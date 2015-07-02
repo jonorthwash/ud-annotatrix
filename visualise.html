@@ -27,13 +27,10 @@ case(taskulampun, kanssa)
 			</code></pre -->
 
 
-			<textarea id="sdin"></textarea>
+			<textarea id="indata" style="width: 100%" rows="20"></textarea>
 
-			<textarea id="cgin" rows=15 cols=50></textarea>
-
-			<textarea id="conlluin"></textarea>
-
-			<pre><code id="dest" class="language-sdparse">
+			<div id="detected"></div>
+			<pre><code id="dest" class="language-sdparse" tabs="yes">
 			</code></pre>
 
 		</div>
@@ -76,8 +73,8 @@ case(taskulampun, kanssa)
 			);
 
 			var webFontURLs = [
-				//root + 'fonts/PT_Sans-Caption-Web-Regular.ttf',
-				//root + 'fonts/Liberation_Sans-Regular.ttf'
+				root + 'static/fonts/PT_Sans-Caption-Web-Regular.ttf',
+				root + 'static/fonts/Liberation_Sans-Regular.ttf'
 			];
 
 			var setupTabs = function() {
@@ -106,10 +103,29 @@ case(taskulampun, kanssa)
 				// perform all embedding and support functions
 				Annodoc.activate(Config.bratCollData, Collections.listing);
 
-				$("#sdin").keyup(
+				$("#indata").keyup(
 					function() {
-						var content = $("#sdin").val();
-						$("#dest").html(content); // $("#source");
+						var content = $("#indata").val();
+						var firstWord = content.split(" ")[0];
+						if (firstWord.match(/"<.*>"/)) {
+							var format = "CG3";
+							var cssClass = "language-sdparse";
+							var printContent = cgParse(content);
+						}
+						else if (firstWord.match(/1/)) {
+							var format = "CoNLL-U";
+							var cssClass = "language-conllu";
+							var printContent = content;
+						}
+						else {
+							var format = "SD"
+							var cssClass = "language-sdparse";
+							var printContent = content;
+						}
+						$("#detected").html("Detected: "+format+" format");
+						$("#dest").removeClass("language-sdparse").removeClass("language-conllu");
+						$("#dest").addClass(cssClass);
+						$("#dest").html(printContent); // $("#source");
 						Annodoc.activate(Config.bratCollData, Collections.listing);
 					}
 				);
@@ -118,9 +134,10 @@ case(taskulampun, kanssa)
 					cgParse
 				);
 
-				$("#conllu").keyup(
+				$("#conlluin").keyup(
 					function() {
-						var content = $("#conllu").val();
+						var content = $("#conlluin").val();
+						$("#dest").removeClass("language-sdparse").addClass("language-conllu");
 						$("#dest").html(content); // $("#source");
 						Annodoc.activate(Config.bratCollData, Collections.listing);
 					}
