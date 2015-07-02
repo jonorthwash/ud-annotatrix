@@ -11,7 +11,7 @@
 	<body>
 
 		<div id="content">
-			<p>There's a test here:</p>
+			<p>Enter trees below in any supported format (SD, CG3, CoNLL-U):</p>
 
 			<!-- pre><code class="language-sdparse">the office of the Chair
 det(office-2, the-1)
@@ -107,7 +107,7 @@ case(taskulampun, kanssa)
 					function() {
 						var content = $("#indata").val();
 						var firstWord = content.split(" ")[0];
-						if (firstWord.match(/"<.*>"/)) {
+						if (firstWord.match(/"<.*/)) {
 							var format = "CG3";
 							var cssClass = "language-sdparse";
 							var printContent = cgParse(content);
