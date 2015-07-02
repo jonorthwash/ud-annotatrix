@@ -3,8 +3,8 @@
 	<head>
 		<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
 		<title>Dependency Grammar visualiser</title>
-		<link rel="root" href="../../"/> <!-- for JS -->
-		<script type="text/javascript" src="head.load.min.js"></script>
+		<link rel="root" href="./lib"/> <!-- for JS -->
+		<script type="text/javascript" src="./lib/head.load.min.js"></script>
 	</head>
 	<body>
 
@@ -25,31 +25,31 @@ case(taskulampun, kanssa)
 
 		<!-- support for embedded visualizations -->
 		<script type="text/javascript">
-			var root = '../../'; // filled in by jekyll
+			var root = './lib'; // filled in by jekyll
 			head.js(
 				// External libraries
-				root + 'lib/ext/jquery.min.js',
-				root + 'lib/ext/jquery.svg.min.js',
-				root + 'lib/ext/jquery.svgdom.min.js',
-				root + 'lib/ext/jquery-ui.min.js',
-				root + 'lib/ext/waypoints.min.js',
-				root + 'lib/ext/jquery.address.min.js',
+				root + 'ext/jquery.min.js',
+				root + 'ext/jquery.svg.min.js',
+				root + 'ext/jquery.svgdom.min.js',
+				root + 'ext/jquery-ui.min.js',
+				root + 'ext/waypoints.min.js',
+				root + 'ext/jquery.address.min.js',
 				
 				// brat helper modules
-				root + 'lib/brat/configuration.js',
-				root + 'lib/brat/util.js',
-				root + 'lib/brat/annotation_log.js',
-				root + 'lib/ext/webfont.js',
+				root + 'brat/configuration.js',
+				root + 'brat/util.js',
+				root + 'brat/annotation_log.js',
+				root + 'ext/webfont.js',
 				
 				// brat modules
-				root + 'lib/brat/dispatcher.js',
-				root + 'lib/brat/url_monitor.js',
-				root + 'lib/brat/visualizer.js',
+				root + 'brat/dispatcher.js',
+				root + 'brat/url_monitor.js',
+				root + 'brat/visualizer.js',
 
 				// embedding configuration
-				root + 'lib/local/config.js',
+				root + 'local/config.js',
 				// project-specific collection data
-				root + 'lib/local/collections.js',
+				root + 'local/collections.js',
 				
 				// NOTE: non-local libraries
 				'http://spyysalo.github.io/annodoc/lib/local/annodoc.js',
@@ -57,9 +57,8 @@ case(taskulampun, kanssa)
 			);
 
 			var webFontURLs = [
-				//        root + 'static/fonts/Astloch-Bold.ttf',
-				root + 'static/fonts/PT_Sans-Caption-Web-Regular.ttf',
-				root + 'static/fonts/Liberation_Sans-Regular.ttf'
+				root + 'lib/fonts/PT_Sans-Caption-Web-Regular.ttf',
+				root + 'lib/fonts/Liberation_Sans-Regular.ttf'
 			];
 
 			var setupTabs = function() {
