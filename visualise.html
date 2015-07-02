@@ -27,7 +27,11 @@ case(taskulampun, kanssa)
 			</code></pre -->
 
 
-			<textarea id="source"></textarea>
+			<textarea id="sdin"></textarea>
+
+			<textarea id="cgin" rows=15 cols=50></textarea>
+
+			<textarea id="conlluin"></textarea>
 
 			<pre><code id="dest" class="language-sdparse">
 			</code></pre>
@@ -65,7 +69,10 @@ case(taskulampun, kanssa)
 				
 				// NOTE: non-local libraries
 				'http://spyysalo.github.io/annodoc/lib/local/annodoc.js',
-				'http://spyysalo.github.io/conllu.js/conllu.js'
+				'http://spyysalo.github.io/conllu.js/conllu.js',
+
+				//JNW stuff
+				root + 'visualise.js'
 			);
 
 			var webFontURLs = [
@@ -99,13 +106,27 @@ case(taskulampun, kanssa)
 				// perform all embedding and support functions
 				Annodoc.activate(Config.bratCollData, Collections.listing);
 
-				$("#source").keyup(
+				$("#sdin").keyup(
 					function() {
-						var content = $("#source").val();
+						var content = $("#sdin").val();
 						$("#dest").html(content); // $("#source");
 						Annodoc.activate(Config.bratCollData, Collections.listing);
 					}
 				);
+
+				$("#cgin").keyup(
+					cgParse
+				);
+
+				$("#conllu").keyup(
+					function() {
+						var content = $("#conllu").val();
+						$("#dest").html(content); // $("#source");
+						Annodoc.activate(Config.bratCollData, Collections.listing);
+					}
+				);
+
+
 			});
 		</script>
 	</body>
