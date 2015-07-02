@@ -13,17 +13,23 @@
 		<div id="content">
 			<p>There's a test here:</p>
 
-			<pre><code class="language-sdparse">the office of the Chair
+			<!-- pre><code class="language-sdparse">the office of the Chair
 det(office-2, the-1)
 nmod(office-2, Chair-5)
 case(Chair-5, of-3)
 det(Chair-5, the-4)
-			</code></pre>
+			</code></pre -->
 
-			<p>And a test here too:</a>
+			<!-- p>And a test here too:</a>
 			<pre><code class="language-sdparse">etsiä taskulampun kanssa \n to_search torch.GENITIVE with
 nmod(etsiä, taskulampun)
 case(taskulampun, kanssa)
+			</code></pre -->
+
+
+			<textarea id="source"></textarea>
+
+			<pre><code id="dest" class="language-sdparse">
 			</code></pre>
 
 		</div>
@@ -92,6 +98,14 @@ case(taskulampun, kanssa)
 				
 				// perform all embedding and support functions
 				Annodoc.activate(Config.bratCollData, Collections.listing);
+
+				$("#source").keyup(
+					function() {
+						var content = $("#source").val();
+						$("#dest").html(content); // $("#source");
+						Annodoc.activate(Config.bratCollData, Collections.listing);
+					}
+				);
 			});
 		</script>
 	</body>
