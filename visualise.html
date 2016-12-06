@@ -11,6 +11,10 @@
 	<body>
 
 		<div id="content">
+			
+			<input disabled type="button" value="Previous Sentence" id="prevBtn" onClick="javascript:prevSent();"/>
+			<input disabled type="button" value="Next Sentence" id="nextBtn" onClick="javascript:nextSent();"/>
+		
 			<p>Enter trees below in any supported format (SD, CG3, CoNLL-U):</p>
 
 			<!-- pre><code class="language-sdparse">the office of the Chair
@@ -28,7 +32,15 @@ case(taskulampun, kanssa)
 
 
 			<textarea id="indata" style="width: 100%" rows="20"></textarea>
-
+			<p>
+			<input type="button" onClick="javascript:exportcopra();" value="Export Corpora" />
+			</p>
+			
+			<p>
+			Load Corpora from file:
+			<input type="file" id="filename" multiple/>
+			</p>
+			
 			<div id="detected"></div>
 			<pre><code id="dest" class="language-sdparse" tabs="yes">
 			</code></pre>
@@ -104,30 +116,7 @@ case(taskulampun, kanssa)
 				Annodoc.activate(Config.bratCollData, Collections.listing);
 
 				$("#indata").keyup(
-					function() {
-						var content = $("#indata").val();
-						var firstWord = content.split(" ")[0];
-						if (firstWord.match(/"<.*/)) {
-							var format = "CG3";
-							var cssClass = "language-sdparse";
-							var printContent = cgParse(content);
-						}
-						else if (firstWord.match(/1/)) {
-							var format = "CoNLL-U";
-							var cssClass = "language-conllu";
-							var printContent = content;
-						}
-						else {
-							var format = "SD"
-							var cssClass = "language-sdparse";
-							var printContent = content;
-						}
-						$("#detected").html("Detected: "+format+" format");
-						$("#dest").removeClass("language-sdparse").removeClass("language-conllu");
-						$("#dest").addClass(cssClass);
-						$("#dest").html(printContent); // $("#source");
-						Annodoc.activate(Config.bratCollData, Collections.listing);
-					}
+					keyupfunc
 				);
 
 				$("#cgin").keyup(
@@ -142,9 +131,114 @@ case(taskulampun, kanssa)
 						Annodoc.activate(Config.bratCollData, Collections.listing);
 					}
 				);
-
-
 			});
+			
+			var format = "";
+			function keyupfunc() {
+						var content = $("#indata").val();
+						var firstWord = content.split(" ")[0];
+						if (firstWord.match(/"<.*/)) {
+							format = "CG3";
+							var cssClass = "language-sdparse";
+							var printContent = cgParse(content);
+						}
+						else if (firstWord.match(/1/)) {
+							format = "CoNLL-U";
+							var cssClass = "language-conllu";
+							var printContent = content;
+						}
+						else {
+							format = "SD"
+							var cssClass = "language-sdparse";
+							var printContent = content;
+						}
+						$("#detected").html("Detected: "+format+" format");
+						$("#dest").removeClass("language-sdparse").removeClass("language-conllu");
+						$("#dest").addClass(cssClass);
+						$("#dest").html(printContent); // $("#source");
+						Annodoc.activate(Config.bratCollData, Collections.listing);
+			}
+			
+			//Listener to Load file
+			document.getElementById('filename').addEventListener('change', loadfromfile, false);
+			var masterFileArray = new Array();
+			var currentindex = 0;
+			var filescount = 0;
+			
+			//Load Corpora from file
+			function loadfromfile(evt) {
+				masterFileArray = [];
+				var files = evt.target.files;
+				filescount = files.length;
+				
+				if(filescount > 1){
+					document.getElementById("nextBtn").disabled = false;
+				}
+				
+				window.array = []
+				if (files) {
+					for (var i = 0, f; f = files[i]; i++) {
+						var r = new FileReader();
+						r.onload = (function (f) {
+							return function (e) {
+								var contents = e.target.result;
+								masterFileArray.push(contents);
+								loadDataInIndex();
+							};
+						})(f);
+						r.readAsText(f);
+					}
+				} else {
+					alert("Failed to load files");
+				}
+			}
+			function loadDataInIndex(){
+				
+				var element = document.getElementById('indata');
+				element.innerHTML = masterFileArray[currentindex];
+				keyupfunc();
+			}
+			function prevSent(){
+				currentindex--;
+				
+				if(currentindex < (filescount-1)){
+					document.getElementById("nextBtn").disabled = false;
+				}
+			
+				if(currentindex == 0){
+					document.getElementById("prevBtn").disabled = true;
+				}
+				
+				loadDataInIndex();
+			}
+			function nextSent(){
+				
+				currentindex++;
+				
+				if(currentindex == (filescount-1)){
+					document.getElementById("nextBtn").disabled = true;
+				}
+			
+				if(currentindex > 0){
+					document.getElementById("prevBtn").disabled = false;
+				}
+				
+				loadDataInIndex();
+			}
+			//Export Corpora to file
+			function exportcopra(){
+					var type = ".txt";
+					if(format == "CoNLL-U"){
+						type = ".conllu";
+					}
+					var elHtml = document.getElementById("indata").value;
+					var link = document.createElement('a');
+					var mimeType = 'text/plain';
+					link.setAttribute('download', 'corpora'+type);
+					link.setAttribute('href', 'data:' + mimeType  +  ';charset=utf-8,' + encodeURIComponent(elHtml));
+					link.click(); 
+					alert(elHtml);
+			}
 		</script>
 	</body>
 </html>
