@@ -15,8 +15,9 @@
 
     <div id="content">
 
-        <input disabled type="button" value="Previous Sentence" id="prevBtn" onClick="javascript:prevSent();" />
-        <input disabled type="button" value="Next Sentence" id="nextBtn" onClick="javascript:nextSent();" />
+		Current Sentance: <span id="currentsen">00</span> / <span id="totalsen">00</span>&nbsp;
+        <input disabled type="button" value="Previous Sentance" id="prevSenBtn" onClick="javascript:prevSenSent();" />
+        <input disabled type="button" value="Next Sentance" id="nextSenBtn" onClick="javascript:nextSenSent();" />
 
         <p>Enter trees below in any supported format (SD, CG3, CoNLL-U):</p>
 
@@ -40,7 +41,7 @@ case(taskulampun, kanssa)
 
         <p>
             Load Corpora from file:
-            <input type="file" id="filename" multiple/>
+            <input type="file" id="filename"/>
         </p>
 
         <div id="detected"></div>
@@ -156,73 +157,75 @@ case(taskulampun, kanssa)
 
         //Listener to Load file
         document.getElementById('filename').addEventListener('change', loadfromfile, false);
-        var masterFileArray = new Array();
-        var currentindex = 0;
-        var filescount = 0;
 
         //Load Corpora from file
-        function loadfromfile(evt) {
-            masterFileArray = [];
-            var files = evt.target.files;
-            filescount = files.length;
-
-            if (filescount > 1) {
-                document.getElementById("nextBtn").disabled = false;
+		var contents = "";
+        function loadfromfile(e) {
+            var file = e.target.files[0];
+            if (!file) {
+                return;
             }
-
-            window.array = []
-            if (files) {
-                for (var i = 0, f; f = files[i]; i++) {
-                    var r = new FileReader();
-                    r.onload = (function(f) {
-                        return function(e) {
-                            var contents = e.target.result;
-                            masterFileArray.push(contents);
-                            loadDataInIndex();
-                        };
-                    })(f);
-                    r.readAsText(f);
-                }
-            } else {
-                alert("Failed to load files");
-            }
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                contents = e.target.result;
+                loadDataInIndex();
+            };
+            reader.readAsText(file);
         }
 
+        var availablesentances = 0;
+        var currentsentance = 0;
+        var results = new Array();
+		
         function loadDataInIndex() {
+            availablesentances = 0;
+            currentsentance = 0;
+            var splitted = contents.split("\n\n");
+            availablesentances = splitted.length;
+			
+            if (availablesentances == 1 || availablesentances == 0) {
+                document.getElementById('nextSenBtn').disabled = true;
+            } else {
+				document.getElementById('nextSenBtn').disabled = false;
+			}
+			
+            for (var i = 0; i < splitted.length; ++i) {
+                var check = splitted[i];
+                results.push(check);
+            }
+            showdataindiv();
+        }
 
+        function showdataindiv() {
+			document.getElementById('currentsen').innerHTML = (currentsentance+1);
+			document.getElementById('totalsen').innerHTML = availablesentances;
             var element = document.getElementById('indata');
-            element.innerHTML = masterFileArray[currentindex];
+            element.innerHTML = results[currentsentance];
             keyupfunc();
         }
 
-        function prevSent() {
-            currentindex--;
-
-            if (currentindex < (filescount - 1)) {
-                document.getElementById("nextBtn").disabled = false;
+        function prevSenSent() {
+            currentsentance--;
+            if (currentsentance < (availablesentances - 1)) {
+                document.getElementById("nextSenBtn").disabled = false;
             }
-
-            if (currentindex == 0) {
-                document.getElementById("prevBtn").disabled = true;
+            if (currentsentance == 0) {
+                document.getElementById("prevSenBtn").disabled = true;
             }
-
-            loadDataInIndex();
+            showdataindiv();
         }
 
-        function nextSent() {
-
-            currentindex++;
-
-            if (currentindex == (filescount - 1)) {
-                document.getElementById("nextBtn").disabled = true;
+        function nextSenSent() {
+            currentsentance++;
+            if (currentsentance == (availablesentances - 1)) {
+                document.getElementById("nextSenBtn").disabled = true;
             }
-
-            if (currentindex > 0) {
-                document.getElementById("prevBtn").disabled = false;
+            if (currentsentance > 0) {
+                document.getElementById("prevSenBtn").disabled = false;
             }
-
-            loadDataInIndex();
+            showdataindiv();
         }
+
         //Export Corpora to file
         function exportcopra() {
             var type = ".txt";
@@ -235,7 +238,6 @@ case(taskulampun, kanssa)
             link.setAttribute('download', 'corpora' + type);
             link.setAttribute('href', 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(elHtml));
             link.click();
-            alert(elHtml);
         }
     </script>
 </body>
