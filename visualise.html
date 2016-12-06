@@ -129,21 +129,22 @@ case(taskulampun, kanssa)
 				);
 			});
 			
+			var format = "";
 			function keyupfunc() {
 						var content = $("#indata").val();
 						var firstWord = content.split(" ")[0];
 						if (firstWord.match(/"<.*/)) {
-							var format = "CG3";
+							format = "CG3";
 							var cssClass = "language-sdparse";
 							var printContent = cgParse(content);
 						}
 						else if (firstWord.match(/1/)) {
-							var format = "CoNLL-U";
+							format = "CoNLL-U";
 							var cssClass = "language-conllu";
 							var printContent = content;
 						}
 						else {
-							var format = "SD"
+							format = "SD"
 							var cssClass = "language-sdparse";
 							var printContent = content;
 						}
@@ -175,12 +176,17 @@ case(taskulampun, kanssa)
 			
 			//Export Corpora to file
 			function exportcopra(){
-					var elHtml = document.getElementById("indata").innerHTML;
+					var type = ".txt";
+					if(format == "CoNLL-U"){
+						type = ".conllu";
+					}
+					var elHtml = document.getElementById("indata").value;
 					var link = document.createElement('a');
 					var mimeType = 'text/plain';
-					link.setAttribute('download', 'corpora.txt');
+					link.setAttribute('download', 'corpora'+type);
 					link.setAttribute('href', 'data:' + mimeType  +  ';charset=utf-8,' + encodeURIComponent(elHtml));
 					link.click(); 
+					alert(elHtml);
 			}
 		</script>
 	</body>
