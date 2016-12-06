@@ -15,9 +15,9 @@
 
     <div id="content">
 
-		Current Sentance: <span id="currentsen">00</span> / <span id="totalsen">00</span>&nbsp;
-        <input disabled type="button" value="Previous Sentance" id="prevSenBtn" onClick="javascript:prevSenSent();" />
-        <input disabled type="button" value="Next Sentance" id="nextSenBtn" onClick="javascript:nextSenSent();" />
+		Current Sentence: <span id="currentsen">00</span> / <span id="totalsen">00</span>&nbsp;
+        <input disabled type="button" value="Previous Sentence" id="prevSenBtn" onClick="javascript:prevSenSent();" />
+        <input disabled type="button" value="Next Sentence" id="nextSenBtn" onClick="javascript:nextSenSent();" />
 
         <p>Enter trees below in any supported format (SD, CG3, CoNLL-U):</p>
 
@@ -161,6 +161,7 @@ case(taskulampun, kanssa)
         //Load Corpora from file
 		var contents = "";
         function loadfromfile(e) {
+			contents = "";
             var file = e.target.files[0];
             if (!file) {
                 return;
@@ -178,6 +179,7 @@ case(taskulampun, kanssa)
         var results = new Array();
 		
         function loadDataInIndex() {
+			results = [];
             availablesentances = 0;
             currentsentance = 0;
             var splitted = contents.split("\n\n");
