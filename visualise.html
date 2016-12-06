@@ -28,7 +28,15 @@ case(taskulampun, kanssa)
 
 
 			<textarea id="indata" style="width: 100%" rows="20"></textarea>
-
+			<p>
+			<input type="button" onClick="javascript:exportcopra();" value="Export Corpora" />
+			</p>
+			
+			<p>
+			Load Corpora from file:
+			<input type="file" id="filename"/>
+			</p>
+			
 			<div id="detected"></div>
 			<pre><code id="dest" class="language-sdparse" tabs="yes">
 			</code></pre>
@@ -104,7 +112,24 @@ case(taskulampun, kanssa)
 				Annodoc.activate(Config.bratCollData, Collections.listing);
 
 				$("#indata").keyup(
+					keyupfunc
+				);
+
+				$("#cgin").keyup(
+					cgParse
+				);
+
+				$("#conlluin").keyup(
 					function() {
+						var content = $("#conlluin").val();
+						$("#dest").removeClass("language-sdparse").addClass("language-conllu");
+						$("#dest").html(content); // $("#source");
+						Annodoc.activate(Config.bratCollData, Collections.listing);
+					}
+				);
+			});
+			
+			function keyupfunc() {
 						var content = $("#indata").val();
 						var firstWord = content.split(" ")[0];
 						if (firstWord.match(/"<.*/)) {
@@ -127,24 +152,36 @@ case(taskulampun, kanssa)
 						$("#dest").addClass(cssClass);
 						$("#dest").html(printContent); // $("#source");
 						Annodoc.activate(Config.bratCollData, Collections.listing);
-					}
-				);
-
-				$("#cgin").keyup(
-					cgParse
-				);
-
-				$("#conlluin").keyup(
-					function() {
-						var content = $("#conlluin").val();
-						$("#dest").removeClass("language-sdparse").addClass("language-conllu");
-						$("#dest").html(content); // $("#source");
-						Annodoc.activate(Config.bratCollData, Collections.listing);
-					}
-				);
-
-
-			});
+			}
+			
+			//Listener to Load file
+			document.getElementById('filename').addEventListener('change', loadfromfile, false);
+			
+			//Load Corpora from file
+			function loadfromfile(e){
+					 var file = e.target.files[0];
+					  if (!file) {
+						return;
+					  }
+					  var reader = new FileReader();
+					  reader.onload = function(e) {
+						var contents = e.target.result;
+						 var element = document.getElementById('indata');
+						 element.innerHTML = contents;
+						 keyupfunc();
+					  };
+					  reader.readAsText(file);
+			}
+			
+			//Export Corpora to file
+			function exportcopra(){
+					var elHtml = document.getElementById("indata").innerHTML;
+					var link = document.createElement('a');
+					var mimeType = 'text/plain';
+					link.setAttribute('download', 'corpora.txt');
+					link.setAttribute('href', 'data:' + mimeType  +  ';charset=utf-8,' + encodeURIComponent(elHtml));
+					link.click(); 
+			}
 		</script>
 	</body>
 </html>
