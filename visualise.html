@@ -1,150 +1,259 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-	<head>
-		<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-		<title>Dependency Grammar visualiser</title>
-		<link rel="root" href="./lib"/> <!-- for JS -->
-		<link rel="stylesheet" type="text/css" href="./lib/css/style.css"/>
-		<link rel="stylesheet" type="text/css" href="./lib/css/style-vis.css"/>
-		<script type="text/javascript" src="./lib/ext/head.load.min.js"></script>
-	</head>
-	<body>
 
-		<div id="content">
-			<p>Enter trees below in any supported format (SD, CG3, CoNLL-U):</p>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>Dependency Grammar visualiser</title>
+    <link rel="root" href="./lib" />
+    <!-- for JS -->
+    <link rel="stylesheet" type="text/css" href="./lib/css/style.css" />
+    <link rel="stylesheet" type="text/css" href="./lib/css/style-vis.css" />
+    <script type="text/javascript" src="./lib/ext/head.load.min.js"></script>
+</head>
 
-			<!-- pre><code class="language-sdparse">the office of the Chair
+<body>
+
+    <div id="content">
+
+		Current Sentence: <span id="currentsen">00</span> / <span id="totalsen">00</span>&nbsp;
+        <input disabled type="button" value="Previous Sentence" id="prevSenBtn" onClick="javascript:prevSenSent();" />
+        <input disabled type="button" value="Next Sentence" id="nextSenBtn" onClick="javascript:nextSenSent();" />
+
+        <p>Enter trees below in any supported format (SD, CG3, CoNLL-U):</p>
+
+        <!-- pre><code class="language-sdparse">the office of the Chair
 det(office-2, the-1)
 nmod(office-2, Chair-5)
 case(Chair-5, of-3)
 det(Chair-5, the-4)
 			</code></pre -->
 
-			<!-- p>And a test here too:</a>
+        <!-- p>And a test here too:</a>
 			<pre><code class="language-sdparse">etsiä taskulampun kanssa \n to_search torch.GENITIVE with
 nmod(etsiä, taskulampun)
 case(taskulampun, kanssa)
 			</code></pre -->
 
+        <textarea id="indata" style="width: 100%" rows="20"></textarea>
+        <p>
+            <input type="button" onClick="javascript:exportcopra();" value="Export Corpora" />
+        </p>
 
-			<textarea id="indata" style="width: 100%" rows="20"></textarea>
+        <p>
+            Load Corpora from file:
+            <input type="file" id="filename"/>
+        </p>
 
-			<div id="detected"></div>
-			<pre><code id="dest" class="language-sdparse" tabs="yes">
+        <div id="detected"></div>
+        <pre><code id="dest" class="language-sdparse" tabs="yes">
 			</code></pre>
 
-		</div>
+    </div>
 
+    <!-- support for embedded visualizations -->
+    <script type="text/javascript">
+        var root = './lib/'; // filled in by jekyll
+        head.js(
+            // External libraries
+            root + 'ext/jquery.min.js',
+            root + 'ext/jquery.svg.min.js',
+            root + 'ext/jquery.svgdom.min.js',
+            root + 'ext/jquery-ui.min.js',
+            root + 'ext/waypoints.min.js',
+            root + 'ext/jquery.address.min.js',
 
-		<!-- support for embedded visualizations -->
-		<script type="text/javascript">
-			var root = './lib/'; // filled in by jekyll
-			head.js(
-				// External libraries
-				root + 'ext/jquery.min.js',
-				root + 'ext/jquery.svg.min.js',
-				root + 'ext/jquery.svgdom.min.js',
-				root + 'ext/jquery-ui.min.js',
-				root + 'ext/waypoints.min.js',
-				root + 'ext/jquery.address.min.js',
-				
-				// brat helper modules
-				root + 'brat/configuration.js',
-				root + 'brat/util.js',
-				root + 'brat/annotation_log.js',
-				root + 'ext/webfont.js',
-				
-				// brat modules
-				root + 'brat/dispatcher.js',
-				root + 'brat/url_monitor.js',
-				root + 'brat/visualizer.js',
+            // brat helper modules
+            root + 'brat/configuration.js',
+            root + 'brat/util.js',
+            root + 'brat/annotation_log.js',
+            root + 'ext/webfont.js',
 
-				// embedding configuration
-				root + 'local/config.js',
-				// project-specific collection data
-				root + 'local/collections.js',
-				
-				// NOTE: non-local libraries
-				'http://spyysalo.github.io/annodoc/lib/local/annodoc.js',
-				'http://spyysalo.github.io/conllu.js/conllu.js',
+            // brat modules
+            root + 'brat/dispatcher.js',
+            root + 'brat/url_monitor.js',
+            root + 'brat/visualizer.js',
+            // embedding configuration
+            root + 'local/config.js',
+            // project-specific collection data
+            root + 'local/collections.js',
 
-				//JNW stuff
-				root + 'visualise.js'
-			);
+            // NOTE: non-local libraries
+            'http://spyysalo.github.io/annodoc/lib/local/annodoc.js',
+            'http://spyysalo.github.io/conllu.js/conllu.js',
+            //JNW stuff
+            root + 'visualise.js'
+        );
+        var webFontURLs = [
+            root + 'static/fonts/PT_Sans-Caption-Web-Regular.ttf',
+            root + 'static/fonts/Liberation_Sans-Regular.ttf'
+        ];
+        var setupTabs = function() {
+            // standard jQuery UI "tabs" element initialization
+            $(".jquery-ui-tabs").tabs({
+                heightStyle: "auto"
+            });
+            // use jQuery address to preserve tab state
+            // (see https://github.com/UniversalDependencies/docs/issues/65,
+            // http://stackoverflow.com/a/3330919)
+            if ($(".jquery-ui-tabs").length > 0) {
+                $.address.change(function(event) {
+                    $(".jquery-ui-tabs").tabs("select", window.location.hash)
+                });
+                $(".jquery-ui-tabs").bind("tabsselect", function(event, ui) {
+                    window.location.hash = ui.tab.hash;
+                });
+            }
+        };
 
-			var webFontURLs = [
-				root + 'static/fonts/PT_Sans-Caption-Web-Regular.ttf',
-				root + 'static/fonts/Liberation_Sans-Regular.ttf'
-			];
+        head.ready(function() {
+            // set up UI tabs on page
+            setupTabs();
 
-			var setupTabs = function() {
-				// standard jQuery UI "tabs" element initialization
-				$(".jquery-ui-tabs").tabs({ heightStyle: "auto" });
-				// use jQuery address to preserve tab state
-				// (see https://github.com/UniversalDependencies/docs/issues/65,
-				// http://stackoverflow.com/a/3330919)
-				if ($(".jquery-ui-tabs").length > 0) {
-					$.address.change(function(event){
-						$(".jquery-ui-tabs").tabs("select", window.location.hash)
-					});
-					$(".jquery-ui-tabs").bind("tabsselect", function(event, ui) { 
-						window.location.hash = ui.tab.hash;
-					});
-				}
-			};
+            // mark current collection (filled in by Jekyll)
+            Collections.listing['_current'] = 'u-overview';
+
+            // perform all embedding and support functions
+            Annodoc.activate(Config.bratCollData, Collections.listing);
+            $("#indata").keyup(
+                keyupfunc
+            );
+            $("#cgin").keyup(
+                cgParse
+            );
+            $("#conlluin").keyup(
+                function() {
+                    var content = $("#conlluin").val();
+                    $("#dest").removeClass("language-sdparse").addClass("language-conllu");
+                    $("#dest").html(content); // $("#source");
+                    Annodoc.activate(Config.bratCollData, Collections.listing);
+                }
+            );
+        });
+
+        var format = "";
+
+        //Listener to Load file
+        document.getElementById('filename').addEventListener('change', loadfromfile, false);
+
+        //Load Corpora from file
+		var contents = "";
+        function loadfromfile(e) {
+			contents = "";
+            var file = e.target.files[0];
+            if (!file) {
+                return;
+            }
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                contents = e.target.result;
+                loadDataInIndex();
+            };
+            reader.readAsText(file);
+        }
+
+        var availablesentances = 0;
+        var currentsentance = 0;
+        var results = new Array();
+		
+        function loadDataInIndex() {
+			results = [];
+            availablesentances = 0;
+            currentsentance = 0;
+            var splitted = contents.split("\n\n");
+            availablesentances = splitted.length;
 			
-			head.ready(function() {
-				// set up UI tabs on page
-				setupTabs();
-				
-				// mark current collection (filled in by Jekyll)
-				Collections.listing['_current'] = 'u-overview';
-				
-				// perform all embedding and support functions
-				Annodoc.activate(Config.bratCollData, Collections.listing);
+            if (availablesentances == 1 || availablesentances == 0) {
+                document.getElementById('nextSenBtn').disabled = true;
+            } else {
+				document.getElementById('nextSenBtn').disabled = false;
+			}
+			
+            for (var i = 0; i < splitted.length; ++i) {
+                var check = splitted[i];
+                results.push(check);
+            }
+            showdataindiv();
+        }
 
-				$("#indata").keyup(
-					function() {
-						var content = $("#indata").val();
-						var firstWord = content.split(" ")[0];
-						if (firstWord.match(/"<.*/)) {
-							var format = "CG3";
-							var cssClass = "language-sdparse";
-							var printContent = cgParse(content);
-						}
-						else if (firstWord.match(/1/)) {
-							var format = "CoNLL-U";
-							var cssClass = "language-conllu";
-							var printContent = content;
-						}
-						else {
-							var format = "SD"
-							var cssClass = "language-sdparse";
-							var printContent = content;
-						}
-						$("#detected").html("Detected: "+format+" format");
-						$("#dest").removeClass("language-sdparse").removeClass("language-conllu");
-						$("#dest").addClass(cssClass);
-						$("#dest").html(printContent); // $("#source");
-						Annodoc.activate(Config.bratCollData, Collections.listing);
-					}
-				);
+        function showdataindiv() {
+			document.getElementById('indata').value = (results[currentsentance]);
+			document.getElementById('currentsen').innerHTML = (currentsentance+1);
+			document.getElementById('totalsen').innerHTML = availablesentances;
+            keyupfunc();
+        }
 
-				$("#cgin").keyup(
-					cgParse
-				);
+        function prevSenSent() {
+			results[currentsentance] = document.getElementById("indata").value;
+            currentsentance--;
+            if (currentsentance < (availablesentances - 1)) {
+                document.getElementById("nextSenBtn").disabled = false;
+            }
+            if (currentsentance == 0) {
+                document.getElementById("prevSenBtn").disabled = true;
+            }
+            showdataindiv();
+        }
 
-				$("#conlluin").keyup(
-					function() {
-						var content = $("#conlluin").val();
-						$("#dest").removeClass("language-sdparse").addClass("language-conllu");
-						$("#dest").html(content); // $("#source");
-						Annodoc.activate(Config.bratCollData, Collections.listing);
-					}
-				);
+		//When Navigate to next item
+        function nextSenSent() {
+			results[currentsentance] = document.getElementById("indata").value;
+            currentsentance++;
+            if (currentsentance == (availablesentances - 1)) {
+                document.getElementById("nextSenBtn").disabled = true;
+            }
+            if (currentsentance > 0) {
+                document.getElementById("prevSenBtn").disabled = false;
+            }
+            showdataindiv();
+        }
 
+        //Export Corpora to file
+        function exportcopra() {
+            var type = ".txt";
+            if (format == "CoNLL-U") {
+                type = ".conllu";
+            }
+			
+			results[currentsentance] = document.getElementById("indata").value;
+			var finalcontent = "";
+			for(var x=0; x < results.length; x++){
+				finalcontent = finalcontent + results[x];
+				if(x != ((results.length)-1)){
+					finalcontent = finalcontent + "\n\n";
+				}
+			}
+			
+            var link = document.createElement('a');
+            var mimeType = 'text/plain';
+            link.setAttribute('download', 'corpora' + type);
+            link.setAttribute('href', 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(finalcontent));
+            link.click();
+        }
+		
+		//KeyUp function
+		function keyupfunc() {
+            var content = $("#indata").val();
+            var firstWord = content.split(" ")[0];
+            if (firstWord.match(/"<.*/)) {
+                format = "CG3";
+                var cssClass = "language-sdparse";
+                var printContent = cgParse(content);
+            } else if (firstWord.match(/1/)) {
+                format = "CoNLL-U";
+                var cssClass = "language-conllu";
+                var printContent = content;
+            } else {
+                format = "SD"
+                var cssClass = "language-sdparse";
+                var printContent = content;
+            }
+            $("#detected").html("Detected: " + format + " format");
+            $("#dest").removeClass("language-sdparse").removeClass("language-conllu");
+            $("#dest").addClass(cssClass);
+            $("#dest").html(printContent); // $("#source");
+            Annodoc.activate(Config.bratCollData, Collections.listing);
+        }
+    </script>
+</body>
 
-			});
-		</script>
-	</body>
 </html>
