@@ -217,7 +217,10 @@ case(taskulampun, kanssa)
 			results[currentsentance] = document.getElementById("indata").value;
 			var finalcontent = "";
 			for(var x=0; x < results.length; x++){
-				finalcontent = finalcontent + results[x] + "\n\n";
+				finalcontent = finalcontent + results[x];
+				if(x != ((results.length)-1)){
+					finalcontent = finalcontent + "\n\n";
+				}
 			}
 			
             var link = document.createElement('a');
