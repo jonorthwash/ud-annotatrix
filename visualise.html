@@ -132,29 +132,6 @@ case(taskulampun, kanssa)
 
         var format = "";
 
-        function keyupfunc() {
-            var content = $("#indata").val();
-            var firstWord = content.split(" ")[0];
-            if (firstWord.match(/"<.*/)) {
-                format = "CG3";
-                var cssClass = "language-sdparse";
-                var printContent = cgParse(content);
-            } else if (firstWord.match(/1/)) {
-                format = "CoNLL-U";
-                var cssClass = "language-conllu";
-                var printContent = content;
-            } else {
-                format = "SD"
-                var cssClass = "language-sdparse";
-                var printContent = content;
-            }
-            $("#detected").html("Detected: " + format + " format");
-            $("#dest").removeClass("language-sdparse").removeClass("language-conllu");
-            $("#dest").addClass(cssClass);
-            $("#dest").html(printContent); // $("#source");
-            Annodoc.activate(Config.bratCollData, Collections.listing);
-        }
-
         //Listener to Load file
         document.getElementById('filename').addEventListener('change', loadfromfile, false);
 
@@ -199,14 +176,14 @@ case(taskulampun, kanssa)
         }
 
         function showdataindiv() {
+			document.getElementById('indata').value = (results[currentsentance]);
 			document.getElementById('currentsen').innerHTML = (currentsentance+1);
 			document.getElementById('totalsen').innerHTML = availablesentances;
-            var element = document.getElementById('indata');
-            element.innerHTML = results[currentsentance];
             keyupfunc();
         }
 
         function prevSenSent() {
+			results[currentsentance] = document.getElementById("indata").value;
             currentsentance--;
             if (currentsentance < (availablesentances - 1)) {
                 document.getElementById("nextSenBtn").disabled = false;
@@ -217,7 +194,9 @@ case(taskulampun, kanssa)
             showdataindiv();
         }
 
+		//When Navigate to next item
         function nextSenSent() {
+			results[currentsentance] = document.getElementById("indata").value;
             currentsentance++;
             if (currentsentance == (availablesentances - 1)) {
                 document.getElementById("nextSenBtn").disabled = true;
@@ -234,12 +213,42 @@ case(taskulampun, kanssa)
             if (format == "CoNLL-U") {
                 type = ".conllu";
             }
-            var elHtml = document.getElementById("indata").value;
+			
+			results[currentsentance] = document.getElementById("indata").value;
+			var finalcontent = "";
+			for(var x=0; x < results.length; x++){
+				finalcontent = finalcontent + results[x] + "\n\n";
+			}
+			
             var link = document.createElement('a');
             var mimeType = 'text/plain';
             link.setAttribute('download', 'corpora' + type);
-            link.setAttribute('href', 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(elHtml));
+            link.setAttribute('href', 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(finalcontent));
             link.click();
+        }
+		
+		//KeyUp function
+		function keyupfunc() {
+            var content = $("#indata").val();
+            var firstWord = content.split(" ")[0];
+            if (firstWord.match(/"<.*/)) {
+                format = "CG3";
+                var cssClass = "language-sdparse";
+                var printContent = cgParse(content);
+            } else if (firstWord.match(/1/)) {
+                format = "CoNLL-U";
+                var cssClass = "language-conllu";
+                var printContent = content;
+            } else {
+                format = "SD"
+                var cssClass = "language-sdparse";
+                var printContent = content;
+            }
+            $("#detected").html("Detected: " + format + " format");
+            $("#dest").removeClass("language-sdparse").removeClass("language-conllu");
+            $("#dest").addClass(cssClass);
+            $("#dest").html(printContent); // $("#source");
+            Annodoc.activate(Config.bratCollData, Collections.listing);
         }
     </script>
 </body>
