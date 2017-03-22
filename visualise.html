@@ -234,6 +234,16 @@ case(taskulampun, kanssa)
 		function keyupfunc() {
             var content = $("#indata").val();
             var firstWord = content.split(" ")[0];
+
+            // my fix
+            if (firstWord[0] === '#'){
+                var following = 1;
+                while (firstWord[0] === '#' && following < content.length){
+                    firstWord = content.split("\n")[following];
+                    following ++;
+                }
+            }
+
             if (firstWord.match(/"<.*/)) {
                 format = "CG3";
                 var cssClass = "language-sdparse";
