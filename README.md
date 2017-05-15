@@ -5,3 +5,5 @@ The purpose of the UD Annotatrix is to provide interfaces to the current [visual
 See [examples](http://universaldependencies.org/kk/dep/conj.html) of UD graphs using the same library as the visualiser currently does use and as the annotatrix will use.
 
 Note that something similar exists in brat ([example](http://kazcorpus.kz/brat1/#/_qq01/_qq_005_109)), but that we're aiming for a simpler, cleaner, faster interface that has no server-side component.  Everything should be in javascript.
+
+Documentation of the changes made by Tai can be found at: https://wikis.swarthmore.edu/ling073/User:Twarner2/Final_project
