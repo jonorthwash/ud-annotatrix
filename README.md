@@ -1,6 +1,6 @@
 # ud-annotatrix
 
-The purpose of the UD Annotatrix is to provide interfaces to the current [visualiser tool](http://jonorthwash.github.io/visualise.html) that allows dependency graphs to be modified.  The point of this is to make manual editing of dependency corpora much quicker.
+The purpose of the UD Annotatrix is to provide an interface to editting CoNLL-U and VISL format dependency trees.  The point of this is to make manual editing of dependency corpora much quicker.
 
 See [examples](http://universaldependencies.org/kk/dep/conj.html) of UD graphs using the same library as the visualiser currently does use and as the annotatrix will use.
 
