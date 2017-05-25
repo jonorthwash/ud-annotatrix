@@ -1,8 +1,8 @@
 # ud-annotatrix
 
-UD Annotatrix is a client-side, browser only, tool for editting CoNLL-U and VISL files (with dependency trees).  The point of this is to make manual editing of dependency corpora quicker. 
+UD Annotatrix is a client-side, browser only, tool for editting CoNLL-U and VISL files (with dependency trees).  The point of this is to make manual editing of dependency corpora quicker.
 
-Use use it, clone the repository to your local machine and open the file `visualize.html` in your browser.
+To use it, you can clone the repository to your local machine and open the file `visualize.html` in your browser.
 
 See [examples](http://universaldependencies.org/kk/dep/conj.html) of UD graphs using the same library as the visualiser currently does use and as the annotatrix will use.
 
