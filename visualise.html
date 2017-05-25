@@ -251,9 +251,10 @@ case(taskulampun, kanssa)
             } else if (firstWord.match(/1/)) {
                 format = "CoNLL-U";
                 var cssClass = "language-conllu";
-                //var printContent = content;
 		// FMT: Hack, for some reason < and > break the CoNLL-U parser, this does not happen with
 		// the upstream conllu.js. FIX THIS!!!
+		// https://github.com/jonorthwash/ud-annotatrix/issues/28
+                //var printContent = content;
                 var printContent = content.replace(/</g, "←").replace(/>/g, "→");
             } else {
                 format = "SD"
