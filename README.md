@@ -1,6 +1,8 @@
 # ud-annotatrix
 
-The purpose of the UD Annotatrix is to provide an interface to editting CoNLL-U and VISL format dependency trees.  The point of this is to make manual editing of dependency corpora much quicker.
+UD Annotatrix is a client-side, browser only, tool for editting CoNLL-U and VISL files (with dependency trees).  The point of this is to make manual editing of dependency corpora quicker. 
+
+Use use it, clone the repository to your local machine and open the file `visualize.html` in your browser.
 
 See [examples](http://universaldependencies.org/kk/dep/conj.html) of UD graphs using the same library as the visualiser currently does use and as the annotatrix will use.
 
