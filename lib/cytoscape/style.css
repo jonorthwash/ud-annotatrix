@@ -1,0 +1,17 @@
+/*body {
+  font-family: helvetica, sans-serif;
+  font-size: 14px;
+}
+*/
+#cy {
+  position: relative;
+  width: 1500px;
+  height: 300px;
+  display: block;
+  z-index: 999;
+}
+
+/*h1 {
+  opacity: 0.5;
+  font-size: 1em;
+}*/
