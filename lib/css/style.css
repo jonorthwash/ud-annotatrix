@@ -90,6 +90,14 @@ pre > code {
    cursor: default;
 }
 
+#cy {
+  position: relative;
+  width: 1500px;
+  height: 300px;
+  display: block;
+  z-index: 999;
+}
+
 #notebox {
   width:50%;
   margin:auto;
