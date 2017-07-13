@@ -49,38 +49,6 @@ span.tt {
   font-family: 'Bitstream Vera Sans Mono','Courier',monospace;
 }
 
-pre {
-  display: block;
-  white-space: pre;
-  background-color: #F8F8F8;
-  border: 1px solid #CCC;
-  font-size: 13px;
-  line-height: 19px;
-  overflow: auto;
-  padding: 6px 10px;
-  border-radius: 3px;
-}
-
-code {
-  line-height: 1.4;
-/*   font: 12px 'Bitstream Vera Sans Mono','Courier',monospace; */
-  font-family: 'Bitstream Vera Sans Mono','Courier',monospace;
-  margin: 0 2px;
-   padding: 0 5px; 
-   border: 1px solid #EAEAEA; 
-   background-color: #F8F8F8; 
-   border-radius: 3px; 
-}
-
-
-pre > code {
-  margin: 0;
-  padding: 0;
-  white-space: pre;
-  border: none;
-  background: transparent;
-}
-
 .hp-unselectable {
    -moz-user-select: -moz-none;
    -khtml-user-select: none;
