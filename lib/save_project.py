@@ -8,7 +8,7 @@ from flask import send_from_directory
 import os
 
 
-app = Flask(__name__, static_folder='..', static_url_path='/static')
+app = Flask(__name__, static_folder='..', static_url_path='/annotatrix')
 
 
 if __name__ == '__main__':
