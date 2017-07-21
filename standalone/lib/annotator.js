@@ -143,7 +143,19 @@ function nextSenSent() {
 
 //Export Corpora to file
 function exportCorpora() {
+    var finalcontent = getTreebank();
             
+    var link = document.createElement('a');
+    var mimeType = 'text/plain';
+
+    link.setAttribute('download', FILENAME);
+    link.setAttribute('href', 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(finalcontent));
+    link.click();
+}
+
+
+function getTreebank() {
+    /* Returns the current treebank. */
     RESULTS[CURRENTSENTENCE] = document.getElementById("indata").value;
     var finalcontent = "";
     for(var x=0; x < RESULTS.length; x++){
@@ -152,13 +164,7 @@ function exportCorpora() {
             finalcontent = finalcontent + "\n\n";
         }
     }
-            
-    var link = document.createElement('a');
-    var mimeType = 'text/plain';
-
-    link.setAttribute('download', FILENAME);
-    link.setAttribute('href', 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(finalcontent));
-    link.click();
+    return finalcontent;
 }
         
 //KeyUp function
@@ -206,6 +212,24 @@ function detectFormat(content) {
     }
 
     return FORMAT
+}
+
+
+function guid() {
+    /* Note: such values are not genuine GUIDs */
+    function s4() {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    }
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
+}
+
+
+function saveOnServer(evt) {
+    var finalcontent = getTreebank();
+    location.href = location.href + "?treebank_id=" + guid();
 }
 
 
