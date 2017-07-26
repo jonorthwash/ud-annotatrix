@@ -229,7 +229,28 @@ function guid() {
 
 function saveOnServer(evt) {
     var finalcontent = getTreebank();
-    location.href = location.href + "?treebank_id=" + guid();
+
+    // editing url to create a unique link
+    // if (!location.search){
+    //     location.search = "treebank_id=" + guid();
+    // } else if (!location.search.includes("treebank_id")) {
+    //     location.search = location.search + "&treebank_id=" + guid();
+    // };
+    
+
+    // sending data on server
+    var treebank_id = location.search.split('&')
+    $.ajax({
+        type: "POST",
+        url: '/',
+        data: {
+            "content": finalcontent
+        },
+        dataType: "json",
+        success: function(){
+            console.log('Load was performed.');
+        }
+    });
 }
 
 
