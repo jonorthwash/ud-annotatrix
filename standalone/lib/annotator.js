@@ -30,7 +30,7 @@ function main() {
         fetch('running').then(
             function(data) {
                 console.log("Response from server, status: " + data["status"]);
-                redefineFunctions();
+                redefineHandlers();
             });
 
         $("#indata").keyup(drawTree);
@@ -245,22 +245,24 @@ function saveOnServer(evt) {
     
 
     // sending data on server
-    var treebank_id = location.search.split('&')
+    var treebank_id = location.href.split('/')[4];
     $.ajax({
         type: "POST",
-        url: '/',
+        url: '/save',
         data: {
-            "content": finalcontent
+            "content": finalcontent,
+            "treebank_id": treebank_id
         },
         dataType: "json",
-        success: function(){
+        success: function(data){
             console.log('Load was performed.');
+            console.log(data);
         }
     });
 }
 
 
-function redefineFunctions() {
+function redefineHandlers() {
     // body...
 }
 

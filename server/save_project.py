@@ -21,15 +21,16 @@ if not os.path.exists(PATH_TO_CORPORA):
     os.mkdir(PATH_TO_CORPORA)
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/save', methods=['GET', 'POST'])
 def parse_request():
     data = 'hello world'
     if request.form:
         data = request.form['content']
-        if request.args and request.args['treebank_id']:
-            treebank_id = request.args['treebank_id']
-        else:
-            treebank_id = str(uuid.uuid4())
+        treebank_id = request.form['treebank_id']
+        # if request.args and request.args['treebank_id']:
+        #     treebank_id = request.args['treebank_id']
+        # else:
+        #     treebank_id = str(uuid.uuid4())
 
         with open(PATH_TO_CORPORA + '/' + treebank_id, 'w') as f:
             f.write(data)
@@ -45,12 +46,8 @@ def running():
 
 @app.route('/annotatrix/annotator.html', methods=['GET', 'POST'])
 def annotatrix():
-    if request.args and request.args['treebank_id']:
-        return redirect(url_for('corpus_page', treebank_id=request.args['treebank_id']))
-    # else:
-    #     treebank_id = str(uuid.uuid4())
-    #     return redirect(url_for('corpus_page', treebank_id=treebank_id))
-    return send_from_directory('../standalone', 'annotator.html')
+    treebank_id = str(uuid.uuid4())
+    return redirect(url_for('corpus_page', treebank_id=treebank_id))
 
 
 @app.route('/annotatrix', methods=['GET', 'POST'])
@@ -58,10 +55,10 @@ def annotatrix_index():
     return redirect(url_for('annotatrix'))
 
 
-@app.route('/annotatrix/corpus/<treebank_id>')
+@app.route('/annotatrix/<treebank_id>')
 def corpus_page(treebank_id):
     print(treebank_id)
-    return '<html>hello world</html>'
+    return send_from_directory('../standalone', 'annotator.html')
 
 
 if __name__ == '__main__':
