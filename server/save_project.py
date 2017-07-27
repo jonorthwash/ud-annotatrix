@@ -22,8 +22,7 @@ if not os.path.exists(PATH_TO_CORPORA):
 
 
 @app.route('/save', methods=['GET', 'POST'])
-def parse_request():
-    data = 'hello world'
+def save_corpus():
     if request.form:
         data = request.form['content']
         treebank_id = request.form['treebank_id']
@@ -31,7 +30,16 @@ def parse_request():
         with open(PATH_TO_CORPORA + '/' + treebank_id, 'w') as f:
             f.write(data)
         return jsonify({'id': treebank_id, 'content': data})
+    return jsonify()
 
+
+@app.route('/load', methods=['GET', 'POST'])
+def load_corpus():
+    treebank_id = request.form['treebank_id']
+    if os.path.exists(PATH_TO_CORPORA + '/' + treebank_id):
+        with open(PATH_TO_CORPORA + '/' + treebank_id) as f:
+            corpus = f.read()
+        return jsonify({'content': corpus})
     return jsonify()
 
 
@@ -53,7 +61,6 @@ def annotatrix_index():
 
 @app.route('/annotatrix/<treebank_id>')
 def corpus_page(treebank_id):
-    print(treebank_id)
     return send_from_directory('../standalone', 'annotator.html')
 
 

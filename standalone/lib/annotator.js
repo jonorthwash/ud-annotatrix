@@ -30,6 +30,7 @@ function main() {
         fetch('running').then(
             function(data) {
                 console.log("Response from server, status: " + data["status"]);
+                getCorpusData();
                 redefineHandlers();
             });
 
@@ -256,7 +257,6 @@ function saveOnServer(evt) {
         dataType: "json",
         success: function(data){
             console.log('Load was performed.');
-            console.log(data);
         }
     });
 }
@@ -265,5 +265,24 @@ function saveOnServer(evt) {
 function redefineHandlers() {
     // body...
 }
+
+
+function getCorpusData() {
+    var treebank_id = location.href.split('/')[4];
+    $.ajax({
+        type: "POST",
+        url: "/load",
+        data: {"treebank_id": treebank_id},
+        dataType: "json",
+        success: loadData
+    });
+}
+
+
+function loadData(data) {
+    CONTENTS = data["content"];
+    loadDataInIndex();
+}
+
 
 main()
