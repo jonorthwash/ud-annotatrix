@@ -27,10 +27,6 @@ def parse_request():
     if request.form:
         data = request.form['content']
         treebank_id = request.form['treebank_id']
-        # if request.args and request.args['treebank_id']:
-        #     treebank_id = request.args['treebank_id']
-        # else:
-        #     treebank_id = str(uuid.uuid4())
 
         with open(PATH_TO_CORPORA + '/' + treebank_id, 'w') as f:
             f.write(data)
