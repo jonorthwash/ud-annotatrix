@@ -27,6 +27,12 @@ function main() {
 
     head.ready(function() {
 
+        fetch('running').then(
+            function(data) {
+                console.log("Response from server, status: " + data["status"]);
+                redefineFunctions();
+            });
+
         $("#indata").keyup(drawTree);
         loadFromUrl();
     });
@@ -253,5 +259,9 @@ function saveOnServer(evt) {
     });
 }
 
+
+function redefineFunctions() {
+    // body...
+}
 
 main()

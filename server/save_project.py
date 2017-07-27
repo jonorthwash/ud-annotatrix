@@ -26,9 +26,20 @@ def parse_request():
     data = 'hello world'
     if request.form:
         data = request.form['content']
-        treebank_id = str(uuid.uuid4())
+        if request.args and request.args['treebank_id']:
+            treebank_id = request.args['treebank_id']
+        else:
+            treebank_id = str(uuid.uuid4())
+
         with open(PATH_TO_CORPORA + '/' + treebank_id, 'w') as f:
             f.write(data)
+        return jsonify({'id': treebank_id, 'content': data})
+
+    return jsonify()
+
+
+@app.route('/annotatrix/running', methods=['GET'])
+def running():
     return jsonify()
 
 
@@ -36,9 +47,9 @@ def parse_request():
 def annotatrix():
     if request.args and request.args['treebank_id']:
         return redirect(url_for('corpus_page', treebank_id=request.args['treebank_id']))
-    else:
-        treebank_id = str(uuid.uuid4())
-        return redirect(url_for('corpus_page', treebank_id=treebank_id))
+    # else:
+    #     treebank_id = str(uuid.uuid4())
+    #     return redirect(url_for('corpus_page', treebank_id=treebank_id))
     return send_from_directory('../standalone', 'annotator.html')
 
 
