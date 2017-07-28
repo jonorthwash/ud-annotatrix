@@ -63,16 +63,27 @@ function selectArc() {
     Activated when an arc is selected. Changes style and activates arcKeyUp.
     */
 
-    // visual effects
-    this.addClass("selected");
+    // if the user clicked an activated node
+    if (this.hasClass("selected")) {
+        this.removeClass("selected");
 
-    // getting info about nodes
-    var sourceNodeId = this.data("source");
-    var destNodeId = this.data("target");
+        // removing visual effects for destNode
+        var destNodeId = this.data("target");
+        cy.$("#" + destNodeId).removeClass("arc-selected");
 
-    // another ugly piece of code for visual effects
-    // cy.$("#" + sourceNodeId).addClass("arc-selected");
-    cy.$("#" + destNodeId).addClass("arc-selected");
+    } else {
+        this.addClass("selected");
+
+        // getting info about nodes
+        var destNodeId = this.data("target");
+
+        // visual effects for destNode
+        cy.$("#" + destNodeId).addClass("arc-selected");
+    }
+
+
+
+
 
     // for identifying the node
     cy.$("#" + destNodeId).data("state", "arc-dest");
