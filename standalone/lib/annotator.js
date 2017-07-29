@@ -42,7 +42,7 @@ function main() {
 
 
 function addHandlers() {
-    cy.on('click', 'node', drawArcs);
+    cy.on('click', 'node.wf', drawArcs);
     cy.on('click', 'edge', selectArc);
 }
 
