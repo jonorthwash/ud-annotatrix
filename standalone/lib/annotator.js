@@ -31,7 +31,6 @@ function main() {
             function(data) {
                 console.log("Response from server, status: " + data["status"]);
                 getCorpusData();
-                redefineHandlers();
             });
 
         $("#indata").keyup(drawTree);
@@ -259,11 +258,6 @@ function saveOnServer(evt) {
             console.log('Load was performed.');
         }
     });
-}
-
-
-function redefineHandlers() {
-    // body...
 }
 
 
