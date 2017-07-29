@@ -81,10 +81,6 @@ function selectArc() {
         cy.$("#" + destNodeId).addClass("arc-selected");
     }
 
-
-
-
-
     // for identifying the node
     cy.$("#" + destNodeId).data("state", "arc-dest");
 
@@ -162,4 +158,11 @@ function editDeprel() {
     // rewriting the tree
     $("#indata").val(sent.serial);
     drawTree();   
+}
+
+
+function changePOS() {
+    var x = this.position("x");
+    var y = this.position("y");
+    console.log("x: " + x + " y: " + y);
 }
