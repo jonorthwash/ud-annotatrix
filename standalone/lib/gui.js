@@ -162,8 +162,21 @@ function editDeprel() {
 
 
 function changePOS() {
-    var x = this.position("x");
-    var y = this.position("y");
+    var x = this.relativePosition("x");
+    var y = this.relativePosition("y");
     console.log("x: " + x + " y: " + y);
-    console.log('height: ' + this.height());
+
+    var width = this.width();
+    console.log('width: ' + this.width());
+
+    $("#mute").addClass("activated");
+    var inp = $("<input id='POS'>")
+        .css("position", "absolute")
+        .css("bottom", y)
+        .css("left", x)
+        .css("z-index", 999);
+
+    $("#mute").append(inp);
+
+    $("#POS").focus();
 }
