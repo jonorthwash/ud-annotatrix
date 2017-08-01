@@ -165,4 +165,5 @@ function changePOS() {
     var x = this.position("x");
     var y = this.position("y");
     console.log("x: " + x + " y: " + y);
+    console.log('height: ' + this.height());
 }

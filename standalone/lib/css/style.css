@@ -63,6 +63,15 @@ span.tt {
   width: 1500px;
   height: 300px;
   display: block;
+}
+
+.activated#mute {
+  position: absolute;
+  width: 1500px;
+  height: 300px;
+  display: block;
+  background-color: white;
+  opacity: 0.7;
   z-index: 999;
 }
 
