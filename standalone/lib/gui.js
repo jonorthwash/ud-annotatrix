@@ -170,13 +170,12 @@ function changePOS() {
     console.log('width: ' + this.width());
 
     $("#mute").addClass("activated");
-    var inp = $("<input id='POS'>")
-        .css("position", "absolute")
-        .css("bottom", y)
-        .css("left", x)
+    $("#POS").css("display", "inline")
+        .css("bottom", 50)
+        .css("left", 50)
         .css("z-index", 999);
 
-    $("#mute").append(inp);
-
     $("#POS").focus();
+
+
 }
