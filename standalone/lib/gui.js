@@ -7,6 +7,7 @@ This scripts contains makes support for graphical editing.
 var ACTIVE = "#2653c9";
 var NORMAL = "#7fa2ff";
 var FANCY = "#cc22fc";
+var POS_COLOR = "#afa2ff";
 var DEL_KEY = 46;
 var BACKSPACE = 8;
 var D = 68;
@@ -164,19 +165,21 @@ function editDeprel() {
 function changePOS() {
     var x = this.renderedPosition("x");
     var y = this.relativePosition("y");
-    console.log("x: " + x + " y: " + y);
 
     var width = this.renderedWidth();
     var height = this.renderedHeight();
-    console.log('width: ' + width + 'height: ' + height);
 
     $("#mute").addClass("activated");
     $("#POS").css("display", "inline")
-        .css("bottom", y - parseInt(height/2)*1.1)
+        // .css("bottom", y - parseInt(height*1.75))
+        .css("bottom", y - parseInt(height*0.55))
         .css("left", x - parseInt(width/2)*1.1)
-        .css("height", height*0.9)
-        .css("width", width*0.9)
-        .css("z-index", 999);
+        .css("height", height)
+        .css("width", width)
+        .css("border", "2px solid black")
+        .css("background-color", POS_COLOR)
+        .css("color", "black")
+        .attr("placeholder", this.data("pos"));
 
     $("#POS").focus();
 
