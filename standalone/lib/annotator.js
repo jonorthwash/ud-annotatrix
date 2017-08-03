@@ -45,12 +45,6 @@ function addHandlers() {
     cy.on('click', 'node.wf', drawArcs);
     cy.on('click', 'node.pos', changePOS);
     cy.on('click', 'edge', selectArc);
-    $("#POS")[0].addEventListener("blur", qwerty);
-}
-
-
-function qwerty() {
-    console.log("out of focus");
 }
 
 
