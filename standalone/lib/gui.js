@@ -166,15 +166,16 @@ function changePOS() {
     var y = this.relativePosition("y");
     console.log("x: " + x + " y: " + y);
 
-    var width = this.width();
-    console.log('width: ' + this.width());
+    var width = this.renderedWidth();
+    var height = this.renderedHeight();
+    console.log('width: ' + width + 'height: ' + height);
 
     $("#mute").addClass("activated");
     $("#POS").css("display", "inline")
-        .css("bottom", y - 10 + "px")
-        .css("left", x - width/2 + "px")
-        .css("height", 20 + "px")
-        .css("width", width)
+        .css("bottom", y - parseInt(height/2)*1.1)
+        .css("left", x - parseInt(width/2)*1.1)
+        .css("height", height*0.9)
+        .css("width", width*0.9)
         .css("z-index", 999);
 
     $("#POS").focus();
