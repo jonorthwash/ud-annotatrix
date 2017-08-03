@@ -174,7 +174,7 @@ function getTreebank() {
     return finalcontent;
 }
         
-//KeyUp function
+
 function drawTree() {
 
     var content = $("#indata").val();
@@ -184,7 +184,6 @@ function drawTree() {
 
     if (FORMAT == "CoNLL-U") {
         conlluDraw(content);
-        // setTimeout(addHandlers, 500);
         addHandlers();
     }
 
