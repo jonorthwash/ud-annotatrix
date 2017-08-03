@@ -21,6 +21,7 @@ function drawArcs(evt) {
     // if the user clicked an activated node
     if (this.hasClass("activated")) {
         this.removeClass("activated");
+        this.removeClass("retokenize");
     } else {
         // look for other activated nodes
         var actNode = cy.$(".activated");
@@ -97,6 +98,8 @@ function keyUpClassifier(key) {
     var inp = $(".activated#mute");
     // looking if some wf node is selected
     var wf = cy.$("node.wf.activated");
+    // looking for a node to be tokenised
+    var toBretokenized = cy.$("node.wf.activated.retokenize");
 
     if (selArcs.length) {
         console.log('selected');
@@ -113,12 +116,13 @@ function keyUpClassifier(key) {
         if (key.which == ENTER) {
             writePOS();
         }
+    } else if (toBretokenized.length == 1) {
+        retokenize(key);
     } else if (wf.length == 1) {
         if (key.which == T) {
-            console.log("make tokenisation");
+            wf.addClass("retokenize");
         }
     }
-
 
 }
 
@@ -215,4 +219,19 @@ function writePOS() {
     sent.tokens[nodeId].upostag = posInp; // TODO: think about xpostag changing support
     $("#indata").val(sent.serial);
     drawTree();
+}
+
+
+function retokenize(key) {
+    var sym = String.fromCharCode(key.keyCode);
+    console.log(sym);
+
+    var node = cy.$(".retokenize");
+    var form = node.data("form");
+
+    if (form.includes(sym)) {
+        console.log("YEAH!");
+    }
+
+    console.log("key: " + key.keyCode);
 }

@@ -119,21 +119,21 @@ function simpleIdSorting(n1, n2) {
 
 // is defined in a js file, because fetch doesn't work offline in chrome
 var CY_STYLE = [{
-  "selector": "node",
-  "style": {
-    "height": 20,
-    "width": "data(length)",
-    "background-color": NORMAL,
-    "shape": "roundrectangle",
-    "text-valign": "center",
-    "text-halign": "center",
-    "border-color": "#000",
-    "border-width": 1
-  }
+    "selector": "node",
+    "style": {
+        "height": 20,
+        "width": "data(length)",
+        "background-color": NORMAL,
+        "shape": "roundrectangle",
+        "text-valign": "center",
+        "text-halign": "center",
+        "border-color": "#000",
+        "border-width": 1
+    }
 }, {
-  "selector": "node.wf",
-  "style": {
-    "label": "data(form)"
+    "selector": "node.wf",
+    "style": {
+        "label": "data(form)"
   }
 }, {
     "selector": "node.wf.arc-selected",
@@ -144,6 +144,12 @@ var CY_STYLE = [{
     "selector": "node.wf.activated",
     "style": {
         "background-color": ACTIVE
+    }
+}, {
+    "selector": "node.wf.activated.retokenize",
+    "style": {
+        "background-color": POS_COLOR,
+        "border-color": FANCY
     }
 }, {
   "selector": "node.pos",
