@@ -162,7 +162,7 @@ function editDeprel() {
 
 
 function changePOS() {
-    var x = this.relativePosition("x");
+    var x = this.renderedPosition("x");
     var y = this.relativePosition("y");
     console.log("x: " + x + " y: " + y);
 
@@ -171,11 +171,12 @@ function changePOS() {
 
     $("#mute").addClass("activated");
     $("#POS").css("display", "inline")
-        .css("bottom", 50)
-        .css("left", 50)
+        .css("bottom", y - 10 + "px")
+        .css("left", x - width/2 + "px")
+        .css("height", 20 + "px")
+        .css("width", width)
         .css("z-index", 999);
 
     $("#POS").focus();
-
 
 }
