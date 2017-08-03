@@ -175,6 +175,8 @@ function editDeprel() {
 
 
 function changePOS() {
+    this.addClass("input");
+
     var x = this.renderedPosition("x");
     var y = this.relativePosition("y");
 
@@ -190,13 +192,20 @@ function changePOS() {
         .css("border", "2px solid black")
         .css("background-color", POS_COLOR)
         .css("color", "black")
-        .attr("placeholder", this.data("pos"));
+        .attr("value", this.data("pos"));
 
     $("#POS").focus();
 }
 
 
 function writePOS() {
-    var posInp = $("#POS");
-    console.log(posInp.val());
-} 
+    var posInp = $("#POS").val();
+    var activeNode = cy.$(".input");
+    var nodeId = activeNode.id().slice(2) - 1;
+
+    var sent = new conllu.Sentence();
+    sent.serial = $("#indata").val();
+    sent.tokens[nodeId].upostag = posInp; // TODO: think about xpostag changing support
+    $("#indata").val(sent.serial);
+    drawTree();
+}
