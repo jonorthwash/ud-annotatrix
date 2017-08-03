@@ -242,15 +242,7 @@ function guid() {
 
 function saveOnServer(evt) {
     var finalcontent = getTreebank();
-
-    // editing url to create a unique link
-    // if (!location.search){
-    //     location.search = "treebank_id=" + guid();
-    // } else if (!location.search.includes("treebank_id")) {
-    //     location.search = location.search + "&treebank_id=" + guid();
-    // };
     
-
     // sending data on server
     var treebank_id = location.href.split('/')[4];
     $.ajax({
