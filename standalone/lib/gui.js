@@ -13,6 +13,7 @@ var BACKSPACE = 8;
 var ENTER = 13;
 var D = 68;
 var I = 73;
+var T = 84;
 
 function drawArcs(evt) {
     /* Called when a node is clicked. */
@@ -94,6 +95,8 @@ function keyUpClassifier(key) {
     var selArcs = cy.$("edge.dependency.selected");
     // looking if it is in an input mode
     var inp = $(".activated#mute");
+    // looking if some wf node is selected
+    var wf = cy.$("node.wf.activated");
 
     if (selArcs.length) {
         console.log('selected');
@@ -109,6 +112,10 @@ function keyUpClassifier(key) {
     } else if (inp.length) {
         if (key.which == ENTER) {
             writePOS();
+        }
+    } else if (wf.length == 1) {
+        if (key.which == T) {
+            console.log("make tokenisation");
         }
     }
 

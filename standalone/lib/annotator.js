@@ -31,7 +31,7 @@ function main() {
             function(data) {
                 console.log("Response from server, status: " + data["status"]);
                 getCorpusData();
-            });
+            }); // TODO: to get rid of the error, read about promisses
 
         $("#indata").keyup(drawTree);
         loadFromUrl();
