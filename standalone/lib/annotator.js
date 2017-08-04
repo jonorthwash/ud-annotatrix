@@ -191,9 +191,6 @@ function drawTree() {
         var inpSupport = $("<div id=\"mute\"><input type=\"text\" id=\"POS\"/>"
                            + "<input type=\"text\" id=\"wf\"/></div>");
         $("#cy").prepend(inpSupport);
-        console.log("Drawing...");
-        console.log($("#POS"));
-        
         addHandlers();
     }
 

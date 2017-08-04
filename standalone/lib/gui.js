@@ -193,7 +193,6 @@ function editDeprel() {
 
 function changePOS() {
     this.addClass("input");
-    console.log($("#POS"));
 
     var x = this.renderedPosition("x");
     var y = this.relativePosition("y");
@@ -231,10 +230,7 @@ function writePOS(posInp) {
         .css("display", "none")
         .attr("value", "");
 
-    console.log($("#POS"));
     drawTree();
-    console.log("Finally...")
-    console.log($("#POS"));
 }
 
 
