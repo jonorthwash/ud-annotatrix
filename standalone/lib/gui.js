@@ -116,7 +116,7 @@ function keyUpClassifier(key) {
         }
     } else if (posInp.length) {
         if (key.which == ENTER) {
-            writePOS();
+            writePOS(posInp);
         }
     } else if (wfInp.length) {
         if (key.which == ENTER) {
@@ -193,6 +193,7 @@ function editDeprel() {
 
 function changePOS() {
     this.addClass("input");
+    console.log($("#POS"));
 
     var x = this.renderedPosition("x");
     var y = this.relativePosition("y");
@@ -216,16 +217,24 @@ function changePOS() {
 }
 
 
-function writePOS() {
-    var posInp = $("#POS").val();
+function writePOS(posInp) {
     var activeNode = cy.$(".input");
     var nodeId = activeNode.id().slice(2) - 1;
 
     var sent = new conllu.Sentence();
     sent.serial = $("#indata").val();
-    sent.tokens[nodeId].upostag = posInp; // TODO: think about xpostag changing support
+    sent.tokens[nodeId].upostag = posInp.val(); // TODO: think about xpostag changing support
     $("#indata").val(sent.serial);
+
+    $("#mute").removeClass("activated");
+    $("#POS").removeClass("activated")
+        .css("display", "none")
+        .attr("value", "");
+
+    console.log($("#POS"));
     drawTree();
+    console.log("Finally...")
+    console.log($("#POS"));
 }
 
 
