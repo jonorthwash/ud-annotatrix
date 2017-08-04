@@ -120,7 +120,7 @@ function keyUpClassifier(key) {
         }
     } else if (wfInp.length) {
         if (key.which == ENTER) {
-            writeWF();
+            writeWF(wfInp);
         }
     } else if (toBretokenized.length == 1) {
         retokenize(key); // developing, not ready yet
@@ -193,16 +193,17 @@ function editDeprel() {
 
 function changeInp() {
 
-    var selector;
-    var color;
+    var selector, color, label;
 
     // defining which part of the tree needs to be changed
     if (this.hasClass("pos")) {
         selector = "#pos";
         color = POS_COLOR;
+        label = "pos";
     } else if (this.hasClass("wf")) {
         selector = "#wf";
         color = NORMAL;
+        label = "form";
     }
 
     this.addClass("input");
@@ -214,6 +215,7 @@ function changeInp() {
     var height = this.renderedHeight();
 
     $("#mute").addClass("activated");
+    console.log($(selector));
     $(selector).css("display", "inline")
         .css("bottom", y - parseInt(height*0.55))
         .css("left", x - parseInt(width/2)*1.1)
@@ -222,7 +224,7 @@ function changeInp() {
         .css("border", "2px solid black")
         .css("background-color", color)
         .css("color", "black")
-        .attr("value", this.data("pos"))
+        .attr("value", this.data(label))
         .addClass("activated");
 
     $(selector).focus();
@@ -242,6 +244,11 @@ function writePOS(posInp) {
 }
 
 
+function writeWF(wfInp) {
+    console.log("In writeWF. There's nothing more yet.");
+}
+
+
 function retokenize(key) {
     var sym = String.fromCharCode(key.keyCode);
     console.log(sym);
@@ -254,9 +261,4 @@ function retokenize(key) {
     }
 
     console.log("key: " + key.keyCode);
-}
-
-
-function writeWF() {
-    console.log("In writeWF. There's nothing more yet.");
 }
