@@ -225,11 +225,6 @@ function writePOS(posInp) {
     sent.tokens[nodeId].upostag = posInp.val(); // TODO: think about xpostag changing support
     $("#indata").val(sent.serial);
 
-    $("#mute").removeClass("activated");
-    $("#POS").removeClass("activated")
-        .css("display", "none")
-        .attr("value", "");
-
     drawTree();
 }
 
