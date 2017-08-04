@@ -95,7 +95,7 @@ function keyUpClassifier(key) {
     // looking if there are selected arcs
     var selArcs = cy.$("edge.dependency.selected");
     // looking if there is a POS label to be modified
-    var posInp = $(".activated#POS");
+    var posInp = $(".activated#pos");
     // looking if there is a wf label to be modified
     var wfInp = $(".activated#wf");
     // looking if some wf node is selected
@@ -191,7 +191,20 @@ function editDeprel() {
 }
 
 
-function changePOS() {
+function changeInp() {
+
+    var selector;
+    var color;
+
+    // defining which part of the tree needs to be changed
+    if (this.hasClass("pos")) {
+        selector = "#pos";
+        color = POS_COLOR;
+    } else if (this.hasClass("wf")) {
+        selector = "#wf";
+        color = NORMAL;
+    }
+
     this.addClass("input");
 
     var x = this.renderedPosition("x");
@@ -201,18 +214,18 @@ function changePOS() {
     var height = this.renderedHeight();
 
     $("#mute").addClass("activated");
-    $("#POS").css("display", "inline")
+    $(selector).css("display", "inline")
         .css("bottom", y - parseInt(height*0.55))
         .css("left", x - parseInt(width/2)*1.1)
         .css("height", height)
         .css("width", width)
         .css("border", "2px solid black")
-        .css("background-color", POS_COLOR)
+        .css("background-color", color)
         .css("color", "black")
         .attr("value", this.data("pos"))
         .addClass("activated");
 
-    $("#POS").focus();
+    $(selector).focus();
 }
 
 
