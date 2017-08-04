@@ -33,6 +33,7 @@ function main() {
                 getCorpusData();
             }); // TODO: to get rid of the error, read about promisses
 
+        $(document).keyup(keyUpClassifier); // TODO: causes errors if called before the cy is initialised
         $("#indata").keyup(drawTree);
         loadFromUrl();
     });
@@ -42,10 +43,10 @@ function main() {
 
 
 function addHandlers() {
-    $(document).keyup(keyUpClassifier);
     cy.on('click', 'node.wf', drawArcs);
     cy.on('click', 'node.pos', changePOS);
     cy.on('click', 'edge', selectArc);
+    cy.$('node.wf').on('cxttapend', function(e){console.log("AAA", e)}); 
 }
 
 
