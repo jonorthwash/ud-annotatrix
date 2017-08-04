@@ -94,8 +94,10 @@ function keyUpClassifier(key) {
 
     // looking if there are selected arcs
     var selArcs = cy.$("edge.dependency.selected");
-    // looking if it is in an input mode
-    var inp = $(".activated#mute");
+    // looking if there is a POS label to be modified
+    var posInp = $(".activated#POS");
+    // looking if there is a wf label to be modified
+    var wfInp = $(".activated#wf");
     // looking if some wf node is selected
     var wf = cy.$("node.wf.activated");
     // looking for a node to be tokenised
@@ -112,12 +114,16 @@ function keyUpClassifier(key) {
         } else if (key.which == I) {
             editDeprel();
         }
-    } else if (inp.length) {
+    } else if (posInp.length) {
         if (key.which == ENTER) {
             writePOS();
         }
+    } else if (wfInp.length) {
+        if (key.which == ENTER) {
+            writeWF();
+        }
     } else if (toBretokenized.length == 1) {
-        retokenize(key);
+        retokenize(key); // developing, not ready yet
     } else if (wf.length == 1) {
         if (key.which == T) {
             wf.addClass("retokenize");
@@ -203,7 +209,8 @@ function changePOS() {
         .css("border", "2px solid black")
         .css("background-color", POS_COLOR)
         .css("color", "black")
-        .attr("value", this.data("pos"));
+        .attr("value", this.data("pos"))
+        .addClass("activated");
 
     $("#POS").focus();
 }
@@ -234,4 +241,9 @@ function retokenize(key) {
     }
 
     console.log("key: " + key.keyCode);
+}
+
+
+function writeWF() {
+    console.log("In writeWF. There's nothing more yet.");
 }
