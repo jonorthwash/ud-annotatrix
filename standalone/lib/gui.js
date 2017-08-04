@@ -207,13 +207,12 @@ function changeInp() {
     }
 
     this.addClass("input");
-
     var x = this.renderedPosition("x");
     var y = this.relativePosition("y");
-
     var width = this.renderedWidth();
     var height = this.renderedHeight();
 
+    // TODO: font size
     $("#mute").addClass("activated");
     console.log($(selector));
     $(selector).css("display", "inline")
@@ -245,7 +244,27 @@ function writePOS(posInp) {
 
 
 function writeWF(wfInp) {
-    console.log("In writeWF. There's nothing more yet.");
+    var activeNode = cy.$(".input");
+    var nodeId = activeNode.id().slice(2) - 1;
+
+    var newToken = wfInp.val();
+    if (newToken.includes(" ")) {
+        console.log("going to retokenize it");
+    } else {
+
+        // TODO: this almost copies writePOS. DRY.
+        var sent = new conllu.Sentence();
+        sent.serial = $("#indata").val();
+        sent.tokens[nodeId].form = wfInp.val();
+        $("#indata").val(sent.serial);
+
+        drawTree();
+    }
+}
+
+
+function changeTokenization() {
+    // body...
 }
 
 
