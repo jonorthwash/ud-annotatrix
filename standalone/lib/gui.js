@@ -249,13 +249,13 @@ function writeWF(wfInp) {
 
     var newToken = wfInp.val();
     if (newToken.includes(" ")) {
-        console.log("going to retokenize it");
+        changeTokenization(newToken, nodeId);
     } else {
 
         // TODO: this almost copies writePOS. DRY.
         var sent = new conllu.Sentence();
         sent.serial = $("#indata").val();
-        sent.tokens[nodeId].form = wfInp.val();
+        sent.tokens[nodeId].form = newToken;
         $("#indata").val(sent.serial);
 
         drawTree();
@@ -263,8 +263,34 @@ function writeWF(wfInp) {
 }
 
 
-function changeTokenization() {
-    // body...
+function changeTokenization(newToken, nodeId) {
+    var newTokens = newToken.split(" ");
+
+    var sent = new conllu.Sentence(); // DRY
+    sent.serial = $("#indata").val();
+    sent.tokens[nodeId].form = newTokens[0];
+
+
+    // renumbering
+    var rest = sent.tokens.slice(nodeId);
+    rest = rest.map(function(tok){
+        tok.id ++;
+    });
+
+    // head correction after indices shift
+    var start = sent.tokens.slice(0, nodeId + 1);
+    start = start.map(function(tok){
+        if (tok.head > nodeId + 1) {
+            tok.head ++;
+        };
+    });
+    
+    // rewriting sent
+    sent.tokens = start.concat(rest);
+    console.log("ok"); // ломается после этого
+
+    $("#indata").val(sent.serial);
+    drawTree();
 }
 
 
