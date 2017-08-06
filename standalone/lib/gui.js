@@ -269,9 +269,9 @@ function changeTokenization(oldToken, nodeId) {
     sent.serial = $("#indata").val();
 
     $.each(sent.tokens, function(n, tok){
-        if (n <= nodeId){
+        if (tok.head > nodeId){
             tok.head = +tok.head + 1; // head correction after indices shift
-        } else {
+        } else if (n > nodeId) {
             tok.id = tok.id + 1; // renumbering
         };
     });
