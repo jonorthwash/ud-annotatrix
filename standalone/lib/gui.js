@@ -257,7 +257,6 @@ function writeWF(wfInp) {
         sent.serial = $("#indata").val();
         sent.tokens[nodeId].form = newToken;
         $("#indata").val(sent.serial);
-
         drawTree();
     }
 }
@@ -274,11 +273,13 @@ function changeTokenization(oldToken, nodeId) {
             tok.head = +tok.head + 1; // head correction after indices shift
         } else {
             tok.id = tok.id + 1; // renumbering
-        }
+        };
     });
 
     // changing the first part
     sent.tokens[nodeId].form = newTokens[0];
+
+    // creating inserting the second part
     var restTok = formNewToken({"id": nodeId + 2, "form": newTokens[1]});
     sent.tokens.splice(nodeId + 1, 0, restTok);
     
