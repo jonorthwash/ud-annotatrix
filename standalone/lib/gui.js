@@ -263,61 +263,18 @@ function writeWF(wfInp) {
 }
 
 
-function changeTokenization(newToken, nodeId) {
-    var newTokens = newToken.split(" ");
-
-    var sent = new conllu.Sentence(); // DRY
-    sent.serial = $("#indata").val();
-    sent.tokens[nodeId].form = newTokens[0];
-
-
-    // renumbering
-    var rest = sent.tokens.slice(nodeId + 1);
-    rest = rest.map(function(tok){
-        console.log("before: " + tok.id);
-        tok.id = tok.id + 1;
-        console.log("after: " + tok.id);
-    });
-
-    // head correction after indices shift
-    var start = sent.tokens.slice(0, nodeId + 1);
-    start = start.map(function(tok){
-        if (tok.head > nodeId + 1) {
-            tok.head = +tok.head + 1;
-            console.log(tok.head);
-        };
-    });
-    start.push(newTokens[1]);
-    
-    // rewriting sent
-    sent.tokens = start.concat(rest);
-    console.log("ok"); // ломается после этого
-
-    $("#indata").val(sent.serial);
-
-    console.log("sill ok");
-    drawTree();
-}
-
-
-
-function changeTokenization1(newToken, nodeId) {
-    var newTokens = newToken.split(" ");
+function changeTokenization(oldToken, nodeId) {
+    var newTokens = oldToken.split(" ");
 
     var sent = new conllu.Sentence(); // DRY
     sent.serial = $("#indata").val();
 
     $.each(sent.tokens, function(n, tok){
-
-        // head correction after indices shift
         if (n <= nodeId){
-            tok.head = +tok.head + 1;
-
-        // renumbering
+            tok.head = +tok.head + 1; // head correction after indices shift
         } else {
-            tok.id = tok.id + 1;
+            tok.id = tok.id + 1; // renumbering
         }
-
     });
 
     // changing the first part
@@ -328,11 +285,8 @@ function changeTokenization1(newToken, nodeId) {
     restTok.form = newTokens[1];
     sent.tokens.splice(nodeId + 1, 0, restTok);
     
-    console.log("ok"); // ломается после этого
-
     $("#indata").val(sent.serial);
 
-    console.log("sill ok");
     drawTree();
 }
 
