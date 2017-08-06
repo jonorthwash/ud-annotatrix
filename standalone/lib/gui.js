@@ -52,8 +52,7 @@ function writeArc(sourceNode, destNode) {
     toConllu();
 
     // replace the old line of destNode with the one with HEAD
-    var sent = new conllu.Sentence();
-    sent.serial = $("#indata").val();
+    var sent = buildSent();
     sent.tokens[destIndex - 1].head = Number(sourceIndex);
     $("#indata").val(sent.serial);
 
@@ -137,8 +136,7 @@ function removeArc(argument) {
     /* Removes all the selected edges. */
 
     var destNodes = cy.$("node[state='arc-dest']");
-    var sent = new conllu.Sentence();
-    sent.serial = $("#indata").val();
+    var sent = buildSent();
 
     // support for multiple arcs
     $.each(destNodes, function(i, node) {
@@ -169,8 +167,7 @@ function moveArc() {
 
 function editDeprel() {
     // building the CoNLL-U sent
-    var sent = new conllu.Sentence();
-    sent.serial = $("#indata").val();
+    var sent = buildSent();
 
     // getting the deprel and the head
     // var actNode = cy.$(".activated");
@@ -233,8 +230,7 @@ function writePOS(posInp) {
     var activeNode = cy.$(".input");
     var nodeId = activeNode.id().slice(2) - 1;
 
-    var sent = new conllu.Sentence();
-    sent.serial = $("#indata").val();
+    var sent = buildSent();
     sent.tokens[nodeId].upostag = posInp.val(); // TODO: think about xpostag changing support
     $("#indata").val(sent.serial);
 
@@ -252,8 +248,7 @@ function writeWF(wfInp) {
     } else {
 
         // TODO: this almost copies writePOS. DRY.
-        var sent = new conllu.Sentence();
-        sent.serial = $("#indata").val();
+        var sent = buildSent();
         sent.tokens[nodeId].form = newToken;
         $("#indata").val(sent.serial);
         drawTree();
@@ -263,9 +258,8 @@ function writeWF(wfInp) {
 
 function changeTokenization(oldToken, nodeId) {
     var newTokens = oldToken.split(" ");
+    var sent = buildSent();
 
-    var sent = new conllu.Sentence(); // DRY
-    sent.serial = $("#indata").val();
     // changing the first part
     sent.tokens[nodeId].form = newTokens[0];
 
@@ -278,13 +272,10 @@ function changeTokenization(oldToken, nodeId) {
             tok.head = +tok.head + 1; // head correction after indices shift
         };
         if (n > nodeId) {
-            console.log("before: " + tok.id);
             tok.id = tok.id + 1; // renumbering
-            console.log("after: " + tok.id);
         };
     });
 
-    console.log(sent.serial);
     $("#indata").val(sent.serial);
     drawTree();
 }
@@ -299,6 +290,15 @@ function formNewToken(attrs) {
         newToken[attr] = val;
     });
     return newToken;
+}
+
+
+function buildSent() {
+    /* Reads data from the textbox, returns a sent object. */
+
+    var sent = new conllu.Sentence();
+    sent.serial = $("#indata").val();
+    return sent;
 }
 
 
