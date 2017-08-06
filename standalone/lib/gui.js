@@ -279,19 +279,29 @@ function changeTokenization(oldToken, nodeId) {
 
     // changing the first part
     sent.tokens[nodeId].form = newTokens[0];
-
-    var restTok = new conllu.Token();
-    restTok.id = nodeId + 2;
-    restTok.form = newTokens[1];
+    var restTok = formNewToken({"id": nodeId + 2, "form": newTokens[1]});
     sent.tokens.splice(nodeId + 1, 0, restTok);
     
     $("#indata").val(sent.serial);
-
     drawTree();
 }
 
 
+function formNewToken(attrs) {
+    /* Takes a dictionary of attributes. Creates a new token, assigns
+    values to the attributes given. Returns the new token. */
+
+    var newToken = new conllu.Token();
+    $.each(attrs, function(attr, val){
+        newToken[attr] = val;
+    });
+    return newToken;
+}
+
+
 function retokenize(key) {
+    /* Dead now. x_x */
+
     var sym = String.fromCharCode(key.keyCode);
     console.log(sym);
 
