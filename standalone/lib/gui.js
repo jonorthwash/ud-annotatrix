@@ -257,6 +257,10 @@ function writeWF(wfInp) {
 
 
 function changeTokenization(oldToken, nodeId) {
+    /* Takes a token to retokenize with space in it and the Id of the token.
+    Creates the new tokens, makes indices and head shifting, redraws the tree.
+    All the attributes default to belong to the first part. */
+
     var newTokens = oldToken.split(" ");
     var sent = buildSent();
 
@@ -295,7 +299,6 @@ function formNewToken(attrs) {
 
 function buildSent() {
     /* Reads data from the textbox, returns a sent object. */
-
     var sent = new conllu.Sentence();
     sent.serial = $("#indata").val();
     return sent;
