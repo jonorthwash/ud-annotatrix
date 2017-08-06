@@ -270,13 +270,14 @@ function changeTokenization(oldToken, nodeId) {
     sent.tokens[nodeId].form = newTokens[0];
 
     // creating inserting the second part
-    var restTok = formNewToken({"id": nodeId + 2, "form": newTokens[1]});
+    var restTok = formNewToken({"id": nodeId + 1, "form": newTokens[1]});
     sent.tokens.splice(nodeId + 1, 0, restTok);
 
     $.each(sent.tokens, function(n, tok){
         if (tok.head > nodeId + 1){
             tok.head = +tok.head + 1; // head correction after indices shift
-        } else if (n > nodeId + 1) {
+        };
+        if (n > nodeId) {
             console.log("before: " + tok.id);
             tok.id = tok.id + 1; // renumbering
             console.log("after: " + tok.id);
