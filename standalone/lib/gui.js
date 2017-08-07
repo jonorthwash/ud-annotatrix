@@ -54,10 +54,7 @@ function writeArc(sourceNode, destNode) {
     // replace the old line of destNode with the one with HEAD
     var sent = buildSent();
     sent.tokens[destIndex - 1].head = Number(sourceIndex);
-    $("#indata").val(sent.serial);
-
-    // redraw the tree
-    drawTree();
+    redrawTree(sent);
 }
 
 
@@ -147,9 +144,7 @@ function removeArc(argument) {
         sent.tokens[destIndex - 1].deprel = undefined;
     })
 
-    // redraw the tree
-    $("#indata").val(sent.serial);
-    drawTree();
+    redrawTree(sent);
 }
 
 
@@ -183,8 +178,7 @@ function editDeprel() {
     sent.tokens[destIndex].deprel = deprel;
 
     // rewriting the tree
-    $("#indata").val(sent.serial);
-    drawTree();   
+    redrawTree(sent);   
 }
 
 
@@ -232,9 +226,8 @@ function writePOS(posInp) {
 
     var sent = buildSent();
     sent.tokens[nodeId].upostag = posInp.val(); // TODO: think about xpostag changing support
-    $("#indata").val(sent.serial);
 
-    drawTree();
+    redrawTree(sent);
 }
 
 
@@ -250,8 +243,7 @@ function writeWF(wfInp) {
         // TODO: this almost copies writePOS. DRY.
         var sent = buildSent();
         sent.tokens[nodeId].form = newToken;
-        $("#indata").val(sent.serial);
-        drawTree();
+        redrawTree(sent);
     }
 }
 
@@ -280,8 +272,7 @@ function changeTokenization(oldToken, nodeId) {
         };
     });
 
-    $("#indata").val(sent.serial);
-    drawTree();
+    redrawTree(sent);
 }
 
 
@@ -302,6 +293,14 @@ function buildSent() {
     var sent = new conllu.Sentence();
     sent.serial = $("#indata").val();
     return sent;
+}
+
+
+function redrawTree(sent) {
+    /* Takes a Sentence object. Writes it to the textbox and calls
+    the function drawing the tree. */
+    $("#indata").val(sent.serial);
+    drawTree(); 
 }
 
 
