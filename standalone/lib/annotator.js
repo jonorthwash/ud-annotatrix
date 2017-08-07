@@ -188,8 +188,10 @@ function drawTree() {
     if (FORMAT == "CoNLL-U") {
         conlluDraw(content);
 
-        var inpSupport = $("<div id='mute'><input type='text' id='pos'/>"
-                           + "<input type='text' id='wf'/></div>");
+        var inpSupport = $("<div id='mute'>"
+            + "<input type='text' id='pos' class='hidden-input'/>"
+            + "<input type='text' id='wf' class='hidden-input'/>"
+            + "<input type='text' id='deprel' class='hidden-input'/></div>");
         $("#cy").prepend(inpSupport);
         addHandlers();
     }

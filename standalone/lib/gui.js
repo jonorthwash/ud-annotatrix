@@ -107,9 +107,7 @@ function keyUpClassifier(key) {
             drawTree();
         } else if (key.which == D) {
             moveArc();
-        } else if (key.which == I) {
-            editDeprel();
-        }
+        };
     } else if (posInp.length) {
         if (key.which == ENTER) {
             writePOS(posInp);

@@ -65,13 +65,7 @@ span.tt {
   display: block;
 }
 
-#pos {
-  position: absolute;
-  display: none;
-  opacity: 0.99;
-}
-
-#wf {
+.hidden-input {
   position: absolute;
   display: none;
   opacity: 0.99;
