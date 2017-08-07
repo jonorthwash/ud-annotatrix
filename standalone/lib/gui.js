@@ -182,6 +182,12 @@ function editDeprel() {
 
 function changeInp() {
 
+    this.addClass("input");
+    var x = this.renderedPosition("x");
+    var y = this.relativePosition("y");
+    var width = this.renderedWidth();
+    var height = this.renderedHeight();
+
     var selector, color, label;
 
     // defining which part of the tree needs to be changed
@@ -193,13 +199,11 @@ function changeInp() {
         selector = "#wf";
         color = NORMAL;
         label = "form";
+        y = this.renderedPosition("y");
+        console.log("y: " + y);
+        y = y*0.4;
     }
 
-    this.addClass("input");
-    var x = this.renderedPosition("x");
-    var y = this.relativePosition("y");
-    var width = this.renderedWidth();
-    var height = this.renderedHeight();
 
     // TODO: font size
     $("#mute").addClass("activated");
