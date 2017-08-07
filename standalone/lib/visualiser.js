@@ -63,7 +63,6 @@ function makeDependencies(token, nodeId, graph) {
             "ctrl": [40, 40, 40, 40]
         }
         var coef = token.head - nodeId;
-        // console.log("head: " + token.head + ", dep: " + nodeId + ", coef: " + coef);
         edgeDep.ctrl = edgeDep.ctrl.map(function(el){ return el*coef; });
         graph.push({"data": edgeDep, "classes": "dependency"});
     };
@@ -147,6 +146,12 @@ var CY_STYLE = [{
     }
 }, {
     "selector": "node.wf.activated.retokenize",
+    "style": {
+        "background-color": POS_COLOR,
+        "border-color": FANCY
+    }
+}, {
+    "selector": "node.wf.merge",
     "style": {
         "background-color": POS_COLOR,
         "border-color": FANCY

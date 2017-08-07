@@ -71,6 +71,12 @@ span.tt {
   opacity: 0.99;
 }
 
+.hidden-input.activated {
+  display: inline;
+  border: 2px solid black;
+  color: black;
+}
+
 .activated#mute {
   position: absolute;
   width: 1500px;

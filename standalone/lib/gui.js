@@ -11,9 +11,12 @@ var POS_COLOR = "#afa2ff";
 var DEL_KEY = 46;
 var BACKSPACE = 8;
 var ENTER = 13;
+var RIGHT = 39;
+var LEFT = 37;
 var D = 68;
 var I = 73;
 var T = 84;
+var M = 77;
 
 function drawArcs(evt) {
     /* Called when a node is clicked. */
@@ -100,9 +103,10 @@ function keyUpClassifier(key) {
     var wf = cy.$("node.wf.activated");
     // looking for a node to be tokenised
     var toBretokenized = cy.$("node.wf.activated.retokenize");
+    // looking if some node waits to be merged
+    var toMerge = cy.$(".merge");
 
     if (selArcs.length) {
-        console.log('selected');
         if (key.which == DEL_KEY) {
             removeArc();
         } else if (key.which == BACKSPACE) {
@@ -113,22 +117,32 @@ function keyUpClassifier(key) {
     } else if (posInp.length) {
         if (key.which == ENTER) {
             writePOS(posInp);
-        }
+        };
     } else if (wfInp.length) {
         if (key.which == ENTER) {
             writeWF(wfInp);
-        }
+        };
     } else if (deprelInp.length) {
         if (key.which == ENTER) {
             writeDeprel(deprelInp);
-        }
+        };
     } else if (toBretokenized.length == 1) {
         retokenize(key); // is not used now
     } else if (wf.length == 1) {
         if (key.which == T) {
-            wf.addClass("retokenize");
-        }
+            wf.addClass("retokenize"); // is not used now
+        } else if (key.which == M) {
+            wf.addClass("merge");
+            wf.removeClass("activated");
+        };
+    } else if (toMerge.length) {
+        if (key.which == RIGHT) {
+            mergeTokens(toMerge, "right");
+        } else if (key.which == LEFT) {
+            mergeTokens(toMerge, "left");
+        };
     }
+    console.log(key.which);
 
 }
 
@@ -222,14 +236,11 @@ function changeInp() {
 
     // TODO: font size
     $("#mute").addClass("activated");
-    $(selector).css("display", "inline")
-        .css("bottom", y - parseInt(height*0.55))
+    $(selector).css("bottom", y - parseInt(height*0.55))
         .css("left", x - parseInt(width/2)*1.1)
         .css("height", height)
         .css("width", width)
-        .css("border", "2px solid black")
         .css("background-color", color)
-        .css("color", "black")
         .attr("value", this.data(label))
         .addClass("activated");
 
@@ -279,9 +290,10 @@ function writePOS(posInp) {
 function writeWF(wfInp) {
     /* Either writes changes to token or retokenises the sentence. */
     var nodeId = find2change();
+    var newToken = wfInp.val();
 
     if (newToken.includes(" ")) {
-        changeTokenization(wfInp.val(), nodeId);
+        changeTokenization(newToken, nodeId);
     } else {
 
         // TODO: this almost copies writePOS. DRY.
@@ -345,6 +357,12 @@ function redrawTree(sent) {
     the function drawing the tree. */
     $("#indata").val(sent.serial);
     drawTree(); 
+}
+
+
+function mergeTokens(toMerge, side) {
+    nodeId = toMerge.id();
+    console.log("nodeId: " + nodeId);
 }
 
 
