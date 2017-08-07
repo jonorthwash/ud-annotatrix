@@ -202,7 +202,16 @@ function changeInp() {
         y = this.renderedPosition("y");
         console.log("y: " + y);
         y = y*0.4;
-    }
+    } else if (this.hasClass("dependency")) {
+        selector = "#deprel";
+        color = "white";
+        label = "label";
+        var coord = findEdgesPos(this);
+        x = coord[0];
+        y = coord[1];
+        width = 100; // TODO: make a subtlier sizing
+        height = 40;
+    };
 
 
     // TODO: font size
@@ -219,6 +228,20 @@ function changeInp() {
         .addClass("activated");
 
     $(selector).focus();
+}
+
+
+function findEdgesPos(edge) {
+    var sourceNode = edge.data("source");
+    var sourceX = cy.$("#" + sourceNode).renderedPosition("x");
+    var sourceY = cy.$("#" + sourceNode).renderedPosition("y");
+    var destNode = edge.data("target");
+    var destX = cy.$("#" + destNode).renderedPosition("x");
+    var lift = Math.abs(edge.data("ctrl")[0]);
+    var dist = sourceX - destX;
+    var y = sourceY;
+    var x = sourceX - dist/2;
+    return [x, y];
 }
 
 

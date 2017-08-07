@@ -44,9 +44,10 @@ function main() {
 
 function addHandlers() {
     cy.on('click', 'node.wf', drawArcs);
-    cy.on('click', 'node.pos', changeInp);
     cy.on('click', 'edge', selectArc);
+    cy.on('click', 'node.pos', changeInp);
     cy.on('cxttapend', 'node.wf', changeInp);
+    cy.on('cxttapend', 'edge.dependency', changeInp);
 }
 
 
