@@ -94,6 +94,8 @@ function keyUpClassifier(key) {
     var posInp = $(".activated#pos");
     // looking if there is a wf label to be modified
     var wfInp = $(".activated#wf");
+    // looking if there is a deprel label to be modified
+    var deprelInp = $(".activated#deprel");
     // looking if some wf node is selected
     var wf = cy.$("node.wf.activated");
     // looking for a node to be tokenised
@@ -116,8 +118,12 @@ function keyUpClassifier(key) {
         if (key.which == ENTER) {
             writeWF(wfInp);
         }
+    } else if (deprelInp.length) {
+        if (key.which == ENTER) {
+            writeDeprel(deprelInp);
+        }
     } else if (toBretokenized.length == 1) {
-        retokenize(key); // developing, not ready yet
+        retokenize(key); // is not used now
     } else if (wf.length == 1) {
         if (key.which == T) {
             wf.addClass("retokenize");
@@ -245,29 +251,42 @@ function findEdgesPos(edge) {
 }
 
 
-function writePOS(posInp) {
-    var activeNode = cy.$(".input");
-    var nodeId = activeNode.id().slice(2) - 1;
+function find2change() {
+    /* Selects a cy element which is to be changed, returns its index. */
+    var active = cy.$(".input");
+    var Id = active.id().slice(2) - 1;
+    return Id;
+}
 
+
+function writeDeprel(deprelInp) {
+    /* Writes changes to deprel label. */
+    var edgeId = find2change();
+    var sent = buildSent();
+    sent.tokens[edgeId].deprel = deprelInp.val();
+    redrawTree(sent);
+}
+
+function writePOS(posInp) {
+    /* Writes changes to POS label. */
+    var nodeId = find2change();
     var sent = buildSent();
     sent.tokens[nodeId].upostag = posInp.val(); // TODO: think about xpostag changing support
-
     redrawTree(sent);
 }
 
 
 function writeWF(wfInp) {
-    var activeNode = cy.$(".input");
-    var nodeId = activeNode.id().slice(2) - 1;
+    /* Either writes changes to token or retokenises the sentence. */
+    var nodeId = find2change();
 
-    var newToken = wfInp.val();
     if (newToken.includes(" ")) {
-        changeTokenization(newToken, nodeId);
+        changeTokenization(wfInp.val(), nodeId);
     } else {
 
         // TODO: this almost copies writePOS. DRY.
         var sent = buildSent();
-        sent.tokens[nodeId].form = newToken;
+        sent.tokens[nodeId].form = wfInp.val();
         redrawTree(sent);
     }
 }
