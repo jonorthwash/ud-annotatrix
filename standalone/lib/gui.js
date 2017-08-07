@@ -361,8 +361,24 @@ function redrawTree(sent) {
 
 
 function mergeTokens(toMerge, side) {
-    nodeId = toMerge.id();
-    console.log("nodeId: " + nodeId);
+    var nodeId = Number(toMerge.id().slice(2)) - 1;
+    var sent = buildSent();
+    var otherId = (side == "right") ? nodeId + 1 : nodeId - 1;
+
+    if (otherId >= 0 && sent.tokens[otherId]) {
+        var main = toMerge.data("form");
+        var other = sent.tokens[otherId].form;
+        var newToken = (side == "right") ? main + other : other + main;
+        console.log("Can merge: " + newToken);
+
+        // remove the merged token
+        sent.tokens.splice(otherId, 1);
+
+        // make reordering: TODO
+
+    } else {
+        console.log("Probably wrong direction?");
+    }
 }
 
 
