@@ -332,6 +332,39 @@ function changeTokenization(oldToken, nodeId) {
 }
 
 
+function mergeTokens(toMerge, side) {
+    var nodeId = Number(toMerge.id().slice(2)) - 1;
+    var sent = buildSent();
+    var otherId = (side == "right") ? nodeId + 1 : nodeId - 1;
+
+    if (otherId >= 0 && sent.tokens[otherId]) {
+        var main = toMerge.data("form");
+        var other = sent.tokens[otherId].form;
+        var newToken = (side == "right") ? main + other : other + main;
+        console.log("Can merge: " + newToken);
+
+        // rewrite the token
+        sent.tokens[nodeId].form = newToken;
+
+        // remove the merged token
+        sent.tokens.splice(otherId, 1);
+
+        $.each(sent.tokens, function(n, tok){
+            if (tok.head > nodeId + 1){
+                tok.head = +tok.head - 1; // head correction after indices shift
+            };
+            if (n > nodeId) {
+                tok.id = tok.id - 1; // renumbering
+            };
+        });
+
+        redrawTree(sent);
+    } else {
+        console.log("Probably wrong direction?");
+    };
+};
+
+
 function formNewToken(attrs) {
     /* Takes a dictionary of attributes. Creates a new token, assigns
     values to the attributes given. Returns the new token. */
@@ -357,28 +390,6 @@ function redrawTree(sent) {
     the function drawing the tree. */
     $("#indata").val(sent.serial);
     drawTree(); 
-}
-
-
-function mergeTokens(toMerge, side) {
-    var nodeId = Number(toMerge.id().slice(2)) - 1;
-    var sent = buildSent();
-    var otherId = (side == "right") ? nodeId + 1 : nodeId - 1;
-
-    if (otherId >= 0 && sent.tokens[otherId]) {
-        var main = toMerge.data("form");
-        var other = sent.tokens[otherId].form;
-        var newToken = (side == "right") ? main + other : other + main;
-        console.log("Can merge: " + newToken);
-
-        // remove the merged token
-        sent.tokens.splice(otherId, 1);
-
-        // make reordering: TODO
-
-    } else {
-        console.log("Probably wrong direction?");
-    }
 }
 
 
