@@ -58,6 +58,11 @@ span.tt {
    cursor: default;
 }
 
+#help {
+  position: relative;
+  left: 1500px;
+}
+
 #cy {
   position: relative;
   width: 1500px;

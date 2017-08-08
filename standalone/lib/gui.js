@@ -278,6 +278,7 @@ function writeDeprel(deprelInp) {
     redrawTree(sent);
 }
 
+
 function writePOS(posInp) {
     /* Writes changes to POS label. */
     var nodeId = find2change();
