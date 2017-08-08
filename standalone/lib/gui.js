@@ -350,10 +350,12 @@ function mergeTokens(toMerge, side) {
         sent.tokens.splice(otherId, 1);
 
         $.each(sent.tokens, function(n, tok){
-            if (tok.head > nodeId + 1){
+            if ((side == "right" && tok.head > nodeId + 1)
+                || (side == "left" && tok.head > otherId)){
                 tok.head = +tok.head - 1; // head correction after indices shift
             };
-            if (n > nodeId) {
+            if ((side == "right" && n > nodeId)
+                || (side == "left" && n >= otherId)) {
                 tok.id = tok.id - 1; // renumbering
             };
         });
