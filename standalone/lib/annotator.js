@@ -281,4 +281,11 @@ function loadData(data) {
 }
 
 
+function showHelp() {
+    /* Opens help in a new tab. */
+    var win = window.open("help.html", '_blank');
+    win.focus();
+}
+
+
 main()
