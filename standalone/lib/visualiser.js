@@ -33,22 +33,49 @@ function conllu2cy(content) {
     var graph = [];
     $.each(sent.tokens, function(n, token) {
 
-        var nodeId = strWithZero(token.id);
 
+        // var nodeId = strWithZero(token.id);
         // creating token node
-        var nodeWF = token;
-        nodeWF.length = nodeWF.form.length + "em";
-        nodeWF.id = "nf" + nodeId;
-        nodeWF.state = "normal";
-        graph.push({"data": nodeWF, "classes": "wf"});
+        // var nodeWF = token;
+        // nodeWF.length = nodeWF.form.length + "em";
+        // nodeWF.id = "nf" + nodeId;
+        // nodeWF.state = "normal";
+        // graph.push({"data": nodeWF, "classes": "wf"});
 
-        graph = makePOS(token, nodeId, graph);
-        graph = makeDependencies(token, nodeId, graph);
+        // graph = makePOS(token, nodeId, graph);
+        // graph = makeDependencies(token, nodeId, graph);
+        if (token.tokens){
+            console.log("span");
+            // graph.push({"data": {"id": "kotiki", "label": "parent", "length": 1}, "classes": "parent"})
+            graph = createToken(graph, token.tokens[0], true);
+            graph = createToken(graph, token.tokens[1], true);
+        } else {
+            graph = createToken(graph, token);
+        }
     })
 
     return graph;
 }
 
+
+function createToken(graph, token, span) {
+    // handling empty form
+    if (token.form == undefined && span) {token.form = token.lemma};
+    if (token.form == undefined) {token.form = " "};
+
+    // 
+    if (span) {}
+    var nodeId = strWithZero(token.id);
+    var nodeWF = token;
+    nodeWF.length = nodeWF.form.length + "em";
+    nodeWF.id = "nf" + nodeId;
+    nodeWF.state = "normal";
+    graph.push({"data": nodeWF, "classes": "wf"});
+
+    graph = makePOS(token, nodeId, graph);
+    graph = makeDependencies(token, nodeId, graph);
+    return graph;
+}
 
 function makeDependencies(token, nodeId, graph) {
     /* if there is head, create an edge for dependency */
@@ -117,7 +144,7 @@ function simpleIdSorting(n1, n2) {
 
 
 function strWithZero(num) {
-    return (String(num).length > 1) ? num : "0" + num;
+    return (String(num).length > 1) ? "" + num : "0" + num;
 }
 
 
@@ -138,6 +165,11 @@ var CY_STYLE = [{
     "selector": "node.wf",
     "style": {
         "label": "data(form)"
+  }
+}, {
+    "selector": "node.parent",
+    "style": {
+        "background-color": FANCY
   }
 }, {
     "selector": "node.wf.arc-selected",
