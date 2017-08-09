@@ -33,7 +33,7 @@ function conllu2cy(content) {
     var graph = [];
     $.each(sent.tokens, function(n, token) {
 
-        var nodeId = (String(token.id).length > 1) ? token.id : "0" + token.id;
+        var nodeId = strWithZero(token.id);
 
         // creating token node
         var nodeWF = token;
@@ -54,7 +54,7 @@ function makeDependencies(token, nodeId, graph) {
     /* if there is head, create an edge for dependency */
 
     if (token.head && token.head != 0) {
-        var head = (String(token.head).length > 1) ? token.head : "0" + token.head;
+        var head = strWithZero(token.head);
         var edgeDep = {
             "id": "ed" + nodeId,
             "source": "nf" + head,
@@ -113,6 +113,11 @@ function simpleIdSorting(n1, n2) {
     } else {
         return 0;
     }
+}
+
+
+function strWithZero(num) {
+    return (String(num).length > 1) ? num : "0" + num;
 }
 
 
