@@ -33,17 +33,6 @@ function conllu2cy(content) {
     var graph = [];
     $.each(sent.tokens, function(n, token) {
 
-
-        // var nodeId = strWithZero(token.id);
-        // creating token node
-        // var nodeWF = token;
-        // nodeWF.length = nodeWF.form.length + "em";
-        // nodeWF.id = "nf" + nodeId;
-        // nodeWF.state = "normal";
-        // graph.push({"data": nodeWF, "classes": "wf"});
-
-        // graph = makePOS(token, nodeId, graph);
-        // graph = makeDependencies(token, nodeId, graph);
         if (token.tokens){
             console.log("span");
             // graph.push({"data": {"id": "kotiki", "label": "parent", "length": 1}, "classes": "parent"})
@@ -127,6 +116,15 @@ function makePOS(token, nodeId, graph) {
 }
 
 
+function makeSupertoken(graph, token) {
+    graph.push({
+        "data": {},
+        "classes": "supertoken"
+    })
+    return graph;
+}
+
+
 function sortNodes(n1, n2) {
     // TODO?
 }
@@ -167,7 +165,7 @@ var CY_STYLE = [{
         "label": "data(form)"
   }
 }, {
-    "selector": "node.parent",
+    "selector": "node.supertoken",
     "style": {
         "background-color": FANCY
   }
