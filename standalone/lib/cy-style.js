@@ -1,3 +1,4 @@
+
 // is defined in a js file, because fetch doesn't work offline in chrome
 var CY_STYLE = [{
     "selector": "node",

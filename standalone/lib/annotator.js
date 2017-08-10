@@ -22,7 +22,8 @@ function main() {
         ROOT + 'CG2conllx.js',
         ROOT + 'converters.js',
         ROOT + 'gui.js',
-        ROOT + 'visualiser.js'
+        ROOT + 'visualiser.js',
+        ROOT + 'cy-style.js'
     );
 
     head.ready(function() {
