@@ -55,6 +55,9 @@ function conllu2cy(content) {
 
 
 function createToken(graph, token, spId) {
+    /* Takes the tree graph, a token object and the id of the supertoken.
+    Creates the wf node, the POS node and dependencies. Returns the graph. */
+
     // handling empty form
     if (token.form == undefined && spId) {token.form = token.lemma};
     if (token.form == undefined) {token.form = " "};
