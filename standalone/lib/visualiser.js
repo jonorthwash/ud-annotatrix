@@ -32,12 +32,12 @@ function conllu2cy(content) {
     sent.serial = content;
     var graph = [];
     $.each(sent.tokens, function(n, token) {
-
         if (token.tokens){
-            console.log("span");
-            graph = makeSupertoken(graph, token);
-            graph = createToken(graph, token.tokens[0], true);
-            graph = createToken(graph, token.tokens[1], true);
+            var supertokenId = "ns" + strWithZero(n);
+            console.log("spine: " + supertokenId);
+            graph = makeSupertoken(graph, token, supertokenId);
+            graph = createToken(graph, token.tokens[0], supertokenId);
+            graph = createToken(graph, token.tokens[1], supertokenId);
         } else {
             graph = createToken(graph, token);
         }
@@ -47,15 +47,15 @@ function conllu2cy(content) {
 }
 
 
-function createToken(graph, token, spine) {
+function createToken(graph, token, spId) {
     // handling empty form
-    if (token.form == undefined && spine) {token.form = token.lemma};
+    if (token.form == undefined && spId) {token.form = token.lemma};
     if (token.form == undefined) {token.form = " "};
 
     var nodeId = strWithZero(token.id);
     var nodeWF = token;
-    // 
-    if (spine) {nodeWF.parent = "a"};
+
+    nodeWF.parent = spId;
     nodeWF.length = nodeWF.form.length + "em";
     nodeWF.id = "nf" + nodeId;
     nodeWF.state = "normal";
@@ -65,6 +65,21 @@ function createToken(graph, token, spine) {
     graph = makeDependencies(token, nodeId, graph);
     return graph;
 }
+
+
+function makeSupertoken(graph, token, id) {
+    graph.push({
+        "data": {
+            "id": id,
+            length: 0,
+            "form": token.form
+        },
+        "classes": "supertoken"
+
+    })
+    return graph;
+}
+
 
 function makeDependencies(token, nodeId, graph) {
     /* if there is head, create an edge for dependency */
@@ -112,20 +127,6 @@ function makePOS(token, nodeId, graph) {
     }
     graph.push({"data": edgePOS, "classes": "pos"});
 
-    return graph;
-}
-
-
-function makeSupertoken(graph, token) {
-    graph.push({
-        "data": {
-            "id": "a",
-            length: 0,
-            "form": token.form
-        },
-        "classes": "supertoken"
-
-    })
     return graph;
 }
 
