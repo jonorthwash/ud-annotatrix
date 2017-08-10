@@ -4,6 +4,7 @@ var ACTIVE = "#2653c9";
 var NORMAL = "#7fa2ff";
 var FANCY = "#cc22fc";
 var POS_COLOR = "#afa2ff";
+var ST_COLOR = "#bcd2ff"
 
 // require lib for CoNLL-U parsing
 var conllu = require("conllu");
@@ -178,7 +179,7 @@ var CY_STYLE = [{
 }, {
     "selector": "node.supertoken",
     "style": {
-        "background-color": POS_COLOR,
+        "background-color": ST_COLOR,
         "label": "data(form)"
   }
 }, {
