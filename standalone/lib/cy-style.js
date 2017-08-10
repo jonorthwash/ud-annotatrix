@@ -4,7 +4,6 @@ var CY_STYLE = [{
     "selector": "node",
     "style": {
         "height": 20,
-        "width": "data(length)",
         "background-color": NORMAL,
         "shape": "roundrectangle",
         "text-valign": "center",
@@ -15,10 +14,11 @@ var CY_STYLE = [{
 }, {
     "selector": "node.wf",
     "style": {
+        "width": "data(length)",
         "label": "data(form)"
   }
 }, {
-    "selector": "node.supertoken",
+    "selector": "$node > node",
     "style": {
         "background-color": ST_COLOR,
         "label": "data(form)"
@@ -48,6 +48,7 @@ var CY_STYLE = [{
 }, {
   "selector": "node.pos",
   "style": {
+    "width": "data(length)",
     "label": "data(pos)",
     "background-color": POS_COLOR
   }

@@ -39,11 +39,12 @@ function conllu2cy(content) {
     var graph = [];
     $.each(sent.tokens, function(n, token) {
         if (token.tokens){
-            var supertokenId = "ns" + strWithZero(n);
-            console.log("spine: " + supertokenId);
-            graph = makeSupertoken(graph, token, supertokenId);
-            graph = createToken(graph, token.tokens[0], supertokenId);
-            graph = createToken(graph, token.tokens[1], supertokenId);
+            var spId = "ns" + strWithZero(n);
+            console.log("spine: " + spId);
+            graph.push({"data": {"id": spId, "form": token.form}});
+            $.each(token.tokens, function(n, subTok) {
+                graph = createToken(graph, subTok, spId);
+            });
         } else {
             graph = createToken(graph, token);
         }
@@ -69,20 +70,6 @@ function createToken(graph, token, spId) {
 
     graph = makePOS(token, nodeId, graph);
     graph = makeDependencies(token, nodeId, graph);
-    return graph;
-}
-
-
-function makeSupertoken(graph, token, id) {
-    graph.push({
-        "data": {
-            "id": id,
-            length: 0,
-            "form": token.form
-        },
-        "classes": "supertoken"
-
-    })
     return graph;
 }
 
