@@ -1,5 +1,10 @@
 "use strict"
 
+var ACTIVE = "#2653c9";
+var NORMAL = "#7fa2ff";
+var FANCY = "#cc22fc";
+var POS_COLOR = "#afa2ff";
+
 // require lib for CoNLL-U parsing
 var conllu = require("conllu");
 
