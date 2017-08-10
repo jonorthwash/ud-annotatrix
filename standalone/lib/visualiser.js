@@ -35,7 +35,7 @@ function conllu2cy(content) {
 
         if (token.tokens){
             console.log("span");
-            // graph.push({"data": {"id": "kotiki", "label": "parent", "length": 1}, "classes": "parent"})
+            graph = makeSupertoken(graph, token);
             graph = createToken(graph, token.tokens[0], true);
             graph = createToken(graph, token.tokens[1], true);
         } else {
@@ -47,15 +47,15 @@ function conllu2cy(content) {
 }
 
 
-function createToken(graph, token, span) {
+function createToken(graph, token, spine) {
     // handling empty form
-    if (token.form == undefined && span) {token.form = token.lemma};
+    if (token.form == undefined && spine) {token.form = token.lemma};
     if (token.form == undefined) {token.form = " "};
 
-    // 
-    if (span) {}
     var nodeId = strWithZero(token.id);
     var nodeWF = token;
+    // 
+    if (spine) {nodeWF.parent = "a"};
     nodeWF.length = nodeWF.form.length + "em";
     nodeWF.id = "nf" + nodeId;
     nodeWF.state = "normal";
@@ -118,8 +118,13 @@ function makePOS(token, nodeId, graph) {
 
 function makeSupertoken(graph, token) {
     graph.push({
-        "data": {},
+        "data": {
+            "id": "a",
+            length: 0,
+            "form": token.form
+        },
         "classes": "supertoken"
+
     })
     return graph;
 }
@@ -167,7 +172,8 @@ var CY_STYLE = [{
 }, {
     "selector": "node.supertoken",
     "style": {
-        "background-color": FANCY
+        "background-color": POS_COLOR,
+        "label": "data(form)"
   }
 }, {
     "selector": "node.wf.arc-selected",
