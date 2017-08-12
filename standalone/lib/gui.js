@@ -4,10 +4,6 @@
 This scripts contains makes support for graphical editing.
 */
 
-var ACTIVE = "#2653c9";
-var NORMAL = "#7fa2ff";
-var FANCY = "#cc22fc";
-var POS_COLOR = "#afa2ff";
 var DEL_KEY = 46;
 var BACKSPACE = 8;
 var ENTER = 13;
@@ -16,6 +12,7 @@ var LEFT = 37;
 var D = 68;
 var I = 73;
 var T = 84;
+var S = 83;
 var M = 77;
 
 function drawArcs(evt) {
@@ -105,6 +102,9 @@ function keyUpClassifier(key) {
     var toBretokenized = cy.$("node.wf.activated.retokenize");
     // looking if some node waits to be merged
     var toMerge = cy.$(".merge");
+    // looking if some node waits to be merged to supertoken
+    var toSup = cy.$(".supertoken");
+
 
     if (selArcs.length) {
         if (key.which == DEL_KEY) {
@@ -134,12 +134,21 @@ function keyUpClassifier(key) {
         } else if (key.which == M) {
             wf.addClass("merge");
             wf.removeClass("activated");
+        } else if (key.which == S) {
+            wf.addClass("supertoken");
+            wf.removeClass("activated");
         };
     } else if (toMerge.length) {
         if (key.which == RIGHT) {
             mergeTokens(toMerge, "right");
         } else if (key.which == LEFT) {
             mergeTokens(toMerge, "left");
+        };
+    } else if (toSup.length) {
+        if (key.which == RIGHT) {
+            mergeSupertoken(toSup, "right");
+        } else if (key.which == LEFT) {
+            mergeSupertoken(toSup, "left");
         };
     }
     console.log(key.which);
@@ -330,6 +339,43 @@ function changeTokenization(oldToken, nodeId) {
     });
 
     redrawTree(sent);
+}
+
+
+function mergeSupertoken(toSup, side) { // TODO: dry with mergeTokens
+    var nodeId = Number(toSup.id().slice(2)) - 1;
+    var sent = buildSent();
+    var otherId = (side == "right") ? nodeId + 1 : nodeId - 1;
+    var min = Math.min(nodeId, otherId);
+    if (otherId >= 0 && sent.tokens[otherId]) {
+        var supertoken = new conllu.MultiwordToken();
+
+        var main = toSup.data("form");
+        var other = sent.tokens[otherId].form;
+        var newToken = (side == "right") ? main + other : other + main;
+        console.log("Can merge: " + newToken);
+
+        // rewrite the token
+        supertoken.tokens = sent.tokens.splice(min, 2);
+        supertoken.form = newToken;
+        sent.tokens.splice(min, 0, supertoken);
+
+
+        $.each(sent.tokens, function(n, tok){
+            if ((side == "right" && tok.head > nodeId + 1)
+                || (side == "left" && tok.head > otherId)){
+                tok.head = +tok.head - 1; // head correction after indices shift
+            };
+            if ((side == "right" && n > nodeId)
+                || (side == "left" && n >= otherId)) {
+                tok.id = tok.id - 1; // renumbering
+            };
+        });
+
+        redrawTree(sent);
+    } else {
+        console.log("Probably wrong direction?");
+    };
 }
 
 

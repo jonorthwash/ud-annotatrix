@@ -46,6 +46,12 @@ var CY_STYLE = [{
         "border-color": FANCY
     }
 }, {
+    "selector": "node.wf.supertoken",
+    "style": {
+        "background-color": POS_COLOR,
+        "border-color": FANCY
+    }
+}, {
   "selector": "node.pos",
   "style": {
     "width": "data(length)",
