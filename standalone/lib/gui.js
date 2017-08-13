@@ -360,18 +360,6 @@ function mergeSupertoken(toSup, side) { // TODO: dry with mergeTokens
         supertoken.form = newToken;
         sent.tokens.splice(min, 0, supertoken);
 
-
-        $.each(sent.tokens, function(n, tok){
-            if ((side == "right" && tok.head > nodeId + 1)
-                || (side == "left" && tok.head > otherId)){
-                tok.head = +tok.head - 1; // head correction after indices shift
-            };
-            if ((side == "right" && n > nodeId)
-                || (side == "left" && n >= otherId)) {
-                tok.id = tok.id - 1; // renumbering
-            };
-        });
-
         redrawTree(sent);
     } else {
         console.log("Probably wrong direction?");
