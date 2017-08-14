@@ -7,13 +7,15 @@ var CONTENTS = "";
 var AVAILABLESENTENCES = 0;
 var CURRENTSENTENCE = 0;
 var RESULTS = [];
-
+var LOC_ST_AVALIABLE = false;
+ 
 
 function main() {
     head.js(
         ROOT + 'ext/jquery.min.js',
         ROOT + 'ext/jquery-ui.min.js',
         ROOT + 'ext/cytoscape.min.js',
+        ROOT + 'ext/undomanager.js',
 
         // CoNLL-U parser from https://github.com/FrancessFractal/conllu
         ROOT + 'conllu/conllu.js',
@@ -32,9 +34,22 @@ function main() {
             function(data) {
                 console.log("Response from server, status: " + data["status"]);
                 getCorpusData();
-            }); // TODO: to get rid of the error, read about promisses
+            }); // TODO: to get rid of the error, read about promisses: https://qntm.org/files/promise/promise.html
 
         $(document).keyup(keyUpClassifier); // TODO: causes errors if called before the cy is initialised
+
+        // trying to load the corpus from localStorage
+        if (storageAvailable('localStorage')) {
+            LOC_ST_AVALIABLE = true;
+            if (localStorage.getItem("corpus")) {
+                CONTENTS = localStorage.getItem("corpus");
+                loadDataInIndex();
+            };
+        }
+        else {
+            console.log("localStorage is not avaliable :(")
+        }
+
         $("#indata").keyup(drawTree);
         loadFromUrl();
     });
@@ -87,6 +102,7 @@ function loadFromFile(e) {
     var reader = new FileReader();
     reader.onload = function(e) {
         CONTENTS = e.target.result;
+        localStorage.setItem("corpus", CONTENTS);
         loadDataInIndex();
     };
     reader.readAsText(file);
@@ -286,6 +302,32 @@ function showHelp() {
     /* Opens help in a new tab. */
     var win = window.open("help.html", '_blank');
     win.focus();
+}
+
+
+function storageAvailable(type) {
+    /* Taken from https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API */
+    try {
+        var storage = window[type],
+            x = '__storage_test__';
+        storage.setItem(x, x);
+        storage.removeItem(x);
+        return true;
+    }
+    catch(e) {
+        return e instanceof DOMException && (
+            // everything except Firefox
+            e.code === 22 ||
+            // Firefox
+            e.code === 1014 ||
+            // test name field too, because code might not be present
+            // everything except Firefox
+            e.name === 'QuotaExceededError' ||
+            // Firefox
+            e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
+            // acknowledge QuotaExceededError only if there's something already stored
+            storage.length !== 0;
+    }
 }
 
 
