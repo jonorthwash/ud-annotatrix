@@ -138,7 +138,7 @@ function keyUpClassifier(key) {
             mergeNodes(toMerge, SIDES[key.which], "subtoken");
         }
     } else if (toSup.length) {
-        if (key.which == RIGHT || key.which == LEFT) {
+        if (key.which in SIDES) {
             mergeNodes(toSup, SIDES[key.which], "supertoken");
         }
     }
