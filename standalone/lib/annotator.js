@@ -214,6 +214,7 @@ function drawTree() {
         addHandlers();
     }
 
+    localStorage.setItem("corpus", getTreebank()); // saving the data
 }
 
 
