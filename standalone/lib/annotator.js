@@ -213,8 +213,9 @@ function drawTree() {
         $("#cy").prepend(inpSupport);
         addHandlers();
     }
-
-    localStorage.setItem("corpus", getTreebank()); // saving the data
+    if (LOC_ST_AVALIABLE) {
+        localStorage.setItem("corpus", getTreebank()); // saving the data
+    }
 }
 
 
