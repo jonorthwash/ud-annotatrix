@@ -21,6 +21,7 @@ var CY_STYLE = [{
     "selector": "$node > node",
     "style": {
         "background-color": ST_COLOR,
+        "text-valign": "top",
         "label": "data(form)"
   }
 }, {

@@ -87,9 +87,10 @@ function makeDependencies(token, nodeId, graph) {
             "source": "nf" + head,
             "target": "nf" + nodeId,
             "label": token.deprel,
-            "ctrl": [40, 40, 40, 40]
+            "ctrl": [55, 55, 55, 55]
         }
-        var coef = token.head - nodeId;
+        var coef = (token.head - nodeId);
+        if (Math.abs(coef) != 1) {coef *= 0.7};
         edgeDep.ctrl = edgeDep.ctrl.map(function(el){ return el*coef; });
         graph.push({"data": edgeDep, "classes": "dependency"});
     };
