@@ -100,8 +100,6 @@ function keyUpClassifier(key) {
     var deprelInp = $(".activated#deprel");
     // looking if some wf node is selected
     var wf = cy.$("node.wf.activated");
-    // looking for a node to be tokenised
-    var toBretokenized = cy.$("node.wf.activated.retokenize");
     // looking if some node waits to be merged
     var toMerge = cy.$(".merge");
     // looking if some node waits to be merged to supertoken
@@ -128,12 +126,8 @@ function keyUpClassifier(key) {
         if (key.which == ENTER) {
             writeDeprel(deprelInp);
         };
-    } else if (toBretokenized.length == 1) {
-        retokenize(key); // is not used now
     } else if (wf.length == 1) {
-        if (key.which == T) {
-            wf.addClass("retokenize"); // is not used now
-        } else if (key.which == M) {
+        if (key.which == M) {
             wf.addClass("merge");
             wf.removeClass("activated");
         } else if (key.which == S) {
@@ -412,21 +406,4 @@ function redrawTree(sent) {
     the function drawing the tree. */
     $("#indata").val(sent.serial);
     drawTree(); 
-}
-
-
-function retokenize(key) {
-    /* Dead now. x_x */
-
-    var sym = String.fromCharCode(key.keyCode);
-    console.log(sym);
-
-    var node = cy.$(".retokenize");
-    var form = node.data("form");
-
-    if (form.includes(sym)) {
-        console.log("YEAH!");
-    }
-
-    console.log("key: " + key.keyCode);
 }
