@@ -334,14 +334,15 @@ function splitTokens(oldToken, nodeId) {
 
 
 function renumberNodes(nodeId, otherId, sent, side) {
+    /* Shifts the node and head indices to the right. */
     $.each(sent.tokens, function(n, tok){
         if ((side == "right" && tok.head > nodeId + 1)
             || (side == "left" && tok.head > otherId)){
-            tok.head = +tok.head - 1; // head correction after indices shift
+            tok.head = +tok.head - 1; // head correction
         };
         if ((side == "right" && n > nodeId)
             || (side == "left" && n >= otherId)) {
-            tok.id = tok.id - 1; // renumbering
+            tok.id = tok.id - 1; // id renumbering
         };
     });
     return sent;
@@ -349,6 +350,10 @@ function renumberNodes(nodeId, otherId, sent, side) {
 
 
 function mergeNodes(toMerge, side, how) {
+    /* Support for merging tokens into either a new token or a supertoken.
+    Recieves the node to merge, side (right or left) and a string denoting
+    how to merge the nodes. In case of success, redraws the tree. */
+    
     var nodeId = Number(toMerge.id().slice(2)) - 1;
     var sent = buildSent();
     var otherId = (side == "right") ? nodeId + 1 : nodeId - 1;
