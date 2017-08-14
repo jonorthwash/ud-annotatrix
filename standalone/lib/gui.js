@@ -11,10 +11,9 @@ var RIGHT = 39;
 var LEFT = 37;
 var D = 68;
 var I = 73;
-var T = 84;
 var S = 83;
 var M = 77;
-var SIDE = {RIGHT: 'right', LEFT: "left"};
+var SIDES = {39: "right", 37: "left"};
 
 
 function drawArcs(evt) {
@@ -135,17 +134,13 @@ function keyUpClassifier(key) {
             wf.removeClass("activated");
         };
     } else if (toMerge.length) {
-        if (key.which == RIGHT) {
-            mergeNodes(toMerge, "right", "subtoken");
-        } else if (key.which == LEFT) {
-            mergeNodes(toMerge, "left", "subtoken");
-        };
+        if (key.which in SIDES) {
+            mergeNodes(toMerge, SIDES[key.which], "subtoken");
+        }
     } else if (toSup.length) {
-        if (key.which == RIGHT) {
-            mergeNodes(toSup, "right", "supertoken");
-        } else if (key.which == LEFT) {
-            mergeNodes(toSup, "left", "supertoken");
-        };
+        if (key.which == RIGHT || key.which == LEFT) {
+            mergeNodes(toSup, SIDES[key.which], "supertoken");
+        }
     }
     console.log(key.which);
 
@@ -338,7 +333,7 @@ function splitTokens(oldToken, nodeId) {
 }
 
 
-function renumberNodes(nodeId, sent, side) {
+function renumberNodes(nodeId, otherId, sent, side) {
     $.each(sent.tokens, function(n, tok){
         if ((side == "right" && tok.head > nodeId + 1)
             || (side == "left" && tok.head > otherId)){
@@ -365,7 +360,7 @@ function mergeNodes(toMerge, side, how) {
         if (how == "subtoken") {
             sent.tokens[nodeId].form = newToken; // rewrite the token
             sent.tokens.splice(otherId, 1); // remove the merged token
-            sent = renumberNodes(nodeId, sent, side);
+            sent = renumberNodes(nodeId, otherId, sent, side);
         } else if (how == "supertoken") {
             var min = Math.min(nodeId, otherId)
             var supertoken = new conllu.MultiwordToken();
