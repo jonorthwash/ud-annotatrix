@@ -299,7 +299,7 @@ function writeWF(wfInp) {
     var newToken = wfInp.val();
 
     if (newToken.includes(" ")) {
-        changeTokenization(newToken, nodeId);
+        splitTokens(newToken, nodeId);
     } else {
 
         // TODO: this almost copies writePOS. DRY.
@@ -310,7 +310,7 @@ function writeWF(wfInp) {
 }
 
 
-function changeTokenization(oldToken, nodeId) {
+function splitTokens(oldToken, nodeId) {
     /* Takes a token to retokenize with space in it and the Id of the token.
     Creates the new tokens, makes indices and head shifting, redraws the tree.
     All the attributes default to belong to the first part. */
