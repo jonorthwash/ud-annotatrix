@@ -344,66 +344,6 @@ function changeTokenization(oldToken, nodeId) {
 }
 
 
-function mergeSupertoken(toSup, side) { // TODO: dry with mergeTokens
-    var nodeId = Number(toSup.id().slice(2)) - 1;
-    var sent = buildSent();
-    var otherId = (side == "right") ? nodeId + 1 : nodeId - 1;
-    var min = Math.min(nodeId, otherId);
-    if (otherId >= 0 && sent.tokens[otherId]) {
-        var supertoken = new conllu.MultiwordToken();
-
-        var main = toSup.data("form");
-        var other = sent.tokens[otherId].form;
-        var newToken = (side == "right") ? main + other : other + main;
-        console.log("Can merge: " + newToken);
-
-        // rewrite the token
-        supertoken.tokens = sent.tokens.splice(min, 2);
-        supertoken.form = newToken;
-        sent.tokens.splice(min, 0, supertoken);
-
-        redrawTree(sent);
-    } else {
-        console.log("Probably wrong direction?");
-    };
-}
-
-
-function mergeTokens(toMerge, side) {
-    var nodeId = Number(toMerge.id().slice(2)) - 1;
-    var sent = buildSent();
-    var otherId = (side == "right") ? nodeId + 1 : nodeId - 1;
-
-    if (otherId >= 0 && sent.tokens[otherId]) {
-        var main = toMerge.data("form");
-        var other = sent.tokens[otherId].form;
-        var newToken = (side == "right") ? main + other : other + main;
-        console.log("Can merge: " + newToken);
-
-        // rewrite the token
-        sent.tokens[nodeId].form = newToken;
-
-        // remove the merged token
-        sent.tokens.splice(otherId, 1);
-
-        $.each(sent.tokens, function(n, tok){
-            if ((side == "right" && tok.head > nodeId + 1)
-                || (side == "left" && tok.head > otherId)){
-                tok.head = +tok.head - 1; // head correction after indices shift
-            };
-            if ((side == "right" && n > nodeId)
-                || (side == "left" && n >= otherId)) {
-                tok.id = tok.id - 1; // renumbering
-            };
-        });
-
-        redrawTree(sent);
-    } else {
-        console.log("Probably wrong direction?");
-    };
-};
-
-
 function renumberNodes(nodeId, sent, side) {
     $.each(sent.tokens, function(n, tok){
         if ((side == "right" && tok.head > nodeId + 1)
