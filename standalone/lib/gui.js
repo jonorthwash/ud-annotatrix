@@ -14,6 +14,8 @@ var I = 73;
 var T = 84;
 var S = 83;
 var M = 77;
+var SIDE = {RIGHT: 'right', LEFT: "left"};
+
 
 function drawArcs(evt) {
     /* Called when a node is clicked. */
@@ -140,15 +142,15 @@ function keyUpClassifier(key) {
         };
     } else if (toMerge.length) {
         if (key.which == RIGHT) {
-            mergeTokens(toMerge, "right");
+            mergeNodes(toMerge, "right", "subtoken");
         } else if (key.which == LEFT) {
-            mergeTokens(toMerge, "left");
+            mergeNodes(toMerge, "left", "subtoken");
         };
     } else if (toSup.length) {
         if (key.which == RIGHT) {
-            mergeSupertoken(toSup, "right");
+            mergeNodes(toSup, "right", "supertoken");
         } else if (key.which == LEFT) {
-            mergeSupertoken(toSup, "left");
+            mergeNodes(toSup, "left", "supertoken");
         };
     }
     console.log(key.which);
@@ -400,6 +402,49 @@ function mergeTokens(toMerge, side) {
         console.log("Probably wrong direction?");
     };
 };
+
+
+function renumberNodes(nodeId, sent, side) {
+    $.each(sent.tokens, function(n, tok){
+        if ((side == "right" && tok.head > nodeId + 1)
+            || (side == "left" && tok.head > otherId)){
+            tok.head = +tok.head - 1; // head correction after indices shift
+        };
+        if ((side == "right" && n > nodeId)
+            || (side == "left" && n >= otherId)) {
+            tok.id = tok.id - 1; // renumbering
+        };
+    });
+    return sent;
+}
+
+
+function mergeNodes(toMerge, side, how) {
+    var nodeId = Number(toMerge.id().slice(2)) - 1;
+    var sent = buildSent();
+    var otherId = (side == "right") ? nodeId + 1 : nodeId - 1;
+
+    if (otherId >= 0 && sent.tokens[otherId]) {
+        var main = toMerge.data("form");
+        var other = sent.tokens[otherId].form;
+        var newToken = (side == "right") ? main + other : other + main;
+        if (how == "subtoken") {
+            sent.tokens[nodeId].form = newToken; // rewrite the token
+            sent.tokens.splice(otherId, 1); // remove the merged token
+            sent = renumberNodes(nodeId, sent, side);
+        } else if (how == "supertoken") {
+            var min = Math.min(nodeId, otherId)
+            var supertoken = new conllu.MultiwordToken();
+            supertoken.tokens = sent.tokens.splice(min, 2);
+            supertoken.form = newToken;
+            sent.tokens.splice(min, 0, supertoken);
+        };
+
+        redrawTree(sent);
+    } else {
+        console.log("Probably wrong direction?");
+    }
+}
 
 
 function formNewToken(attrs) {
