@@ -110,6 +110,15 @@ function selectArc() {
 }
 
 
+function selectSup() {
+    if (this.hasClass("supAct")) {
+        this.removeClass("supAct");
+    } else {
+        this.addClass("supAct");
+    }
+}
+
+
 function keyUpClassifier(key) {
 
     // looking if there are selected arcs
@@ -122,6 +131,8 @@ function keyUpClassifier(key) {
     var deprelInp = $(".activated#deprel");
     // looking if some wf node is selected
     var wf = cy.$("node.wf.activated");
+    // looking if a supertoken node is selected
+    var st = cy.$(".supAct"); // probably needs debugging
     // looking if some node waits to be merged
     var toMerge = cy.$(".merge");
     // looking if some node waits to be merged to supertoken
@@ -163,6 +174,10 @@ function keyUpClassifier(key) {
     } else if (toSup.length) {
         if (key.which in SIDES) {
             mergeNodes(toSup, SIDES[key.which], "supertoken");
+        }
+    } else if (st.length) {
+        if (key.which == DEL_KEY) {
+            console.log("going to delete this guy");
         }
     }
     console.log(key.which);

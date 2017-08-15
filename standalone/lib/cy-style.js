@@ -31,6 +31,11 @@ var CY_STYLE = [{
         "label": "data(form)"
   }
 }, {
+    "selector": ".supAct",
+    "style": {
+        "background-color": ACTIVE
+    }
+}, {
     "selector": "node.wf.arc-selected",
     "style": {
         "border-color": FANCY
