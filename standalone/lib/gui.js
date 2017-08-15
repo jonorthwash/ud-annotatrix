@@ -138,7 +138,7 @@ function keyUpClassifier(key) {
         };
     } else if (posInp.length) {
         if (key.which == ENTER) {
-            writePOS(posInp);
+            writePOS(posInp.val());
         };
     } else if (wfInp.length) {
         if (key.which == ENTER) {
@@ -302,29 +302,24 @@ function writeDeprel(deprelInp) { // TODO: DRY
 }
 
 
-function undoPOS(argument) {
-    // body...
-}
 
 
-function writePOS(posInp) {
+function writePOS(posInp, nodeId) {
     /* Writes changes to POS label. */
-    var nodeId = find2change();
+    var nodeId = nodeId ? nodeId : find2change();
     var sent = buildSent();
-    var prevPOS = sent.tokens[nodeId].upostag ? sent.tokens[nodeId].upostag : "_";
-    console.log(prevPOS);
-    sent.tokens[nodeId].upostag = posInp.val(); // TODO: think about xpostag changing support
+    var prevPOS = sent.tokens[nodeId].upostag;
+    sent.tokens[nodeId].upostag = posInp; // TODO: think about xpostag changing support
     redrawTree(sent);
 
     window.undoManager.add({
         undo: function(){
-            console.log(prevPOS);
             var sent = buildSent();
             sent.tokens[nodeId].upostag = prevPOS;
             redrawTree(sent);
         },
         redo: function(){
-            writePOS(posInp);
+            writePOS(posInp, nodeId);
         }
     });
 }
