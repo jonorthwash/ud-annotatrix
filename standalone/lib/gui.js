@@ -57,15 +57,6 @@ function drawArcs(evt) {
             writeArc(actNode, this);
         }
     };
-
-    window.undoManager.add({
-        undo: function(){
-            console.log('hi');
-        },
-        redo: function(){
-            console.log("by");
-        }
-    });
 }
 
 
@@ -302,7 +293,7 @@ function find2change() {
 }
 
 
-function writeDeprel(deprelInp) {
+function writeDeprel(deprelInp) { // TODO: DRY
     /* Writes changes to deprel label. */
     var edgeId = find2change();
     var sent = buildSent();
@@ -311,12 +302,31 @@ function writeDeprel(deprelInp) {
 }
 
 
+function undoPOS(argument) {
+    // body...
+}
+
+
 function writePOS(posInp) {
     /* Writes changes to POS label. */
     var nodeId = find2change();
     var sent = buildSent();
+    var prevPOS = sent.tokens[nodeId].upostag ? sent.tokens[nodeId].upostag : "_";
+    console.log(prevPOS);
     sent.tokens[nodeId].upostag = posInp.val(); // TODO: think about xpostag changing support
     redrawTree(sent);
+
+    window.undoManager.add({
+        undo: function(){
+            console.log(prevPOS);
+            var sent = buildSent();
+            sent.tokens[nodeId].upostag = prevPOS;
+            redrawTree(sent);
+        },
+        redo: function(){
+            writePOS(posInp);
+        }
+    });
 }
 
 
