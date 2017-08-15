@@ -21,6 +21,12 @@ var CY_STYLE = [{
     "selector": "$node > node",
     "style": {
         "background-color": ST_COLOR,
+        "text-background-color": NORMAL,
+        "text-background-opacity": 0.9,
+        "text-border-color": "#000",
+        "text-border-opacity": 0.9,
+        "text-border-width": "1px",
+        "text-background-shape": "roundrectangle",
         "text-valign": "top",
         "label": "data(form)"
   }
