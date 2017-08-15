@@ -38,6 +38,10 @@ function main() {
 
         $(document).keyup(keyUpClassifier); // TODO: causes errors if called before the cy is initialised
 
+        // undo support
+        window.undoManager = new UndoManager();
+        setUndos(window.undoManager);
+
         // trying to load the corpus from localStorage
         if (storageAvailable('localStorage')) {
             LOC_ST_AVALIABLE = true;

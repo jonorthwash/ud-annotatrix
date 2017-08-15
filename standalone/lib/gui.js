@@ -16,6 +16,29 @@ var M = 77;
 var SIDES = {39: "right", 37: "left"};
 
 
+function setUndos(undoManager) {
+    btnUndo = document.getElementById("btnUndo");
+    btnRedo = document.getElementById("btnRedo");
+
+    function updateUI() {
+        btnUndo.disabled = !undoManager.hasUndo();
+        btnRedo.disabled = !undoManager.hasRedo();
+    }
+    undoManager.setCallback(updateUI);
+
+    btnUndo.onclick = function () {
+        undoManager.undo();
+        updateUI();
+    };
+    btnRedo.onclick = function () {
+        undoManager.redo();
+        updateUI();
+    };
+
+    updateUI();
+}
+
+
 function drawArcs(evt) {
     /* Called when a node is clicked. */
 
@@ -33,7 +56,16 @@ function drawArcs(evt) {
         if (actNode.length == 1) {
             writeArc(actNode, this);
         }
-    }
+    };
+
+    window.undoManager.add({
+        undo: function(){
+            console.log('hi');
+        },
+        redo: function(){
+            console.log("by");
+        }
+    });
 }
 
 
