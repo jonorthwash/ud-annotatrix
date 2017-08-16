@@ -258,7 +258,7 @@ function removeSup(st) {
 }
 
 
-function changeInp() {
+function changeInp() { // TODO: REFACTOR the thing!
 
     this.addClass("input");
     var x = this.renderedPosition("x");
@@ -294,12 +294,13 @@ function changeInp() {
 
     // TODO: font size
     $("#mute").addClass("activated");
+    console.log($(selector))
     $(selector).css("bottom", y - parseInt(height*0.55))
         .css("left", x - parseInt(width/2)*1.1)
         .css("height", height)
         .css("width", width)
         .css("background-color", color)
-        .attr("value", this.data(label))
+        .attr("value", this.data(label)) // debug!
         .addClass("activated");
 
     $(selector).focus();
@@ -321,7 +322,7 @@ function findEdgesPos(edge) {
 
 
 function find2change() {
-    /* Selects a cy element which is to be changed, returns its index. */
+    /* Selects a cy element to be changed, returns its index. */
     var active = cy.$(".input");
     var Id = active.id().slice(2) - 1;
     return Id;
@@ -332,8 +333,20 @@ function writeDeprel(deprelInp) { // TODO: DRY
     /* Writes changes to deprel label. */
     var edgeId = find2change();
     var sent = buildSent();
+    var prevDeprel = sent.tokens[edgeId].deprel;
     sent.tokens[edgeId].deprel = deprelInp.val();
     redrawTree(sent);
+
+    window.undoManager.add({
+        undo: function(){
+            var sent = buildSent();
+            sent.tokens[edgeId].upostag = prevPOS;
+            redrawTree(sent);
+        },
+        redo: function(){
+            writePOS(posInp, nodeId);
+        }
+    });
 }
 
 
