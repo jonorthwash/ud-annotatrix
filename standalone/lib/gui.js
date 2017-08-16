@@ -71,7 +71,6 @@ function writeArc(sourceNode, destNode) {
 
     // if source index equals target index, abort rewriting
     if (sourceIndex == destIndex) { return };
-
     // convert data to conllu
     toConllu();
 
@@ -337,11 +336,9 @@ function writeDeprel(deprelInp) { // TODO: DRY
 }
 
 
-
-
 function writePOS(posInp, nodeId) {
     /* Writes changes to POS label. */
-    var nodeId = nodeId ? nodeId : find2change();
+    var nodeId = (nodeId != undefined) ? nodeId : find2change();
     var sent = buildSent();
     var prevPOS = sent.tokens[nodeId].upostag;
     sent.tokens[nodeId].upostag = posInp; // TODO: think about xpostag changing support
