@@ -68,8 +68,6 @@ function writeArc(sourceNode, destNode) {
 
     var sourceIndex = +sourceNode.data("id").slice(2);
     var destIndex = +destNode.data("id").slice(2);
-    toConllu(); // convert data to conllu
-
     var sent = buildSent(); // add HEAD to destNode
     var prevHead = sent.tokens[destIndex - 1].head;
     sent.tokens[destIndex - 1].head = sourceIndex;
