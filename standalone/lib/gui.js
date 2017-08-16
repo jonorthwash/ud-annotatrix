@@ -68,9 +68,6 @@ function writeArc(sourceNode, destNode) {
 
     var sourceIndex = +sourceNode.data("id").slice(2);
     var destIndex = +destNode.data("id").slice(2);
-
-    // if source index equals target index, abort rewriting
-    if (sourceIndex == destIndex) { return };
     toConllu(); // convert data to conllu
 
     var sent = buildSent(); // add HEAD to destNode
