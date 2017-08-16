@@ -40,7 +40,6 @@ function conllu2cy(content) {
     $.each(sent.tokens, function(n, token) {
         if (token.tokens){
             var spId = "ns" + strWithZero(n);
-            console.log("spine: " + spId);
             graph.push({"data": {"id": spId, "form": token.form}});
             $.each(token.tokens, function(n, subTok) {
                 graph = createToken(graph, subTok, spId);
