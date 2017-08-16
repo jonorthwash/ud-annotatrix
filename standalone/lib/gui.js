@@ -177,10 +177,10 @@ function keyUpClassifier(key) {
         }
     } else if (st.length) {
         if (key.which == DEL_KEY) {
-            console.log("going to delete this guy");
+            removeSup(st);
         }
     }
-    console.log(key.which);
+    // console.log(key.which);
 
 }
 
@@ -235,6 +235,26 @@ function editDeprel() {
 
     // rewriting the tree
     redrawTree(sent);   
+}
+
+
+function removeSup(st) {
+    /* Support for removing supertokens. */
+    var sent = buildSent();
+    var id = st.id().slice(2) - 1;
+    var supIds = [];
+    $.each(sent.tokens, function(n, tok) {
+        if (tok.tokens) {supIds.push(n)};
+    });
+
+    var subTokens = sent.tokens[supIds[id]].tokens;
+    sent.tokens.splice(supIds[id], 1);
+
+    // is there really no more beautiful way?..
+    $.each(subTokens, function(n, tok) {
+        sent.tokens.splice(supIds[id], 0, tok);
+    });
+    redrawTree(sent);
 }
 
 
