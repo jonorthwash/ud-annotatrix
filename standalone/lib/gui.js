@@ -66,17 +66,15 @@ function writeArc(sourceNode, destNode) {
     redrawing the tree. Currently supports only conllu.
     */
 
-    var sourceIndex = Number(sourceNode.data("id").slice(2)); // TODO: more beautiful way
-    var destIndex = Number(destNode.data("id").slice(2));
+    var sourceIndex = +sourceNode.data("id").slice(2);
+    var destIndex = +destNode.data("id").slice(2);
 
     // if source index equals target index, abort rewriting
     if (sourceIndex == destIndex) { return };
-    // convert data to conllu
-    toConllu();
+    toConllu(); // convert data to conllu
 
-    // replace the old line of destNode with the one with HEAD
-    var sent = buildSent();
-    sent.tokens[destIndex - 1].head = Number(sourceIndex);
+    var sent = buildSent(); // add HEAD to destNode
+    sent.tokens[destIndex - 1].head = sourceIndex;
     redrawTree(sent);
 }
 
