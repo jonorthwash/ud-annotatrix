@@ -71,8 +71,20 @@ function writeArc(sourceNode, destNode) {
     toConllu(); // convert data to conllu
 
     var sent = buildSent(); // add HEAD to destNode
+    var prevHead = sent.tokens[destIndex - 1].head;
     sent.tokens[destIndex - 1].head = sourceIndex;
     redrawTree(sent);
+
+    window.undoManager.add({
+        undo: function(){
+            var sent = buildSent();
+            sent.tokens[destIndex - 1].head = prevHead;
+            redrawTree(sent);
+        },
+        redo: function(){
+            writeArc(sourceNode, destNode);
+        }
+    });
 }
 
 
