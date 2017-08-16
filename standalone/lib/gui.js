@@ -85,18 +85,14 @@ function selectArc() {
     if (this.hasClass("selected")) {
         this.removeClass("selected");
 
-        // removing visual effects for destNode
+        // removing visual effects from destNode
         var destNodeId = this.data("target");
         cy.$("#" + destNodeId).removeClass("arc-selected");
 
     } else {
         this.addClass("selected");
-
-        // getting info about nodes
-        var destNodeId = this.data("target");
-
-        // visual effects for destNode
-        cy.$("#" + destNodeId).addClass("arc-selected");
+        var destNodeId = this.data("target"); // getting info about nodes
+        cy.$("#" + destNodeId).addClass("arc-selected"); // css for destNode
     }
 
     // for identifying the node
