@@ -289,8 +289,12 @@ function changeInp() { // TODO: REFACTOR the thing!
         y = coord[1];
         width = 100; // TODO: make a subtlier sizing
         height = 40;
+        if (this.data(label) == undefined) {
+            this.data(label, "");
+        }
     };
 
+    console.log(this.data(label));
 
     // TODO: font size
     $("#mute").addClass("activated");
