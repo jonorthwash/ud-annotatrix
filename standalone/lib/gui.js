@@ -314,17 +314,14 @@ function changeInp() {
 
 
 function changePOS() {
-    this.addClass("input");
-    var x = this.renderedPosition("x");
-    var y = this.relativePosition("y");
-    var height = this.renderedHeight();
-    var width = this.renderedWidth();
+    this.addClass("input");;
+    var coord = findNodePos(this);
 
     $("#mute").addClass("activated");
-    $("#pos").css("bottom", y - parseInt(height*0.55))
-        .css("left", x - parseInt(width/2)*1.1)
-        .css("height", height)
-        .css("width", width)
+    $("#pos").css("bottom", coord.y - parseInt(coord.height*0.55))
+        .css("left", coord.x - parseInt(coord.width/2)*1.1)
+        .css("height", coord.height)
+        .css("width", coord.width)
         .css("background-color", POS_COLOR)
         .attr("value", this.data("pos"))
         .addClass("activated");
@@ -335,21 +332,13 @@ function changePOS() {
 
 function changeWF() {
     this.addClass("input");
-    var x = this.renderedPosition("x");
-    var y = this.relativePosition("y");
-    var height = this.renderedHeight();
-    var width = this.renderedWidth();
-
-    // trying out with position
-    y = this.renderedPosition("y");
-    console.log("y: " + y);
-    y = y*0.4;
+    var coord = findNodePos(this);
 
     $("#mute").addClass("activated");
-    $("#wf").css("bottom", y - parseInt(height*0.55))
-        .css("left", x - parseInt(width/2)*1.1)
-        .css("height", height)
-        .css("width", width)
+    $("#wf").css("bottom", coord.y - parseInt(coord.height*0.55))
+        .css("left", coord.x - parseInt(coord.width/2)*1.1)
+        .css("height", coord.height)
+        .css("width", coord.width)
         .css("background-color", NORMAL)
         .attr("value", this.data("form"))
         .addClass("activated");
@@ -358,29 +347,41 @@ function changeWF() {
 }
 
 
+function findNodePos(node) {
+    var coord = {};
+    coord.x = node.renderedPosition("x");
+    if (node.hasClass("pos")) {
+        coord.y = node.relativePosition("y");
+    } else {
+        coord.y = node.renderedPosition("y") * 0.4;
+    }
+    coord.height = node.renderedHeight();
+    coord.width = node.renderedWidth();
+    return coord;
+}
+
+
 function changeDeprel() {
 
     this.addClass("input");
     var coord = findEdgesPos(this);
-    var x = coord.x;
-    var y = coord.y;
-    var width = 100; // TODO: make a subtlier sizing
-    var height = 40;
     if (this.data("label") == undefined) {
         this.data("label", "");
     }
 
     $("#mute").addClass("activated");
-    $("#deprel").css("bottom", y - parseInt(height*0.55))
-        .css("left", x - parseInt(width/2)*1.1)
-        .css("height", height)
-        .css("width", width)
+    $("#deprel").css("bottom", coord.y - parseInt(coord.height*0.55))
+        .css("left", coord.x - parseInt(coord.width/2)*1.1)
+        .css("height", coord.height)
+        .css("width", coord.width)
         .css("background-color", "white")
         .attr("value", this.data("label"))
         .addClass("activated");
 
     $("#deprel").focus();
 }
+
+
 
 
 function findEdgesPos(edge) {
@@ -393,7 +394,7 @@ function findEdgesPos(edge) {
     var dist = sourceX - destX;
     var y = sourceY;
     var x = sourceX - dist/2;
-    return {x:x, y:y};
+    return {x:x, y:y, width: 100, height: 40}; // TODO: make a subtlier sizing
 }
 
 
