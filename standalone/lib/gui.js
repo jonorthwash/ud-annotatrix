@@ -124,9 +124,9 @@ function keyUpClassifier(key) {
     // looking if there are selected arcs
     var selArcs = cy.$("edge.dependency.selected");
     // looking if there is a POS label to be modified
-    var posInp = $(".activated#pos");
+    var posInp = $(".activated.np");
     // looking if there is a wf label to be modified
-    var wfInp = $(".activated#wf");
+    var wfInp = $(".activated.nf");
     // looking if there is a deprel label to be modified
     var deprelInp = $(".activated#deprel");
     // looking if some wf node is selected
@@ -317,6 +317,7 @@ function changeInp() {
 function changePOS() {
     this.addClass("input");
     var coord = this.renderedBoundingBox();
+    var id = this.id().slice(0, 2);
 
     $("#mute").addClass("activated");
     $("#pos").css("top", coord.y1)
@@ -325,7 +326,8 @@ function changePOS() {
         .css("width", coord.w)
         .css("background-color", this.style("background-color"))
         .attr("value", this.data("label"))
-        .addClass("activated");
+        .addClass("activated")
+        .addClass(id);
 
     $("#pos").focus();
 }
@@ -334,6 +336,7 @@ function changePOS() {
 function changeWF() {
     this.addClass("input");
     var coord = this.renderedBoundingBox();
+    var id = this.id().slice(0, 2);
 
     $("#mute").addClass("activated");
     $("#wf").css("top", coord.y1)
@@ -342,7 +345,8 @@ function changeWF() {
         .css("width", coord.w)
         .css("background-color", this.style("background-color"))
         .attr("value", this.data("form"))
-        .addClass("activated");
+        .addClass("activated")
+        .addClass(id);;
 
     $("#wf").focus();
 }

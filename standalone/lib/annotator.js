@@ -212,8 +212,7 @@ function drawTree() {
         conlluDraw(content);
 
         var inpSupport = $("<div id='mute'>"
-            + "<input type='text' id='pos' class='hidden-input'/>"
-            + "<input type='text' id='wf' class='hidden-input'/>"
+            + "<input type='text' id='edit' class='hidden-input'/>"
             + "<input type='text' id='deprel' class='hidden-input'/></div>");
         $("#cy").prepend(inpSupport);
         addHandlers();
