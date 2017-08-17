@@ -311,7 +311,7 @@ function changeInp() { // TODO: REFACTOR the thing!
 }
 
 
-function changePOS(argument) {
+function changePOS() {
     this.addClass("input");
     var x = this.renderedPosition("x");
     var y = this.relativePosition("y");
@@ -328,6 +328,56 @@ function changePOS(argument) {
         .addClass("activated");
 
     $("#pos").focus();
+}
+
+
+function changeWF() {
+    this.addClass("input");
+    var x = this.renderedPosition("x");
+    var y = this.relativePosition("y");
+    var height = this.renderedHeight();
+    var width = this.renderedWidth();
+
+    // trying out with position
+    y = this.renderedPosition("y");
+    console.log("y: " + y);
+    y = y*0.4;
+
+    $("#mute").addClass("activated");
+    $("#wf").css("bottom", y - parseInt(height*0.55))
+        .css("left", x - parseInt(width/2)*1.1)
+        .css("height", height)
+        .css("width", width)
+        .css("background-color", NORMAL)
+        .attr("value", this.data("form"))
+        .addClass("activated");
+
+    $("#wf").focus();
+}
+
+
+function changeDeprel(argument) {
+
+    this.addClass("input");
+    var coord = findEdgesPos(this);
+    var x = coord[0];
+    var y = coord[1];
+    var width = 100; // TODO: make a subtlier sizing
+    var height = 40;
+    if (this.data("label") == undefined) {
+        this.data("label", "");
+    }
+
+    $("#mute").addClass("activated");
+    $("#deprel").css("bottom", y - parseInt(height*0.55))
+        .css("left", x - parseInt(width/2)*1.1)
+        .css("height", height)
+        .css("width", width)
+        .css("background-color", "white")
+        .attr("value", this.data("label")) // debug!
+        .addClass("activated");
+
+    $("#deprel").focus();
 }
 
 
