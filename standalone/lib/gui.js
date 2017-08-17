@@ -311,6 +311,26 @@ function changeInp() { // TODO: REFACTOR the thing!
 }
 
 
+function changePOS(argument) {
+    this.addClass("input");
+    var x = this.renderedPosition("x");
+    var y = this.relativePosition("y");
+    var height = this.renderedHeight();
+    var width = this.renderedWidth();
+
+    $("#mute").addClass("activated");
+    $("#pos").css("bottom", y - parseInt(height*0.55))
+        .css("left", x - parseInt(width/2)*1.1)
+        .css("height", height)
+        .css("width", width)
+        .css("background-color", POS_COLOR)
+        .attr("value", this.data("pos"))
+        .addClass("activated");
+
+    $("#pos").focus();
+}
+
+
 function findEdgesPos(edge) {
     var sourceNode = edge.data("source");
     var sourceX = cy.$("#" + sourceNode).renderedPosition("x");
