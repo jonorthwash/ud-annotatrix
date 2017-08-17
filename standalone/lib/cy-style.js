@@ -67,7 +67,7 @@ var CY_STYLE = [{
   "selector": "node.pos",
   "style": {
     "width": "data(length)",
-    "label": "data(pos)",
+    "label": "data(label)",
     "background-color": POS_COLOR
   }
 }, {

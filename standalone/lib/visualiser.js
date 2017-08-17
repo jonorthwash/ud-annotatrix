@@ -110,7 +110,7 @@ function makePOS(token, nodeId, graph) {
     // creating pos node
     var nodePOS = {
         "id": "np" + nodeId,
-        "pos": pos,
+        "label": pos,
         "length": (pos.length + 1) + "em"
     }
     graph.push({"data": nodePOS, "classes": "pos"});

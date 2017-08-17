@@ -314,7 +314,7 @@ function changeInp() {
 
 
 function changePOS() {
-    this.addClass("input");;
+    this.addClass("input");
     var coord = findNodePos(this);
 
     $("#mute").addClass("activated");
@@ -322,8 +322,8 @@ function changePOS() {
         .css("left", coord.x - parseInt(coord.width/2)*1.1)
         .css("height", coord.height)
         .css("width", coord.width)
-        .css("background-color", POS_COLOR)
-        .attr("value", this.data("pos"))
+        .css("background-color", this.style("background-color"))
+        .attr("value", this.data("label"))
         .addClass("activated");
 
     $("#pos").focus();
@@ -332,14 +332,14 @@ function changePOS() {
 
 function changeWF() {
     this.addClass("input");
-    var coord = findNodePos(this);
+    var coord = findNodePos2(this);
 
     $("#mute").addClass("activated");
-    $("#wf").css("bottom", coord.y - parseInt(coord.height*0.55))
-        .css("left", coord.x - parseInt(coord.width/2)*1.1)
+    $("#wf").css("top", coord.y)
+        .css("left", coord.x)
         .css("height", coord.height)
         .css("width", coord.width)
-        .css("background-color", NORMAL)
+        .css("background-color", this.style("background-color"))
         .attr("value", this.data("form"))
         .addClass("activated");
 
@@ -357,6 +357,18 @@ function findNodePos(node) {
     }
     coord.height = node.renderedHeight();
     coord.width = node.renderedWidth();
+    return coord;
+}
+
+
+function findNodePos2(node) {
+    var bb = node.renderedBoundingBox();
+
+    var coord = {};
+    coord.x = bb.x1;
+    coord.y = bb.y1;
+    coord.height = bb.h;
+    coord.width = bb.w;
     return coord;
 }
 
