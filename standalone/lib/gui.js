@@ -258,7 +258,9 @@ function removeSup(st) {
 }
 
 
-function changeInp() { // TODO: REFACTOR the thing!
+function changeInp() { 
+// TODO: for now, this func is dead.
+// mb, I will refactor the "change" functions
 
     this.addClass("input");
     var x = this.renderedPosition("x");
@@ -356,12 +358,12 @@ function changeWF() {
 }
 
 
-function changeDeprel(argument) {
+function changeDeprel() {
 
     this.addClass("input");
     var coord = findEdgesPos(this);
-    var x = coord[0];
-    var y = coord[1];
+    var x = coord.x;
+    var y = coord.y;
     var width = 100; // TODO: make a subtlier sizing
     var height = 40;
     if (this.data("label") == undefined) {
@@ -374,7 +376,7 @@ function changeDeprel(argument) {
         .css("height", height)
         .css("width", width)
         .css("background-color", "white")
-        .attr("value", this.data("label")) // debug!
+        .attr("value", this.data("label"))
         .addClass("activated");
 
     $("#deprel").focus();
@@ -391,7 +393,7 @@ function findEdgesPos(edge) {
     var dist = sourceX - destX;
     var y = sourceY;
     var x = sourceX - dist/2;
-    return [x, y];
+    return {x:x, y:y};
 }
 
 
