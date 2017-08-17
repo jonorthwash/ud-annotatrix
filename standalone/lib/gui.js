@@ -261,6 +261,7 @@ function removeSup(st) {
 function changeInp() { 
 // TODO: for now, this func is dead.
 // mb, I will refactor the "change" functions
+// OK, i'm refactoring it now
 
     this.addClass("input");
     var x = this.renderedPosition("x");
@@ -315,13 +316,13 @@ function changeInp() {
 
 function changePOS() {
     this.addClass("input");
-    var coord = findNodePos(this);
+    var coord = this.renderedBoundingBox();
 
     $("#mute").addClass("activated");
-    $("#pos").css("bottom", coord.y - parseInt(coord.height*0.55))
-        .css("left", coord.x - parseInt(coord.width/2)*1.1)
-        .css("height", coord.height)
-        .css("width", coord.width)
+    $("#pos").css("top", coord.y1)
+        .css("left", coord.x1)
+        .css("height", coord.h)
+        .css("width", coord.w)
         .css("background-color", this.style("background-color"))
         .attr("value", this.data("label"))
         .addClass("activated");
@@ -345,17 +346,6 @@ function changeWF() {
 
     $("#wf").focus();
 }
-
-
-function findNodePos(node) {
-    var coord = {};
-    coord.x = node.renderedPosition("x");
-    coord.y = node.relativePosition("y");
-    coord.height = node.renderedHeight();
-    coord.width = node.renderedWidth();
-    return coord;
-}
-
 
 
 function changeDeprel() {
