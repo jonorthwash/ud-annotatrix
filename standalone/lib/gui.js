@@ -333,25 +333,6 @@ function changeNode() {
 }
 
 
-function changeWF() {
-    this.addClass("input");
-    var coord = this.renderedBoundingBox();
-    var id = this.id().slice(0, 2);
-
-    $("#mute").addClass("activated");
-    $("#edit").css("top", coord.y1)
-        .css("left", coord.x1)
-        .css("height", coord.h)
-        .css("width", coord.w)
-        .css("background-color", this.style("background-color"))
-        .attr("value", this.data("form"))
-        .addClass("activated")
-        .addClass(id);;
-
-    $("#edit").focus();
-}
-
-
 function changeDeprel() {
 
     this.addClass("input");
