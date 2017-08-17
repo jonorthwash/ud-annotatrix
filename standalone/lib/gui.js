@@ -314,13 +314,13 @@ function changeInp() {
 }
 
 
-function changePOS() {
+function changeNode() {
     this.addClass("input");
     var coord = this.renderedBoundingBox();
     var id = this.id().slice(0, 2);
 
     $("#mute").addClass("activated");
-    $("#pos").css("top", coord.y1)
+    $("#edit").css("top", coord.y1)
         .css("left", coord.x1)
         .css("height", coord.h)
         .css("width", coord.w)
@@ -329,7 +329,7 @@ function changePOS() {
         .addClass("activated")
         .addClass(id);
 
-    $("#pos").focus();
+    $("#edit").focus();
 }
 
 
@@ -339,7 +339,7 @@ function changeWF() {
     var id = this.id().slice(0, 2);
 
     $("#mute").addClass("activated");
-    $("#wf").css("top", coord.y1)
+    $("#edit").css("top", coord.y1)
         .css("left", coord.x1)
         .css("height", coord.h)
         .css("width", coord.w)
@@ -348,7 +348,7 @@ function changeWF() {
         .addClass("activated")
         .addClass(id);;
 
-    $("#wf").focus();
+    $("#edit").focus();
 }
 
 

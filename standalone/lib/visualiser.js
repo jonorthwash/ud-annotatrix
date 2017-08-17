@@ -67,6 +67,7 @@ function createToken(graph, token, spId) {
     nodeWF.parent = spId;
     nodeWF.length = nodeWF.form.length + "em";
     nodeWF.id = "nf" + nodeId;
+    nodeWF.label = nodeWF.form;
     nodeWF.state = "normal";
     graph.push({"data": nodeWF, "classes": "wf"});
 

@@ -15,7 +15,7 @@ var CY_STYLE = [{
     "selector": "node.wf",
     "style": {
         "width": "data(length)",
-        "label": "data(form)"
+        "label": "data(label)"
   }
 }, {
     "selector": "$node > node",
@@ -28,7 +28,7 @@ var CY_STYLE = [{
         "text-border-width": "1px",
         "text-background-shape": "roundrectangle",
         "text-valign": "top",
-        "label": "data(form)"
+        "label": "data(label)"
   }
 }, {
     "selector": ".supAct",
