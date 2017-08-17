@@ -332,13 +332,13 @@ function changePOS() {
 
 function changeWF() {
     this.addClass("input");
-    var coord = findNodePos2(this);
+    var coord = this.renderedBoundingBox();
 
     $("#mute").addClass("activated");
-    $("#wf").css("top", coord.y)
-        .css("left", coord.x)
-        .css("height", coord.height)
-        .css("width", coord.width)
+    $("#wf").css("top", coord.y1)
+        .css("left", coord.x1)
+        .css("height", coord.h)
+        .css("width", coord.w)
         .css("background-color", this.style("background-color"))
         .attr("value", this.data("form"))
         .addClass("activated");
@@ -350,27 +350,12 @@ function changeWF() {
 function findNodePos(node) {
     var coord = {};
     coord.x = node.renderedPosition("x");
-    if (node.hasClass("pos")) {
-        coord.y = node.relativePosition("y");
-    } else {
-        coord.y = node.renderedPosition("y") * 0.4;
-    }
+    coord.y = node.relativePosition("y");
     coord.height = node.renderedHeight();
     coord.width = node.renderedWidth();
     return coord;
 }
 
-
-function findNodePos2(node) {
-    var bb = node.renderedBoundingBox();
-
-    var coord = {};
-    coord.x = bb.x1;
-    coord.y = bb.y1;
-    coord.height = bb.h;
-    coord.width = bb.w;
-    return coord;
-}
 
 
 function changeDeprel() {
