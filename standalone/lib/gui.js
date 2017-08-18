@@ -460,3 +460,18 @@ function redrawTree(sent) {
     $("#indata").val(sent.serial);
     drawTree(); 
 }
+
+
+// refactoring the write functions
+function writeSent(makeChanges) {
+
+    // build sent
+    var sent = new conllu.Sentence();
+    sent.serial = $("#indata").val();
+
+    sent = makeChanges(sent, this);
+
+    // redraw tree
+    $("#indata").val(sent.serial);
+    drawTree();    
+}
