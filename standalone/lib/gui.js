@@ -257,69 +257,13 @@ function removeSup(st) {
 }
 
 
-function changeInp() { 
-// TODO: for now, this func is dead.
-// mb, I will refactor the "change" functions
-// OK, i'm refactoring it now
-
-    this.addClass("input");
-    var x = this.renderedPosition("x");
-    var y = this.relativePosition("y");
-    var width = this.renderedWidth();
-    var height = this.renderedHeight();
-
-    var selector, color, label;
-
-    // defining which part of the tree needs to be changed
-    if (this.hasClass("pos")) {
-        selector = "#pos";
-        color = POS_COLOR;
-        label = "pos";
-    } else if (this.hasClass("wf")) {
-        selector = "#wf";
-        color = NORMAL;
-        label = "form";
-        y = this.renderedPosition("y");
-        console.log("y: " + y);
-        y = y*0.4;
-    } else if (this.hasClass("dependency")) {
-        selector = "#deprel";
-        color = "white";
-        label = "label";
-        var coord = findEdgesPos(this);
-        x = coord[0];
-        y = coord[1];
-        width = 100; // TODO: make a subtlier sizing
-        height = 40;
-        if (this.data(label) == undefined) {
-            this.data(label, "");
-        }
-    };
-
-    console.log(this.data(label));
-
-    // TODO: font size
-    $("#mute").addClass("activated");
-    console.log($(selector))
-    $(selector).css("bottom", y - parseInt(height*0.55))
-        .css("left", x - parseInt(width/2)*1.1)
-        .css("height", height)
-        .css("width", width)
-        .css("background-color", color)
-        .attr("value", this.data(label)) // debug!
-        .addClass("activated");
-
-    $(selector).focus();
-}
-
-
 function changeNode() {
     this.addClass("input");
     var id = this.id().slice(0, 2);
     var param = this.renderedBoundingBox();
     param.color = this.style("background-color");
     if (id == "ed") {param = changeEdgeParam(param)};
-    
+
     // for some reason, there are problems with label in deprels without this 
     if (this.data("label") == undefined) {this.data("label", "")};
 
@@ -343,41 +287,6 @@ function changeEdgeParam(param) {
     param.h = 40;
     param.color = "white";
     return param;
-}
-
-
-function changeDeprel() {
-
-    this.addClass("input");
-    var id = this.id().slice(0, 2);
-    var coord = findEdgesPos(this);
-    if (this.data("label") == undefined) {this.data("label", "")};
-
-    $("#mute").addClass("activated");
-    $("#deprel").css("bottom", coord.y - parseInt(coord.h*0.55))
-        .css("left", coord.x - parseInt(coord.w/2)*1.1)
-        .css("height", coord.h)
-        .css("width", coord.w)
-        .css("background-color", "white")
-        .attr("value", this.data("label"))
-        .addClass("activated")
-        .addClass(id);
-
-    $("#deprel").focus();
-}
-
-
-function findEdgesPos(edge) {
-    var sourceNode = edge.data("source");
-    var sourceX = cy.$("#" + sourceNode).renderedPosition("x");
-    var sourceY = cy.$("#" + sourceNode).renderedPosition("y");
-    var destNode = edge.data("target");
-    var destX = cy.$("#" + destNode).renderedPosition("x");
-    var lift = Math.abs(edge.data("ctrl")[0]);
-    var dist = sourceX - destX;
-    var y = sourceY;
-    var x = sourceX - dist/2;
-    return {x1:x, y1:y, w: 100, h: 40}; // TODO: make a subtlier sizing
 }
 
 
