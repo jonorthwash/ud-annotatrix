@@ -45,7 +45,6 @@ function drawArcs(evt) {
     // if the user clicked an activated node
     if (this.hasClass("activated")) {
         this.removeClass("activated");
-        this.removeClass("retokenize");
     } else {
         // look for other activated nodes
         var actNode = cy.$(".activated");
@@ -128,7 +127,7 @@ function keyUpClassifier(key) {
     // looking if there is a wf label to be modified
     var wfInp = $(".activated.nf");
     // looking if there is a deprel label to be modified
-    var deprelInp = $(".activated#deprel");
+    var deprelInp = $(".activated.ed");
     // looking if some wf node is selected
     var wf = cy.$("node.wf.activated");
     // looking if a supertoken node is selected
@@ -316,15 +315,20 @@ function changeInp() {
 
 function changeNode() {
     this.addClass("input");
-    var coord = this.renderedBoundingBox();
     var id = this.id().slice(0, 2);
+    var param = this.renderedBoundingBox();
+    param.color = this.style("background-color");
+    if (id == "ed") {param = changeEdgeParam(param)};
+    
+    // for some reason, there are problems with label in deprels without this 
+    if (this.data("label") == undefined) {this.data("label", "")};
 
     $("#mute").addClass("activated");
-    $("#edit").css("top", coord.y1)
-        .css("left", coord.x1)
-        .css("height", coord.h)
-        .css("width", coord.w)
-        .css("background-color", this.style("background-color"))
+    $("#edit").css("top", param.y1)
+        .css("left", param.x1)
+        .css("height", param.h)
+        .css("width", param.w)
+        .css("background-color", param.color)
         .attr("value", this.data("label"))
         .addClass("activated")
         .addClass(id);
@@ -333,27 +337,34 @@ function changeNode() {
 }
 
 
-function changeDeprel() {
-
-    this.addClass("input");
-    var coord = findEdgesPos(this);
-    if (this.data("label") == undefined) {
-        this.data("label", "");
-    }
-
-    $("#mute").addClass("activated");
-    $("#deprel").css("bottom", coord.y - parseInt(coord.height*0.55))
-        .css("left", coord.x - parseInt(coord.width/2)*1.1)
-        .css("height", coord.height)
-        .css("width", coord.width)
-        .css("background-color", "white")
-        .attr("value", this.data("label"))
-        .addClass("activated");
-
-    $("#deprel").focus();
+function changeEdgeParam(param) {
+    param.x1 = param.x1 + (param.x2 - param.x1)/2 - 50
+    param.w = 100; // TODO: make a subtlier sizing
+    param.h = 40;
+    param.color = "white";
+    return param;
 }
 
 
+function changeDeprel() {
+
+    this.addClass("input");
+    var id = this.id().slice(0, 2);
+    var coord = findEdgesPos(this);
+    if (this.data("label") == undefined) {this.data("label", "")};
+
+    $("#mute").addClass("activated");
+    $("#deprel").css("bottom", coord.y - parseInt(coord.h*0.55))
+        .css("left", coord.x - parseInt(coord.w/2)*1.1)
+        .css("height", coord.h)
+        .css("width", coord.w)
+        .css("background-color", "white")
+        .attr("value", this.data("label"))
+        .addClass("activated")
+        .addClass(id);
+
+    $("#deprel").focus();
+}
 
 
 function findEdgesPos(edge) {
@@ -366,7 +377,7 @@ function findEdgesPos(edge) {
     var dist = sourceX - destX;
     var y = sourceY;
     var x = sourceX - dist/2;
-    return {x:x, y:y, width: 100, height: 40}; // TODO: make a subtlier sizing
+    return {x1:x, y1:y, w: 100, h: 40}; // TODO: make a subtlier sizing
 }
 
 
