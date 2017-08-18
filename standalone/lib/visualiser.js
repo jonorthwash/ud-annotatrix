@@ -17,6 +17,7 @@ function conlluDraw(content) {
         boxSelectionEnabled: false,
         autounselectify: true,
         autoungrabify: true,
+        userZoomingEnabled: false,
 
 
         layout: {
