@@ -282,9 +282,10 @@ function changeNode() {
 
 
 function changeEdgeParam(param) {
-    param.x1 = param.x1 + (param.x2 - param.x1)/2 - 50
-    param.w = 100; // TODO: make a subtlier sizing
-    param.h = 40;
+    var nodeBox = cy.nodes()[0].renderedBoundingBox();
+    param.w = nodeBox.w;
+    param.h = nodeBox.h;
+    param.x1 = param.x1 + (param.x2 - param.x1)/2 - param.w*0.5;
     param.color = "white";
     return param;
 }
