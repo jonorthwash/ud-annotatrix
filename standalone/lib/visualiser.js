@@ -6,7 +6,7 @@ var FANCY = "#cc22fc";
 var POS_COLOR = "#afa2ff";
 var ST_COLOR = "#bcd2ff"
 var LOW_DIGITS = {0: "₀", 1: "₁", 2: "₂", 3: "₃", 4: "₄", 5: "₅",
-6: "₆", 7: "7", 8: "8"}
+6: "₆", 7: "₇", 8: "₈", 9: "₉", "-": "₋", "(" : "₍", ")" : "₎"};
 
 // require lib for CoNLL-U parsing
 var conllu = require("conllu");
@@ -43,8 +43,8 @@ function conllu2cy(content) {
     $.each(sent.tokens, function(n, token) {
         if (token.tokens){
             var spId = "ns" + strWithZero(n);
-            var id = findSupTokId(token.tokens);
-            graph.push({"data": {"id": spId,"label": token.form + " (" + id + ")"}});
+            var id = toSubscript(" (" + findSupTokId(token.tokens) + ")");
+            graph.push({"data": {"id": spId,"label": token.form + id}});
             $.each(token.tokens, function(n, subTok) {
                 graph = createToken(graph, subTok, spId);
             });
@@ -62,6 +62,16 @@ function findSupTokId(subtokens) {
 }
 
 
+function toSubscript(str) {
+    var substr = "";
+    $.each(str, function(n, char) {
+        var newChar = (LOW_DIGITS[char]) ? LOW_DIGITS[char] : char;
+        substr += newChar;
+    })
+    return substr;
+}
+
+
 function createToken(graph, token, spId) {
     /* Takes the tree graph, a token object and the id of the supertoken.
     Creates the wf node, the POS node and dependencies. Returns the graph. */
@@ -76,7 +86,7 @@ function createToken(graph, token, spId) {
     nodeWF.parent = spId;
     nodeWF.length = nodeWF.form.length + 1 + "em";
     nodeWF.id = "nf" + nodeId;
-    nodeWF.label = nodeWF.form + " " + LOW_DIGITS[+nodeId];
+    nodeWF.label = nodeWF.form + toSubscript(" " + +nodeId);
     nodeWF.state = "normal";
     graph.push({"data": nodeWF, "classes": "wf"});
 
