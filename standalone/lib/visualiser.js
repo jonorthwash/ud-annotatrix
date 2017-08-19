@@ -5,6 +5,8 @@ var NORMAL = "#7fa2ff";
 var FANCY = "#cc22fc";
 var POS_COLOR = "#afa2ff";
 var ST_COLOR = "#bcd2ff"
+var LOW_DIGITS = {0: "₀", 1: "₁", 2: "₂", 3: "₃", 4: "₄", 5: "₅",
+6: "₆", 7: "7", 8: "8"}
 
 // require lib for CoNLL-U parsing
 var conllu = require("conllu");
@@ -41,7 +43,8 @@ function conllu2cy(content) {
     $.each(sent.tokens, function(n, token) {
         if (token.tokens){
             var spId = "ns" + strWithZero(n);
-            graph.push({"data": {"id": spId, "form": token.form}});
+            var id = findSupTokId(token.tokens);
+            graph.push({"data": {"id": spId,"label": token.form + " (" + id + ")"}});
             $.each(token.tokens, function(n, subTok) {
                 graph = createToken(graph, subTok, spId);
             });
@@ -51,6 +54,11 @@ function conllu2cy(content) {
     })
 
     return graph;
+}
+
+
+function findSupTokId(subtokens) {
+    return subtokens[0].id + "-" + subtokens[subtokens.length - 1].id;
 }
 
 
@@ -66,9 +74,9 @@ function createToken(graph, token, spId) {
     var nodeWF = token;
 
     nodeWF.parent = spId;
-    nodeWF.length = nodeWF.form.length + "em";
+    nodeWF.length = nodeWF.form.length + 1 + "em";
     nodeWF.id = "nf" + nodeId;
-    nodeWF.label = nodeWF.form;
+    nodeWF.label = nodeWF.form + " " + LOW_DIGITS[+nodeId];
     nodeWF.state = "normal";
     graph.push({"data": nodeWF, "classes": "wf"});
 
