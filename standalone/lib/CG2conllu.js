@@ -44,7 +44,6 @@ function formTokens(lines) {
             } else {
                 console.log("Something gone wrong on line: " + lines[i + 1]);
             }
-
             tokens.push(formNewToken(analyses));
         } else {
             console.log("Something gone wrong on line: " + lines[i]);
@@ -61,14 +60,17 @@ function getAnalyses(line, analyses) {
     var forSubst = quoted.replace(/ /g, "·");
     var gram = line.replace(/".*"/, forSubst);
 
-    gram = gram.split(" "); // then split on space
-    $.each(gram, function(n, ana) {
+    gram = gram.trim(" ").split(" "); // then split on space and iterate
+    $.each(gram, function(n, ana) { 
         if (ana.match(/"[^<>]*"/)) {
             analyses.lemma = ana.replace(/"([^<>]*)"/, '$1');
         } else if (ana.match(/#[0-9]+->[0-9]+/)) {
             analyses.head = ana.replace(/#([0-9]+)->([0-9]+)/, '$2');
         } else if (ana.match(/@[a-z:]+/)) {
             analyses.deprel = ana.replace(/@([a-z:]+)/, '$1');
+        } else if (n < 2) {
+            analyses.upostag = ana; // TODO: what about xpostag?
+            console.log("upostag: " + analyses.upostag);
         }
     })
 
