@@ -74,7 +74,7 @@ function getAnalyses(line, analyses) {
             if (!analyses.feats) {
                 analyses.feats = ana;
             } else {
-                analyses.feats += "." + ana;
+                analyses.feats += "|" + ana;
             }
         }
     })
