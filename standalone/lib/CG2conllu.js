@@ -37,15 +37,14 @@ function formTokens(lines) {
             var analyses = {};
             analyses.id = i/2 + 1;
             analyses.form = lines[i].replace(/"<(.*)>"/, '$1');
-            console.log(analyses.id + ": " + analyses.form);
 
             if (lines[i + 1] && !lines[i + 1].match(/"<.*>"/)) { // then everything is ok
                 analyses = getAnalyses(lines[i + 1], analyses); 
-            } else {
+            } else { // TODO: raise an exception
                 console.log("Something gone wrong on line: " + lines[i + 1]);
             }
             tokens.push(formNewToken(analyses));
-        } else {
+        } else { // TODO: raise an exception
             console.log("Something gone wrong on line: " + lines[i]);
         }
     }
@@ -70,8 +69,7 @@ function getAnalyses(line, analyses) {
             analyses.deprel = ana.replace(/@([a-z:]+)/, '$1');
         } else if (n < 2) {
             analyses.upostag = ana; // TODO: what about xpostag?
-            console.log("upostag: " + analyses.upostag);
-        }
+        } // TODO: saving other data
     })
 
     return analyses;
