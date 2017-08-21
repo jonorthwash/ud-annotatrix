@@ -69,7 +69,14 @@ function getAnalyses(line, analyses) {
             analyses.deprel = ana.replace(/@([a-z:]+)/, '$1');
         } else if (n < 2) {
             analyses.upostag = ana; // TODO: what about xpostag?
-        } // TODO: saving other data
+        } else {
+            // saving other data
+            if (!analyses.feats) {
+                analyses.feats = ana;
+            } else {
+                analyses.feats += "." + ana;
+            }
+        }
     })
 
     return analyses;
