@@ -35,30 +35,26 @@ function formTokens(lines) {
     for (var i = 0; i < (lines.length); i += 2) {
         if (lines[i].match(/"<.*>"/)) { // then everything is ok
             var analyses = {};
-            var id = i/2 + 1;
-            var form = lines[i].replace(/"<(.*)>"/, '$1');
-            console.log(id + ": " + form);
+            analyses.id = i/2 + 1;
+            analyses.form = lines[i].replace(/"<(.*)>"/, '$1');
+            console.log(analyses.id + ": " + analyses.form);
 
             if (lines[i + 1] && !lines[i + 1].match(/"<.*>"/)) { // then everything is ok
-                analyses = getAnalyses(lines[i + 1]); 
+                analyses = getAnalyses(lines[i + 1], analyses); 
             } else {
                 console.log("Something gone wrong on line: " + lines[i + 1]);
             }
 
-            analyses.id = id;
-            analyses.form = form;
             tokens.push(formNewToken(analyses));
         } else {
-            console.log("Malformed CG!");
+            console.log("Something gone wrong on line: " + lines[i]);
         }
     }
     return tokens;
 }
 
 
-function getAnalyses(line) {
-    var analyses = {}
-
+function getAnalyses(line, analyses) {
     // first replace space (0020) with · for lemmas and forms containing
     // whitespace, so that the parser doesn't get confused.
     var quoted = line.replace(/.*(".*?").*/, '$1');
@@ -66,6 +62,15 @@ function getAnalyses(line) {
     var gram = line.replace(/".*"/, forSubst);
 
     gram = gram.split(" "); // then split on space
+    $.each(gram, function(n, ana) {
+        if (ana.match(/"[^<>]*"/)) {
+            analyses.lemma = ana.replace(/"([^<>]*)"/, '$1');
+        } else if (ana.match(/#[0-9]+->[0-9]+/)) {
+            analyses.head = ana.replace(/#([0-9]+)->([0-9]+)/, '$2');
+        } else if (ana.match(/@[a-z:]+/)) {
+            analyses.deprel = ana.replace(/@([a-z:]+)/, '$1');
+        }
+    })
 
     return analyses;
 }
