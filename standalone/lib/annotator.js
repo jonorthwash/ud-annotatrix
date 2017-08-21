@@ -22,6 +22,7 @@ function main() {
 
         // native project code
         ROOT + 'CG2conllx.js',
+        ROOT + 'CG2conllu.js',
         ROOT + 'converters.js',
         ROOT + 'gui.js',
         ROOT + 'visualiser.js',

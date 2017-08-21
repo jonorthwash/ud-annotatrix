@@ -412,18 +412,6 @@ function mergeNodes(toMerge, side, how) {
 }
 
 
-function formNewToken(attrs) {
-    /* Takes a dictionary of attributes. Creates a new token, assigns
-    values to the attributes given. Returns the new token. */
-
-    var newToken = new conllu.Token();
-    $.each(attrs, function(attr, val){
-        newToken[attr] = val;
-    });
-    return newToken;
-}
-
-
 function buildSent() {
     /* Reads data from the textbox, returns a sent object. */
     var sent = new conllu.Sentence();
