@@ -209,14 +209,16 @@ function drawTree() {
     $("#detected").html("Detected: " + FORMAT + " format");
 
 
-    if (FORMAT == "CoNLL-U") {
-        conlluDraw(content);
+    if (FORMAT == "CoNLL-U" || FORMAT == "CG3") {
+        if (FORMAT == "CG3") {content = CG2conllu(content)};
 
+        conlluDraw(content);
         var inpSupport = $("<div id='mute'>"
             + "<input type='text' id='edit' class='hidden-input'/></div>");
         $("#cy").prepend(inpSupport);
         addHandlers();
     }
+
     if (LOC_ST_AVALIABLE) {
         localStorage.setItem("corpus", getTreebank()); // saving the data
     }
