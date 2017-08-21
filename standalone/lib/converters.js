@@ -4,8 +4,8 @@ function toConllu() {
     if (FORMAT == "plain text") {
         plainText2Conllu();
     } else if (FORMAT == "CG3") {
-        // $("#indata").val(cgParse(text));
-        alert("The option is not supported yet :( ");
+        var text = $("#indata").val(); // TODO: refactor
+        $("#indata").val(CG2conllu(text));
     }
     drawTree();
 }
