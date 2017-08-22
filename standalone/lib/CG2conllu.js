@@ -3,16 +3,19 @@
 function CG2conllu(CGtext) {
     /* Takes a string in CG, returns a string in conllu. */
 
-    test4ambiguety(CGtext); // to abort conversion if there are ambiguous analyses
+    if (ambiguetyPresent(CGtext)) { // to abort conversion if there are ambiguous analyses
+        document.getElementById("convert").disabled = true;
+        $("#warning").css("background-color", "pink")
+            .text("Warning: CG containing ambiguous analyses can't be converted into CoNLL-U!");
+        return;
+    }
 
     var sent = new conllu.Sentence();
     var separated = findComments(CGtext);
     sent.comments = separated[0];
-
     var tokens = formTokens(separated[1]);
     sent.tokens = tokens;
-
-    return sent.serial;
+    return sent.serial;        
 }
 
 
@@ -32,10 +35,19 @@ function findComments(CGtext) {
 }
 
 
-function test4ambiguety(CGtext) {
-    var analyses = CGtext.split(/"<(.*)>"/);
-    console.log("analyses: ");
-    console.log(analyses);
+function ambiguetyPresent(CGtext) {
+    var lines = CGtext.split(/"<(.*)>"/);
+
+    // suppose the indent is consistent troughout the sentence
+    var indent = lines[2].replace("\n", "").split(/[^\s]/)[0];
+    for (var i = 2; i < lines.length; i += 2) {
+        var ana = lines[i].trim(); 
+        if (ana.includes(indent) && !ana.includes(indent + indent)) {
+            console.log(lines[i]);
+            return true;
+        }
+    }
+    return false;
 }
 
 
