@@ -2,8 +2,10 @@
 
 function CG2conllu(CGtext) {
     /* Takes a string in CG, returns a string in conllu. */
+
+    test4ambiguety(CGtext); // to abort conversion if there are ambiguous analyses
+
     var sent = new conllu.Sentence();
-    // console.log(CGtext);
     var separated = findComments(CGtext);
     sent.comments = separated[0];
 
@@ -30,6 +32,13 @@ function findComments(CGtext) {
 }
 
 
+function test4ambiguety(CGtext) {
+    var analyses = CGtext.split(/"<(.*)>"/);
+    console.log("analyses: ");
+    console.log(analyses);
+}
+
+
 function formTokens(lines) {
     var tokens = [];
     for (var i = 0; i < (lines.length); i += 2) {
@@ -52,6 +61,36 @@ function formTokens(lines) {
 }
 
 
+function formTokens1(lines) { 
+
+    // i use the presupposition that there are no ambiguous readings,
+    // because i've aboted conversion of ambiguous sentences in test4ambiguety 
+    var tokens = [];
+    var i = 0;
+    while (i < (lines.length)) {
+        if (lines[i].match(/"<.*>"/)) { // token
+            var token = {};
+            token.id = i/2 + 1;
+            token.form = lines[i].replace(/"<(.*)>"/, '$1');
+            i ++;
+        } else if (i != 0) {
+            if (lines[i - 1].match(/"<.*>"/)){
+                token = getAnalyses(lines[i], token);
+                tokens.push(formNewToken(token));                
+            } else if (lines[i - 1].match(/"[^<>]*"/)) {
+                console.log("There should be a supertoken.")
+            } else {
+                console.log("Something gone wrong on line: " + lines[i]);
+            }
+            i ++;
+        } else {
+            console.log("Something gone wrong on line: " + lines[i]);
+        }
+    }
+    return tokens;
+}
+
+
 function getAnalyses(line, analyses) {
     // first replace space (0020) with · for lemmas and forms containing
     // whitespace, so that the parser doesn't get confused.
@@ -59,7 +98,7 @@ function getAnalyses(line, analyses) {
     var forSubst = quoted.replace(/ /g, "·");
     var gram = line.replace(/".*"/, forSubst);
 
-    gram = gram.trim(" ").split(" "); // then split on space and iterate
+    gram = gram.replace(/;? +/, "").split(" "); // then split on space and iterate
     $.each(gram, function(n, ana) { 
         if (ana.match(/"[^<>]*"/)) {
             analyses.lemma = ana.replace(/"([^<>]*)"/, '$1');
