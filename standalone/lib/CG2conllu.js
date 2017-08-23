@@ -141,5 +141,14 @@ function conllu2CG(conlluText, indent) {
     }
 
     var CGtext = "#" + sent.comments.join("\n#")
+    $.each(sent.tokens, function(n, tok) {
+        var form = (tok.form) ? ('\n"<' + tok.form + '>"\n') : ''; 
+        var lemma = (tok.lemma) ? ('"' + tok.lemma + '"') : '';
+        var pos = (tok.upostag) ? tok.upostag : tok.xpostag;
+        CGtext += form;
+        CGtext += indent + lemma;
+        CGtext += " " + pos;
+    })
+
     return CGtext;
 }
