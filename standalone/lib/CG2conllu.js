@@ -13,8 +13,11 @@ function CG2conllu(CGtext) {
     var sent = new conllu.Sentence();
     var separated = findComments(CGtext);
     sent.comments = separated[0];
-    var tokens = formTokens(separated[1]);
+    // var tokens = formTokens1(separated[1]);
+    var tokens = formTokens2(CGtext);
     sent.tokens = tokens;
+    console.log("result: ");
+    console.log(sent.serial);
     return sent.serial;        
 }
 
@@ -43,7 +46,7 @@ function ambiguetyPresent(CGtext) {
     for (var i = 2; i < lines.length; i += 2) {
         var ana = lines[i].trim(); 
         if (ana.includes(indent) && !ana.includes(indent + indent)) {
-            console.log(lines[i]);
+            // console.log(lines[i]);
             return true;
         }
     }
@@ -103,6 +106,38 @@ function formTokens1(lines) {
 }
 
 
+function formTokens2(CGtext) {
+
+    // i use the presupposition that there are no ambiguous readings,
+    // because i've aboted conversion of ambiguous sentences in ambiguetyPresent
+    var tokens = [];
+    var lines = CGtext.split(/"<(.*)>"/).slice(1);
+    var tokId = 1;
+    $.each(lines, function(n, line) {
+        if (n % 2 == 1) {
+            var token = {"form": lines[n - 1]};
+            line = line.replace(/\n?;?( +|\t)/, "");
+            if (!line.match(/(  |\t)/)) {
+                console.log("token: " + token.form);
+                console.log("ana: " + line);
+                token.id = tokId;
+                token = getAnalyses(line, token);
+                tokens.push(formNewToken(token));
+                console.log(tokens[tokens.length - 1]);
+                tokId ++;
+            } else {
+                console.log("sup: " + line);
+                // var subtokens = line.split(/  +|\t/);
+                // var supertoken = formSupertoken(subtokens, token, tokId);
+                // tokens.push(supertoken);
+                // tokId += subtokens.length;
+            }
+        }
+    })
+    return tokens;
+}
+
+
 function getAnalyses(line, analyses) {
     // first replace space (0020) with · for lemmas and forms containing
     // whitespace, so that the parser doesn't get confused.
@@ -110,16 +145,20 @@ function getAnalyses(line, analyses) {
     var forSubst = quoted.replace(/ /g, "·");
     var gram = line.replace(/".*"/, forSubst);
 
-    gram = gram.replace(/;? +/, "").split(" "); // then split on space and iterate
+    // gram = gram.replace(/;? +/, "").split(" "); // then split on space and iterate
+    gram = gram.replace(/[\n\t]+/, "").split(" "); // then split on space and iterate
+    // console.log("gram: ");
+    // console.log(gram);
     $.each(gram, function(n, ana) { 
         if (ana.match(/"[^<>]*"/)) {
             analyses.lemma = ana.replace(/"([^<>]*)"/, '$1');
         } else if (ana.match(/#[0-9]+->[0-9]+/)) {
-            analyses.head = ana.replace(/#([0-9]+)->([0-9]+)/, '$2');
+            analyses.head = ana.replace(/#([0-9]+)->([0-9]+)/, '$2').trim();
         } else if (ana.match(/@[a-z:]+/)) {
             analyses.deprel = ana.replace(/@([a-z:]+)/, '$1');
         } else if (n < 2) {
             analyses.upostag = ana; // TODO: what about xpostag?
+            // console.log("pos: " + ana);
         } else {
             // saving other data
             if (!analyses.feats) {
@@ -129,7 +168,8 @@ function getAnalyses(line, analyses) {
             }
         }
     })
-
+    // console.log("analyses: ");
+    // console.log(analyses);
     return analyses;
 }
 
@@ -143,4 +183,9 @@ function formNewToken(attrs) {
         newToken[attr] = val;
     });
     return newToken;
+}
+
+
+function formSupertoken(subtokens, attrs, tokId) {
+    console.log("There should be a supertoken!");
 }
