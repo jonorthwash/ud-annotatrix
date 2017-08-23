@@ -62,17 +62,16 @@ function formTokens2(CGtext) {
     var tokId = 1;
     $.each(lines, function(n, line) {
         if (n % 2 == 1) {
-            var token = {"form": lines[n - 1]};
-            line = line.replace(/\n?;?( +|\t)/, "");
+            var form = lines[n -1];
+            line = line.replace(/^\n?;?( +|\t)/, "");
             if (!line.match(/(  |\t)/)) {
-                token.id = tokId;
-                token = getAnalyses(line, token);
+                var token = getAnalyses(line, {"form": form, "id": tokId});
                 tokens.push(formNewToken(token));
                 tokId ++;
             } else {
-                var subtokens = line.split(/  +|\t/);
+                var subtokens = line.trim().split("\n");
                 console.log("sup: " + subtokens);
-                // var supertoken = formSupertoken(subtokens, token, tokId);
+                var supertoken = formSupertoken(subtokens, form, tokId);
                 // tokens.push(supertoken);
                 // tokId += subtokens.length;
             }
