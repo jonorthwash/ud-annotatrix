@@ -13,7 +13,6 @@ function CG2conllu(CGtext) {
     var sent = new conllu.Sentence();
     var separated = findComments(CGtext);
     sent.comments = separated[0];
-    // var tokens = formTokens1(separated[1]);
     var tokens = formTokens2(CGtext);
     sent.tokens = tokens;
     console.log("result: ");
@@ -51,58 +50,6 @@ function ambiguetyPresent(CGtext) {
         }
     }
     return false;
-}
-
-
-function formTokens(lines) {
-    var tokens = [];
-    for (var i = 0; i < (lines.length); i += 2) {
-        if (lines[i].match(/"<.*>"/)) { // then everything is ok
-            var analyses = {};
-            analyses.id = i/2 + 1;
-            analyses.form = lines[i].replace(/"<(.*)>"/, '$1');
-
-            if (lines[i + 1] && !lines[i + 1].match(/"<.*>"/)) { // then everything is ok
-                analyses = getAnalyses(lines[i + 1], analyses); 
-            } else { // TODO: raise an exception
-                console.log("Something gone wrong on line: " + lines[i + 1]);
-            }
-            tokens.push(formNewToken(analyses));
-        } else { // TODO: raise an exception
-            console.log("Something gone wrong on line: " + lines[i]);
-        }
-    }
-    return tokens;
-}
-
-
-function formTokens1(lines) { 
-
-    // i use the presupposition that there are no ambiguous readings,
-    // because i've aboted conversion of ambiguous sentences in test4ambiguety 
-    var tokens = [];
-    var i = 0;
-    while (i < (lines.length)) {
-        if (lines[i].match(/"<.*>"/)) { // token
-            var token = {};
-            token.id = i/2 + 1;
-            token.form = lines[i].replace(/"<(.*)>"/, '$1');
-            i ++;
-        } else if (i != 0) {
-            if (lines[i - 1].match(/"<.*>"/)){
-                token = getAnalyses(lines[i], token);
-                tokens.push(formNewToken(token));                
-            } else if (lines[i - 1].match(/"[^<>]*"/)) {
-                console.log("There should be a supertoken.")
-            } else {
-                console.log("Something gone wrong on line: " + lines[i]);
-            }
-            i ++;
-        } else {
-            console.log("Something gone wrong on line: " + lines[i]);
-        }
-    }
-    return tokens;
 }
 
 
@@ -145,7 +92,6 @@ function getAnalyses(line, analyses) {
     var forSubst = quoted.replace(/ /g, "·");
     var gram = line.replace(/".*"/, forSubst);
 
-    // gram = gram.replace(/;? +/, "").split(" "); // then split on space and iterate
     gram = gram.replace(/[\n\t]+/, "").split(" "); // then split on space and iterate
     // console.log("gram: ");
     // console.log(gram);
