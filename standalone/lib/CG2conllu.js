@@ -15,8 +15,6 @@ function CG2conllu(CGtext) {
     sent.comments = separated[0];
     var tokens = formTokens2(CGtext);
     sent.tokens = tokens;
-    console.log("result: ");
-    console.log(sent.serial);
     return sent.serial;        
 }
 
@@ -70,8 +68,6 @@ function formTokens2(CGtext) {
                 tokId ++;
             } else {
                 var subtokens = line.trim().split("\n");
-                console.log("sup: " + subtokens);
-                console.log(subtokens.length);
                 var supertoken = formSupertoken(subtokens, form, tokId);
                 tokens.push(supertoken);
                 tokId += subtokens.length;
@@ -134,4 +130,9 @@ function formSupertoken(subtokens, form, tokId) {
         tokId ++;
     })
     return sup;
+}
+
+
+function conllu2CG(conlluText) {
+    // body...
 }
