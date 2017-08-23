@@ -133,6 +133,13 @@ function formSupertoken(subtokens, form, tokId) {
 }
 
 
-function conllu2CG(conlluText) {
-    // body...
+function conllu2CG(conlluText, indent) {
+    var sent = new conllu.Sentence();
+    sent.serial = conlluText;
+    if (indent == undefined) {
+        var indent = "\t";
+    }
+
+    var CGtext = "#" + sent.comments.join("\n#")
+    return CGtext;
 }
