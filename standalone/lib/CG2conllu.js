@@ -71,9 +71,10 @@ function formTokens2(CGtext) {
             } else {
                 var subtokens = line.trim().split("\n");
                 console.log("sup: " + subtokens);
+                console.log(subtokens.length);
                 var supertoken = formSupertoken(subtokens, form, tokId);
-                // tokens.push(supertoken);
-                // tokId += subtokens.length;
+                tokens.push(supertoken);
+                tokId += subtokens.length;
             }
         }
     })
@@ -123,6 +124,14 @@ function formNewToken(attrs) {
 }
 
 
-function formSupertoken(subtokens, attrs, tokId) {
-    console.log("There should be a supertoken!");
+function formSupertoken(subtokens, form, tokId) {
+    var sup = new conllu.MultiwordToken();
+    sup.form = form;
+
+    $.each(subtokens, function(n, tok) {
+        var newTok = getAnalyses(tok, {"id": tokId});
+        sup.tokens.push(formNewToken(newTok));
+        tokId ++;
+    })
+    return sup;
 }
