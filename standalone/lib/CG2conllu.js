@@ -65,16 +65,13 @@ function formTokens2(CGtext) {
             var token = {"form": lines[n - 1]};
             line = line.replace(/\n?;?( +|\t)/, "");
             if (!line.match(/(  |\t)/)) {
-                console.log("token: " + token.form);
-                console.log("ana: " + line);
                 token.id = tokId;
                 token = getAnalyses(line, token);
                 tokens.push(formNewToken(token));
-                console.log(tokens[tokens.length - 1]);
                 tokId ++;
             } else {
-                console.log("sup: " + line);
-                // var subtokens = line.split(/  +|\t/);
+                var subtokens = line.split(/  +|\t/);
+                console.log("sup: " + subtokens);
                 // var supertoken = formSupertoken(subtokens, token, tokId);
                 // tokens.push(supertoken);
                 // tokId += subtokens.length;
@@ -93,8 +90,6 @@ function getAnalyses(line, analyses) {
     var gram = line.replace(/".*"/, forSubst);
 
     gram = gram.replace(/[\n\t]+/, "").split(" "); // then split on space and iterate
-    // console.log("gram: ");
-    // console.log(gram);
     $.each(gram, function(n, ana) { 
         if (ana.match(/"[^<>]*"/)) {
             analyses.lemma = ana.replace(/"([^<>]*)"/, '$1');
@@ -104,7 +99,6 @@ function getAnalyses(line, analyses) {
             analyses.deprel = ana.replace(/@([a-z:]+)/, '$1');
         } else if (n < 2) {
             analyses.upostag = ana; // TODO: what about xpostag?
-            // console.log("pos: " + ana);
         } else {
             // saving other data
             if (!analyses.feats) {
@@ -114,8 +108,6 @@ function getAnalyses(line, analyses) {
             }
         }
     })
-    // console.log("analyses: ");
-    // console.log(analyses);
     return analyses;
 }
 
