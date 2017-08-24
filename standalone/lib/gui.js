@@ -7,6 +7,7 @@ This scripts contains makes support for graphical editing.
 var DEL_KEY = 46;
 var BACKSPACE = 8;
 var ENTER = 13;
+var ESC = 27;
 var RIGHT = 39;
 var LEFT = 37;
 var D = 68;

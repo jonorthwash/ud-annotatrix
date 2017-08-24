@@ -54,7 +54,9 @@ function main() {
             console.log("localStorage is not avaliable :(")
         }
 
-        $("#indata").keyup(drawTree);
+        // $("#indata").keyup(drawTree);
+        $("#indata").bind("keyup", drawTree);
+        $("#indata").bind("keyup", focusOut);
         loadFromUrl();
     });
 
@@ -322,6 +324,13 @@ function storageAvailable(type) {
             e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
             // acknowledge QuotaExceededError only if there's something already stored
             storage.length !== 0;
+    }
+}
+
+
+function focusOut(key) {
+    if (key.which == ESC) {
+        this.blur();
     }
 }
 
