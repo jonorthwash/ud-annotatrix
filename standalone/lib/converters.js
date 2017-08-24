@@ -7,6 +7,7 @@ function toConllu() {
         var text = $("#indata").val(); // TODO: refactor
         $("#indata").val(CG2conllu(text));
     }
+    FORMAT = "CoNLL-U";
     drawTree();
 }
 
