@@ -17,8 +17,8 @@ var SIDES = {39: "right", 37: "left"};
 
 
 function setUndos(undoManager) {
-    btnUndo = document.getElementById("btnUndo");
-    btnRedo = document.getElementById("btnRedo");
+    var btnUndo = document.getElementById("btnUndo");
+    var btnRedo = document.getElementById("btnRedo");
 
     function updateUI() {
         btnUndo.disabled = !undoManager.hasUndo();
