@@ -13,7 +13,7 @@ function CG2conllu(CGtext) {
     var sent = new conllu.Sentence();
     var separated = findComments(CGtext);
     sent.comments = separated[0];
-    var tokens = formTokens2(CGtext);
+    var tokens = formTokens(CGtext);
     sent.tokens = tokens;
     return sent.serial;        
 }
@@ -51,7 +51,7 @@ function ambiguetyPresent(CGtext) {
 }
 
 
-function formTokens2(CGtext) {
+function formTokens(CGtext) {
 
     // i use the presupposition that there are no ambiguous readings,
     // because i've aboted conversion of ambiguous sentences in ambiguetyPresent
