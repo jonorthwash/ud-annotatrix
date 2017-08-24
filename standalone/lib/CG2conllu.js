@@ -85,7 +85,7 @@ function getAnalyses(line, analyses) {
     var forSubst = quoted.replace(/ /g, "·");
     var gram = line.replace(/".*"/, forSubst);
 
-    gram = gram.replace(/[\n\t]+/, "").split(" "); // then split on space and iterate
+    gram = gram.replace(/[\n\t]+/, "").trim().split(" "); // then split on space and iterate
     $.each(gram, function(n, ana) { 
         if (ana.match(/"[^<>]*"/)) {
             analyses.lemma = ana.replace(/"([^<>]*)"/, '$1');
