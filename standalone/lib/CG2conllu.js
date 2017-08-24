@@ -140,29 +140,31 @@ function conllu2CG(conlluText, indent) {
         var indent = "\t";
     }
 
-    var CGtext = "#" + sent.comments.join("\n#")
+    var CGtext = (sent.comments.length) ? "#" + sent.comments.join("\n#") : "";
 
-    $.each(sent.tokens, function(n, tok) {
+    $.each(sent.tokens, function(i, tok) {
 
         var form = (tok.form) ? ('\n"<' + tok.form + '>"\n') : '';
-        CGtext += form + indent;
+        CGtext += form;
         if (tok.tokens == undefined) {
-            CGtext += newCgAna(n, tok);
+            CGtext += indent + newCgAna(i, tok);
         } else {
-            console.log("Here should be a supertoken!");
+            $.each(tok.tokens, function(j, subtok) {
+                CGtext += "\n" + indent.repeat(j + 1) + newCgAna(j, subtok);
+            })
         }
     })
 
-    return CGtext;
+    return CGtext.trim();
 }
 
 
-function newCgAna(n, tok) {
+function newCgAna(i, tok) {
     var lemma = (tok.lemma) ? ('"' + tok.lemma + '"') : '';
     var pos = (tok.upostag) ? " " + tok.upostag : tok.xpostag;
     var feats = (tok.feats) ? " " + tok.feats : '';
     var deprel = (tok.deprel) ? " @" + tok.deprel : " @x"; // is it really what we want by default?
-    var edge = (tok.head) ? " #" + n + "->" + tok.head : ''; 
+    var edge = (tok.head) ? " #" + (i + 1) + "->" + tok.head : ''; 
     var cgToken = lemma + pos + feats + deprel + edge;
     return cgToken;
 }
