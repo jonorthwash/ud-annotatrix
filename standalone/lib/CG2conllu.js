@@ -141,14 +141,28 @@ function conllu2CG(conlluText, indent) {
     }
 
     var CGtext = "#" + sent.comments.join("\n#")
+
     $.each(sent.tokens, function(n, tok) {
-        var form = (tok.form) ? ('\n"<' + tok.form + '>"\n') : ''; 
-        var lemma = (tok.lemma) ? ('"' + tok.lemma + '"') : '';
-        var pos = (tok.upostag) ? tok.upostag : tok.xpostag;
-        CGtext += form;
-        CGtext += indent + lemma;
-        CGtext += " " + pos;
+
+        var form = (tok.form) ? ('\n"<' + tok.form + '>"\n') : '';
+        CGtext += form + indent;
+        if (tok.tokens == undefined) {
+            CGtext += newCgAna(n, tok);
+        } else {
+            console.log("Here should be a supertoken!");
+        }
     })
 
     return CGtext;
+}
+
+
+function newCgAna(n, tok) {
+    var lemma = (tok.lemma) ? ('"' + tok.lemma + '"') : '';
+    var pos = (tok.upostag) ? " " + tok.upostag : tok.xpostag;
+    var feats = (tok.feats) ? " " + tok.feats : '';
+    var deprel = (tok.deprel) ? " @" + tok.deprel : " @x"; // is it really what we want by default?
+    var edge = (tok.head) ? " #" + n + "->" + tok.head : ''; 
+    var cgToken = lemma + pos + feats + deprel + edge;
+    return cgToken;
 }
