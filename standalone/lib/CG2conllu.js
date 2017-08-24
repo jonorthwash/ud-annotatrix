@@ -162,7 +162,7 @@ function conllu2CG(conlluText, indent) {
 function newCgAna(i, tok) {
     var lemma = (tok.lemma) ? ('"' + tok.lemma + '"') : '';
     var pos = (tok.upostag) ? " " + tok.upostag : tok.xpostag;
-    var feats = (tok.feats) ? " " + tok.feats : '';
+    var feats = (tok.feats) ? " " + tok.feats.replace(/\|/g, " ") : '';
     var deprel = (tok.deprel) ? " @" + tok.deprel : " @x"; // is it really what we want by default?
     var edge = (tok.head) ? " #" + (i + 1) + "->" + tok.head : ''; 
     var cgToken = lemma + pos + feats + deprel + edge;
