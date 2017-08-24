@@ -60,7 +60,7 @@ function formTokens(CGtext) {
     var tokId = 1;
     $.each(lines, function(n, line) {
         if (n % 2 == 1) {
-            var form = lines[n -1];
+            var form = lines[n - 1];
             line = line.replace(/^\n?;?( +|\t)/, "");
             if (!line.match(/(  |\t)/)) {
                 var token = getAnalyses(line, {"form": form, "id": tokId});
@@ -125,7 +125,7 @@ function formSupertoken(subtokens, form, tokId) {
     sup.form = form;
 
     $.each(subtokens, function(n, tok) {
-        var newTok = getAnalyses(tok, {"id": tokId});
+        var newTok = getAnalyses(tok, {"id": tokId, "form": "_"});
         sup.tokens.push(formNewToken(newTok));
         tokId ++;
     })
