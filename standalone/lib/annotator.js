@@ -220,6 +220,9 @@ function getTreebank() {
         
 
 function drawTree() {
+    try {
+        cy.destroy();
+    } catch (err) {};
 
     var content = $("#indata").val();
     FORMAT = detectFormat(content);
