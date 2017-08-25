@@ -9,6 +9,7 @@ var AVAILABLESENTENCES = 0;
 var CURRENTSENTENCE = 0;
 var RESULTS = [];
 var LOC_ST_AVALIABLE = false;
+var SERVER_RUNNING = false;
  
 
 function main() {
@@ -35,6 +36,7 @@ function main() {
             function(data) {
                 console.log("Response from server, status: " + data["status"]);
                 getCorpusData();
+                SERVER_RUNNING = true;
             }); // TODO: to get rid of the error, read about promisses: https://qntm.org/files/promise/promise.html
 
         $(document).keyup(keyUpClassifier); // TODO: causes errors if called before the cy is initialised
@@ -46,7 +48,7 @@ function main() {
         // trying to load the corpus from localStorage
         if (storageAvailable('localStorage')) {
             LOC_ST_AVALIABLE = true;
-            if (localStorage.getItem("corpus")) {
+            if (localStorage.getItem("corpus") != null) {
                 CONTENTS = localStorage.getItem("corpus");
                 loadDataInIndex();
             };
@@ -62,6 +64,13 @@ function main() {
     });
 
     document.getElementById('filename').addEventListener('change', loadFromFile, false);
+
+    setTimeout(function(){
+        if (SERVER_RUNNING) {
+            $("#save").css("display", "block")
+                .css("background-color", NORMAL);
+        }
+    }, 500);
 }
 
 
@@ -121,6 +130,10 @@ function loadDataInIndex() {
     RESULTS = [];
     AVAILABLESENTENCES = 0;
     CURRENTSENTENCE = 0;
+
+    if (CONTENTS == undefined) {
+        console.log("yeah...")
+    }
 
     if (FORMAT == "plain text") {
         var splitted = CONTENTS.match(/[^ ].+?[.!?](?=( |$))/g);
@@ -191,6 +204,9 @@ function exportCorpora() {
 
 function getTreebank() {
     /* Returns the current treebank. */
+    var currentSent = document.getElementById("indata").value; 
+    if (FORMAT == "CG3") {currentSent = CG2conllu(currentSent)}; // TODO: change if the arcitecture changes
+
     RESULTS[CURRENTSENTENCE] = document.getElementById("indata").value;
     var finalcontent = "";
     for(var x=0; x < RESULTS.length; x++){
@@ -291,7 +307,9 @@ function getCorpusData() {
 
 
 function loadData(data) {
-    CONTENTS = data["content"];
+    if (data["content"]) {
+        CONTENTS = data["content"];
+    }
     loadDataInIndex();
 }
 

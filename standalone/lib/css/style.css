@@ -70,6 +70,10 @@ span.tt {
   display: block;
 }
 
+#save {
+  display: none;
+}
+
 .hidden-input {
   position: absolute;
   display: none;
