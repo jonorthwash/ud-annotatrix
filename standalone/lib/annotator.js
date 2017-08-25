@@ -1,7 +1,7 @@
 "use strict"
 
 var FORMAT = "";
-var VIEW = ""; // responsible for how the daæa are represented
+var VIEW_FORMAT = ""; // responsible for how the daæa are represented
 var FILENAME = 'corpora.txt'; // default name
 var ROOT = './lib/';
 var CONTENTS = "";
@@ -205,8 +205,8 @@ function exportCorpora() {
 function getTreebank() {
     /* Returns the current treebank. */
     var currentSent = document.getElementById("indata").value; 
-    if (FORMAT == "CG3") {currentSent = CG2conllu(currentSent)}; // TODO: change if the arcitecture changes
 
+    // if (VIEW_FORMAT == FORMAT) {
     RESULTS[CURRENTSENTENCE] = document.getElementById("indata").value;
     var finalcontent = "";
     for(var x=0; x < RESULTS.length; x++){
@@ -215,6 +215,8 @@ function getTreebank() {
             finalcontent = finalcontent + "\n\n";
         }
     }
+    // } else { // convert }
+
     return finalcontent;
 }
         
@@ -249,6 +251,7 @@ function drawTree() {
 function detectFormat(content) {
     //TODO: too many "hacks" and presuppositions. refactor.
 
+    content = content.trim();
     var firstWord = content.replace(/\n/g, " ").split(" ")[0];
     
     // handling # comments at the beginning
