@@ -16,7 +16,7 @@ function toConllu() {
 
 
 function toCG() {
-    // body...
+    alert("Doesn't work correctly yet.");
 }
 
 
@@ -76,35 +76,4 @@ function conllu2plainSent(text) {
     })
     var plain = tokens.join(" ");
     return plain;
-}
-
-
-function viewAsPlain() {
-    if (FORMAT == "CoNLL-U") {
-        var text = $("#indata").val();
-        $("#indata").val(conllu2plainSent(text));
-    }
-    VIEW_FORMAT = "plain text";
-}
-
-
-function viewAsConllu() {
-    if (FORMAT == "plain text") {
-        loadDataInIndex();
-    } else if (FORMAT = "CG3") {
-        var text = $("#indata").val();
-        $("#indata").val(CG2conllu(text));
-    }
-    VIEW_FORMAT = "CoNLL-U";
-}
-
-
-function viewAsCG() {
-
-    // this is temporal!
-    if (FORMAT == "CoNLL-U") {
-        var text = $("#indata").val();
-        $("#indata").val(conllu2CG(text));
-    }
-    VIEW_FORMAT = "СG3";
 }

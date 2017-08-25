@@ -444,32 +444,48 @@ function writeSent(makeChanges) {
 }
 
 
-function viewAsPlain() {
-    if (FORMAT == "CoNLL-U") {
-        var text = $("#indata").val();
-        $("#indata").val(conllu2plainSent(text));
+function viewAsPlain() { // TODO: DRY?
+    var text = $("#indata").val();
+    VIEW_FORMAT = detectFormat(text);
+
+    console.log("viewAsPlain called");
+    console.log("FORMAT: " + FORMAT);
+    console.log("VIEW_FORMAT: " + VIEW_FORMAT);
+    if (VIEW_FORMAT == "CoNLL-U" || (!VIEW_FORMAT && FORMAT == "CoNLL-U")) {
+        text = conllu2plainSent(text);
+    } else if (VIEW_FORMAT == "CG3"  || (!VIEW_FORMAT && FORMAT == "CG3")) {
+        text = CG2conllu(text);
+        text = conllu2plainSent(text);
     }
-    VIEW_FORMAT = "plain text";
+    $("#indata").val(text);
 }
 
 
 function viewAsConllu() {
+    var text = $("#indata").val();
+    VIEW_FORMAT = detectFormat(text);
+
+    console.log("viewAsConllu called");
+    console.log("FORMAT: " + FORMAT);
+    console.log("VIEW_FORMAT: " + VIEW_FORMAT);
     if (FORMAT == "plain text") {
-        loadDataInIndex();
-    } else if (FORMAT = "CG3") {
-        var text = $("#indata").val();
+        loadDataInIndex(); // TODO: this will certainly cause unexpected behavior. refactor when you have time.
+    } else if (VIEW_FORMAT == "CG3"  || (!VIEW_FORMAT && FORMAT == "CG3")) {
         $("#indata").val(CG2conllu(text));
     }
-    VIEW_FORMAT = "CoNLL-U";
 }
 
 
 function viewAsCG() {
+    var text = $("#indata").val();
+    VIEW_FORMAT = detectFormat(text);
 
-    // this is temporal!
-    if (FORMAT == "CoNLL-U") {
-        var text = $("#indata").val();
-        $("#indata").val(conllu2CG(text));
+    console.log("viewAsCG called");
+    console.log("FORMAT: " + FORMAT);
+    console.log("VIEW_FORMAT: " + VIEW_FORMAT);
+    var text = $("#indata").val();
+    if (VIEW_FORMAT == "CoNLL-U"  || (!VIEW_FORMAT && FORMAT == "CoNLL-U")) {
+        text = conllu2CG(text);
     }
-    VIEW_FORMAT = "СG3";
+    $("#indata").val(text);
 }
