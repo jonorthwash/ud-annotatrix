@@ -1,6 +1,7 @@
 "use strict"
 
 var FORMAT = "";
+var VIEW = ""; // responsible for how the daæa are represented
 var FILENAME = 'corpora.txt'; // default name
 var ROOT = './lib/';
 var CONTENTS = "";

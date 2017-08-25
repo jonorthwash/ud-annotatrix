@@ -80,5 +80,22 @@ function viewAsPlain() {
 
 
 function viewAsConllu() {
-    loadDataInIndex();
+    if (FORMAT == "plain text") {
+        loadDataInIndex();
+    } else if (FORMAT = "CG3") {
+        var text = $("#indata").val();
+        $("#indata").val(CG2conllu(text));
+    }
+}
+
+
+function viewAsCG() {
+    // if (FORMAT)
+    // DESIGN THE ARCITECTURE
+
+    // this is temporal!
+    if (FORMAT == "CoNLL-U") {
+        var text = $("#indata").val();
+        $("#indata").val(conllu2CG(text));
+    }
 }
