@@ -22,15 +22,15 @@
 
         <p><input type="button" id="save" onClick="javascript: saveOnServer();" value="Save treebank" /></p>
         <p>
-            <input type="button" id="viewConllu" onClick="javascript:viewAsConllu();" value="View as CoNLL-U" />
-            <input type="button" id="viewCG" onClick="javascript:viewAsCG();" value="View as CG" />
-            <input type="button" id="viewPlain" onClick="javascript:viewAsPlain();" value="View as plain text" />
+            <input type="button" id="viewConllu" onClick="javascript:viewAsConllu();" value="View sentence as CoNLL-U" />
+            <input type="button" id="viewCG" onClick="javascript:viewAsCG();" value="View sentence as CG" />
+            <input type="button" id="viewPlain" onClick="javascript:viewAsPlain();" value="View sentence as plain text" />
         </p>
         <textarea id="indata" style="width: 100%" rows="20"></textarea>
 
         <p>
             <input type="button" onClick="javascript:exportCorpora();" value="Export Corpus" />
-            <input type="button" id="convert" onClick="javascript:toConllu();" value="Convert to CoNLL-U" />
+            <input type="button" id="convert" onClick="javascript:toConllu();" value="Convert the corpus to CoNLL-U" />
             <div id="warning"></div>
         </p>
 
