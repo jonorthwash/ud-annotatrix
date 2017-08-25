@@ -4,7 +4,8 @@ function CG2conllu(CGtext) {
     /* Takes a string in CG, returns a string in conllu. */
 
     if (ambiguetyPresent(CGtext)) { // to abort conversion if there are ambiguous analyses
-        document.getElementById("convert").disabled = true;
+        // document.getElementById("convert").disabled = true;
+        document.getElementById("viewConllu").disabled = true;
         $("#warning").css("background-color", "pink")
             .text("Warning: CG containing ambiguous analyses can't be converted into CoNLL-U!");
         return;
