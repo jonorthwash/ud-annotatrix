@@ -215,7 +215,7 @@ function getTreebank() {
             finalcontent = finalcontent + "\n\n";
         }
     }
-    // } else { // convert }
+    // } else { // convert cur sent }
 
     return finalcontent;
 }
