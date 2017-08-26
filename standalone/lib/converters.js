@@ -4,14 +4,16 @@ function toConllu() {
     var newContents = getTreebank();
     if (FORMAT == "plain text") {
         plainText2Conllu(newContents);
-    } else if (FORMAT == "CG3") {
-        // var text = $("#indata").val(); // TODO: refactor
-        // $("#indata").val(CG2conllu(text));
-
-        // CONTENTS = CG2conllu() // iterate!
+    } else {
+        for (var i = 0; i < RESULTS.length; ++i) {
+            var currentFormat = detectFormat(RESULTS[i]);
+            if (currentFormat = "CG3") {
+                RESULTS[i] = CG2conllu(RESULTS[i]);
+            }
+        }
+        showDataIndiv();
     }
     FORMAT = "CoNLL-U";
-    drawTree();
 }
 
 
