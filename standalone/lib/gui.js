@@ -436,7 +436,16 @@ function buildSent() {
 function redrawTree(sent) {
     /* Takes a Sentence object. Writes it to the textbox and calls
     the function drawing the tree. */
-    $("#indata").val(sent.serial);
+    var changedSent = sent.serial;
+
+    // the following block is needed for detection of which format was used
+    var currentSent = $("#indata").val();
+    var currentFormat = detectFormat(currentSent);
+    if (currentFormat == "CG3") {
+        changedSent = conllu2CG(changedSent);
+    }
+
+    $("#indata").val(changedSent);
     drawTree(); 
 }
 
