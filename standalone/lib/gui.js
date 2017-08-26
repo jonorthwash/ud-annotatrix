@@ -469,9 +469,6 @@ function viewAsPlain() { // TODO: DRY?
     var text = $("#indata").val();
     var currentFormat = detectFormat(text);
 
-    console.log("viewAsPlain called");
-    console.log("FORMAT: " + FORMAT);
-    console.log("currentFormat: " + currentFormat);
     if (currentFormat == "CoNLL-U") {
         text = conllu2plainSent(text);
     } else if (currentFormat == "CG3") {
@@ -491,9 +488,6 @@ function viewAsConllu() {
     var text = $("#indata").val();
     var currentFormat = detectFormat(text);
 
-    console.log("viewAsConllu called");
-    console.log("FORMAT: " + FORMAT);
-    console.log("currentFormat: " + currentFormat);
     if (FORMAT == "plain text") {
         loadDataInIndex(); // TODO: this will certainly cause unexpected behavior. refactor when you have time.
     } else if (currentFormat == "CG3") {
@@ -511,9 +505,6 @@ function viewAsCG() {
     var text = $("#indata").val();
     var currentFormat = detectFormat(text);
 
-    console.log("viewAsCG called");
-    console.log("FORMAT: " + FORMAT);
-    console.log("currentFormat: " + currentFormat);
     var text = $("#indata").val();
     if (currentFormat == "CoNLL-U") {
         text = conllu2CG(text);
