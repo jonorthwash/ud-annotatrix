@@ -130,10 +130,6 @@ function loadDataInIndex() {
     AVAILABLESENTENCES = 0;
     CURRENTSENTENCE = 0;
 
-    if (CONTENTS == undefined) {
-        console.log("yeah...")
-    }
-
     if (FORMAT == "plain text") {
         var splitted = CONTENTS.match(/[^ ].+?[.!?](?=( |$))/g);
     } else {
