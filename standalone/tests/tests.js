@@ -73,7 +73,8 @@ var cg3simpleAnswer = `1	Патшамен	патша	n	_	ins	3	nmod	_	_
 10	біз	біз	prn	_	pers|p1|pl|nom	12	nsubj	_	_
 11	соғысқа	соғыс	n	_	dat	12	nmod	_	_
 12	бардық	бар	v	_	iv|ifi|p1|pl	0	root	_	_
-13	.	.	sent	_	_	12	punct	_	_`
+13	.	.	sent	_	_	12	punct	_	_
+`
 
 
 QUnit.test(cg3simple, function( assert ) {
