@@ -446,14 +446,14 @@ function writeSent(makeChanges) {
 
 function viewAsPlain() { // TODO: DRY?
     var text = $("#indata").val();
-    VIEW_FORMAT = detectFormat(text);
+    var currentFormat = detectFormat(text);
 
     console.log("viewAsPlain called");
     console.log("FORMAT: " + FORMAT);
-    console.log("VIEW_FORMAT: " + VIEW_FORMAT);
-    if (VIEW_FORMAT == "CoNLL-U" || (!VIEW_FORMAT && FORMAT == "CoNLL-U")) {
+    console.log("currentFormat: " + currentFormat);
+    if (currentFormat == "CoNLL-U") {
         text = conllu2plainSent(text);
-    } else if (VIEW_FORMAT == "CG3"  || (!VIEW_FORMAT && FORMAT == "CG3")) {
+    } else if (currentFormat == "CG3") {
         text = CG2conllu(text);
         text = conllu2plainSent(text);
     }
@@ -463,14 +463,14 @@ function viewAsPlain() { // TODO: DRY?
 
 function viewAsConllu() {
     var text = $("#indata").val();
-    VIEW_FORMAT = detectFormat(text);
+    var currentFormat = detectFormat(text);
 
     console.log("viewAsConllu called");
     console.log("FORMAT: " + FORMAT);
-    console.log("VIEW_FORMAT: " + VIEW_FORMAT);
+    console.log("currentFormat: " + currentFormat);
     if (FORMAT == "plain text") {
         loadDataInIndex(); // TODO: this will certainly cause unexpected behavior. refactor when you have time.
-    } else if (VIEW_FORMAT == "CG3"  || (!VIEW_FORMAT && FORMAT == "CG3")) {
+    } else if (currentFormat == "CG3") {
         $("#indata").val(CG2conllu(text));
     }
 }
@@ -478,13 +478,13 @@ function viewAsConllu() {
 
 function viewAsCG() {
     var text = $("#indata").val();
-    VIEW_FORMAT = detectFormat(text);
+    var currentFormat = detectFormat(text);
 
     console.log("viewAsCG called");
     console.log("FORMAT: " + FORMAT);
-    console.log("VIEW_FORMAT: " + VIEW_FORMAT);
+    console.log("currentFormat: " + currentFormat);
     var text = $("#indata").val();
-    if (VIEW_FORMAT == "CoNLL-U"  || (!VIEW_FORMAT && FORMAT == "CoNLL-U")) {
+    if (currentFormat == "CoNLL-U") {
         text = conllu2CG(text);
     }
     $("#indata").val(text);

@@ -1,7 +1,6 @@
 "use strict"
 
 var FORMAT = "";
-var VIEW_FORMAT = ""; // responsible for how the daæa are represented
 var FILENAME = 'corpora.txt'; // default name
 var ROOT = './lib/';
 var CONTENTS = "";
@@ -204,9 +203,10 @@ function exportCorpora() {
 
 function getTreebank() {
     /* Returns the current treebank. */
-    var currentSent = document.getElementById("indata").value; 
+    var currentSent = document.getElementById("indata").value;    
 
-    // if (VIEW_FORMAT == FORMAT) {
+    // var currentFormat = detectFormat(currentSent);
+    // if (currentFormat == FORMAT) {
     RESULTS[CURRENTSENTENCE] = document.getElementById("indata").value;
     var finalcontent = "";
     for(var x=0; x < RESULTS.length; x++){
