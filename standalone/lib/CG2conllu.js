@@ -8,8 +8,8 @@ function CG2conllu(CGtext) {
     }
 
     var sent = new conllu.Sentence();
-    var separated = findComments(CGtext);
-    sent.comments = separated[0];
+    var comments = findComments(CGtext);
+    sent.comments = comments;
     var tokens = formTokens(CGtext);
     sent.tokens = tokens;
     return sent.serial;        
@@ -20,16 +20,13 @@ function findComments(CGtext) {
     /* Takes a string in CG, returns 2 arrays with strings. */
     var lines = CGtext.split("\n");
     var comments = [];
-    var tokens = [];
     $.each(lines, function(n, line) {
         if (line[0] == "#") {
             line = line.replace(/^#+/, "");
             comments.push(line);
-        } else {
-            tokens.push(line);
         }
     });
-    return [comments, tokens];
+    return comments;
 }
 
 
