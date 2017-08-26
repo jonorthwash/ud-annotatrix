@@ -277,17 +277,6 @@ function find2change() {
 }
 
 
-function findConlluId(wf) {
-    // takes a cy wf node
-
-    var isSubtoken = false;
-    var parent;
-    if (wf.data("parent") != undefined) {
-        parent = wf.data("parent"); // WORKING ON THIS!
-    }
-}
-
-
 
 function writeDeprel(deprelInp) { // TODO: DRY
     /* Writes changes to deprel label. */
@@ -316,11 +305,14 @@ function writePOS(posInp, nodeId) {
     /* Writes changes to POS label. */
 
     // now
-    var active = cy.$(".input");
-    var Id = active.id().slice(2);
-    var wfNode = cy.$("#nf" + Id);
-    console.log("in writePOS. wfNode:");
-    console.log(wfNode.data());
+    if (nodeId == undefined) {
+        var active = cy.$(".input");
+        var Id = active.id().slice(2);
+        var wfNode = cy.$("#nf" + Id);
+        console.log("in writePOS. wfNode:");
+        console.log(wfNode.data()); // works!
+        var indices = findConlluId(active); // is not used yet 
+    }
 
     var nodeId = (nodeId != undefined) ? nodeId : find2change();
     var sent = buildSent();
@@ -344,19 +336,15 @@ function writePOS(posInp, nodeId) {
 function writeWF(wfInp) {
     /* Either writes changes to token or retokenises the sentence. */
 
+    //now
     var active = cy.$(".input");
-    if (active.data("parent") == undefined) {
-        console.log("simple");
-    } else {
-        console.log("subtoken");
-        console.log("parent: " + active.data("parent"));
-    }
+    var indices = findConlluId(active);
 
 
     var nodeId = find2change();
     var newToken = wfInp.val();
 
-    if (newToken.includes(" ")) {
+    if (newToken.includes(" ")) { // this was a temporal solution. refactor.
         splitTokens(newToken, nodeId);
     } else {
 
@@ -365,6 +353,28 @@ function writeWF(wfInp) {
         sent.tokens[nodeId].form = wfInp.val();
         redrawTree(sent);
     }
+}
+
+
+function findConlluId(wf) {
+    // takes a cy wf node
+
+    var isSubtoken = false;
+    var outerIndex;
+    var innerIndex;
+    if (wf.data("parent") != undefined) {
+        var parentId = wf.data("parent"); // WORKING ON THIS!
+        console.log("parentId: " + parentId);
+        var parent = cy.$("#" + parentId);
+        console.log("children");
+        console.log(parent.children());
+        outerIndex = +parentId.slice(2);
+        for (var i = 0; i < parent.children().length; ++i) {
+            // find innerIndex
+        }
+
+    }
+    return [isSubtoken, outerIndex, innerIndex]
 }
 
 
