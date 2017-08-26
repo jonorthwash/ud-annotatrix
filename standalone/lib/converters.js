@@ -15,11 +15,6 @@ function toConllu() {
 }
 
 
-function toCG() {
-    alert("Doesn't work correctly yet.");
-}
-
-
 function plainSent2Conllu(text) {
     /* Takes a plain text sentence, returns a sentence in CoNLL-U format. */
 
