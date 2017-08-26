@@ -23,6 +23,7 @@ function findComments(CGtext) {
     var tokens = [];
     $.each(lines, function(n, line) {
         if (line[0] == "#") {
+            line = line.replace(/^#+/, "");
             comments.push(line);
         } else {
             tokens.push(line);
