@@ -277,8 +277,21 @@ function find2change() {
 }
 
 
+function findConlluId(wf) {
+    // takes a cy wf node
+
+    var isSubtoken = false;
+    var parent;
+    if (wf.data("parent") != undefined) {
+        parent = wf.data("parent"); // WORKING ON THIS!
+    }
+}
+
+
+
 function writeDeprel(deprelInp) { // TODO: DRY
     /* Writes changes to deprel label. */
+
     var edgeId = find2change();
     console.log(edgeId);
     var sent = buildSent();
@@ -301,6 +314,14 @@ function writeDeprel(deprelInp) { // TODO: DRY
 
 function writePOS(posInp, nodeId) {
     /* Writes changes to POS label. */
+
+    // now
+    var active = cy.$(".input");
+    var Id = active.id().slice(2);
+    var wfNode = cy.$("#nf" + Id);
+    console.log("in writePOS. wfNode:");
+    console.log(wfNode.data());
+
     var nodeId = (nodeId != undefined) ? nodeId : find2change();
     var sent = buildSent();
     var prevPOS = sent.tokens[nodeId].upostag;
@@ -322,6 +343,16 @@ function writePOS(posInp, nodeId) {
 
 function writeWF(wfInp) {
     /* Either writes changes to token or retokenises the sentence. */
+
+    var active = cy.$(".input");
+    if (active.data("parent") == undefined) {
+        console.log("simple");
+    } else {
+        console.log("subtoken");
+        console.log("parent: " + active.data("parent"));
+    }
+
+
     var nodeId = find2change();
     var newToken = wfInp.val();
 
@@ -424,8 +455,6 @@ function buildSent() {
             cantConvertCG();
             drawTree(); // not sure if this line is ok
             return;
-        } else {
-            console.log("buildSent: conversion gone right!");
         }
     }
     sent.serial = currentSent;
@@ -450,7 +479,7 @@ function redrawTree(sent) {
 }
 
 
-// refactoring the write functions
+// refactoring the write functions. in project, doesn't work yet
 function writeSent(makeChanges) {
 
     // build sent
