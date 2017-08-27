@@ -658,5 +658,11 @@ function switchRtlMode() {
 
 
 function switchAlignment(argument) {
-    console.log("working on it");
+    if (this.checked) {
+        VERT_ALIGNMENT = true;
+        drawTree();
+    } else {
+        VERT_ALIGNMENT = false;
+        drawTree();
+    }
 }

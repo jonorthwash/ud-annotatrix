@@ -1,6 +1,6 @@
 "use strict"
 
-var ALIGNMENT = "h";
+var VERT_ALIGNMENT = false;
 var LEFT_TO_RIGHT = true;
 var ACTIVE = "#2653c9";
 var NORMAL = "#7fa2ff";
@@ -15,6 +15,9 @@ var conllu = require("conllu");
 
 function conlluDraw(content) {
     /* Draw the tree. */
+    var sent = new conllu.Sentence();
+    sent.serial = content;
+
     var sortingFunc = (LEFT_TO_RIGHT) ? simpleIdSorting : rtlSorting;
     var cy = window.cy = cytoscape({
         container: document.getElementById('cy'),
@@ -34,14 +37,12 @@ function conlluDraw(content) {
         },
 
         style: CY_STYLE,
-        elements: conllu2cy(content)
+        elements: conllu2cy(sent)
     });
 }
 
 
-function conllu2cy(content) {
-    var sent = new conllu.Sentence();
-    sent.serial = content;
+function conllu2cy(sent) {
     var graph = [];
     $.each(sent.tokens, function(n, token) {
         if (token.tokens){
