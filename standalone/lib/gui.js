@@ -62,27 +62,35 @@ function drawArcs(evt) {
 
 function writeArc(sourceNode, destNode) {
     /*
-    Called in arcDest. Makes changes to the text data and calls the function
+    Called in drawArcs. Makes changes to the text data and calls the function
     redrawing the tree. Currently supports only conllu.
     */
 
     var sourceIndex = +sourceNode.data("id").slice(2);
     var destIndex = +destNode.data("id").slice(2);
-    var sent = buildSent(); // add HEAD to destNode
-    var prevHead = sent.tokens[destIndex - 1].head;
-    sent.tokens[destIndex - 1].head = sourceIndex;
-    redrawTree(sent);
+
+    var indices = findConlluId(destNode);
+    var sent = buildSent();
+
+    // var prevHead = sent.tokens[destIndex - 1].head;
+    // sent.tokens[destIndex - 1].head = sourceIndex;
+    var sentAndPrev = changeConlluAttr(sent, indices, "head", sourceIndex);
+    sent = sentAndPrev[0];
+    var pervVal = sentAndPrev[1];
 
     window.undoManager.add({
         undo: function(){
             var sent = buildSent();
-            sent.tokens[destIndex - 1].head = prevHead;
+            var sentAndPrev = changeConlluAttr(sent, indices, "head", pervVal);
+            sent = sentAndPrev[0];
             redrawTree(sent);
         },
         redo: function(){
             writeArc(sourceNode, destNode);
         }
     });
+
+    redrawTree(sent);
 }
 
 
