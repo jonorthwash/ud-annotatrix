@@ -16,7 +16,20 @@ var conllu = require("conllu");
 function conlluDraw(content) {
     /* Draw the tree. */
 
-    var sortingFunc = (LEFT_TO_RIGHT) ? simpleIdSorting : rtlSorting;
+    // var sortingFunc = (LEFT_TO_RIGHT) ? simpleIdSorting : rtlSorting;
+    var layout = {name: "grid", condense: true};
+    if (VERT_ALIGNMENT) {
+        layout.cols = 2;
+        layout.sort = simpleIdSorting;
+    } else {
+        layout.rows = 2;
+        if (LEFT_TO_RIGHT) {
+            layout.sort = simpleIdSorting;
+        } else {
+            layout.sort = rtlSorting;
+        }
+    }
+
     var cy = window.cy = cytoscape({
         container: document.getElementById("cy"),
 
@@ -25,13 +38,13 @@ function conlluDraw(content) {
         autoungrabify: true,
         userZoomingEnabled: false,
 
-
-        layout: {
-            name: "grid",
-            condense: true,
-            rows: 2,
-            sort: sortingFunc
-        },
+        layout: layout,
+        // layout: {
+        //     name: "grid",
+        //     condense: true,
+        //     rows: 2,
+        //     sort: sortingFunc
+        // },
 
         style: CY_STYLE,
         elements: conllu2cy(content)
