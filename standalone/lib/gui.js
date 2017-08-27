@@ -363,18 +363,23 @@ function findConlluId(wf) {
     var outerIndex;
     var innerIndex;
     if (wf.data("parent") != undefined) {
+        isSubtoken = true;
         var parentId = wf.data("parent"); // WORKING ON THIS!
         console.log("parentId: " + parentId);
-        var parent = cy.$("#" + parentId);
+        var children = cy.$("#" + parentId).children();
         console.log("children");
-        console.log(parent.children());
+        console.log(children);
         outerIndex = +parentId.slice(2);
-        for (var i = 0; i < parent.children().length; ++i) {
-            // find innerIndex
+        for (var i = 0; i < children.length; ++i) {
+            if (children[i].id() == wf.id()){
+                console.log("Matched child: " + i);
+            }
         }
-
+    } else {
+        outerIndex = wf.id().slice(2) - 1
+        console.log("simple token, id: " + outerIndex);
     }
-    return [isSubtoken, outerIndex, innerIndex]
+    return [isSubtoken, outerIndex, innerIndex];
 }
 
 
