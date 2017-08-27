@@ -181,18 +181,16 @@ function simpleIdSorting(n1, n2) {
 
 
 function rtlSorting(n1, n2) {
-    var result = 0;
     if ((n1.hasClass("wf") && n2.hasClass("wf")) // = if the nodes have the same class
         || (n1.hasClass("pos") && n2.hasClass("pos"))) {
-        result = simpleIdSorting(n1, n2) * -1;
+        return simpleIdSorting(n1, n2) * -1;
     } else if (n1.hasClass("wf") && n2.hasClass("pos")) {
-        result = -1
+        return -1
     } else if (n1.hasClass("pos") && n2.hasClass("wf")) {
-        result = 1
+        return 1
     } else {
-        result = 0;
+        return 0;
     }
-    return result;
 }
 
 
