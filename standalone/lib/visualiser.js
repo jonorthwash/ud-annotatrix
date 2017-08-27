@@ -15,12 +15,10 @@ var conllu = require("conllu");
 
 function conlluDraw(content) {
     /* Draw the tree. */
-    var sent = new conllu.Sentence();
-    sent.serial = content;
 
     var sortingFunc = (LEFT_TO_RIGHT) ? simpleIdSorting : rtlSorting;
     var cy = window.cy = cytoscape({
-        container: document.getElementById('cy'),
+        container: document.getElementById("cy"),
 
         boxSelectionEnabled: false,
         autounselectify: true,
@@ -29,20 +27,21 @@ function conlluDraw(content) {
 
 
         layout: {
-            name: 'grid',
+            name: "grid",
             condense: true,
-            // cols: sent.tokens.length,
             rows: 2,
             sort: sortingFunc
         },
 
         style: CY_STYLE,
-        elements: conllu2cy(sent)
+        elements: conllu2cy(content)
     });
 }
 
 
-function conllu2cy(sent) {
+function conllu2cy(content) {
+    var sent = new conllu.Sentence();
+    sent.serial = content;
     var graph = [];
     $.each(sent.tokens, function(n, token) {
         if (token.tokens){
