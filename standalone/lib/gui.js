@@ -309,9 +309,10 @@ function writePOS(posInp, nodeId) {
         var active = cy.$(".input");
         var Id = active.id().slice(2);
         var wfNode = cy.$("#nf" + Id);
-        console.log("in writePOS. wfNode:");
-        console.log(wfNode.data()); // works!
-        var indices = findConlluId(active); // is not used yet 
+        var indices = findConlluId(active);
+        var isSubtoken = indices[0];
+        var outerIndex = indices[1];
+        var innerIndex = indices[2];
     }
 
     var nodeId = (nodeId != undefined) ? nodeId : find2change();
@@ -345,26 +346,29 @@ function writeWF(wfInp) {
     var outerIndex = indices[1];
     var innerIndex = indices[2];
 
-    var nodeId = find2change();
+    var sent = buildSent();
+    // var nodeId = find2change();
 
 
     if (newToken.includes(" ")) { // this was a temporal solution. refactor.
-        splitTokens(newToken, nodeId);
-    } else {
-
-        // TODO: this almost copies writePOS. DRY.
-        var sent = buildSent();
-
-        if (isSubtoken) {
-            console.log("rewriting wf... with: " +  wfInp.val());
-            console.log("multiTok");
+        if (!thereIsSupertoken(sent)) {
+            console.log("thereIsSupertoken: " + thereIsSupertoken(sent));
+            console.log("rewriting wf... with: " + newToken);
+            console.log("token");
             console.log(sent.tokens[outerIndex]);
-
+            splitTokens(newToken, outerIndex, sent);
+            console.log(sent.serial);
+            console.log("done!");
+        } else {
+            alert("Sorry, this option is not supported yet!");
+            drawTree();
+            return;
+        }
+    } else {
+        if (isSubtoken) {
             // TODO: think, whether it should be lemma or form.
             // NB: if form, then you have to edit drawTree
             sent.tokens[outerIndex].tokens[innerIndex].lemma = wfInp.val();
-            console.log(sent.serial);
-            console.log("done!");
         } else {
             sent.tokens[outerIndex].form = wfInp.val();
         }
@@ -381,7 +385,7 @@ function findConlluId(wfNode) { // TODO: refactor the arcitecture.
     var innerIndex;
     if (wfNode.data("parent") != undefined) {
         isSubtoken = true;
-        var parentId = wfNode.data("parent"); // WORKING ON THIS!
+        var parentId = wfNode.data("parent");
         console.log("parentId: " + parentId);
         var children = cy.$("#" + parentId).children();
         outerIndex = +parentId.slice(2);
@@ -405,13 +409,24 @@ function findConlluId(wfNode) { // TODO: refactor the arcitecture.
 }
 
 
-function splitTokens(oldToken, nodeId) {
+function thereIsSupertoken(sent) { // quick fix. refactor the arcitecture later.
+    var supTokFound = false;
+    $.each(sent.tokens, function(n, tok) {
+        if (tok instanceof conllu.MultiwordToken) {
+            supTokFound = true;
+        } 
+    })
+    return supTokFound;
+}
+
+
+function splitTokens(oldToken, nodeId, sent) {
     /* Takes a token to retokenize with space in it and the Id of the token.
     Creates the new tokens, makes indices and head shifting, redraws the tree.
     All the attributes default to belong to the first part. */
 
     var newTokens = oldToken.split(" ");
-    var sent = buildSent();
+    // var sent = buildSent();
 
     // changing the first part
     sent.tokens[nodeId].form = newTokens[0];
@@ -429,7 +444,7 @@ function splitTokens(oldToken, nodeId) {
         };
     });
 
-    redrawTree(sent);
+    redrawTree(sent);        
 }
 
 
