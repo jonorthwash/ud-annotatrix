@@ -301,36 +301,58 @@ function writeDeprel(deprelInp) { // TODO: DRY
 }
 
 
-function writePOS(posInp, nodeId) {
+function writePOS(posInp, indices) {
     /* Writes changes to POS label. */
 
     // now
-    if (nodeId == undefined) {
+    if (indices == undefined) {
         var active = cy.$(".input");
         var Id = active.id().slice(2);
         var wfNode = cy.$("#nf" + Id);
-        var indices = findConlluId(active);
-        var isSubtoken = indices[0];
-        var outerIndex = indices[1];
-        var innerIndex = indices[2];
+        var indices = findConlluId(wfNode);
+    }
+    var isSubtoken = indices[0];
+    var outerIndex = indices[1];
+    var innerIndex = indices[2];
+
+    var sent = buildSent();
+
+    if (isSubtoken) {
+        console.log("rewriting wf... with: " + posInp);
+        var prevPOS = sent.tokens[outerIndex].tokens[innerIndex].upostag;
+        sent.tokens[outerIndex].tokens[innerIndex].upostag = posInp;
+        console.log(sent.serial);
+        console.log("done!");
+
+        window.undoManager.add({
+            undo: function(){
+                var sent = buildSent();
+                sent.tokens[outerIndex].tokens[innerIndex].upostag = prevPOS;
+                redrawTree(sent);
+            },
+            redo: function(){
+                writePOS(posInp, indices);
+            }
+        });
+
+    } else {
+        var prevPOS = sent.tokens[outerIndex].upostag;
+        sent.tokens[outerIndex].upostag = posInp; // TODO: think about xpostag changing support
+
+        window.undoManager.add({
+            undo: function(){
+                var sent = buildSent();
+                sent.tokens[outerIndex].upostag = prevPOS;
+                redrawTree(sent);
+            },
+            redo: function(){
+                writePOS(posInp, indices);
+            }
+        });
     }
 
-    var nodeId = (nodeId != undefined) ? nodeId : find2change();
-    var sent = buildSent();
-    var prevPOS = sent.tokens[nodeId].upostag;
-    sent.tokens[nodeId].upostag = posInp; // TODO: think about xpostag changing support
     redrawTree(sent);
 
-    window.undoManager.add({
-        undo: function(){
-            var sent = buildSent();
-            sent.tokens[nodeId].upostag = prevPOS;
-            redrawTree(sent);
-        },
-        redo: function(){
-            writePOS(posInp, nodeId);
-        }
-    });
 }
 
 
@@ -352,17 +374,10 @@ function writeWF(wfInp) {
 
     if (newToken.includes(" ")) { // this was a temporal solution. refactor.
         if (!thereIsSupertoken(sent)) {
-            console.log("thereIsSupertoken: " + thereIsSupertoken(sent));
-            console.log("rewriting wf... with: " + newToken);
-            console.log("token");
-            console.log(sent.tokens[outerIndex]);
             splitTokens(newToken, outerIndex, sent);
-            console.log(sent.serial);
-            console.log("done!");
         } else {
             alert("Sorry, this option is not supported yet!");
             drawTree();
-            return;
         }
     } else {
         if (isSubtoken) {
