@@ -60,6 +60,7 @@ function main() {
         $("#indata").bind("keyup", drawTree);
         $("#indata").bind("keyup", focusOut);
         $("#RTL").bind("change", switchRtlMode);
+        $("#vertical").bind("change", switchAlignment);
         loadFromUrl();
     });
 

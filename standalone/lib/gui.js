@@ -655,3 +655,8 @@ function switchRtlMode() {
         drawTree();
     }
 }
+
+
+function switchAlignment(argument) {
+    console.log("working on it");
+}
