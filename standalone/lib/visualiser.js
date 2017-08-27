@@ -37,15 +37,7 @@ function conlluDraw(content) {
         autounselectify: true,
         autoungrabify: true,
         userZoomingEnabled: false,
-
-        layout: layout,
-        // layout: {
-        //     name: "grid",
-        //     condense: true,
-        //     rows: 2,
-        //     sort: sortingFunc
-        // },
-
+        layout: layout, 
         style: CY_STYLE,
         elements: conllu2cy(content)
     });
@@ -199,8 +191,8 @@ function vertAlSort(n1, n2) {
     var num2 = +n2.id().slice(2);
     if (num1 < num2) {
         return -1;
-    } else if (num2 > num1) {
-        return 1
+    } else if (num1 > num2) {
+        return 1;
     } else {
         if (n1.hasClass("wf") && n2.hasClass("pos")) {
             return 1;
