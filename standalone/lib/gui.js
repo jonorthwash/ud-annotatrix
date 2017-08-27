@@ -335,14 +335,18 @@ function writePOS(posInp, nodeId) {
 
 function writeWF(wfInp) {
     /* Either writes changes to token or retokenises the sentence. */
+    var newToken = wfInp.val();
 
     //now
     var active = cy.$(".input");
     var indices = findConlluId(active);
-
+    console.log(indices);
+    var isSubtoken = indices[0];
+    var outerIndex = indices[1];
+    var innerIndex = indices[2];
 
     var nodeId = find2change();
-    var newToken = wfInp.val();
+
 
     if (newToken.includes(" ")) { // this was a temporal solution. refactor.
         splitTokens(newToken, nodeId);
@@ -350,13 +354,23 @@ function writeWF(wfInp) {
 
         // TODO: this almost copies writePOS. DRY.
         var sent = buildSent();
-        sent.tokens[nodeId].form = wfInp.val();
+
+        if (isSubtoken) {
+            console.log("multiTok");
+            console.log(sent.tokens[outerIndex]);
+            sent.tokens[outerIndex].tokens[innerIndex].form = wfInp.val();    
+        } else {
+            console.log("rewriting wf... with: " +  wfInp.val());
+            sent.tokens[outerIndex].form = wfInp.val();
+            console.log(sent.serial);
+            console.log("done!");
+        }
         redrawTree(sent);
     }
 }
 
 
-function findConlluId(wfNode) {
+function findConlluId(wfNode) { // TODO: refactor the arcitecture.
     // takes a cy wf node
 
     var isSubtoken = false;
@@ -376,7 +390,13 @@ function findConlluId(wfNode) {
             }
         }
     } else {
-        outerIndex = wfNode.id().slice(2) - 1
+        var tokNumber = +wfNode.id().slice(2);
+        var sent = buildSent();
+        for (var i = 0; i < sent.tokens.length; ++i) {
+            if (sent.tokens[i].id == tokNumber) {
+                outerIndex = i;
+            }
+        }
         console.log("simple token, id: " + outerIndex);
     }
     return [isSubtoken, outerIndex, innerIndex];
