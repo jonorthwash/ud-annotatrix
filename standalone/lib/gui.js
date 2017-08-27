@@ -356,14 +356,17 @@ function writeWF(wfInp) {
         var sent = buildSent();
 
         if (isSubtoken) {
+            console.log("rewriting wf... with: " +  wfInp.val());
             console.log("multiTok");
             console.log(sent.tokens[outerIndex]);
-            sent.tokens[outerIndex].tokens[innerIndex].form = wfInp.val();    
-        } else {
-            console.log("rewriting wf... with: " +  wfInp.val());
-            sent.tokens[outerIndex].form = wfInp.val();
+
+            // TODO: think, whether it should be lemma or form.
+            // NB: if form, then you have to edit drawTree
+            sent.tokens[outerIndex].tokens[innerIndex].lemma = wfInp.val();
             console.log(sent.serial);
             console.log("done!");
+        } else {
+            sent.tokens[outerIndex].form = wfInp.val();
         }
         redrawTree(sent);
     }
@@ -381,12 +384,12 @@ function findConlluId(wfNode) { // TODO: refactor the arcitecture.
         var parentId = wfNode.data("parent"); // WORKING ON THIS!
         console.log("parentId: " + parentId);
         var children = cy.$("#" + parentId).children();
-        console.log("children");
-        console.log(children);
         outerIndex = +parentId.slice(2);
         for (var i = 0; i < children.length; ++i) {
             if (children[i].id() == wfNode.id()){
-                console.log("Matched child: " + i);
+                innerIndex = i;
+                console.log("Matched child: " + innerIndex);
+                console.log(children[i]);
             }
         }
     } else {
@@ -397,7 +400,6 @@ function findConlluId(wfNode) { // TODO: refactor the arcitecture.
                 outerIndex = i;
             }
         }
-        console.log("simple token, id: " + outerIndex);
     }
     return [isSubtoken, outerIndex, innerIndex];
 }
