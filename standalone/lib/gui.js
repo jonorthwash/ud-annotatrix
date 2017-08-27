@@ -402,7 +402,7 @@ function writeWF(wfInp) {
     // var nodeId = find2change();
 
 
-    if (newToken.includes(" ")) { // this was a temporal solution. refactor.
+    if (newToken.trim().includes(" ")) { // this was a temporal solution. refactor.
         if (!thereIsSupertoken(sent)) {
             splitTokens(newToken, outerIndex, sent);
         } else {
