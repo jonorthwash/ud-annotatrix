@@ -110,6 +110,24 @@ function removeArc(destNodes) {
         prevRelations["deprel"] = sentAndPrev[1];
     });
 
+    window.undoManager.add({
+        undo: function(){
+            var sent = buildSent();
+            $.each(destNodes, function(i, node) {
+                var destIndex = node.id().slice(2);
+                var indices = findConlluId(node);
+                var sentAndPrev = changeConlluAttr(sent, indices, "head", prevRelations.head);
+                sent = sentAndPrev[0];
+                var sentAndPrev = changeConlluAttr(sent, indices, "deprel", prevRelations.deprel);
+                sent = sentAndPrev[0];
+            })
+            redrawTree(sent);
+        },
+        redo: function(){
+            removeArc(destNodes);
+        }
+    });
+
     redrawTree(sent);
 }
 
