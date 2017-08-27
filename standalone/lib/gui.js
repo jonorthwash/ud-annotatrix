@@ -72,8 +72,6 @@ function writeArc(sourceNode, destNode) {
     var indices = findConlluId(destNode);
     var sent = buildSent();
 
-    // var prevHead = sent.tokens[destIndex - 1].head;
-    // sent.tokens[destIndex - 1].head = sourceIndex;
     var sentAndPrev = changeConlluAttr(sent, indices, "head", sourceIndex);
     sent = sentAndPrev[0];
     var pervVal = sentAndPrev[1];
