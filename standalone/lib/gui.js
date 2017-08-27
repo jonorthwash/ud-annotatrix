@@ -92,6 +92,28 @@ function writeArc(sourceNode, destNode) {
 }
 
 
+function removeArc(destNodes) {
+    /* Removes all the selected edges. */
+
+    var sent = buildSent();
+    var prevRelations = {}
+
+    // support for multiple arcs
+    $.each(destNodes, function(i, node) {
+        var destIndex = node.id().slice(2);
+        var indices = findConlluId(node);
+        var sentAndPrev = changeConlluAttr(sent, indices, "head", undefined);
+        sent = sentAndPrev[0];
+        prevRelations["head"] = sentAndPrev[1];
+        var sentAndPrev = changeConlluAttr(sent, indices, "deprel", undefined);
+        sent = sentAndPrev[0];
+        prevRelations["deprel"] = sentAndPrev[1];
+    });
+
+    redrawTree(sent);
+}
+
+
 function selectArc() {
     /* 
     Activated when an arc is selected. Adds classes showing what is selected.
@@ -129,6 +151,7 @@ function keyUpClassifier(key) {
 
     // looking if there are selected arcs
     var selArcs = cy.$("edge.dependency.selected");
+    var destNodes = cy.$("node[state='arc-dest']");
     // looking if there is a POS label to be modified
     var posInp = $(".activated.np");
     // looking if there is a wf label to be modified
@@ -147,7 +170,7 @@ function keyUpClassifier(key) {
 
     if (selArcs.length) {
         if (key.which == DEL_KEY) {
-            removeArc();
+            removeArc(destNodes);
         } else if (key.which == BACKSPACE) {
             drawTree();
         } else if (key.which == D) {
@@ -188,25 +211,6 @@ function keyUpClassifier(key) {
     }
     // console.log(key.which);
 
-}
-
-
-function removeArc(argument) {
-    /* Removes all the selected edges. */
-
-    var destNodes = cy.$("node[state='arc-dest']");
-    var sent = buildSent();
-
-    // support for multiple arcs
-    $.each(destNodes, function(i, node) {
-        var destIndex = node.id().slice(2);
-
-        // remove the head and the deprel from destNode
-        sent.tokens[destIndex - 1].head = undefined;
-        sent.tokens[destIndex - 1].deprel = undefined;
-    })
-
-    redrawTree(sent);
 }
 
 
