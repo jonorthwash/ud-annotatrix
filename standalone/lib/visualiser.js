@@ -185,9 +185,9 @@ function rtlSorting(n1, n2) {
         || (n1.hasClass("pos") && n2.hasClass("pos"))) {
         return simpleIdSorting(n1, n2) * -1;
     } else if (n1.hasClass("wf") && n2.hasClass("pos")) {
-        return -1
+        return -1;
     } else if (n1.hasClass("pos") && n2.hasClass("wf")) {
-        return 1
+        return 1;
     } else {
         return 0;
     }
@@ -195,15 +195,20 @@ function rtlSorting(n1, n2) {
 
 
 function vertAlSort(n1, n2) {
-    if ((n1.hasClass("wf") && n2.hasClass("wf")) // if the nodes have the same class
-        || (n1.hasClass("pos") && n2.hasClass("pos"))) {
-        return simpleIdSorting(n1, n2);
-    } else if (n1.hasClass("wf") && n2.hasClass("pos")) {
+    var num1 = +n1.id().slice(2);
+    var num2 = +n2.id().slice(2);
+    if (num1 < num2) {
+        return -1;
+    } else if (num2 > num1) {
         return 1
-    } else if (n1.hasClass("pos") && n2.hasClass("wf")) {
-        return -1
     } else {
-        return 0;
+        if (n1.hasClass("wf") && n2.hasClass("pos")) {
+            return 1;
+        } else if (n1.hasClass("pos") && n2.hasClass("wf")) {
+            return -1
+        } else {
+            return 0;
+        }
     }
 }
 
