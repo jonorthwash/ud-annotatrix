@@ -304,55 +304,48 @@ function writeDeprel(deprelInp) { // TODO: DRY
 function writePOS(posInp, indices) {
     /* Writes changes to POS label. */
 
-    // now
+    // getting indices
     if (indices == undefined) {
         var active = cy.$(".input");
         var Id = active.id().slice(2);
         var wfNode = cy.$("#nf" + Id);
         var indices = findConlluId(wfNode);
     }
-    var isSubtoken = indices[0];
-    var outerIndex = indices[1];
-    var innerIndex = indices[2];
 
     var sent = buildSent();
+    var sentAndPrev = changeConlluAttr(sent, indices, "upostag", posInp);
+    sent = sentAndPrev[0];
+    var pervVal = sentAndPrev[1];
 
-    if (isSubtoken) {
-        console.log("rewriting wf... with: " + posInp);
-        var prevPOS = sent.tokens[outerIndex].tokens[innerIndex].upostag;
-        sent.tokens[outerIndex].tokens[innerIndex].upostag = posInp;
-        console.log(sent.serial);
-        console.log("done!");
-
-        window.undoManager.add({
-            undo: function(){
-                var sent = buildSent();
-                sent.tokens[outerIndex].tokens[innerIndex].upostag = prevPOS;
-                redrawTree(sent);
-            },
-            redo: function(){
-                writePOS(posInp, indices);
-            }
-        });
-
-    } else {
-        var prevPOS = sent.tokens[outerIndex].upostag;
-        sent.tokens[outerIndex].upostag = posInp; // TODO: think about xpostag changing support
-
-        window.undoManager.add({
-            undo: function(){
-                var sent = buildSent();
-                sent.tokens[outerIndex].upostag = prevPOS;
-                redrawTree(sent);
-            },
-            redo: function(){
-                writePOS(posInp, indices);
-            }
-        });
-    }
+    window.undoManager.add({
+        undo: function(){
+            var sent = buildSent();
+            var sentAndPrev = changeConlluAttr(sent, indices, "upostag", pervVal);
+            sent = sentAndPrev[0];
+            redrawTree(sent);
+        },
+        redo: function(){
+            writePOS(posInp, indices);
+        }
+    });
 
     redrawTree(sent);
 
+}
+
+
+function changeConlluAttr(sent, indices, attrName, newVal) {
+    var isSubtoken = indices[0];
+    var outerIndex = indices[1];
+    var innerIndex = indices[2];
+    if (isSubtoken) {
+        var pervVal = sent.tokens[outerIndex].tokens[innerIndex][attrName];
+        sent.tokens[outerIndex].tokens[innerIndex][attrName] = newVal;
+    } else {
+        var pervVal = sent.tokens[outerIndex][attrName];
+        sent.tokens[outerIndex][attrName] = newVal;
+    }
+    return [sent, pervVal]
 }
 
 
