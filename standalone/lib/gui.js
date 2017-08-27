@@ -157,7 +157,7 @@ function keyUpClassifier(key) {
         };
     } else if (deprelInp.length) {
         if (key.which == ENTER) {
-            writeDeprel(deprelInp);
+            writeDeprel(deprelInp.val());
         };
     } else if (wf.length == 1) {
         if (key.which == M) {
@@ -278,26 +278,35 @@ function find2change() {
 
 
 
-function writeDeprel(deprelInp) { // TODO: DRY
+function writeDeprel(deprelInp, indices) { // TODO: DRY
     /* Writes changes to deprel label. */
 
-    var edgeId = find2change();
-    console.log(edgeId);
+    // getting indices
+    if (indices == undefined) {
+        var active = cy.$(".input");
+        var Id = active.id().slice(2);
+        var wfNode = cy.$("#nf" + Id);
+        var indices = findConlluId(wfNode);
+    }
+
     var sent = buildSent();
-    var prevDeprel = sent.tokens[edgeId].deprel;
-    sent.tokens[edgeId].deprel = deprelInp.val();
-    redrawTree(sent);
+    var sentAndPrev = changeConlluAttr(sent, indices, "deprel", deprelInp);
+    sent = sentAndPrev[0];
+    var pervVal = sentAndPrev[1];
 
     window.undoManager.add({
         undo: function(){
             var sent = buildSent();
-            sent.tokens[edgeId].upostag = prevPOS;
+            var sentAndPrev = changeConlluAttr(sent, indices, "deprel", pervVal);
+            sent = sentAndPrev[0];
             redrawTree(sent);
         },
         redo: function(){
-            writePOS(posInp, nodeId);
+            writeDeprel(deprelInp, indices);
         }
     });
+
+    redrawTree(sent);
 }
 
 
