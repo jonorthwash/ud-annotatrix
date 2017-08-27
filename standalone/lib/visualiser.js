@@ -20,7 +20,7 @@ function conlluDraw(content) {
     var layout = {name: "grid", condense: true};
     if (VERT_ALIGNMENT) {
         layout.cols = 2;
-        layout.sort = simpleIdSorting;
+        layout.sort = vertAlSort;
     } else {
         layout.rows = 2;
         if (LEFT_TO_RIGHT) {
@@ -181,13 +181,27 @@ function simpleIdSorting(n1, n2) {
 
 
 function rtlSorting(n1, n2) {
-    if ((n1.hasClass("wf") && n2.hasClass("wf")) // = if the nodes have the same class
+    if ((n1.hasClass("wf") && n2.hasClass("wf")) // if the nodes have the same class
         || (n1.hasClass("pos") && n2.hasClass("pos"))) {
         return simpleIdSorting(n1, n2) * -1;
     } else if (n1.hasClass("wf") && n2.hasClass("pos")) {
         return -1
     } else if (n1.hasClass("pos") && n2.hasClass("wf")) {
         return 1
+    } else {
+        return 0;
+    }
+}
+
+
+function vertAlSort(n1, n2) {
+    if ((n1.hasClass("wf") && n2.hasClass("wf")) // if the nodes have the same class
+        || (n1.hasClass("pos") && n2.hasClass("pos"))) {
+        return simpleIdSorting(n1, n2);
+    } else if (n1.hasClass("wf") && n2.hasClass("pos")) {
+        return 1
+    } else if (n1.hasClass("pos") && n2.hasClass("wf")) {
+        return -1
     } else {
         return 0;
     }
