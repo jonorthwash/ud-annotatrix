@@ -644,3 +644,14 @@ function cantConvertCG() {
     $("#warning").css("background-color", "pink")
         .text("Warning: CG containing ambiguous analyses can't be converted into CoNLL-U!");
 }
+
+
+function switchRtlMode() {
+    if (this.checked) {
+        LEFT_TO_RIGHT = false;
+        drawTree();
+    } else {
+        LEFT_TO_RIGHT = true;
+        drawTree();
+    }
+}

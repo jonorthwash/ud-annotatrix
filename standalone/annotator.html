@@ -39,9 +39,13 @@
             <input type="file" id="filename"/>
         </p>
 
-        <div id="detected"></div>
-        <button type="button" class="btn btn-primary" id="btnUndo" disabled="disabled">Undo</button>
-        <button type="button" class="btn btn-primary" id="btnRedo" disabled="disabled">Redo</button>
+        <p>
+            <div id="detected"></div>
+            <input type="checkbox" id="RTL" name="RTL">
+            <label for="RTL">Enable RTL</label>            
+        </p>
+        <button type="button" class="btn btn-primary" id="btnUndo" disabled="true">Undo</button>
+        <button type="button" class="btn btn-primary" id="btnRedo" disabled="true">Redo</button>
 
 
         <div id="cy"></div>

@@ -1,5 +1,7 @@
 "use strict"
 
+var ALIGNMENT = "h";
+var LEFT_TO_RIGHT = true;
 var ACTIVE = "#2653c9";
 var NORMAL = "#7fa2ff";
 var FANCY = "#cc22fc";
@@ -13,6 +15,7 @@ var conllu = require("conllu");
 
 function conlluDraw(content) {
     /* Draw the tree. */
+    var sortingFunc = (LEFT_TO_RIGHT) ? simpleIdSorting : rtlSorting;
     var cy = window.cy = cytoscape({
         container: document.getElementById('cy'),
 
@@ -27,7 +30,7 @@ function conlluDraw(content) {
             condense: true,
             // cols: sent.tokens.length,
             rows: 2,
-            sort: simpleIdSorting
+            sort: sortingFunc
         },
 
         style: CY_STYLE,
@@ -109,6 +112,7 @@ function makeDependencies(token, nodeId, graph) {
             "ctrl": [55, 55, 55, 55]
         }
         var coef = (token.head - nodeId);
+        if (!LEFT_TO_RIGHT) {coef *= -1}; // support for RTL
         if (Math.abs(coef) != 1) {coef *= 0.7};
         edgeDep.ctrl = edgeDep.ctrl.map(function(el){ return el*coef; });
         graph.push({"data": edgeDep, "classes": "dependency"});
@@ -160,6 +164,22 @@ function simpleIdSorting(n1, n2) {
     } else {
         return 0;
     }
+}
+
+
+function rtlSorting(n1, n2) {
+    var result = 0;
+    if ((n1.hasClass("wf") && n2.hasClass("wf")) // = if the nodes have the same class
+        || (n1.hasClass("pos") && n2.hasClass("pos"))) {
+        result = simpleIdSorting(n1, n2) * -1;
+    } else if (n1.hasClass("wf") && n2.hasClass("pos")) {
+        result = -1
+    } else if (n1.hasClass("pos") && n2.hasClass("wf")) {
+        result = 1
+    } else {
+        result = 0;
+    }
+    return result;
 }
 
 
