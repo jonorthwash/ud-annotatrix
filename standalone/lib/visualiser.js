@@ -21,6 +21,7 @@ function conlluDraw(content) {
     if (VERT_ALIGNMENT) {
         layout.cols = 2;
         layout.sort = vertAlSort;
+        $("#cy").css("height", "1000px");
     } else {
         layout.rows = 2;
         if (LEFT_TO_RIGHT) {
