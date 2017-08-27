@@ -356,27 +356,27 @@ function writeWF(wfInp) {
 }
 
 
-function findConlluId(wf) {
+function findConlluId(wfNode) {
     // takes a cy wf node
 
     var isSubtoken = false;
     var outerIndex;
     var innerIndex;
-    if (wf.data("parent") != undefined) {
+    if (wfNode.data("parent") != undefined) {
         isSubtoken = true;
-        var parentId = wf.data("parent"); // WORKING ON THIS!
+        var parentId = wfNode.data("parent"); // WORKING ON THIS!
         console.log("parentId: " + parentId);
         var children = cy.$("#" + parentId).children();
         console.log("children");
         console.log(children);
         outerIndex = +parentId.slice(2);
         for (var i = 0; i < children.length; ++i) {
-            if (children[i].id() == wf.id()){
+            if (children[i].id() == wfNode.id()){
                 console.log("Matched child: " + i);
             }
         }
     } else {
-        outerIndex = wf.id().slice(2) - 1
+        outerIndex = wfNode.id().slice(2) - 1
         console.log("simple token, id: " + outerIndex);
     }
     return [isSubtoken, outerIndex, innerIndex];
