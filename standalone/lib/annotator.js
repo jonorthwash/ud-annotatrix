@@ -19,7 +19,7 @@ function main() {
         ROOT + 'ext/undomanager.js',
 
         // CoNLL-U parser from https://github.com/FrancessFractal/conllu
-        ROOT + 'conllu/conllu.js',
+        ROOT + 'ext/conllu/conllu.js',
 
         // native project code
         ROOT + 'CG2conllu.js',
