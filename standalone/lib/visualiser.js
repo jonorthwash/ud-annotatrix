@@ -212,10 +212,6 @@ function rtlSorting(n1, n2) {
 function vertAlSort(n1, n2) {
     var num1 = +n1.id().slice(2);
     var num2 = +n2.id().slice(2);
-    // if (num1 < num2) {
-    //     return -1;
-    // } else if (num1 > num2) {
-    //     return 1;
     if (num1 != num2) {
         return num1 - num2;
     } else {
