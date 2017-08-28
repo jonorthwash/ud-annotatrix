@@ -84,12 +84,16 @@ function changeEdgeStyle() {
         depEdgeStyle["text-border-opacity"] = 1;
         depEdgeStyle["control-point-weights"] = "0.15 0.45 0.55 0.85";
         depEdgeStyle["text-margin-x"] = "data(length)";
+        depEdgeStyle["source-distance-from-node"] = 10;
+        depEdgeStyle["target-distance-from-node"] = 10;
     } else {
         depEdgeStyle["text-margin-y"] = -10;
         depEdgeStyle["text-margin-x"] = 0;
         depEdgeStyle["text-background-opacity"] = 0;
         depEdgeStyle["text-border-opacity"] = 0;
         depEdgeStyle["control-point-weights"] = "0 0.25 0.75 1";
+        depEdgeStyle["source-distance-from-node"] = 0;
+        depEdgeStyle["target-distance-from-node"] = 0;
     }
 }
 
