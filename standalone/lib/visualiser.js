@@ -43,7 +43,7 @@ function changeBoxSize(sent) {
         $("#cy").css("width", "1700px");       
         $("#cy").css("height", (length * 50) + "px");
     } else {
-        var width = length * 150;
+        var width = length * 200;
         if (width < minWidth) {
             width = minWidth;
         } else if (width > maxWidth) {
