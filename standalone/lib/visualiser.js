@@ -17,19 +17,15 @@ function conlluDraw(content) {
     /* Draw the tree. */
     var sent = new conllu.Sentence();
     sent.serial = content;
-    var length = sent.tokens.length;
+    changeCyStle(sent);
 
     // var sortingFunc = (LEFT_TO_RIGHT) ? simpleIdSorting : rtlSorting;
     var layout = {name: "grid", condense: true};
     if (VERT_ALIGNMENT) {
         layout.cols = 2;
         layout.sort = vertAlSort;
-        $("#cy").css("height", (length * 50) + "px");
-        $("#cy").css("width", (length * 100) + "px");
     } else {
         layout.rows = 2;
-        $("#cy").css("height", (length * 50) + "px"); // TODO: min and max size
-        $("#cy").css("width", (length * 150) + "px");
         if (LEFT_TO_RIGHT) {
             layout.sort = simpleIdSorting;
         } else {
@@ -48,6 +44,25 @@ function conlluDraw(content) {
         style: CY_STYLE,
         elements: conllu2cy(sent)
     });
+}
+
+
+function changeCyStle(sent) {
+    var minWidth = 500;
+    var maxWidth = 1700;
+    var length = sent.tokens.length;
+    if (VERT_ALIGNMENT) {
+        $("#cy").css("height", (length * 50) + "px");
+    } else {
+        var width = length * 150;
+        if (width < minWidth) {
+            width = minWidth;
+        } else if (width > maxWidth) {
+            width = maxWidth;
+            console.log("ok");
+        }
+        $("#cy").css("width", width + "px");        
+    }
 }
 
 
