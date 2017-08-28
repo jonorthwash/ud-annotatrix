@@ -18,6 +18,7 @@ function conlluDraw(content) {
     var sent = new conllu.Sentence();
     sent.serial = content;
     changeBoxSize(sent);
+    changeEdgeStyle();
     var layout = formLayout();
 
     var cy = window.cy = cytoscape({
@@ -70,6 +71,26 @@ function formLayout() {
     return layout;
 }
 
+
+function changeEdgeStyle() {
+    var depEdgeStyle = CY_STYLE[11]["style"];
+    if (VERT_ALIGNMENT) {
+        depEdgeStyle["text-margin-y"] = 0;
+        depEdgeStyle["text-background-opacity"] = 1;
+        depEdgeStyle["text-background-color"] = "white";
+        depEdgeStyle["text-border-color"] = "black";
+        depEdgeStyle["text-border-width"] = 1;
+        depEdgeStyle["text-border-opacity"] = 1;
+        depEdgeStyle["control-point-weights"] = "0.15 0.45 0.55 0.85";
+        depEdgeStyle["text-margin-x"] = "data(length)";
+    } else {
+        depEdgeStyle["text-margin-y"] = -10;
+        depEdgeStyle["text-margin-x"] = 0;
+        depEdgeStyle["text-background-opacity"] = 0;
+        depEdgeStyle["text-border-opacity"] = 0;
+        depEdgeStyle["control-point-weights"] = "0 0.25 0.75 1";
+    }
+}
 
 function conllu2cy(sent) {
     var graph = [];
@@ -138,11 +159,13 @@ function makeDependencies(token, nodeId, graph) {
             "id": "ed" + nodeId,
             "source": "nf" + head,
             "target": "nf" + nodeId,
+            "length": (token.deprel.length / 3) + "em",
             "label": token.deprel,
             "ctrl": [55, 55, 55, 55]
         }
         var coef = (token.head - nodeId);
         if (!LEFT_TO_RIGHT) {coef *= -1}; // support for RTL
+        if (VERT_ALIGNMENT) {edgeDep.ctrl = [70, 70, 70, 70]};
         if (Math.abs(coef) != 1) {coef *= 0.7};
         edgeDep.ctrl = edgeDep.ctrl.map(function(el){ return el*coef; });
         graph.push({"data": edgeDep, "classes": "dependency"});
