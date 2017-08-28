@@ -78,6 +78,7 @@ function changeEdgeStyle() {
         depEdgeStyle["text-margin-y"] = 0;
         depEdgeStyle["text-background-opacity"] = 1;
         depEdgeStyle["text-background-color"] = "white";
+        depEdgeStyle["text-background-shape"] = "roundrectangle";
         depEdgeStyle["text-border-color"] = "black";
         depEdgeStyle["text-border-width"] = 1;
         depEdgeStyle["text-border-opacity"] = 1;
@@ -165,7 +166,7 @@ function makeDependencies(token, nodeId, graph) {
         }
         var coef = (token.head - nodeId);
         if (!LEFT_TO_RIGHT) {coef *= -1}; // support for RTL
-        if (VERT_ALIGNMENT) {edgeDep.ctrl = [70, 70, 70, 70]};
+        if (VERT_ALIGNMENT) {edgeDep.ctrl = [90, 90, 90, 90]};
         if (Math.abs(coef) != 1) {coef *= 0.7};
         edgeDep.ctrl = edgeDep.ctrl.map(function(el){ return el*coef; });
         graph.push({"data": edgeDep, "classes": "dependency"});
