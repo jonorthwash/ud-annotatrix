@@ -15,15 +15,21 @@ var conllu = require("conllu");
 
 function conlluDraw(content) {
     /* Draw the tree. */
+    var sent = new conllu.Sentence();
+    sent.serial = content;
+    var length = sent.tokens.length;
 
     // var sortingFunc = (LEFT_TO_RIGHT) ? simpleIdSorting : rtlSorting;
     var layout = {name: "grid", condense: true};
     if (VERT_ALIGNMENT) {
         layout.cols = 2;
         layout.sort = vertAlSort;
-        $("#cy").css("height", "1000px");
+        $("#cy").css("height", (length * 50) + "px");
+        $("#cy").css("width", (length * 100) + "px");
     } else {
         layout.rows = 2;
+        $("#cy").css("height", (length * 50) + "px"); // TODO: min and max size
+        $("#cy").css("width", (length * 150) + "px");
         if (LEFT_TO_RIGHT) {
             layout.sort = simpleIdSorting;
         } else {
@@ -40,14 +46,12 @@ function conlluDraw(content) {
         userZoomingEnabled: false,
         layout: layout, 
         style: CY_STYLE,
-        elements: conllu2cy(content)
+        elements: conllu2cy(sent)
     });
 }
 
 
-function conllu2cy(content) {
-    var sent = new conllu.Sentence();
-    sent.serial = content;
+function conllu2cy(sent) {
     var graph = [];
     $.each(sent.tokens, function(n, token) {
         if (token.tokens){
