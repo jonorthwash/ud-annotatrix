@@ -18,7 +18,7 @@ var CY_STYLE = [{
         "label": "data(label)"
   }
 }, {
-    "selector": "$node > node",
+    "selector": "node.MultiwordToken",
     "style": {
         "background-color": ST_COLOR,
         "text-background-color": NORMAL,

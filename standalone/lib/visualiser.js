@@ -99,7 +99,11 @@ function conllu2cy(sent) {
         if (token instanceof conllu.MultiwordToken){
             var spId = "ns" + strWithZero(n);
             var id = toSubscript(" (" + findSupTokId(token.tokens) + ")");
-            graph.push({"data": {"id": spId,"label": token.form + id}});
+            var MultiwordToken = {
+                "data": {"id": spId,"label": token.form + id},
+                "classes": "MultiwordToken"
+            };
+            graph.push(MultiwordToken);
             $.each(token.tokens, function(n, subTok) {
                 graph = createToken(graph, subTok, spId);
             });
