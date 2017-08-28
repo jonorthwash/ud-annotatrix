@@ -39,6 +39,7 @@ function changeBoxSize(sent) {
     var maxWidth = 1700;
     var length = sent.tokens.length;
     if (VERT_ALIGNMENT) {
+        $("#cy").css("width", "1700px");       
         $("#cy").css("height", (length * 50) + "px");
     } else {
         var width = length * 150;
@@ -47,7 +48,8 @@ function changeBoxSize(sent) {
         } else if (width > maxWidth) {
             width = maxWidth;
         }
-        $("#cy").css("width", width + "px");        
+        $("#cy").css("width", width + "px");    
+        $("#cy").css("height", "400px");    
     }
 }
 
