@@ -29,7 +29,6 @@
         <textarea id="indata" style="width: 100%" rows="20"></textarea>
 
         <p>
-            <input type="button" onClick="javascript:exportCorpora();" value="Export Corpus" />
             <input type="button" id="convert" onClick="javascript:toConllu();" value="Convert the corpus to CoNLL-U" />
             <div id="warning"></div>
         </p>
@@ -37,6 +36,7 @@
         <p>
             Load Corpora from file:
             <input type="file" id="filename"/>
+            <input type="button" onClick="javascript:exportCorpora();" value="Export Corpus" />
         </p>
 
         <p>
