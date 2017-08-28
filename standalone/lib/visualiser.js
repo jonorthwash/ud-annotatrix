@@ -140,13 +140,24 @@ function createToken(graph, token, spId) {
     if (token.form == undefined) {token.form = " "};
 
     var nodeId = strWithZero(token.id);
-    var nodeWF = token;
+    // token number
+    graph.push({
+        "data": {
+            "id": "num" + nodeId,
+            "label": +nodeId,
+            "parent": spId
+        },
+        "classes": "tokenNumber"
+    })
 
-    nodeWF.parent = spId;
-    nodeWF.length = nodeWF.form.length + 1 + "em";
+    var nodeWF = token;
+    // nodeWF.parent = spId;
+    nodeWF.length = nodeWF.form.length + "em";
     nodeWF.id = "nf" + nodeId;
-    nodeWF.label = nodeWF.form + toSubscript("" + +nodeId);
+    nodeWF.label = nodeWF.form;
     nodeWF.state = "normal";
+
+    nodeWF.parent = "num" + nodeId;
     graph.push({"data": nodeWF, "classes": "wf"});
 
     graph = makePOS(token, nodeId, graph);
