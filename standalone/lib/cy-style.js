@@ -87,7 +87,8 @@ var CY_STYLE = [{
     "control-point-distances": "data(ctrl)",
     "control-point-weights": "0 0.25 0.75 1",
     "edge-distances": "node-position",
-    "label": "data(label)"
+    "label": "data(label)",
+    "text-events": "yes"
   }
 }, {
     "selector": "edge.dependency.selected",
