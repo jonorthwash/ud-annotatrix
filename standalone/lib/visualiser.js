@@ -154,14 +154,15 @@ function createToken(graph, token, spId) {
 function makeDependencies(token, nodeId, graph) {
     /* if there is head, create an edge for dependency */
 
+    var deprel = (token.deprel) ? token.deprel : "";
     if (token.head && token.head != 0) {
         var head = strWithZero(token.head);
         var edgeDep = {
             "id": "ed" + nodeId,
             "source": "nf" + head,
             "target": "nf" + nodeId,
-            "length": (token.deprel.length / 3) + "em",
-            "label": token.deprel,
+            "length": (deprel.length / 3) + "em",
+            "label": deprel,
             "ctrl": [55, 55, 55, 55]
         }
         var coef = (token.head - nodeId);
