@@ -17,21 +17,8 @@ function conlluDraw(content) {
     /* Draw the tree. */
     var sent = new conllu.Sentence();
     sent.serial = content;
-    changeCyStle(sent);
-
-    // var sortingFunc = (LEFT_TO_RIGHT) ? simpleIdSorting : rtlSorting;
-    var layout = {name: "grid", condense: true};
-    if (VERT_ALIGNMENT) {
-        layout.cols = 2;
-        layout.sort = vertAlSort;
-    } else {
-        layout.rows = 2;
-        if (LEFT_TO_RIGHT) {
-            layout.sort = simpleIdSorting;
-        } else {
-            layout.sort = rtlSorting;
-        }
-    }
+    changeBoxSize(sent);
+    var layout = formLayout();
 
     var cy = window.cy = cytoscape({
         container: document.getElementById("cy"),
@@ -47,7 +34,7 @@ function conlluDraw(content) {
 }
 
 
-function changeCyStle(sent) {
+function changeBoxSize(sent) {
     var minWidth = 500;
     var maxWidth = 1700;
     var length = sent.tokens.length;
@@ -59,10 +46,26 @@ function changeCyStle(sent) {
             width = minWidth;
         } else if (width > maxWidth) {
             width = maxWidth;
-            console.log("ok");
         }
         $("#cy").css("width", width + "px");        
     }
+}
+
+
+function formLayout() {
+    var layout = {name: "grid", condense: true};
+    if (VERT_ALIGNMENT) {
+        layout.cols = 2;
+        layout.sort = vertAlSort;
+    } else {
+        layout.rows = 2;
+        if (LEFT_TO_RIGHT) {
+            layout.sort = simpleIdSorting;
+        } else {
+            layout.sort = rtlSorting;
+        }
+    }
+    return layout;
 }
 
 
