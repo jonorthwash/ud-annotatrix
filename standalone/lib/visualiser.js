@@ -96,7 +96,6 @@ function changeEdgeStyle() {
 function conllu2cy(sent) {
     var graph = [];
     $.each(sent.tokens, function(n, token) {
-        // if (token.tokens){
         if (token instanceof conllu.MultiwordToken){
             var spId = "ns" + strWithZero(n);
             var id = toSubscript(" (" + findSupTokId(token.tokens) + ")");
