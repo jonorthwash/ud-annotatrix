@@ -13,6 +13,7 @@
 
 <body>
     <div id="content">
+    <div> <!-- Textarea + buttons -->
         Current Sentence: <span id="currentsen">00</span> / <span id="totalsen">00</span>&nbsp;
         <input disabled type="button" value="Previous Sentence" id="prevSenBtn" onClick="javascript:prevSenSent();" />
         <input disabled type="button" value="Next Sentence" id="nextSenBtn" onClick="javascript:nextSenSent();" />
@@ -48,9 +49,11 @@
         </p>
         <button type="button" class="btn btn-primary" id="btnUndo" disabled="true">Undo</button>
         <button type="button" class="btn btn-primary" id="btnRedo" disabled="true">Redo</button>
-
-
+ 
+      </div>
+      <div> <!-- Graph -->
         <div id="cy"></div>
+      </div>
 
     </div>
 
