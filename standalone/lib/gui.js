@@ -406,8 +406,13 @@ function writeWF(wfInp) {
         if (!thereIsSupertoken(sent)) {
             splitTokens(newToken, outerIndex, sent);
         } else {
-            alert("Sorry, this option is not supported yet!");
-            drawTree();
+            if (!isSubtoken) {
+                console.log("Woring on this");
+                splitTokens(newToken, outerIndex, sent);
+            } else {
+                alert("Sorry, this option is not supported yet!");
+                drawTree();
+            }
         }
     } else {
         if (isSubtoken) {
@@ -425,12 +430,15 @@ function writeWF(wfInp) {
 function findConlluId(wfNode) { // TODO: refactor the arcitecture.
     // takes a cy wf node
 
+                                // change the way to find subtoken
     var isSubtoken = false;
     var outerIndex;
     var innerIndex;
-    if (wfNode.data("parent") != undefined) {
+
+    var parId = findParentId(wfNode);
+    if (parId != undefined) {
         isSubtoken = true;
-        var parentId = wfNode.data("parent");
+        var parentId = parId;
         console.log("parentId: " + parentId);
         var children = cy.$("#" + parentId).children();
         outerIndex = +parentId.slice(2);
@@ -451,6 +459,17 @@ function findConlluId(wfNode) { // TODO: refactor the arcitecture.
         }
     }
     return [isSubtoken, outerIndex, innerIndex];
+}
+
+
+function findParentId(wfNode) {
+    var parId = wfNode.data("parent");
+    var firstPar = cy.$("#" + parId);
+    console.log(firstPar.data());
+    // var isSubtoken = (firstPar.data("parent") != undefined);
+    // console.log("isSubtoken: " + isSubtoken);
+    var secParId = firstPar.data("parent");
+    return secParId;
 }
 
 
