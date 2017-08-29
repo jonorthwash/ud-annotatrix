@@ -407,7 +407,7 @@ function writeWF(wfInp) {
             splitTokens(newToken, outerIndex, sent);
         } else {
             if (!isSubtoken) {
-                console.log("Woring on this");
+                console.log("Working on this");
                 splitTokens(newToken, outerIndex, sent);
             } else {
                 alert("Sorry, this option is not supported yet!");
@@ -483,7 +483,6 @@ function splitTokens(oldToken, nodeId, sent) {
     All the attributes default to belong to the first part. */
 
     var newTokens = oldToken.split(" ");
-    // var sent = buildSent();
 
     // changing the first part
     sent.tokens[nodeId].form = newTokens[0];

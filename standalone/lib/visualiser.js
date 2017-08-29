@@ -225,11 +225,6 @@ function makePOS(token, nodeId, graph) {
 }
 
 
-function sortNodes(n1, n2) {
-    // TODO?
-}
-
-
 function simpleIdSorting(n1, n2) {
     if( n1.id() < n2.id() ){
         return -1;
