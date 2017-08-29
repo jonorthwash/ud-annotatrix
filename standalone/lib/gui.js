@@ -435,18 +435,14 @@ function findConlluId(wfNode) { // TODO: refactor the arcitecture.
     var outerIndex;
     var innerIndex;
 
-    var parId = findParentId(wfNode);
-    if (parId != undefined) {
+    var parentId = findParentId(wfNode);
+    if (parentId != undefined) {
         isSubtoken = true;
-        var parentId = parId;
-        console.log("parentId: " + parentId);
         var children = cy.$("#" + parentId).children();
         outerIndex = +parentId.slice(2);
         for (var i = 0; i < children.length; ++i) {
-            if (children[i].id() == wfNode.id()){
+            if (children[i].children()[0].id() == wfNode.id()){
                 innerIndex = i;
-                console.log("Matched child: " + innerIndex);
-                console.log(children[i]);
             }
         }
     } else {
@@ -676,7 +672,7 @@ function switchRtlMode() {
 }
 
 
-function switchAlignment(argument) {
+function switchAlignment() {
     if (this.checked) {
         VERT_ALIGNMENT = true;
         drawTree();
