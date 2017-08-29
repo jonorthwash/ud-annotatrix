@@ -461,9 +461,6 @@ function findConlluId(wfNode) { // TODO: refactor the arcitecture.
 function findParentId(wfNode) {
     var parId = wfNode.data("parent");
     var firstPar = cy.$("#" + parId);
-    console.log(firstPar.data());
-    // var isSubtoken = (firstPar.data("parent") != undefined);
-    // console.log("isSubtoken: " + isSubtoken);
     var secParId = firstPar.data("parent");
     return secParId;
 }
