@@ -404,11 +404,12 @@ function writeWF(wfInp) {
 
     if (newToken.trim().includes(" ")) { // this was a temporal solution. refactor.
         if (!thereIsSupertoken(sent)) {
-            splitTokens(newToken, outerIndex, sent);
+            splitTokensMod(newToken, outerIndex, sent);
         } else {
             if (!isSubtoken) {
                 console.log("Working on this");
-                splitTokens(newToken, outerIndex, sent);
+                console.log("outerIndex: " + outerIndex);
+                splitTokensMod(newToken, outerIndex, sent);
             } else {
                 alert("Sorry, this option is not supported yet!");
                 drawTree();
@@ -477,7 +478,7 @@ function thereIsSupertoken(sent) { // quick fix. refactor the arcitecture later.
 }
 
 
-function splitTokens(oldToken, nodeId, sent) {
+function splitTokens(oldToken, outerIndex, sent) {
     /* Takes a token to retokenize with space in it and the Id of the token.
     Creates the new tokens, makes indices and head shifting, redraws the tree.
     All the attributes default to belong to the first part. */
@@ -485,22 +486,67 @@ function splitTokens(oldToken, nodeId, sent) {
     var newTokens = oldToken.split(" ");
 
     // changing the first part
-    sent.tokens[nodeId].form = newTokens[0];
+    sent.tokens[outerIndex].form = newTokens[0];
 
     // creating inserting the second part
-    var restTok = formNewToken({"id": nodeId + 1, "form": newTokens[1]});
-    sent.tokens.splice(nodeId + 1, 0, restTok);
+    var restTok = formNewToken({"id": outerIndex + 1, "form": newTokens[1]});
+    sent.tokens.splice(outerIndex + 1, 0, restTok);
 
-    $.each(sent.tokens, function(n, tok){
-        if (tok.head > nodeId + 1){
+    $.each(sent.tokens, function(n, tok){ // I REALISED THAT THE BUG IS HERE, bc i use n (iterator)
+        if (tok.head > outerIndex + 1){
             tok.head = +tok.head + 1; // head correction after indices shift
         };
-        if (n > nodeId) {
-            tok.id = tok.id + 1; // renumbering
+        if (n > outerIndex) {
+            // console.log("n: " + n);
+            if (tok instanceof conllu.MultiwordToken) {
+                // console.log("MultiwordToken");
+                $.each(tok.tokens, function(j, subtok) {
+                    subtok.id = subtok.id += 1;
+                })
+            } else if (tok instanceof conllu.Token) {
+                // console.log("simple");
+                // console.log("shifting: " + tok.id);
+                tok.id = tok.id + 1; // renumbering
+                // console.log("done: " + tok.id);
+
+            }
         };
     });
 
     redrawTree(sent);        
+}
+
+
+function splitTokensMod(oldToken, outerIndex, sent) {
+    var newTokens = oldToken.split(" ");
+    sent.tokens[outerIndex].form = newTokens[0];
+
+    // creating and inserting the second part
+    var restTok = formNewToken({"id": outerIndex + 1, "form": newTokens[1]});
+    sent.tokens.splice(outerIndex + 1, 0, restTok);
+
+    $.each(sent.tokens, function(i, tok){
+        if (tok instanceof conllu.MultiwordToken) {
+            console.log("MultiwordToken");
+            $.each(tok.tokens, function(j, subtok) {
+                if (i > outerIndex) {
+                    subtok.id = subtok.id += 1;
+                }
+                if (subtok.head > outerIndex + 1) {
+                    subtok.head = +subtok.head + 1;
+                }
+            })
+        } else if (tok instanceof conllu.Token) {
+            if (i > outerIndex) {
+                tok.id = tok.id + 1;
+            }
+            if (tok.head > outerIndex + 1){
+                tok.head = +tok.head + 1; // head correction after indices shift
+            };
+        }
+    });
+
+    redrawTree(sent);
 }
 
 
