@@ -478,46 +478,11 @@ function thereIsSupertoken(sent) { // quick fix. refactor the arcitecture later.
 }
 
 
-function splitTokens(oldToken, outerIndex, sent) {
+function splitTokensMod(oldToken, outerIndex, sent) {
     /* Takes a token to retokenize with space in it and the Id of the token.
     Creates the new tokens, makes indices and head shifting, redraws the tree.
     All the attributes default to belong to the first part. */
 
-    var newTokens = oldToken.split(" ");
-
-    // changing the first part
-    sent.tokens[outerIndex].form = newTokens[0];
-
-    // creating inserting the second part
-    var restTok = formNewToken({"id": outerIndex + 1, "form": newTokens[1]});
-    sent.tokens.splice(outerIndex + 1, 0, restTok);
-
-    $.each(sent.tokens, function(n, tok){ // I REALISED THAT THE BUG IS HERE, bc i use n (iterator)
-        if (tok.head > outerIndex + 1){
-            tok.head = +tok.head + 1; // head correction after indices shift
-        };
-        if (n > outerIndex) {
-            // console.log("n: " + n);
-            if (tok instanceof conllu.MultiwordToken) {
-                // console.log("MultiwordToken");
-                $.each(tok.tokens, function(j, subtok) {
-                    subtok.id = subtok.id += 1;
-                })
-            } else if (tok instanceof conllu.Token) {
-                // console.log("simple");
-                // console.log("shifting: " + tok.id);
-                tok.id = tok.id + 1; // renumbering
-                // console.log("done: " + tok.id);
-
-            }
-        };
-    });
-
-    redrawTree(sent);        
-}
-
-
-function splitTokensMod(oldToken, outerIndex, sent) {
     var newTokens = oldToken.split(" ");
     sent.tokens[outerIndex].form = newTokens[0];
 
@@ -526,19 +491,25 @@ function splitTokensMod(oldToken, outerIndex, sent) {
     sent.tokens.splice(outerIndex + 1, 0, restTok);
 
     $.each(sent.tokens, function(i, tok){
+        console.log("i: " + i);
         if (tok instanceof conllu.MultiwordToken) {
             console.log("MultiwordToken");
             $.each(tok.tokens, function(j, subtok) {
                 if (i > outerIndex) {
+                    console.log("shifting: " + subtok.id);
                     subtok.id = subtok.id += 1;
+                    console.log("done: " + tok.id);
                 }
                 if (subtok.head > outerIndex + 1) {
                     subtok.head = +subtok.head + 1;
                 }
             })
         } else if (tok instanceof conllu.Token) {
+            console.log("simple");
             if (i > outerIndex) {
+                console.log("shifting: " + tok.id);
                 tok.id = tok.id + 1;
+                console.log("done: " + tok.id);
             }
             if (tok.head > outerIndex + 1){
                 tok.head = +tok.head + 1; // head correction after indices shift
