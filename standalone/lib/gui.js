@@ -486,7 +486,8 @@ function splitTokensMod(oldToken, outerIndex, sent) {
     sent.tokens[outerIndex].form = newTokens[0];
 
     // creating and inserting the second part
-    var restTok = formNewToken({"id": outerIndex + 1, "form": newTokens[1]});
+    var tokId = sent.tokens[outerIndex].id;
+    var restTok = formNewToken({"id": tokId, "form": newTokens[1]});
     sent.tokens.splice(outerIndex + 1, 0, restTok);
 
     $.each(sent.tokens, function(i, tok){
@@ -512,7 +513,7 @@ function shiftIndices(tok, i, outerIndex) {
         console.log("done: " + tok.id);
     }
     if (tok.head > outerIndex + 1){
-        tok.head = +tok.head + 1; // head correction after indices shift
+        tok.head = +tok.head + 1;
     };
     return tok;
 }
