@@ -135,8 +135,7 @@ var cg3withSemicolumn = `
 	"." sent
 `
 
-var cg3withSemicolumnAnswer = `
-1	Siedzieliśmy	siedzieć	vblex	_	impf|past|p1|m|pl	_	_	_	_
+var cg3withSemicolumnAnswer = `1	Siedzieliśmy	siedzieć	vblex	_	impf|past|p1|m|pl	_	_	_	_
 2	w	w	pr	_	_	_	_	_	_
 3	moim	mój	prn	_	pos|mi|sg|loc	_	_	_	_
 4	pokoju	pokój	n	_	mi|sg|loc	_	_	_	_
