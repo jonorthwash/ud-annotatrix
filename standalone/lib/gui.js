@@ -390,7 +390,6 @@ function writeWF(wfInp) {
     /* Either writes changes to token or retokenises the sentence. */
     var newToken = wfInp.val();
 
-    //now
     var active = cy.$(".input");
     var indices = findConlluId(active);
     console.log(indices);
@@ -399,8 +398,6 @@ function writeWF(wfInp) {
     var innerIndex = indices[2];
 
     var sent = buildSent();
-    // var nodeId = find2change();
-
 
     if (newToken.trim().includes(" ")) { // this was a temporal solution. refactor.
         splitTokens(newToken, sent, indices);
@@ -420,7 +417,6 @@ function writeWF(wfInp) {
 function findConlluId(wfNode) { // TODO: refactor the arcitecture.
     // takes a cy wf node
 
-                                // change the way to find subtoken
     var isSubtoken = false;
     var outerIndex;
     var innerIndex;
@@ -599,7 +595,7 @@ function redrawTree(sent) {
     the function drawing the tree. */
     var changedSent = sent.serial;
 
-    // the following block is needed for detection of which format was used
+    // detecting which format was used
     var currentSent = $("#indata").val();
     var currentFormat = detectFormat(currentSent);
     if (currentFormat == "CG3") {
@@ -611,7 +607,7 @@ function redrawTree(sent) {
 }
 
 
-// refactoring the write functions. in project, doesn't work yet
+// refactoring the write functions. in project, is not used yet
 function writeSent(makeChanges) {
 
     // build sent
