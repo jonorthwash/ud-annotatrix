@@ -403,15 +403,7 @@ function writeWF(wfInp) {
 
 
     if (newToken.trim().includes(" ")) { // this was a temporal solution. refactor.
-        if (!thereIsSupertoken(sent)) {
-            splitTokensMod(newToken, sent, indices);
-        } else {
-            if (!isSubtoken) {
-                splitTokensMod(newToken, sent, indices);
-            } else {
-                splitTokensMod(newToken, sent, indices);
-            }
-        }
+        splitTokensMod(newToken, sent, indices);
     } else {
         if (isSubtoken) {
             // TODO: think, whether it should be lemma or form.
@@ -464,7 +456,9 @@ function findParentId(wfNode) {
 }
 
 
-function thereIsSupertoken(sent) { // quick fix. refactor the arcitecture later.
+function thereIsSupertoken(sent) {
+    /* Indicates that a sent contains supertoken.\
+    Is notused anywhere at tye moment */
     var supTokFound = false;
     $.each(sent.tokens, function(n, tok) {
         if (tok instanceof conllu.MultiwordToken) {
