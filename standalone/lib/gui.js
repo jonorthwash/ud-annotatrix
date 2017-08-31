@@ -540,8 +540,7 @@ function mergeNodes(toMerge, side, how) {
     Recieves the node to merge, side (right or left) and a string denoting
     how to merge the nodes. In case of success, redraws the tree. */
 
-    var indices = findConlluId(toMerge); // WORKING ON THIS
-    console.log(indices);
+    var indices = findConlluId(toMerge);
     var isSubtoken = indices[0];
 
     if (isSubtoken) {
@@ -550,7 +549,6 @@ function mergeNodes(toMerge, side, how) {
         return;
     }
     
-    // var nodeId = Number(toMerge.id().slice(2)) - 1;
     var nodeId = indices[1];
     var otherId = (side == "right") ? nodeId + 1 : nodeId - 1;
     var sent = buildSent();
