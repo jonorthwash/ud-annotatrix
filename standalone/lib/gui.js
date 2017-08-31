@@ -490,14 +490,20 @@ function splitTokensMod(oldToken, sent, indices) {
         console.log("Splitting subtoken. Indices: " + indices);
         sent.tokens[outerIndex].tokens[innerIndex].form = newTokens[0];
         var tokId = sent.tokens[outerIndex].tokens[innerIndex].id;
+
+        // creating and inserting the second part
+        var restTok = formNewToken({"id": tokId + 1, "form": newTokens[1]});
+        sent.tokens[outerIndex].tokens.splice(innerIndex + 1, 0, restTok);
+        console.log(sent.serial);
     } else {
         sent.tokens[outerIndex].form = newTokens[0];
         var tokId = sent.tokens[outerIndex].id;
+
+        // creating and inserting the second part
+        var restTok = formNewToken({"id": tokId, "form": newTokens[1]});
+        sent.tokens.splice(outerIndex + 1, 0, restTok);
     }
 
-    // creating and inserting the second part
-    var restTok = formNewToken({"id": tokId, "form": newTokens[1]});
-    sent.tokens.splice(outerIndex + 1, 0, restTok);
 
     $.each(sent.tokens, function(i, tok){
         console.log("i: " + i);
