@@ -404,16 +404,14 @@ function writeWF(wfInp) {
 
     if (newToken.trim().includes(" ")) { // this was a temporal solution. refactor.
         if (!thereIsSupertoken(sent)) {
-            splitTokensMod(newToken, outerIndex, sent, indices);
+            splitTokensMod(newToken, sent, indices);
         } else {
             if (!isSubtoken) {
-                splitTokensMod(newToken, outerIndex, sent, indices);
+                splitTokensMod(newToken, sent, indices);
             } else {
+                console.log("Splitting a subtoken. Working on this!");
                 console.log("outerIndex: " + outerIndex); // Working on this
                 splitTokensMod(newToken, outerIndex, sent, indices);
-
-                alert("Sorry, this option is not supported yet!");
-                drawTree();
             }
         }
     } else {
@@ -479,7 +477,7 @@ function thereIsSupertoken(sent) { // quick fix. refactor the arcitecture later.
 }
 
 
-function splitTokensMod(oldToken, outerIndex, sent, indices) {
+function splitTokensMod(oldToken, sent, indices) {
     /* Takes a token to retokenize with space in it and the Id of the token.
     Creates the new tokens, makes indices and head shifting, redraws the tree.
     All the attributes default to belong to the first part. */
