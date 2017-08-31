@@ -403,7 +403,7 @@ function writeWF(wfInp) {
 
 
     if (newToken.trim().includes(" ")) { // this was a temporal solution. refactor.
-        splitTokensMod(newToken, sent, indices);
+        splitTokens(newToken, sent, indices);
     } else {
         if (isSubtoken) {
             // TODO: think, whether it should be lemma or form.
@@ -469,7 +469,7 @@ function thereIsSupertoken(sent) {
 }
 
 
-function splitTokensMod(oldToken, sent, indices) {
+function splitTokens(oldToken, sent, indices) {
     /* Takes a token to retokenize with space in it and the Id of the token.
     Creates the new tokens, makes indices and head shifting, redraws the tree.
     All the attributes default to belong to the first part. */
