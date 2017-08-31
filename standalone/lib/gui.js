@@ -411,7 +411,7 @@ function writeWF(wfInp) {
             } else {
                 console.log("Splitting a subtoken. Working on this!");
                 console.log("outerIndex: " + outerIndex); // Working on this
-                splitTokensMod(newToken, outerIndex, sent, indices);
+                splitTokensMod(newToken, sent, indices);
             }
         }
     } else {
@@ -487,13 +487,15 @@ function splitTokensMod(oldToken, sent, indices) {
 
     var newTokens = oldToken.split(" ");
     if (isSubtoken) {
+        console.log("Splitting subtoken. Indices: " + indices);
         sent.tokens[outerIndex].tokens[innerIndex].form = newTokens[0];
+        var tokId = sent.tokens[outerIndex].tokens[innerIndex].id;
     } else {
         sent.tokens[outerIndex].form = newTokens[0];
+        var tokId = sent.tokens[outerIndex].id;
     }
 
     // creating and inserting the second part
-    var tokId = sent.tokens[outerIndex].id;
     var restTok = formNewToken({"id": tokId, "form": newTokens[1]});
     sent.tokens.splice(outerIndex + 1, 0, restTok);
 
