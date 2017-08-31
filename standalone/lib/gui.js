@@ -492,8 +492,9 @@ function splitTokensMod(oldToken, sent, indices) {
         var tokId = sent.tokens[outerIndex].tokens[innerIndex].id;
 
         // creating and inserting the second part
-        var restTok = formNewToken({"id": tokId + 1, "form": newTokens[1]});
+        var restTok = formNewToken({"id": tokId, "form": newTokens[1]});
         sent.tokens[outerIndex].tokens.splice(innerIndex + 1, 0, restTok);
+        console.log("tokId: " + tokId)
         console.log(sent.serial);
     } else {
         sent.tokens[outerIndex].form = newTokens[0];
@@ -510,7 +511,7 @@ function splitTokensMod(oldToken, sent, indices) {
         if (tok instanceof conllu.MultiwordToken) {
             console.log("MultiwordToken");
             $.each(tok.tokens, function(j, subtok) {
-                subtok = shiftIndices(subtok, i, outerIndex);
+                subtok = shiftIndices(subtok, i, outerIndex, innerIndex, j);
             })
         } else if (tok instanceof conllu.Token) {
             console.log("simple");
@@ -521,8 +522,8 @@ function splitTokensMod(oldToken, sent, indices) {
 }
 
 
-function shiftIndices(tok, i, outerIndex) {
-    if (i > outerIndex) {
+function shiftIndices(tok, i, outerIndex, innerIndex, j) {
+    if (i > outerIndex || (innerIndex != undefined && j > innerIndex)) {
         console.log("shifting: " + tok.id);
         tok.id = tok.id + 1;
         console.log("done: " + tok.id);
