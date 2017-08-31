@@ -35,31 +35,31 @@ QUnit.test(cg3ambiguous, function( assert ) {
 
 
 var cg3simple = `"<Патшамен>"
-        "патша" n ins @nmod #1->3
+	"патша" n ins @nmod #1->3
 "<соғыс>"
-        "соғыс" n nom @obj #2->3
+	"соғыс" n nom @obj #2->3
 "<ашқанда>"
-        "аш" v tv ger_past loc @advcl #3->12
+	"аш" v tv ger_past loc @advcl #3->12
 "<,>"
-        "," cm @punct #4->12
+	"," cm @punct #4->12
 "<ел-жұрт>"
-        "ел-жұрт" n nom @conj #5->7
+	"ел-жұрт" n nom @conj #5->7
 "<,>"
-        "," cm @punct #6->7
+	"," cm @punct #6->7
 "<отанымды>"
-        "отан" n px1sg acc @obj #7->8
+	"отан" n px1sg acc @obj #7->8
 "<қорғауға>"
-        "қорға" v tv ger dat @advcl #8->12
+	"қорға" v tv ger dat @advcl #8->12
 "<,>"
-        "," cm @punct #9->12
+	"," cm @punct #9->12
 "<біз>"
-        "біз" prn pers p1 pl nom @nsubj #10->12
+	"біз" prn pers p1 pl nom @nsubj #10->12
 "<соғысқа>"
-        "соғыс" n dat @nmod #11->12
+	"соғыс" n dat @nmod #11->12
 "<бардық>"
-        "бар" v iv ifi p1 pl @root #12->0
+	"бар" v iv ifi p1 pl @root #12->0
 "<.>"
-        "." sent @punct #13->12`
+	"." sent @punct #13->12`
 
 var cg3simpleAnswer = `1	Патшамен	патша	n	_	ins	3	nmod	_	_
 2	соғыс	соғыс	n	_	nom	3	obj	_	_
@@ -79,4 +79,91 @@ var cg3simpleAnswer = `1	Патшамен	патша	n	_	ins	3	nmod	_	_
 
 QUnit.test(cg3simple, function( assert ) {
   assert.ok(CG2conllu(cg3simple) == cg3simpleAnswer, "Passed!" );
+});
+
+
+var cg3withSemicolumn = `
+"<Siedzieliśmy>"
+	"siedzieć" vblex impf past p1 m pl
+"<w>"
+	"w" pr
+"<moim>"
+;   "mój" prn pos mi sg loc
+"<pokoju>"
+	"pokój" n mi sg loc
+"<,>"
+	"," cm
+"<paląc>"
+	"palić" vblex impf pprs adv
+"<i>"
+	"i" cnjcoo
+"<rozmawiając>"
+	"rozmawiać" vblex impf pprs adv
+"<o>"
+	"o" pr
+"<tem>"
+	"to" prn dem mi sg loc
+"<,>"
+	"," cm
+"<jak>"
+	"jak" rel adv
+"<marni>"
+	"marny" adj sint mp pl nom
+"<jesteśmy>"
+	"być" vbser pres p1 pl
+"<,>"
+	"," cm
+"<marni>"
+	"marny" adj sint mp pl nom
+"<z>"
+	"z" pr
+"<lekarskiego>"
+	"lekarski" adj mi sg gen
+"<punktu>"
+	"punkt" n mi sg gen
+"<widzenia>"
+;   "widzieć" vblex impf ger nt sg gen
+"<chcę>"
+	"chcieć" vblex impf pres p1 sg
+"<powiedzieć>"
+	"powiedzieć" vblex perf inf
+"<,>"
+	"," cm
+"<naturalnie>"
+	"naturalnie" adv sint
+"<.>"
+	"." sent
+`
+
+var cg3withSemicolumnAnswer = `
+1	Siedzieliśmy	siedzieć	vblex	_	impf|past|p1|m|pl	_	_	_	_
+2	w	w	pr	_	_	_	_	_	_
+3	moim	mój	prn	_	pos|mi|sg|loc	_	_	_	_
+4	pokoju	pokój	n	_	mi|sg|loc	_	_	_	_
+5	,	,	cm	_	_	_	_	_	_
+6	paląc	palić	vblex	_	impf|pprs|adv	_	_	_	_
+7	i	i	cnjcoo	_	_	_	_	_	_
+8	rozmawiając	rozmawiać	vblex	_	impf|pprs|adv	_	_	_	_
+9	o	o	pr	_	_	_	_	_	_
+10	tem	to	prn	_	dem|mi|sg|loc	_	_	_	_
+11	,	,	cm	_	_	_	_	_	_
+12	jak	jak	rel	_	adv	_	_	_	_
+13	marni	marny	adj	_	sint|mp|pl|nom	_	_	_	_
+14	jesteśmy	być	vbser	_	pres|p1|pl	_	_	_	_
+15	,	,	cm	_	_	_	_	_	_
+16	marni	marny	adj	_	sint|mp|pl|nom	_	_	_	_
+17	z	z	pr	_	_	_	_	_	_
+18	lekarskiego	lekarski	adj	_	mi|sg|gen	_	_	_	_
+19	punktu	punkt	n	_	mi|sg|gen	_	_	_	_
+20	widzenia	widzieć	vblex	_	impf|ger|nt|sg|gen	_	_	_	_
+21	chcę	chcieć	vblex	_	impf|pres|p1|sg	_	_	_	_
+22	powiedzieć	powiedzieć	vblex	_	perf|inf	_	_	_	_
+23	,	,	cm	_	_	_	_	_	_
+24	naturalnie	naturalnie	adv	_	sint	_	_	_	_
+25	.	.	sent	_	_	_	_	_	_
+`
+
+
+QUnit.test(cg3withSemicolumn, function( assert ) {
+  assert.ok(CG2conllu(cg3withSemicolumn) == cg3withSemicolumnAnswer, "Passed!" );
 });
