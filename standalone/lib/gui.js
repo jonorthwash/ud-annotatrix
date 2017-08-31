@@ -409,8 +409,6 @@ function writeWF(wfInp) {
             if (!isSubtoken) {
                 splitTokensMod(newToken, sent, indices);
             } else {
-                console.log("Splitting a subtoken. Working on this!");
-                console.log("outerIndex: " + outerIndex); // Working on this
                 splitTokensMod(newToken, sent, indices);
             }
         }
@@ -487,15 +485,12 @@ function splitTokensMod(oldToken, sent, indices) {
 
     var newTokens = oldToken.split(" ");
     if (isSubtoken) {
-        console.log("Splitting subtoken. Indices: " + indices);
         sent.tokens[outerIndex].tokens[innerIndex].form = newTokens[0];
         var tokId = sent.tokens[outerIndex].tokens[innerIndex].id;
 
         // creating and inserting the second part
         var restTok = formNewToken({"id": tokId, "form": newTokens[1]});
         sent.tokens[outerIndex].tokens.splice(innerIndex + 1, 0, restTok);
-        console.log("tokId: " + tokId)
-        console.log(sent.serial);
     } else {
         sent.tokens[outerIndex].form = newTokens[0];
         var tokId = sent.tokens[outerIndex].id;
@@ -507,14 +502,11 @@ function splitTokensMod(oldToken, sent, indices) {
 
 
     $.each(sent.tokens, function(i, tok){
-        console.log("i: " + i);
         if (tok instanceof conllu.MultiwordToken) {
-            console.log("MultiwordToken");
             $.each(tok.tokens, function(j, subtok) {
                 subtok = shiftIndices(subtok, i, outerIndex, innerIndex, j);
             })
         } else if (tok instanceof conllu.Token) {
-            console.log("simple");
             tok = shiftIndices(tok, i, outerIndex);
         }
     });
@@ -524,9 +516,7 @@ function splitTokensMod(oldToken, sent, indices) {
 
 function shiftIndices(tok, i, outerIndex, innerIndex, j) {
     if (i > outerIndex || (innerIndex != undefined && j > innerIndex)) {
-        console.log("shifting: " + tok.id);
         tok.id = tok.id + 1;
-        console.log("done: " + tok.id);
     }
     if (tok.head > outerIndex + 1){
         tok.head = +tok.head + 1;
