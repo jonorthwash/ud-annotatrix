@@ -300,7 +300,12 @@ function changeNode() {
 function changeEdgeParam(param) {
     param.w = 100;
     param.h = cy.nodes()[0].renderedHeight();
-    param.x1 = param.x1 + (param.x2 - param.x1)/2 - 50;
+    if (VERT_ALIGNMENT) {
+        param.y1 = param.y1 + (param.y2 - param.y1)/2 - 15;
+        param.x1 = param.x2 - 70;
+    } else {
+        param.x1 = param.x1 + (param.x2 - param.x1)/2 - 50;
+    }
     param.color = "white";
     return param;
 }
