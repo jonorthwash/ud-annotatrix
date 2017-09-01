@@ -89,7 +89,7 @@ span.tt {
 .activated#mute {
   position: absolute;
   width: 1500px;
-  height: 300px;
+  height: 400px;
   display: block;
   background-color: rgba(0,0,0,0.25);;
   z-index: 800;

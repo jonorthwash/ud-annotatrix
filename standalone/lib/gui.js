@@ -275,6 +275,15 @@ function changeNode() {
     if (this.data("label") == undefined) {this.data("label", "")};
 
     $("#mute").addClass("activated");
+    var sent = buildSent();
+    var length = sent.tokens.length;
+    if (VERT_ALIGNMENT) {
+        $(".activated#mute").css("height", (length * 50) + "px");
+    } else {
+        var width = getWidth(length);
+        $(".activated#mute").css("width", width + "px");
+    }
+
     $("#edit").css("top", param.y1)
         .css("left", param.x1)
         .css("height", param.h)

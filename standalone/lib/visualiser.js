@@ -36,22 +36,28 @@ function conlluDraw(content) {
 
 
 function changeBoxSize(sent) {
-    var minWidth = 500;
-    var maxWidth = 1700;
     var length = sent.tokens.length;
     if (VERT_ALIGNMENT) {
-        $("#cy").css("width", "1700px");       
+        $("#cy").css("width", "1500px");
         $("#cy").css("height", (length * 50) + "px");
     } else {
-        var width = length * 200;
-        if (width < minWidth) {
-            width = minWidth;
-        } else if (width > maxWidth) {
-            width = maxWidth;
-        }
-        $("#cy").css("width", width + "px");    
-        $("#cy").css("height", "400px");    
+        var width = getWidth(length); 
+        $("#cy").css("width", width + "px");
+        $("#cy").css("height", "400px");
     }
+}
+
+
+function getWidth(length) {
+    var minWidth = 500;
+    var maxWidth = 1500;
+    var width = length * 200;
+    if (width < minWidth) {
+        width = minWidth;
+    } else if (width > maxWidth) {
+        width = maxWidth;
+    }
+    return width;
 }
 
 
