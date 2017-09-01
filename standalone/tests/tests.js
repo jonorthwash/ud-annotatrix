@@ -161,3 +161,25 @@ var cg3withSemicolumnAnswer = `1	Siedzieliśmy	siedzieć	vblex	_	impf|past|p1|m|
 QUnit.test(cg3withSemicolumn, function( assert ) {
   assert.ok(CG2conllu(cg3withSemicolumn) == cg3withSemicolumnAnswer, "Passed!" );
 });
+
+
+var cg3ambWithSemicolumn = `"<Dlaczego>"
+	"dlaczego" adv itg
+"<nie>"
+	"nie" adv
+"<miałem>"
+	"mieć" vbhaver impf past p1 m sg
+"<wysiąku>"
+	"wysiąk" n mi sg loc
+;	"wysiąk" n mi sg voc REMOVE:117
+"<w>"
+	"w" pr
+"<kolanie>"
+	"kolano" n nt sg loc
+"<?>"
+	"?" sent`
+
+
+QUnit.test(cg3withSemicolumn, function( assert ) {
+  assert.ok(CG2conllu(cg3ambWithSemicolumn) == undefined, "Passed!" );
+});
