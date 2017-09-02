@@ -1,11 +1,17 @@
 # ud-annotatrix
 
-UD Annotatrix is a client-side, browser only, tool for editting CoNLL-U and VISL files (with dependency trees).  The point of this is to make manual editing of dependency corpora quicker.
+## About
 
-To use it, you can clone the repository to your local machine and open the file `visualise.html` in your browser.
+UD Annotatrix is a client-side, browser only, tool for editting CoNLL-U and VISL files (with dependency trees).  The point of this is to make manual editing of dependency corpora quicker. The online interface is currently avaliable on [GitHub pages](https://maryszmary.github.io/ud-annotatrix/standalone/annotator.html). To use it offline, you can clone the repository to your local machine and open the file `visualise.html` in your browser.
 
-See [examples](http://universaldependencies.org/kk/dep/conj.html) of UD graphs using the same library as the visualiser currently does use and as the annotatrix will use.
+Note that something similar exists in brat ([example](http://kazcorpus.kz/brat1/#/_qq01/_qq_005_109)), but that we're aiming for a simpler, cleaner, faster interface that has no server-side component.
 
-Note that something similar exists in brat ([example](http://kazcorpus.kz/brat1/#/_qq01/_qq_005_109)), but that we're aiming for a simpler, cleaner, faster interface that has no server-side component.  Everything should be in javascript.
+## User guide
 
-Documentation of the changes made by Tai can be found at: https://wikis.swarthmore.edu/ling073/User:Twarner2/Final_project
+The basic user guide is avaliable on the [help page](https://maryszmary.github.io/ud-annotatrix/standalone/help.html).
+
+## Contributors:
+* Jonathan North Washington
+* Mariya Sheyanova (@maryszmary; [documentation of the changes](http://wiki.apertium.org/wiki/UD_annotatrix/UD_annotatrix_at_GSoC_2017))
+* Tai Vongsathorn Warner (..., [documentation of the changes](https://wikis.swarthmore.edu/ling073/User:Twarner2/Final_project))
+
