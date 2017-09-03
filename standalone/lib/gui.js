@@ -692,6 +692,13 @@ function cantConvertCG() {
 }
 
 
+function clearWarning() {
+    document.getElementById("viewConllu").disabled = false;
+    $("#warning").css("background-color", "white")
+        .text("");
+}
+
+
 function switchRtlMode() {
     if (this.checked) {
         LEFT_TO_RIGHT = false;

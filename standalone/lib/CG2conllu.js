@@ -32,15 +32,13 @@ function findComments(CGtext) {
 
 function ambiguetyPresent(CGtext) {
     var lines = CGtext.split(/"<(.*)>"/);
-    console.log(lines);
 
     // suppose the indent is consistent troughout the sentence
     for (var i = 2; i < lines.length; i += 2) {
         var indent = lines[i].replace("\n", "").split(/[^\s]/)[0];
-        console.log(indent);
         var ana = lines[i].trim(); 
         if (ana.includes(indent) && !ana.includes(indent + indent)) {
-            console.log(lines[i]);
+            // console.log(lines[i]);
             return true;
         }
     }

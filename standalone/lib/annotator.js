@@ -9,6 +9,7 @@ var CURRENTSENTENCE = 0;
 var RESULTS = [];
 var LOC_ST_AVALIABLE = false;
 var SERVER_RUNNING = false;
+var AMBIGUOUS = false;
  
 
 function main() {
@@ -229,9 +230,16 @@ function drawTree() {
 
     $("#detected").html("Detected: " + FORMAT + " format");
 
+    if (FORMAT == "CG3") {
+        content = CG2conllu(content)
+        if (content == undefined) {
+            AMBIGUOUS = true;
+        } else {
+            AMBIGUOUS = false;
+        }
+    };
 
-    if (FORMAT == "CoNLL-U" || FORMAT == "CG3") {
-        if (FORMAT == "CG3") {content = CG2conllu(content)};
+    if (FORMAT == "CoNLL-U" || (FORMAT == "CG3" && !AMBIGUOUS)) {
 
         conlluDraw(content);
         var inpSupport = $("<div id='mute'>"
@@ -242,6 +250,12 @@ function drawTree() {
 
     if (LOC_ST_AVALIABLE) {
         localStorage.setItem("corpus", getTreebank()); // saving the data
+    }
+
+    if (AMBIGUOUS) {
+        cantConvertCG();
+    } else {
+        clearWarning();
     }
 }
 
