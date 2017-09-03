@@ -27,8 +27,8 @@ The interface supports right-to-left readin order and vertiacal alignment for lo
 
 The basic user guide is avaliable on the [help page](https://maryszmary.github.io/ud-annotatrix/standalone/help.html).
 
-## Contributors:
+## Contributors
 
 * Jonathan North Washington (@jonorthwash)
 * Mariya Sheyanova (@maryszmary; [documentation of the changes](http://wiki.apertium.org/wiki/UD_annotatrix/UD_annotatrix_at_GSoC_2017))
-* Tai Vongsathorn Warner (@MidasDoas, [documentation of the changes](https://wikis.swarthmore.edu/ling073/User:Twarner2/Final_project))
+* Tai Vongsathorn Warner (@MidasDoas; [documentation of the changes](https://wikis.swarthmore.edu/ling073/User:Twarner2/Final_project))
