@@ -183,3 +183,51 @@ var cg3ambWithSemicolumn = `"<Dlaczego>"
 QUnit.test(cg3withSemicolumn, function( assert ) {
   assert.ok(CG2conllu(cg3ambWithSemicolumn) == undefined, "Passed!" );
 });
+
+
+var cg3withSpans = `# text = He boued e tebr Mona er gegin.
+# text[eng] = Mona eats her food here in the kitchen.
+# labels = press_1986 ch_syntax p_197 to_check
+"<He>"
+	"he" det pos f sp @det #1->2
+"<boued>"
+	"boued" n m sg @obj #2->4
+"<e>"
+	"e" vpart obj @aux #3->4
+"<tebr>"
+	"debriñ" vblex pri p3 sg @root #4->0
+"<Mona>"
+	"Mona" np ant f sg @nsubj #5->4
+"<er>"
+	"e" pr @case #1->8
+		"an" det def sp @det #2->8
+"<gegin>"
+	"kegin" n f sg @obl #7->4
+"<.>"
+	"." sent @punct #8->4`
+
+
+var cg3withSpansAnswer = `# text = He boued e tebr Mona er gegin.
+# text[eng] = Mona eats her food here in the kitchen.
+# labels = press_1986 ch_syntax p_197 to_check
+1	He	he	det	_	pos|f|sp	2	det	_	_
+2	boued	boued	n	_	m|sg	4	obj	_	_
+3	e	e	vpart	_	obj	4	aux	_	_
+4	tebr	debriñ	vblex	_	pri|p3|sg	0	root	_	_
+5	Mona	Mona	np	_	ant|f|sg	4	nsubj	_	_
+6-7	er	_	_	_	_	_	_	_	_
+6	_	e	pr	_	_	8	case	_	_
+7	_	an	det	_	def|sp	8	det	_	_
+8	gegin	kegin	n	_	f|sg	4	obl	_	_
+9	.	.	sent	_	_	4	punct	_	_
+`
+
+
+QUnit.test(cg3withSemicolumn, function( assert ) {
+  assert.ok(CG2conllu(cg3withSpans) == cg3withSpansAnswer, "Passed!" );
+});
+
+
+QUnit.test(cg3withSemicolumn, function( assert ) {
+  assert.ok(conllu2CG(CG2conllu(cg3withSpans)) == cg3withSpans, "Passed!" );
+});
