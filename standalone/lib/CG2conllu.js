@@ -144,9 +144,11 @@ function conllu2CG(conlluText, indent) {
         if (tok.tokens == undefined) {
             CGtext += indent + newCgAna(i, tok);
         } else {
+            var anas = [];
             $.each(tok.tokens, function(j, subtok) {
-                CGtext += "\n" + indent.repeat(j + 1) + newCgAna(j, subtok);
+                 anas.push(indent.repeat(j + 1) + newCgAna(j, subtok));
             })
+            CGtext += anas.join("\n");
         }
     })
 
