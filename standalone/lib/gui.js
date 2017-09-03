@@ -595,6 +595,7 @@ function buildSent() {
         currentSent = CG2conllu(currentSent);
         if (currentSent == undefined) {
             cantConvertCG();
+            console.log("can't convert CG");
             drawTree(); // not sure if this line is ok
             return;
         }
