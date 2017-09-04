@@ -24,7 +24,7 @@ var cg3ambiguous = `# text = He boued e tebr Mona er gegin.
 	"." sent @punct #9->4`
 
 
-QUnit.test(cg3ambiguous, function( assert ) {
+QUnit.test("cg3 ambiguous", function( assert ) {
   assert.ok(CG2conllu(cg3ambiguous) == undefined, "Passed!" );
 });
 
@@ -72,7 +72,7 @@ var cg3simpleAnswer = `1	Патшамен	патша	n	_	ins	3	nmod	_	_
 `
 
 
-QUnit.test(cg3simple, function( assert ) {
+QUnit.test("cg 3simple", function( assert ) {
   assert.ok(CG2conllu(cg3simple) == cg3simpleAnswer, "Passed!" );
 });
 
@@ -158,7 +158,7 @@ var cg3withSemicolumnAnswer = `1	Siedzieliśmy	siedzieć	vblex	_	impf|past|p1|m|
 `
 
 
-QUnit.test(cg3withSemicolumn, function( assert ) {
+QUnit.test("cg3 with semicolumn", function( assert ) {
   assert.ok(CG2conllu(cg3withSemicolumn) == cg3withSemicolumnAnswer, "Passed!" );
 });
 
@@ -180,7 +180,7 @@ var cg3ambWithSemicolumn = `"<Dlaczego>"
 	"?" sent`
 
 
-QUnit.test(cg3withSemicolumn, function( assert ) {
+QUnit.test("cg3 ambiguous with semicolumn", function( assert ) {
   assert.ok(CG2conllu(cg3ambWithSemicolumn) == undefined, "Passed!" );
 });
 
@@ -199,12 +199,12 @@ var cg3withSpans = `# text = He boued e tebr Mona er gegin.
 "<Mona>"
 	"Mona" np ant f sg @nsubj #5->4
 "<er>"
-	"e" pr @case #1->8
-		"an" det def sp @det #2->8
+	"e" pr @case #6->8
+		"an" det def sp @det #7->8
 "<gegin>"
-	"kegin" n f sg @obl #7->4
+	"kegin" n f sg @obl #8->4
 "<.>"
-	"." sent @punct #8->4`
+	"." sent @punct #9->4`
 
 
 var cg3withSpansAnswer = `# text = He boued e tebr Mona er gegin.
@@ -223,11 +223,11 @@ var cg3withSpansAnswer = `# text = He boued e tebr Mona er gegin.
 `
 
 
-QUnit.test(cg3withSemicolumn, function( assert ) {
+QUnit.test("cg3 with spans", function( assert ) {
   assert.ok(CG2conllu(cg3withSpans) == cg3withSpansAnswer, "Passed!" );
 });
 
 
-QUnit.test(cg3withSemicolumn, function( assert ) {
+QUnit.test("cg3 with spans back", function( assert ) {
   assert.ok(conllu2CG(CG2conllu(cg3withSpans)) == cg3withSpans, "Passed!" );
 });
