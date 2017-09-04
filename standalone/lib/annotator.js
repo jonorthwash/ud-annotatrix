@@ -128,6 +128,20 @@ function loadFromFile(e) {
 }
 
 
+function removeCurSent() {
+    var conf = confirm("Do you want to remove the sentence?");
+    if (conf) {
+        var curSent = CURRENTSENTENCE;
+        $("#indata").val("");
+        CONTENTS = getTreebank();
+        loadDataInIndex();
+        CURRENTSENTENCE = curSent;
+        if (CURRENTSENTENCE >= AVAILABLESENTENCES) {CURRENTSENTENCE--};
+        showDataIndiv();    
+    }
+}
+
+
 function loadDataInIndex() {
     RESULTS = [];
     AVAILABLESENTENCES = 0;
