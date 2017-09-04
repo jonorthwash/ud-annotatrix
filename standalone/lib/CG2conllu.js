@@ -86,6 +86,8 @@ function getAnalyses(line, analyses) {
             analyses.lemma = ana.replace(/"([^<>]*)"/, '$1');
         } else if (ana.match(/#[0-9]+->[0-9]+/)) {
             analyses.head = ana.replace(/#([0-9]+)->([0-9]+)/, '$2').trim();
+        } else if (ana.match(/#[0-9]+->/)) {
+            // pass
         } else if (ana.match(/@[a-z:]+/)) {
             analyses.deprel = ana.replace(/@([a-z:]+)/, '$1');
         } else if (n < 2) {
@@ -162,7 +164,7 @@ function newCgAna(i, tok) {
     if (pos == undefined) { pos = "_" };
     var feats = (tok.feats) ? " " + tok.feats.replace(/\|/g, " ") : '';
     var deprel = (tok.deprel) ? " @" + tok.deprel : " @x"; // is it really what we want by default?
-    var edge = (tok.head) ? " #" + (i + 1) + "->" + tok.head : '';
-    var cgToken = lemma + " " + pos + feats + deprel + edge;
+    var head = (tok.head) ? tok.head : '';
+    var cgToken = lemma + " " + pos + feats + deprel + " #" + tok.id + "->" + head;
     return cgToken;
 }
