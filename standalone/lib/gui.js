@@ -402,7 +402,7 @@ function changeConlluAttr(sent, indices, attrName, newVal) {
 
 function writeWF(wfInp) {
     /* Either writes changes to token or retokenises the sentence. */
-    var newToken = wfInp.val();
+    var newToken = wfInp.val().trim();
 
     var active = cy.$(".input");
     var indices = findConlluId(active);
@@ -413,15 +413,15 @@ function writeWF(wfInp) {
 
     var sent = buildSent();
 
-    if (newToken.trim().includes(" ")) { // this was a temporal solution. refactor.
+    if (newToken.includes(" ")) { // this was a temporal solution. refactor.
         splitTokens(newToken, sent, indices);
     } else {
         if (isSubtoken) {
             // TODO: think, whether it should be lemma or form.
             // NB: if form, then you have to edit drawTree
-            sent.tokens[outerIndex].tokens[innerIndex].lemma = wfInp.val();
+            sent.tokens[outerIndex].tokens[innerIndex].lemma = newToken;
         } else {
-            sent.tokens[outerIndex].form = wfInp.val();
+            sent.tokens[outerIndex].form = newToken;
         }
         redrawTree(sent);
     }
@@ -594,9 +594,7 @@ function buildSent() {
     if (currentFormat == "CG3") {
         currentSent = CG2conllu(currentSent);
         if (currentSent == undefined) {
-            cantConvertCG();
-            console.log("can't convert CG");
-            drawTree(); // not sure if this line is ok
+            drawTree();
             return;
         }
     }
