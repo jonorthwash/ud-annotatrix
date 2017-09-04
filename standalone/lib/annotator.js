@@ -139,6 +139,12 @@ function loadDataInIndex() {
         var splitted = CONTENTS.split("\n\n");
     }
 
+    for (var i = splitted.length - 1; i >= 0; i--) {
+        if (splitted[i].trim() === "") {
+            splitted.splice(i, 1);
+        }
+    }
+
     AVAILABLESENTENCES = splitted.length;
             
     if (AVAILABLESENTENCES == 1 || AVAILABLESENTENCES == 0) {
