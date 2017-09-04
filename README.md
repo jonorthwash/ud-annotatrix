@@ -27,6 +27,41 @@ The interface supports right-to-left readin order and vertiacal alignment for lo
 
 The basic user guide is avaliable on the [help page](https://maryszmary.github.io/ud-annotatrix/standalone/help.html).
 
+## Architecture and components
+
+
+### Standalone
+
+The standalone part of the project is written in JavaScript. The standalone version supports full functionality, apart from saving corpora on server.
+
+#### Project's modules
+
+* main menaging script: `annotator.js`
+* support for visualisation: `visualiser.js`, `cy-style.js`
+* support for graphical editing: `gui.js`
+* format handling: `converters.js`, `CG2conllu.js`
+
+#### Dependencies
+
+* jQuery
+* Cytoscape
+* head.js
+* a JS library for parsing conllu written by Magdalena Parks
+
+All the dependencies are stored in ./standalone/lib/ext/.
+
+#### Tests
+
+Currently, there are only tests for CG3 to CoNLL-U converters.
+
+### Server
+
+The server package provides additional support for deploying the web-interface on a web-server. The back-end is written Python 3, Flask.
+
+#### Dependencies
+
+* Flask
+
 ## Contributors
 
 * Jonathan North Washington (@jonorthwash)
