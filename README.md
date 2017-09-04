@@ -46,6 +46,7 @@ The standalone part of the project is written in JavaScript. The standalone vers
 * jQuery
 * Cytoscape
 * head.js
+* undomanager.js
 * a JS library for parsing conllu written by Magdalena Parks
 
 All the dependencies are stored in ./standalone/lib/ext/.
