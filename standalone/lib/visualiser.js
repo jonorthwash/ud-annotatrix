@@ -146,7 +146,7 @@ function createToken(graph, token, spId) {
     Creates the wf node, the POS node and dependencies. Returns the graph. */
 
     // handling empty form
-    if (spId) {token.form = token.lemma};
+    // if (spId) {token.form = token.lemma};
     if (token.form == undefined) {token.form = " "};
 
     var nodeId = strWithZero(token.id);

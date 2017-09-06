@@ -418,8 +418,8 @@ function writeWF(wfInp) {
     } else {
         if (isSubtoken) {
             // TODO: think, whether it should be lemma or form.
-            // NB: if form, then you have to edit drawTree
-            sent.tokens[outerIndex].tokens[innerIndex].lemma = newToken;
+            // sent.tokens[outerIndex].tokens[innerIndex].lemma = newToken;
+            sent.tokens[outerIndex].tokens[innerIndex].form = newToken;
         } else {
             sent.tokens[outerIndex].form = newToken;
         }
