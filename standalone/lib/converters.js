@@ -14,6 +14,7 @@ function toConllu() {
         showDataIndiv();
     }
     FORMAT = "CoNLL-U";
+    drawTree();
 }
 
 
