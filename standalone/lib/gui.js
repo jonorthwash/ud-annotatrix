@@ -187,9 +187,9 @@ function keyUpClassifier(key) {
 
 
     if (selArcs.length) {
-        if (key.which == DEL_KEY) {
+        if (key.which == DEL_KEY || key.which == BACKSPACE) {
             removeArc(destNodes);
-        } else if (key.which == BACKSPACE) {
+        } else if (key.which == ESC) {
             drawTree();
         } else if (key.which == D) {
             moveArc();
