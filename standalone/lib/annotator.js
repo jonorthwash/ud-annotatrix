@@ -182,14 +182,20 @@ function loadDataInIndex() {
 
 function showDataIndiv() {
     document.getElementById('indata').value = (RESULTS[CURRENTSENTENCE]);
-    document.getElementById('currentsen').innerHTML = (CURRENTSENTENCE);
+    document.getElementById('currentsen').innerHTML = (CURRENTSENTENCE+1);
     document.getElementById('totalsen').innerHTML = AVAILABLESENTENCES;
     drawTree();
 }
 
 function goToSenSent() {
     RESULTS[CURRENTSENTENCE] = document.getElementById("indata").value;
-    CURRENTSENTENCE = parseInt(document.getElementById("currentsen").value);
+    CURRENTSENTENCE = parseInt(document.getElementById("currentsen").value) - 1;
+    if (CURRENTSENTENCE < 0)  {
+        CURRENTSENTENCE = 0;
+    }
+    if (CURRENTSENTENCE > (AVAILABLESENTENCES - 1))  {
+        CURRENTSENTENCE = AVAILABLESENTENCES - 1;
+    }
     if (CURRENTSENTENCE < (AVAILABLESENTENCES - 1)) {
         document.getElementById("nextSenBtn").disabled = false;
     }
