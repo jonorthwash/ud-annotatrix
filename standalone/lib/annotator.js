@@ -296,6 +296,8 @@ function drawTree() {
     };
 
     if (FORMAT == "CoNLL-U" || (FORMAT == "CG3" && !AMBIGUOUS)) {
+        content = cleanConllu(content);
+        $("#indata").val(content);
 
         conlluDraw(content);
         var inpSupport = $("<div id='mute'>"
@@ -313,6 +315,36 @@ function drawTree() {
     } else {
         clearWarning();
     }
+}
+
+function cleanConllu(content) {
+    // if we don't find any tabs, then convert >1 space to tabs
+    // TODO: this should probably go somewhere else, and be more 
+     // robust, think about vietnamese D:
+    var res = content.search("\n");
+    if(res < 0) {
+        return content;
+    }
+    var res = content.search(" ");
+    if(res <= 2) {
+        return content;
+    }
+    var res = content.search("\t");
+    if(res < 0) {
+        console.log("no tabs");
+        content = content.replace(/  */g, "\t");
+    }
+    // remove blank lines
+    var lines = content.split("\n");
+    var newContent = "";
+    for(var i = 0; i < lines.length; i++) {
+        if(lines[i].trim().length == 0) {
+            continue;
+        }
+        // strip the extra tabs/spaces at the end of the line 
+        newContent = newContent + lines[i].trim() + "\n";
+    }
+    return newContent;
 }
 
 
