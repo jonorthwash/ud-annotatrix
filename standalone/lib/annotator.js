@@ -155,8 +155,10 @@ function loadDataInIndex() {
 
     if (FORMAT == "plain text") {
         var splitted = CONTENTS.match(/[^ ].+?[.!?](?=( |$))/g);
-    } else {
+    } else if (FORMAT == "CoNLL-U" || FORMAT == "CG3") {
         var splitted = CONTENTS.split("\n\n");
+    } else {
+        var splitted = [CONTENTS];
     }
 
     for (var i = splitted.length - 1; i >= 0; i--) {
@@ -241,6 +243,18 @@ function exportCorpora() {
     link.setAttribute('download', FILENAME);
     link.setAttribute('href', 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(finalcontent));
     link.click();
+}
+
+
+function clearCorpus() {
+    CONTENTS = "";
+    AVAILABLESENTENCES = 0;
+    CURRENTSENTENCE = 0;
+    RESULTS = [];
+    localStorage.setItem("corpus", "");
+    $("#indata").val("");
+    window.reload();
+    drawTree();
 }
 
 
