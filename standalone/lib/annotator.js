@@ -297,8 +297,11 @@ function drawTree() {
     };
 
     if (FORMAT == "CoNLL-U" || (FORMAT == "CG3" && !AMBIGUOUS)) {
-        content = cleanConllu(content);
-        $("#indata").val(content);
+        var newContent = cleanConllu(content);
+        if(newContent != content) {
+            content = newContent;
+            $("#indata").val(content);
+        }
 
         conlluDraw(content);
         var inpSupport = $("<div id='mute'>"
@@ -326,7 +329,8 @@ function cleanConllu(content) {
     if(res < 0) {
         return content;
     }
-    var res = content.search(" ");
+    // maybe someone is just trying to type conllu directly...
+    var res = (content.match(/_/g)||[]).length;
     if(res <= 2) {
         return content;
     }
