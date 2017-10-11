@@ -68,3 +68,4 @@ The server package provides additional support for deploying the web-interface o
 * Jonathan North Washington (@jonorthwash)
 * Mariya Sheyanova (@maryszmary; [documentation of the changes](http://wiki.apertium.org/wiki/UD_annotatrix/UD_annotatrix_at_GSoC_2017))
 * Tai Vongsathorn Warner (@MidasDoas; [documentation of the changes](https://wikis.swarthmore.edu/ling073/User:Twarner2/Final_project))
+* Francis Tyers (@ftyers)
