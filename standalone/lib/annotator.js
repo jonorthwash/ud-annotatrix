@@ -255,7 +255,8 @@ function clearCorpus() {
     FORMAT = ""
     localStorage.setItem("corpus", "");
     $("#indata").val("");
-    window.reload();
+    showDataIndiv() 
+    window.location.reload();
     drawTree();
 }
 
