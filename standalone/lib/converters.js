@@ -1,6 +1,6 @@
 function toConllu() {
     /* Converts the input to CoNLL-U and redraws the tree */
-
+    console.log('toConllu()');
     var newContents = getTreebank();
     if (FORMAT == "plain text") {
         plainText2Conllu(newContents);
@@ -47,10 +47,13 @@ function plainText2Conllu(text) {
     if (text.match(/[^ ].+?[.!?](?=( |\n)[^ \n])/)) {
         CONTENTS = text;
     }
-
+    console.log('plainText2Conllu() ' + text.length);
+    
     if (CONTENTS != "") {
         var newContents = [];
-        var splitted = CONTENTS.match(/[^ ].+?[.!?](?=( |$))/g);
+        //var splitted = CONTENTS.match(/[^ ].+?[.!?](?=( |$))/g);
+        var splitted = CONTENTS.match(/([^ ]+ ?)+[.!?]( |$)/g);
+        //console.log(splitted);
         $.each(splitted, function(i, sentence) {
             newContents.push(plainSent2Conllu(sentence));
         })
