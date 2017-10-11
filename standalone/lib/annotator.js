@@ -182,9 +182,21 @@ function loadDataInIndex() {
 
 function showDataIndiv() {
     document.getElementById('indata').value = (RESULTS[CURRENTSENTENCE]);
-    document.getElementById('currentsen').innerHTML = (CURRENTSENTENCE+1);
+    document.getElementById('currentsen').innerHTML = (CURRENTSENTENCE);
     document.getElementById('totalsen').innerHTML = AVAILABLESENTENCES;
     drawTree();
+}
+
+function goToSenSent() {
+    RESULTS[CURRENTSENTENCE] = document.getElementById("indata").value;
+    CURRENTSENTENCE = parseInt(document.getElementById("currentsen").value);
+    if (CURRENTSENTENCE < (AVAILABLESENTENCES - 1)) {
+        document.getElementById("nextSenBtn").disabled = false;
+    }
+    if (CURRENTSENTENCE == 0) {
+        document.getElementById("prevSenBtn").disabled = true;
+    }
+    showDataIndiv();
 }
 
 function prevSenSent() {
