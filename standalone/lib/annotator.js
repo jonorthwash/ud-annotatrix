@@ -213,7 +213,7 @@ function exportCorpora() {
             
     var link = document.createElement('a');
     var mimeType = 'text/plain';
-
+    document.body.appendChild(link); // needed for FF
     link.setAttribute('download', FILENAME);
     link.setAttribute('href', 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(finalcontent));
     link.click();
@@ -233,7 +233,8 @@ function getTreebank() {
             finalcontent = finalcontent + "\n\n";
         }
     }
-    return finalcontent + "\n";
+    // output final newline
+    return finalcontent + "\n\n";
 }
         
 
