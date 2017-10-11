@@ -55,6 +55,12 @@ function main() {
         }
         else {
             console.log("localStorage is not avaliable :(")
+            // add a nice message so the user has some idea how to fix this
+            var warnMsg = document.createElement('p');
+            warnMsg.innerHTML = "Unable to save to localStorage, maybe third-party cookies are blocked?";
+            var warnLoc = document.getElementById('warning');
+            warnLoc.appendChild(warnMsg);
+
         }
 
         // $("#indata").keyup(drawTree);
