@@ -155,10 +155,10 @@ function loadDataInIndex() {
 
     if (FORMAT == "plain text") {
         var splitted = CONTENTS.match(/[^ ].+?[.!?](?=( |$))/g);
-    } else if (FORMAT == "CoNLL-U" || FORMAT == "CG3") {
-        var splitted = CONTENTS.split("\n\n");
+    } else if (FORMAT == undefined) {
+        var splitted = [];
     } else {
-        var splitted = [CONTENTS];
+        var splitted = CONTENTS.split("\n\n");
     }
 
     for (var i = splitted.length - 1; i >= 0; i--) {
@@ -251,6 +251,7 @@ function clearCorpus() {
     AVAILABLESENTENCES = 0;
     CURRENTSENTENCE = 0;
     RESULTS = [];
+    FORMAT = ""
     localStorage.setItem("corpus", "");
     $("#indata").val("");
     window.reload();
