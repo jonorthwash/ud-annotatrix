@@ -183,8 +183,9 @@ function loadDataInIndex() {
 }
 
 function showDataIndiv() {
+    console.log('showDataIndiv()');
     document.getElementById('indata').value = (RESULTS[CURRENTSENTENCE]);
-    document.getElementById('currentsen').innerHTML = (CURRENTSENTENCE+1);
+    document.getElementById('currentsen').value = (CURRENTSENTENCE+1);
     document.getElementById('totalsen').innerHTML = AVAILABLESENTENCES;
     drawTree();
 }
