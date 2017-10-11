@@ -13,7 +13,7 @@
 <body>
     <div id="content">
     <div> <!-- Textarea + buttons -->
-        Current Sentence: <span id="currentsen">00</span> / <span id="totalsen">00</span>&nbsp;
+        Current Sentence: <input id="currentsen" value="0" size="2" onBlur="javascript:goToSenSent();"/> / <span id="totalsen">00</span>&nbsp;
         <input disabled type="button" value="Previous Sentence" id="prevSenBtn" onClick="javascript:prevSenSent();" />
         <input disabled type="button" value="Next Sentence" id="nextSenBtn" onClick="javascript:nextSenSent();" />
         <input type="button" value="Help" id="help" onClick="javascript: showHelp();" />
