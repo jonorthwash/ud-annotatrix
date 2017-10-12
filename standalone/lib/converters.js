@@ -27,7 +27,7 @@ function plainSent2Conllu(text) {
     text = text.replace(/([^ ])([.?!;:,])/g, "$1 $2");
 
     var sent = new conllu.Sentence();
-    var lines = ["# " + text]; // creating comment
+    var lines = ["# sent_id = _" + "\n# text = " + text]; // creating comment
     var tokens = text.split(" ");
 
     // enumerating tokens
@@ -43,7 +43,7 @@ function plainSent2Conllu(text) {
 function plainText2Conllu(text) {
     /* Takes plain text, converts it to CoNLL-U format. */
 
-    // if text consists of several sentences, prices it as imported file
+    // if text consists of several sentences, process it as imported file
     if (text.match(/[^ ].+?[.!?](?=( |\n)[^ \n])/)) {
         CONTENTS = text;
     }
@@ -51,9 +51,7 @@ function plainText2Conllu(text) {
     
     if (CONTENTS != "") {
         var newContents = [];
-        //var splitted = CONTENTS.match(/[^ ].+?[.!?](?=( |$))/g);
-        var splitted = CONTENTS.match(/([^ ]+ ?)+[.!?]( |$)/g);
-        //console.log(splitted);
+        var splitted = CONTENTS.match(/[^ ].+?[.!?](?=( |$|\n))/g);
         $.each(splitted, function(i, sentence) {
             newContents.push(plainSent2Conllu(sentence));
         })

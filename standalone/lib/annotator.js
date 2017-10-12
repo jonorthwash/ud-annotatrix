@@ -161,6 +161,7 @@ function loadDataInIndex() {
         var splitted = CONTENTS.split("\n\n");
     }
 
+    console.log('loadDataInIndex ' + splitted.length)
     for (var i = splitted.length - 1; i >= 0; i--) {
         if (splitted[i].trim() === "") {
             splitted.splice(i, 1);
