@@ -204,7 +204,9 @@ function keyUpClassifier(key) {
         };
     } else if (deprelInp.length) {
         if (key.which == ENTER) {
-            writeDeprel(deprelInp.val());
+            var res = deprelInp.val();
+            res = res.replace(/[⊲⊳]/g, '');
+            writeDeprel(res);
         };
     } else if (wf.length == 1) {
         if (key.which == M) {
@@ -329,9 +331,26 @@ function writeDeprel(deprelInp, indices) { // TODO: DRY
         var Id = active.id().slice(2);
         var wfNode = cy.$("#nf" + Id);
         var indices = findConlluId(wfNode);
-    }
+    } 
 
     var sent = buildSent();
+ 
+    var outerIndex = indices[1];
+    var cur = parseInt(sent.tokens[outerIndex].id);
+    var head = parseInt(sent.tokens[outerIndex].head);
+    console.log('writeDeprel');
+    console.log(head + ' ' + cur);
+
+    // Append ⊲ or ⊳ to indicate direction of the arc (helpful if 
+    // there are many arcs. TODO: This should ideally be external to the 
+    // text of the deprel (e.g. done in the cytoscape arc style thing)
+    if(head < cur && deprelInp.search('⊳') < 0) { 
+      deprelInp = deprelInp + '⊳';
+    } else if(head > cur && deprelInp.search('⊲') < 0) {
+      deprelInp = '⊲' + deprelInp;
+    }
+
+
     var sentAndPrev = changeConlluAttr(sent, indices, "deprel", deprelInp);
     sent = sentAndPrev[0];
     var pervVal = sentAndPrev[1];
