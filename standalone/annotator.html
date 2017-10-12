@@ -11,11 +11,12 @@
 </head>
 
 <body>
-    <div id="content">
+  <div id="content">
     <div> <!-- Textarea + buttons -->
+      <div style="float:left" id="nav">
         Current Sentence: <input id="currentsen" value="0" size="2" onBlur="javascript:goToSenSent();"/> / <span id="totalsen">00</span>&nbsp;
-        <input disabled type="button" value="Previous Sentence" id="prevSenBtn" onClick="javascript:prevSenSent();" />
-        <input disabled type="button" value="Next Sentence" id="nextSenBtn" onClick="javascript:nextSenSent();" />
+        <input disabled type="button" value="Previous" id="prevSenBtn" onClick="javascript:prevSenSent();" />
+        <input disabled type="button" value="Next" id="nextSenBtn" onClick="javascript:nextSenSent();" />
         <input type="button" value="Help" id="help" onClick="javascript: showHelp();" />
         <input type="button" value="Discard corpus" id="discard" onClick="javascript: clearCorpus();" />
 
@@ -23,34 +24,46 @@
 
         <p><input type="button" id="save" onClick="javascript: saveOnServer();" value="Save treebank" /></p>
         <p>
-            <input type="button" id="viewConllu" onClick="javascript:viewAsConllu();" value="View sentence as CoNLL-U" />
-            <input type="button" id="viewCG" onClick="javascript:viewAsCG();" value="View sentence as CG" />
-            <input disabled="true" type="button" id="viewPlain" onClick="javascript:viewAsPlain();" value="View sentence as plain text" />
-            <input type="button" id="remove" onClick="javascript:removeCurSent();" value="Remove the current sentence." />
+            <input type="button" id="viewConllu" onClick="javascript:viewAsConllu();" value="View as CoNLL-U" />
+            <input type="button" id="viewCG" onClick="javascript:viewAsCG();" value="View as CG" />
+            <input disabled="true" type="button" id="viewPlain" onClick="javascript:viewAsPlain();" value="View as plain text" />
+            <input type="button" id="remove" onClick="javascript:removeCurSent();" value="Remove this sentence" />
         </p>
-        <textarea id="indata" style="width: 100%" rows="20"></textarea>
-
-        <p>
-            <input type="button" id="convert" onClick="javascript:toConllu();" value="Convert the corpus to CoNLL-U" />
+      </div>
+      <div style="float:right">
             <div id="warning"></div>
-        </p>
-
         <p>
-            Load Corpora from file:
+            Load corpora from file:
             <input type="file" id="filename"/>
             <input type="button" onClick="javascript:exportCorpora();" value="Export Corpus" />
         </p>
+        <div>
+         <div style="float:left">
+              <div id="detected"></div>
+         </div>
+         <div style="float:right">
+            <input type="button" id="convert" onClick="javascript:toConllu();" value="Generate CoNLL-U" />
+         </div>
+        </div>
 
-        <p>
-            <div id="detected"></div>
-            <input type="checkbox" id="RTL" name="RTL">
-            <label for="RTL">Enable RTL</label>
-            <input type="checkbox" id="vertical" name="RTL">
-            <label for="vertical">Enable vertical alignment</label>            
-        </p>
+</div>
+      </div>
+        <textarea id="indata" style="width: 100%" rows="20"></textarea>
+
+      <div>
+        <div style="float:left">
         <button type="button" class="btn btn-primary" id="btnUndo" disabled="true">Undo</button>
         <button type="button" class="btn btn-primary" id="btnRedo" disabled="true">Redo</button>
- 
+        </div>
+        <div style="float:right">
+   
+          <p>
+              <input type="checkbox" id="RTL" name="RTL">
+              <label for="RTL">Enable RTL</label>
+              <input type="checkbox" id="vertical" name="RTL">
+              <label for="vertical">Enable vertical alignment</label>            
+          </p>
+        </div>
       </div>
       <div> <!-- Graph -->
         <div id="cy"></div>
