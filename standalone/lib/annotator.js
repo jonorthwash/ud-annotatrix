@@ -392,9 +392,10 @@ function detectFormat(content) {
     // TODO: better plaintext recognition
     } else if (!content.trim("\n").includes("\n")) {
         FORMAT = "plain text";
-
-    } else {
+    } else if (content.trim("\n").includes("(")) {
         FORMAT = "SD";
+    } else { 
+        FORMAT = "Unknown";
     }
 
     return FORMAT
