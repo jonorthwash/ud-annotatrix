@@ -33,7 +33,7 @@ function SD2conllu(text) {
 
     // now process the dependency relations
     for(var i = 1; i < inputLines.length; i++) {
-      console.log(inputLines[i]);
+      //console.log(inputLines[i]);
       var curLine = inputLines[i];
       
       if(curLine.search(",") < 0) { // root node
@@ -67,19 +67,28 @@ function SD2conllu(text) {
           depTok = depTok + curLine[j];
         }
       }
-      //console.log(depTok + " → " + headTok + " @" + deprel + " | " + tokenToId[depTok] + " : " + tokenToId[headTok]);
-      heads[tokenToId[depTok]] = tokenToId[headTok];
-      deprels[tokenToId[depTok]] = deprel;
+      var depId = tokenToId[depTok];
+      var headId = tokenToId[headTok];
+      if(depTok.search(/-[0-9]+/) > 0) {
+        depId = parseInt(depTok.split("-")[1]);
+      }
+      if(headTok.search(/-[0-9]+/) > 0) {
+        headId = parseInt(headTok.split("-")[1]);
+      }
+      //console.log(depTok + " → " + headTok + " @" + deprel + " | " + tokenToId[depTok] + " : " + tokenToId[headTok] + " // " + depId + "→" + headId);
+      heads[depId] = headId;
+      deprels[depId] = deprel;
     }
 
 
     for(var i = 0; i < textTokens.length; i++) { 
       var newToken = new conllu.Token();
-      tokId = tokenToId[textTokens[i]];
+      tokId = i+1;
       newToken["form"] = textTokens[i];
-      newToken["id"] = tokenToId[textTokens[i]];
+      newToken["id"] = tokId;
       newToken["head"] = heads[tokId];
       newToken["deprel"] = deprels[tokId];
+      //console.log('@@@' + newToken["form"] + " " + newToken["id"] + " " + newToken["head"] + " " + newToken["deprel"]);
       tokens.push(newToken); 
     }
 
