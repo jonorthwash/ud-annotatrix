@@ -338,7 +338,7 @@ function writeDeprel(deprelInp, indices) { // TODO: DRY
     var outerIndex = indices[1];
     var cur = parseInt(sent.tokens[outerIndex].id);
     var head = parseInt(sent.tokens[outerIndex].head);
-    console.log('writeDeprel');
+    console.log('writeDeprel @valid=' + is_udeprel(deprelInp));
     console.log(head + ' ' + cur);
 
     // Append ⊲ or ⊳ to indicate direction of the arc (helpful if 

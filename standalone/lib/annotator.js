@@ -27,6 +27,7 @@ function main() {
         ROOT + 'converters.js',
         ROOT + 'gui.js',
         ROOT + 'visualiser.js',
+        ROOT + 'validation.js',
         ROOT + 'cy-style.js'
     );
 
