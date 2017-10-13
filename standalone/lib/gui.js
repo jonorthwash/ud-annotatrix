@@ -338,8 +338,13 @@ function writeDeprel(deprelInp, indices) { // TODO: DRY
     var outerIndex = indices[1];
     var cur = parseInt(sent.tokens[outerIndex].id);
     var head = parseInt(sent.tokens[outerIndex].head);
-    console.log('writeDeprel @valid=' + is_udeprel(deprelInp));
+    console.log('writeDeprel');
     console.log(head + ' ' + cur);
+
+    if(!is_udeprel(deprelInp)) {
+      console.log('writeDeprel @valid=false ' + Id);
+      // TODO: Find out a way to change the colour of the label, e.g. to red.
+    }
 
     // Append ⊲ or ⊳ to indicate direction of the arc (helpful if 
     // there are many arcs. TODO: This should ideally be external to the 
@@ -408,6 +413,10 @@ function changeConlluAttr(sent, indices, attrName, newVal) {
     var isSubtoken = indices[0];
     var outerIndex = indices[1];
     var innerIndex = indices[2];
+ 
+    //if(attrName == "deprel") {
+    //  newVal = newVal.replace(/[⊲⊳]/g, '');
+    //}
     if (isSubtoken) {
         var pervVal = sent.tokens[outerIndex].tokens[innerIndex][attrName];
         sent.tokens[outerIndex].tokens[innerIndex][attrName] = newVal;
