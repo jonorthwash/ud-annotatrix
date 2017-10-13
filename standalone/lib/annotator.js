@@ -276,7 +276,7 @@ function getTreebank() {
     for(var x=0; x < RESULTS.length; x++){
         // add them to the final file, but get rid of any trailing whitespace
         finalcontent = finalcontent + RESULTS[x].trim();
-        // if it's not the last tree, add two newlines (e.g. one blank line)
+        // if it's not the last tree, add two ewlines (e.g. one blank line)
         if(x != ((RESULTS.length)-1)){
             finalcontent = finalcontent + "\n\n";
         }
@@ -379,7 +379,17 @@ function detectFormat(content) {
     if (firstWord[0] === '#'){
         var following = 1;
         while (firstWord[0] === '#' && following < content.length){
+            // TODO: apparently we need to log the thing or it won't register???
+            console.log('detectFormat|while| ' + firstWord);
             firstWord = content.split("\n")[following];
+            if(firstWord.search('# labels') >= 0) {
+              var labels = firstWord.split("=")[1].split(" ");
+              var htmlLabels = document.getElementById('treeLabels');
+              var labelMsg = document.createElement('span');
+              labelMsg.append(labels) ;
+              htmlLabels.append(labels) ;
+              console.log("FOUND LABELS:" + labels);
+            }
             following ++;
         }
     }
