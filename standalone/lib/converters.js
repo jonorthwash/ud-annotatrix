@@ -47,11 +47,12 @@ function plainText2Conllu(text) {
     if (text.match(/[^ ].+?[.!?](?=( |\n)[^ \n])/)) {
         CONTENTS = text;
     }
-    console.log('plainText2Conllu() ' + text.length);
+    console.log('plainText2Conllu() ' + text.length + ' // ' + text);
     
     if (CONTENTS != "") {
         var newContents = [];
         var splitted = CONTENTS.match(/[^ ].+?[.!?](?=( |$|\n))/g);
+        console.log('@ ' + splitted.length);
         $.each(splitted, function(i, sentence) {
             newContents.push(plainSent2Conllu(sentence));
         })

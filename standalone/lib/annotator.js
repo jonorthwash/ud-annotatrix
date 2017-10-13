@@ -185,7 +185,11 @@ function loadDataInIndex() {
 
 function showDataIndiv() {
     console.log('showDataIndiv()');
-    document.getElementById('indata').value = (RESULTS[CURRENTSENTENCE]);
+    if(RESULTS[CURRENTSENTENCE] != undefined) {
+      document.getElementById('indata').value = (RESULTS[CURRENTSENTENCE]);
+    } else {
+      document.getElementById('indata').value = "";
+    }
     document.getElementById('currentsen').value = (CURRENTSENTENCE+1);
     document.getElementById('totalsen').innerHTML = AVAILABLESENTENCES;
     drawTree();
