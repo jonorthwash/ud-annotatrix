@@ -43,7 +43,7 @@ function SD2conllu(text) {
       var deprel = "";
       var headTok = "";
       var depTok = ""; 
-      var state = 0;
+      var state = 0; // 0 = reading deprel, 1 = reading head, 2 = reading dep
       for(var j = 0; j < curLine.length; j++) { // I have a feeling it should be easier to do this
         if(state == 0 && curLine[j] == "(") { 
           state = 1;
@@ -67,7 +67,7 @@ function SD2conllu(text) {
           depTok = depTok + curLine[j];
         }
       }
-      console.log(depTok + " → " + headTok + " @" + deprel + " | " + tokenToId[depTok] + " : " + tokenToId[headTok]);
+      //console.log(depTok + " → " + headTok + " @" + deprel + " | " + tokenToId[depTok] + " : " + tokenToId[headTok]);
       heads[tokenToId[depTok]] = tokenToId[headTok];
       deprels[tokenToId[depTok]] = deprel;
     }
