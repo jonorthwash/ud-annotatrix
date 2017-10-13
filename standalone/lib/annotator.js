@@ -24,6 +24,7 @@ function main() {
 
         // native project code
         ROOT + 'CG2conllu.js',
+        ROOT + 'SD2conllu.js',
         ROOT + 'converters.js',
         ROOT + 'gui.js',
         ROOT + 'visualiser.js',
@@ -304,7 +305,11 @@ function drawTree() {
         }
     };
 
-    if (FORMAT == "CoNLL-U" || (FORMAT == "CG3" && !AMBIGUOUS)) {
+    if (FORMAT == "SD") {
+        content = SD2conllu(content);
+    }
+
+    if (FORMAT == "CoNLL-U" || (FORMAT == "CG3" && !AMBIGUOUS) || FORMAT == "SD") {
         var newContent = cleanConllu(content);
         if(newContent != content) {
             content = newContent;
