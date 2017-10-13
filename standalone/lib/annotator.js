@@ -292,6 +292,9 @@ function drawTree() {
     } catch (err) {};
 
     var content = $("#indata").val();
+    // remove extra spaces at the end of lines. #89
+    content = content.replace(/ +\n/, '\n');
+    $("#indata").val(content);
     FORMAT = detectFormat(content);
 
     $("#detected").html("Detected: " + FORMAT + " format");
