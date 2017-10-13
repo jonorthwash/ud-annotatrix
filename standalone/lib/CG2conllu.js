@@ -6,7 +6,8 @@ function CG2conllu(CGtext) {
     if (ambiguetyPresent(CGtext)) { // to abort conversion if there are ambiguous analyses
         return;
     }
-
+    // remove extra spaces before newline before processing text
+    CGtext = CGtext.replace(/ +\n/, '\n');
     var sent = new conllu.Sentence();
     var comments = findComments(CGtext);
     sent.comments = comments;
