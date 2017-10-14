@@ -23,14 +23,14 @@
         <p>Enter trees below in any supported format (SD, CG3, CoNLL-U):</p>
 
         <p><input type="button" id="save" onClick="javascript: saveOnServer();" value="Save treebank" /></p>
-        <p>
+        <!-- p>
             <input type="button" id="viewConllu" onClick="javascript:viewAsConllu();" value="View as CoNLL-U" />
             <input type="button" id="viewCG" onClick="javascript:viewAsCG();" value="View as CG" />
             <input disabled="true" type="button" id="viewPlain" onClick="javascript:viewAsPlain();" value="View as plain text" />
             <input type="button" id="remove" onClick="javascript:removeCurSent();" value="Remove this sentence" />
-        </p>
+        </p -->
       </div>
-      <div style="float:right">
+      <div id="filemanagement">
             <div id="warning"></div>
         <p>
             <span title="When you select a file it will automatically upload it into the interface"><u>Choose and upload file</u></span>:
@@ -50,9 +50,18 @@
           <div style="float:right" id="treeLabels"/>
 </div>
       </div>
-        <textarea id="indata" style="width: 100%" rows="20"></textarea>
+		<div class="inarea">
+			<div class="viewoptions">
+				<a id="viewConllu" onClick="javascript:viewAsConllu();">as CoNLL-U</a>
+				<a id="viewCG" onClick="javascript:viewAsCG();">as CG</a>
+				<a id="remove" onClick="javascript:removeCurSent();">Remove sentence</a>
+			</div>
+			<div class="indataarea">
+				<textarea id="indata" style="width: 100%" rows="20"></textarea>
+			</div>
+		</div>
 
-      <div>
+      <div class="controls">
         <div style="float:left">
         <button type="button" class="btn btn-primary" id="btnUndo" disabled="true">Undo</button>
         <button type="button" class="btn btn-primary" id="btnRedo" disabled="true">Redo</button>
@@ -67,7 +76,7 @@
           </p>
         </div>
       </div>
-      <div> <!-- Graph -->
+      <div class="graph"> <!-- Graph -->
         <div id="cy"></div>
       </div>
 

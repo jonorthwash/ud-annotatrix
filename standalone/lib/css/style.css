@@ -471,3 +471,54 @@ h4, h5, h6 {
   font-weight: normal;
   text-decoration: underline;
 }
+
+
+/* Begin JNW additions for tabs */
+#filemanagement {
+	float: right ;
+}
+
+.inarea {
+	clear: both ;
+	background-color: #eee ;
+	height: 4em ;
+	width: 100% ;
+}
+
+.inarea a {
+	border: 1px solid black ;
+	margin-right: 1ex ;
+	padding: 0.5ex ;
+}
+
+.inarea a:hover {
+	cursor: pointer ;
+	color: #aaa ;
+}
+
+#indata {
+	display: block ;
+
+}
+
+.indataarea {
+	padding: 1ex ;
+	background-color: #fff ;
+	border: 1px solid silver ;
+	clear: both ;
+	display: block ;
+}
+
+.cy {
+	clear: both ;
+}
+
+.controls {
+	clear: both ;
+}
+
+.graph {
+	clear: both ;
+}
+
+/* End JNW additions for tabs */
