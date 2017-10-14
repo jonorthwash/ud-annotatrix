@@ -10,6 +10,7 @@ var RESULTS = [];
 var LOC_ST_AVALIABLE = false;
 var SERVER_RUNNING = false;
 var AMBIGUOUS = false;
+var LABELS = [];
  
 
 function main() {
@@ -245,6 +246,7 @@ function nextSenSent() {
 }
 
 function clearLabels() {
+    LABELS = [];
     var htmlLabels = document.getElementById('treeLabels');
     while (htmlLabels.firstChild) {
       htmlLabels.removeChild(htmlLabels.firstChild);
@@ -380,6 +382,7 @@ function cleanConllu(content) {
 
 
 function detectFormat(content) {
+    clearLabels();
     //TODO: too many "hacks" and presuppositions. refactor.
 
     content = content.trim();
@@ -396,11 +399,24 @@ function detectFormat(content) {
             // wants to go somewhere else.
             if(firstWord.search('# labels') >= 0) {
               var labels = firstWord.split("=")[1].split(" ");
+              for(var i = 0; i < labels.length; i++) {
+                var seen = false;
+                for(var j = 0; j < LABELS.length; j++) {
+                  if(labels[i] == LABELS[j]) {
+                    seen = true; 
+                  }
+                }
+                if(!seen) {
+                  LABELS.push(labels[i]);
+                }
+              }
               var htmlLabels = document.getElementById('treeLabels');
               var labelMsg = document.createElement('span');
-              labelMsg.append(labels) ;
-              htmlLabels.append(labels) ;
-              console.log("FOUND LABELS:" + labels);
+              for(var k = 0; k < LABELS.length; k++) { 
+                labelMsg.append(LABELS[k]) ;
+              }
+              htmlLabels.append(labelMsg) ;
+              console.log("FOUND LABELS:" + LABELS);
             }
             following ++;
         }
