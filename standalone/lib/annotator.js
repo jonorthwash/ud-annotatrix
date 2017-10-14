@@ -212,6 +212,8 @@ function goToSenSent() {
     if (CURRENTSENTENCE == 0) {
         document.getElementById("prevSenBtn").disabled = true;
     }
+    
+    clearLabels();
     showDataIndiv();
 }
 
@@ -224,6 +226,7 @@ function prevSenSent() {
     if (CURRENTSENTENCE == 0) {
         document.getElementById("prevSenBtn").disabled = true;
     }
+    clearLabels();
     showDataIndiv();
 }
 
@@ -237,9 +240,16 @@ function nextSenSent() {
     if (CURRENTSENTENCE > 0) {
         document.getElementById("prevSenBtn").disabled = false;
     }
+    clearLabels();
     showDataIndiv();
 }
 
+function clearLabels() {
+    var htmlLabels = document.getElementById('treeLabels');
+    while (htmlLabels.firstChild) {
+      htmlLabels.removeChild(htmlLabels.firstChild);
+    }
+}
 
 //Export Corpora to file
 function exportCorpora() {
@@ -382,6 +392,8 @@ function detectFormat(content) {
             // TODO: apparently we need to log the thing or it won't register???
             console.log('detectFormat|while| ' + firstWord);
             firstWord = content.split("\n")[following];
+            // pull out labels and put them in HTML, TODO: this probably
+            // wants to go somewhere else.
             if(firstWord.search('# labels') >= 0) {
               var labels = firstWord.split("=")[1].split(" ");
               var htmlLabels = document.getElementById('treeLabels');
