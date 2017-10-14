@@ -478,22 +478,37 @@ h4, h5, h6 {
 	float: right ;
 }
 
+.viewoptions {
+	/* height: 4em ; */
+	padding-top: 1ex;
+	padding-left: 1ex;
+	margin-bottom: -1px;
+}
+
 .inarea {
 	clear: both ;
 	background-color: #eee ;
-	height: 4em ;
 	width: 100% ;
 }
 
-.inarea a {
-	border: 1px solid black ;
-	margin-right: 1ex ;
-	padding: 0.5ex ;
+
+.inarea button.selected {
+	background: #fff ;
 }
 
-.inarea a:hover {
+.inarea button {
+	border: 1px solid silver ;
+	border-radius: 3px 3px 0 0 ;
+	border-bottom: none ;
+	margin-right: 1ex ;
+	padding: 0.5ex ;
+	display: inline-block ;
+}
+
+.inarea button:hover {
 	cursor: pointer ;
 	color: #aaa ;
+	display: inline-block ;
 }
 
 #indata {
@@ -502,7 +517,7 @@ h4, h5, h6 {
 }
 
 .indataarea {
-	padding: 1ex ;
+	padding: 2ex ;
 	background-color: #fff ;
 	border: 1px solid silver ;
 	clear: both ;

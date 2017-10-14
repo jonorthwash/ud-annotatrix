@@ -694,6 +694,8 @@ function viewAsConllu() {
             cantConvertCG();
             return;
         }
+        $("#viewCG").removeClass("selected");
+        $("#viewConllu").addClass("selected");
         $("#indata").val(text);
     }
 }
@@ -706,7 +708,9 @@ function viewAsCG() {
     var text = $("#indata").val();
     if (currentFormat == "CoNLL-U") {
         text = conllu2CG(text);
+        $("#viewConllu").removeClass("selected");
     }
+    $("#viewCG").addClass("selected");
     $("#indata").val(text);
 }
 
