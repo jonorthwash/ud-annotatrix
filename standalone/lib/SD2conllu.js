@@ -21,8 +21,9 @@ function SD2conllu(text) {
       tokId = tokId + 1;
     }
 
-    // TODO: This will break if you have two tokens with the same surface form in the same
-    // sentence. The right way to deal with that in SDParse is to use indexes in the relations,
+    // When there are two surface forms that are the same, you have to specify the one you
+    // are referring to.
+    //
     // e.g. 
     // the bear eats the crisps.
     // det(bear, the-1)
