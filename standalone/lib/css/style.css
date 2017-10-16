@@ -483,15 +483,28 @@ h4, h5, h6 {
 	padding-top: 1ex;
 	padding-left: 1ex;
 	margin-bottom: -1px;
+	float: right ;
+}
+
+.corpusNavigation {
+	/* margin-bottom: 1em !important; */
+
+}
+
+.tabContainer {
+}
+
+.tabContainer div {
 }
 
 .inarea {
 	clear: both ;
 	background-color: #eee ;
 	width: 100% ;
+	vertical-align: bottom ;
 }
 
-
+/**
 .inarea button.selected {
 	background: #fff ;
 }
@@ -510,16 +523,25 @@ h4, h5, h6 {
 	color: #aaa ;
 	display: inline-block ;
 }
+**/
+
+.inarea .row {
+	margin-left: 0 !important;
+	margin-right: 0 !important;
+	padding: 1ex 1ex 0 1ex;
+
+}
 
 #indata {
 	display: block ;
+	font-family: "Liberation Mono", monospace ;
 
 }
 
 .indataarea {
 	padding: 2ex ;
 	background-color: #fff ;
-	border: 1px solid silver ;
+	border: 1px solid #ddd ;
 	clear: both ;
 	display: block ;
 }
@@ -534,6 +556,20 @@ h4, h5, h6 {
 
 .graph {
 	clear: both ;
+}
+
+#currentsen {
+	text-align: right;
+}
+
+/** fix button height **/
+.input-group > .input-group-btn > .btn, .input-group-btn:last-child > .dropdown-toggle {
+  height: 38px;
+}
+
+
+.nav-tabs {
+	margin-bottom: -1px;
 }
 
 /* End JNW additions for tabs */

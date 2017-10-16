@@ -694,8 +694,8 @@ function viewAsConllu() {
             cantConvertCG();
             return;
         }
-        $("#viewCG").removeClass("selected");
-        $("#viewConllu").addClass("selected");
+        $("#viewCG").removeClass("active");
+        $("#viewConllu").addClass("active");
         $("#indata").val(text);
     }
 }
@@ -708,9 +708,9 @@ function viewAsCG() {
     var text = $("#indata").val();
     if (currentFormat == "CoNLL-U") {
         text = conllu2CG(text);
-        $("#viewConllu").removeClass("selected");
+        $("#viewConllu").removeClass("active");
     }
-    $("#viewCG").addClass("selected");
+    $("#viewCG").addClass("active");
     $("#indata").val(text);
 }
 
@@ -749,3 +749,17 @@ function switchAlignment() {
         drawTree();
     }
 }
+
+$('#currentsen').keyup(function(e){
+	if(e.keyCode == 13) {
+		goToSenSent();
+	} else if(e.keyCode == 38 || e.keyCode == 75) { // up arrow || k
+		prevSenSent();
+	} else if(e.keyCode == 40 || e.keyCode == 74) { // down arrow || j
+		nextSenSent();
+	} else if(e.keyCode == 189) { // -
+		removeCurSent();
+	} else if(e.keyCode == 187 ) { // + || =
+		//addSent();
+	}
+});

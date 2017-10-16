@@ -2,41 +2,74 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>UD Annotatrix</title>
-    <link rel="root" href="./lib" />
-    <!-- for JS -->
-    <link rel="stylesheet" type="text/css" href="./lib/css/style.css" />
-    <script type="text/javascript" src="./lib/ext/head.load.min.js"></script>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>UD Annotatrix</title>
+	<link rel="root" href="./lib" />
+	<script type="text/javascript" src="./lib/ext/head.load.min.js"></script>
+
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">	
+
+	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+
+	<link rel="stylesheet" type="text/css" href="./lib/ext/font-awesome-4.7.0/css/font-awesome.min.css" />
+
+	<link rel="stylesheet" type="text/css" href="./lib/css/style.css" />
 </head>
 
 <body>
   <div id="content">
-    <div> <!-- Textarea + buttons -->
-      <div style="float:left" id="nav">
+    <!-- div --> <!-- Textarea + buttons -->
+      <!-- div style="float:left" id="nav">
         Current Sentence: <input id="currentsen" value="0" size="2" onBlur="javascript:goToSenSent();"/> / <span id="totalsen">00</span>&nbsp;
         <input disabled type="button" value="Previous" id="prevSenBtn" onClick="javascript:prevSenSent();" />
         <input disabled type="button" value="Next" id="nextSenBtn" onClick="javascript:nextSenSent();" />
         <input type="button" value="Help" id="help" onClick="javascript: showHelp();" />
         <input type="button" value="Discard corpus" id="discard" onClick="javascript: clearCorpus();" />
+		</div -->
 
-        <p>Enter trees below in any supported format (SD, CG3, CoNLL-U):</p>
+        <!-- p>Enter trees below in any supported format (SD, CG3, CoNLL-U):</p -->
 
-        <p><input type="button" id="save" onClick="javascript: saveOnServer();" value="Save treebank" /></p>
+
+        <!-- p><input type="button" id="save" onClick="javascript: saveOnServer();" value="Save treebank" /></p -->
         <!-- p>
             <input type="button" id="viewConllu" onClick="javascript:viewAsConllu();" value="View as CoNLL-U" />
             <input type="button" id="viewCG" onClick="javascript:viewAsCG();" value="View as CG" />
             <input disabled="true" type="button" id="viewPlain" onClick="javascript:viewAsPlain();" value="View as plain text" />
             <input type="button" id="remove" onClick="javascript:removeCurSent();" value="Remove this sentence" />
         </p -->
-      </div>
+      <!-- /div -->
+
+		<div class="modal fade" id="fileModal" tabindex="-1" role="dialog" aria-labelledby="fileModalLabel" aria-hidden="true">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="fileModalLabel">Import corpus</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						<span title="When you select a file it will automatically upload it into the interface"><u>Choose and upload file</u></span>:
+						<input type="file" id="filename"/>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+						<!-- button type="button" class="btn btn-primary">Save changes</button -->
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<p style="float: left; ">Enter trees below in any supported format (SD, CG3, CoNLL-U):</p>
       <div id="filemanagement">
             <div id="warning"></div>
-        <p>
+        <!-- p>
             <span title="When you select a file it will automatically upload it into the interface"><u>Choose and upload file</u></span>:
             <input type="file" id="filename"/>
             <input type="button" onClick="javascript:exportCorpora();" value="Download corpus" />
-        </p>
+        </p -->
         <div>
          <div style="float:left">
               <div id="detected"></div>
@@ -51,21 +84,77 @@
 </div>
       </div>
 		<div class="inarea">
-			<div class="viewoptions">
-				<button role="tab" id="viewConllu" class="selected" onClick="javascript:viewAsConllu();">as CoNLL-U</a>
-				<button role="tab" id="viewCG" onClick="javascript:viewAsCG();">as CG</a>
-				<button role="tab" id="remove" onClick="javascript:removeCurSent();">Remove sentence</a>
+			<div class="row">
+				<div class="btn-toolbar col-xs-6 corpusNavigation" role="toolbar">
+					<div class="input-group" style="padding-right: 1em;">
+						<div class="input-group-btn">
+							<a class="btn btn-secondary" href="#" id="prevSenBtn" onClick="javascript:prevSenSent();">
+								<i class="fa fa-arrow-left" title="Previous sentence"></i>
+							</a>
+						</div>
+						<input class="form-control col-xs-2" id="currentsen" value="0" size="2" onBlur="javascript:goToSenSent();"/>
+						<span class="input-group-addon">/&nbsp;<span id="totalsen">00</span></span>
+						<div class="input-group-btn ml-auto">
+							<a class="btn btn-secondary" href="#" id="nextSenBtn" onClick="javascript:nextSenSent();">
+								<i class="fa fa-arrow-right" title="Next sentence"></i>
+							</a>
+						</div>
+					</div>
+					<div class="btn-group ml-sx-auto" style="padding-right: 1em;">
+						<a class="btn btn-secondary" href="#"  id="remove" onClick="javascript:removeCurSent();">
+							<i class="fa fa-minus-circle" title="Delete sentence"></i>
+						</a>
+						<a class="btn btn-secondary" href="#"  id="add" onClick="javascript:addSent();">
+							<i class="fa fa-plus-circle" title="Add sentence"></i>
+						</a>
+					</div>
+					<div class="btn-group ml-sx-auto" style="padding-right: 1em;">
+						<a class="btn btn-secondary" href="#">
+							<i class="fa fa-upload" title="Import corpus" data-toggle="modal" data-target="#fileModal"></i>
+						</a>
+						<a class="btn btn-secondary" href="#" onClick="javascript:exportCorpora();">
+							<i class="fa fa-download" title="Download corpus"></i>
+						</a>
+						<a class="btn btn-secondary" href="#" onClick="javascript:saveOnServer();">
+							<i class="fa fa-cloud-upload" title="Save on server"></i>
+						</a>
+						<a class="btn btn-secondary" href="#">
+							<i class="fa fa-trash" title="Discard corpus"></i>
+						</a>
+					</div>
+					<div class="btn-group" style="float:left">
+						<button type="button" class="btn btn-primary" id="btnUndo" disabled="true">
+							<i class="fa fa-undo" title="Undo"></i>
+						</button>
+						<button type="button" class="btn btn-primary" id="btnRedo" disabled="true">
+							<i class="fa fa-repeat" title="Redo"></i>
+						</button>
+					</div>
+				</div>
+				<div class="tabContainer col-xs-4 ml-auto">
+				<div class="nav nav-tabs">
+					<li class="nav-item">
+						<a href="#" class="nav-link active" id="viewConllu" onClick="javascript:viewAsConllu();">CoNLL-U</a>
+					</li>
+					<li class="nav-item">
+						<a href="#" class="nav-link" id="viewCG" onClick="javascript:viewAsCG();">CG3</a>
+					</li>
+				</div>
+				</div>
+
 			</div>
+			<!-- div class="viewoptions">
+				<button role="tab" id="viewConllu" class="selected" onClick="javascript:viewAsConllu();">as CoNLL-U</button>
+				<button role="tab" id="viewCG" onClick="javascript:viewAsCG();">as CG</button>
+				<button role="tab" id="remove" onClick="javascript:removeCurSent();">Remove sentence</button>
+			</div -->
 			<div class="indataarea">
-				<textarea id="indata" style="width: 100%" rows="20"></textarea>
+				<textarea id="indata" style="width: 100%; font-size: 85%" rows="20"></textarea>
 			</div>
 		</div>
 
-      <div class="controls">
-        <div style="float:left">
-        <button type="button" class="btn btn-primary" id="btnUndo" disabled="true">Undo</button>
-        <button type="button" class="btn btn-primary" id="btnRedo" disabled="true">Redo</button>
-        </div>
+		<div class="controls">
+
         <div style="float:right">
    
           <p>
