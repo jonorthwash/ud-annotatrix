@@ -243,7 +243,10 @@ function prevSenSent() {
 function nextSenSent() {
     RESULTS[CURRENTSENTENCE] = document.getElementById("indata").value;
     CURRENTSENTENCE++;
-    if (CURRENTSENTENCE == (AVAILABLESENTENCES - 1)) {
+    if(CURRENTSENTENCE >= AVAILABLESENTENCES) {
+      CURRENTSENTENCE = AVAILABLESENTENCES;
+    }
+    if (CURRENTSENTENCE >= (AVAILABLESENTENCES - 1)) {
         document.getElementById("nextSenBtn").disabled = true;
     }
     if (CURRENTSENTENCE > 0) {
