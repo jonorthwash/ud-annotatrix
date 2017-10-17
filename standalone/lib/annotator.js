@@ -137,6 +137,11 @@ function loadFromFile(e) {
 }
 
 
+function addSent() {
+        AVAILABLESENTENCES = AVAILABLESENTENCES + 1; 
+        showDataIndiv();    
+}
+
 function removeCurSent() {
     var conf = confirm("Do you want to remove the sentence?");
     if (conf) {
