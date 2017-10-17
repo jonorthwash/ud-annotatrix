@@ -686,6 +686,10 @@ function viewAsConllu() {
     var text = $("#indata").val();
     var currentFormat = detectFormat(text);
 
+	if ($("#viewOther").text() == "plain text") {
+		  toConllu();
+	}	
+
     if (FORMAT == "plain text") {
         loadDataInIndex(); // TODO: this will certainly cause unexpected behavior. refactor when you have time.
     } else if (currentFormat == "CG3") {
@@ -763,3 +767,5 @@ $('#currentsen').keyup(function(e){
 		//addSent();
 	}
 });
+
+$('#viewText').hide() ;

@@ -44,12 +44,11 @@ function plainText2Conllu(text) {
     /* Takes plain text, converts it to CoNLL-U format. */
 
     // if text consists of several sentences, process it as imported file
-    if (text.match(/[^ ].+?[.!?](?=( |\n)[^ \n])/)) {
+    if (text.match(/[^ ].+?[.!?](?=( |\n)[^ \n])/)) { // match sentence break, e.g. "blah. hargle"
         CONTENTS = text;
     }
     console.log('plainText2Conllu() ' + text.length + ' // ' + text);
-    
-    if (CONTENTS != "") {
+    if (CONTENTS.trim() != "") {
         var newContents = [];
         var splitted = CONTENTS.match(/[^ ].+?[.!?](?=( |$|\n))/g);
         console.log('@ ' + splitted.length);

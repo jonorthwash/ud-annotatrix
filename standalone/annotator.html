@@ -70,16 +70,16 @@
             <input type="file" id="filename"/>
             <input type="button" onClick="javascript:exportCorpora();" value="Download corpus" />
         </p -->
-        <div>
+        <!-- div>
          <div style="float:left">
               <div id="detected"></div>
          </div>
          <div style="float:right">
             <input type="button" id="convert" onClick="javascript:toConllu();" value="Generate CoNLL-U" />
          </div>
-        </div>
+        </div -->
 
- <p/>
+ <!-- p/ -->
           <div style="float:right" id="treeLabels"/>
 </div>
       </div>
@@ -133,6 +133,9 @@
 				</div>
 				<div class="tabContainer col-xs-4 ml-auto">
 				<div class="nav nav-tabs">
+					<li class="nav-item">
+						<a href="#" class="nav-link" id="viewOther"></a>
+					</li>
 					<li class="nav-item">
 						<a href="#" class="nav-link active" id="viewConllu" onClick="javascript:viewAsConllu();">CoNLL-U</a>
 					</li>
