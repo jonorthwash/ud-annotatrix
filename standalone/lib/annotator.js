@@ -221,6 +221,9 @@ function goToSenSent() {
 function prevSenSent() {
     RESULTS[CURRENTSENTENCE] = document.getElementById("indata").value;
     CURRENTSENTENCE--;
+    if (CURRENTSENTENCE < 0)  {
+        CURRENTSENTENCE = 0;
+    }
     if (CURRENTSENTENCE < (AVAILABLESENTENCES - 1)) {
         document.getElementById("nextSenBtn").disabled = false;
     }
