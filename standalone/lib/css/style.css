@@ -583,4 +583,10 @@ h4, h5, h6 {
        padding-right: 3px; 
 }
 
+
+
+.ui-menu-item a:hover {
+	cursor: pointer ;
+}
+
 /* End JNW additions for tabs */
