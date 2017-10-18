@@ -759,5 +759,13 @@ function switchAlignment() {
         }
  });
 
+$('#helpModal').on('show.bs.modal', console.log);
+
+$('#helpModal').on('show.bs.modal', function(e) {  
+	alert('HARGLE BARGLE');
+	$(e.target).find('.modal-body').load('help.html');
+});
+
+
 $('#viewText').hide() ;
 
