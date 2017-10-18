@@ -487,12 +487,11 @@ h4, h5, h6 {
 }
 
 .corpusNavigation {
-	margin-bottom: 4px !important;
+	/* margin-bottom: 1em !important; */
 
 }
 
 .tabContainer {
-	margin-top: 4px !important;
 }
 
 .tabContainer div {
