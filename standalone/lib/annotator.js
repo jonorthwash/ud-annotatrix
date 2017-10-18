@@ -456,11 +456,12 @@ function detectFormat(content) {
         }
     }
 
+    var trimmedContent = content.trim("\n");
     if (firstWord.match(/"<.*/)) {
         FORMAT = "CG3";
     } else if (firstWord.match(/1/)) {
         FORMAT = "CoNLL-U";
-    } else if (content.trim("\n").includes("(")) {
+    } else if (trimmedContent.includes("(") && trimmedContent.includes("\n") && (trimmedContent.includes(")\n") || trimmedContent[trimmedContent.length-1] == ")")) {
         FORMAT = "SD";
     // TODO: better plaintext recognition
     } else if (!content.trim("\n").includes("\n")) {
