@@ -547,16 +547,9 @@ function storageAvailable(type) {
 }
 
 function toggleCodeWindow() {
-    console.log('toggleCodeWindow()');
-    if(!HIDDEN_CODE_WINDOW) {
-      $("#codeVisibleButton").attr('class', 'fa fa-chevron-down');
-      $("#indata").hide();
-      HIDDEN_CODE_WINDOW = true;
-    } else { 
-      $("#codeVisibleButton").attr('class', 'fa fa-chevron-up');
-      $("#indata").show();
-      HIDDEN_CODE_WINDOW = false;
-    }
+	console.log('toggleCodeWindow()');
+	$("#codeVisibleButton").toggleClass('fa-chevron-down', 'fa-chevron-up');
+	$("#indata").toggle('show');
 }
 
 function focusOut(key) {
