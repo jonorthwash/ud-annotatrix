@@ -550,13 +550,11 @@ function toggleCodeWindow() {
     console.log('toggleCodeWindow()');
     if(!HIDDEN_CODE_WINDOW) {
       $("#codeVisibleButton").attr('class', 'fa fa-chevron-down');
-      $("#indata").css('visibility', 'hidden');
-      $("#indata").css('height', '0px');
+      $("#indata").hide();
       HIDDEN_CODE_WINDOW = true;
     } else { 
       $("#codeVisibleButton").attr('class', 'fa fa-chevron-up');
-      $("#indata").css('visibility', '');
-      $("#indata").css('height', '200px');
+      $("#indata").show();
       HIDDEN_CODE_WINDOW = false;
     }
 }
