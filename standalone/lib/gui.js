@@ -754,26 +754,28 @@ function switchAlignment() {
     }
 }
 
-$('#currentsen').keyup(function(e){
-	if(e.keyCode == 13) {
-		goToSenSent();
-	} else if(e.keyCode == 38 || e.keyCode == 75) { // up arrow || k
-		prevSenSent();
-	} else if(e.keyCode == 40 || e.keyCode == 74) { // down arrow || j
-		nextSenSent();
-	} else if(e.keyCode == 189) { // -
-		removeCurSent();
-	} else if(e.keyCode == 187 ) { // + || =
-		//addSent();
-	}
+
+$(document).ready(function(){
+	$('#currentsen').keyup(function(e){
+		if(e.keyCode == 13) {
+			goToSenSent();
+		} else if(e.keyCode == 38 || e.keyCode == 75) { // up arrow || k
+			prevSenSent();
+		} else if(e.keyCode == 40 || e.keyCode == 74) { // down arrow || j
+			nextSenSent();
+		} else if(e.keyCode == 189) { // -
+			removeCurSent();
+		} else if(e.keyCode == 187 ) { // + || =
+			//addSent();
+		}
+	});
+
+	$('#helpModal').on('show.bs.modal', console.log);
+
+	$('#helpModal').on('shown.bs.modal', function() {
+		alert('HARGLE BARGLE');
+		//$(e.target).find('.modal-body').load('help.html');
+	});
+
+	$('#viewText').hide() ;
 });
-
-$('#helpModal').on('show.bs.modal', console.log);
-
-$('#helpModal').on('show.bs.modal', function(e) {  
-	alert('HARGLE BARGLE');
-	$(e.target).find('.modal-body').load('help.html');
-});
-
-
-$('#viewText').hide() ;
