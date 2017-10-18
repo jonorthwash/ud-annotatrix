@@ -92,6 +92,7 @@ function addHandlers() {
     cy.on('click', '$node > node', selectSup);
     cy.on('cxttapend', 'node.wf', changeNode);
     cy.on('click', 'edge.dependency', changeNode);
+    cy.on('click', 'edge.dependency-error', changeNode);
 }
 
 
