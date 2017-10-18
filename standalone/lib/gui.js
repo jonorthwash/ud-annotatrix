@@ -759,8 +759,8 @@ $(document).ready(function(){
 			removeCurSent();
 		} else if(e.keyCode == 187 ) { // + || =
 			addSent();
+			//addSent();
 		}
-	});
 
 	$('#helpModal').on('show.bs.modal', console.log);
 
