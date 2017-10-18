@@ -773,5 +773,6 @@ $(document).ready(function(){
 		//$(e.target).find('.modal-body').load('help.html');
 	});
 
+
 	$('#viewText').hide() ;
 });

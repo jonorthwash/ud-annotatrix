@@ -583,13 +583,22 @@ h4, h5, h6 {
        padding-right: 3px; 
 }
 
+.ui-menu-item a:hover {
+	cursor: pointer ;
+}
 
+/* for the future */
+.ui-menu-item:has(> .ui-state-hover) {
+	background-color: #ddd ;
+}
+/* for now */
+.ui-menu-item .ui-state-hover {
+	background-color: #ddd ;
+}
 .ui-menu-item:hover {
 	background-color: #ddd ;
 }
 
-.ui-menu-item a:hover {
-	cursor: pointer ;
-}
+
 
 /* End JNW additions for tabs */
