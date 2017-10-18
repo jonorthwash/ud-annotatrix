@@ -460,12 +460,11 @@ function detectFormat(content) {
         FORMAT = "CG3";
     } else if (firstWord.match(/1/)) {
         FORMAT = "CoNLL-U";
-
-    // TODO: better plaintext recognition
-//    } else if (!content.trim("\n").includes("\n")) {
-//        FORMAT = "plain text";
     } else if (content.trim("\n").includes("(")) {
         FORMAT = "SD";
+    // TODO: better plaintext recognition
+    } else if (!content.trim("\n").includes("\n")) {
+        FORMAT = "plain text";
     } else { 
         FORMAT = "Unknown";
     }
