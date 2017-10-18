@@ -487,11 +487,11 @@ h4, h5, h6 {
 }
 
 .corpusNavigation {
-	/* margin-bottom: 1em !important; */
-
+	margin-bottom: .5em;
 }
 
 .tabContainer {
+	display: flex;
 }
 
 .tabContainer div {
@@ -569,6 +569,7 @@ h4, h5, h6 {
 
 .nav-tabs {
 	margin-bottom: -1px;
+	margin-top: auto;
 }
 
 .tabContainer {
