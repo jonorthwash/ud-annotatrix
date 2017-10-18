@@ -549,11 +549,12 @@ function storageAvailable(type) {
 function toggleCodeWindow() {
     console.log('toggleCodeWindow()');
     if(!HIDDEN_CODE_WINDOW) {
-      // change icon to down chevron here
+      $("#codeVisibleButton").attr('class', 'fa fa-chevron-down');
       $("#indata").css('visibility', 'hidden');
       $("#indata").css('height', '0px');
       HIDDEN_CODE_WINDOW = true;
     } else { 
+      $("#codeVisibleButton").attr('class', 'fa fa-chevron-up');
       $("#indata").css('visibility', '');
       $("#indata").css('height', '200px');
       HIDDEN_CODE_WINDOW = false;
