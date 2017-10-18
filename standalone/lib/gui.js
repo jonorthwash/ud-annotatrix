@@ -206,7 +206,7 @@ function keyUpClassifier(key) {
         if (key.which == ENTER) {
             var res = deprelInp.val();
             // to get rid of the magic direction arrows
-            res = res.replace(/⊳⊲/, '');
+            res = res.replace(/[⊳⊲]/, '');
             writeDeprel(res);
         };
     } else if (wf.length == 1) {
@@ -268,6 +268,7 @@ function removeSup(st) {
 
 
 function changeNode() {
+//    console.log("changeNode() " + this.data("label"));
     this.addClass("input");
     var id = this.id().slice(0, 2);
     var param = this.renderedBoundingBox();
@@ -276,6 +277,12 @@ function changeNode() {
 
     // for some reason, there are problems with label in deprels without this 
     if (this.data("label") == undefined) {this.data("label", "")};
+
+    // to get rid of the magic direction arrows
+    var res = this.data("label").replace(/[⊳⊲]/, '');
+    this.data("label", res);
+
+ //   console.log("[2] changeNode() " + this.data("label") + " " + res);
 
     $("#mute").addClass("activated");
     var sent = buildSent();
