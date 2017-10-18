@@ -575,4 +575,12 @@ h4, h5, h6 {
 	z-index: +1;
 }
 
+.ui-autocomplete {
+       background-color: white;
+       width: 150px;
+       list-style-type: none;
+       padding-left: 3px; 
+       padding-right: 3px; 
+}
+
 /* End JNW additions for tabs */
