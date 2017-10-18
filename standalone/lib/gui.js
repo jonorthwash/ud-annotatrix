@@ -294,6 +294,10 @@ function changeNode() {
         $(".activated#mute").css("width", width + "px");
     }
 
+    // TODO: rank the labels + make the style better  
+    var availableLabels = U_DEPRELS ;
+    $("#edit").autocomplete({source: availableLabels});
+
     $("#edit").css("top", param.y1)
         .css("left", param.x1)
         .css("height", param.h)
