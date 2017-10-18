@@ -179,7 +179,6 @@ function createToken(graph, token, spId) {
 
 function makeDependencies(token, nodeId, graph) {
     /* if there is head, create an edge for dependency */
-
     var deprel = (token.deprel) ? token.deprel : "";
     var head = token.head; // The id of the head
 
@@ -192,10 +191,14 @@ function makeDependencies(token, nodeId, graph) {
 
     // Append ⊲ or ⊳ to indicate direction of the arc (helpful if 
     // there are many arcs.
-    if(parseInt(head) < parseInt(nodeId)) {
+    if(parseInt(head) < parseInt(nodeId) && LEFT_TO_RIGHT) {
       deprel = deprel + '⊳';
-    } else if(parseInt(head) > parseInt(nodeId)) {
+    } else if(parseInt(head) > parseInt(nodeId) && LEFT_TO_RIGHT) {
       deprel = '⊲' + deprel;
+    } else if(parseInt(head) < parseInt(nodeId) && !LEFT_TO_RIGHT) {
+      deprel = '⊲' + deprel;
+    } else if(parseInt(head) > parseInt(nodeId) && !LEFT_TO_RIGHT) {
+      deprel = deprel + '⊳';
     }
 
     if (token.head && token.head != 0) {
