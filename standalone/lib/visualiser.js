@@ -107,6 +107,7 @@ function conllu2cy(sent) {
     var graph = [];
     $.each(sent.tokens, function(n, token) {
         if (token instanceof conllu.MultiwordToken){
+            // ns = supertoken
             var spId = "ns" + strWithZero(n);
             var id = toSubscript(" (" + findSupTokId(token.tokens) + ")");
             var MultiwordToken = {
@@ -180,22 +181,45 @@ function makeDependencies(token, nodeId, graph) {
     /* if there is head, create an edge for dependency */
 
     var deprel = (token.deprel) ? token.deprel : "";
+    var head = token.head; // The id of the head
+
+    var validDep = true;
+
+    if(!is_udeprel(deprel)) {
+      console.log('writeDeprel @valid=false ' + deprel);
+      validDep = false;
+    }
+
+    // Append ⊲ or ⊳ to indicate direction of the arc (helpful if 
+    // there are many arcs.
+    if(parseInt(head) < parseInt(nodeId)) {
+      deprel = deprel + '⊳';
+    } else if(parseInt(head) > parseInt(nodeId)) {
+      deprel = '⊲' + deprel;
+    }
+
     if (token.head && token.head != 0) {
-        var head = strWithZero(token.head);
+        var headId = strWithZero(head);
         var edgeDep = {
             "id": "ed" + nodeId,
-            "source": "nf" + head,
+            "source": "nf" + headId,
             "target": "nf" + nodeId,
             "length": (deprel.length / 3) + "em",
             "label": deprel,
             "ctrl": [55, 55, 55, 55]
         }
-        var coef = (token.head - nodeId);
+        var coef = (head - nodeId);
         if (!LEFT_TO_RIGHT) {coef *= -1}; // support for RTL
         if (VERT_ALIGNMENT) {edgeDep.ctrl = [90, 90, 90, 90]};
         if (Math.abs(coef) != 1) {coef *= 0.7};
         edgeDep.ctrl = edgeDep.ctrl.map(function(el){ return el*coef; });
-        graph.push({"data": edgeDep, "classes": "dependency"});
+        // if it's not valid, mark it as an error (see cy-style.js)
+        if(validDep) {
+          graph.push({"data": edgeDep, "classes": "dependency"});
+        }else{
+          graph.push({"data": edgeDep, "classes": "dependency-error"});
+        }
+        
     };
     return graph;
 }

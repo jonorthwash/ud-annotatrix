@@ -205,7 +205,8 @@ function keyUpClassifier(key) {
     } else if (deprelInp.length) {
         if (key.which == ENTER) {
             var res = deprelInp.val();
-            res = res.replace(/[⊲⊳]/g, '');
+            // to get rid of the magic direction arrows
+            res = res.replace(/⊳⊲/, '');
             writeDeprel(res);
         };
     } else if (wf.length == 1) {
@@ -340,21 +341,6 @@ function writeDeprel(deprelInp, indices) { // TODO: DRY
     var head = parseInt(sent.tokens[outerIndex].head);
     console.log('writeDeprel');
     console.log(head + ' ' + cur);
-
-    if(!is_udeprel(deprelInp)) {
-      console.log('writeDeprel @valid=false ' + Id);
-      // TODO: Find out a way to change the colour of the label, e.g. to red.
-    }
-
-    // Append ⊲ or ⊳ to indicate direction of the arc (helpful if 
-    // there are many arcs. TODO: This should ideally be external to the 
-    // text of the deprel (e.g. done in the cytoscape arc style thing)
-    if(head < cur && deprelInp.search('⊳') < 0) { 
-      deprelInp = deprelInp + '⊳';
-    } else if(head > cur && deprelInp.search('⊲') < 0) {
-      deprelInp = '⊲' + deprelInp;
-    }
-
 
     var sentAndPrev = changeConlluAttr(sent, indices, "deprel", deprelInp);
     sent = sentAndPrev[0];
@@ -754,18 +740,17 @@ function switchAlignment() {
     }
 }
 
-$('#currentsen').keyup(function(e){
-	if(e.keyCode == 13) {
-		goToSenSent();
-	} else if(e.keyCode == 38 || e.keyCode == 75) { // up arrow || k
-		prevSenSent();
-	} else if(e.keyCode == 40 || e.keyCode == 74) { // down arrow || j
-		nextSenSent();
-	} else if(e.keyCode == 189) { // -
-		removeCurSent();
-	} else if(e.keyCode == 187 ) { // + || =
-		//addSent();
-	}
-});
+ $('#currentsen').keyup(function(e){
+       if(e.keyCode == 13) {
+               goToSenSent();
+       } else if(e.keyCode == 38 || e.keyCode == 75) { // up arrow || k
+               prevSenSent();
+        } else if(e.keyCode == 40 || e.keyCode == 74) { // down arrow || j
+                nextSenSent();
+        } else if(e.keyCode == 189) { // -
+                //addSent();
+        }
+ });
 
 $('#viewText').hide() ;
+
