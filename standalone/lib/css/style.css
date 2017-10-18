@@ -584,6 +584,9 @@ h4, h5, h6 {
 }
 
 
+.ui-menu-item:hover {
+	background-color: #ddd ;
+}
 
 .ui-menu-item a:hover {
 	cursor: pointer ;
