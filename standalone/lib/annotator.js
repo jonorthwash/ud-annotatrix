@@ -5,6 +5,7 @@ var FILENAME = 'corpora.txt'; // default name
 var ROOT = './lib/';
 var CONTENTS = "";
 var AVAILABLESENTENCES = 0;
+var HIDDEN_CODE_WINDOW = false;
 var CURRENTSENTENCE = 0;
 var RESULTS = [];
 var LOC_ST_AVALIABLE = false;
@@ -545,6 +546,19 @@ function storageAvailable(type) {
     }
 }
 
+function toggleCodeWindow() {
+    console.log('toggleCodeWindow()');
+    if(!HIDDEN_CODE_WINDOW) {
+      // change icon to down chevron here
+      $("#indata").css('visibility', 'hidden');
+      $("#indata").css('height', '0px');
+      HIDDEN_CODE_WINDOW = true;
+    } else { 
+      $("#indata").css('visibility', '');
+      $("#indata").css('height', '200px');
+      HIDDEN_CODE_WINDOW = false;
+    }
+}
 
 function focusOut(key) {
     if (key.which == ESC) {
