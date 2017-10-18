@@ -547,8 +547,8 @@ function storageAvailable(type) {
 }
 
 function toggleCodeWindow() {
-	console.log('toggleCodeWindow()');
 	$("#codeVisibleButton").toggleClass('fa-chevron-down', 'fa-chevron-up');
+	console.log('toggleCodeWindow()');
 	$("#indata").toggle('show');
 }
 

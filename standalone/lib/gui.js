@@ -760,7 +760,7 @@ $(document).ready(function(){
 		} else if(e.keyCode == 187 ) { // + || =
 			addSent();
 		}
-	}
+	});
 
 	$('#helpModal').on('show.bs.modal', console.log);
 
