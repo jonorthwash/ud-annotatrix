@@ -758,7 +758,7 @@ $(document).ready(function(){
 		} else if(e.keyCode == 189) { // -
 			removeCurSent();
 		} else if(e.keyCode == 187 ) { // + || =
-			//addSent();
+			addSent();
 		}
 	});
 
