@@ -86,6 +86,8 @@ function main() {
 
 
 function addHandlers() {
+    // NOTE: If you change the style of a node (e.g. its selector) then
+    // you also need to update the event handler here
     cy.on('click', 'node.wf', drawArcs);
     cy.on('cxttapend', 'edge.dependency', selectArc);
     cy.on('click', 'node.pos', changeNode);
