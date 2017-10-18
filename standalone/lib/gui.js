@@ -773,6 +773,11 @@ $(document).ready(function(){
 		//$(e.target).find('.modal-body').load('help.html');
 	});
 
+$('.ui-autocomplete').keydown(function(e) {
+    if(e.keyCode == 9) { // Tab
+        console.log('test');
+    }
+});
 
 	$('#viewText').hide() ;
 });
