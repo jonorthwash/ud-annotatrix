@@ -167,9 +167,6 @@
 					<li class="nav-item">
 						<a href="#" class="nav-link" id="viewCG" onClick="javascript:viewAsCG();">CG3</a>
 					</li>
-						<a class="btn btn-secondary" href="#" onClick="javascript: toggleCodeWindow();">
-							<i id="codeVisibleButton" class="fa fa-chevron-up" title="Show/hide"></i>
-						</a>
 				</div>
 				</div>
 
@@ -179,7 +176,13 @@
 				<button role="tab" id="viewCG" onClick="javascript:viewAsCG();">as CG</button>
 				<button role="tab" id="remove" onClick="javascript:removeCurSent();">Remove sentence</button>
 			</div -->
-			<div class="indataarea">
+			<div class="indataarea" style="position: relative">
+				<div class="btn-toolbar col-xs-1" role="toolbar" style="position: absolute; right: 0; top: 0;">
+					<a class="btn btn-secondary" href="#" onClick="javascript: toggleCodeWindow();">
+						<i id="codeVisibleButton" class="fa fa-chevron-up" title="Show/hide"></i>
+					</a>
+				</div>
+
 				<textarea id="indata" style="width: 100%; font-size: 85%" rows="20"></textarea>
 			</div>
 		</div>
