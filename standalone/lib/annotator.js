@@ -445,11 +445,16 @@ function detectFormat(content) {
                 }
               }
               var htmlLabels = document.getElementById('treeLabels');
-              var labelMsg = document.createElement('span');
               for(var k = 0; k < LABELS.length; k++) { 
-                labelMsg.append(LABELS[k]) ;
+                if(LABELS[k].trim() == "") {
+                  continue;
+                }
+                var labelMsg = document.createElement('span');
+                var labelTxt = document.createTextNode(LABELS[k]);
+                labelMsg.className = 'treebankLabel';
+                labelMsg.appendChild(labelTxt);
+                htmlLabels.append(labelMsg) ;
               }
-              htmlLabels.append(labelMsg) ;
               console.log("FOUND LABELS:" + LABELS);
             }
             following ++;
