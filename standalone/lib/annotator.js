@@ -17,7 +17,7 @@ var LABELS = [];
 function main() {
     head.js(
         ROOT + 'ext/jquery-3.2.1.min.js',
-        ROOT + 'ext/jquery-ui.min.js',
+        ROOT + 'ext/jquery-ui-1.12.1/jquery-ui.min.js',
         ROOT + 'ext/cytoscape.min.js',
         ROOT + 'ext/undomanager.js',
         ROOT + 'ext/popper.min.js',
