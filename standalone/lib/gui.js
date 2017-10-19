@@ -195,6 +195,7 @@ function keyUpClassifier(key) {
 
     // looking if there are selected arcs
     var selArcs = cy.$("edge.dependency.selected");
+    var selArcs = cy.$("edge.dependency-error.selected");
     var destNodes = cy.$("node[state='arc-dest']");
     // looking if there is a POS label to be modified
     var posInp = $(".activated.np");
