@@ -10,11 +10,23 @@ var ENTER = 13;
 var ESC = 27;
 var RIGHT = 39;
 var LEFT = 37;
+var UP = 38;
+var DOWN = 40;
+var MINUS = 189;
+var EQUALS = 187; // also PLUS
+var J = 74;
+var K = 75;
 var D = 68;
 var I = 73;
 var S = 83;
 var M = 77;
 var SIDES = {39: "right", 37: "left"};
+var POS2RELmappings = {
+	"PUNCT": "punct",
+	"DET": "det",
+	"CCONJ": "cc",
+	"SCONJ": "mark"
+}
 
 
 function setUndos(undoManager) {
@@ -84,6 +96,10 @@ function writeArc(sourceNode, destNode) {
     // IF the target POS tag is SCONJ set the deprel to @mark [86%]
     // IF the target POS tag is DET set the deprel to @det [83%]
     // TODO: Put this somewhere better
+	if(thisToken['upostag'] in POS2RELmappings) {
+		sentAndPrev = changeConlluAttr(sent, indices, "deprel", POS2RELmappings[thisToken['upostag']])
+	}
+	/**
     if(thisToken['upostag'] == 'PUNCT') {
       sentAndPrev = changeConlluAttr(sent, indices, "deprel", "punct");
     }else if(thisToken['upostag'] == 'DET') {
@@ -93,6 +109,7 @@ function writeArc(sourceNode, destNode) {
     }else if(thisToken['upostag'] == 'SCONJ') {
       sentAndPrev = changeConlluAttr(sent, indices, "deprel", "mark");
     }
+	**/
      
     // AUX can be @cop also
 //    }else if(thisToken['upostag'] == 'AUX') {
@@ -782,13 +799,13 @@ $(document).ready(function(){
 	$('#currentsen').keyup(function(e){
 		if(e.keyCode == 13) {
 			goToSenSent();
-		} else if(e.keyCode == 38 || e.keyCode == 75) { // up arrow || k
+		} else if(e.keyCode == UP || e.keyCode == K) {
 			prevSenSent();
-		} else if(e.keyCode == 40 || e.keyCode == 74) { // down arrow || j
+		} else if(e.keyCode == DOWN || e.keyCode == J) {
 			nextSenSent();
-		} else if(e.keyCode == 189) { // -
+		} else if(e.keyCode == MINUS) {
 			removeCurSent();
-		} else if(e.keyCode == 187 ) { // + || =
+		} else if(e.keyCode == EQUALS ) {
 			addSent();
 		}
 	});
