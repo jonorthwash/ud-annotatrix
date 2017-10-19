@@ -464,14 +464,22 @@ function detectFormat(content) {
     }
 
     var trimmedContent = content.trim("\n");
+    console.log(trimmedContent + ' | ' + trimmedContent[trimmedContent.length-1]);
     if (firstWord.match(/"<.*/)) {
+	// SAFE: The first token in the string should start with "<
         FORMAT = "CG3";
     } else if (firstWord.match(/1/)) {
+	// UNSAFE: The first token in the string should be 1
         FORMAT = "CoNLL-U";
     } else if (trimmedContent.includes("(") && trimmedContent.includes("\n") && (trimmedContent.includes(")\n") || trimmedContent[trimmedContent.length-1] == ")")) {
+	// SAFE: To be SDParse as opposed to plain text we need at least 2 lines.
+	// UNSAFE: SDParse should include at least one line ending in ) followed by a newline
+	// UNSAFE: The last character in the string should be a )
         FORMAT = "SD";
     // TODO: better plaintext recognition
-    } else if (!content.trim("\n").includes("\n")) {
+    } else if (!trimmedContent.includes("\t") && trimmedContent[trimmedContent.length-1] != ")") {
+	// SAFE: Plain text and SDParse should not include tabs. CG3/CoNLL-U should include tabs
+	// UNSAFE: SDParse should end the line with a ), but plain text conceivably could too
         FORMAT = "plain text";
     } else { 
         FORMAT = "Unknown";
