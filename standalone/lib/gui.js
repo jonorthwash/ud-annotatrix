@@ -79,13 +79,19 @@ function writeArc(sourceNode, destNode) {
     console.log('writeArc ' + destIndex + ' ' + thisToken['upostag']); 
     var sentAndPrev = changeConlluAttr(sent, indices, "head", sourceIndex);
 
-    // If the target POS tag is PUNCT set the deprel to @punct
-    // IF the target POS tag is DET set the deprel to @det
+    // If the target POS tag is PUNCT set the deprel to @punct [99%]
+    // IF the target POS tag is CCONJ set the deprel to @cc [88%]
+    // IF the target POS tag is SCONJ set the deprel to @mark [86%]
+    // IF the target POS tag is DET set the deprel to @det [83%]
     // TODO: Put this somewhere better
     if(thisToken['upostag'] == 'PUNCT') {
       sentAndPrev = changeConlluAttr(sent, indices, "deprel", "punct");
     }else if(thisToken['upostag'] == 'DET') {
       sentAndPrev = changeConlluAttr(sent, indices, "deprel", "det");
+    }else if(thisToken['upostag'] == 'CCONJ') {
+      sentAndPrev = changeConlluAttr(sent, indices, "deprel", "cc");
+    }else if(thisToken['upostag'] == 'SCONJ') {
+      sentAndPrev = changeConlluAttr(sent, indices, "deprel", "mark");
     }
      
     // AUX can be @cop also
