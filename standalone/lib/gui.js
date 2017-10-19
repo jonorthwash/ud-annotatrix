@@ -769,8 +769,8 @@ $(document).ready(function(){
 	$('#helpModal').on('show.bs.modal', console.log);
 
 	$('#helpModal').on('shown.bs.modal', function() {
-		alert('HARGLE BARGLE');
-		//$(e.target).find('.modal-body').load('help.html');
+		//alert('HARGLE BARGLE');
+		$(e.target).find('.modal-body').load('help.html');
 	});
 
 	$('.ui-autocomplete').keydown(function(e) {

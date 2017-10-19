@@ -16,12 +16,12 @@ var LABELS = [];
 
 function main() {
     head.js(
-        'https://code.jquery.com/jquery-3.2.1.min.js',
+        ROOT + 'ext/jquery-3.2.1.min.js',
         ROOT + 'ext/jquery-ui.min.js',
         ROOT + 'ext/cytoscape.min.js',
         ROOT + 'ext/undomanager.js',
-	'https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js',
-	'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js',
+        ROOT + 'ext/popper.js',
+        ROOT + 'ext/bootstrap.min.js',
 
         // CoNLL-U parser from https://github.com/FrancessFractal/conllu
         ROOT + 'ext/conllu/conllu.js',
