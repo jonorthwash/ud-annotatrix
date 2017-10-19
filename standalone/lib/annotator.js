@@ -93,6 +93,7 @@ function addHandlers() {
     // you also need to update the event handler here
     cy.on('click', 'node.wf', drawArcs);
     cy.on('cxttapend', 'edge.dependency', selectArc);
+    cy.on('cxttapend', 'edge.dependency-error', selectArc);
     cy.on('click', 'node.pos', changeNode);
     cy.on('click', '$node > node', selectSup);
     cy.on('cxttapend', 'node.wf', changeNode);

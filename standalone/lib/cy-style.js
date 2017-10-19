@@ -92,6 +92,12 @@ var CY_STYLE = [{
     "text-events": "yes"
   }
 }, {
+    "selector": "edge.dependency-error.selected",
+    "style": {
+        "line-color": FANCY,
+        "target-arrow-color": FANCY
+    }
+}, {
   "selector": "edge.dependency",
   "style": {
     "target-arrow-shape": "triangle",
