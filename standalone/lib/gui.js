@@ -70,9 +70,28 @@ function writeArc(sourceNode, destNode) {
     var destIndex = +destNode.data("id").slice(2);
 
     var indices = findConlluId(destNode);
+    // For some reason we need all of this code otherwise stuff becomes undefined
+    var idx = findConlluId(destNode)[1];
     var sent = buildSent();
-
+    var tokens = sent.tokens;
+    console.log(idx + ' ' + tokens);
+    var thisToken = tokens[idx];
+    console.log('writeArc ' + destIndex + ' ' + thisToken['upostag']); 
     var sentAndPrev = changeConlluAttr(sent, indices, "head", sourceIndex);
+
+    // If the target POS tag is PUNCT set the deprel to punct
+    // IF the target POS tag is DET set the deprel to det
+    // IF the target POS tag is AUX set the deprel to aux
+    // TODO: Put this somewhere better
+    if(thisToken['upostag'] == 'PUNCT') {
+      sentAndPrev = changeConlluAttr(sent, indices, "deprel", "punct");
+    }else if(thisToken['upostag'] == 'DET') {
+      sentAndPrev = changeConlluAttr(sent, indices, "deprel", "det");
+    }else if(thisToken['upostag'] == 'AUX') {
+      sentAndPrev = changeConlluAttr(sent, indices, "deprel", "aux");
+    }
+
+//    var sentAndPrev = changeConlluAttr(sent, indices, "head", sourceIndex);
     sent = sentAndPrev[0];
     var pervVal = sentAndPrev[1];
 
@@ -773,11 +792,11 @@ $(document).ready(function(){
 		$(e.target).find('.modal-body').load('help.html');
 	});
 
-	$('.ui-autocomplete').keydown(function(e) {
-		if(e.keyCode == 9) { // Tab
-			console.log('test');
-		}
-	});
+//	$('.ui-autocomplete').keydown(function(e) {
+//		if(e.keyCode == 9) { // Tab
+//			console.log('test');
+//		}
+//	});
 
 	$('#viewText').hide() ;
 });
