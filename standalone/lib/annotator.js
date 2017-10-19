@@ -20,7 +20,7 @@ function main() {
         ROOT + 'ext/jquery-ui.min.js',
         ROOT + 'ext/cytoscape.min.js',
         ROOT + 'ext/undomanager.js',
-        ROOT + 'ext/popper.js',
+        ROOT + 'ext/popper.min.js',
         ROOT + 'ext/bootstrap.min.js',
 
         // CoNLL-U parser from https://github.com/FrancessFractal/conllu
