@@ -1,9 +1,11 @@
 function toConllu() {
     /* Converts the input to CoNLL-U and redraws the tree */
-    console.log('toConllu()');
+    console.log('toConllu() ' + FORMAT);
     var newContents = getTreebank();
     if (FORMAT == "plain text") {
         plainText2Conllu(newContents);
+    } else if (FORMAT == "SD") {
+        SD2Conllu(newContents);
     } else {
         for (var i = 0; i < RESULTS.length; ++i) {
             var currentFormat = detectFormat(RESULTS[i]);
@@ -47,6 +49,15 @@ function plainSent2Conllu(text) {
     return sent.serial;
 }
 
+
+function SD2Conllu(text) {
+        var newContents = [];
+        newContents.push(SD2conllu(text));
+        CONTENTS = newContents.join("\n");
+        console.log('!!!' + CONTENTS);
+        FORMAT = "CoNLL-U";
+        loadDataInIndex();
+}
 
 function plainText2Conllu(text) {
     /* Takes plain text, converts it to CoNLL-U format. */

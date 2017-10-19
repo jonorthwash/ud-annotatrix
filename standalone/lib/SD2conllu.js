@@ -86,16 +86,16 @@ function SD2conllu(text) {
       var newToken = new conllu.Token();
       tokId = i+1;
       newToken["form"] = textTokens[i];
+      // TODO: automatical recognition of punctuation's POS
+      if(textTokens[i].match(/\W/)) {
+        newToken["upostag"] = "PUNCT";
+      }
       newToken["id"] = tokId;
       newToken["head"] = heads[tokId];
       newToken["deprel"] = deprels[tokId];
       //console.log('@@@' + newToken["form"] + " " + newToken["id"] + " " + newToken["head"] + " " + newToken["deprel"]);
       tokens.push(newToken); 
     }
-
-
-    // TODO: automatical recognition of punctuation's POS
-    //lines = lines.concat(tokens);
 
     sent.comments = comments;
     sent.tokens = tokens;

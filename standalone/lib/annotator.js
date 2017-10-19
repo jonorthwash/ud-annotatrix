@@ -175,7 +175,7 @@ function loadDataInIndex() {
         var splitted = CONTENTS.split("\n\n");
     }
 
-    console.log('loadDataInIndex ' + splitted.length)
+    console.log('loadDataInIndex |' + FORMAT + " | " + splitted.length)
     for (var i = splitted.length - 1; i >= 0; i--) {
         if (splitted[i].trim() === "") {
             splitted.splice(i, 1);
@@ -470,7 +470,7 @@ function detectFormat(content) {
     }
 
     var trimmedContent = content.trim("\n");
-    console.log(trimmedContent + ' | ' + trimmedContent[trimmedContent.length-1]);
+    //console.log(trimmedContent + ' | ' + trimmedContent[trimmedContent.length-1]);
     if (firstWord.match(/"<.*/)) {
 	// SAFE: The first token in the string should start with "<
         FORMAT = "CG3";
@@ -528,6 +528,7 @@ function getCorpusData() {
 
 
 function loadData(data) {
+    console.log("loadData");
     if (data["content"]) {
         CONTENTS = data["content"];
     }

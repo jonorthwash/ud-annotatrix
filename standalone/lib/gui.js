@@ -702,7 +702,7 @@ function viewAsConllu() {
     var text = $("#indata").val();
     var currentFormat = detectFormat(text);
 
-	if ($("#viewOther").text() == "plain text") {
+	if ($("#viewOther").text() == "plain text" || $("#viewOther").text() == "SD") {
 		  toConllu();
 	}	
 
