@@ -32,10 +32,18 @@ function plainSent2Conllu(text) {
 
     // enumerating tokens
     $.each(tokens, function(i, token) {tokens[i] = (i + 1) + "\t" + token});
-
-    // TODO: automatical recognition of punctuation's POS
+ 
     lines = lines.concat(tokens);
     sent.serial = lines.join("\n");
+
+    // TODO: automatical recognition of punctuation's POS
+    for(var i = 0; i < sent.tokens.length; i++) {
+//       console.log(sent.tokens[i])
+       if(sent.tokens[i]['form'].match(/\W/)) {
+         sent.tokens[i]['upostag'] = 'PUNCT';
+       }
+    }
+
     return sent.serial;
 }
 
@@ -47,7 +55,7 @@ function plainText2Conllu(text) {
     if (text.match(/[^ ].+?[.!?](?=( |\n)[^ \n])/)) { // match sentence break, e.g. "blah. hargle"
         CONTENTS = text;
     }
-    console.log('plainText2Conllu() ' + text.length + ' // ' + text);
+//    console.log('plainText2Conllu() ' + text.length + ' // ' + text);
     if (CONTENTS.trim() != "") {
         var newContents = [];
         var splitted = CONTENTS.match(/[^ ].+?[.!?](?=( |$|\n))/g);
@@ -56,6 +64,7 @@ function plainText2Conllu(text) {
             newContents.push(plainSent2Conllu(sentence));
         })
         CONTENTS = newContents.join("\n");
+        console.log('!!!' + CONTENTS);
         FORMAT = "CoNLL-U";
         loadDataInIndex();
     } else {
