@@ -399,19 +399,25 @@ function cleanConllu(content) {
         return content;
     }
     var res = content.search("\t");
+    var spaceToTab = false;
+    // If we don't find any tabs, then we want to replace multiple spaces with tabs
     if(res < 0) {
-        console.log("no tabs");
-        content = content.replace(/  */g, "\t");
+        spaceToTab = true; 
     }
     // remove blank lines
     var lines = content.split("\n");
     var newContent = "";
     for(var i = 0; i < lines.length; i++) {
-        if(lines[i].trim().length == 0) {
+        var newLine = lines[i].trim();
+        if(newLine.length == 0) {
             continue;
         }
+        // If there are no spaces and the line isn't a comment, then replace more than one space with a tab
+        if(newLine[0] != "#" && spaceToTab) {
+            newLine = newLine.replace(/  */g, "\t");
+        }
         // strip the extra tabs/spaces at the end of the line 
-        newContent = newContent + lines[i].trim() + "\n";
+        newContent = newContent + newLine + "\n";
     }
     return newContent;
 }
