@@ -9,6 +9,7 @@ var POS_COLOR = "#afa2ff";
 var ST_COLOR = "#bcd2ff"
 var LOW_DIGITS = {0: "₀", 1: "₁", 2: "₂", 3: "₃", 4: "₄", 5: "₅",
 6: "₆", 7: "₇", 8: "₈", 9: "₉", "-": "₋", "(" : "₍", ")" : "₎"};
+var TREE_ = {};
 
 // require lib for CoNLL-U parsing
 var conllu = require("conllu");
@@ -143,12 +144,15 @@ function toSubscript(str) {
 
 
 function createToken(graph, token, spId) {
+    console.log('createToken() '+spId + ' / ' + token.form + ' / ' + token.upostag);
     /* Takes the tree graph, a token object and the id of the supertoken.
     Creates the wf node, the POS node and dependencies. Returns the graph. */
 
     // handling empty form
     // if (spId) {token.form = token.lemma};
     if (token.form == undefined) {token.form = " "};
+ 
+    TREE_[token.id] = token;
 
     var nodeId = strWithZero(token.id);
     // token number
@@ -184,8 +188,21 @@ function makeDependencies(token, nodeId, graph) {
 
     var validDep = true;
 
+//    console.log(TREE_);
+//    console.log(TREE_[head]);
+
+    if(head in TREE_) { // for some reason we need this part
+      // if the pos tag of the head is in the list of leaf nodes, then
+      // mark it as an error.
+      if(is_leaf(TREE_[head].upostag)) {
+        console.log('[1] writeDeprel @valid=false ' + deprel);
+        validDep = false;
+      }
+    }
+
     if(!is_udeprel(deprel)) {
-      console.log('writeDeprel @valid=false ' + deprel);
+      // if the deprel is not valid, mark it as an error
+      console.log('[2] writeDeprel @valid=false ' + deprel);
       validDep = false;
     }
 

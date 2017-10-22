@@ -2,6 +2,7 @@
 
 var U_DEPRELS = ["acl", "advcl", "advmod", "amod", "appos", "aux", "case", "cc", "ccomp", "clf", "compound", "conj", "cop", "csubj", "dep", "det", "discourse", "dislocated", "expl", "fixed", "flat", "goeswith", "iobj", "list", "mark", "nmod", "nsubj", "nummod", "obj", "obl", "orphan", "parataxis", "punct", "reparandum", "root", "vocative", "xcomp"];
 var U_POS = ["ADJ", "ADP", "ADV", "AUX", "CCONJ", "DET", "INTJ", "NOUN", "NUM", "PART", "PRON", "PROPN", "PUNCT", "SCONJ", "SYM", "VERB", "X"];
+var U_POS_LEAF = ["ADP", "AUX", "CCONJ", "PART", "PUNCT", "SCONJ"];
 
 function is_udeprel(s) {
     var s_deprel = s;
@@ -16,4 +17,15 @@ function is_udeprel(s) {
       }
     }
     return false;    
+}
+
+function is_leaf(s) {
+
+    for(var i = 0; i < U_POS_LEAF.length; i++) {
+      if(U_POS_LEAF[i] == s) { 
+        return true;
+      }
+    }
+    return false;    
+
 }
