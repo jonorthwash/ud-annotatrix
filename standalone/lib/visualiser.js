@@ -202,8 +202,10 @@ function makeDependencies(token, nodeId, graph) {
       }
     }
 
-    if(!is_udeprel(deprel)) {
-      // if the deprel is not valid, mark it as an error
+    if(!is_udeprel(deprel) && deprel != "") {
+      // if the deprel is not valid, mark it as an error, but 
+      // don't mark it as an error if it's blank. TODO: mark 
+      // arcs in grey if the deprel is blank.
       console.log('[2] writeDeprel @valid=false ' + deprel);
       validDep = false;
     }
