@@ -9,7 +9,7 @@ var POS_COLOR = "#afa2ff";
 var ST_COLOR = "#bcd2ff"
 var LOW_DIGITS = {0: "₀", 1: "₁", 2: "₂", 3: "₃", 4: "₄", 5: "₅",
 6: "₆", 7: "₇", 8: "₈", 9: "₉", "-": "₋", "(" : "₍", ")" : "₎"};
-var TREE_ = {};
+var TREE_ = {}; // This map allows us to address the Token object given an ID
 
 // require lib for CoNLL-U parsing
 var conllu = require("conllu");
@@ -152,6 +152,8 @@ function createToken(graph, token, spId) {
     // if (spId) {token.form = token.lemma};
     if (token.form == undefined) {token.form = " "};
  
+    // TODO: We shouldn't need to hold information in multiple places
+    // at least not like this.
     TREE_[token.id] = token;
 
     var nodeId = strWithZero(token.id);
