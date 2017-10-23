@@ -26,3 +26,4 @@ guidelines.
 * Each function should be documented in JSDoc style
 * Braces go on the same line
 * Use semicolons at the end of statements
+* Use var for local variables

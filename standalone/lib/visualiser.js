@@ -106,6 +106,7 @@ function changeEdgeStyle() {
 
 function conllu2cy(sent) {
     var graph = [];
+    TREE_ = {};
     $.each(sent.tokens, function(n, token) {
         if (token instanceof conllu.MultiwordToken){
             // ns = supertoken
