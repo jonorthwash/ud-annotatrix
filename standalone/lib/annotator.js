@@ -12,7 +12,7 @@ var LOC_ST_AVALIABLE = false;
 var SERVER_RUNNING = false;
 var AMBIGUOUS = false;
 var LABELS = [];
- 
+
 
 function main() {
     head.js(
@@ -111,7 +111,7 @@ function loadFromUrl(argument) {
     parameters = parameters.split('&')[1]
     if (parameters){
         var variables = parameters.map(function(arg){
-            return arg.split('=')[1].replace(/\+/g, " "); 
+            return arg.split('=')[1].replace(/\+/g, " ");
         });
 
         $("#indata").val(variables[0]);
@@ -128,7 +128,7 @@ function loadFromFile(e) {
     FILENAME = file.name;
 
     // check if the code is invoked
-    var ext = FILENAME.split(".")[FILENAME.split(".").length - 1]; // TODO: should be more beautiful way 
+    var ext = FILENAME.split(".")[FILENAME.split(".").length - 1]; // TODO: should be more beautiful way
     if (ext == "txt") {
         FORMAT = "plain text";
     }
@@ -147,8 +147,8 @@ function loadFromFile(e) {
 
 
 function addSent() {
-        AVAILABLESENTENCES = AVAILABLESENTENCES + 1; 
-        showDataIndiv();    
+        AVAILABLESENTENCES = AVAILABLESENTENCES + 1;
+        showDataIndiv();
 }
 
 function removeCurSent() {
@@ -160,7 +160,7 @@ function removeCurSent() {
         loadDataInIndex();
         CURRENTSENTENCE = curSent;
         if (CURRENTSENTENCE >= AVAILABLESENTENCES) {CURRENTSENTENCE--};
-        showDataIndiv();    
+        showDataIndiv();
     }
 }
 
@@ -186,13 +186,13 @@ function loadDataInIndex() {
     }
 
     AVAILABLESENTENCES = splitted.length;
-            
+
     if (AVAILABLESENTENCES == 1 || AVAILABLESENTENCES == 0) {
         document.getElementById('nextSenBtn').disabled = true;
     } else {
         document.getElementById('nextSenBtn').disabled = false;
     }
-            
+
     for (var i = 0; i < splitted.length; ++i) {
         var check = splitted[i];
         RESULTS.push(check);
@@ -227,7 +227,7 @@ function goToSenSent() {
     if (CURRENTSENTENCE == 0) {
         document.getElementById("prevSenBtn").disabled = true;
     }
-    
+
     clearLabels();
     showDataIndiv();
 }
@@ -276,7 +276,7 @@ function clearLabels() {
 //Export Corpora to file
 function exportCorpora() {
     var finalcontent = getTreebank();
-            
+
     var link = document.createElement('a');
     var mimeType = 'text/plain';
     document.body.appendChild(link); // needed for FF
@@ -294,7 +294,7 @@ function clearCorpus() {
     FORMAT = ""
     localStorage.setItem("corpus", "");
     $("#indata").val("");
-    showDataIndiv() 
+    showDataIndiv()
     window.location.reload();
     drawTree();
 }
@@ -316,7 +316,7 @@ function getTreebank() {
     // output final newline
     return finalcontent + "\n\n";
 }
-        
+
 
 function drawTree() {
     try {
@@ -348,7 +348,7 @@ function drawTree() {
 		$("#viewCG").removeClass("active");
 		$("#viewOther").text(FORMAT);
 	}
-	 	
+
 
     if (FORMAT == "CG3") {
         content = CG2conllu(content)
@@ -390,7 +390,7 @@ function drawTree() {
 
 function cleanConllu(content) {
     // if we don't find any tabs, then convert >1 space to tabs
-    // TODO: this should probably go somewhere else, and be more 
+    // TODO: this should probably go somewhere else, and be more
      // robust, think about vietnamese D:
     var res = content.search("\n");
     if(res < 0) {
@@ -405,7 +405,7 @@ function cleanConllu(content) {
     var spaceToTab = false;
     // If we don't find any tabs, then we want to replace multiple spaces with tabs
     if(res < 0) {
-        spaceToTab = true; 
+        spaceToTab = true;
     }
     // remove blank lines
     var lines = content.split("\n");
@@ -419,7 +419,7 @@ function cleanConllu(content) {
         if(newLine[0] != "#" && spaceToTab) {
             newLine = newLine.replace(/  */g, "\t");
         }
-        // strip the extra tabs/spaces at the end of the line 
+        // strip the extra tabs/spaces at the end of the line
         newContent = newContent + newLine + "\n";
     }
     return newContent;
@@ -427,80 +427,79 @@ function cleanConllu(content) {
 
 
 function detectFormat(content) {
-    clearLabels();
-    //TODO: too many "hacks" and presuppositions. refactor.
+	clearLabels();
+	//TODO: too many "hacks" and presuppositions. refactor.
 
-    content = content.trim();
-    var firstWord = content.replace(/\n/g, " ").split(" ")[0];
-    
-    // handling # comments at the beginning
-    if (firstWord[0] === '#'){
-        var following = 1;
-        while (firstWord[0] === '#' && following < content.length){
-            // TODO: apparently we need to log the thing or it won't register???
-            console.log('detectFormat|while| ' + firstWord);
-            firstWord = content.split("\n")[following];
-            // pull out labels and put them in HTML, TODO: this probably
-            // wants to go somewhere else.
-            if(firstWord.search('# labels') >= 0) {
-              var labels = firstWord.split("=")[1].split(" ");
-              for(var i = 0; i < labels.length; i++) {
-                var seen = false;
-                for(var j = 0; j < LABELS.length; j++) {
-                  if(labels[i] == LABELS[j]) {
-                    seen = true; 
-                  }
-                }
-                if(!seen) {
-                  LABELS.push(labels[i]);
-                }
-              }
-              var htmlLabels = document.getElementById('treeLabels');
-              for(var k = 0; k < LABELS.length; k++) { 
-                if(LABELS[k].trim() == "") {
-                  continue;
-                }
-                var labelMsg = document.createElement('span');
-                var labelTxt = document.createTextNode(LABELS[k]);
-                labelMsg.className = 'treebankLabel';
-                labelMsg.appendChild(labelTxt);
-                htmlLabels.append(labelMsg) ;
-              }
-              console.log("FOUND LABELS:" + LABELS);
-            }
-            following ++;
-        }
-    }
+	content = content.trim();
+	var firstWord = content.replace(/\n/g, " ").split(" ")[0];
 
-    var trimmedContent = content.trim("\n");
-    //console.log(trimmedContent + ' | ' + trimmedContent[trimmedContent.length-1]);
-    if (firstWord.match(/"<.*/)) {
+	// handling # comments at the beginning
+	if (firstWord[0] === '#'){
+		var following = 1;
+		while (firstWord[0] === '#' && following < content.length){
+			// TODO: apparently we need to log the thing or it won't register???
+			console.log('detectFormat|while| ' + firstWord);
+			firstWord = content.split("\n")[following];
+			// pull out labels and put them in HTML, TODO: this probably
+			// wants to go somewhere else.
+			if(firstWord.search('# labels') >= 0) {
+				var labels = firstWord.split("=")[1].split(" ");
+				for(var i = 0; i < labels.length; i++) {
+					var seen = false;
+					for(var j = 0; j < LABELS.length; j++) {
+						if(labels[i] == LABELS[j]) {
+							seen = true;
+						}
+					}
+					if(!seen) {
+						LABELS.push(labels[i]);
+					}
+				}
+				var htmlLabels = $('#treeLabels');
+				for(var k = 0; k < LABELS.length; k++) {
+					if(LABELS[k].trim() == "") {
+						continue;
+					}
+					htmlLabels.append($('<span></span>')
+						.addClass('treebankLabel')
+						.text(LABELS[k])
+					);
+				}
+				console.log("FOUND LABELS:" + LABELS);
+			}
+			following ++;
+		}
+	}
+
+	var trimmedContent = content.trim("\n");
+	//console.log(trimmedContent + ' | ' + trimmedContent[trimmedContent.length-1]);
+	if (firstWord.match(/"<.*/)) {
 	// SAFE: The first token in the string should start with "<
-        FORMAT = "CG3";
-    } else if (firstWord.match(/1/)) {
+		FORMAT = "CG3";
+	} else if (firstWord.match(/1/)) {
 	// UNSAFE: The first token in the string should be 1
-        FORMAT = "CoNLL-U";
-    } else if (trimmedContent.includes("(") && trimmedContent.includes("\n") && (trimmedContent.includes(")\n") || trimmedContent[trimmedContent.length-1] == ")")) {
+		FORMAT = "CoNLL-U";
+	} else if (trimmedContent.includes("(") && trimmedContent.includes("\n") && (trimmedContent.includes(")\n") || trimmedContent[trimmedContent.length-1] == ")")) {
 	// SAFE: To be SDParse as opposed to plain text we need at least 2 lines.
 	// UNSAFE: SDParse should include at least one line ending in ) followed by a newline
 	// UNSAFE: The last character in the string should be a )
-        FORMAT = "SD";
-    // TODO: better plaintext recognition
-    } else if (!trimmedContent.includes("\t") && trimmedContent[trimmedContent.length-1] != ")") {
+		FORMAT = "SD";
+	// TODO: better plaintext recognition
+	} else if (!trimmedContent.includes("\t") && trimmedContent[trimmedContent.length-1] != ")") {
 	// SAFE: Plain text and SDParse should not include tabs. CG3/CoNLL-U should include tabs
 	// UNSAFE: SDParse should end the line with a ), but plain text conceivably could too
-        FORMAT = "plain text";
-    } else { 
-        FORMAT = "Unknown";
-    }
+		FORMAT = "plain text";
+	} else {
+		FORMAT = "Unknown";
+	}
 
-    return FORMAT
+	return FORMAT
 }
 
 
 function saveOnServer(evt) {
     var finalcontent = getTreebank();
-    
+
     // sending data on server
     var treebank_id = location.href.split('/')[4];
     $.ajax({
