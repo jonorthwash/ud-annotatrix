@@ -212,14 +212,15 @@ function makeDependencies(token, nodeId, graph) {
 
     // Append ⊲ or ⊳ to indicate direction of the arc (helpful if 
     // there are many arcs.
+    var deprelLabel = deprel;
     if(parseInt(head) < parseInt(nodeId) && LEFT_TO_RIGHT) {
-      deprel = deprel + '⊳';
+      deprelLabel = deprelLabel + '⊳';
     } else if(parseInt(head) > parseInt(nodeId) && LEFT_TO_RIGHT) {
-      deprel = '⊲' + deprel;
+      deprelLabel = '⊲' + deprelLabel;
     } else if(parseInt(head) < parseInt(nodeId) && !LEFT_TO_RIGHT) {
-      deprel = '⊲' + deprel;
+      deprelLabel = '⊲' + deprelLabel;
     } else if(parseInt(head) > parseInt(nodeId) && !LEFT_TO_RIGHT) {
-      deprel = deprel + '⊳';
+      deprelLabel = deprelLabel + '⊳';
     }
 
     if (token.head && token.head != 0) {
@@ -228,8 +229,8 @@ function makeDependencies(token, nodeId, graph) {
             "id": "ed" + nodeId,
             "source": "nf" + headId,
             "target": "nf" + nodeId,
-            "length": (deprel.length / 3) + "em",
-            "label": deprel,
+            "length": (deprelLabel.length / 3) + "em",
+            "label": deprelLabel,
             "ctrl": [55, 55, 55, 55]
         }
         var coef = (head - nodeId);
@@ -238,10 +239,15 @@ function makeDependencies(token, nodeId, graph) {
         if (Math.abs(coef) != 1) {coef *= 0.7};
         edgeDep.ctrl = edgeDep.ctrl.map(function(el){ return el*coef; });
         // if it's not valid, mark it as an error (see cy-style.js)
-        if(validDep) {
+        if(validDep && deprel != "" && deprel != undefined) {
           graph.push({"data": edgeDep, "classes": "dependency"});
+          console.log("makeDependencies(): valid @" + deprel);
+        } else if (deprel == "" || deprel == undefined) {
+          graph.push({"data": edgeDep, "classes": "dependency, incomplete"});
+          console.log("makeDependencies(): incomplete @" + deprel);
         }else{
-          graph.push({"data": edgeDep, "classes": "dependency-error"});
+          graph.push({"data": edgeDep, "classes": "dependency, error"});
+          console.log("makeDependencies(): error @" + deprel);
         }
         
     };
