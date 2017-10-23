@@ -1,6 +1,11 @@
 # ud-annotatrix
 
-The online interface is currently avaliable on [GitHub pages](https://maryszmary.github.io/ud-annotatrix/standalone/annotator.html). To use it offline, clone the repository to your local machine and open the file `visualise.html` in your browser.
+The online interface is currently available from several places:
+
+* [Masha's GitHub pages](https://maryszmary.github.io/ud-annotatrix/standalone/annotator.html). 
+* [Fran's GitHub pages](https://ftyers.github.io/ud-annotatrix/). 
+
+To use it offline, clone the repository to your local machine and open the file `index.html` in your browser.
 
 ## About
 
