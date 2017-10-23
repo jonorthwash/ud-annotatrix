@@ -1,5 +1,28 @@
 var conllu = require("conllu");
 
+var conlluwithouttabs = `#sent_id = chapID01:paragID1:sentID1 
+# text = Кечаень сыргозтизь налкставтыця карвот . 
+# text[eng] = Kechai was awoken by annoying flies. 
+1 Кечаень Кечай N N Sem/Ant_Mal|Prop|SP|Gen|Indef 2 obj _ Кечаень 
+2 сыргозтизь сыргозтемс V V TV|Ind|Prt1|ScPl3|OcSg3 0 root _ сыргозтизь 
+3 налкставтыця налкставтомс PRC Prc V|TV|PrcPrsL|Sg|Nom|Indef 4 amod налкставтыця 
+4 карвот карво N N Sem/Ani|N|Pl|Nom|Indef 2 nsubj _ карвот 
+5 . . CLB CLB CLB 2 punct _ .`
+
+var conlluwithtabs = `#sent_id = chapID01:paragID1:sentID1
+# text = Кечаень сыргозтизь налкставтыця карвот .
+# text[eng] = Kechai was awoken by annoying flies.
+1	Кечаень	Кечай	N	N	Sem/Ant_Mal|Prop|SP|Gen|Indef	2	obj	_	Кечаень
+2	сыргозтизь	сыргозтемс	V	V	TV|Ind|Prt1|ScPl3|OcSg3	0	root	_	сыргозтизь
+3	налкставтыця	налкставтомс	PRC	Prc	V|TV|PrcPrsL|Sg|Nom|Indef	4	amod	налкставтыця
+4	карвот	карво	N	N	Sem/Ani|N|Pl|Nom|Indef	2	nsubj	_	карвот
+5	.	.	CLB	CLB	CLB	2	punct	_	.`
+
+QUnit.test("conllu no tabs", function( assert ) {
+  assert.ok(cleanConllu(conlluwithouttabs) == conlluwithtabs, "Passed!" );
+});
+
+
 
 var cg3ambiguous = `# text = He boued e tebr Mona er gegin.
 # text[eng] = Mona eats her food here in the kitchen.
