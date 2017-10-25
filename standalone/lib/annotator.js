@@ -365,6 +365,10 @@ function drawTree() {
 
     if (FORMAT == "CoNLL-U" || (FORMAT == "CG3" && !AMBIGUOUS) || FORMAT == "SD") {
         var newContent = cleanConllu(content);
+        // If there are >1 CoNLL-U format sentences is in the input, treat them as such
+        if(newContent.match(/\n\n/)) {
+            conlluMultiInput(newContent);
+        }
         if(newContent != content) {
             content = newContent;
             $("#indata").val(content);
@@ -408,13 +412,13 @@ function cleanConllu(content) {
         spaceToTab = true;
     }
     // remove blank lines
-    var lines = content.split("\n");
+    var lines = content.trim().split("\n");
     var newContent = "";
     for(var i = 0; i < lines.length; i++) {
         var newLine = lines[i].trim();
-        if(newLine.length == 0) {
-            continue;
-        }
+//        if(newLine.length == 0) {
+//            continue;
+//        }
         // If there are no spaces and the line isn't a comment, then replace more than one space with a tab
         if(newLine[0] != "#" && spaceToTab) {
             newLine = newLine.replace(/  */g, "\t");
