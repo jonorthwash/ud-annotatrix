@@ -136,10 +136,18 @@ function findSupTokId(subtokens) {
 
 function toSubscript(str) {
     var substr = "";
-    $.each(str, function(n, char) {
-        var newChar = (LOW_DIGITS[char]) ? LOW_DIGITS[char] : char;
+//  This causes some error about jquery and "in" and length stuff.
+//    $.each(str, function(n, char) {
+//        var newChar = (LOW_DIGITS[char]) ? LOW_DIGITS[char] : char;
+//        substr += newChar;
+//    })
+    for(var i = 0; i < str.length; i++) {
+        var newChar = str[i];
+        if(newChar in LOW_DIGITS) {
+            newChar = LOW_DIGITS[newChar];
+        }
         substr += newChar;
-    })
+    }
     return substr;
 }
 
