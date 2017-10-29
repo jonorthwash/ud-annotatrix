@@ -41,7 +41,8 @@ function plainSent2Conllu(text) {
     // TODO: automatical recognition of punctuation's POS
     for(var i = 0; i < sent.tokens.length; i++) {
 //       console.log(sent.tokens[i])
-       if(sent.tokens[i]['form'].match(/\W/)) {
+       if(sent.tokens[i]['form'].match(/^[!.)(»«:;?¡,"\-><]+$/)) {
+//       if(sent.tokens[i]['form'].match(/\W/)) {
          sent.tokens[i]['upostag'] = 'PUNCT';
        }
     }
