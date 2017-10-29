@@ -29,3 +29,8 @@ function is_leaf(s) {
     return false;    
 
 }
+
+function is_cyclic(s) {
+
+   return false;
+}
