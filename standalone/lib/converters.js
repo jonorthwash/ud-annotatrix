@@ -45,6 +45,12 @@ function plainSent2Conllu(text) {
 //       if(sent.tokens[i]['form'].match(/\W/)) {
          sent.tokens[i]['upostag'] = 'PUNCT';
        }
+       if(sent.tokens[i]['form'].match(/^[0-9]+([,.][0-9]+)*$/)) {
+         sent.tokens[i]['upostag'] = 'NUM';
+       }
+       if(sent.tokens[i]['form'].match(/^[$%€£¥Æ§©]+$/)) {
+         sent.tokens[i]['upostag'] = 'SYM';
+       }
     }
 
     return sent.serial;
