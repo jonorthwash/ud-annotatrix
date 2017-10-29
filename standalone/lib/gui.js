@@ -211,8 +211,7 @@ function selectSup() {
 function keyUpClassifier(key) {
 
     // looking if there are selected arcs
-    var selArcs = cy.$("edge.dependency.selected");
-    var selArcs = cy.$("edge.dependency-error.selected");
+    var selArcs = cy.$("edge.dependency.selected") + cy.$("edge.dependency-error.selected");
     var destNodes = cy.$("node[state='arc-dest']");
     // looking if there is a POS label to be modified
     var posInp = $(".activated.np");
@@ -228,7 +227,6 @@ function keyUpClassifier(key) {
     var toMerge = cy.$(".merge");
     // looking if some node waits to be merged to supertoken
     var toSup = cy.$(".supertoken");
-
 
     if (selArcs.length) {
         if (key.which == DEL_KEY || key.which == BACKSPACE) {
