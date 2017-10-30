@@ -1,12 +1,15 @@
 "use strict"
 
+// This code is for parsing bracketted notation like:
+// [root [nsubj I] have [obj [amod [advmod too] many] commitments] [advmod right now] [punct .]]
+
 function Node(name, s, index, children) {
     this.name = name;
     this.s = s;
     this.index = index;
     this.children = children;
 
-    this.maxindex function() { 
+    this.maxindex = function() { 
         var max = 0;
         for(var i = 0; i < this.children.length; i++) { 
             if(this.children[i] > max && this.children[i] > this.index) {
@@ -15,14 +18,14 @@ function Node(name, s, index, children) {
         }
     };
 
-    this.paternity function() {
+    this.paternity = function() {
         for(var i = 0; i < this.children.length; i++) { 
             this.children[i].parent = this;    
             this.paternity();
         }
     };
 
-    this.parent_index function() { 
+    this.parent_index = function() { 
         if(this.parent.index != undefined) {
             return this.parent.index;
         } 
@@ -44,13 +47,13 @@ function match(s, up, down) {
         }
         i += 1
     }
-    return s.slide(0,i-1);
+    return s.slice(0,i-1);
 }
 
 function _max(l) {
     var localmax = 0;
     for(var i = 0; i < l.length; i++) { 
-        if(l[i] > max) {
+        if(l[i] > localmax) {
             localmax = l[i];
         }
     }
@@ -82,25 +85,25 @@ function node(s, j) {
 
     while(i < s.length) {
         if(l[i] == '[') {
-            m = match(l.slice(i+1,l.length), '[', ']');
-            indices = [j]; 
+            var m = match(l.slice(i+1,l.length), '[', ']');
+            var indices = [j]; 
             for(var k = 0; k < children.length; k++) { 
                 indices.push(children[k].maxindex());
             }
-            n = node(m, _max(indices)); 
-            children.append(n);
-            i += len(m) + 2;
+            var n = node(m, _max(indices)); 
+            children.push(n);
+            i += m.length + 2;
             if(w == undefined) {
                 j = _max([j, n.maxindex()])
             }
         } else if(l[i] != ' ' && (l[i-1] == ' ' || i == 0)) {
-            var ii = l.find('[', i);
+            var ii = l.indexOf('[', i);
             if(ii < 0) { 
                 w = l.slice(i, l.length);
             } else { 
                 w = l.slice(i, l.indexOf(' '));
             }
-            index = j;
+            var index = j;
             i += w.length;
             j += 1 + _count(' ', w.trim());
         } else { 
@@ -112,6 +115,7 @@ function node(s, j) {
 }
 
 function Brackets2conllu(text) {
+    console.log('Brackets2conllu() ' + text);
     /* Takes a string in bracket notation, returns a string in conllu. */
     var sent = new conllu.Sentence();
     var inputLines = text.split("\n");
@@ -147,4 +151,3 @@ function Brackets2conllu(text) {
     sent.tokens = tokens;
     return sent.serial;        
 }
-
