@@ -51,6 +51,8 @@ function match(s, up, down) {
 }
 
 function _max(l) {
+    // Return the largest number in a list otherwise return 0
+    // @l = the list to search in
     var localmax = 0;
     for(var i = 0; i < l.length; i++) { 
         if(l[i] > localmax) {
@@ -61,6 +63,9 @@ function _max(l) {
 }
  
 function _count(needle, haystack) {
+   // Return the number of times you see needle in the haystack
+   // @needle = string to search for
+   // @haystack = string to search in
    var count = 0;
    for(var i = 0; i < haystack.length; i++) {
        if(haystack[i] == needle) { 
@@ -71,19 +76,25 @@ function _count(needle, haystack) {
 }
 
 function node(s, j) {
+    // Parse a bracketted expression 
+    // @s = the expression
+    // @j = the index we are at
+    console.log('node() ' + s + ' || ' + j);
     if(s[0] == '[' && s[-1] == ']') {
         s = s.slice(1, -1);
     }
 
-    var first = s.indexOf(' ');
-    var name = s.slice(0, first);
-    var l = s.slice(first, s.length);
+    var first = s.indexOf(' '); // first space delimiter
+    var name = s.slice(0, first); // dependency relation name
+    var l = s.slice(first, s.length); // remainder
+
+    console.log('@name = ' + name + ' || remain:' +  l);
     
     var i = 0;
     var w = undefined;
     var children = [];
 
-    while(i < s.length) {
+    while(i < l.length) {
         if(l[i] == '[') {
             var m = match(l.slice(i+1,l.length), '[', ']');
             var indices = [j]; 
@@ -110,7 +121,9 @@ function node(s, j) {
             i = i + 1;
         } 
     }
-    return new Node(name, w, children, j);
+    var newNode = new Node(name, w, j, children);
+    console.log('newNode: ' + newNode.index + ' ' + newNode.name + ' ' +  newNode.s);
+    return newNode;
 
 }
 
