@@ -10,12 +10,13 @@ function Node(name, s, index, children) {
     this.children = children;
 
     this.maxindex = function() { 
-        var max = 0;
+        var localmax = 0;
         for(var i = 0; i < this.children.length; i++) { 
-            if(this.children[i] > max && this.children[i] > this.index) {
-                max = this.children[i];
+            if(this.children[i] > localmax && this.children[i] > this.index) {
+                localmax = this.children[i];
             } 
         }
+        return localmax;
     };
 
     this.paternity = function() {
@@ -37,7 +38,6 @@ function Node(name, s, index, children) {
 function match(s, up, down) {
     var depth = 0;
     var i = 0;
-
     while(i < s.length && depth >= 0) {
         if(s[i] == up) {
             depth += 1;
@@ -45,8 +45,10 @@ function match(s, up, down) {
         if(s[i] == down) {
             depth -= 1;
         }
-        i += 1
+        i += 1;
     }
+    var res = s.slice(0, i-1);
+    console.log('match() ' + i + ' | ' + res);
     return s.slice(0,i-1);
 }
 
@@ -95,12 +97,14 @@ function node(s, j) {
     var children = [];
 
     while(i < l.length) {
+        console.log('! ' + l.length + ' !! l[' + i + '] = ' + l[i]);
         if(l[i] == '[') {
             var m = match(l.slice(i+1,l.length), '[', ']');
             var indices = [j]; 
             for(var k = 0; k < children.length; k++) { 
                 indices.push(children[k].maxindex());
             }
+            console.log('!! [ ' + m + ' || ' + indices);
             var n = node(m, _max(indices)); 
             children.push(n);
             i += m.length + 2;
@@ -109,15 +113,17 @@ function node(s, j) {
             }
         } else if(l[i] != ' ' && (l[i-1] == ' ' || i == 0)) {
             var ii = l.indexOf('[', i);
+            console.log('!! ] ' + ii);
             if(ii < 0) { 
                 w = l.slice(i, l.length);
             } else { 
-                w = l.slice(i, l.indexOf(' '));
+                w = l.slice(i, l.indexOf(' ', i));
             }
             var index = j;
             i += w.length;
             j += 1 + _count(' ', w.trim());
         } else { 
+            console.log('!! * ' + i + ' ' + l[i]);
             i = i + 1;
         } 
     }
