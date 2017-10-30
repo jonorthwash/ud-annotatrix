@@ -29,9 +29,11 @@ function Node(name, s, index, children) {
     };
 
     this.parent_index = function() { 
-        if(this.parent.index != undefined) {
-            return this.parent.index;
-        } 
+        if(this.parent != undefined) { 
+            if(this.parent.index != undefined) {
+                return this.parent.index;
+            } 
+        }
         return 0;
     };
 
@@ -135,9 +137,30 @@ function node(s, j) {
 
 }
 
+function fillTokens(node, tokens) {
+
+    var newToken = new conllu.Token();
+    newToken["form"] = node.s;
+    // TODO: automatical recognition of punctuation's POS
+    if(newToken["form"].match(/^[!.)(»«:;?¡,"\-><]+$/)) {
+      newToken["upostag"] = "PUNCT";
+    }
+    newToken["id"] = node.index;
+    newToken["head"] = node.parent_index();
+    newToken["deprel"] = node.name;
+    //console.log('@@@' + newToken["form"] + " " + newToken["id"] + " " + newToken["head"] + " " + newToken["deprel"]);
+    tokens.push(newToken); 
+
+    for(var i = 0; i < node.children.length; i++) {
+        tokens = fillTokens(node.children[i], tokens);
+    }
+ 
+    return tokens;
+}
+
 function Brackets2conllu(text) {
-    console.log('Brackets2conllu() ' + text);
     /* Takes a string in bracket notation, returns a string in conllu. */
+    console.log('Brackets2conllu() ' + text);
     var sent = new conllu.Sentence();
     var inputLines = text.split("\n");
     var comments = "";
@@ -151,22 +174,7 @@ function Brackets2conllu(text) {
 
     var root = node(inputLines[0], 0); 
     root.paternity();
-
-    for(var i = 0; i < root.children.length; i++) {
-      console.log(root.children[i].index + ' ' + root.children[i].s + ' ' + root.children[i].name + ' ' + root.children[i].parent_index());
-      var newToken = new conllu.Token();
-      tokId = i+1;
-      newToken["form"] = root.children[i].s;
-      // TODO: automatical recognition of punctuation's POS
-      if(newToken["form"].match(/^[!.)(»«:;?¡,"\-><]+$/)) {
-        newToken["upostag"] = "PUNCT";
-      }
-      newToken["id"] = root.children[i].index;
-      newToken["head"] = root.children[i].parent_index();
-      newToken["deprel"] = root.children[i].name;
-      //console.log('@@@' + newToken["form"] + " " + newToken["id"] + " " + newToken["head"] + " " + newToken["deprel"]);
-      tokens.push(newToken); 
-    }
+    tokens = fillTokens(root, tokens); 
 
     console.log('||| ' + tokens);
 
