@@ -11,12 +11,18 @@ function Node(name, s, index, children) {
     this.children = children;
 
     this.maxindex = function() { 
+        // Returns the maximum index for the node
+        // mx = max([c.index for c in self.children] + [self.index])
         var localmax = 0;
+        if(parseInt(this.index) > localmax) {
+            localmax = parseInt(this.index);
+        }
         for(var i = 0; i < this.children.length; i++) { 
-            if(this.children[i] > localmax && this.children[i] > this.index) {
-                localmax = this.children[i];
+            if(parseInt(this.children[i].index) > localmax) {
+                localmax = parseInt(this.children[i].index);
             } 
         }
+        //console.log('maxindex: ' + localmax + ' /// this.index: ' + this.index);
         return localmax;
     };
 
@@ -52,7 +58,7 @@ function match(s, up, down) {
         i += 1;
     }
     var res = s.slice(0, i-1);
-    console.log('match() ' + i + ' | ' + res);
+    //console.log('match() ' + i + ' | ' + res);
     return s.slice(0,i-1);
 }
 
@@ -65,6 +71,7 @@ function _max(l) {
             localmax = l[i];
         }
     }
+    //console.log("_max " + l + " = " + localmax);
     return localmax;
 }
  
@@ -78,6 +85,7 @@ function _count(needle, haystack) {
            count += 1;
        }
    }
+   //console.log('_count "'+needle+'" in "' + haystack + '" = ' + count);
    return count;
 }
 
@@ -85,7 +93,7 @@ function node(s, j) {
     // Parse a bracketted expression 
     // @s = the expression
     // @j = the index we are at
-    console.log('node() ' + s + ' || ' + j);
+    //console.log('node() ' + s + ' || ' + j);
     if(s[0] == '[' && s[-1] == ']') {
         s = s.slice(1, -1);
     }
@@ -94,45 +102,45 @@ function node(s, j) {
     var name = s.slice(0, first); // dependency relation name
     var l = s.slice(first, s.length); // remainder
 
-    console.log('@name = ' + name + ' || remain:' +  l);
-    
-    var i = 0;
-    var w = undefined;
-    var children = [];
+    var i = 0; 
+    var j; // token id
+    var w; // the current word
+    var children = []; // current list of children
 
+    // While there is input left
     while(i < l.length) {
-        console.log('! ' + l.length + ' !! l[' + i + '] = ' + l[i]);
-        if(l[i] == '[') {
-            var m = match(l.slice(i+1,l.length), '[', ']');
-            var indices = [j]; 
+        //console.log('@j: ' + j);
+        // We're starting a new expression
+        if(l[i] == '[') { 
+            var m = match(l.slice(i+1,l.length), '[', ']'); 
+            var indices = []; 
+            indices.push(j);
             for(var k = 0; k < children.length; k++) { 
                 indices.push(children[k].maxindex());
             }
-            console.log('!! [ ' + m + ' || ' + indices);
+            //console.log('>> [ ' + m + ' || ' + indices);
             var n = node(m, _max(indices)); 
             children.push(n);
             i += m.length + 2;
-            if(w == undefined) {
+            if(!w) {
                 j = _max([j, n.maxindex()])
             }
         } else if(l[i] != ' ' && (l[i-1] == ' ' || i == 0)) {
             var ii = l.indexOf('[', i);
-            console.log('!! ] ' + ii);
+            //console.log('<< ] ' + ii);
             if(ii < 0) { 
                 w = l.slice(i, l.length);
             } else { 
                 w = l.slice(i, l.indexOf(' ', i));
             }
-            var index = j;
             i += w.length;
-            j += 1 + _count(' ', w.trim());
+            j = j + 1 + _count(' ', w.trim());
         } else { 
-            console.log('!! * ' + i + ' ' + l[i]);
             i = i + 1;
         } 
     }
     var newNode = new Node(name, w, j, children);
-    console.log('newNode: ' + newNode.index + ' ' + newNode.name + ' ' +  newNode.s);
+    //console.log('%%% newNode: (' + j +') ' + newNode.index + ' ' + newNode.name + ' ' +  newNode.s);
     return newNode;
 
 }
@@ -147,7 +155,7 @@ function fillTokens(node, tokens) {
     newToken["id"] = node.index;
     newToken["head"] = node.parent_index();
     newToken["deprel"] = node.name;
-    console.log('@@@' + newToken["form"] + " " + newToken["id"] + " " + newToken["head"] + " " + newToken["deprel"]);
+    //console.log('@@@ ' + newToken["form"] + " " + newToken["id"] + " " + newToken["head"] + " " + newToken["deprel"]);
     tokens.push(newToken); 
 
     for(var i = 0; i < node.children.length; i++) {
@@ -159,7 +167,7 @@ function fillTokens(node, tokens) {
 
 function Brackets2conllu(text) {
     /* Takes a string in bracket notation, returns a string in conllu. */
-    console.log('Brackets2conllu() ' + text);
+    //console.log('Brackets2conllu() ' + text);
     var sent = new conllu.Sentence();
     var inputLines = text.split("\n");
     var comments = "";
@@ -170,7 +178,7 @@ function Brackets2conllu(text) {
     root.paternity();
     tokens = fillTokens(root, tokens); 
 
-    console.log('||| ' + tokens);
+    //console.log('||| ' + tokens);
 
     sent.comments = comments;
     sent.tokens = tokens;
