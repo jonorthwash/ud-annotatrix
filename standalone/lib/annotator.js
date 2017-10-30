@@ -29,6 +29,7 @@ function main() {
         // native project code
         ROOT + 'CG2conllu.js',
         ROOT + 'SD2conllu.js',
+        ROOT + 'Brackets2conllu.js',
         ROOT + 'converters.js',
         ROOT + 'gui.js',
         ROOT + 'visualiser.js',
@@ -363,6 +364,11 @@ function drawTree() {
         content = SD2conllu(content);
     }
 
+    if (FORMAT == "Brackets") {
+        content = Brackets2conllu(content);
+    }
+
+
     if (FORMAT == "CoNLL-U" || (FORMAT == "CG3" && !AMBIGUOUS) || FORMAT == "SD") {
         var newContent = cleanConllu(content);
         // If there are >1 CoNLL-U format sentences is in the input, treat them as such
@@ -488,6 +494,9 @@ function detectFormat(content) {
 	// UNSAFE: SDParse should include at least one line ending in ) followed by a newline
 	// UNSAFE: The last character in the string should be a )
 		FORMAT = "SD";
+        // UNSAFE: The first character is an open square bracket
+        } else if (firstWord.match(/\[/)) {
+                FORMAT = "Brackets";
 	// TODO: better plaintext recognition
 	} else if (!trimmedContent.includes("\t") && trimmedContent[trimmedContent.length-1] != ")") {
 	// SAFE: Plain text and SDParse should not include tabs. CG3/CoNLL-U should include tabs
