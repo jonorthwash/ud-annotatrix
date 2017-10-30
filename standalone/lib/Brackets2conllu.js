@@ -138,7 +138,6 @@ function node(s, j) {
 }
 
 function fillTokens(node, tokens) {
-
     var newToken = new conllu.Token();
     newToken["form"] = node.s;
     // TODO: automatical recognition of punctuation's POS
@@ -148,7 +147,7 @@ function fillTokens(node, tokens) {
     newToken["id"] = node.index;
     newToken["head"] = node.parent_index();
     newToken["deprel"] = node.name;
-    //console.log('@@@' + newToken["form"] + " " + newToken["id"] + " " + newToken["head"] + " " + newToken["deprel"]);
+    console.log('@@@' + newToken["form"] + " " + newToken["id"] + " " + newToken["head"] + " " + newToken["deprel"]);
     tokens.push(newToken); 
 
     for(var i = 0; i < node.children.length; i++) {
@@ -165,14 +164,9 @@ function Brackets2conllu(text) {
     var inputLines = text.split("\n");
     var comments = "";
 
-    var tokId = 1;
     var tokens = []; // list of tokens
-    var tokenToId = {}; // convert from a token to index
-    var tokenCounter = {}; // keep a count of duplicate tokens
-    var heads = []; // e.g. heads[1] = 3
-    var deprels = []; // e.g. deprels[1] = nsubj
-
     var root = node(inputLines[0], 0); 
+
     root.paternity();
     tokens = fillTokens(root, tokens); 
 
