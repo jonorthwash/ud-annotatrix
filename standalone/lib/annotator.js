@@ -369,7 +369,7 @@ function drawTree() {
     }
 
 
-    if (FORMAT == "CoNLL-U" || (FORMAT == "CG3" && !AMBIGUOUS) || FORMAT == "SD") {
+    if (FORMAT == "CoNLL-U" || (FORMAT == "CG3" && !AMBIGUOUS) || FORMAT == "SD" || FORMAT == "Brackets") {
         var newContent = cleanConllu(content);
         // If there are >1 CoNLL-U format sentences is in the input, treat them as such
         if(newContent.match(/\n\n/)) {

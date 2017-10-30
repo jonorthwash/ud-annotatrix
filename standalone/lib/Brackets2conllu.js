@@ -2,6 +2,7 @@
 
 // This code is for parsing bracketted notation like:
 // [root [nsubj I] have [obj [amod [advmod too] many] commitments] [advmod right now] [punct .]]
+// Thanks to Nick Howell for help with a Python version.
 
 function Node(name, s, index, children) {
     this.name = name;
@@ -22,8 +23,9 @@ function Node(name, s, index, children) {
     this.paternity = function() {
         for(var i = 0; i < this.children.length; i++) { 
             this.children[i].parent = this;    
-            this.paternity();
+            this.children[i].paternity();
         }
+        return this;
     };
 
     this.parent_index = function() { 
@@ -147,24 +149,26 @@ function Brackets2conllu(text) {
     var heads = []; // e.g. heads[1] = 3
     var deprels = []; // e.g. deprels[1] = nsubj
 
-    var tree = node(inputLines[0], 0); 
+    var root = node(inputLines[0], 0); 
+    root.paternity();
 
-    console.log(tree.children[0]);
-
-    for(var i = 0; i < textTokens.length; i++) { 
+    for(var i = 0; i < root.children.length; i++) {
+      console.log(root.children[i].index + ' ' + root.children[i].s + ' ' + root.children[i].name + ' ' + root.children[i].parent_index());
       var newToken = new conllu.Token();
       tokId = i+1;
-      newToken["form"] = textTokens[i];
+      newToken["form"] = root.children[i].s;
       // TODO: automatical recognition of punctuation's POS
-      if(textTokens[i].match(/\W/)) {
+      if(newToken["form"].match(/^[!.)(»«:;?¡,"\-><]+$/)) {
         newToken["upostag"] = "PUNCT";
       }
-      newToken["id"] = tokId;
-      newToken["head"] = heads[tokId];
-      newToken["deprel"] = deprels[tokId];
+      newToken["id"] = root.children[i].index;
+      newToken["head"] = root.children[i].parent_index();
+      newToken["deprel"] = root.children[i].name;
       //console.log('@@@' + newToken["form"] + " " + newToken["id"] + " " + newToken["head"] + " " + newToken["deprel"]);
       tokens.push(newToken); 
     }
+
+    console.log('||| ' + tokens);
 
     sent.comments = comments;
     sent.tokens = tokens;
