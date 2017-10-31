@@ -600,16 +600,17 @@ function tableEditCell(loc) {
     
     for (var r = 1, n = table.rows.length; r < n; r++) {
         for (var c = 0, m = table.rows[r].cells.length; c < m; c++) {
-//            console.log("@" + table.rows[r].cells[c].innerHTML);
+            var thisCell = table.rows[r].cells[c].childNodes[0].innerHTML;
+//            console.log("@" + table.rows[r].cells[c].innerHTML + " // " + thisCell);
             if(c > 0) {
-              conllu = conllu + "\t" + table.rows[r].cells[c].innerHTML;
+              conllu = conllu + "\t" + thisCell;
             } else {
-              conllu = conllu + table.rows[r].cells[c].innerHTML;
+              conllu = conllu + thisCell;
             }
         }
         conllu = conllu + "\n";
     }
-
+    console.log("!@", conllu);
     $("#indata").val(conllu);
  
     // Draw tree 
@@ -630,13 +631,13 @@ function toggleTableView() {
         }
         console.log(line);
         if(line[0] == '#') { 
-            $("#indataTable tbody").append('<tr style="display:none" id="table_"' + row + '"><td colspan="10">' + line + '</td></tr>'); 
+            $("#indataTable tbody").append('<tr style="display:none" id="table_"' + row + '"><td colspan="10"><span>' + line + '</span></td></tr>'); 
         } else { 
             var lineRow = "<tr>";
             var cells = line.split("\t");
             for(var col = 0; col < 10; col++) {
                 var loc = "table_" + row + ":" + col;
-                lineRow = lineRow + '<td data-value="' + cells[col] + '" onKeyUp="tableEditCell(\''+loc+'\');" id="' + loc + '" contenteditable>' + cells[col] + '</td>"';
+                lineRow = lineRow + '<td><span data-value="' + cells[col] + '" onKeyUp="tableEditCell(\''+loc+'\');" id="' + loc + '" contenteditable>' + cells[col] + '</span></td>"';
             }
             lineRow += "</tr>";
             $("#indataTable tbody").append(lineRow); 
