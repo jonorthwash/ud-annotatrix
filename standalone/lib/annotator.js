@@ -320,6 +320,8 @@ function getTreebank() {
 
 
 function drawTree() {
+    // This function is called whenever the input area changes
+    //
     try {
         cy.destroy();
     } catch (err) {};
@@ -331,7 +333,7 @@ function drawTree() {
     FORMAT = detectFormat(content);
 
     $("#detected").html("Detected: " + FORMAT + " format");
-    console.log(FORMAT);
+    console.log('drawTree() ' + FORMAT);
     if (FORMAT == "CoNLL-U") {
         $("#viewOther").hide();
         $("#viewCG").removeClass("active");
@@ -583,17 +585,72 @@ function storageAvailable(type) {
     }
 }
 
+function tableEditCell(loc) { 
+    // Yes I'm sorry I don't know Jquery, I'm sure this could be done much better.
+    loc = loc.trim();
+    var table = document.getElementById("indataTable");
+    var cell = document.getElementById(loc).innerHTML;
+    console.log("tableEditCell() " + loc + " " + cell);
+
+    // Update the table with the value from the edit
+
+    // Update the CoNLL-U and set the value in the textbox 
+
+    var conllu = "";
+    
+    for (var r = 1, n = table.rows.length; r < n; r++) {
+        for (var c = 0, m = table.rows[r].cells.length; c < m; c++) {
+//            console.log("@" + table.rows[r].cells[c].innerHTML);
+            if(c > 0) {
+              conllu = conllu + "\t" + table.rows[r].cells[c].innerHTML;
+            } else {
+              conllu = conllu + table.rows[r].cells[c].innerHTML;
+            }
+        }
+        conllu = conllu + "\n";
+    }
+
+    $("#indata").val(conllu);
+ 
+    // Draw tree 
+
+    drawTree();
+}
+
 function toggleTableView() {
     $("#indata").toggle();
     $("#indataTable").toggle();
     $("#tableViewButton").toggleClass('fa-code', 'fa-table');
-    $("#indataTable tbody").empty().append(
-        $("#indata").val().split("\n")
-            .filter(line => line.length && !line.startsWith("#"))
-            .map(rowText => $("<tr>").append(
-                rowText.split("\t").map(cellText => $("<td>").text(cellText))
-            ))
-    );
+    $("#indataTable tbody").empty();
+    var conlluLines = $("#indata").val().split("\n");
+    var row = 0;
+    for(let line of conlluLines) {
+        if(line.trim() == "") {
+            continue;
+        }
+        console.log(line);
+        if(line[0] == '#') { 
+            $("#indataTable tbody").append('<tr style="display:none" id="table_"' + row + '"><td colspan="10">' + line + '</td></tr>'); 
+        } else { 
+            var lineRow = "<tr>";
+            var cells = line.split("\t");
+            for(var col = 0; col < 10; col++) {
+                var loc = "table_" + row + ":" + col;
+                lineRow = lineRow + '<td data-value="' + cells[col] + '" onKeyUp="tableEditCell(\''+loc+'\');" id="' + loc + '" contenteditable>' + cells[col] + '</td>"';
+            }
+            lineRow += "</tr>";
+            $("#indataTable tbody").append(lineRow); 
+        }
+        row += 1;
+    }
+
+//    $("#indataTable tbody").append(
+//        $("#indata").val().split("\n")
+//            .filter(line => line.length && !line.startsWith("#"))
+//            .map(rowText => $("<tr>").append(
+//                rowText.split("\t").map(cellText => $("<td>").text(cellText))
+//            ))
+//    );
 }
 
 
