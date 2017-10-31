@@ -96,26 +96,10 @@ function writeArc(sourceNode, destNode) {
     // IF the target POS tag is SCONJ set the deprel to @mark [86%]
     // IF the target POS tag is DET set the deprel to @det [83%]
     // TODO: Put this somewhere better
-	if(thisToken['upostag'] in POS2RELmappings) {
-		sentAndPrev = changeConlluAttr(sent, indices, "deprel", POS2RELmappings[thisToken['upostag']])
-	}
-	/**
-    if(thisToken['upostag'] == 'PUNCT') {
-      sentAndPrev = changeConlluAttr(sent, indices, "deprel", "punct");
-    }else if(thisToken['upostag'] == 'DET') {
-      sentAndPrev = changeConlluAttr(sent, indices, "deprel", "det");
-    }else if(thisToken['upostag'] == 'CCONJ') {
-      sentAndPrev = changeConlluAttr(sent, indices, "deprel", "cc");
-    }else if(thisToken['upostag'] == 'SCONJ') {
-      sentAndPrev = changeConlluAttr(sent, indices, "deprel", "mark");
+    if(thisToken['upostag'] in POS2RELmappings) {
+        sentAndPrev = changeConlluAttr(sent, indices, "deprel", POS2RELmappings[thisToken['upostag']])
     }
-	**/
-     
-    // AUX can be @cop also
-//    }else if(thisToken['upostag'] == 'AUX') {
-//      sentAndPrev = changeConlluAttr(sent, indices, "deprel", "aux");
 
-//    var sentAndPrev = changeConlluAttr(sent, indices, "head", sourceIndex);
     sent = sentAndPrev[0];
     var pervVal = sentAndPrev[1];
 
@@ -211,7 +195,7 @@ function selectSup() {
 function keyUpClassifier(key) {
 
     // looking if there are selected arcs
-    var selArcs = cy.$("edge.dependency.selected") + cy.$("edge.dependency-error.selected");
+    var selArcs = cy.$("edge.dependency.selected");  // + cy.$("edge.dependency.error");
     var destNodes = cy.$("node[state='arc-dest']");
     // looking if there is a POS label to be modified
     var posInp = $(".activated.np");

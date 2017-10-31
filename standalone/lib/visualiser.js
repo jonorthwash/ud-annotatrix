@@ -261,9 +261,9 @@ function makeDependencies(token, nodeId, graph) {
         
     };
 
-    if(is_cyclic(TREE_)) {
-        console.log('[3] writeDeprel is_cyclic=true');
-    }
+//    if(is_cyclic(TREE_)) {
+//        console.log('[3] writeDeprel is_cyclic=true');
+//    }
 
     return graph;
 }

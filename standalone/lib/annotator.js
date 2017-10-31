@@ -586,6 +586,7 @@ function storageAvailable(type) {
 function toggleTableView() {
     $("#indata").toggle();
     $("#indataTable").toggle();
+    $("#tableViewButton").toggleClass('fa-code', 'fa-table');
     $("#indataTable tbody").empty().append(
         $("#indata").val().split("\n")
             .filter(line => line.length && !line.startsWith("#"))
