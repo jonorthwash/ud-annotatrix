@@ -180,21 +180,36 @@
 					</a>
 				</div>
 
-				<textarea id="indata" style="width: 100%; font-size: 85%" rows="20"></textarea>
-				<table id="indataTable" style="width: 100%; font-size: 85%; visibility:hidden;">
-<thead><th><td>ID</td><td>FORM</td><td>LEMMA</td><td>UPOSTAG</td><td>XPOSTAG</td><td>FEATS</td><td>HEAD</td><td>DEPREL</td><td>DEPS</td><td>MISC</td></th></thead><tbody></tbody></table>
+				<textarea id="indata" class="w-100" style="font-size: 85%" rows="20"></textarea>
+				<table id="indataTable" class="table table-bordered table-sm table-hover w-100" style="display: none;">
+					<thead class="thead-default">
+						<tr>
+							<th>ID</th>
+							<th>FORM</th>
+							<th>LEMMA</th>
+							<th>UPOSTAG</th>
+							<th>XPOSTAG</th>
+							<th>FEATS</th>
+							<th>HEAD</th>
+							<th>DEPREL</th>
+							<th>DEPS</th>
+							<th>MISC</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
 			</div>
 		</div>
 
 		<div class="controls">
 
         <div style="float:right">
-   
+
           <p>
               <input type="checkbox" id="RTL" name="RTL">
               <label for="RTL">Enable RTL</label>
               <input type="checkbox" id="vertical" name="RTL">
-              <label for="vertical">Enable vertical alignment</label>            
+              <label for="vertical">Enable vertical alignment</label>
           </p><p>
             <div id="treeLabels"/></p> <!-- This needs better positioning -->
         </div>

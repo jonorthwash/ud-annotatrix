@@ -584,10 +584,15 @@ function storageAvailable(type) {
 }
 
 function toggleTableView() {
-	console.log('toggleTableView()');
-	$("#indata").toggle('show');
-	$("#indataTable").toggle('show');
-        $("#mytable tbody").empty().append($("#indata").val().split("\n").map(rowText => $("<tr>").append(rowText.split("\t").map(cellText => $("<td>").text(cellText)))))
+	$("#indata").toggle();
+	$("#indataTable").toggle();
+    $("#indataTable tbody").empty().append(
+        $("#indata").val().split("\n")
+            .filter(line => line.length && !line.startsWith("#"))
+            .map(rowText => $("<tr>").append(
+                rowText.split("\t").map(cellText => $("<td>").text(cellText))
+            ))
+    );
 }
 
 
