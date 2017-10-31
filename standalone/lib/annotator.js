@@ -653,6 +653,20 @@ function toggleTableView() {
 //    );
 }
 
+function toggleTableColumn(col) {
+   var colTitle = {"ID":0,"FORM":1,"LEMMA":2,"UPOSTAG":3,"XPOSTAG":4,"FEATS":5,"HEAD":6,"DEPREL":7,"DEPS":8,"MISC":9};
+   var colId = colTitle[col];
+   var button = $("#tableCol_" + col).text();
+   console.log("toggleTableColumn() " + " " + col + " " + button);
+   $("#tableCol_" + col).empty();
+   if(button == "⚪") { 
+     $("#tableCol_" + col).append("⚫");
+     $("[id^=table_][id$=" + colId+"]").css("display","block");
+   } else { 
+     $("#tableCol_" + col).append("⚪");
+     $("[id^=table_][id$=" + colId+"]").css("display","none");
+   }
+}
 
 function toggleCodeWindow() {
     $("#codeVisibleButton").toggleClass('fa-chevron-down', 'fa-chevron-up');
