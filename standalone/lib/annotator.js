@@ -583,6 +583,14 @@ function storageAvailable(type) {
     }
 }
 
+function toggleTableView() {
+	console.log('toggleTableView()');
+	$("#indata").toggle('show');
+	$("#indataTable").toggle('show');
+        $("#mytable tbody").empty().append($("#indata").val().split("\n").map(rowText => $("<tr>").append(rowText.split("\t").map(cellText => $("<td>").text(cellText)))))
+}
+
+
 function toggleCodeWindow() {
 	$("#codeVisibleButton").toggleClass('fa-chevron-down', 'fa-chevron-up');
 	console.log('toggleCodeWindow()');

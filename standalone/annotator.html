@@ -175,9 +175,14 @@
 					<a class="btn btn-secondary" href="#" onClick="javascript: toggleCodeWindow();">
 						<i id="codeVisibleButton" class="fa fa-chevron-up" title="Show/hide"></i>
 					</a>
+					<a class="btn btn-secondary" href="#" onClick="javascript: toggleTableView();">
+						<i id="tableViewButton" class="fa fa-table" title="Table view"></i>
+					</a>
 				</div>
 
 				<textarea id="indata" style="width: 100%; font-size: 85%" rows="20"></textarea>
+				<table id="indataTable" style="width: 100%; font-size: 85%; visibility:hidden;">
+<thead><th><td>ID</td><td>FORM</td><td>LEMMA</td><td>UPOSTAG</td><td>XPOSTAG</td><td>FEATS</td><td>HEAD</td><td>DEPREL</td><td>DEPS</td><td>MISC</td></th></thead><tbody></tbody></table>
 			</div>
 		</div>
 
