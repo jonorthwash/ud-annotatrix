@@ -124,19 +124,6 @@ var CY_STYLE = [{
         "line-color": FANCY,
         "target-arrow-color": FANCY
     }
-}, {
-    "selector": "node.MultiwordToken",
-    "style": {
-        "background-color": ST_COLOR,
-        "text-background-color": NORMAL,
-        "text-background-opacity": 0.9,
-        "text-border-color": "#000",
-        "text-border-opacity": 0.9,
-        "text-border-width": "1px",
-        "text-background-shape": "roundrectangle",
-        "text-valign": "top",
-        "label": "data(label)"
-  }
 }, {"selector": "edge.pos",
   "style": {
     "curve-style": "haystack"
