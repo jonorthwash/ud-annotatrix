@@ -331,24 +331,24 @@ function drawTree() {
     FORMAT = detectFormat(content);
 
     $("#detected").html("Detected: " + FORMAT + " format");
-	console.log(FORMAT);
-	if (FORMAT == "CoNLL-U") {
-		$("#viewOther").hide();
-		$("#viewCG").removeClass("active");
-		$("#viewOther").removeClass("active");
-		$("#viewConllu").addClass("active");
-	} else if (FORMAT == "CG3") {
-		$("#viewOther").hide();
-		$("#viewConllu").removeClass("active");
-		$("#viewOther").removeClass("active");
-		$("#viewCG").addClass("active");
-	} else {
-		$("#viewOther").show();
-		$("#viewOther").addClass("active");
-		$("#viewConllu").removeClass("active");
-		$("#viewCG").removeClass("active");
-		$("#viewOther").text(FORMAT);
-	}
+    console.log(FORMAT);
+    if (FORMAT == "CoNLL-U") {
+        $("#viewOther").hide();
+        $("#viewCG").removeClass("active");
+        $("#viewOther").removeClass("active");
+        $("#viewConllu").addClass("active");
+    } else if (FORMAT == "CG3") {
+        $("#viewOther").hide();
+        $("#viewConllu").removeClass("active");
+        $("#viewOther").removeClass("active");
+        $("#viewCG").addClass("active");
+    } else {
+        $("#viewOther").show();
+        $("#viewOther").addClass("active");
+        $("#viewConllu").removeClass("active");
+        $("#viewCG").removeClass("active");
+        $("#viewOther").text(FORMAT);
+    }
 
 
     if (FORMAT == "CG3") {
@@ -437,76 +437,76 @@ function cleanConllu(content) {
 
 
 function detectFormat(content) {
-	clearLabels();
-	//TODO: too many "hacks" and presuppositions. refactor.
+    clearLabels();
+    //TODO: too many "hacks" and presuppositions. refactor.
 
-	content = content.trim();
-	var firstWord = content.replace(/\n/g, " ").split(" ")[0];
+    content = content.trim();
+    var firstWord = content.replace(/\n/g, " ").split(" ")[0];
 
-	// handling # comments at the beginning
-	if (firstWord[0] === '#'){
-		var following = 1;
-		while (firstWord[0] === '#' && following < content.length){
-			// TODO: apparently we need to log the thing or it won't register???
-			console.log('detectFormat|while| ' + firstWord);
-			firstWord = content.split("\n")[following];
-			// pull out labels and put them in HTML, TODO: this probably
-			// wants to go somewhere else.
-			if(firstWord.search('# labels') >= 0) {
-				var labels = firstWord.split("=")[1].split(" ");
-				for(var i = 0; i < labels.length; i++) {
-					var seen = false;
-					for(var j = 0; j < LABELS.length; j++) {
-						if(labels[i] == LABELS[j]) {
-							seen = true;
-						}
-					}
-					if(!seen) {
-						LABELS.push(labels[i]);
-					}
-				}
-				var htmlLabels = $('#treeLabels');
-				for(var k = 0; k < LABELS.length; k++) {
-					if(LABELS[k].trim() == "") {
-						continue;
-					}
-					htmlLabels.append($('<span></span>')
-						.addClass('treebankLabel')
-						.text(LABELS[k])
-					);
-				}
-				console.log("FOUND LABELS:" + LABELS);
-			}
-			following ++;
-		}
-	}
+    // handling # comments at the beginning
+    if (firstWord[0] === '#'){
+        var following = 1;
+        while (firstWord[0] === '#' && following < content.length){
+            // TODO: apparently we need to log the thing or it won't register???
+            console.log('detectFormat|while| ' + firstWord);
+            firstWord = content.split("\n")[following];
+            // pull out labels and put them in HTML, TODO: this probably
+            // wants to go somewhere else.
+            if(firstWord.search('# labels') >= 0) {
+                var labels = firstWord.split("=")[1].split(" ");
+                for(var i = 0; i < labels.length; i++) {
+                    var seen = false;
+                    for(var j = 0; j < LABELS.length; j++) {
+                        if(labels[i] == LABELS[j]) {
+                            seen = true;
+                        }
+                    }
+                    if(!seen) {
+                        LABELS.push(labels[i]);
+                    }
+                }
+                var htmlLabels = $('#treeLabels');
+                for(var k = 0; k < LABELS.length; k++) {
+                    if(LABELS[k].trim() == "") {
+                        continue;
+                    }
+                    htmlLabels.append($('<span></span>')
+                        .addClass('treebankLabel')
+                        .text(LABELS[k])
+                    );
+                }
+                console.log("FOUND LABELS:" + LABELS);
+            }
+            following ++;
+        }
+    }
 
-	var trimmedContent = content.trim("\n");
-	//console.log(trimmedContent + ' | ' + trimmedContent[trimmedContent.length-1]);
-	if (firstWord.match(/"<.*/)) {
-	// SAFE: The first token in the string should start with "<
-		FORMAT = "CG3";
-	} else if (firstWord.match(/1/)) {
-	// UNSAFE: The first token in the string should be 1
-		FORMAT = "CoNLL-U";
-	} else if (trimmedContent.includes("(") && trimmedContent.includes("\n") && (trimmedContent.includes(")\n") || trimmedContent[trimmedContent.length-1] == ")")) {
-	// SAFE: To be SDParse as opposed to plain text we need at least 2 lines.
-	// UNSAFE: SDParse should include at least one line ending in ) followed by a newline
-	// UNSAFE: The last character in the string should be a )
-		FORMAT = "SD";
+    var trimmedContent = content.trim("\n");
+    //console.log(trimmedContent + ' | ' + trimmedContent[trimmedContent.length-1]);
+    if (firstWord.match(/"<.*/)) {
+    // SAFE: The first token in the string should start with "<
+        FORMAT = "CG3";
+    } else if (firstWord.match(/1/)) {
+    // UNSAFE: The first token in the string should be 1
+        FORMAT = "CoNLL-U";
+    } else if (trimmedContent.includes("(") && trimmedContent.includes("\n") && (trimmedContent.includes(")\n") || trimmedContent[trimmedContent.length-1] == ")")) {
+    // SAFE: To be SDParse as opposed to plain text we need at least 2 lines.
+    // UNSAFE: SDParse should include at least one line ending in ) followed by a newline
+    // UNSAFE: The last character in the string should be a )
+        FORMAT = "SD";
         // UNSAFE: The first character is an open square bracket
         } else if (firstWord.match(/\[/)) {
                 FORMAT = "Brackets";
-	// TODO: better plaintext recognition
-	} else if (!trimmedContent.includes("\t") && trimmedContent[trimmedContent.length-1] != ")") {
-	// SAFE: Plain text and SDParse should not include tabs. CG3/CoNLL-U should include tabs
-	// UNSAFE: SDParse should end the line with a ), but plain text conceivably could too
-		FORMAT = "plain text";
-	} else {
-		FORMAT = "Unknown";
-	}
+    // TODO: better plaintext recognition
+    } else if (!trimmedContent.includes("\t") && trimmedContent[trimmedContent.length-1] != ")") {
+    // SAFE: Plain text and SDParse should not include tabs. CG3/CoNLL-U should include tabs
+    // UNSAFE: SDParse should end the line with a ), but plain text conceivably could too
+        FORMAT = "plain text";
+    } else {
+        FORMAT = "Unknown";
+    }
 
-	return FORMAT
+    return FORMAT
 }
 
 
@@ -584,8 +584,8 @@ function storageAvailable(type) {
 }
 
 function toggleTableView() {
-	$("#indata").toggle();
-	$("#indataTable").toggle();
+    $("#indata").toggle();
+    $("#indataTable").toggle();
     $("#indataTable tbody").empty().append(
         $("#indata").val().split("\n")
             .filter(line => line.length && !line.startsWith("#"))
@@ -597,9 +597,9 @@ function toggleTableView() {
 
 
 function toggleCodeWindow() {
-	$("#codeVisibleButton").toggleClass('fa-chevron-down', 'fa-chevron-up');
-	console.log('toggleCodeWindow()');
-	$("#indata").toggle('show');
+    $("#codeVisibleButton").toggleClass('fa-chevron-down', 'fa-chevron-up');
+    console.log('toggleCodeWindow()');
+    $("#indata").toggle('show');
 }
 
 function focusOut(key) {
