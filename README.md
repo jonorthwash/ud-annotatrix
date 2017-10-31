@@ -13,12 +13,12 @@ To use it offline, clone the repository to your local machine and open the file 
 
 UD Annotatrix is a client-side, browser only, tool for editting dependency trees in [CoNLL-U](http://universaldependencies.org/format.html) and [VISL](http://beta.visl.sdu.dk/cg3/single/#streamformats) formsts.  The point of this is to make manual editing of dependency corpora quicker. The aim of this project is to create an easy-to-use, quick and interactive interface tool for Universal Dependencies annotation, which would work both online and offline and allow the user to edit the annotation in both graphical and text modes.
 
-Note that something similar exists in [brat](http://brat.nlplab.org), but that we're aiming for a simpler, cleaner, faster interface with optional server-side component.
+Note that something similar exists in [brat](http://brat.nlplab.org), but that we're aiming for a simpler, cleaner, faster interface optimised for Universal Dependencies with an optional server-side component.
 
 ### Functionality
 
-At the moment, the interface allows to:
-* draw depencencies between tokens
+At the moment, the interface supports:
+* draw dependencies between tokens
 * edit dependency relations
 * delete dependencies
 * edit POS labels
@@ -30,7 +30,7 @@ The interface supports right-to-left readin order and vertiacal alignment for lo
 
 ## User guide
 
-The basic user guide is avaliable on the [help page](https://maryszmary.github.io/ud-annotatrix/standalone/help.html).
+The basic user guide is available on the [help page](https://maryszmary.github.io/ud-annotatrix/standalone/help.html).
 
 ## Architecture and components
 
@@ -39,9 +39,9 @@ The basic user guide is avaliable on the [help page](https://maryszmary.github.i
 
 The standalone part of the project is written in JavaScript. The standalone version supports full functionality, apart from saving corpora on server.
 
-#### Project's modules
+#### Project architecture
 
-* main menaging script: `annotator.js`
+* main managing script: `annotator.js`
 * support for visualisation: `visualiser.js`, `cy-style.js`
 * support for graphical editing: `gui.js`
 * format handling: `converters.js`, `CG2conllu.js`
