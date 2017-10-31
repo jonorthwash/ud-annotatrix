@@ -7,6 +7,11 @@ The online interface is currently available from several places:
 
 To use it offline, clone the repository to your local machine and open the file `index.html` in your browser.
 
+## Support
+
+Having a problem with Annotatrix ? Want some one-on-one support ? You can try <tt>#_u-dep</tt> on <tt>irc.freenode.net</tt> or
+join our [Telegram chat](https://t.me/joinchat/EWWgMhGXARzxvgO5AzI0ew).
+
 ## About
 
 ### The idea
