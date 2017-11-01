@@ -64,31 +64,36 @@ function SD2Conllu(text) {
         console.log('!!!' + CONTENTS);
         FORMAT = "CoNLL-U";
         loadDataInIndex();
+        showDataIndiv();
 }
 
 function plainText2Conllu(text) {
     /* Takes plain text, converts it to CoNLL-U format. */
+    console.log('plainText2Conllu() ' + text);
 
     // if text consists of several sentences, process it as imported file
     if (text.match(/[^ ].+?[.!?](?=( |\n)[^ \n])/)) { // match sentence break, e.g. "blah. hargle"
         CONTENTS = text;
     }
-//    console.log('plainText2Conllu() ' + text.length + ' // ' + text);
+    console.log('plainText2Conllu() ' + text.length + ' // ' + text);
     if (CONTENTS.trim() != "") {
         var newContents = [];
         var splitted = CONTENTS.match(/[^ ].+?[.!?](?=( |$|\n))/g);
-        console.log('@ ' + splitted.length);
+        console.log('@ CONTENTS: ' + splitted.length);
         $.each(splitted, function(i, sentence) {
             newContents.push(plainSent2Conllu(sentence));
         })
         CONTENTS = newContents.join("\n");
-        console.log('!!!' + CONTENTS);
+        console.log('@ CONTENTS: ' + CONTENTS);
         FORMAT = "CoNLL-U";
+        AVAILABLESENTENCES = splitted.length;
         loadDataInIndex();
     } else {
 
         // TODO: this probably, redundant. check.
+        AVAILABLESENTENCES = 1;
         $("#indata").val(plainSent2Conllu(text));
+        loadDataInIndex();
     }
 }
 

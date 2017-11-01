@@ -187,6 +187,7 @@ function loadDataInIndex() {
     }
 
     AVAILABLESENTENCES = splitted.length;
+    console.log('loadDataInIndex |' + FORMAT + " | AVAILABLESENTENCES = " + AVAILABLESENTENCES)
 
     if (AVAILABLESENTENCES == 1 || AVAILABLESENTENCES == 0) {
         document.getElementById('nextSenBtn').disabled = true;
@@ -204,13 +205,17 @@ function loadDataInIndex() {
 function showDataIndiv() {
     // This function is called each time the current sentence is changed to update
     // the CoNLL-U in the textarea.
-    console.log('showDataIndiv()');
+    console.log('showDataIndiv() ' + RESULTS.length);
     if(RESULTS[CURRENTSENTENCE] != undefined) {
       document.getElementById('indata').value = (RESULTS[CURRENTSENTENCE]);
     } else {
       document.getElementById('indata').value = "";
     }
-    document.getElementById('currentsen').value = (CURRENTSENTENCE+1);
+    if(AVAILABLESENTENCES != 0) {
+        document.getElementById('currentsen').value = (CURRENTSENTENCE+1);
+    } else { 
+        document.getElementById('currentsen').value = 0;
+    }
     document.getElementById('totalsen').innerHTML = AVAILABLESENTENCES;
     updateTable(); // Update the table view at the same time 
     drawTree();
@@ -688,9 +693,11 @@ function toggleTableColumn(col) {
 
    if(button == "⚪") {  // If the column is currently hidden, make it visible
      $("#tableCol_" + col).append("⚫");
-     $("[id^=table_][id$=" + colId+"]").css("display","block");
+     $("#tableHead_" + col).css("display","inline-block");
+     $("[id^=table_][id$=" + colId+"]").css("display","inline-block");
    } else { // If the column is visible make it hidden
      $("#tableCol_" + col).append("⚪");
+     $("#tableHead_" + col).css("display","none");
      $("[id^=table_][id$=" + colId+"]").css("display","none");
    }
 
