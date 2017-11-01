@@ -645,6 +645,7 @@ function toggleTableView() {
         row += 1;
     }
 
+// Sushain's original, more beautiful code:
 //    $("#indataTable tbody").append(
 //        $("#indata").val().split("\n")
 //            .filter(line => line.length && !line.startsWith("#"))
@@ -655,18 +656,29 @@ function toggleTableView() {
 }
 
 function toggleTableColumn(col) {
+   // Toggle the visibility of a table column. It only hides the values in the cells,
+   // not the column header. 
+   // @col = the column that was clicked
+
+   // the HTML id of the table cell is #table_<ROW>:<COLUMN>, this hash maps 
+   // from column ID to column offset
    var colTitle = {"ID":0,"FORM":1,"LEMMA":2,"UPOSTAG":3,"XPOSTAG":4,"FEATS":5,"HEAD":6,"DEPREL":7,"DEPS":8,"MISC":9};
    var colId = colTitle[col];
-   var button = $("#tableCol_" + col).text();
+   var button = $("#tableCol_" + col).text();  // The text (e.g. dot)
+
    console.log("toggleTableColumn() " + " " + col + " " + button);
-   $("#tableCol_" + col).empty();
-   if(button == "⚪") { 
+   $("#tableCol_" + col).empty(); // Empty the text
+
+   if(button == "⚪") {  // If the column is currently hidden, make it visible
      $("#tableCol_" + col).append("⚫");
      $("[id^=table_][id$=" + colId+"]").css("display","block");
-   } else { 
+   } else { // If the column is visible make it hidden
      $("#tableCol_" + col).append("⚪");
      $("[id^=table_][id$=" + colId+"]").css("display","none");
    }
+
+   // TODO: Maybe use greying out of the headers in addition to/instead of 
+   // the filled/empty dots to indicate hidden or not
 }
 
 function toggleCodeWindow() {
