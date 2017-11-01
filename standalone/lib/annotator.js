@@ -1,14 +1,13 @@
 "use strict"
 
 var FORMAT = "";
-var FILENAME = 'corpora.txt'; // default name
+var FILENAME = 'ud-annotatrix-corpus.conllu'; // default name
 var ROOT = './lib/';
 var CONTENTS = "";
 var AVAILABLESENTENCES = 0;
-var TABLE_VIEW = false;
 var CURRENTSENTENCE = 0;
 var RESULTS = [];
-var LOC_ST_AVALIABLE = false;
+var LOC_ST_AVAILABLE = false;
 var SERVER_RUNNING = false;
 var AMBIGUOUS = false;
 var LABELS = [];
@@ -54,7 +53,7 @@ function main() {
 
         // trying to load the corpus from localStorage
         if (storageAvailable('localStorage')) {
-            LOC_ST_AVALIABLE = true;
+            LOC_ST_AVAILABLE = true;
             if (localStorage.getItem("corpus") != null) {
                 CONTENTS = localStorage.getItem("corpus");
                 loadDataInIndex();
@@ -392,7 +391,7 @@ function drawTree() {
         addHandlers();
     }
 
-    if (LOC_ST_AVALIABLE) {
+    if (LOC_ST_AVAILABLE) {
         localStorage.setItem("corpus", getTreebank()); // saving the data
     }
 
@@ -594,8 +593,6 @@ function tableEditCell(loc) {
     var table = document.getElementById("indataTable");
     var cell = document.getElementById(loc).innerHTML;
     console.log("tableEditCell() " + loc + " " + cell);
-
-    // Update the table with the value from the edit
 
     // Update the CoNLL-U and set the value in the textbox 
 
