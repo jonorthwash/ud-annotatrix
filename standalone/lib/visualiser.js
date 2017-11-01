@@ -153,7 +153,7 @@ function toSubscript(str) {
 
 
 function createToken(graph, token, spId) {
-    console.log('createToken() '+spId + ' / ' + token.form + ' / ' + token.upostag);
+    console.log('createToken() '+ token.id + ' / ' + spId + ' / ' + token.form + ' / ' + token.upostag);
     /* Takes the tree graph, a token object and the id of the supertoken.
     Creates the wf node, the POS node and dependencies. Returns the graph. */
 
@@ -199,7 +199,7 @@ function makeDependencies(token, nodeId, graph) {
 
     var validDep = true;
 
-//    console.log(TREE_);
+    console.log(TREE_);
 //    console.log(TREE_[head]);
 
     if(head in TREE_) { // for some reason we need this part
@@ -258,12 +258,16 @@ function makeDependencies(token, nodeId, graph) {
           graph.push({"data": edgeDep, "classes": "dependency, error"});
           console.log("makeDependencies(): error @" + deprel);
         }
+
+        if(is_cyclic(TREE_)) {
+            console.log('[3] writeDeprel is_cyclic=true');
+        } else {
+            console.log('[3] writeDeprel is_cyclic=false');
+        }
+
+
         
     };
-
-//    if(is_cyclic(TREE_)) {
-//        console.log('[3] writeDeprel is_cyclic=true');
-//    }
 
     return graph;
 }

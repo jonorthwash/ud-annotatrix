@@ -40,6 +40,11 @@ function is_leaf(s) {
 function is_cyclic(tree) {
     // Checks if a given tree is cyclic 
     // @tree = input tree
+    console.log('is_cyclic() ' + tree);
+
+    for(let node in tree){ 
+        console.log('| ' + tree[node].id + ' -> ' + tree[node].head);
+    }
 
     return false;
 }
