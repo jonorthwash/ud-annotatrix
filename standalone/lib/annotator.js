@@ -5,7 +5,7 @@ var FILENAME = 'corpora.txt'; // default name
 var ROOT = './lib/';
 var CONTENTS = "";
 var AVAILABLESENTENCES = 0;
-var HIDDEN_CODE_WINDOW = false;
+var TABLE_VIEW = false;
 var CURRENTSENTENCE = 0;
 var RESULTS = [];
 var LOC_ST_AVALIABLE = false;
@@ -202,6 +202,8 @@ function loadDataInIndex() {
 }
 
 function showDataIndiv() {
+    // This function is called each time the current sentence is changed to update
+    // the CoNLL-U in the textarea.
     console.log('showDataIndiv()');
     if(RESULTS[CURRENTSENTENCE] != undefined) {
       document.getElementById('indata').value = (RESULTS[CURRENTSENTENCE]);
@@ -210,6 +212,7 @@ function showDataIndiv() {
     }
     document.getElementById('currentsen').value = (CURRENTSENTENCE+1);
     document.getElementById('totalsen').innerHTML = AVAILABLESENTENCES;
+    updateTable(); // Update the table view at the same time 
     drawTree();
 }
 
@@ -619,9 +622,14 @@ function tableEditCell(loc) {
 }
 
 function toggleTableView() {
+    // This function toggles the table view
     $("#indata").toggle();
     $("#indataTable").toggle();
     $("#tableViewButton").toggleClass('fa-code', 'fa-table');
+}
+
+function updateTable() {
+    // Update the data in the table from the data in the textarea
     $("#indataTable tbody").empty();
     var conlluLines = $("#indata").val().split("\n");
     var row = 0;
