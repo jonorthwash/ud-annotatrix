@@ -601,6 +601,9 @@ function tableEditCell(loc) {
     for (var r = 1, n = table.rows.length; r < n; r++) {
         for (var c = 0, m = table.rows[r].cells.length; c < m; c++) {
             var thisCell = table.rows[r].cells[c].childNodes[0].innerHTML;
+            if(thisCell.trim() == "") {
+                thisCell = "_";
+            }
 //            console.log("@" + table.rows[r].cells[c].innerHTML + " // " + thisCell);
             if(c > 0) {
               conllu = conllu + "\t" + thisCell;
@@ -642,6 +645,9 @@ function updateTable() {
             var cells = line.split("\t");
             for(var col = 0; col < 10; col++) {
                 var loc = "table_" + row + ":" + col;
+                if(cells[col].trim() == "") { 
+                    cells[col] = "_";
+                } 
                 lineRow = lineRow + '<td><span data-value="' + cells[col] + '" onKeyUp="tableEditCell(\''+loc+'\');" id="' + loc + '" contenteditable>' + cells[col] + '</span></td>"';
             }
             lineRow += "</tr>";
