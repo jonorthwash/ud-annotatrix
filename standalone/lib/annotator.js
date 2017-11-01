@@ -6,6 +6,7 @@ var ROOT = './lib/';
 var CONTENTS = "";
 var AVAILABLESENTENCES = 0;
 var CURRENTSENTENCE = 0;
+var TABLE_VIEW = false;
 var RESULTS = [];
 var LOC_ST_AVAILABLE = false;
 var SERVER_RUNNING = false;
@@ -626,6 +627,11 @@ function toggleTableView() {
     $("#indata").toggle();
     $("#indataTable").toggle();
     $("#tableViewButton").toggleClass('fa-code', 'fa-table');
+    if(TABLE_VIEW) {
+        TABLE_VIEW = false;
+    } else { 
+        TABLE_VIEW = true;
+    }
 }
 
 function updateTable() {
@@ -695,7 +701,11 @@ function toggleTableColumn(col) {
 function toggleCodeWindow() {
     $("#codeVisibleButton").toggleClass('fa-chevron-down', 'fa-chevron-up');
     console.log('toggleCodeWindow()');
-    $("#indata").toggle('show');
+    if(TABLE_VIEW) {
+        $("#indataTable").toggle('show');
+    } else { 
+        $("#indata").toggle('show');
+    }
 }
 
 function focusOut(key) {
