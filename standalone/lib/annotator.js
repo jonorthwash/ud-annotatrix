@@ -24,6 +24,7 @@ function main() {
         ROOT + 'ext/undomanager.js',
         ROOT + 'ext/popper.min.js',
         ROOT + 'ext/bootstrap.min.js',
+        ROOT + 'ext/l20n.js',
 
         // CoNLL-U parser from https://github.com/FrancessFractal/conllu
         ROOT + 'ext/conllu/conllu.js',
@@ -658,7 +659,7 @@ function updateTable() {
             var lineRow = "<tr>";
             var cells = line.split("\t");
             for(var col = 0; col < 10; col++) {
-                var valid = [true, ""];
+                var valid = [true, "", {}];
                 if(col == 3) {
                     valid = is_upos(cells[col]);
                 }
@@ -672,7 +673,8 @@ function updateTable() {
                 lineRow = lineRow + '<td>';
                 lineRow = lineRow + '<span data-value="' + cells[col] + '"onBlur="updateTable();" onKeyUp="tableEditCell(\''+loc+'\');" id="' + loc + '" contenteditable>' + cells[col] + '</span>';
                 if(!valid[0]) { 
-                    lineRow = lineRow + '<span title="' + valid[1] + '"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i></span>';
+                    var t = document.l10n.formatValue(valid[1], valid[2]);
+                    lineRow = lineRow + '<span title="' + t + '"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i></span>';
                 }
                 lineRow = lineRow + '</td>';
             }
