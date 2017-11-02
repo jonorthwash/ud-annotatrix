@@ -747,5 +747,4 @@ function focusOut(key) {
     }
 }
 
-
-main()
+window.onload = main;
