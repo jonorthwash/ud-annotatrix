@@ -247,7 +247,7 @@ function makeDependencies(token, nodeId, graph) {
             "target": "nf" + nodeId,
             "length": (deprelLabel.length / 3) + "em",
             "label": deprelLabel,
-            "ctrl": [45, 45, 45, 45]
+            "ctrl": [44, 44, 44, 44] // ARC HEIGHT STUFFS
         }
         var coef = (head - nodeId);
         if (!LEFT_TO_RIGHT) {coef *= -1}; // support for RTL
