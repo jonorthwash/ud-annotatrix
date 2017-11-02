@@ -686,13 +686,13 @@ function updateTable() {
                 let td = $("<td>");
                 let span0 = $('<span data-value="' + cells[col] + '"onBlur="updateTable();" onKeyUp="tableEditCell(\''+loc+'\');" id="' + loc + '" contenteditable>' + cells[col] + '</span>');
                 td.append(span0);
-                 if(!valid[0]) { 
+                if(!valid[0]) { 
                     let span1 = $('<span><i class="fa fa-exclamation-triangle" aria-hidden="true"></i></span>');
                     document.l10n.formatValue(valid[1], valid[2]).then(function(t) { span1.attr("title", t);});
                     td.append(span1);
-                 }
+                }
                 lineRow.append(td);
-             }
+            }
             $("#indataTable tbody").append(lineRow); 
         }
         row += 1;
@@ -760,5 +760,4 @@ function focusOut(key) {
     }
 }
 
-
-main()
+window.onload = main;

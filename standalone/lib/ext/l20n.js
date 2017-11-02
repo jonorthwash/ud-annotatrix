@@ -3669,12 +3669,12 @@ var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbo
   }
 
   var ResourceBundle = function () {
-    function ResourceBundle(lang, resIds) {
+    function ResourceBundle(lang, el) {
       classCallCheck(this, ResourceBundle);
 
       this.lang = lang;
       this.loaded = false;
-      this.resIds = resIds;
+      this.el = el;
     }
 
     createClass(ResourceBundle, [{
@@ -3683,9 +3683,7 @@ var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbo
         var _this = this;
 
         if (!this.loaded) {
-          this.loaded = Promise.all(this.resIds.map(function (resId) {
-            return fetchResource(resId, _this.lang);
-          }));
+          this.loaded = Promise.resolve([this.el.text]);
         }
 
         return this.loaded;
@@ -3706,14 +3704,14 @@ var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbo
   }
 
   function getResourceLinks(elem) {
-    return Array.prototype.map.call(elem.querySelectorAll('link[rel="localization"]'), function (el) {
-      return [el.getAttribute('href'), el.getAttribute('name') || 'main'];
+    return Array.prototype.map.call(elem.querySelectorAll('script[type="text/fluent"]'), function (el) {
+      return [el.getAttribute('lang'), el];
     }).reduce(function (seq, _ref) {
       var _ref2 = slicedToArray(_ref, 2),
-          href = _ref2[0],
-          name = _ref2[1];
+          lang = _ref2[0],
+          el = _ref2[1];
 
-      return seq.set(name, (seq.get(name) || []).concat(href));
+      return seq.set(lang, el);
     }, new Map());
   }
 
@@ -3772,19 +3770,19 @@ var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbo
     return new MessageContext(lang);
   }
 
-  function createLocalization(defaultLocale, availableLangs, resIds, name) {
+  function createLocalization(defaultLocale, availableLangs, lang, el) {
     function requestBundles() {
       var requestedLangs = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : navigator.languages;
 
       var newLangs = negotiateLanguages(requestedLangs, availableLangs, { defaultLocale: defaultLocale });
 
       var bundles = newLangs.map(function (lang) {
-        return new ResourceBundle(lang, resIds);
+        return new ResourceBundle(lang, el);
       });
 
       return Promise.resolve(bundles);
     }
-
+    let name = 'main';
     if (name === 'main') {
       document.l10n = new DocumentLocalization(requestBundles, createContext);
       document.l10n.ready = documentReady().then(function () {
@@ -3803,9 +3801,8 @@ var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbo
   var _getMeta = getMeta(document.head);
   var defaultLang = _getMeta.defaultLang;
   var availableLangs = _getMeta.availableLangs;
-
-  getResourceLinks(document.head).forEach(function (resIds, name) {
-    return createLocalization(defaultLang, availableLangs, resIds, name);
+  getResourceLinks(document.head).forEach(function (el, lang) {
+    return createLocalization(defaultLang, availableLangs, lang, el);
   });
 })();
 //# sourceMappingURL=l20n.js.map
