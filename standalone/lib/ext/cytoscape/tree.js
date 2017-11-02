@@ -43,6 +43,7 @@ TreeLayout.prototype.run = function(){
     x1: 0, y1: 0, w: cy.width(), h: cy.height()
   } );
 
+
   if( bb.h === 0 || bb.w === 0 ){
     nodes.layoutPositions( this, options, function( ele ){
       return { x: bb.x1, y: bb.y1 };
@@ -140,9 +141,14 @@ TreeLayout.prototype.run = function(){
       widthCoefs.push(1.0);
     }
     
+    var posWordMax = {};
     if( options.avoidOverlap ){
       // iterate through all the nodes and set the cellWidth and cellHeight
       // to the maximum width/height seen in the graph plus a padding value
+      for( let i = 0; i < nodes.length; i++ ){
+        let clumpId = parseInt(nodes[i]._private.data.id.replace(/np0*|nf0*/,'')) - 1 ;
+        posWordMax[clumpId] = 0;
+      }
       for( let i = 0; i < nodes.length; i++ ){
         // the current node
         let node = nodes[ i ];
@@ -161,18 +167,25 @@ TreeLayout.prototype.run = function(){
  
         widths[i] = w;
 
-        console.log('tree.js [' + i + ']nbb.w|nbb.h|cellWidth|cellHeight = ' + nbb.w +'|'+ nbb.h +'|'+ cellWidth +'|'+ cellHeight);
+        //console.log('tree.js: [' + i + '] ' + node._private.data.label);
+        //console.log('tree.js: [' + i + '] ' + node._private.data.id);
+        let clumpId = parseInt(node._private.data.id.replace(/np0*|nf0*/,'')) - 1 ;
+        //console.log('tree.js: [' + i + '] ' + clumpId);
+        posWordMax[clumpId] = Math.max(posWordMax[clumpId], nbb.w + p);
+        //console.log('tree.js: [' + i + '] ' + posWordMax[clumpId]);
+        //console.log('tree.js: [' + i + '] nbb.w|nbb.h|cellWidth|cellHeight = ' + nbb.w +'|'+ nbb.h +'|'+ cellWidth +'|'+ cellHeight);
         cellWidth = Math.max( cellWidth, w ) ;
         cellHeight = Math.max( cellHeight, h );
       }
-
+      //console.log('tree.js: ** ' + Object.entries(posWordMax));    
       for( let i = 0; i < nodes.length; i++ ){
         widthCoefs[i] = widths[i] / cellWidth;
+        //console.log('tree.js: posWordMax  ' + posWordMax[i]);    
         if(widthCoefs[i] < 0.7) {
           widthCoefs[i] = 0.7;
         }
       }
-      console.log('tree.js ' + widthCoefs);    
+      //console.log('tree.js ' + widthCoefs);    
     }
 
     let cellUsed = {}; // e.g. 'c-0-2' => true
@@ -246,19 +259,17 @@ TreeLayout.prototype.run = function(){
         }
 
         var prevNodes = 0;
-        var newX = 0;
         for(let ii = 0; ii < col; ii++) { 
-          newX += widthCoefs[ii] * cellWidth;
-          prevNodes += widths[ii];
+          prevNodes += posWordMax[ii];
         }
         var pad = 2;
         // this is where we set the final position
         //x = (0.1*cellWidth) + newX + (cellWidth * widthCoefs[col]) / 2 + bb.x1;
-        x = prevNodes + (pad * 2 * col) + (widths[col] / 2);
+        x = prevNodes + (pad * 2 * col) + (posWordMax[col] / 2);
         //x = col * cellWidth + cellWidth / 2 + bb.x1;
         y = row * cellHeight + cellHeight / 2 + bb.y1;
  
-        console.log('tree.js [X][' + col + '] x,y = ' + x + ',' + y); 
+        console.log('tree.js [' + row + '][' + col + '] x,y = ' + x + ',' + y); 
 
         use( row, col );
 

@@ -31,12 +31,17 @@ function conlluDraw(content) {
         boxSelectionEnabled: false,
         autounselectify: true,
         autoungrabify: true,
-        userZoomingEnabled: true,
-        wheelSensitivity: 0.2,
+        zoomingEnabled: true,
+        userZoomingEnabled: false,
+        wheelSensitivity: 0.1,
         layout: layout, 
         style: CY_STYLE,
         elements: conllu2cy(sent)
     });
+
+    cy.minZoom(0.5);
+    cy.maxZoom(1.5);
+    cy.center();
 }
 
 
