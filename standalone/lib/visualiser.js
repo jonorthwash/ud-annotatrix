@@ -32,7 +32,7 @@ function conlluDraw(content) {
         autounselectify: true,
         autoungrabify: true,
         zoomingEnabled: true,
-        userZoomingEnabled: false,
+        userZoomingEnabled: true,
         wheelSensitivity: 0.1,
         layout: layout, 
         style: CY_STYLE,
@@ -40,7 +40,7 @@ function conlluDraw(content) {
     });
 
     cy.minZoom(0.5);
-    cy.maxZoom(1.5);
+    cy.maxZoom(2.0);
     cy.center();
 }
 
