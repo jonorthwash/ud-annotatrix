@@ -656,7 +656,7 @@ function updateTable() {
         if(line[0] == '#') { 
             $("#indataTable tbody").append('<tr style="display:none" id="table_"' + row + '"><td colspan="10"><span>' + line + '</span></td></tr>'); 
         } else { 
-            var lineRow = "<tr>";
+            var lineRow = $("<tr>");
             var cells = line.split("\t");
             for(var col = 0; col < 10; col++) {
                 var valid = [true, "", {}];
@@ -670,15 +670,16 @@ function updateTable() {
                 if(cells[col].trim() == "") { 
                     cells[col] = "_";
                 } 
-                lineRow = lineRow + '<td>';
-                lineRow = lineRow + '<span data-value="' + cells[col] + '"onBlur="updateTable();" onKeyUp="tableEditCell(\''+loc+'\');" id="' + loc + '" contenteditable>' + cells[col] + '</span>';
+                let td = $("<td>");
+                let span0 = $('<span data-value="' + cells[col] + '"onBlur="updateTable();" onKeyUp="tableEditCell(\''+loc+'\');" id="' + loc + '" contenteditable>' + cells[col] + '</span>');
+                td.append(span0);
                 if(!valid[0]) { 
-                    var t = document.l10n.formatValue(valid[1], valid[2]);
-                    lineRow = lineRow + '<span title="' + t + '"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i></span>';
+                    let span1 = $('<span><i class="fa fa-exclamation-triangle" aria-hidden="true"></i></span>');
+                    document.l10n.formatValue(valid[1], valid[2]).then(function(t) { span1.attr("title", t);});
+                    td.append(span1);
                 }
-                lineRow = lineRow + '</td>';
+                lineRow.append(td);
             }
-            lineRow += "</tr>";
             $("#indataTable tbody").append(lineRow); 
         }
         row += 1;
