@@ -77,8 +77,9 @@ function main() {
         // $("#indata").keyup(drawTree);
         $("#indata").bind("keyup", drawTree);
         $("#indata").bind("keyup", focusOut);
-        $("#RTL").bind("change", switchRtlMode);
-        $("#vertical").bind("change", switchAlignment);
+        // $("#RTL").bind("change", switchRtlMode);
+        $("#RTL").on("click", switchRtlMode);
+        $("#vertical").on("click", switchAlignment);
         loadFromUrl();
     });
 

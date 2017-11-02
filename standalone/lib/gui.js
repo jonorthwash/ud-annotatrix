@@ -757,24 +757,22 @@ function clearWarning() {
 
 
 function switchRtlMode() {
-    if (this.checked) {
+	 if (LEFT_TO_RIGHT) {
         LEFT_TO_RIGHT = false;
-        drawTree();
     } else {
         LEFT_TO_RIGHT = true;
-        drawTree();
     }
+    drawTree();
 }
 
 
 function switchAlignment() {
-    if (this.checked) {
-        VERT_ALIGNMENT = true;
-        drawTree();
-    } else {
+    if (VERT_ALIGNMENT) {
         VERT_ALIGNMENT = false;
-        drawTree();
+    } else {
+        VERT_ALIGNMENT = true;
     }
+    drawTree();
 }
 
 $(document).ready(function(){
