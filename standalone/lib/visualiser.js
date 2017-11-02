@@ -14,6 +14,9 @@ var TREE_ = {}; // This map allows us to address the Token object given an ID
 // require lib for CoNLL-U parsing
 var conllu = require("conllu");
 
+// var panzoom = require('cytoscape-panzoom');
+// panzoom(cytoscape);
+
 function conlluDraw(content) {
     /* Draw the tree. */
     var sent = new conllu.Sentence();
@@ -29,6 +32,7 @@ function conlluDraw(content) {
         autounselectify: true,
         autoungrabify: true,
         userZoomingEnabled: false,
+        // wheelSensitivity: 0.2,
         layout: layout, 
         style: CY_STYLE,
         elements: conllu2cy(sent)
