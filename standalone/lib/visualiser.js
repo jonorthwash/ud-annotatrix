@@ -247,7 +247,7 @@ function makeDependencies(token, nodeId, graph) {
             "target": "nf" + nodeId,
             "length": (deprelLabel.length / 3) + "em",
             "label": deprelLabel,
-            "ctrl": [55, 55, 55, 55]
+            "ctrl": [45, 45, 45, 45]
         }
         var coef = (head - nodeId);
         if (!LEFT_TO_RIGHT) {coef *= -1}; // support for RTL
