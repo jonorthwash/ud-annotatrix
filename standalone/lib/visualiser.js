@@ -165,7 +165,8 @@ function createToken(graph, token, spId) {
     graph.push({
         "data": {
             "id": "num" + nodeId,
-            "label": +nodeId,
+            "label": +nodeId,         // do we need the '+' here ?
+            "pos": +token.upostag,
             "parent": spId
         },
         "classes": "tokenNumber"
