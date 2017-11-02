@@ -316,8 +316,7 @@ function changeNode() {
     if (VERT_ALIGNMENT) {
         $(".activated#mute").css("height", (length * 50) + "px");
     } else {
-        var width = getWidth(length);
-        $(".activated#mute").css("width", width + "px");
+        $(".activated#mute").css("width", "1500px");
     }
 
     // TODO: rank the labels + make the style better  
