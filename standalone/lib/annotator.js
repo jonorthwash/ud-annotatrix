@@ -208,7 +208,7 @@ function loadDataInIndex() {
 function showDataIndiv() {
     // This function is called each time the current sentence is changed to update
     // the CoNLL-U in the textarea.
-    console.log('showDataIndiv() ' + RESULTS.length);
+    console.log('showDataIndiv() ' + RESULTS.length + " // " + CURRENTSENTENCE);
     if(RESULTS[CURRENTSENTENCE] != undefined) {
       document.getElementById('indata').value = (RESULTS[CURRENTSENTENCE]);
     } else {
@@ -454,14 +454,22 @@ function detectFormat(content) {
     //TODO: too many "hacks" and presuppositions. refactor.
 
     content = content.trim();
+
+    if(content == "") {
+        console.log('[0] detectFormat() WARNING EMPTY CONTENT');
+        return  "Unknown";
+    }
+ 
     var firstWord = content.replace(/\n/g, " ").split(" ")[0];
+
+    console.log('[0] detectFormat() ' + content.length + " | " + FORMAT);
+    console.log('[1] detectFormat() ' + content);
 
     // handling # comments at the beginning
     if (firstWord[0] === '#'){
         var following = 1;
         while (firstWord[0] === '#' && following < content.length){
             // TODO: apparently we need to log the thing or it won't register???
-            console.log('detectFormat|while| ' + firstWord);
             firstWord = content.split("\n")[following];
             // pull out labels and put them in HTML, TODO: this probably
             // wants to go somewhere else.
@@ -507,8 +515,8 @@ function detectFormat(content) {
     // UNSAFE: SDParse should include at least one line ending in ) followed by a newline
     // UNSAFE: The last character in the string should be a )
         FORMAT = "SD";
-        // UNSAFE: The first character is an open square bracket
-        } else if (firstWord.match(/\[/)) {
+    // UNSAFE: The first character is an open square bracket
+    } else if (firstWord.match(/\[/)) {
                 FORMAT = "Brackets";
     // TODO: better plaintext recognition
     } else if (!trimmedContent.includes("\t") && trimmedContent[trimmedContent.length-1] != ")") {
@@ -518,6 +526,7 @@ function detectFormat(content) {
     } else {
         FORMAT = "Unknown";
     }
+    console.log('[3] detectFormat() ' + FORMAT);
 
     return FORMAT
 }

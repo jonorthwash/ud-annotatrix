@@ -26,7 +26,11 @@ function plainSent2Conllu(text) {
     // TODO: if there's punctuation in the middle of a sentence,
     // indices shift when drawing an arc
     // punctuation
+
+
     text = text.replace(/([^ ])([.?!;:,])/g, "$1 $2");
+
+    console.log('plainSent2Conllu() ' + text);
 
     var sent = new conllu.Sentence();
     var lines = ["# sent_id = _" + "\n# text = " + text]; // creating comment
@@ -75,24 +79,29 @@ function plainText2Conllu(text) {
     if (text.match(/[^ ].+?[.!?](?=( |\n)[^ \n])/)) { // match sentence break, e.g. "blah. hargle"
         CONTENTS = text;
     }
-    console.log('plainText2Conllu() ' + text.length + ' // ' + text);
+    //console.log('plainText2Conllu() ' + text.length + ' // ' + text);
     if (CONTENTS.trim() != "") {
         var newContents = [];
         var splitted = CONTENTS.match(/[^ ].+?[.!?](?=( |$|\n))/g);
-        console.log('@ CONTENTS: ' + splitted.length);
+        //console.log('@ CONTENTS: ' + splitted.length);
         $.each(splitted, function(i, sentence) {
             newContents.push(plainSent2Conllu(sentence));
         })
         CONTENTS = newContents.join("\n");
-        console.log('@ CONTENTS: ' + CONTENTS);
+        //console.log('@ CONTENTS: ' + CONTENTS);
         FORMAT = "CoNLL-U";
         AVAILABLESENTENCES = splitted.length;
         loadDataInIndex();
     } else {
-
-        // TODO: this probably, redundant. check.
+        // If the CONTENTS is empty, then we need to fill it (this is the first time
+        // we have put something into the annotatrix and CONTENTS will be empty if 
+        // it's the first time
+        FORMAT = "CoNLL-U";
+        //console.log('plainText2Conllu() ELSE ' + text);
+        CONTENTS = plainSent2Conllu(text) + "\n";
+        //console.log('plainText2Conllu() ELSE newContents ' + newContents);
         AVAILABLESENTENCES = 1;
-        $("#indata").val(plainSent2Conllu(text));
+        $("#indata").val(newContents);
         loadDataInIndex();
     }
 }
@@ -109,12 +118,12 @@ function conlluMultiInput(text) {
     if (CONTENTS.trim() != "") {
         var newContents = [];
         var splitted = CONTENTS.split("\n\n");
-        console.log('@! ' + splitted.length);
+        //console.log('@! ' + splitted.length);
         for(var i = 0; i < splitted.length; i++) {
             newContents.push(splitted[i]);
         }
         CONTENTS = newContents.join("\n\n");
-        console.log('!!!' + CONTENTS);
+        //console.log('!!!' + CONTENTS);
         FORMAT = "CoNLL-U";
         loadDataInIndex();
     }
