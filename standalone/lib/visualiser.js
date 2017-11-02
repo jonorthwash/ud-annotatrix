@@ -205,18 +205,21 @@ function makeDependencies(token, nodeId, graph) {
     if(head in TREE_) { // for some reason we need this part
       // if the pos tag of the head is in the list of leaf nodes, then
       // mark it as an error.
-      if(is_leaf(TREE_[head].upostag)) {
-        console.log('[1] writeDeprel @valid=false ' + deprel);
+      var res = is_leaf(TREE_[head].upostag);
+      if(res[0]) {
+        console.log('[1] writeDeprel @valid=false ' + deprel + ' // ' + res[1]);
         validDep = false;
       }
     }
 
-    if(!is_udeprel(deprel) && deprel != "") {
-      // if the deprel is not valid, mark it as an error, but 
-      // don't mark it as an error if it's blank. TODO: mark 
-      // arcs in grey if the deprel is blank.
-      console.log('[2] writeDeprel @valid=false ' + deprel);
-      validDep = false;
+    if(deprel != "") { 
+        var res = is_udeprel(deprel);
+        if(!res[0]) {
+          // if the deprel is not valid, mark it as an error, but 
+          // don't mark it as an error if it's blank. 
+          console.log('[2] writeDeprel @valid=false ' + deprel + ' // ' + res[1]);
+          validDep = false;
+        }
     }
 
     // Append ⊲ or ⊳ to indicate direction of the arc (helpful if 
@@ -259,7 +262,9 @@ function makeDependencies(token, nodeId, graph) {
           console.log("makeDependencies(): error @" + deprel);
         }
 
-        if(is_cyclic(TREE_)) {
+        
+        var res = is_cyclic(TREE_);
+        if(!res[0]) {
             console.log('[3] writeDeprel is_cyclic=true');
         } else {
             console.log('[3] writeDeprel is_cyclic=false');

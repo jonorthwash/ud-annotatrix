@@ -658,11 +658,23 @@ function updateTable() {
             var lineRow = "<tr>";
             var cells = line.split("\t");
             for(var col = 0; col < 10; col++) {
+                var valid = [true, ""];
+                if(col == 3) {
+                    valid = is_upos(cells[col]);
+                }
+                if(col == 7) {
+                    valid = is_udeprel(cells[col]);
+                }
                 var loc = "table_" + row + ":" + col;
                 if(cells[col].trim() == "") { 
                     cells[col] = "_";
                 } 
-                lineRow = lineRow + '<td><span data-value="' + cells[col] + '" onKeyUp="tableEditCell(\''+loc+'\');" id="' + loc + '" contenteditable>' + cells[col] + '</span></td>"';
+                lineRow = lineRow + '<td>';
+                lineRow = lineRow + '<span data-value="' + cells[col] + '" onKeyUp="tableEditCell(\''+loc+'\');" id="' + loc + '" contenteditable>' + cells[col] + '</span>';
+                if(!valid[0]) { 
+                    lineRow = lineRow + '<span title="' + valid[1] + '">⚠</span>';
+                }
+                lineRow = lineRow + '</td>';
             }
             lineRow += "</tr>";
             $("#indataTable tbody").append(lineRow); 
