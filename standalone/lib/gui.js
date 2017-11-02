@@ -767,6 +767,7 @@ function switchRtlMode() {
 
 
 function switchAlignment() {
+	$('#vertical').toggleClass('fa-rotate-90');
     if (VERT_ALIGNMENT) {
         VERT_ALIGNMENT = false;
     } else {
