@@ -176,8 +176,8 @@ function loadDataInIndex() {
 
     if (FORMAT == "plain text") {
         var splitted = CONTENTS.match(/[^ ].+?[.!?](?=( |$))/g);
-    } else if (FORMAT == undefined) {
-        var splitted = [];
+    // } else if (FORMAT == undefined) {
+    //     var splitted = [];
     } else {
         var splitted = CONTENTS.split("\n\n");
     }
