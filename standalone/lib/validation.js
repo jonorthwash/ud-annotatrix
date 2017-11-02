@@ -53,10 +53,14 @@ function is_leaf(s) {
 
 function is_cyclic(tree) {
     // Checks if a given tree is cyclic 
+    // Questions: (1) do we want to deal with partial trees ? 
     // @tree = input tree
     console.log('is_cyclic() ' + tree);
 
+    // Let's do a DFS for each of the valid nodes in the tree,
+
     for(let node in tree){ 
+        var visited = {};
         console.log('| ' + tree[node].id + ' -> ' + tree[node].head);
     }
 
