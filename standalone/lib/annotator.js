@@ -670,7 +670,7 @@ function updateTable() {
                     cells[col] = "_";
                 } 
                 lineRow = lineRow + '<td>';
-                lineRow = lineRow + '<span data-value="' + cells[col] + '" onKeyUp="tableEditCell(\''+loc+'\');" id="' + loc + '" contenteditable>' + cells[col] + '</span>';
+                lineRow = lineRow + '<span data-value="' + cells[col] + '"onBlur="updateTable();" onKeyUp="tableEditCell(\''+loc+'\');" id="' + loc + '" contenteditable>' + cells[col] + '</span>';
                 if(!valid[0]) { 
                     lineRow = lineRow + '<span title="' + valid[1] + '">⚠</span>';
                 }
