@@ -23,7 +23,7 @@ function conlluDraw(content) {
     sent.serial = content;
     changeBoxSize(sent);
     changeEdgeStyle();
-    var layout = formLayout();
+    var layout = formLayout(); // This is the thing that lays out nodes on the grid
 
     var cy = window.cy = cytoscape({
         container: document.getElementById("cy"),
@@ -31,8 +31,8 @@ function conlluDraw(content) {
         boxSelectionEnabled: false,
         autounselectify: true,
         autoungrabify: true,
-        userZoomingEnabled: false,
-        // wheelSensitivity: 0.2,
+        userZoomingEnabled: true,
+        wheelSensitivity: 0.2,
         layout: layout, 
         style: CY_STYLE,
         elements: conllu2cy(sent)
@@ -41,6 +41,7 @@ function conlluDraw(content) {
 
 
 function changeBoxSize(sent) {
+    // Changes the size of the cytoscape viewport
     var length = sent.tokens.length;
     if (VERT_ALIGNMENT) {
         $("#cy").css("width", "1500px");
@@ -53,7 +54,11 @@ function changeBoxSize(sent) {
 
 
 function formLayout() {
-    var layout = {name: "grid", condense: true};
+    //  Layout nodes on a grid, condense means 
+    var layout = {name: "tree", 
+                    padding: 0, 
+                    nodeDimensionsIncludeLabels: false
+    };
     if (VERT_ALIGNMENT) {
         layout.cols = 2;
         layout.sort = vertAlSort;
@@ -169,6 +174,9 @@ function createToken(graph, token, spId) {
     var nodeWF = token;
     // nodeWF.parent = spId;
     nodeWF.length = nodeWF.form.length + "em";
+    if(nodeWF.form.length > 3) {
+      nodeWF.length = nodeWF.form.length*0.7 + "em";
+    }
     nodeWF.id = "nf" + nodeId;
     nodeWF.label = nodeWF.form;
     nodeWF.state = "normal";
