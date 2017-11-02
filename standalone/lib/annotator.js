@@ -660,16 +660,18 @@ function updateTable() {
             var cells = line.split("\t");
             for(var col = 0; col < 10; col++) {
                 var valid = [true, "", {}];
-                if(col == 3) {
-                    valid = is_upos(cells[col]);
-                }
-                if(col == 7) {
-                    valid = is_udeprel(cells[col]);
-                }
                 var loc = "table_" + row + ":" + col;
                 if(cells[col].trim() == "") { 
                     cells[col] = "_";
                 } 
+                if(cells[col] != "_") {
+                    if(col == 3) {
+                        valid = is_upos(cells[col]);
+                    }
+                    if(col == 7) {
+                        valid = is_udeprel(cells[col]);
+                    }
+                }
 
                 let td = $("<td>");
                 let span0 = $('<span data-value="' + cells[col] + '"onBlur="updateTable();" onKeyUp="tableEditCell(\''+loc+'\');" id="' + loc + '" contenteditable>' + cells[col] + '</span>');
