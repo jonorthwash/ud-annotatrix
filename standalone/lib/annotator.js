@@ -643,9 +643,9 @@ function tableEditCell(loc) {
 
 function toggleTableView() {
     // This function toggles the table view
+    $("#tableViewButton").toggleClass('fa-code', 'fa-table');
     $("#indata").toggle();
     $("#indataTable").toggle();
-    $("#tableViewButton").toggleClass('fa-code', 'fa-table');
     if(TABLE_VIEW) {
         TABLE_VIEW = false;
     } else { 
@@ -747,12 +747,15 @@ function toggleTableColumn(col) {
 
 function toggleCodeWindow() {
     $("#codeVisibleButton").toggleClass('fa-chevron-down', 'fa-chevron-up');
-    console.log('toggleCodeWindow()');
+    //console.log('toggleCodeWindow()');
+    $(".indataarea").toggle();
+    /**
     if(TABLE_VIEW) {
         $("#indataTable").toggle('show');
     } else { 
         $("#indata").toggle('show');
     }
+    **/
 }
 
 function focusOut(key) {
