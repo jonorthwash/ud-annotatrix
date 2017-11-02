@@ -13,7 +13,7 @@ function is_upos(s) {
     // returns a tuple of [bool, message]
     for(var i = 0; i < U_POS.length; i++) {
       if(U_POS[i] == s) { 
-        return [true, ""];
+        return [true, "", {}];
       }
     }
     return [false, "err_upos_invalid", {"tag": s}];    
@@ -32,7 +32,7 @@ function is_udeprel(s) {
     // Check if the deprel is in the list of valid relations
     for(var i = 0; i < U_DEPRELS.length; i++) {
       if(U_DEPRELS[i] == s_deprel) { 
-        return [true, ""];
+        return [true, "", {}];
       }
     }
     return [false, "err_udeprel_invalid", {"label": s}];
@@ -44,10 +44,9 @@ function is_leaf(s) {
     // @s = part of speech tag
     for(var i = 0; i < U_POS_LEAF.length; i++) {
       if(U_POS_LEAF[i] == s) { 
-        return [true, ""];
+        return [true, "", {}];
       }
     }
-    msg = 
     return [false, "err_udep_leaf_node", {"tag": s}];  
 
 }
