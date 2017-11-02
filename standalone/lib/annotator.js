@@ -658,7 +658,7 @@ function updateTable() {
             var lineRow = "<tr>";
             var cells = line.split("\t");
             for(var col = 0; col < 10; col++) {
-                var valid = [true, ""];
+                var valid = [true, "", {}];
                 if(col == 3) {
                     valid = is_upos(cells[col]);
                 }

@@ -16,7 +16,7 @@ function is_upos(s) {
         return [true, ""];
       }
     }
-    return [false, "«" + s + "» is not in the list of universal part-of-speech tags"];    
+    return [false, "err_upos_invalid", {"tag": s}];    
 }
 
 
@@ -35,7 +35,7 @@ function is_udeprel(s) {
         return [true, ""];
       }
     }
-    return [false, "«" + s + "» is not in the list of universal relations"];
+    return [false, "err_udeprel_invalid", {"label": s}];
 }
 
 function is_leaf(s) {
@@ -47,7 +47,8 @@ function is_leaf(s) {
         return [true, ""];
       }
     }
-    return [false, "Nodes with the «" + s + "» part-of-speech tag should normally not have dependents"];    
+    msg = 
+    return [false, "err_udep_leaf_node", {"tag": s}];  
 
 }
 
@@ -64,5 +65,5 @@ function is_cyclic(tree) {
         console.log('| ' + tree[node].id + ' -> ' + tree[node].head);
     }
 
-    return [false, ""];
+    return [false, "", {}];
 }
