@@ -7,6 +7,8 @@ var CONTENTS = "";
 var AVAILABLESENTENCES = 0;
 var CURRENTSENTENCE = 0;
 var TABLE_VIEW = false;
+var TABLE_COLUMNS_HEADERS = {"ID":0,"FORM":1,"LEMMA":2,"UPOSTAG":3,"XPOSTAG":4,"FEATS":5,"HEAD":6,"DEPREL":7,"DEPS":8,"MISC":9};
+var TABLE_COLUMNS_VISIBILITY = {0:true,1:true,2:true,3:true,4:true,5:true,6:true,7:true,8:true,9:true};
 var RESULTS = [];
 var LOC_ST_AVAILABLE = false;
 var SERVER_RUNNING = false;
@@ -644,6 +646,7 @@ function updateTable() {
     $("#indataTable tbody").empty();
     var conlluLines = $("#indata").val().split("\n");
     var row = 0;
+
     for(let line of conlluLines) {
         if(line.trim() == "") {
             continue;
@@ -667,6 +670,13 @@ function updateTable() {
         row += 1;
     }
 
+    // Make sure hidden columns stay hidden
+    // This could probably go in the for loop above
+    for(var col = 0; col < 10; col++) {
+        if(!TABLE_COLUMNS_VISIBILITY[col]) {
+            $("[id^=table_][id$=" + col+"]").css("display","none");
+        }
+    }
 // Sushain's original, more beautiful code:
 //    $("#indataTable tbody").append(
 //        $("#indata").val().split("\n")
@@ -682,10 +692,9 @@ function toggleTableColumn(col) {
    // not the column header. 
    // @col = the column that was clicked
 
-   // the HTML id of the table cell is #table_<ROW>:<COLUMN>, this hash maps 
+   // the HTML id of the table cell is #table_<ROW>:<COLUMN>, the hash maps 
    // from column ID to column offset
-   var colTitle = {"ID":0,"FORM":1,"LEMMA":2,"UPOSTAG":3,"XPOSTAG":4,"FEATS":5,"HEAD":6,"DEPREL":7,"DEPS":8,"MISC":9};
-   var colId = colTitle[col];
+   var colId = TABLE_COLUMNS_HEADERS[col];
    var button = $("#tableCol_" + col).text();  // The text (e.g. dot)
 
    console.log("toggleTableColumn() " + " " + col + " " + button);
@@ -695,10 +704,12 @@ function toggleTableColumn(col) {
      $("#tableCol_" + col).append("⚫");
      $("#tableHead_" + col).css("display","inline-block");
      $("[id^=table_][id$=" + colId+"]").css("display","inline-block");
+     TABLE_COLUMNS_VISIBILITY[colId] = true;
    } else { // If the column is visible make it hidden
      $("#tableCol_" + col).append("⚪");
      $("#tableHead_" + col).css("display","none");
      $("[id^=table_][id$=" + colId+"]").css("display","none");
+     TABLE_COLUMNS_VISIBILITY[colId] = false;
    }
 
    // TODO: Maybe use greying out of the headers in addition to/instead of 
