@@ -655,8 +655,8 @@ function buildSent() {
 
 
 function redrawTree(sent) {
-    /* Takes a Sentence object. Writes it to the textbox and calls
-    the function drawing the tree. */
+    // Takes a Sentence object. Writes it to the textbox and calls
+    // the function drawing the tree and updating the table
     var changedSent = sent.serial;
 
     // detecting which format was used
@@ -667,6 +667,7 @@ function redrawTree(sent) {
     }
 
     $("#indata").val(changedSent);
+    updateTable();
     drawTree(); 
 }
 
