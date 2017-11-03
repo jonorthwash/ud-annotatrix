@@ -261,22 +261,25 @@ function keyUpClassifier(key) {
     console.log('ZOOM: ', CURRENT_ZOOM);
     if(key.which == EQUALS || key.which == 61){
         CURRENT_ZOOM = cy.zoom();
-        if(key.shiftKey) {
+        if(key.shiftKey) { // zoom in
             CURRENT_ZOOM += 0.1;
-        }  else { 
-            CURRENT_ZOOM = 1.0;
+        }  else {  // fit to screen
+            CURRENT_ZOOM = cy.fit(); 
         }
         cy.zoom(CURRENT_ZOOM);
         cy.center();
-    } else if(key.which == MINUS || key.which == 173) {
+    } else if(key.which == MINUS || key.which == 173) { // zoom out
         CURRENT_ZOOM = cy.zoom();
         if(key.shiftKey) { 
             CURRENT_ZOOM -= 0.1;
         }
         cy.zoom(CURRENT_ZOOM);
         cy.center();
+    } else if(key.which == 48) { // 0 = zoom 1.0
+        CURRENT_ZOOM = 1.0;
+        cy.zoom(CURRENT_ZOOM);
+        cy.center();
     }
-
 }
 
 
