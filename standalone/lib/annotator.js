@@ -114,6 +114,9 @@ function addHandlers() {
 function changeZoom() {
 
     console.log('zoom event');
+//if(event.shiftKey) {
+//    console.log('zoom event+SHIFT');
+//}
     cy.center();
 }
 

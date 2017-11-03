@@ -10,6 +10,7 @@ var ENTER = 13;
 var ESC = 27;
 var RIGHT = 39;
 var LEFT = 37;
+var CURRENT_ZOOM = 1.0;
 var UP = 38;
 var DOWN = 40;
 var MINUS = 189;
@@ -256,7 +257,22 @@ function keyUpClassifier(key) {
             removeSup(st);
         }
     }
-    // console.log(key.which);
+    console.log('KEY: ' + key.which);
+    if(key.which == 187 && event.shiftKey) {
+      CURRENT_ZOOM = cy.zoom();
+      console.log('KEY: ' + key.which);
+      CURRENT_ZOOM += 0.1;
+      console.log('ZOOM: ', CURRENT_ZOOM);
+      cy.zoom(CURRENT_ZOOM);
+    }
+
+    if(key.which == 189  && event.shiftKey) {
+      CURRENT_ZOOM = cy.zoom();
+      console.log('KEY: ' + key.which);
+      CURRENT_ZOOM -= 0.1;
+      console.log('ZOOM: ', CURRENT_ZOOM);
+      cy.zoom(CURRENT_ZOOM);
+    }
 
 }
 
