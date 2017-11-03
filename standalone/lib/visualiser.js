@@ -46,7 +46,7 @@ function conlluDraw(content) {
     });
 
 //    if(content.split('\n').length > 10) {
-//        cleanEdges(); 
+      cleanEdges(); 
 //    }
 
     cy.minZoom(0.1);
@@ -326,7 +326,7 @@ function makePOS(token, nodeId, graph) {
  * Creates a range of numbers in an array, starting at a specified number and
  * ending before a different specified number.
  */
-function range(start, finish, step) {
+function rangeExclusive(start, finish, step) {
 	// If only one number was passed in make it the finish and 0 the start.
 	if (arguments.length == 1) {
 		finish = start;
@@ -337,13 +337,15 @@ function range(start, finish, step) {
 	finish = finish || 0;
 	step = step || 1;
 
-	// If start is mroe than finish, reverse.
+	// If start is greater than finish, reverse.
 	if (start > finish) {
 		var temp = start;
 		start = finish;
 		finish = temp;
 	}
 
+	start = start+1;
+	//finish = finish-1;
 	// Create the array of numbers, stopping before the finish.
 	for (var ret = []; (finish - start) * step > 0; start += step) {
 		ret.push(start);
@@ -389,16 +391,15 @@ function cleanEdges() {
 		if (targetNode<sourceNode) { increment = 1; } // else { increment = -1 };
 		if (diff > 1) {
 			var maxFound = 1;
-			var toCheck = range(targ+increment, sorc, Math.abs(increment));
+			var toCheck = rangeExclusive(targ, sorc, Math.abs(increment));
 			console.log(maxes);
-			console.log("[1] cleanEdges() BEFORE LOOP:", targ, sorc, toCheck, range(7, 3, 1));
+			console.log("[1] cleanEdges() BEFORE LOOP:", targ, sorc, toCheck, rangeExclusive(targ, sorc, 1));
 			$.each(toCheck, function(x, i) {
 				if (maxes[i] > maxFound) {
 					maxFound = maxes[i];
 				}
 				console.log('[2] cleanEdges()', targ, sorc, i, maxFound);
 			});
-			maxes[targetNode] = maxFound;
 			//console.log("BEFORE LOOP", targ, sorc, increment, targ+increment, sorc-increment);
 			/**for (i=targ+increment; i=sorc-increment; i+=increment) {
 				console.log(targ, i, maxFound);
@@ -407,6 +408,7 @@ function cleanEdges() {
 				}
 			}**/
 			howHigh = maxFound +1;
+			maxes[targetNode] = howHigh;
 			console.log(targetNode, howHigh, "—", maxes);
 		}
 		if (!LEFT_TO_RIGHT) {var RTL = -1} else {var RTL = 1}; // support for RTL
