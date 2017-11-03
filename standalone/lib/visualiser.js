@@ -197,88 +197,85 @@ function createToken(graph, token, spId) {
 
 
 function makeDependencies(token, nodeId, graph) {
-    /* if there is head, create an edge for dependency */
-    var deprel = (token.deprel) ? token.deprel : "";
-    var head = token.head; // The id of the head
+	/* if there is head, create an edge for dependency */
+	var deprel = (token.deprel) ? token.deprel : "";
+	var head = token.head; // The id of the head
 
-    var validDep = true;
+	var validDep = true;
 
-    console.log(TREE_);
-//    console.log(TREE_[head]);
+	console.log(TREE_);
+//	console.log(TREE_[head]);
 
-    if(head in TREE_) { // for some reason we need this part
-      // if the pos tag of the head is in the list of leaf nodes, then
-      // mark it as an error.
-      var res = is_leaf(TREE_[head].upostag);
-      if(res[0]) {
-        console.log('[1] writeDeprel @valid=false ' + deprel + ' // ' + res[1]);
-        validDep = false;
-      }
-    }
+	if(head in TREE_) { // for some reason we need this part
+		// if the pos tag of the head is in the list of leaf nodes, then
+		// mark it as an error.
+		var res = is_leaf(TREE_[head].upostag);
+		if(res[0]) {
+			console.log('[1] writeDeprel @valid=false ' + deprel + ' // ' + res[1]);
+			validDep = false;
+		}
+	}
 
-    if(deprel != "") { 
-        var res = is_udeprel(deprel);
-        if(!res[0]) {
-          // if the deprel is not valid, mark it as an error, but 
-          // don't mark it as an error if it's blank. 
-          console.log('[2] writeDeprel @valid=false ' + deprel + ' // ' + res[1]);
-          validDep = false;
-        }
-    }
+	if(deprel != "") { 
+		var res = is_udeprel(deprel);
+		if(!res[0]) {
+			// if the deprel is not valid, mark it as an error, but 
+			// don't mark it as an error if it's blank. 
+			console.log('[2] writeDeprel @valid=false ' + deprel + ' // ' + res[1]);
+			validDep = false;
+		}
+	}
 
-    // Append ⊲ or ⊳ to indicate direction of the arc (helpful if 
-    // there are many arcs.
-    var deprelLabel = deprel;
-    if(parseInt(head) < parseInt(nodeId) && LEFT_TO_RIGHT) {
-      deprelLabel = deprelLabel + '⊳';
-    } else if(parseInt(head) > parseInt(nodeId) && LEFT_TO_RIGHT) {
-      deprelLabel = '⊲' + deprelLabel;
-    } else if(parseInt(head) < parseInt(nodeId) && !LEFT_TO_RIGHT) {
-      deprelLabel = '⊲' + deprelLabel;
-    } else if(parseInt(head) > parseInt(nodeId) && !LEFT_TO_RIGHT) {
-      deprelLabel = deprelLabel + '⊳';
-    }
+	// Append ⊲ or ⊳ to indicate direction of the arc (helpful if 
+	// there are many arcs.
+	var deprelLabel = deprel;
+	if(parseInt(head) < parseInt(nodeId) && LEFT_TO_RIGHT) {
+		deprelLabel = deprelLabel + '⊳';
+	} else if(parseInt(head) > parseInt(nodeId) && LEFT_TO_RIGHT) {
+		deprelLabel = '⊲' + deprelLabel;
+	} else if(parseInt(head) < parseInt(nodeId) && !LEFT_TO_RIGHT) {
+		deprelLabel = '⊲' + deprelLabel;
+	} else if(parseInt(head) > parseInt(nodeId) && !LEFT_TO_RIGHT) {
+		deprelLabel = deprelLabel + '⊳';
+	}
 
-    if (token.head && token.head != 0) {
-        var headId = strWithZero(head);
-        var edgeDep = {
-            "id": "ed" + nodeId,
-            "source": "nf" + headId,
-            "target": "nf" + nodeId,
-            "length": (deprelLabel.length / 3) + "em",
-            "label": deprelLabel,
-            "ctrl": [44, 44, 44, 44] // ARC HEIGHT STUFFS
-        }
-        var coef = (head - nodeId);
-        if (!LEFT_TO_RIGHT) {coef *= -1}; // support for RTL
-        if (VERT_ALIGNMENT) {edgeDep.ctrl = [90, 90, 90, 90]};
-        if (Math.abs(coef) != 1) {coef *= 0.7};
-        edgeDep.ctrl = edgeDep.ctrl.map(function(el){ return el*coef; });
-        // if it's not valid, mark it as an error (see cy-style.js)
-        if(validDep && deprel != "" && deprel != undefined) {
-          graph.push({"data": edgeDep, "classes": "dependency"});
-          console.log("makeDependencies(): valid @" + deprel);
-        } else if (deprel == "" || deprel == undefined) {
-          graph.push({"data": edgeDep, "classes": "dependency, incomplete"});
-          console.log("makeDependencies(): incomplete @" + deprel);
-        }else{
-          graph.push({"data": edgeDep, "classes": "dependency, error"});
-          console.log("makeDependencies(): error @" + deprel);
-        }
+	if (token.head && token.head != 0) {
+		var edgeHeight = 40;
+		var defaultCoef = 1;  // 0.7
+		var headId = strWithZero(head);
+		var edgeDep = {
+			"id": "ed" + nodeId,
+			"source": "nf" + headId,
+			"target": "nf" + nodeId,
+			"length": (deprelLabel.length / 3) + "em",
+			"label": deprelLabel,
+			"ctrl": [edgeHeight, edgeHeight, edgeHeight, edgeHeight] // ARC HEIGHT STUFFS
+		}
+		var coef = (head - nodeId);
+		if (!LEFT_TO_RIGHT) {coef *= -1}; // support for RTL
+		if (VERT_ALIGNMENT) {edgeDep.ctrl = [90, 90, 90, 90]};
+		if (Math.abs(coef) != 1) {coef *= defaultCoef};
+		edgeDep.ctrl = edgeDep.ctrl.map(function(el){ return el*coef; });
+		// if it's not valid, mark it as an error (see cy-style.js)
+		if(validDep && deprel != "" && deprel != undefined) {
+			graph.push({"data": edgeDep, "classes": "dependency"});
+			console.log("makeDependencies(): valid @" + deprel);
+		} else if (deprel == "" || deprel == undefined) {
+			graph.push({"data": edgeDep, "classes": "dependency, incomplete"});
+			console.log("makeDependencies(): incomplete @" + deprel);
+		}else{
+			graph.push({"data": edgeDep, "classes": "dependency, error"});
+			console.log("makeDependencies(): error @" + deprel);
+		}
 
-        
-        var res = is_cyclic(TREE_);
-        if(!res[0]) {
-            console.log('[3] writeDeprel is_cyclic=true');
-        } else {
-            console.log('[3] writeDeprel is_cyclic=false');
-        }
-
-
-        
-    };
-
-    return graph;
+		var res = is_cyclic(TREE_);
+		if(!res[0]) {
+			console.log('[3] writeDeprel is_cyclic=true');
+		} else {
+			console.log('[3] writeDeprel is_cyclic=false');
+		}
+	};
+	return graph;
 }
 
 
