@@ -345,8 +345,13 @@ function changeNode() {
     }
 
     // TODO: rank the labels + make the style better  
-    var availableLabels = U_DEPRELS ;
-    $("#edit").autocomplete({source: availableLabels});
+    var availableLabels = [];
+    for(let i = 0; i < U_DEPRELS.length; i++) {
+        availableLabels.push({"id":U_DEPRELS[i],"text":U_DEPRELS[i]});
+    }
+    console.log('availableLabels:', availableLabels);
+
+    //$('#edit').select2({data: availableLabels});
 
     $("#edit").css("top", param.y1)
         .css("left", param.x1)
@@ -357,7 +362,10 @@ function changeNode() {
         .addClass("activated")
         .addClass(id);
 
+
+    //$("#edit").select2('focus');
     $("#edit").focus();
+
 }
 
 
@@ -852,3 +860,4 @@ $(document).ready(function(){
 
 	$('#viewText').hide() ;
 });
+

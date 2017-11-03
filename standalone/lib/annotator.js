@@ -25,6 +25,7 @@ function main() {
         // ROOT + 'ext/cytoscape-panzoom.js',
         ROOT + 'ext/undomanager.js',
         ROOT + 'ext/popper.min.js',
+        ROOT + 'ext/select2.full.min.js',
         ROOT + 'ext/bootstrap.min.js',
         ROOT + 'ext/l20n.js',
 
