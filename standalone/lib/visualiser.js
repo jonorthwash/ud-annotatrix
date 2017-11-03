@@ -241,7 +241,7 @@ function makeDependencies(token, nodeId, graph) {
 
 	if (token.head && token.head != 0) {
 		var edgeHeight = 40;
-		var defaultCoef = 1;  // 0.7
+		var defaultCoef = 1; // 0.7
 		var headId = strWithZero(head);
 		var edgeDep = {
 			"id": "ed" + nodeId,
@@ -259,20 +259,20 @@ function makeDependencies(token, nodeId, graph) {
 		// if it's not valid, mark it as an error (see cy-style.js)
 		if(validDep && deprel != "" && deprel != undefined) {
 			graph.push({"data": edgeDep, "classes": "dependency"});
-			console.log("makeDependencies(): valid @" + deprel);
+			//console.log("makeDependencies(): valid @" + deprel);
 		} else if (deprel == "" || deprel == undefined) {
 			graph.push({"data": edgeDep, "classes": "dependency, incomplete"});
-			console.log("makeDependencies(): incomplete @" + deprel);
+			//console.log("makeDependencies(): incomplete @" + deprel);
 		}else{
 			graph.push({"data": edgeDep, "classes": "dependency, error"});
-			console.log("makeDependencies(): error @" + deprel);
+			//console.log("makeDependencies(): error @" + deprel);
 		}
 
 		var res = is_cyclic(TREE_);
 		if(!res[0]) {
-			console.log('[3] writeDeprel is_cyclic=true');
+			//console.log('[3] writeDeprel is_cyclic=true');
 		} else {
-			console.log('[3] writeDeprel is_cyclic=false');
+			//console.log('[3] writeDeprel is_cyclic=false');
 		}
 	};
 	return graph;
