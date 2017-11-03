@@ -231,9 +231,13 @@ err_udep_leaf_node = Nodes with the « { $tag } » part-of-speech tag should nor
 		<div class="controls">
 
 		<div style="float:right">
-			<button id="RTL" type="button" class="btn btn-outline-primary" data-toggle="button" aria-pressed="false" autocomplete="off">RTL</button>
+			<button id="RTL" type="button" class="btn btn-outline-primary" data-toggle="button" aria-pressed="false" autocomplete="off">
+				<!-- when fa-align-right is set as default, the button shows the mode to switch to; if fa-align-left, then it shows the current mode -->
+				<i class="fa fa-align-right" title="Toggle right-to-left / left-to-right"></i>
+			</button>
 			<button id="vertical" type="button" class="btn btn-outline-primary" data-toggle="button" aria-pressed="false" autocomplete="off">
-				<i class="fa fa-align-justify fa-rotate-90" title="Previous sentence"></i>
+				<!-- when fa-rotate-90 is set as default, the button shows the mode to switch to; without it, then it shows the current mode -->
+				<i class="fa fa-align-justify fa-rotate-90" title="Toggle vertical / horizontal display"></i>
 			</button>
           <!--p>
               <input type="checkbox" id="RTL" name="RTL">

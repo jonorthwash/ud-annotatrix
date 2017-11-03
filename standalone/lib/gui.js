@@ -757,6 +757,8 @@ function clearWarning() {
 
 
 function switchRtlMode() {
+	$('#RTL .fa').toggleClass('fa-align-right');
+	$('#RTL .fa').toggleClass('fa-align-left');
 	 if (LEFT_TO_RIGHT) {
         LEFT_TO_RIGHT = false;
     } else {
@@ -767,7 +769,7 @@ function switchRtlMode() {
 
 
 function switchAlignment() {
-	$('#vertical').toggleClass('fa-rotate-90');
+	$('#vertical .fa').toggleClass('fa-rotate-90');
     if (VERT_ALIGNMENT) {
         VERT_ALIGNMENT = false;
     } else {
