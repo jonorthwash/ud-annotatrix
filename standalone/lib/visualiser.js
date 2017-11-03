@@ -50,8 +50,8 @@ function conlluDraw(content) {
 //    }
 
     cy.minZoom(0.5);
-    cy.maxZoom(2.0);
-    cy.fit(5);
+    cy.maxZoom(10.0);
+    cy.fit(2);
     cy.center();
 
 }
@@ -265,7 +265,8 @@ function makeDependencies(token, nodeId, graph) {
 		}
 		var coef = (head - nodeId);
 		if (!LEFT_TO_RIGHT) {coef *= -1}; // support for RTL
-		if (VERT_ALIGNMENT) {edgeDep.ctrl = [90, 90, 90, 90]};
+		//if (VERT_ALIGNMENT) {edgeDep.ctrl = [90, 90, 90, 90]};
+		if (VERT_ALIGNMENT) {edgeDep.ctrl = [45, 45, 45, 45]};
 		if (Math.abs(coef) != 1) {coef *= defaultCoef};
 		edgeDep.ctrl = edgeDep.ctrl.map(function(el){ return el*coef; });
 		// if it's not valid, mark it as an error (see cy-style.js)
