@@ -793,7 +793,25 @@ $(document).ready(function(){
 		}
 	});
 
-	$('#helpModal').on('show.bs.modal', console.log);
+	// solution based on https://stackoverflow.com/a/12444641/5181692
+	var map = {}; // You could also use an array
+	onkeydown = onkeyup = function(e){
+		e = e || event; // to deal with IE
+		map[e.key] = e.type == 'keydown';
+		/* insert conditional here */
+		if(map["Shift"] && map["PageDown"]){
+			nextSenSent();
+			map = [];
+			map["Shift"] = true; // leave Shift so that another event can be fired
+		}else if(map["Shift"] && map["PageUp"]){
+			prevSenSent();
+			map = [];
+			map["Shift"] = true; // leave Shift so that another event can be fired
+		}
+		//return false;  // only needed if want to override all the shortcuts
+	}
+
+		$('#helpModal').on('show.bs.modal', console.log);
 
 	$('#helpModal').on('shown.bs.modal', function(e) {
 		//alert('HARGLE BARGLE');
