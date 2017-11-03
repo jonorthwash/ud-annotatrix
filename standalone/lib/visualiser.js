@@ -111,7 +111,7 @@ function cleanEdges() {
 			console.log(targetNode, howHigh, "—", maxes);
 		}
 		if (!LEFT_TO_RIGHT) {var RTL = -1} else {var RTL = 1}; // support for RTL
-		var thisHeight = edgeHeight * defaultCoef * howHigh * increment * RTL;
+		var thisHeight = 5+edgeHeight * defaultCoef * howHigh * increment * RTL;
 		//console.log("HARGLE "+thisHeight);
 		thisEdge.data({'ctrl': [thisHeight, thisHeight, thisHeight, thisHeight]});
 
@@ -143,7 +143,9 @@ function conlluDraw(content) {
         elements: conllu2cy(sent)
     });
 
-	cleanEdges();
+//    if(content.split('\n').length > 10) {
+        cleanEdges(); 
+//    }
 
     cy.minZoom(0.5);
     cy.maxZoom(2.0);
