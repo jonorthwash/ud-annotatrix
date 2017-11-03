@@ -687,6 +687,7 @@ function redrawTree(sent) {
     $("#indata").val(changedSent);
     updateTable();
     drawTree(); 
+    cy.zoom(CURRENT_ZOOM);
 }
 
 
