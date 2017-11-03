@@ -194,7 +194,6 @@ function selectSup() {
 
 
 function keyUpClassifier(key) {
-
     // looking if there are selected arcs
     var selArcs = cy.$("edge.dependency.selected");  // + cy.$("edge.dependency.error");
     var destNodes = cy.$("node[state='arc-dest']");
@@ -258,21 +257,24 @@ function keyUpClassifier(key) {
         }
     }
     //console.log('KEY: ' + key.which);
-    if((key.which == 187 || event.charCode == "=") && event.shiftKey ) {
-      CURRENT_ZOOM = cy.zoom();
-      console.log('KEY: ' + key.which);
-      CURRENT_ZOOM += 0.1;
-      console.log('ZOOM: ', CURRENT_ZOOM);
-      cy.zoom(CURRENT_ZOOM);
-    } else if((key.which == 187 || event.charCode == "=") && !event.shiftKey) {
-      cy.zoom(1.0);
-      CURRENT_ZOOM = cy.zoom();
-    } else if((key.which == 189 || event.charCode == "-")  && event.shiftKey) {
-      CURRENT_ZOOM = cy.zoom();
-      console.log('KEY: ' + key.which);
-      CURRENT_ZOOM -= 0.1;
-      console.log('ZOOM: ', CURRENT_ZOOM);
-      cy.zoom(CURRENT_ZOOM);
+    console.log('KEY: ' + key.which);
+    console.log('ZOOM: ', CURRENT_ZOOM);
+    if(key.which == EQUALS || key.which == 61){
+        CURRENT_ZOOM = cy.zoom();
+        if(key.shiftKey) {
+            CURRENT_ZOOM += 0.1;
+        }  else { 
+            CURRENT_ZOOM = 1.0;
+        }
+        cy.zoom(CURRENT_ZOOM);
+        cy.center();
+    } else if(key.which == MINUS || key.which == 173) {
+        CURRENT_ZOOM = cy.zoom();
+        if(key.shiftKey) { 
+            CURRENT_ZOOM -= 0.1;
+        }
+        cy.zoom(CURRENT_ZOOM);
+        cy.center();
     }
 
 }

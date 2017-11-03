@@ -46,11 +46,12 @@ function conlluDraw(content) {
     });
 
 //    if(content.split('\n').length > 10) {
-        cleanEdges(); 
+//        cleanEdges(); 
 //    }
 
     cy.minZoom(0.5);
     cy.maxZoom(2.0);
+    cy.fit(5);
     cy.center();
 
 }
