@@ -49,7 +49,7 @@ function conlluDraw(content) {
 //        cleanEdges(); 
 //    }
 
-    cy.minZoom(0.5);
+    cy.minZoom(0.1);
     cy.maxZoom(10.0);
     cy.fit(2);
     cy.center();
