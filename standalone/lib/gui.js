@@ -265,6 +265,11 @@ function keyUpClassifier(key) {
       console.log('ZOOM: ', CURRENT_ZOOM);
       cy.zoom(CURRENT_ZOOM);
     }
+    if(key.which == 187 && !event.shiftKey) {
+      cy.zoom(1.0);
+      CURRENT_ZOOM = cy.zoom();
+    }
+
 
     if(key.which == 189  && event.shiftKey) {
       CURRENT_ZOOM = cy.zoom();
