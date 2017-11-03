@@ -11,7 +11,7 @@ var LOW_DIGITS = {0: "₀", 1: "₁", 2: "₂", 3: "₃", 4: "₄", 5: "₅",
 6: "₆", 7: "₇", 8: "₈", 9: "₉", "-": "₋", "(" : "₍", ")" : "₎"};
 var TREE_ = {}; // This map allows us to address the Token object given an ID
 
-var edgeHeight = 50;
+var edgeHeight = 40;
 var defaultCoef = 1; // 0.7
 
 
@@ -376,7 +376,7 @@ function cleanEdges() {
 		//console.log(diff);
 		maxes[parseInt(targetNode)] = diff;
 	});
-	console.log(maxes);
+	console.log('[0] cleanEdges() maxes:' + maxes);
 
 	// set height to max intervening height + 1
 	$.each(edges, function (targetNode, thisEdge) {
@@ -391,12 +391,12 @@ function cleanEdges() {
 			var maxFound = 1;
 			var toCheck = range(targ+increment, sorc, Math.abs(increment));
 			console.log(maxes);
-			console.log("BEFORE LOOP", targ, sorc, toCheck, range(7, 3, 1));
+			console.log("[1] cleanEdges() BEFORE LOOP:", targ, sorc, toCheck, range(7, 3, 1));
 			$.each(toCheck, function(x, i) {
 				if (maxes[i] > maxFound) {
 					maxFound = maxes[i];
 				}
-				console.log(targ, sorc, i, maxFound);
+				console.log('[2] cleanEdges()', targ, sorc, i, maxFound);
 			});
 			maxes[targetNode] = maxFound;
 			//console.log("BEFORE LOOP", targ, sorc, increment, targ+increment, sorc-increment);
