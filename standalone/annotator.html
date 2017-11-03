@@ -183,7 +183,13 @@ err_udep_leaf_node = Nodes with the « { $tag } » part-of-speech tag should nor
 			</div -->
 			<div class="indataarea" style="position: relative">
 				<div class="row" style="padding-top: none">
-					<div class="btn-toolbar col-xs-6" role="toolbar">
+					<div class="tabContainer col-xs-1 corpusNavigation" style="float: left" role="toolbar">
+						<a class="btn btn-secondary" href="#" onClick="javascript: toggleTableView();">
+							<i id="tableViewButton" class="fa fa-table" title="Table view"></i>
+						</a>
+					</div>
+
+					<div class="btn-toolbar col-xs-6 ml-auto" style="float: right;" role="toolbar">
 						<div class="tabContainer col-xs-5 ml-auto">
 							<div class="nav nav-tabs">
 								<li class="nav-item">
@@ -197,11 +203,6 @@ err_udep_leaf_node = Nodes with the « { $tag } » part-of-speech tag should nor
 								</li>
 							</div>
 						</div>
-					</div>
-					<div class="tabContainer col-xs-5 ml-auto corpusNavigation" style="float: right" role="toolbar">
-						<a class="btn btn-secondary" href="#" onClick="javascript: toggleTableView();">
-							<i id="tableViewButton" class="fa fa-table" title="Table view"></i>
-						</a>
 					</div>
 				</div>
 				<textarea id="indata" class="w-100" style="font-size: 85%" rows="20"></textarea>
