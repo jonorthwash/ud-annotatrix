@@ -108,8 +108,14 @@ function addHandlers() {
     cy.on('click', 'edge.dependency', changeNode);
     cy.on('click', 'edge.error', changeNode);
     cy.on('click', 'edge.incomplete', changeNode);
+    cy.on('zoom', changeZoom);
 }
 
+function changeZoom() {
+
+    console.log('zoom event');
+    cy.center();
+}
 
 function loadFromUrl(argument) {
     //check if the URL contains arguments
