@@ -257,21 +257,17 @@ function keyUpClassifier(key) {
             removeSup(st);
         }
     }
-    console.log('KEY: ' + key.which);
-    if(key.which == 187 && event.shiftKey) {
+    //console.log('KEY: ' + key.which);
+    if((key.which == 187 || event.charCode == "=") && event.shiftKey ) {
       CURRENT_ZOOM = cy.zoom();
       console.log('KEY: ' + key.which);
       CURRENT_ZOOM += 0.1;
       console.log('ZOOM: ', CURRENT_ZOOM);
       cy.zoom(CURRENT_ZOOM);
-    }
-    if(key.which == 187 && !event.shiftKey) {
+    } else if((key.which == 187 || event.charCode == "=") && !event.shiftKey) {
       cy.zoom(1.0);
       CURRENT_ZOOM = cy.zoom();
-    }
-
-
-    if(key.which == 189  && event.shiftKey) {
+    } else if((key.which == 189 || event.charCode == "-")  && event.shiftKey) {
       CURRENT_ZOOM = cy.zoom();
       console.log('KEY: ' + key.which);
       CURRENT_ZOOM -= 0.1;
