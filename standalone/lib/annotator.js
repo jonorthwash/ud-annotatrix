@@ -184,7 +184,7 @@ function loadDataInIndex() {
         var splitted = CONTENTS.split("\n\n");
     }
 
-    console.log('loadDataInIndex |' + FORMAT + " | " + splitted.length)
+    // console.log('loadDataInIndex |' + FORMAT + " | " + splitted.length)
     for (var i = splitted.length - 1; i >= 0; i--) {
         if (splitted[i].trim() === "") {
             splitted.splice(i, 1);
@@ -192,7 +192,7 @@ function loadDataInIndex() {
     }
 
     AVAILABLESENTENCES = splitted.length;
-    console.log('loadDataInIndex |' + FORMAT + " | AVAILABLESENTENCES = " + AVAILABLESENTENCES)
+    //console.log('loadDataInIndex |' + FORMAT + " | AVAILABLESENTENCES = " + AVAILABLESENTENCES)
 
     if (AVAILABLESENTENCES == 1 || AVAILABLESENTENCES == 0) {
         document.getElementById('nextSenBtn').disabled = true;
@@ -210,7 +210,7 @@ function loadDataInIndex() {
 function showDataIndiv() {
     // This function is called each time the current sentence is changed to update
     // the CoNLL-U in the textarea.
-    console.log('showDataIndiv() ' + RESULTS.length + " // " + CURRENTSENTENCE);
+    //console.log('showDataIndiv() ' + RESULTS.length + " // " + CURRENTSENTENCE);
     if(RESULTS[CURRENTSENTENCE] != undefined) {
       document.getElementById('indata').value = (RESULTS[CURRENTSENTENCE]);
     } else {
@@ -346,7 +346,7 @@ function drawTree() {
     FORMAT = detectFormat(content);
 
     $("#detected").html("Detected: " + FORMAT + " format");
-    console.log('drawTree() ' + FORMAT);
+    //console.log('drawTree() ' + FORMAT);
     if (FORMAT == "CoNLL-U") {
         $("#viewOther").hide();
         $("#viewCG").removeClass("active");
@@ -464,8 +464,8 @@ function detectFormat(content) {
  
     var firstWord = content.replace(/\n/g, " ").split(" ")[0];
 
-    console.log('[0] detectFormat() ' + content.length + " | " + FORMAT);
-    console.log('[1] detectFormat() ' + content);
+    //console.log('[0] detectFormat() ' + content.length + " | " + FORMAT);
+    //console.log('[1] detectFormat() ' + content);
 
     // handling # comments at the beginning
     if (firstWord[0] === '#'){
@@ -498,7 +498,7 @@ function detectFormat(content) {
                         .text(LABELS[k])
                     );
                 }
-                console.log("FOUND LABELS:" + LABELS);
+                //console.log("FOUND LABELS:" + LABELS);
             }
             following ++;
         }
@@ -528,7 +528,7 @@ function detectFormat(content) {
     } else {
         FORMAT = "Unknown";
     }
-    console.log('[3] detectFormat() ' + FORMAT);
+    //console.log('[3] detectFormat() ' + FORMAT);
 
     return FORMAT
 }
@@ -663,7 +663,7 @@ function updateTable() {
         if(line.trim() == "") {
             continue;
         }
-        console.log(line);
+        //console.log(line);
         if(line[0] == '#') { 
             $("#indataTable tbody").append('<tr style="display:none" id="table_"' + row + '"><td colspan="10"><span>' + line + '</span></td></tr>'); 
         } else { 
