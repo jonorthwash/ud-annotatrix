@@ -257,28 +257,31 @@ function keyUpClassifier(key) {
         }
     }
     //console.log('KEY: ' + key.which);
-    console.log('KEY: ' + key.which);
-    console.log('ZOOM: ', CURRENT_ZOOM);
-    if(key.which == EQUALS || key.which == 61){
-        CURRENT_ZOOM = cy.zoom();
-        if(key.shiftKey) { // zoom in
-            CURRENT_ZOOM += 0.1;
-        }  else {  // fit to screen
-            CURRENT_ZOOM = cy.fit(); 
+    var inputAreaFocus = $("#indata").is(":focus");
+    console.log('KEY: ' + key.which, inputAreaFocus);
+    if(!inputAreaFocus) {
+        console.log('ZOOM: ', CURRENT_ZOOM, inputAreaFocus);
+        if((key.which == EQUALS || key.which == 61) ){
+            CURRENT_ZOOM = cy.zoom();
+            if(key.shiftKey) { // zoom in
+                CURRENT_ZOOM += 0.1;
+            }  else {  // fit to screen
+                CURRENT_ZOOM = cy.fit(); 
+            }
+            cy.zoom(CURRENT_ZOOM);
+            cy.center();
+        } else if((key.which == MINUS || key.which == 173) ) { // zoom out
+            CURRENT_ZOOM = cy.zoom();
+            if(key.shiftKey) { 
+                CURRENT_ZOOM -= 0.1;
+            }
+            cy.zoom(CURRENT_ZOOM);
+            cy.center();
+        } else if(key.which == 48 ) { // 0 = zoom 1.0
+            CURRENT_ZOOM = 1.0;
+            cy.zoom(CURRENT_ZOOM);
+            cy.center();
         }
-        cy.zoom(CURRENT_ZOOM);
-        cy.center();
-    } else if(key.which == MINUS || key.which == 173) { // zoom out
-        CURRENT_ZOOM = cy.zoom();
-        if(key.shiftKey) { 
-            CURRENT_ZOOM -= 0.1;
-        }
-        cy.zoom(CURRENT_ZOOM);
-        cy.center();
-    } else if(key.which == 48) { // 0 = zoom 1.0
-        CURRENT_ZOOM = 1.0;
-        cy.zoom(CURRENT_ZOOM);
-        cy.center();
     }
 }
 
