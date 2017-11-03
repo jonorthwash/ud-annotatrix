@@ -23,104 +23,6 @@ var conllu = require("conllu");
 
 
 
-/**
- * Creates a range of numbers in an array, starting at a specified number and
- * ending before a different specified number.
- */
-function range(start, finish, step) {
-	// If only one number was passed in make it the finish and 0 the start.
-	if (arguments.length == 1) {
-		finish = start;
-		start = 0;
-	}
-	
-	// Validate the finish and step numbers.
-	finish = finish || 0;
-	step = step || 1;
-
-	// If start is mroe than finish, reverse.
-	if (start > finish) {
-		var temp = start;
-		start = finish;
-		finish = temp;
-	}
-
-	// Create the array of numbers, stopping before the finish.
-	for (var ret = []; (finish - start) * step > 0; start += step) {
-		ret.push(start);
-	}
-	return ret;
-}
-
-function cleanEdges() {
-	var sources = {}
-	var edges = {}
-	$.each(cy.filter('edge[id*="ed"]'), function (a, thisEdge) {
-		if (thisEdge.data('source') != thisEdge.data('target')) {
-			//console.log(thisEdge);
-			var sourceNode = thisEdge.data('source').replace("nf","");
-			var targetNode = thisEdge.data('target').replace("nf","");
-			sources[targetNode] = sourceNode;
-			edges[targetNode] = thisEdge;
-			//var diff = Math.abs(sourceNode - targetNode);
-			//console.log(thisEdge.data(), sourceNode, targetNode);
-			//		 (thisEdge.data(), thisEdge.data('source').replace("nf",""), thisEdge.data('target').replace("nf",""));
-			//thisEdge.data({'ctrl': [thisHeight, thisHeight, thisHeight, thisHeight]});
-		}
-	});
-
-	// calculate max heights
-	var maxes = {}
-	$.each(edges, function (targetNode, thisEdge) {
-		var howHigh = 1;
-		var diff = Math.abs(targetNode - sources[targetNode]);
-		//console.log(diff);
-		maxes[parseInt(targetNode)] = diff;
-	});
-	console.log(maxes);
-
-	// set height to max intervening height + 1
-	$.each(edges, function (targetNode, thisEdge) {
-		var sourceNode = sources[targetNode] ;
-		var targ = parseInt(targetNode)
-		var sorc = parseInt(sourceNode)
-		var diff = Math.abs(targ - sorc);
-		var howHigh = 1;
-		var increment = -1 ;
-		if (targetNode<sourceNode) { increment = 1; } // else { increment = -1 };
-		if (diff > 1) {
-			var maxFound = 1;
-			var toCheck = range(targ+increment, sorc, Math.abs(increment));
-			console.log(maxes);
-			console.log("BEFORE LOOP", targ, sorc, toCheck, range(7, 3, 1));
-			$.each(toCheck, function(x, i) {
-				if (maxes[i] > maxFound) {
-					maxFound = maxes[i];
-				}
-				console.log(targ, sorc, i, maxFound);
-			});
-			maxes[targetNode] = maxFound;
-			//console.log("BEFORE LOOP", targ, sorc, increment, targ+increment, sorc-increment);
-			/**for (i=targ+increment; i=sorc-increment; i+=increment) {
-				console.log(targ, i, maxFound);
-				if (maxes[i] > maxFound) {
-					maxFound = maxes[i];
-				}
-			}**/
-			howHigh = maxFound +1;
-			console.log(targetNode, howHigh, "—", maxes);
-		}
-		if (!LEFT_TO_RIGHT) {var RTL = -1} else {var RTL = 1}; // support for RTL
-		var thisHeight = 5+edgeHeight * defaultCoef * howHigh * increment * RTL;
-		//console.log("HARGLE "+thisHeight);
-		thisEdge.data({'ctrl': [thisHeight, thisHeight, thisHeight, thisHeight]});
-
-	});
-	//console.log(sources);
-	//cy.filter('edge[id="ed12"]').data({'ctrl': [thisHeight, thisHeight, thisHeight, thisHeight]});
-	//cy.filter('edge[id="ed12"]').data({'ctrl': [34,50,40,20]}); //.ctrl = [50,34,34,40]); //graph.filter('edge[id="n12"]');//, TREE_);
-}
-
 function conlluDraw(content) {
     /* Draw the tree. */
     var sent = new conllu.Sentence();
@@ -150,6 +52,7 @@ function conlluDraw(content) {
     cy.minZoom(0.5);
     cy.maxZoom(2.0);
     cy.center();
+    cy.fit();
 }
 
 
@@ -157,10 +60,12 @@ function changeBoxSize(sent) {
     // Changes the size of the cytoscape viewport
     var length = sent.tokens.length;
     if (VERT_ALIGNMENT) {
-        $("#cy").css("width", "1500px");
+        //$("#cy").css("width", "1500px");
+        $("#cy").css("width", $(window).width()-10);
         $("#cy").css("height", (length * 50) + "px");
     } else {
-        $("#cy").css("width", "1500px");
+        //$("#cy").css("width", "1500px");
+        $("#cy").css("width", $(window).width()-10);
         $("#cy").css("height", "400px");
     }
 }
@@ -415,6 +320,103 @@ function makePOS(token, nodeId, graph) {
 }
 
 
+/**
+ * Creates a range of numbers in an array, starting at a specified number and
+ * ending before a different specified number.
+ */
+function range(start, finish, step) {
+	// If only one number was passed in make it the finish and 0 the start.
+	if (arguments.length == 1) {
+		finish = start;
+		start = 0;
+	}
+	
+	// Validate the finish and step numbers.
+	finish = finish || 0;
+	step = step || 1;
+
+	// If start is mroe than finish, reverse.
+	if (start > finish) {
+		var temp = start;
+		start = finish;
+		finish = temp;
+	}
+
+	// Create the array of numbers, stopping before the finish.
+	for (var ret = []; (finish - start) * step > 0; start += step) {
+		ret.push(start);
+	}
+	return ret;
+}
+
+function cleanEdges() {
+	var sources = {}
+	var edges = {}
+	$.each(cy.filter('edge[id*="ed"]'), function (a, thisEdge) {
+		if (thisEdge.data('source') != thisEdge.data('target')) {
+			//console.log(thisEdge);
+			var sourceNode = thisEdge.data('source').replace("nf","");
+			var targetNode = thisEdge.data('target').replace("nf","");
+			sources[targetNode] = sourceNode;
+			edges[targetNode] = thisEdge;
+			//var diff = Math.abs(sourceNode - targetNode);
+			//console.log(thisEdge.data(), sourceNode, targetNode);
+			//		 (thisEdge.data(), thisEdge.data('source').replace("nf",""), thisEdge.data('target').replace("nf",""));
+			//thisEdge.data({'ctrl': [thisHeight, thisHeight, thisHeight, thisHeight]});
+		}
+	});
+
+	// calculate max heights
+	var maxes = {}
+	$.each(edges, function (targetNode, thisEdge) {
+		var howHigh = 1;
+		var diff = Math.abs(targetNode - sources[targetNode]);
+		//console.log(diff);
+		maxes[parseInt(targetNode)] = diff;
+	});
+	console.log(maxes);
+
+	// set height to max intervening height + 1
+	$.each(edges, function (targetNode, thisEdge) {
+		var sourceNode = sources[targetNode] ;
+		var targ = parseInt(targetNode)
+		var sorc = parseInt(sourceNode)
+		var diff = Math.abs(targ - sorc);
+		var howHigh = 1;
+		var increment = -1 ;
+		if (targetNode<sourceNode) { increment = 1; } // else { increment = -1 };
+		if (diff > 1) {
+			var maxFound = 1;
+			var toCheck = range(targ+increment, sorc, Math.abs(increment));
+			console.log(maxes);
+			console.log("BEFORE LOOP", targ, sorc, toCheck, range(7, 3, 1));
+			$.each(toCheck, function(x, i) {
+				if (maxes[i] > maxFound) {
+					maxFound = maxes[i];
+				}
+				console.log(targ, sorc, i, maxFound);
+			});
+			maxes[targetNode] = maxFound;
+			//console.log("BEFORE LOOP", targ, sorc, increment, targ+increment, sorc-increment);
+			/**for (i=targ+increment; i=sorc-increment; i+=increment) {
+				console.log(targ, i, maxFound);
+				if (maxes[i] > maxFound) {
+					maxFound = maxes[i];
+				}
+			}**/
+			howHigh = maxFound +1;
+			console.log(targetNode, howHigh, "—", maxes);
+		}
+		if (!LEFT_TO_RIGHT) {var RTL = -1} else {var RTL = 1}; // support for RTL
+		var thisHeight = 5+edgeHeight * defaultCoef * howHigh * increment * RTL;
+		//console.log("HARGLE "+thisHeight);
+		thisEdge.data({'ctrl': [thisHeight, thisHeight, thisHeight, thisHeight]});
+
+	});
+	//console.log(sources);
+	//cy.filter('edge[id="ed12"]').data({'ctrl': [thisHeight, thisHeight, thisHeight, thisHeight]});
+	//cy.filter('edge[id="ed12"]').data({'ctrl': [34,50,40,20]}); //.ctrl = [50,34,34,40]); //graph.filter('edge[id="n12"]');//, TREE_);
+}
 function simpleIdSorting(n1, n2) {
     if( n1.id() < n2.id() ){
         return -1;
