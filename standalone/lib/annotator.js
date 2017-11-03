@@ -4,6 +4,7 @@ var FORMAT = "";
 var FILENAME = 'ud-annotatrix-corpus.conllu'; // default name
 var ROOT = './lib/';
 var CONTENTS = "";
+var TEXTAREA_ROWS_DEFAULT = 20;
 var AVAILABLESENTENCES = 0;
 var CURRENTSENTENCE = 0;
 var TABLE_VIEW = false;
@@ -211,6 +212,7 @@ function showDataIndiv() {
     // This function is called each time the current sentence is changed to update
     // the CoNLL-U in the textarea.
     //console.log('showDataIndiv() ' + RESULTS.length + " // " + CURRENTSENTENCE);
+
     if(RESULTS[CURRENTSENTENCE] != undefined) {
       document.getElementById('indata').value = (RESULTS[CURRENTSENTENCE]);
     } else {
@@ -342,6 +344,11 @@ function drawTree() {
     var content = $("#indata").val();
     // remove extra spaces at the end of lines. #89
     content = content.replace(/ +\n/, '\n');
+    if(content.split('\n').length < TEXTAREA_ROWS_DEFAULT) {
+        $("#indata").attr('rows', content.split('\n').length+1);
+    } else {
+        $("#indata").attr('rows', TEXTAREA_ROWS_DEFAULT);
+    }
     $("#indata").val(content);
     FORMAT = detectFormat(content);
 
