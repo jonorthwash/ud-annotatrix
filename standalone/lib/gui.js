@@ -348,18 +348,24 @@ function changeNode() {
     // TODO: rank the labels + make the style better  
     var availableLabels = [];
     for(let i = 0; i < U_DEPRELS.length; i++) {
-        availableLabels.push({"id":U_DEPRELS[i],"text":U_DEPRELS[i]});
+        availableLabels.push(U_DEPRELS[i]);
     }
     console.log('availableLabels:', availableLabels);
 
  
     // autocomplete
 
+    $('#edit').selfcomplete({lookup: availableLabels, 
+        tabDisabled: true,
+        autoSelectFirst:true,
+        lookupLimit:5
+    });
+
     $("#edit").css("top", param.y1)
         .css("left", param.x1)
         .css("height", param.h)
         .css("width", param.w)
-        .css("background-color", param.color)
+        //.css("background-color", param.color)
         .attr("value", this.data("label"))
         .addClass("activated")
         .addClass(id);

@@ -51,7 +51,7 @@ function conlluDraw(content) {
 
     cy.minZoom(0.1);
     cy.maxZoom(10.0);
-    cy.fit(2);
+    CURRENT_ZOOM = cy.fit(2);
     cy.center();
 
 }
