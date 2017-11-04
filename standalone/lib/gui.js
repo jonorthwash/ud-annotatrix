@@ -342,7 +342,8 @@ function changeNode() {
     if (VERT_ALIGNMENT) {
         $(".activated#mute").css("height", (length * 50) + "px");
     } else {
-        $(".activated#mute").css("width", "1500px");
+        //$(".activated#mute").css("width", "1500px");
+        $(".activated#mute").css("width", $(window).width()-10);
     }
 
     // TODO: rank the labels + make the style better  
@@ -357,6 +358,7 @@ function changeNode() {
 
     $('#edit').selfcomplete({lookup: availableLabels, 
         tabDisabled: true,
+        zindex: 9999,
         autoSelectFirst:true,
         lookupLimit:5
     });

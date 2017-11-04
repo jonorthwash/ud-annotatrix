@@ -577,7 +577,7 @@ h4, h5, h6 {
 	z-index: +1;
 }
 
-.ui-autocomplete {
+.ui-selfcomplete {
        background-color: white;
        width: 150px;
        list-style-type: none;
@@ -624,21 +624,21 @@ textarea {
 	border-color: #ddd;
 }
 
-.autocomplete-suggestions {
+.selfcomplete-suggestions {
 border: 1px solid #999;
 background: #FFF;
 cursor: default;
 overflow: auto;
 }
-.autocomplete-suggestion {
+.selfcomplete-suggestion {
 padding: 2px 5px;
 white-space: nowrap;
 overflow: hidden;
 }
-.autocomplete-selected {
+.selfcomplete-selected {
 background: #F0F0F0;
 }
-.autocomplete-suggestions strong {
+.selfcomplete-suggestions strong {
 font-weight: normal;
 color: #3399FF;
 }

@@ -1,3 +1,6 @@
+// Note: I had to change the name from [Aa]utocomplete to [Ss]elfcomplete 
+// in order to get this to work at the same time as JQuery-UI
+
 /**
 *  Ajax Selfcomplete for jQuery, version 1.4.4
 *  (c) 2017 Tomas Kirda
