@@ -51,8 +51,14 @@ function conlluDraw(content) {
 
     cy.minZoom(0.1);
     cy.maxZoom(10.0);
-    CURRENT_ZOOM = cy.fit(2);
-    cy.center();
+
+    // Fit the graph to the window size
+    cy.fit(2);
+    CURRENT_ZOOM = cy.zoom(); // Get the current zoom factor.
+    if(CURRENT_ZOOM >= 1.7) { // If the current zoom factor is more than 1.7, then set it to 1.7
+      cy.zoom(1.7);           // This is to make sure that small trees don't appear massive.
+    }
+    cy.center(); 
 
 }
 
