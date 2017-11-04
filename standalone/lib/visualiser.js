@@ -275,6 +275,12 @@ function makeDependencies(token, nodeId, graph) {
 		if (VERT_ALIGNMENT) {edgeDep.ctrl = [45, 45, 45, 45]};
 		if (Math.abs(coef) != 1) {coef *= defaultCoef};
 		edgeDep.ctrl = edgeDep.ctrl.map(function(el){ return el*coef; });
+
+                if(token.upostag == 'PUNCT' && !is_projective(TREE_)){
+                    validDep = false;
+                    console.log('WARNING: Non-projective punctuation');
+                }
+
 		// if it's not valid, mark it as an error (see cy-style.js)
 		if(validDep && deprel != "" && deprel != undefined) {
 			graph.push({"data": edgeDep, "classes": "dependency"});
@@ -288,11 +294,11 @@ function makeDependencies(token, nodeId, graph) {
 		}
 
 		var res = is_cyclic(TREE_);
-		if(!res[0]) {
+		/*if(!res[0]) {
 			//console.log('[3] writeDeprel is_cyclic=true');
 		} else {
 			//console.log('[3] writeDeprel is_cyclic=false');
-		}
+		}*/
 		//console.log(edgeDep);
 	};
 	return graph;
@@ -384,7 +390,7 @@ function cleanEdges() {
 		//console.log(diff);
 		maxes[parseInt(targetNode)] = diff;
 	});
-	console.log('[0] cleanEdges() maxes:' + maxes);
+	//console.log('[0] cleanEdges() maxes:' + maxes);
 
 	// set height to max intervening height + 1
 	$.each(edges, function (targetNode, thisEdge) {
@@ -398,13 +404,13 @@ function cleanEdges() {
 		if (diff > 1) {
 			var maxFound = 1;
 			var toCheck = rangeExclusive(targ, sorc, Math.abs(increment));
-			console.log(maxes);
-			console.log("[1] cleanEdges() BEFORE LOOP:", targ, sorc, toCheck, rangeExclusive(targ, sorc, 1));
+			//console.log(maxes);
+			//console.log("[1] cleanEdges() BEFORE LOOP:", targ, sorc, toCheck, rangeExclusive(targ, sorc, 1));
 			$.each(toCheck, function(x, i) {
 				if (maxes[i] > maxFound) {
 					maxFound = maxes[i];
 				}
-				console.log('[2] cleanEdges()', targ, sorc, i, maxFound);
+				//console.log('[2] cleanEdges()', targ, sorc, i, maxFound);
 			});
 			//console.log("BEFORE LOOP", targ, sorc, increment, targ+increment, sorc-increment);
 			/**for (i=targ+increment; i=sorc-increment; i+=increment) {
@@ -415,7 +421,7 @@ function cleanEdges() {
 			}**/
 			howHigh = maxFound +1;
 			maxes[targetNode] = howHigh;
-			console.log(targetNode, howHigh, "—", maxes);
+			//console.log(targetNode, howHigh, "—", maxes);
 		}
 		if (!LEFT_TO_RIGHT) {var RTL = -1} else {var RTL = 1}; // support for RTL
 		var thisHeight = edgeHeight * defaultCoef * howHigh * increment * RTL;
