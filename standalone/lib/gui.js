@@ -357,8 +357,7 @@ function changeNode() {
     // autocomplete
 
     $('#edit').selfcomplete({lookup: availableLabels, 
-        tabDisabled: true,
-        zindex: 9999,
+        tabDisabled: false,
         autoSelectFirst:true,
         lookupLimit:5
     });
