@@ -41,6 +41,12 @@ var CY_STYLE = [{
         "border-color": FANCY
     }
 }, {
+    "selector": "node.wf.root",
+    "style": {
+        "font-weight": "bold",
+        "text-border-width": "2px"
+    }
+}, {
     "selector": "node.wf.activated",
     "style": {
         "background-color": ACTIVE

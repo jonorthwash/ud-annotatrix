@@ -20,6 +20,7 @@ var K = 75;
 var D = 68;
 var I = 73;
 var S = 83;
+var R = 82;
 var M = 77;
 var SIDES = {39: "right", 37: "left"};
 var POS2RELmappings = {
@@ -242,6 +243,9 @@ function keyUpClassifier(key) {
         } else if (key.which == S) {
             wf.addClass("supertoken");
             wf.removeClass("activated");
+        } else if (key.which == R) {
+            setRoot(wf);
+            wf.removeClass("activated");
         };
     } else if (toMerge.length) {
         if (key.which in SIDES) {
@@ -402,6 +406,21 @@ function find2change() {
     var active = cy.$(".input");
     var Id = active.id().slice(2) - 1;
     return Id;
+}
+
+
+function setRoot(wf) {
+   var sent = buildSent();
+   var indices = findConlluId(wf);
+   var outerIndex = indices[1];
+   var cur = parseInt(sent.tokens[outerIndex].id);
+   var head = 0;
+   console.log('setRoot()', outerIndex, cur, head);
+   var sentAndPrev = changeConlluAttr(sent, indices, "deprel", "root");
+   var sentAndPrev = changeConlluAttr(sent, indices, "head", head);
+
+   redrawTree(sent);
+   wf.addClass("root");
 }
 
 
