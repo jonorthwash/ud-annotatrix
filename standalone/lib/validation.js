@@ -42,6 +42,10 @@ function is_leaf(s) {
     // Checks if a node is in the list of part-of-speech tags which 
     // are usually leaf nodes
     // @s = part of speech tag
+
+    // http://universaldependencies.org/u/dep/punct.html
+    // Tokens with the relation punct always attach to content words (except in cases of ellipsis) and can never have dependents.
+
     for(var i = 0; i < U_POS_LEAF.length; i++) {
       if(U_POS_LEAF[i] == s) { 
         return [true, "", {}];
@@ -51,9 +55,9 @@ function is_leaf(s) {
 
 }
 
-function is_projective(tree) {
-    console.log('is_projective()', tree);
 
+function is_projective(tree) {
+    // Checks to see if a graph is projective 
     var nodes = [];
     var heads = {};
     for(let node in tree) {
