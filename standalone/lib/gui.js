@@ -319,13 +319,18 @@ function removeSup(st) {
 
 
 function changeNode() {
-    console.log("changeNode() " + Object.entries(this));
+    console.log("changeNode() " + Object.entries(this) + " // " + this.id());
 
     this.addClass("input");
     var id = this.id().slice(0, 2);
     var param = this.renderedBoundingBox();
     param.color = this.style("background-color");
-    if (id == "ed") {param = changeEdgeParam(param)};
+    var nodeType;
+    if (id == "ed") {
+        param = changeEdgeParam(param);
+        nodeType = "DEPREL";
+    }
+    if (id == "np") {nodeType = "UPOS"};
 
     // for some reason, there are problems with label in deprels without this 
     if (this.data("label") == undefined) {this.data("label", "")};
@@ -348,11 +353,12 @@ function changeNode() {
 
     // TODO: rank the labels + make the style better  
     var availableLabels = [];
-    for(let i = 0; i < U_DEPRELS.length; i++) {
-        availableLabels.push(U_DEPRELS[i]);
+    if(nodeType == "UPOS") {
+        availableLabels = U_POS; 
+    } else if(nodeType == "DEPREL") { 
+        availableLabels = U_DEPRELS;
     }
     console.log('availableLabels:', availableLabels);
-
  
     // autocomplete
 

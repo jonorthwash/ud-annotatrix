@@ -643,6 +643,7 @@ function tableEditCell(loc) {
             if(thisCell.trim() == "") {
                 thisCell = "_";
             }
+            thisCell = thisCell.replace(/<br>/, ''); // Get rid of extra spaces
 //            console.log("@" + table.rows[r].cells[c].innerHTML + " // " + thisCell);
             if(c > 0) {
               conllu = conllu + "\t" + thisCell;
