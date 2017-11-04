@@ -319,7 +319,8 @@ function removeSup(st) {
 
 
 function changeNode() {
-//    console.log("changeNode() " + this.data("label"));
+    console.log("changeNode() " + Object.entries(this));
+
     this.addClass("input");
     var id = this.id().slice(0, 2);
     var param = this.renderedBoundingBox();
@@ -351,7 +352,8 @@ function changeNode() {
     }
     console.log('availableLabels:', availableLabels);
 
-    //$('#edit').select2({data: availableLabels});
+ 
+    // autocomplete
 
     $("#edit").css("top", param.y1)
         .css("left", param.x1)
@@ -363,7 +365,6 @@ function changeNode() {
         .addClass(id);
 
 
-    //$("#edit").select2('focus');
     $("#edit").focus();
 
 }
