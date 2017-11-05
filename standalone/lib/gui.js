@@ -880,6 +880,12 @@ $(document).ready(function(){
 			prevSenSent();
 			map = [];
 			map["Shift"] = true; // leave Shift so that another event can be fired
+		}else if(map["Control"] && map["z"]) {
+			undoManager.undo();
+			updateUI();
+		}else if(map["Control"] && map["y"] || map["Control"] && map["Shift"] && map["Z"]) {
+			undoManager.redo();
+			updateUI();
 		}
 		//return false;  // only needed if want to override all the shortcuts
 	}
