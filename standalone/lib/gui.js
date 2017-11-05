@@ -244,8 +244,11 @@ function keyUpClassifier(key) {
             wf.addClass("supertoken");
             wf.removeClass("activated");
         } else if (key.which == R) {
-            setRoot(wf);
+				wf.addClass("root");
             wf.removeClass("activated");
+            setRoot(wf);
+				//wf.style({"text-border-width": "2em"});
+            console.log("TESTING", wf);
         };
     } else if (toMerge.length) {
         if (key.which in SIDES) {
@@ -419,8 +422,10 @@ function setRoot(wf) {
    var sentAndPrev = changeConlluAttr(sent, indices, "deprel", "root");
    var sentAndPrev = changeConlluAttr(sent, indices, "head", head);
 
+   //wf.addClass("root");
+	//wf.style({"border-width": "5em"});
+	//console.log('setRoot()', wf);
    redrawTree(sent);
-   wf.addClass("root");
 }
 
 

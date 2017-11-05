@@ -44,7 +44,8 @@ var CY_STYLE = [{
     "selector": "node.wf.root",
     "style": {
         "font-weight": "bold",
-        "text-border-width": "2px"
+        //"text-border-width": "2em",
+        "border-width": "2px"
     }
 }, {
     "selector": "node.wf.activated",
@@ -93,6 +94,10 @@ var CY_STYLE = [{
     "curve-style": "unbundled-bezier",
     "control-point-distances": "data(ctrl)",
     "control-point-weights": "0 0.25 0.75 1",
+    'mid-target-arrow-shape': 'triangle',
+    'mid-target-arrow-fill': 'hollow',
+    'mid-target-arrow-color': 'black',
+    'arrow-scale': '1.5',
     "edge-distances": "node-position",
     "label": "data(label)",
     "text-events": "yes"
@@ -107,6 +112,10 @@ var CY_STYLE = [{
     "curve-style": "unbundled-bezier",
     "control-point-distances": "data(ctrl)",
     "control-point-weights": "0 0.25 0.75 1",
+    'mid-target-arrow-shape': 'triangle',
+    'mid-target-arrow-fill': 'hollow',
+    'mid-target-arrow-color': 'black',
+    'arrow-scale': '1.5',
     "edge-distances": "node-position",
     "label": "data(label)",
     "text-events": "yes"
@@ -121,6 +130,12 @@ var CY_STYLE = [{
     "control-point-distances": "data(ctrl)",
     "control-point-weights": "0 0.25 0.75 1",
     "edge-distances": "node-position",
+    'mid-target-arrow-shape': 'triangle',
+    'mid-target-arrow-fill': 'hollow',
+    'mid-target-arrow-color': 'black',
+    'arrow-scale': '1.5',
+//	 'target-endpoint': '25deg',
+//	 'source-endpoint': '-25deg',
     "label": "data(label)",
     "text-events": "yes"
   }
