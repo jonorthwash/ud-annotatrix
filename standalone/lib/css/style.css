@@ -653,4 +653,14 @@ color: #3399FF;
 .thead-default th {
 	position: relative ;
 	cursor: pointer ;
+	border-right: 1px solid white ;
+	border-left: 1px solid white ;
+	border-spacing: 1px;
+}
+
+.thead-default th:first-child {
+	border-left: 1px solid #e9ecef !important ;
+}
+.thead-default th:last-child {
+	border-right: 1px solid #e9ecef !important ;
 }

@@ -750,7 +750,7 @@ function toggleTableColumn(col) {
    console.log("toggleTableColumn() " + " " + col + " " + button);
    // $("#tableCol_" + col).empty(); // Empty the text
 
-   $("#tableCol_" + col + " i").toggleClass("fa-expand", "fa-compress"); 
+   $("#tableCol_" + col + " i").toggleClass("fa-angle-double-right", "fa-angle-double-left"); 
    $("#tableHead_" + col).toggle();
    $("[id^=table_][id$=" + colId+"]").toggle();
    TABLE_COLUMNS_VISIBILITY[colId] = !TABLE_COLUMNS_VISIBILITY[colId] ;
