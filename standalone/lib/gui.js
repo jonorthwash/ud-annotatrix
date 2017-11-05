@@ -275,9 +275,9 @@ function keyUpClassifier(key) {
             cy.center();
         } else if((key.which == MINUS || key.which == 173) ) { // zoom out
             CURRENT_ZOOM = cy.zoom();
-            if(key.shiftKey) { 
+            //if(key.shiftKey) { 
                 CURRENT_ZOOM -= 0.1;
-            }
+            //}
             cy.zoom(CURRENT_ZOOM);
             cy.center();
         } else if(key.which == 48 ) { // 0 = zoom 1.0
