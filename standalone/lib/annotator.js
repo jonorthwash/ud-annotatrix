@@ -769,6 +769,8 @@ function toggleCodeWindow() {
     $("#codeVisibleButton").toggleClass('fa-chevron-down', 'fa-chevron-up');
     //console.log('toggleCodeWindow()');
     $(".indataarea").toggle();
+    $("#tabBox").toggle();
+    $("#viewButton").toggle();
     /**
     if(TABLE_VIEW) {
         $("#indataTable").toggle('show');
