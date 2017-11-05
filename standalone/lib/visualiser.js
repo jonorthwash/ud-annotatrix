@@ -217,7 +217,13 @@ function createToken(graph, token, spId) {
     nodeWF.state = "normal";
 
     nodeWF.parent = "num" + nodeId;
-    graph.push({"data": nodeWF, "classes": "wf"});
+    if (token.head && token.head == 0 ) { // for root node
+        var rootNode = " root";
+    } else {
+        var rootNode = "";
+    }
+
+    graph.push({"data": nodeWF, "classes": "wf"+rootNode});
 
     graph = makePOS(token, nodeId, graph);
     graph = makeDependencies(token, nodeId, graph);
@@ -436,7 +442,6 @@ function cleanEdges() {
 		var thisHeight = edgeHeight * defaultCoef * howHigh * increment * RTL;
 		//console.log("HARGLE "+thisHeight);
 		thisEdge.data({'ctrl': [thisHeight, thisHeight, thisHeight, thisHeight]});
-
 	});
 	//console.log(sources);
 	//cy.filter('edge[id="ed12"]').data({'ctrl': [thisHeight, thisHeight, thisHeight, thisHeight]});

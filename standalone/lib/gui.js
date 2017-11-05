@@ -245,7 +245,6 @@ function keyUpClassifier(key) {
             wf.removeClass("activated");
         } else if (key.which == R) {
             setRoot(wf);
-            wf.removeClass("activated");
         };
     } else if (toMerge.length) {
         if (key.which in SIDES) {
@@ -276,9 +275,9 @@ function keyUpClassifier(key) {
             cy.center();
         } else if((key.which == MINUS || key.which == 173) ) { // zoom out
             CURRENT_ZOOM = cy.zoom();
-            if(key.shiftKey) { 
+            //if(key.shiftKey) { 
                 CURRENT_ZOOM -= 0.1;
-            }
+            //}
             cy.zoom(CURRENT_ZOOM);
             cy.center();
         } else if(key.which == 48 ) { // 0 = zoom 1.0
@@ -420,7 +419,6 @@ function setRoot(wf) {
    var sentAndPrev = changeConlluAttr(sent, indices, "head", head);
 
    redrawTree(sent);
-   wf.addClass("root");
 }
 
 
@@ -806,6 +804,14 @@ function viewAsCG() {
     }
     $("#viewCG").addClass("active");
     $("#indata").val(text);
+
+    if(TABLE_VIEW) {
+        $("#tableViewButton").toggleClass('fa-code', 'fa-table');
+        $("#indataTable").toggle();
+        $("#indata").toggle();
+        TABLE_VIEW = false ;
+    }
+
 }
 
 
@@ -878,7 +884,7 @@ $(document).ready(function(){
 		//return false;  // only needed if want to override all the shortcuts
 	}
 
-		$('#helpModal').on('show.bs.modal', console.log);
+	//$('#helpModal').on('show.bs.modal', console.log);
 
 	$('#helpModal').on('shown.bs.modal', function(e) {
 		//alert('HARGLE BARGLE');
@@ -892,5 +898,17 @@ $(document).ready(function(){
 //	});
 
 	$('#viewText').hide() ;
+
+	// collapse columns when header is clicked on
+	$('.thead-default th').on('click', function(e) {
+		var columnHeader = $('.tableColHeader', this)[0];
+		if (columnHeader) {  // prevents non-collapsible cols from throwing errors
+			toggleTableColumn(columnHeader.title);
+		}
+	});
+	// this way of doing it only responds when icon is clicked:
+	//$('.tableColHeader').on('click', function(e) {
+	//	toggleTableColumn(this.title);
+	//});
 });
 
