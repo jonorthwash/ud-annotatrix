@@ -747,18 +747,23 @@ function toggleTableColumn(col) {
    var button = $("#tableCol_" + col).text();  // The text (e.g. dot)
 
    console.log("toggleTableColumn() " + " " + col + " " + button);
-   $("#tableCol_" + col).empty(); // Empty the text
+   // $("#tableCol_" + col).empty(); // Empty the text
+
+   $("#tableCol_" + col + " i").toggleClass("fa-expand", "fa-compress"); 
+   $("#tableHead_" + col).toggle();
+   $("[id^=table_][id$=" + colId+"]").toggle();
+   TABLE_COLUMNS_VISIBILITY[colId] = !TABLE_COLUMNS_VISIBILITY[colId] ;
 
    if(button == "⚪") {  // If the column is currently hidden, make it visible
-     $("#tableCol_" + col).append("⚫");
-     $("#tableHead_" + col).css("display","inline-block");
-     $("[id^=table_][id$=" + colId+"]").css("display","inline-block");
-     TABLE_COLUMNS_VISIBILITY[colId] = true;
+     //$("#tableCol_" + col).append("⚫");
+     //$("#tableHead_" + col).css("display","inline-block");
+     //$("[id^=table_][id$=" + colId+"]").css("display","inline-block");
+     //TABLE_COLUMNS_VISIBILITY[colId] = true;
    } else { // If the column is visible make it hidden
-     $("#tableCol_" + col).append("⚪");
-     $("#tableHead_" + col).css("display","none");
-     $("[id^=table_][id$=" + colId+"]").css("display","none");
-     TABLE_COLUMNS_VISIBILITY[colId] = false;
+     //$("#tableCol_" + col).append("⚪");
+     //$("#tableHead_" + col).css("display","none");
+     //$("[id^=table_][id$=" + colId+"]").css("display","none");
+     //TABLE_COLUMNS_VISIBILITY[colId] = false;
    }
 
    // TODO: Maybe use greying out of the headers in addition to/instead of 

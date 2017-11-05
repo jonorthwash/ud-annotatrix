@@ -884,7 +884,7 @@ $(document).ready(function(){
 		//return false;  // only needed if want to override all the shortcuts
 	}
 
-		$('#helpModal').on('show.bs.modal', console.log);
+	//$('#helpModal').on('show.bs.modal', console.log);
 
 	$('#helpModal').on('shown.bs.modal', function(e) {
 		//alert('HARGLE BARGLE');
@@ -898,5 +898,17 @@ $(document).ready(function(){
 //	});
 
 	$('#viewText').hide() ;
+
+	// collapse columns when header is clicked on
+	$('.thead-default th').on('click', function(e) {
+		var columnHeader = $('.tableColHeader', this)[0];
+		if (columnHeader) {  // prevents non-collapsible cols from throwing errors
+			toggleTableColumn(columnHeader.title);
+		}
+	});
+	// this way of doing it only responds when icon is clicked:
+	//$('.tableColHeader').on('click', function(e) {
+	//	toggleTableColumn(this.title);
+	//});
 });
 

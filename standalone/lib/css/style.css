@@ -642,3 +642,15 @@ background: #F0F0F0;
 font-weight: normal;
 color: #3399FF;
 }
+
+.tableColHeader {
+	position: absolute ;
+	right: 1px;
+	bottom: 1ex;
+	padding-left: 0.5ex;
+}
+
+.thead-default th {
+	position: relative ;
+	cursor: pointer ;
+}
