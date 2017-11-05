@@ -56,12 +56,21 @@ function conlluDraw(content) {
     cy.fit(2);
     CURRENT_ZOOM = cy.zoom(); // Get the current zoom factor.
     if(CURRENT_ZOOM >= 1.7) { // If the current zoom factor is more than 1.7, then set it to 1.7
-      cy.zoom(1.7);           // This is to make sure that small trees don't appear massive.
+      CURRENT_ZOOM = cy.zoom(1.7);           // This is to make sure that small trees don't appear massive.
+    } else if (CURRENT_ZOOM <= 0.7) {
+      CURRENT_ZOOM = cy.zoom(0.7);
     }
     cy.center(); 
-
+    $(window).bind('resize', onResize);
 }
 
+function onResize(e) {
+    console.log('< resize event', CURRENT_ZOOM);
+    cy.fit();
+    cy.center();
+    CURRENT_ZOOM = cy.zoom();
+    console.log('> resize event', CURRENT_ZOOM);
+}
 
 function changeBoxSize(sent) {
     // Changes the size of the cytoscape viewport
