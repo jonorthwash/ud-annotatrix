@@ -7,7 +7,7 @@ var NORMAL = "#7fa2ff";
 var FANCY = "#cc22fc";
 var POS_COLOR = "#afa2ff";
 var ST_COLOR = "#bcd2ff"
-var SCROLL_ZOOM_INCREMENT = 0.01;
+var SCROLL_ZOOM_INCREMENT = 0.05;
 var LOW_DIGITS = {0: "₀", 1: "₁", 2: "₂", 3: "₃", 4: "₄", 5: "₅",
 6: "₆", 7: "₇", 8: "₈", 9: "₉", "-": "₋", "(" : "₍", ")" : "₎"};
 var TREE_ = {}; // This map allows us to address the Token object given an ID
