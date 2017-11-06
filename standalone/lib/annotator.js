@@ -685,7 +685,10 @@ function updateTable() {
             continue;
         }
         //console.log(line);
-        if(line[0] == '#') { 
+        if(line[0] == '#') {
+            $("#indataTable tbody").append('<tr style="display:none" id="table_"' + row + '"><td colspan="10"><span>' + line + '</span></td></tr>'); 
+        } else if(line.split('\t').length != 10) { 
+            console.log('WEIRDNESS:', line.split('\t').length ,line);
             $("#indataTable tbody").append('<tr style="display:none" id="table_"' + row + '"><td colspan="10"><span>' + line + '</span></td></tr>'); 
         } else { 
             var lineRow = $("<tr>");

@@ -120,6 +120,19 @@ function is_projective(tree) {
     return res;
 }
 
+function dfs(tree, i, visited) { 
+    console.log('DFS: tree |',tree);
+    console.log('DFS: i    |',i);
+    console.log('DFS: visit|',visited);
+    if(!(i in visited)) {
+        visited[i] = 0;
+    }
+    visited[i] += 1;
+    for(let child in tree[i]) {
+        dfs(tree, child, visited);
+    } 
+}
+
 function is_cyclic(tree) {
     // Checks if a given tree is cyclic 
     // Questions: (1) do we want to deal with partial trees ? 
@@ -127,11 +140,30 @@ function is_cyclic(tree) {
     //console.log('is_cyclic() ' + tree);
 
     // Let's do a DFS for each of the valid nodes in the tree,
-
-    for(let node in tree){ 
-        var visited = {};
-        //console.log('| ' + tree[node].id + ' -> ' + tree[node].head);
+    var nodes = [];
+    for(let node in tree) {
+        if(!tree[node] || tree[node] == undefined) { 
+            continue;
+        }
+        var head = tree[node].head;
+        var id = tree[node].id;
+        if(!head || !id) { 
+            continue;
+        }
+        head = parseInt(head);
+        id = parseInt(id.slice(2));
+        if(!(head in nodes)) {
+            nodes[head] = [];
+        }
+        nodes[head].push(id);
     }
 
-    return [false, "", {}];
+    var cyclic = false;
+
+    for(let node in nodes){ 
+        var visited = {};
+//        dfs(nodes, node, visited);
+    }
+
+    return [cyclic, "", {}];
 }

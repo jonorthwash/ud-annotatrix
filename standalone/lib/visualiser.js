@@ -7,6 +7,7 @@ var NORMAL = "#7fa2ff";
 var FANCY = "#cc22fc";
 var POS_COLOR = "#afa2ff";
 var ST_COLOR = "#bcd2ff"
+var SCROLL_ZOOM_INCREMENT = 0.01;
 var LOW_DIGITS = {0: "₀", 1: "₁", 2: "₂", 3: "₃", 4: "₄", 5: "₅",
 6: "₆", 7: "₇", 8: "₈", 9: "₉", "-": "₋", "(" : "₍", ")" : "₎"};
 var TREE_ = {}; // This map allows us to address the Token object given an ID
@@ -56,12 +57,14 @@ function conlluDraw(content) {
     cy.fit(2);
     CURRENT_ZOOM = cy.zoom(); // Get the current zoom factor.
     if(CURRENT_ZOOM >= 1.7) { // If the current zoom factor is more than 1.7, then set it to 1.7
-      CURRENT_ZOOM = cy.zoom(1.7);           // This is to make sure that small trees don't appear massive.
+      CURRENT_ZOOM = 1.7;           // This is to make sure that small trees don't appear massive.
     } else if (CURRENT_ZOOM <= 0.7) {
-      CURRENT_ZOOM = cy.zoom(0.7);
+      CURRENT_ZOOM = 0.7;
     }
+    cy.zoom(CURRENT_ZOOM);
     cy.center(); 
     $(window).bind('resize', onResize);
+    $(window).bind('wheel', onScroll);
 }
 
 function onResize(e) {
@@ -70,6 +73,26 @@ function onResize(e) {
     cy.center();
     CURRENT_ZOOM = cy.zoom();
     console.log('> resize event', CURRENT_ZOOM);
+}
+
+function onScroll(event) {
+    
+    if(event.shiftKey) {
+      if(event.originalEvent.wheelDelta > 0 || event.originalEvent.detail < 0) { // up
+          //console.log('SHIFT SCROLL', event.shiftKey, 'UP', CURRENT_ZOOM);
+          CURRENT_ZOOM += SCROLL_ZOOM_INCREMENT; 
+          cy.zoom(CURRENT_ZOOM);
+          cy.center();
+      } else { //down
+          //console.log('SHIFT SCROLL', event.shiftKey, 'DOWN', CURRENT_ZOOM);
+          CURRENT_ZOOM -= SCROLL_ZOOM_INCREMENT; 
+          cy.zoom(CURRENT_ZOOM);
+          cy.center();
+      }
+    }
+    //} else {
+    //  console.log('SCROLL', event.shiftKey);
+    //  return;
 }
 
 function changeBoxSize(sent) {
