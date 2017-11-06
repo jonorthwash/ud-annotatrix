@@ -89,7 +89,9 @@ function onScroll(event) {
           cy.zoom(CURRENT_ZOOM);
           cy.center();
       }
+      return false;
     }
+
     //} else {
     //  console.log('SCROLL', event.shiftKey);
     //  return;
