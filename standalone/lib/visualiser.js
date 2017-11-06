@@ -64,7 +64,7 @@ function conlluDraw(content) {
     cy.zoom(CURRENT_ZOOM);
     cy.center(); 
     $(window).bind('resize', onResize);
-    $(window).bind('wheel', onScroll);
+    $(window).bind('DOMMouseScroll wheel', onScroll);
 }
 
 function onResize(e) {
@@ -78,7 +78,8 @@ function onResize(e) {
 function onScroll(event) {
     
     if(event.shiftKey) {
-      if(event.originalEvent.wheelDelta > 0 || event.originalEvent.detail < 0) { // up
+      // console.log('SHIFT SCROLL', event.shiftKey, event.originalEvent.wheelDelta, event.originalEvent.detail, event.originalEvent.deltaY);
+      if(event.originalEvent.wheelDelta > 0 || event.originalEvent.detail < 0 || event.originalEvent.deltaY < 0) { // up
           //console.log('SHIFT SCROLL', event.shiftKey, 'UP', CURRENT_ZOOM);
           CURRENT_ZOOM += SCROLL_ZOOM_INCREMENT; 
           cy.zoom(CURRENT_ZOOM);
