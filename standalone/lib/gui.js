@@ -255,7 +255,7 @@ function keyUpClassifier(key) {
             mergeNodes(toSup, SIDES[key.which], "supertoken");
         }
     } else if (st.length) {
-        if (key.which == DEL_KEY) {
+        if (key.which == DEL_KEY || key.which == BACKSPACE) {
             removeSup(st);
         }
     }
