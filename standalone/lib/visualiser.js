@@ -69,22 +69,23 @@ function conlluDraw(content) {
     cy.zoom(CURRENT_ZOOM);
     console.log('[4] CURRENT_ZOOM:', CURRENT_ZOOM);
     cy.center(); 
-    var doit;
-    $(window).bind('resize', function(){clearTimeout(doit); doit = setTimeout(onResize, 100);});
+    $(window).bind('resize', onResize);
     $(window).bind('DOMMouseScroll wheel', onScroll);
 }
 
 function onResize(e) {
     CURRENT_ZOOM = cy.zoom(); // Get the current zoom factor.
-    console.log('< resize event', CURRENT_ZOOM);
+    console.log('< resize event', CURRENT_ZOOM, cy.width(), cy.height());
     console.log('[6] CURRENT_ZOOM:', CURRENT_ZOOM);
-    cy.reset();
     cy.fit();
+    cy.resize();
+    cy.reset();
+    
     CURRENT_ZOOM = cy.zoom(); // Get the current zoom factor.
 //    cy.center();
 //    CURRENT_ZOOM = cy.zoom();
     console.log('[7] CURRENT_ZOOM:', CURRENT_ZOOM);
-    console.log('> resize event', CURRENT_ZOOM);
+    console.log('> resize event', CURRENT_ZOOM, cy.width(), cy.height());
 }
 
 function onScroll(event) {
