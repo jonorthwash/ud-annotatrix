@@ -54,24 +54,36 @@ function conlluDraw(content) {
     cy.maxZoom(10.0);
 
     // Fit the graph to the window size
-    cy.fit(2);
     CURRENT_ZOOM = cy.zoom(); // Get the current zoom factor.
+    console.log('[0] CURRENT_ZOOM:', CURRENT_ZOOM);
+    cy.fit();
+    console.log('[1] CURRENT_ZOOM:', CURRENT_ZOOM);
+    CURRENT_ZOOM = cy.zoom(); // Get the current zoom factor.
+    console.log('[2] CURRENT_ZOOM:', CURRENT_ZOOM);
     if(CURRENT_ZOOM >= 1.7) { // If the current zoom factor is more than 1.7, then set it to 1.7
       CURRENT_ZOOM = 1.7;           // This is to make sure that small trees don't appear massive.
     } else if (CURRENT_ZOOM <= 0.7) {
       CURRENT_ZOOM = 0.7;
     }
+    console.log('[3] CURRENT_ZOOM:', CURRENT_ZOOM);
     cy.zoom(CURRENT_ZOOM);
+    console.log('[4] CURRENT_ZOOM:', CURRENT_ZOOM);
     cy.center(); 
-    $(window).bind('resize', onResize);
+    var doit;
+    $(window).bind('resize', function(){clearTimeout(doit); doit = setTimeout(onResize, 100);});
     $(window).bind('DOMMouseScroll wheel', onScroll);
 }
 
 function onResize(e) {
+    CURRENT_ZOOM = cy.zoom(); // Get the current zoom factor.
     console.log('< resize event', CURRENT_ZOOM);
+    console.log('[6] CURRENT_ZOOM:', CURRENT_ZOOM);
+    cy.reset();
     cy.fit();
-    cy.center();
-    CURRENT_ZOOM = cy.zoom();
+    CURRENT_ZOOM = cy.zoom(); // Get the current zoom factor.
+//    cy.center();
+//    CURRENT_ZOOM = cy.zoom();
+    console.log('[7] CURRENT_ZOOM:', CURRENT_ZOOM);
     console.log('> resize event', CURRENT_ZOOM);
 }
 
