@@ -859,8 +859,8 @@ function switchAlignment() {
 }
 
 function switchEnhanced() {
-    $('#enhanced .fa').toggleClass('fa fa-tree');
-    //$('#enhanced .fa').toggleClass('fa fa-magic');
+    $('#enhanced .fa').toggleClass('fa-tree');
+    $('#enhanced .fa').toggleClass('fa-magic');
     if (VIEW_ENHANCED) {
         VIEW_ENHANCED = false;
     } else {
