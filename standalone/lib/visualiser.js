@@ -188,10 +188,25 @@ function conllu2cy(sent) {
             $.each(token.tokens, function(n, subTok) {
                 graph = createToken(graph, subTok, spId);
             });
+
         } else {
             graph = createToken(graph, token);
         }
     })
+
+    if(VIEW_ENHANCED) {
+    $.each(sent.tokens, function(n, token) {
+        console.log('VIEW_ENHANCED');
+        var enhancedDepsCol = token.deps.split('|');
+        for(var i = 0; i < enhancedDepsCol.length; i++) {
+            var enhancedRow = enhancedDepsCol[i].split(':');
+            var enhancedHead = parseInt(enhancedRow[0]);
+            var enhancedDeprel = enhancedRow.slice(1).join();
+    var nodeId = token.id;
+            graph = makeEnhancedDependency(token, nodeId, enhancedHead, enhancedDeprel, graph);
+        }
+    })
+    }
 
     return graph;
 }
@@ -265,10 +280,43 @@ function createToken(graph, token, spId) {
     graph.push({"data": nodeWF, "classes": "wf"+rootNode});
 
     graph = makePOS(token, nodeId, graph);
-    graph = makeDependencies(token, nodeId, graph);
+
+    if(!VIEW_ENHANCED) {
+        graph = makeDependencies(token, nodeId, graph);
+    }
+ 
+
     return graph;
 }
 
+function makeEnhancedDependency(token, nodeId, head, deprel, graph) {
+    console.log('makeEnhancedDependencies()', nodeId, head, deprel);
+    console.log('makeEnhancedDependencies()', token);
+
+    var nId = parseInt(nodeId.slice(2));
+    if (head != 0) {
+	var headId = strWithZero(head);
+        var edgeDep = {
+            "id": "ed" + nodeId + ":" + headId,
+            "source": "nf" + headId,
+            //"target": "nf" + nodeId,
+            "target": nodeId,
+            "length": (deprel.length / 3) + "em",
+            "label": deprel,
+            "ctrl": [edgeHeight, edgeHeight, edgeHeight, edgeHeight] // ARC HEIGHT STUFFS
+        }
+        console.log('makeEnhancedDependency()',edgeDep['id'], edgeDep['source'], edgeDep['target'], edgeDep['label']);
+        console.log('makeEnhancedDependency()',edgeDep['ctrl']);
+        var coef = (head - nId);
+        if (Math.abs(coef) != 1) {coef *= defaultCoef};
+        edgeDep.ctrl = edgeDep.ctrl.map(function(el){ return el*coef; });
+
+        console.log('makeEnhancedDependency()',edgeDep['ctrl']);
+
+        graph.push({"data": edgeDep, "classes": "enhanced"});
+    };
+    return graph;
+}
 
 function makeDependencies(token, nodeId, graph) {
 	/* if there is head, create an edge for dependency */
@@ -330,10 +378,10 @@ function makeDependencies(token, nodeId, graph) {
 		if (Math.abs(coef) != 1) {coef *= defaultCoef};
 		edgeDep.ctrl = edgeDep.ctrl.map(function(el){ return el*coef; });
 
-                if(token.upostag == 'PUNCT' && !is_projective(TREE_)){
-                    validDep = false;
-                    console.log('WARNING: Non-projective punctuation');
-                }
+                //if(token.upostag == 'PUNCT' && !is_projective(TREE_, [parseInt(nodeId)])){
+                //    validDep = false;
+                //    console.log('WARNING: Non-projective punctuation');
+                //}
 
 		// if it's not valid, mark it as an error (see cy-style.js)
 		if(validDep && deprel != "" && deprel != undefined) {

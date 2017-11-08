@@ -14,6 +14,7 @@ var RESULTS = [];
 var LOC_ST_AVAILABLE = false;
 var SERVER_RUNNING = false;
 var AMBIGUOUS = false;
+var VIEW_ENHANCED = false;
 var LABELS = [];
 
 
@@ -85,6 +86,7 @@ function main() {
         // $("#RTL").bind("change", switchRtlMode);
         $("#RTL").on("click", switchRtlMode);
         $("#vertical").on("click", switchAlignment);
+        $("#enhanced").on("click", switchEnhanced);
         loadFromUrl();
     });
 

@@ -102,6 +102,13 @@ function writeArc(sourceNode, destNode) {
         sentAndPrev = changeConlluAttr(sent, indices, "deprel", POS2RELmappings[thisToken['upostag']])
     }
 
+    var validDep = true;
+    if(thisToken['upostag'] == 'PUNCT' && !is_projective_nodes(sent.tokens, [destIndex])){
+        validDep = false;
+        console.log('WARNING: Non-projective punctuation');
+    }
+
+
     sent = sentAndPrev[0];
     var pervVal = sentAndPrev[1];
 
@@ -850,6 +857,18 @@ function switchAlignment() {
     }
     drawTree();
 }
+
+function switchEnhanced() {
+	$('#enhanced .fa').toggleClass('fa fa-tree');
+	$('#enhanced .fa').toggleClass('fa fa-magic');
+    if (VIEW_ENHANCED) {
+        VIEW_ENHANCED = false;
+    } else {
+        VIEW_ENHANCED = true;
+    }
+    drawTree();
+}
+
 
 $(document).ready(function(){
 	$('#currentsen').keyup(function(e){

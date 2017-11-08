@@ -121,6 +121,26 @@ var CY_STYLE = [{
     "text-events": "yes"
   }
 }, {
+  "selector": "edge.enhanced",
+  "style": {
+    "target-arrow-shape": "triangle",
+    "target-arrow-color": "#3f3",
+    "line-color": "#3f3",
+    "text-margin-y": -10,
+    "curve-style": "unbundled-bezier",
+    "control-point-distances": "data(ctrl)",
+    "control-point-weights": "0 0.25 0.75 1",
+    "edge-distances": "node-position",
+    //'mid-target-arrow-shape': 'triangle',
+    //'mid-target-arrow-fill': 'hollow',
+    //'mid-target-arrow-color': 'black',
+    'arrow-scale': '1.5',
+//	 'target-endpoint': '25deg',
+//	 'source-endpoint': '-25deg',
+    "label": "data(label)",
+    "text-events": "yes"
+  }
+},  {
   "selector": "edge.dependency",
   "style": {
     "target-arrow-shape": "triangle",
