@@ -47,7 +47,9 @@ function conlluDraw(content) {
     });
 
 //    if(content.split('\n').length > 10) {
-      cleanEdges(); 
+          if(!VIEW_ENHANCED){ 
+              cleanEdges(); 
+          }
 //    }
 
     cy.minZoom(0.1);
