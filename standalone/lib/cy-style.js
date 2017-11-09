@@ -124,8 +124,8 @@ var CY_STYLE = [{
   "selector": "edge.enhanced",
   "style": {
     "target-arrow-shape": "triangle",
-    "target-arrow-color": "#3f3",
-    "line-color": "#3f3",
+    "target-arrow-color": "#045",
+    "line-color": "#045",
     "text-margin-y": -10,
     "curve-style": "unbundled-bezier",
     "control-point-distances": "data(ctrl)",
