@@ -498,8 +498,8 @@ function cleanEdges() {
 	//console.log('[0] cleanEdges() maxes:' + maxes);
 
 	// set height to max intervening height + 1
-	console.log("Sources", sources);
-	console.log("Maxes", maxes);
+	//console.log("Sources", sources);
+	//console.log("Maxes", maxes);
 	$.each(edges, function (targetNode, thisEdge) {
 		var sourceNode = sources[targetNode] ;
 		var targ = parseInt(targetNode)
@@ -559,7 +559,7 @@ function cleanEdges() {
 			var toCheck = rangeExclusive(targ, sorc, 1);
 			var thisMax = maxes[targetNode];
 			$.each(toCheck, function(x, i) {
-				console.log("HARGLE", sorc, thisMax, maxes[i]);
+				//console.log("HARGLE", sorc, thisMax, maxes[i]);
 				if (maxes[i] == thisMax+1 || maxes[i] == undefined) {
 					verticalStagger = staggersize;
 				}
