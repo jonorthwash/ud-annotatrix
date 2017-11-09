@@ -14,6 +14,7 @@ var TREE_ = {}; // This map allows us to address the Token object given an ID
 
 var edgeHeight = 40;
 var defaultCoef = 1; // 0.7
+var staggersize = 15;
 
 
 // require lib for CoNLL-U parsing
@@ -475,8 +476,8 @@ function cleanEdges() {
 	$.each(cy.filter('edge[id*="ed"]'), function (a, thisEdge) {
 		if (thisEdge.data('source') != thisEdge.data('target')) {
 			//console.log(thisEdge);
-			var sourceNode = thisEdge.data('source').replace("nf","");
-			var targetNode = thisEdge.data('target').replace("nf","");
+			var sourceNode = parseInt(thisEdge.data('source').replace("nf",""));
+			var targetNode = parseInt(thisEdge.data('target').replace("nf",""));
 			sources[targetNode] = sourceNode;
 			edges[targetNode] = thisEdge;
 			//var diff = Math.abs(sourceNode - targetNode);
@@ -497,6 +498,8 @@ function cleanEdges() {
 	//console.log('[0] cleanEdges() maxes:' + maxes);
 
 	// set height to max intervening height + 1
+	//console.log("Sources", sources);
+	//console.log("Maxes", maxes);
 	$.each(edges, function (targetNode, thisEdge) {
 		var sourceNode = sources[targetNode] ;
 		var targ = parseInt(targetNode)
@@ -507,6 +510,8 @@ function cleanEdges() {
 		if (targetNode<sourceNode) { increment = 1; } // else { increment = -1 };
 		if (diff > 1) {
 			var maxFound = 1;
+			var highest = (targ > sorc) ? targ : sorc;
+			var lowest = (targ < sorc) ? targ : sorc;
 			var toCheck = rangeExclusive(targ, sorc, Math.abs(increment));
 			//console.log(maxes);
 			//console.log("[1] cleanEdges() BEFORE LOOP:", targ, sorc, toCheck, rangeExclusive(targ, sorc, 1));
@@ -526,7 +531,14 @@ function cleanEdges() {
 			howHigh = maxFound +1;
 			maxes[targetNode] = howHigh;
 			//console.log(targetNode, howHigh, "—", maxes);
+			//if (!is_projective_nodes(TREE_, [sourceNode])) {
+			//	alert("ISN'T PROJECTIVE", sourceNode);
+			//}
+			//console.log(highest, lowest, sources[i]);
+			//if (sources[i] >= highest || sources[i] <= lowest) {
+			//	console.log("cleanEdges()", i, "CROSSES");
 		}
+
 		if (!LEFT_TO_RIGHT) {var RTL = -1} else {var RTL = 1}; // support for RTL
 		var thisHeight = edgeHeight * defaultCoef * howHigh * increment * RTL;
 		//console.log("HARGLE "+thisHeight);
@@ -535,6 +547,30 @@ function cleanEdges() {
 	//console.log(sources);
 	//cy.filter('edge[id="ed12"]').data({'ctrl': [thisHeight, thisHeight, thisHeight, thisHeight]});
 	//cy.filter('edge[id="ed12"]').data({'ctrl': [34,50,40,20]}); //.ctrl = [50,34,34,40]); //graph.filter('edge[id="n12"]');//, TREE_);
+
+	// go back through and test if any intervening nodes have arcs that cross this one
+	$.each(edges, function (targetNode, thisEdge) {
+		var sourceNode = sources[targetNode] ;
+		var targ = parseInt(targetNode);
+		var sorc = parseInt(sourceNode);
+		var diff = Math.abs(targ - sorc);
+		var verticalStagger = 0;
+		if (diff > 1) {
+			var toCheck = rangeExclusive(targ, sorc, 1);
+			var thisMax = maxes[targetNode];
+			$.each(toCheck, function(x, i) {
+				//console.log("HARGLE", sorc, thisMax, maxes[i]);
+				if (maxes[i] == thisMax+1 || maxes[i] == undefined) {
+					verticalStagger = staggersize;
+				}
+			});
+		}
+		var thisHeight = thisEdge.data()['ctrl'][0];
+		//console.log("HARGLE "+thisHeight, verticalStagger);
+		thisHeight += verticalStagger;
+		thisEdge.data({'ctrl': [thisHeight, thisHeight, thisHeight, thisHeight]});
+	});
+
 }
 function simpleIdSorting(n1, n2) {
     if( n1.id() < n2.id() ){
