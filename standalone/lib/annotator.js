@@ -281,8 +281,8 @@ function prevSenSent() {
     showDataIndiv();
 }
 
-//When Navigate to next item
 function nextSenSent() {
+    //When Navigate to next item
     RESULTS[CURRENTSENTENCE] = document.getElementById("indata").value;
     CURRENTSENTENCE++;
     if(CURRENTSENTENCE >= AVAILABLESENTENCES) {
@@ -306,8 +306,8 @@ function clearLabels() {
     }
 }
 
-//Export Corpora to file
 function exportCorpora() {
+    //Export Corpora to file
     var finalcontent = getTreebank();
 
     var link = document.createElement('a');
