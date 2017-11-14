@@ -6,6 +6,7 @@ var ROOT = './lib/';
 var CONTENTS = "";
 var TEXTAREA_ROWS_DEFAULT = 20;
 var AVAILABLESENTENCES = 0;
+var LOCALSTORAGE_AVAILABLE = -1;
 var CURRENTSENTENCE = 0;
 var TABLE_VIEW = false;
 var TABLE_COLUMNS_HEADERS = {"ID":0,"FORM":1,"LEMMA":2,"UPOSTAG":3,"XPOSTAG":4,"FEATS":5,"HEAD":6,"DEPREL":7,"DEPS":8,"MISC":9};
@@ -65,13 +66,15 @@ function main() {
         // trying to load the corpus from localStorage
         if (storageAvailable('localStorage')) {
             LOC_ST_AVAILABLE = true;
+            getLocalStorageMaxSize();
+            $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
             if (localStorage.getItem("corpus") != null) {
                 CONTENTS = localStorage.getItem("corpus");
                 loadDataInIndex();
             };
         }
         else {
-            console.log("localStorage is not avaliable :(")
+            console.log("localStorage is not available :(")
             // add a nice message so the user has some idea how to fix this
             var warnMsg = document.createElement('p');
             warnMsg.innerHTML = "Unable to save to localStorage, maybe third-party cookies are blocked?";
@@ -788,6 +791,49 @@ function toggleCodeWindow() {
         $("#indata").toggle('show');
     }
     **/
+}
+
+function getLocalStorageMaxSize(error) {
+  // Returns the remaining available space in localStorage
+  if (localStorage) {
+    var max = 10 * 1024 * 1024,
+        i = 64,
+        string1024 = '',
+        string = '',
+        // generate a random key
+        testKey = 'size-test-' + Math.random().toString(),
+        minimalFound = 0,
+        error = error || 25e4;
+
+    // fill a string with 1024 symbols / bytes    
+    while (i--) string1024 += 1e16;
+
+    i = max / 1024;
+
+    // fill a string with 'max' amount of symbols / bytes    
+    while (i--) string += string1024;
+
+    i = max;
+
+    // binary search implementation
+    while (i > 1) {
+      try {
+        localStorage.setItem(testKey, string.substr(0, i));
+        localStorage.removeItem(testKey);
+
+        if (minimalFound < i - error) {
+          minimalFound = i;
+          i = i * 1.5;
+        }
+        else break;
+      } catch (e) {
+        localStorage.removeItem(testKey);
+        i = minimalFound + (i - minimalFound) / 2;
+      }
+    }
+
+    LOCALSTORAGE_AVAILABLE = minimalFound;
+  }
 }
 
 function focusOut(key) {
