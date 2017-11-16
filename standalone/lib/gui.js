@@ -214,7 +214,7 @@ function keyUpClassifier(key) {
     // looking if some wf node is selected
     var wf = cy.$("node.wf.activated");
     // looking if a supertoken node is selected
-    var st = cy.$(".supAct"); // probably needs debugging
+    var st = cy.$(".supAct");
     // looking if some node waits to be merged
     var toMerge = cy.$(".merge");
     // looking if some node waits to be merged to supertoken
@@ -268,9 +268,9 @@ function keyUpClassifier(key) {
     }
     //console.log('KEY: ' + key.which);
     var inputAreaFocus = $("#indata").is(":focus");
-    console.log('KEY: ' + key.which, inputAreaFocus);
+    // console.log('KEY: ' + key.which, inputAreaFocus);
     if(!inputAreaFocus) {
-        console.log('ZOOM: ', CURRENT_ZOOM, inputAreaFocus);
+        // console.log('ZOOM: ', CURRENT_ZOOM, inputAreaFocus);
         if((key.which == EQUALS || key.which == 61) ){
             CURRENT_ZOOM = cy.zoom();
             if(key.shiftKey) { // zoom in
@@ -309,21 +309,30 @@ function moveArc() {
 
 
 function removeSup(st) {
-    /* Support for removing supertokens. */
+    /* Support for removing supertokens.
+    The function takes the cy-element of superoken that was selected,
+    Checks all the other supertokens, removes the current one
+    and inserts the former subtokens. */
     var sent = buildSent();
-    var id = st.id().slice(2) - 1;
-    var supIds = [];
+    var id = st.id().slice(2) - 1; // the id of the supertoken to be removed
+
+    // finding the corresponding multiword token in conllu
+    var superTokenIds = [];
     $.each(sent.tokens, function(n, tok) {
-        if (tok.tokens) {supIds.push(n)};
+        if (tok.tokens) {superTokenIds.push(n)};
     });
+    var subTokens = sent.tokens[superTokenIds[id]].tokens;
 
-    var subTokens = sent.tokens[supIds[id]].tokens;
-    sent.tokens.splice(supIds[id], 1);
+    // removing the multiword token
+    sent.tokens.splice(superTokenIds[id], 1);
 
-    // is there really no more beautiful way?..
+    // inserting the subtokens
+    console.log(sent.serial);
     $.each(subTokens, function(n, tok) {
-        sent.tokens.splice(supIds[id], 0, tok);
+        console.log("subtokens: " + n + ", " + tok.form + ", " + tok.id);
+        sent.tokens.splice(superTokenIds[id] + n, 0, tok);
     });
+    console.log(sent.serial);
     redrawTree(sent);
 }
 
