@@ -311,28 +311,14 @@ function moveArc() {
 function removeSup(st) {
     /* Support for removing supertokens.
     The function takes the cy-element of superoken that was selected,
-    Checks all the other supertokens, removes the current one
-    and inserts the former subtokens. */
+    removes it and inserts its former subtokens. */
     var sent = buildSent();
-    var id = st.id().slice(2) - 1; // the id of the supertoken to be removed
-
-    // finding the corresponding multiword token in conllu
-    var superTokenIds = [];
-    $.each(sent.tokens, function(n, tok) {
-        if (tok.tokens) {superTokenIds.push(n)};
+    var currentId = +st.id().slice(2); // the id of the supertoken to be removed
+    var subTokens = sent.tokens[currentId].tokens; // getting its children
+    sent.tokens.splice(currentId, 1); // removing the multiword token
+    $.each(subTokens, function(n, tok) { // inserting the subtokens
+        sent.tokens.splice(currentId + n, 0, tok);
     });
-    var subTokens = sent.tokens[superTokenIds[id]].tokens;
-
-    // removing the multiword token
-    sent.tokens.splice(superTokenIds[id], 1);
-
-    // inserting the subtokens
-    console.log(sent.serial);
-    $.each(subTokens, function(n, tok) {
-        console.log("subtokens: " + n + ", " + tok.form + ", " + tok.id);
-        sent.tokens.splice(superTokenIds[id] + n, 0, tok);
-    });
-    console.log(sent.serial);
     redrawTree(sent);
 }
 
