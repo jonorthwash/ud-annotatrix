@@ -391,10 +391,10 @@ function makeDependencies(token, nodeId, graph) {
 			graph.push({"data": edgeDep, "classes": "dependency"});
 			//console.log("makeDependencies(): valid @" + deprel);
 		} else if (deprel == "" || deprel == undefined) {
-			graph.push({"data": edgeDep, "classes": "dependency, incomplete"});
+			graph.push({"data": edgeDep, "classes": "dependency incomplete"});
 			//console.log("makeDependencies(): incomplete @" + deprel);
 		}else{
-			graph.push({"data": edgeDep, "classes": "dependency, error"});
+			graph.push({"data": edgeDep, "classes": "dependency error"});
 			//console.log("makeDependencies(): error @" + deprel);
 		}
 
