@@ -20,11 +20,12 @@ var LABELS = [];
 
 
 function main() {
+    /* First, loads all the js libraries and project modules,
+    then */
     head.js(
         ROOT + 'ext/jquery-3.2.1.min.js',
         ROOT + 'ext/jquery-ui-1.12.1/jquery-ui.min.js',
         ROOT + 'ext/cytoscape.min.js',
-        // ROOT + 'ext/cytoscape-panzoom.js',
         ROOT + 'ext/undomanager.js',
         ROOT + 'ext/popper.min.js',
         ROOT + 'ext/jquery.autocomplete.js',
@@ -83,10 +84,8 @@ function main() {
 
         }
 
-        // $("#indata").keyup(drawTree);
         $("#indata").bind("keyup", drawTree);
         $("#indata").bind("keyup", focusOut);
-        // $("#RTL").bind("change", switchRtlMode);
         $("#RTL").on("click", switchRtlMode);
         $("#vertical").on("click", switchAlignment);
         $("#enhanced").on("click", switchEnhanced);
@@ -109,14 +108,10 @@ function addHandlers() {
     // you also need to update the event handler here
     cy.on('click', 'node.wf', drawArcs);
     cy.on('cxttapend', 'edge.dependency', selectArc);
-    cy.on('cxttapend', 'edge.error', selectArc);
-    cy.on('cxttapend', 'edge.incomplete', selectArc);
     cy.on('click', 'node.pos', changeNode);
     cy.on('click', '$node > node', selectSup);
     cy.on('cxttapend', 'node.wf', changeNode);
     cy.on('click', 'edge.dependency', changeNode);
-    cy.on('click', 'edge.error', changeNode);
-    cy.on('click', 'edge.incomplete', changeNode);
     cy.on('zoom', changeZoom);
 }
 
