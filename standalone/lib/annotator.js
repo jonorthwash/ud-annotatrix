@@ -67,8 +67,7 @@ function onReady() {
         }); // TODO: to get rid of the error, read about promisses: https://qntm.org/files/promise/promise.html
 
     // TODO: causes errors if called before the cy is initialised
-//        $(document).keyup(keyUpClassifier);
-    $(document).keyup(function(event) {keyUpClassifier(event);});
+    $(document).keyup(keyUpClassifier);
 
     // undo support
     window.undoManager = new UndoManager();
