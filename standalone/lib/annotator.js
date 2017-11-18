@@ -20,7 +20,8 @@ var LABELS = [];
 
 
 function main() {
-    /* Loads all the js libraries and project modules, then calles onReady.*/
+    /* Loads all the js libraries and project modules, then calles onReady.
+    If server is running, makes a button for saving data.*/
 
     head.js(
         ROOT + 'ext/jquery-3.2.1.min.js',
@@ -47,18 +48,26 @@ function main() {
     );
 
     head.ready(onReady);
-    document.getElementById('filename').addEventListener('change', loadFromFile, false);
+
+    // if server is running, make a button for saving data on server
     setTimeout(function(){
         if (SERVER_RUNNING) {
             $("#save").css("display", "block")
-                .css("background-color", NORMAL);
+                      .css("background-color", NORMAL);
         }
     }, 500);
 }
 
 
 function onReady() {
-    /* Called when all the naive code and libraries are loded.*/
+    /*
+    Called when all the naive code and libraries are loded.
+    - checks if server is running
+    - sets undo manager
+    - loads data from localStorage, if avaliable
+    - checks if someone loads data in url
+    - binds handlers to DOM emements
+    */
     fetch('running').then(
         function(data) {
             console.log("Response from server, status: " + data["status"]);
@@ -66,15 +75,19 @@ function onReady() {
             SERVER_RUNNING = true;
         }); // TODO: to get rid of the error, read about promisses: https://qntm.org/files/promise/promise.html
 
-    // TODO: causes errors if called before the cy is initialised
-    $(document).keyup(keyUpClassifier);
-
-    // undo support
-    window.undoManager = new UndoManager();
+    window.undoManager = new UndoManager();  // undo support
     setUndos(window.undoManager);
 
+    loadFromLocalStorage(); // trying to load the corpus from localStorage
+    loadFromUrl();
+    bindHanlers()
+}
 
-    // trying to load the corpus from localStorage
+
+function loadFromLocalStorage() {
+    /* Checks if localStorage is avaliable. If yes, tries to load the corpus
+    from localStorage. If no, warn user that localStorage is not avaliable. */
+
     if (storageAvailable('localStorage')) {
         LOC_ST_AVAILABLE = true;
         getLocalStorageMaxSize();
@@ -93,19 +106,21 @@ function onReady() {
         warnLoc.appendChild(warnMsg);
 
     }
-
-    bindHanlers()
-    loadFromUrl();
 }
 
 
 function bindHanlers() {
     /* Binds handlers to DOM elements. */
+
+    // TODO: causes errors if called before the cy is initialised
+    $(document).keyup(keyUpClassifier);
+
     $("#indata").bind("keyup", drawTree);
     $("#indata").bind("keyup", focusOut);
     $("#RTL").on("click", switchRtlMode);
     $("#vertical").on("click", switchAlignment);
     $("#enhanced").on("click", switchEnhanced);
+    document.getElementById('filename').addEventListener('change', loadFromFile, false);
 }
 
 
