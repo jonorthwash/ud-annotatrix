@@ -139,3 +139,41 @@ function conllu2plainSent(text) {
     var plain = tokens.join(" ");
     return plain;
 }
+
+
+function cleanConllu(content) {
+    // if we don't find any tabs, then convert >1 space to tabs
+    // TODO: this should probably go somewhere else, and be more
+     // robust, think about vietnamese D:
+    var res = content.search("\n");
+    if(res < 0) {
+        return content;
+    }
+    // maybe someone is just trying to type conllu directly...
+    var res = (content.match(/_/g)||[]).length;
+    if(res <= 2) {
+        return content;
+    }
+    var res = content.search("\t");
+    var spaceToTab = false;
+    // If we don't find any tabs, then we want to replace multiple spaces with tabs
+    if(res < 0) {
+        spaceToTab = true;
+    }
+    // remove blank lines
+    var lines = content.trim().split("\n");
+    var newContent = "";
+    for(var i = 0; i < lines.length; i++) {
+        var newLine = lines[i].trim();
+//        if(newLine.length == 0) {
+//            continue;
+//        }
+        // If there are no spaces and the line isn't a comment, then replace more than one space with a tab
+        if(newLine[0] != "#" && spaceToTab) {
+            newLine = newLine.replace(/  */g, "\t");
+        }
+        // strip the extra tabs/spaces at the end of the line
+        newContent = newContent + newLine + "\n";
+    }
+    return newContent;
+}
