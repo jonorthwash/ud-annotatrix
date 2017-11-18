@@ -20,8 +20,8 @@ var LABELS = [];
 
 
 function main() {
-    /* First, loads all the js libraries and project modules,
-    then */
+    /* Loads all the js libraries and project modules, then calles onReady.*/
+
     head.js(
         ROOT + 'ext/jquery-3.2.1.min.js',
         ROOT + 'ext/jquery-ui-1.12.1/jquery-ui.min.js',
@@ -46,54 +46,8 @@ function main() {
         ROOT + 'cy-style.js'
     );
 
-    head.ready(function() {
-
-        fetch('running').then(
-            function(data) {
-                console.log("Response from server, status: " + data["status"]);
-                getCorpusData();
-                SERVER_RUNNING = true;
-            }); // TODO: to get rid of the error, read about promisses: https://qntm.org/files/promise/promise.html
-
-        // TODO: causes errors if called before the cy is initialised
-//        $(document).keyup(keyUpClassifier); 
-        $(document).keyup(function(event) {keyUpClassifier(event);}); 
-
-        // undo support
-        window.undoManager = new UndoManager();
-        setUndos(window.undoManager);
-
-
-        // trying to load the corpus from localStorage
-        if (storageAvailable('localStorage')) {
-            LOC_ST_AVAILABLE = true;
-            getLocalStorageMaxSize();
-            $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
-            if (localStorage.getItem("corpus") != null) {
-                CONTENTS = localStorage.getItem("corpus");
-                loadDataInIndex();
-            };
-        }
-        else {
-            console.log("localStorage is not available :(")
-            // add a nice message so the user has some idea how to fix this
-            var warnMsg = document.createElement('p');
-            warnMsg.innerHTML = "Unable to save to localStorage, maybe third-party cookies are blocked?";
-            var warnLoc = document.getElementById('warning');
-            warnLoc.appendChild(warnMsg);
-
-        }
-
-        $("#indata").bind("keyup", drawTree);
-        $("#indata").bind("keyup", focusOut);
-        $("#RTL").on("click", switchRtlMode);
-        $("#vertical").on("click", switchAlignment);
-        $("#enhanced").on("click", switchEnhanced);
-        loadFromUrl();
-    });
-
+    head.ready(onReady);
     document.getElementById('filename').addEventListener('change', loadFromFile, false);
-
     setTimeout(function(){
         if (SERVER_RUNNING) {
             $("#save").css("display", "block")
@@ -103,9 +57,63 @@ function main() {
 }
 
 
-function bindCyHandlers() { 
-    // NOTE: If you change the style of a node (e.g. its selector) then
-    // you also need to update the event handler here
+function onReady() {
+    /* Called when all the naive code and libraries are loded.*/
+    fetch('running').then(
+        function(data) {
+            console.log("Response from server, status: " + data["status"]);
+            getCorpusData();
+            SERVER_RUNNING = true;
+        }); // TODO: to get rid of the error, read about promisses: https://qntm.org/files/promise/promise.html
+
+    // TODO: causes errors if called before the cy is initialised
+//        $(document).keyup(keyUpClassifier);
+    $(document).keyup(function(event) {keyUpClassifier(event);});
+
+    // undo support
+    window.undoManager = new UndoManager();
+    setUndos(window.undoManager);
+
+
+    // trying to load the corpus from localStorage
+    if (storageAvailable('localStorage')) {
+        LOC_ST_AVAILABLE = true;
+        getLocalStorageMaxSize();
+        $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
+        if (localStorage.getItem("corpus") != null) {
+            CONTENTS = localStorage.getItem("corpus");
+            loadDataInIndex();
+        };
+    }
+    else {
+        console.log("localStorage is not available :(")
+        // add a nice message so the user has some idea how to fix this
+        var warnMsg = document.createElement('p');
+        warnMsg.innerHTML = "Unable to save to localStorage, maybe third-party cookies are blocked?";
+        var warnLoc = document.getElementById('warning');
+        warnLoc.appendChild(warnMsg);
+
+    }
+
+    bindHanlers()
+    loadFromUrl();
+}
+
+
+function bindHanlers() {
+    /* Binds handlers to DOM elements. */
+    $("#indata").bind("keyup", drawTree);
+    $("#indata").bind("keyup", focusOut);
+    $("#RTL").on("click", switchRtlMode);
+    $("#vertical").on("click", switchAlignment);
+    $("#enhanced").on("click", switchEnhanced);
+}
+
+
+function bindCyHandlers() {
+    /* Binds event handlers to cy elements.
+    NOTE: If you change the style of a node (e.g. its selector) then
+    you also need to update it here. */
     cy.on('click', 'node.wf', drawArcs);
     cy.on('cxttapend', 'edge.dependency', selectArc);
     cy.on('click', 'node.pos', changeNode);
@@ -114,6 +122,7 @@ function bindCyHandlers() {
     cy.on('click', 'edge.dependency', changeNode);
     cy.on('zoom', changeZoom);
 }
+
 
 function changeZoom() {
     console.log('zoom event');
