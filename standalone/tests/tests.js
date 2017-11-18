@@ -1,4 +1,6 @@
+var VIEW_ENHANCED = false;
 var conllu = require("conllu");
+CURRENT_ZOOM = 1;
 
 var conlluwithouttabs = `#sent_id = chapID01:paragID1:sentID1 
 # text = Кечаень сыргозтизь налкставтыця карвот . 
@@ -16,7 +18,8 @@ var conlluwithtabs = `#sent_id = chapID01:paragID1:sentID1
 2	сыргозтизь	сыргозтемс	V	V	TV|Ind|Prt1|ScPl3|OcSg3	0	root	_	сыргозтизь
 3	налкставтыця	налкставтомс	PRC	Prc	V|TV|PrcPrsL|Sg|Nom|Indef	4	amod	налкставтыця
 4	карвот	карво	N	N	Sem/Ani|N|Pl|Nom|Indef	2	nsubj	_	карвот
-5	.	.	CLB	CLB	CLB	2	punct	_	.`
+5	.	.	CLB	CLB	CLB	2	punct	_	.
+`
 
 QUnit.test("conllu no tabs", function( assert ) {
   assert.ok(cleanConllu(conlluwithouttabs) == conlluwithtabs, "Passed!" );
@@ -45,11 +48,6 @@ var cg3ambiguous = `# text = He boued e tebr Mona er gegin.
 	"kegin" n f pl @obl #8->4
 "<.>"
 	"." sent @punct #9->4`
-
-
-QUnit.test("cg3 ambiguous", function( assert ) {
-  assert.ok(CG2conllu(cg3ambiguous) == undefined, "Passed!" );
-});
 
 
 var cg3simple = `"<Патшамен>"
@@ -95,8 +93,9 @@ var cg3simpleAnswer = `1	Патшамен	патша	n	_	ins	3	nmod	_	_
 `
 
 
-QUnit.test("cg 3simple", function( assert ) {
+QUnit.test("cg3 and ambiguety", function( assert ) {
   assert.ok(CG2conllu(cg3simple) == cg3simpleAnswer, "Passed!" );
+  assert.ok(CG2conllu(cg3ambiguous) == undefined, "Passed!" );
 });
 
 
@@ -181,11 +180,6 @@ var cg3withSemicolumnAnswer = `1	Siedzieliśmy	siedzieć	vblex	_	impf|past|p1|m|
 `
 
 
-QUnit.test("cg3 with semicolumn", function( assert ) {
-  assert.ok(CG2conllu(cg3withSemicolumn) == cg3withSemicolumnAnswer, "Passed!" );
-});
-
-
 var cg3ambWithSemicolumn = `"<Dlaczego>"
 	"dlaczego" adv itg
 "<nie>"
@@ -203,8 +197,9 @@ var cg3ambWithSemicolumn = `"<Dlaczego>"
 	"?" sent`
 
 
-QUnit.test("cg3 ambiguous with semicolumn", function( assert ) {
+QUnit.test("cg3 with semicolumns", function( assert ) {
   assert.ok(CG2conllu(cg3ambWithSemicolumn) == undefined, "Passed!" );
+  assert.ok(CG2conllu(cg3withSemicolumn) == cg3withSemicolumnAnswer, "Passed!" );
 });
 
 
@@ -246,11 +241,15 @@ var cg3withSpansAnswer = `# text = He boued e tebr Mona er gegin.
 `
 
 
-QUnit.test("cg3 with spans", function( assert ) {
+QUnit.test("cg3 and spans", function( assert ) {
   assert.ok(CG2conllu(cg3withSpans) == cg3withSpansAnswer, "Passed!" );
-});
-
-
-QUnit.test("cg3 with spans back", function( assert ) {
   assert.ok(conllu2CG(CG2conllu(cg3withSpans)) == cg3withSpans, "Passed!" );
 });
+
+
+// QUnit.test("a simlpe interface action", function( assert ) {
+//   conlluDraw(cg3withSpansAnswer);
+//   var depArc = cy.$(".dependency")[0];
+//   depArc.trigger('cxttapend')
+//   assert.equal("a", "a");
+// })
