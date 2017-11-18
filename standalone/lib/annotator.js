@@ -103,7 +103,7 @@ function main() {
 }
 
 
-function addHandlers() {
+function bindCyHandlers() { 
     // NOTE: If you change the style of a node (e.g. its selector) then
     // you also need to update the event handler here
     cy.on('click', 'node.wf', drawArcs);
@@ -418,7 +418,7 @@ function drawTree() {
         var inpSupport = $("<div id='mute'>"
             + "<input type='text' id='edit' class='hidden-input'/></div>");
         $("#cy").prepend(inpSupport);
-        addHandlers();
+        bindCyHandlers();
     }
 
     if (LOC_ST_AVAILABLE) {
