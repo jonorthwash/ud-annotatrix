@@ -324,6 +324,8 @@ function exportCorpora() {
 
 
 function clearCorpus() {
+    /* Removes all the corpus data from CONTENTS and localStorage,
+    clears all the ralated global variables. */
     CONTENTS = "";
     AVAILABLESENTENCES = 0;
     CURRENTSENTENCE = 0;
@@ -628,8 +630,6 @@ function tableEditCell(loc) {
     console.log("!@", conllu);
     $("#indata").val(conllu);
  
-    // Draw tree 
-
     drawTree();
 }
 
@@ -659,7 +659,7 @@ function updateTable() {
         if(line[0] == '#') {
             $("#indataTable tbody").append('<tr style="display:none" id="table_"' + row + '"><td colspan="10"><span>' + line + '</span></td></tr>'); 
         } else if(line.split('\t').length != 10) { 
-            console.log('WEIRDNESS:', line.split('\t').length ,line);
+            // console.log('WEIRDNESS:', line.split('\t').length ,line);
             $("#indataTable tbody").append('<tr style="display:none" id="table_"' + row + '"><td colspan="10"><span>' + line + '</span></td></tr>'); 
         } else { 
             var lineRow = $("<tr>");
