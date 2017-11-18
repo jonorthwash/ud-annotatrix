@@ -61,7 +61,7 @@ function main() {
 
 function onReady() {
     /*
-    Called when all the naive code and libraries are loded.
+    Called when all the naive code and libraries are loфded.
     - checks if server is running
     - sets undo manager
     - loads data from localStorage, if avaliable
