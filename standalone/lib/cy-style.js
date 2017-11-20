@@ -82,7 +82,8 @@ var CY_STYLE = [{
   "style": {
     "width": 3,
     "opacity": 0.766,
-    "line-color": "#111"
+    "line-color": "#111",
+    "control-point-weights": "0.2 0.25 0.75 0.8",
   }
 }, {
   "selector": "edge.incomplete",
