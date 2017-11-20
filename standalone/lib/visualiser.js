@@ -373,6 +373,7 @@ function makeDependencies(token, nodeId, graph) {
 			"length": (deprelLabel.length / 3) + "em",
 			"label": deprelLabel,
 			"ctrl": [edgeHeight, edgeHeight, edgeHeight, edgeHeight] // ARC HEIGHT STUFFS
+			
 		}
 		var coef = (head - nodeId);
 		if (!LEFT_TO_RIGHT) {coef *= -1}; // support for RTL
@@ -485,6 +486,7 @@ function cleanEdges() {
 			//		 (thisEdge.data(), thisEdge.data('source').replace("nf",""), thisEdge.data('target').replace("nf",""));
 			//thisEdge.data({'ctrl': [thisHeight, thisHeight, thisHeight, thisHeight]});
 		}
+
 	});
 
 	// calculate max heights
@@ -539,10 +541,16 @@ function cleanEdges() {
 			//	console.log("cleanEdges()", i, "CROSSES");
 		}
 
-		if (!LEFT_TO_RIGHT) {var RTL = -1} else {var RTL = 1}; // support for RTL
-		var thisHeight = edgeHeight * defaultCoef * howHigh * increment * RTL;
+		//if (!LEFT_TO_RIGHT) {var RTL = -1} else {var RTL = 1}; // support for RTL
+		//var thisHeight = edgeHeight * defaultCoef * howHigh * increment * RTL;
+		//console.log("[0]", sorc, targ, increment, howHigh);
+		var thisHeight = edgeHeight * defaultCoef * howHigh;
 		//console.log("HARGLE "+thisHeight);
-		thisEdge.data({'ctrl': [thisHeight, thisHeight, thisHeight, thisHeight]});
+		setEdgePosition(thisEdge, thisHeight, increment, diff);
+		//thisEdge.style({"control-point-weights": "0.05 0.25 0.75 0.95"});
+		//thisEdge.data({'ctrl': [thisHeight/1.5, thisHeight, thisHeight, thisHeight/1.5]});
+		//thisEdge.style({"source-endpoint": String(-15*increment)+"% -50%"});
+		//thisEdge.style({"target-endpoint": String(0*increment)+"% -50%"});
 	});
 	//console.log(sources);
 	//cy.filter('edge[id="ed12"]').data({'ctrl': [thisHeight, thisHeight, thisHeight, thisHeight]});
@@ -567,11 +575,41 @@ function cleanEdges() {
 		}
 		var thisHeight = thisEdge.data()['ctrl'][0];
 		//console.log("HARGLE "+thisHeight, verticalStagger);
+		//console.log("HARGLE "+thisHeight, verticalStagger);
 		thisHeight += verticalStagger;
-		thisEdge.data({'ctrl': [thisHeight, thisHeight, thisHeight, thisHeight]});
+		//setEdgePosition(thisEdge, thisHeight, 1);
 	});
 
 }
+
+function setEdgePosition(thisEdge, thisHeight, coef, diff) {
+	if (!LEFT_TO_RIGHT) {coef *= -1}; // support for RTL
+	if (VERT_ALIGNMENT) {edgeDep.ctrl = [45, 45, 45, 45]};
+	//if (Math.abs(coef) != 1) {coef *= defaultCoef};
+	
+	thisHeight *= coef;
+
+	//console.log(thisEdge);
+	var factor1 = 2 - (Math.abs(thisHeight)/edgeHeight)/10;
+	var factor2 = 1 + ((Math.abs(thisHeight) - edgeHeight)/edgeHeight)/10;
+	var factor3 = 1 + (edgeHeight/(Math.abs(thisHeight)/edgeHeight))/80;
+	var factor4 = 10 * (edgeHeight/(Math.abs(thisHeight)));
+	var factor = factor4;
+
+	console.log("setEdgePosition()", thisHeight, coef, factor);
+	if (diff == 1) {
+		thisEdge.style({"control-point-weights": "0.15 0.25 0.75 1"});
+		thisEdge.data({'ctrl': [thisHeight/1.25, thisHeight, thisHeight, thisHeight]});
+	} else {
+		thisEdge.style({"control-point-weights": String(0.01*factor)+" 0.25 0.75 1"});
+		thisEdge.data({'ctrl': [thisHeight, thisHeight, thisHeight, thisHeight]});
+	}
+	thisEdge.style({"source-endpoint": String(-10*coef)+"px -50%"});
+	thisEdge.style({"target-endpoint": String(0*coef)+"% -50%"});
+
+	//edgeDep.ctrl = edgeDep.ctrl.map(function(el){ return el*coef; });
+}
+
 function simpleIdSorting(n1, n2) {
     if( n1.id() < n2.id() ){
         return -1;
