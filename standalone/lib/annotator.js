@@ -118,17 +118,9 @@ function bindCyHandlers() {
     cy.on('click', '$node > node', selectSup);
     cy.on('cxttapend', 'node.wf', changeNode);
     cy.on('click', 'edge.dependency', changeNode);
-    cy.on('zoom', changeZoom);
+    cy.on('zoom', cy.center);
 }
 
-
-function changeZoom() {
-    console.log('zoom event');
-//if(event.shiftKey) {
-//    console.log('zoom event+SHIFT');
-//}
-    cy.center();
-}
 
 function loadFromUrl(argument) {
     //check if the URL contains arguments
