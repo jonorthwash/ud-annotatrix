@@ -26,6 +26,7 @@ def save_corpus():
     if request.form:
         data = request.form['content']
         treebank_id = request.form['treebank_id']
+        treebank_id = treebank_id.strip('#')
 
         with open(PATH_TO_CORPORA + '/' + treebank_id, 'w') as f:
             f.write(data)
@@ -36,6 +37,7 @@ def save_corpus():
 @app.route('/load', methods=['GET', 'POST'])
 def load_corpus():
     treebank_id = request.form['treebank_id']
+    treebank_id = treebank_id.strip('#')
     if os.path.exists(PATH_TO_CORPORA + '/' + treebank_id):
         with open(PATH_TO_CORPORA + '/' + treebank_id) as f:
             corpus = f.read()
