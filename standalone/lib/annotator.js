@@ -126,21 +126,21 @@ function loadFromUrl(argument) {
     //check if the URL contains arguments
 
     var parameters = window.location.search.slice(1);
-    parameters = parameters.split('&')[1]
+    parameters = parameters.split('&')
     if (parameters){
-        var variables = parameters.map(function(arg){
-            return arg.split('=')[1].replace(/\+/g, " ");
-        });
+        var variables = parameters.map(
+            function(arg){
+                return arg.split('=')[1].replace(/\+/g, " ");
+            })
 
-        $("#indata").val(variables[0]);
-
+        $("#indata").val(variables);
         drawTree();
     }
 }
 
 
-//Load Corpora from file
 function loadFromFile(e) {
+    /* Load Corpora from file */
     CONTENTS = "";
     var file = e.target.files[0];
     FILENAME = file.name;
