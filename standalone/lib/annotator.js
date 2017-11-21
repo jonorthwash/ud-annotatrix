@@ -13,7 +13,6 @@ var TABLE_COLUMNS_HEADERS = {"ID":0,"FORM":1,"LEMMA":2,"UPOSTAG":3,"XPOSTAG":4,"
 var TABLE_COLUMNS_VISIBILITY = {0:true,1:true,2:true,3:true,4:true,5:true,6:true,7:true,8:true,9:true};
 var RESULTS = [];
 var LOC_ST_AVAILABLE = false;
-var SERVER_RUNNING = false;
 var AMBIGUOUS = false;
 var VIEW_ENHANCED = false;
 var LABELS = [];
@@ -32,15 +31,14 @@ function main() {
         ROOT + 'ext/jquery.autocomplete.js',
         ROOT + 'ext/bootstrap.min.js',
         ROOT + 'ext/l20n.js',
-
-        // CoNLL-U parser from https://github.com/FrancessFractal/conllu
-        ROOT + 'ext/conllu/conllu.js',
+        ROOT + 'ext/conllu/conllu.js', // CoNLL-U parser from https://github.com/FrancessFractal/conllu
 
         // native project code
         ROOT + 'CG2conllu.js',
         ROOT + 'SD2conllu.js',
         ROOT + 'Brackets2conllu.js',
         ROOT + 'converters.js',
+        ROOT + 'server_support.js',
         ROOT + 'gui.js',
         ROOT + 'visualiser.js',
         ROOT + 'validation.js',
@@ -67,20 +65,6 @@ function onReady() {
     loadFromLocalStorage(); // trying to load the corpus from localStorage
     loadFromUrl();
     bindHanlers()
-}
-
-
-function checkServer() {
-    /* Tries to read a file from /running. If it works, sets SERVER_RUNNING
-    to true and loads data from server. */
-
-    // TODO: to get rid of the error, read about promisses:
-    // https://qntm.org/files/promise/promise.html
-    fetch('running').then(function(data){
-        console.log("Response from server, status: " + data["status"]);
-        getCorpusData();
-        SERVER_RUNNING = true;
-    });
 }
 
 
@@ -538,47 +522,6 @@ function detectFormat(content) {
     //console.log('[3] detectFormat() ' + FORMAT);
 
     return FORMAT
-}
-
-
-function saveOnServer(evt) {
-    var finalcontent = getTreebank();
-
-    // sending data on server
-    var treebank_id = location.href.split('/')[4];
-    $.ajax({
-        type: "POST",
-        url: '/save',
-        data: {
-            "content": finalcontent,
-            "treebank_id": treebank_id
-        },
-        dataType: "json",
-        success: function(data){
-            console.log('Load was performed.');
-        }
-    });
-}
-
-
-function getCorpusData() {
-    var treebank_id = location.href.split('/')[4];
-    $.ajax({
-        type: "POST",
-        url: "/load",
-        data: {"treebank_id": treebank_id},
-        dataType: "json",
-        success: loadData
-    });
-}
-
-
-function loadData(data) {
-    console.log("loadData");
-    if (data["content"]) {
-        CONTENTS = data["content"];
-    }
-    loadDataInIndex();
 }
 
 
