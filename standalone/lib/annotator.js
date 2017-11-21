@@ -48,14 +48,6 @@ function main() {
     );
 
     head.ready(onReady);
-
-    // if server is running, make a button for saving data on server
-    setTimeout(function(){
-        if (SERVER_RUNNING) {
-            $("#save").css("display", "block")
-                      .css("background-color", NORMAL);
-        }
-    }, 500);
 }
 
 
@@ -68,19 +60,27 @@ function onReady() {
     - checks if someone loads data in url
     - binds handlers to DOM emements
     */
-    fetch('running').then(
-        function(data) {
-            console.log("Response from server, status: " + data["status"]);
-            getCorpusData();
-            SERVER_RUNNING = true;
-        }); // TODO: to get rid of the error, read about promisses: https://qntm.org/files/promise/promise.html
 
+    checkServer() // check if server is running
     window.undoManager = new UndoManager();  // undo support
     setUndos(window.undoManager);
-
     loadFromLocalStorage(); // trying to load the corpus from localStorage
     loadFromUrl();
     bindHanlers()
+}
+
+
+function checkServer() {
+    /* Tries to read a file from /running. If it works, sets SERVER_RUNNING
+    to true and loads data from server. */
+
+    // TODO: to get rid of the error, read about promisses:
+    // https://qntm.org/files/promise/promise.html
+    fetch('running').then(function(data){
+        console.log("Response from server, status: " + data["status"]);
+        getCorpusData();
+        SERVER_RUNNING = true;
+    });
 }
 
 
