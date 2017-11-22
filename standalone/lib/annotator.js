@@ -349,10 +349,10 @@ function drawTree() {
     /* This function is called whenever the input area changes.
     1. removes the previous tree, if there's one
     2. takes the data from the textarea
-    3. */
+    3. fits the size of table (consider moving to some other place)
+    4. */
 
     if (LOC_ST_AVAILABLE) {localStorage.setItem("corpus", getTreebank())} // update the corpus in localStorage
-
     try {cy.destroy()} catch (err) {}; // remove the previous tree, if there is one
 
     var content = $("#indata").val(); // TODO: rename
@@ -368,11 +368,10 @@ function drawTree() {
 
     if (format == "CG3") {
         content = CG2conllu(content)
-        if (content == undefined) {
-            var ambiguous = true;
-            cantConvertCG();
+        if (content == undefined) { // it means that the CG is ambiguous
+            cantConvertCG(); // showing the worning
+            return; // escaping
         } else {
-            var ambiguous = false;
             clearWarning();
         }
     } else if (format == "SD") {
@@ -382,7 +381,8 @@ function drawTree() {
     }
 
 
-    if (format == "CoNLL-U" || (format == "CG3" && !ambiguous) || format == "SD" || format == "Brackets") {
+    // if we were able to convert it
+    if (format != "plain text" && format != "Unknown") {
         var newContent = cleanConllu(content);
         // If there are >1 CoNLL-U format sentences is in the input, treat them as such
         if(newContent.match(/\n\n/)) {
