@@ -11,7 +11,6 @@ var TABLE_COLUMNS_HEADERS = {"ID":0,"FORM":1,"LEMMA":2,"UPOSTAG":3,"XPOSTAG":4,"
 var TABLE_COLUMNS_VISIBILITY = {0:true,1:true,2:true,3:true,4:true,5:true,6:true,7:true,8:true,9:true};
 var RESULTS = [];
 var LOC_ST_AVAILABLE = false;
-var AMBIGUOUS = false;
 var VIEW_ENHANCED = false;
 var LABELS = [];
 
@@ -371,9 +370,11 @@ function drawTree() {
     if (format == "CG3") {
         content = CG2conllu(content)
         if (content == undefined) {
-            AMBIGUOUS = true;
+            var ambiguous = true;
+            cantConvertCG();
         } else {
-            AMBIGUOUS = false;
+            var ambiguous = false;
+            clearWarning();
         }
     } else if (format == "SD") {
         content = SD2conllu(content)
@@ -382,7 +383,7 @@ function drawTree() {
     }
 
 
-    if (format == "CoNLL-U" || (format == "CG3" && !AMBIGUOUS) || format == "SD" || format == "Brackets") {
+    if (format == "CoNLL-U" || (format == "CG3" && !ambiguous) || format == "SD" || format == "Brackets") {
         var newContent = cleanConllu(content);
         // If there are >1 CoNLL-U format sentences is in the input, treat them as such
         if(newContent.match(/\n\n/)) {
@@ -402,12 +403,6 @@ function drawTree() {
 
     if (LOC_ST_AVAILABLE) {
         localStorage.setItem("corpus", getTreebank()); // saving the data
-    }
-
-    if (AMBIGUOUS) {
-        cantConvertCG();
-    } else {
-        clearWarning();
     }
 }
 
