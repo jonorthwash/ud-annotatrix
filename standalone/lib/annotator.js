@@ -4,7 +4,6 @@ var FORMAT = "";
 var FILENAME = 'ud-annotatrix-corpus.conllu'; // default name
 var ROOT = './lib/';
 var CONTENTS = "";
-var TEXTAREA_ROWS_DEFAULT = 20;
 var AVAILABLESENTENCES = 0;
 var LOCALSTORAGE_AVAILABLE = -1;
 var CURRENTSENTENCE = 0;
