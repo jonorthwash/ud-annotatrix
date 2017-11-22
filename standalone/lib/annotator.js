@@ -351,14 +351,17 @@ function drawTree() {
     2. takes the data from the textarea
     3. */
 
+    if (LOC_ST_AVAILABLE) {localStorage.setItem("corpus", getTreebank())} // update the corpus in localStorage
+
     try {cy.destroy()} catch (err) {}; // remove the previous tree, if there is one
 
     var content = $("#indata").val(); // TODO: rename
+
     content = content.replace(/ +\n/, '\n'); // remove extra spaces at the end of lines. #89
+    $("#indata").val(content); // TODO: what is this line for?
 
     fitTable(content); // resize the table
 
-    $("#indata").val(content); // TODO: what is this line for?
     var format = detectFormat(content);
     $("#detected").html("Detected: " + format + " format");
     formatTabsView(format);
@@ -397,9 +400,6 @@ function drawTree() {
         bindCyHandlers();
     }
 
-    if (LOC_ST_AVAILABLE) {
-        localStorage.setItem("corpus", getTreebank()); // saving the data
-    }
 }
 
 

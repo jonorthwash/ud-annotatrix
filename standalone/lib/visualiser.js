@@ -19,11 +19,6 @@ var staggersize = 15;
 // require lib for CoNLL-U parsing
 var conllu = require("conllu");
 
-// var panzoom = require('cytoscape-panzoom');
-// panzoom(cytoscape);
-
-
-
 function conlluDraw(content) {
     /* Draw the tree. */
     var sent = new conllu.Sentence();
