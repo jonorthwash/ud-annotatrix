@@ -2,7 +2,6 @@
 
 var FORMAT = "";
 var FILENAME = 'ud-annotatrix-corpus.conllu'; // default name
-var ROOT = './lib/';
 var CONTENTS = "";
 var AVAILABLESENTENCES = 0;
 var LOCALSTORAGE_AVAILABLE = -1;
@@ -20,29 +19,29 @@ var LABELS = [];
 function main() {
     /* Loads all the js libraries and project modules, then calles onReady.
     If server is running, makes a button for saving data.*/
-
+    var pathRoot = './lib/';
     head.js(
-        ROOT + 'ext/jquery-3.2.1.min.js',
-        ROOT + 'ext/jquery-ui-1.12.1/jquery-ui.min.js',
-        ROOT + 'ext/cytoscape.min.js',
-        ROOT + 'ext/undomanager.js',
-        ROOT + 'ext/popper.min.js',
-        ROOT + 'ext/jquery.autocomplete.js',
-        ROOT + 'ext/bootstrap.min.js',
-        ROOT + 'ext/l20n.js',
-        ROOT + 'ext/conllu/conllu.js', // CoNLL-U parser from https://github.com/FrancessFractal/conllu
+        pathRoot + 'ext/jquery-3.2.1.min.js',
+        pathRoot + 'ext/jquery-ui-1.12.1/jquery-ui.min.js',
+        pathRoot + 'ext/cytoscape.min.js',
+        pathRoot + 'ext/undomanager.js',
+        pathRoot + 'ext/popper.min.js',
+        pathRoot + 'ext/jquery.autocomplete.js',
+        pathRoot + 'ext/bootstrap.min.js',
+        pathRoot + 'ext/l20n.js',
+        pathRoot + 'ext/conllu/conllu.js', // CoNLL-U parser from https://github.com/FrancessFractal/conllu
 
         // native project code
-        ROOT + 'CG2conllu.js',
-        ROOT + 'SD2conllu.js',
-        ROOT + 'Brackets2conllu.js',
-        ROOT + 'converters.js',
-        ROOT + 'server_support.js',
-        ROOT + 'gui.js',
-        ROOT + 'conllu_table.js',
-        ROOT + 'visualiser.js',
-        ROOT + 'validation.js',
-        ROOT + 'cy-style.js'
+        pathRoot + 'CG2conllu.js',
+        pathRoot + 'SD2conllu.js',
+        pathRoot + 'Brackets2conllu.js',
+        pathRoot + 'converters.js',
+        pathRoot + 'server_support.js',
+        pathRoot + 'gui.js',
+        pathRoot + 'conllu_table.js',
+        pathRoot + 'visualiser.js',
+        pathRoot + 'validation.js',
+        pathRoot + 'cy-style.js'
     );
 
     head.ready(onReady);
