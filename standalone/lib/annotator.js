@@ -15,7 +15,6 @@ var AMBIGUOUS = false;
 var VIEW_ENHANCED = false;
 var LABELS = [];
 
-
 function main() {
     /* Loads all the js libraries and project modules, then calles onReady.
     If server is running, makes a button for saving data.*/
@@ -350,6 +349,7 @@ function getTreebank() {
 }
 
 
+
 function drawTree() {
     /* This function is called whenever the input area changes.
     1. removes the previous tree, if there's one
@@ -361,50 +361,28 @@ function drawTree() {
     var content = $("#indata").val(); // TODO: rename
     content = content.replace(/ +\n/, '\n'); // remove extra spaces at the end of lines. #89
 
-    fitTable(content);
-    $("#indata").val(content);
-    FORMAT = detectFormat(content);
+    fitTable(content); // resize the table
 
-    $("#detected").html("Detected: " + FORMAT + " format");
-    //console.log('drawTree() ' + FORMAT);
-    if (FORMAT == "CoNLL-U") {
-        $("#viewOther").hide();
-        $("#viewCG").removeClass("active");
-        $("#viewOther").removeClass("active");
-        $("#viewConllu").addClass("active");
-    } else if (FORMAT == "CG3") {
-        $("#viewOther").hide();
-        $("#viewConllu").removeClass("active");
-        $("#viewOther").removeClass("active");
-        $("#viewCG").addClass("active");
-    } else {
-        $("#viewOther").show();
-        $("#viewOther").addClass("active");
-        $("#viewConllu").removeClass("active");
-        $("#viewCG").removeClass("active");
-        $("#viewOther").text(FORMAT);
-    }
+    $("#indata").val(content); // TODO: what is this line for?
+    var format = detectFormat(content);
+    $("#detected").html("Detected: " + format + " format");
+    formatTabsView(format);
 
-
-    if (FORMAT == "CG3") {
+    if (format == "CG3") {
         content = CG2conllu(content)
         if (content == undefined) {
             AMBIGUOUS = true;
         } else {
             AMBIGUOUS = false;
         }
-    };
-
-    if (FORMAT == "SD") {
-        content = SD2conllu(content);
-    }
-
-    if (FORMAT == "Brackets") {
-        content = Brackets2conllu(content);
+    } else if (format == "SD") {
+        content = SD2conllu(content)
+    } else if (format == "Brackets") {
+        content = Brackets2conllu(content)
     }
 
 
-    if (FORMAT == "CoNLL-U" || (FORMAT == "CG3" && !AMBIGUOUS) || FORMAT == "SD" || FORMAT == "Brackets") {
+    if (format == "CoNLL-U" || (format == "CG3" && !AMBIGUOUS) || format == "SD" || format == "Brackets") {
         var newContent = cleanConllu(content);
         // If there are >1 CoNLL-U format sentences is in the input, treat them as such
         if(newContent.match(/\n\n/)) {
@@ -435,7 +413,25 @@ function drawTree() {
 
 
 function formatTabsView(format) {
-    // body...
+    /* The function handles the format tabs above the textarea.
+    Takes a string with a format name, changes the classes on tabs. */
+    if (format == "CoNLL-U") {
+        $("#viewOther").hide();
+        $("#viewCG").removeClass("active");
+        $("#viewOther").removeClass("active");
+        $("#viewConllu").addClass("active");
+    } else if (format == "CG3") {
+        $("#viewOther").hide();
+        $("#viewConllu").removeClass("active");
+        $("#viewOther").removeClass("active");
+        $("#viewCG").addClass("active");
+    } else {
+        $("#viewOther").show();
+        $("#viewOther").addClass("active");
+        $("#viewConllu").removeClass("active");
+        $("#viewCG").removeClass("active");
+        $("#viewOther").text(format);
+    }
 }
 
 
