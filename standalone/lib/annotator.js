@@ -128,8 +128,8 @@ function loadFromUrl(argument) {
     and writes it to the textbox. */
 
     var parameters = window.location.search.slice(1);
-    parameters = parameters.split('&')
     if (parameters){
+        parameters = parameters.split('&')
         var variables = parameters.map(
             function(arg){
                 return arg.split('=')[1].replace(/\+/g, " ");
