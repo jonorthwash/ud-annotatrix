@@ -831,6 +831,13 @@ function clearWarning() {
 }
 
 
+function focusOut(key) {
+    if (key.which == ESC) {
+        this.blur();
+    }
+}
+
+
 function switchRtlMode() {
 	$('#RTL .fa').toggleClass('fa-align-right');
 	$('#RTL .fa').toggleClass('fa-align-left');

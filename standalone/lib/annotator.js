@@ -544,7 +544,8 @@ function storageAvailable(type) {
 
 
 function getLocalStorageMaxSize(error) {
-  // Returns the remaining available space in localStorage
+  /* Returns the remaining available space in localStorage */
+
   if (localStorage) {
     var max = 10 * 1024 * 1024,
         i = 64,
@@ -584,12 +585,6 @@ function getLocalStorageMaxSize(error) {
 
     LOCALSTORAGE_AVAILABLE = minimalFound;
   }
-}
-
-function focusOut(key) {
-    if (key.which == ESC) {
-        this.blur();
-    }
 }
 
 window.onload = main;
