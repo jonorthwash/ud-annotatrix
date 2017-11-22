@@ -360,14 +360,10 @@ function drawTree() {
 
     try {cy.destroy()} catch (err) {}; // remove the previous tree, if there is one
 
-    var content = $("#indata").val();
+    var content = $("#indata").val(); // TODO: rename
     content = content.replace(/ +\n/, '\n'); // remove extra spaces at the end of lines. #89
 
-    if(content.split('\n').length < TEXTAREA_ROWS_DEFAULT) {
-        $("#indata").attr('rows', content.split('\n').length+1);
-    } else {
-        $("#indata").attr('rows', TEXTAREA_ROWS_DEFAULT);
-    }
+    fitTable(content);
     $("#indata").val(content);
     FORMAT = detectFormat(content);
 
@@ -440,7 +436,19 @@ function drawTree() {
 }
 
 
-function formatTabsView(x) {
+function fitTable(content) {
+    /* If there're less lines in conllu than the default number of rows
+    in the table, fit the number of rows to the number of lines. */
+    var tableRowsDefault = $("#indata").attr("rows");
+    if(content.split('\n').length < tableRowsDefault) {
+        $("#indata").attr("rows", content.split('\n').length+1);
+    } else {
+        $("#indata").attr("rows", tableRowsDefault);
+    }
+}
+
+
+function formatTabsView(format) {
     // body...
 }
 
