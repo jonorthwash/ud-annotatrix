@@ -510,7 +510,7 @@ function detectFormat(content) {
 
 
 function showHelp() {
-    /* Opens help in a new tab. */
+    /* Opens help in the same tab. */
     var win = window.open("help.html", '_blank');
     win.focus();
 }

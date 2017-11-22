@@ -223,11 +223,6 @@ function findSupTokId(subtokens) {
 
 function toSubscript(str) {
     var substr = "";
-//  This causes some error about jquery and "in" and length stuff.
-//    $.each(str, function(n, char) {
-//        var newChar = (LOW_DIGITS[char]) ? LOW_DIGITS[char] : char;
-//        substr += newChar;
-//    })
     for(var i = 0; i < str.length; i++) {
         var newChar = str[i];
         if(newChar in LOW_DIGITS) {
