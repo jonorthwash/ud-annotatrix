@@ -436,18 +436,6 @@ function drawTree() {
 }
 
 
-function fitTable(content) {
-    /* If there're less lines in conllu than the default number of rows
-    in the table, fit the number of rows to the number of lines. */
-    var tableRowsDefault = $("#indata").attr("rows");
-    if(content.split('\n').length < tableRowsDefault) {
-        $("#indata").attr("rows", content.split('\n').length+1);
-    } else {
-        $("#indata").attr("rows", tableRowsDefault);
-    }
-}
-
-
 function formatTabsView(format) {
     // body...
 }
