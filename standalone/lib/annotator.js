@@ -40,6 +40,7 @@ function main() {
         ROOT + 'converters.js',
         ROOT + 'server_support.js',
         ROOT + 'gui.js',
+        ROOT + 'conllu_table.js',
         ROOT + 'visualiser.js',
         ROOT + 'validation.js',
         ROOT + 'cy-style.js'
