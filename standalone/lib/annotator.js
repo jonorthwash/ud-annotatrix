@@ -94,6 +94,7 @@ function bindHanlers() {
 
     $("#indata").bind("keyup", drawTree);
     $("#indata").bind("keyup", focusOut);
+    $("#indata").bind("keyup", fitTable);
     $("#RTL").on("click", switchRtlMode);
     $("#vertical").on("click", switchAlignment);
     $("#enhanced").on("click", switchEnhanced);
@@ -359,8 +360,6 @@ function drawTree() {
 
     content = content.replace(/ +\n/, '\n'); // remove extra spaces at the end of lines. #89
     $("#indata").val(content); // TODO: what is this line for?
-
-    fitTable(content); // resize the table
 
     var format = detectFormat(content);
     $("#detected").html("Detected: " + format + " format");
