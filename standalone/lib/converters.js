@@ -107,25 +107,27 @@ function plainText2Conllu(text) {
 }
 
 function conlluMultiInput(text) {
-    console.log('conlluMultiInput()');
-    // Takes >1 conllu sentence in the input box
+    /* Checks if the input box has > 1 sentence. */
+    if(text.match(/\n\n(#.*\n)?1\t/)) {
+        console.log('conlluMultiInput()');
 
-    // if text consists of several sentences, process it as imported file
-    if (text.match(/\n\n/)) { // match doublenewline
-        CONTENTS = text;
-    }
-//    console.log('plainText2Conllu() ' + text.length + ' // ' + text);
-    if (CONTENTS.trim() != "") {
-        var newContents = [];
-        var splitted = CONTENTS.split("\n\n");
-        //console.log('@! ' + splitted.length);
-        for(var i = 0; i < splitted.length; i++) {
-            newContents.push(splitted[i]);
+        // if text consists of several sentences, process it as imported file
+        if (text.match(/\n\n/)) { // match doublenewline
+            CONTENTS = text;
         }
-        CONTENTS = newContents.join("\n\n");
-        //console.log('!!!' + CONTENTS);
-        FORMAT = "CoNLL-U";
-        loadDataInIndex();
+    //    console.log('plainText2Conllu() ' + text.length + ' // ' + text);
+        if (CONTENTS.trim() != "") {
+            var newContents = [];
+            var splitted = CONTENTS.split("\n\n");
+            //console.log('@! ' + splitted.length);
+            for(var i = 0; i < splitted.length; i++) {
+                newContents.push(splitted[i]);
+            }
+            CONTENTS = newContents.join("\n\n");
+            //console.log('!!!' + CONTENTS);
+            FORMAT = "CoNLL-U";
+            loadDataInIndex();
+        }
     }
 }
 

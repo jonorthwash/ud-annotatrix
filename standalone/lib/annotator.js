@@ -384,9 +384,8 @@ function drawTree() {
 
     var newContent = cleanConllu(content);
     // If there are >1 CoNLL-U format sentences is in the input, treat them as such
-    if(newContent.match(/\n\n/)) {
-        conlluMultiInput(newContent);
-    }
+    conlluMultiInput(newContent);
+
     if(newContent != content) {
         content = newContent;
         $("#indata").val(content);
