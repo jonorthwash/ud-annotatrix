@@ -378,28 +378,25 @@ function drawTree() {
         content = SD2conllu(content)
     } else if (format == "Brackets") {
         content = Brackets2conllu(content)
+    } else {
+        return; // it neans, the format is either "plain text" or "Unknown" and it wasn't converted to conllu
     }
 
-
-    // if we were able to convert it
-    if (format != "plain text" && format != "Unknown") {
-        var newContent = cleanConllu(content);
-        // If there are >1 CoNLL-U format sentences is in the input, treat them as such
-        if(newContent.match(/\n\n/)) {
-            conlluMultiInput(newContent);
-        }
-        if(newContent != content) {
-            content = newContent;
-            $("#indata").val(content);
-        }
-
-        conlluDraw(content);
-        var inpSupport = $("<div id='mute'>"
-            + "<input type='text' id='edit' class='hidden-input'/></div>");
-        $("#cy").prepend(inpSupport);
-        bindCyHandlers();
+    var newContent = cleanConllu(content);
+    // If there are >1 CoNLL-U format sentences is in the input, treat them as such
+    if(newContent.match(/\n\n/)) {
+        conlluMultiInput(newContent);
+    }
+    if(newContent != content) {
+        content = newContent;
+        $("#indata").val(content);
     }
 
+    conlluDraw(content);
+    var inpSupport = $("<div id='mute'>"
+        + "<input type='text' id='edit' class='hidden-input'/></div>");
+    $("#cy").prepend(inpSupport);
+    bindCyHandlers();
 }
 
 
