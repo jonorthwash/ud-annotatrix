@@ -378,7 +378,7 @@ function drawTree() {
         content = SD2conllu(content)
     } else if (format == "Brackets") {
         content = Brackets2conllu(content)
-    } else {
+    } else if (format == "plain text" || format == "Unknown"){
         return; // it neans, the format is either "plain text" or "Unknown" and it wasn't converted to conllu
     }
 
