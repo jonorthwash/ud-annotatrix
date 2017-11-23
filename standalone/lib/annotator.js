@@ -359,12 +359,13 @@ function drawTree() {
 
     var content = $("#indata").val(); // TODO: rename
 
+    // -- to be moved out-- 
     content = content.replace(/ +\n/, '\n'); // remove extra spaces at the end of lines. #89
     $("#indata").val(content); // TODO: what is this line for?
 
     var format = detectFormat(content);
     $("#detected").html("Detected: " + format + " format");
-    // formatTabsView(format);
+    // to be moved out --
 
     if (format == "CG3") {
         content = CG2conllu(content)
@@ -382,14 +383,18 @@ function drawTree() {
         return; // it neans, the format is either "plain text" or "Unknown" and it wasn't converted to conllu
     }
 
-    var newContent = cleanConllu(content);
+
+    // -- to be moved out --
+    var newContent = cleanConllu(content); // TODO: move this one inside of this func
+
     // If there are >1 CoNLL-U format sentences is in the input, treat them as such
-    conlluMultiInput(newContent);
+    conlluMultiInput(newContent); // TODO: move this one also inside of this func, and make a separate func for calling them all at the same time 
 
     if(newContent != content) {
         content = newContent;
         $("#indata").val(content);
     }
+    // -- to be moved out -- 
 
     conlluDraw(content);
     var inpSupport = $("<div id='mute'>"
