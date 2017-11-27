@@ -50,17 +50,6 @@ function tableEditCell(loc) {
     drawTree();
 }
 
-function toggleTableView() {
-    // This function toggles the table view
-    $("#tableViewButton").toggleClass('fa-code', 'fa-table');
-    $("#indata").toggle();
-    $("#indataTable").toggle();
-    if(TABLE_VIEW) {
-        TABLE_VIEW = false;
-    } else { 
-        TABLE_VIEW = true;
-    }
-}
 
 function updateTable() {
     // Update the data in the table from the data in the textarea
