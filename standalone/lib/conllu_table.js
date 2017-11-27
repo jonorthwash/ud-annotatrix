@@ -157,11 +157,4 @@ function toggleCodeWindow() {
     $(".indataarea").toggle();
     $("#tabBox").toggle();
     $("#viewButton").toggle();
-    /**
-    if(TABLE_VIEW) {
-        $("#indataTable").toggle('show');
-    } else { 
-        $("#indata").toggle('show');
-    }
-    **/
 }
