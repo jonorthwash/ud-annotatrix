@@ -4,12 +4,13 @@ var TABLE_VIEW = false;
 var TABLE_COLUMNS_HEADERS = {"ID":0,"FORM":1,"LEMMA":2,"UPOSTAG":3,"XPOSTAG":4,"FEATS":5,"HEAD":6,"DEPREL":7,"DEPS":8,"MISC":9};
 var TABLE_COLUMNS_VISIBILITY = {0:true,1:true,2:true,3:true,4:true,5:true,6:true,7:true,8:true,9:true};
 
-function fitTable(content) {
+function fitTable() {
     /* If there're less lines in conllu than the default number of rows
     in the table, fit the number of rows to the number of lines. */
+    var curSentence = $("#indata").val();
     var tableRowsDefault = $("#indata").attr("rows");
-    if(content.split('\n').length < tableRowsDefault) {
-        $("#indata").attr("rows", content.split('\n').length+1);
+    if(curSentence.split('\n').length < tableRowsDefault) {
+        $("#indata").attr("rows", curSentence.split('\n').length+1);
     } else {
         $("#indata").attr("rows", tableRowsDefault);
     }
@@ -49,17 +50,6 @@ function tableEditCell(loc) {
     drawTree();
 }
 
-function toggleTableView() {
-    // This function toggles the table view
-    $("#tableViewButton").toggleClass('fa-code', 'fa-table');
-    $("#indata").toggle();
-    $("#indataTable").toggle();
-    if(TABLE_VIEW) {
-        TABLE_VIEW = false;
-    } else { 
-        TABLE_VIEW = true;
-    }
-}
 
 function updateTable() {
     // Update the data in the table from the data in the textarea

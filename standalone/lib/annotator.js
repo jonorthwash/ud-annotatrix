@@ -94,6 +94,8 @@ function bindHanlers() {
 
     $("#indata").bind("keyup", drawTree);
     $("#indata").bind("keyup", focusOut);
+    $("#indata").bind("keyup", fitTable);
+    $("#indata").bind("keyup", formatTabsView);
     $("#RTL").on("click", switchRtlMode);
     $("#vertical").on("click", switchAlignment);
     $("#enhanced").on("click", switchEnhanced);
@@ -217,9 +219,8 @@ function loadDataInIndex() {
 }
 
 function showDataIndiv() {
-    // This function is called each time the current sentence is changed to update
-    // the CoNLL-U in the textarea.
-    //console.log('showDataIndiv() ' + RESULTS.length + " // " + CURRENTSENTENCE);
+    /* This function is called each time the current sentence is changed
+    to update the CoNLL-U in the textarea. */
 
     if(RESULTS[CURRENTSENTENCE] != undefined) {
       document.getElementById('indata').value = (RESULTS[CURRENTSENTENCE]);
@@ -232,7 +233,9 @@ function showDataIndiv() {
         document.getElementById('currentsen').value = 0;
     }
     document.getElementById('totalsen').innerHTML = AVAILABLESENTENCES;
-    updateTable(); // Update the table view at the same time 
+    updateTable(); // Update the table view at the same time
+    formatTabsView(document.getElementById('indata')); // update the format taps
+    fitTable(); // make table's size optimal
     drawTree();
 }
 
@@ -352,60 +355,59 @@ function drawTree() {
     3. */
 
     if (LOC_ST_AVAILABLE) {localStorage.setItem("corpus", getTreebank())} // update the corpus in localStorage
-
     try {cy.destroy()} catch (err) {}; // remove the previous tree, if there is one
 
     var content = $("#indata").val(); // TODO: rename
 
+    // -- to be moved out-- 
     content = content.replace(/ +\n/, '\n'); // remove extra spaces at the end of lines. #89
     $("#indata").val(content); // TODO: what is this line for?
 
-    fitTable(content); // resize the table
-
     var format = detectFormat(content);
     $("#detected").html("Detected: " + format + " format");
-    formatTabsView(format);
+    // to be moved out --
 
     if (format == "CG3") {
         content = CG2conllu(content)
-        if (content == undefined) {
-            var ambiguous = true;
-            cantConvertCG();
+        if (content == undefined) { // it means that the CG is ambiguous
+            cantConvertCG(); // showing the worning
+            return; // escaping
         } else {
-            var ambiguous = false;
             clearWarning();
         }
     } else if (format == "SD") {
         content = SD2conllu(content)
     } else if (format == "Brackets") {
         content = Brackets2conllu(content)
+    } else if (format == "plain text" || format == "Unknown"){
+        return; // it neans, the format is either "plain text" or "Unknown" and it wasn't converted to conllu
     }
 
 
-    if (format == "CoNLL-U" || (format == "CG3" && !ambiguous) || format == "SD" || format == "Brackets") {
-        var newContent = cleanConllu(content);
-        // If there are >1 CoNLL-U format sentences is in the input, treat them as such
-        if(newContent.match(/\n\n/)) {
-            conlluMultiInput(newContent);
-        }
-        if(newContent != content) {
-            content = newContent;
-            $("#indata").val(content);
-        }
+    // -- to be moved out --
+    var newContent = cleanConllu(content); // TODO: move this one inside of this func
 
-        conlluDraw(content);
-        var inpSupport = $("<div id='mute'>"
-            + "<input type='text' id='edit' class='hidden-input'/></div>");
-        $("#cy").prepend(inpSupport);
-        bindCyHandlers();
+    // If there are >1 CoNLL-U format sentences is in the input, treat them as such
+    conlluMultiInput(newContent); // TODO: move this one also inside of this func, and make a separate func for calling them all at the same time 
+
+    if(newContent != content) {
+        content = newContent;
+        $("#indata").val(content);
     }
+    // -- to be moved out -- 
 
+    conlluDraw(content);
+    var inpSupport = $("<div id='mute'>"
+        + "<input type='text' id='edit' class='hidden-input'/></div>");
+    $("#cy").prepend(inpSupport);
+    bindCyHandlers();
 }
 
 
-function formatTabsView(format) {
+function formatTabsView() {
     /* The function handles the format tabs above the textarea.
     Takes a string with a format name, changes the classes on tabs. */
+    var format = detectFormat($("#indata").val());
     if (format == "CoNLL-U") {
         $("#viewOther").hide();
         $("#viewCG").removeClass("active");
