@@ -57,7 +57,7 @@ function toggleTableView() {
     $("#indataTable").toggle();
     if(TABLE_VIEW) {
         TABLE_VIEW = false;
-    } else { 
+    } else {
         TABLE_VIEW = true;
     }
 }

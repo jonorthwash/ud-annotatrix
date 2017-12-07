@@ -17,7 +17,7 @@ function checkServer() {
 }
 
 
-function saveOnServer(evt) {
+function saveOnServer() {
     var finalcontent = getTreebank();
 
     // sending data on server

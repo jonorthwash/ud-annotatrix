@@ -47,7 +47,7 @@ function onReady() {
     Called when all the naive code and libraries are loaded.
     - checks if server is running
     - sets undo manager
-    - loads data from localStorage, if avaliable
+    - loads data from localStorage, if avaliable and server is not running
     - checks if someone loads data in url
     - binds handlers to DOM emements
     */
@@ -55,9 +55,24 @@ function onReady() {
     checkServer() // check if server is running
     window.undoManager = new UndoManager();  // undo support
     setUndos(window.undoManager);
-    loadFromLocalStorage(); // trying to load the corpus from localStorage
     loadFromUrl();
-    bindHanlers()
+    bindHanlers();
+    setTimeout(function(){ // setTimeout, because we have to wait checkServer to finish working
+        if (!SERVER_RUNNING) {
+            loadFromLocalStorage(); // trying to load the corpus from localStorage
+        }
+    }, 500)
+}
+
+
+function saveData() {
+    if (SERVER_RUNNING) {
+        saveOnServer()
+    } else {
+        if (LOC_ST_AVAILABLE) {
+            localStorage.setItem("corpus", getTreebank())
+        }
+    }
 }
 
 
@@ -171,6 +186,7 @@ function removeCurSent() {
     Calls confirm window. If affirmed, */
     var conf = confirm("Do you want to remove the sentence?");
     if (conf) {
+        saveData();
         var curSent = CURRENTSENTENCE; // это нужно, т.к. в loadDataInIndex всё переназначается. это как-то мега костыльно, и надо исправить.
         $("#indata").val("");
         CONTENTS = getTreebank();
@@ -240,6 +256,8 @@ function showDataIndiv() {
 }
 
 function goToSenSent() {
+    saveData();
+
     RESULTS[CURRENTSENTENCE] = document.getElementById("indata").value;
     CURRENTSENTENCE = parseInt(document.getElementById("currentsen").value) - 1;
     if (CURRENTSENTENCE < 0)  {
@@ -260,6 +278,8 @@ function goToSenSent() {
 }
 
 function prevSenSent() {
+    saveData();
+
     RESULTS[CURRENTSENTENCE] = document.getElementById("indata").value;
     CURRENTSENTENCE--;
     if (CURRENTSENTENCE < 0)  {
@@ -276,7 +296,9 @@ function prevSenSent() {
 }
 
 function nextSenSent() {
-    //When Navigate to next item
+    /* When the user navigates to the next sentence. */
+    saveData();
+
     RESULTS[CURRENTSENTENCE] = document.getElementById("indata").value;
     CURRENTSENTENCE++;
     if(CURRENTSENTENCE >= AVAILABLESENTENCES) {
@@ -354,7 +376,7 @@ function drawTree() {
     2. takes the data from the textarea
     3. */
 
-    if (LOC_ST_AVAILABLE) {localStorage.setItem("corpus", getTreebank())} // update the corpus in localStorage
+    // TODO: update the sentence
     try {cy.destroy()} catch (err) {}; // remove the previous tree, if there is one
 
     var content = $("#indata").val(); // TODO: rename
