@@ -50,14 +50,14 @@ def running():
     return jsonify()
 
 
-@app.route('/annotatrix/annotator.html', methods=['GET', 'POST'])
+@app.route('/annotatrix/', methods=['GET', 'POST'])
 def annotatrix():
     treebank_id = str(uuid.uuid4())
     return redirect(url_for('corpus_page', treebank_id=treebank_id))
 
 
-@app.route('/annotatrix', methods=['GET', 'POST'])
-def annotatrix_index():
+@app.route('/', methods=['GET', 'POST'])
+def index():
     return redirect(url_for('annotatrix'))
 
 
