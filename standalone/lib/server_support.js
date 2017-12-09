@@ -56,3 +56,24 @@ function loadData(data) {
     }
     loadDataInIndex();
 }
+
+
+function loadSentence(sentIndex) {
+    var treebank_id = location.href.split('/')[4];
+    $.ajax({
+        type: "POST",
+        url: "/load",
+        data: {
+            "treebank_id": treebank_id,
+            "sentIndex": sentIndex
+        },
+        dataType: "json",
+        success: function() {
+            console.log("loaded sent");
+            if (data["content"]){
+                localStorage.setItem("current", data["content"]);
+                // TODO: change showDataIndiv
+            }
+        }
+    });
+}

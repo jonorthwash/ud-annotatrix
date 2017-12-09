@@ -236,7 +236,7 @@ function loadDataInIndex() {
 
 function showDataIndiv() {
     /* This function is called each time the current sentence is changed
-    to update the CoNLL-U in the textarea. */
+    to update the CoNLL-U in the textarea and the indices. */
 
     if(RESULTS[CURRENTSENTENCE] != undefined) {
       document.getElementById('indata').value = (RESULTS[CURRENTSENTENCE]);
