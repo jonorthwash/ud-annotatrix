@@ -106,6 +106,39 @@ function plainText2Conllu(text) {
     }
 }
 
+
+function plainText2ConlluMod(text) {
+    /* Takes plain text, converts it to CoNLL-U format. */
+    console.log('plainText2Conllu() ' + text);
+
+    var corpus;
+    // if text consists of several sentences, process it as imported file
+    if (text.match(/[^ ].+?[.!?](?=( |\n)[^ \n])/)) { // match sentence break, e.g. "blah. hargle"
+        corpus = text;
+    }
+    if (corpus.trim() != "") {
+        var newContents = [];
+        var splitted = corpus.match(/[^ ].+?[.!?](?=( |$|\n))/g);
+        $.each(splitted, function(i, sentence) {
+            newContents.push(plainSent2Conllu(sentence));
+        })
+        corpus = newContents.join("\n");
+        AVAILABLESENTENCES = splitted.length;
+    } else {
+        // If the CONTENTS is empty, then we need to fill it (this is the first time
+        // we have put something into the annotatrix and CONTENTS will be empty if 
+        // it's the first time
+        corpus = plainSent2Conllu(text) + "\n";
+        AVAILABLESENTENCES = 1;
+        $("#indata").val(newContents); // TODO: wtf, is newContents global var, or just undefined here?
+
+        CONTENTS = corpus;
+    }
+    FORMAT = "CoNLL-U";
+    loadDataInIndex();
+}
+
+
 function conlluMultiInput(text) {
     /* Checks if the input box has > 1 sentence. */
     if(text.match(/\n\n(#.*\n)?1\t/)) {

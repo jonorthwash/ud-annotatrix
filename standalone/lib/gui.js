@@ -915,7 +915,7 @@ $(document).ready(function(){
 
 	$('#helpModal').on('shown.bs.modal', function(e) {
 		//alert('HARGLE BARGLE');
-                $("#treebankSize").text(CONTENTS.length); // TODO: Report the current loaded treebank size to user
+        // $("#treebankSize").text(CONTENTS.length); // TODO: Report the current loaded treebank size to user
 		$(e.target).find('.modal-body').load('help.html');
 	});
 
