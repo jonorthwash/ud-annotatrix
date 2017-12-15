@@ -76,6 +76,19 @@ function saveData() {
 }
 
 
+function getContents() { // TODO: replace getTreebank with this func
+    /* Gets the corpus data saving the changes in current sentence,
+    dependlessly of whether it's on server or in localStorage.
+    Should replace getTreebank. */
+    var corpus;
+    if (SERVER_RUNNING) {
+        // TODO: implement
+    } else if (LOC_ST_AVAILABLE) {
+        
+    }
+}
+
+
 function loadFromLocalStorage() {
     /* Checks if localStorage is avaliable. If yes, tries to load the corpus
     from localStorage. If no, warn user that localStorage is not avaliable. */
