@@ -773,24 +773,24 @@ function viewAsPlain() { // TODO: DRY?
 
 
 function viewAsConllu() {
-    var text = $("#indata").val();
-    var currentFormat = detectFormat(text);
+    var curSent = $("#indata").val();
+    var currentFormat = detectFormat(curSent);
 
 	if ($("#viewOther").text() == "plain text" || $("#viewOther").text() == "SD") {
 		  toConllu();
-	}	
+	}
 
     if (FORMAT == "plain text") {
         loadDataInIndex(); // TODO: this will certainly cause unexpected behavior. refactor when you have time.
     } else if (currentFormat == "CG3") {
-        text = CG2conllu(text);
-        if (text == undefined) {
+        curSent = CG2conllu(curSent);
+        if (curSent == undefined) {
             cantConvertCG();
             return;
         }
         $("#viewCG").removeClass("active");
         $("#viewConllu").addClass("active");
-        $("#indata").val(text);
+        $("#indata").val(curSent);
     }
 }
 
