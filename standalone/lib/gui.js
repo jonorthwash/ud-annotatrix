@@ -780,7 +780,7 @@ function viewAsConllu() {
     if (currentFormat == "plain text") {
         var contents = getTreebank();
         plainText2Conllu(contents);
-    } else if ($("#viewOther").text() == "SD") {
+    } else if (currentFormat == "SD") {
         var contents = getTreebank();
         SD2Conllu(contents);
     } else if (currentFormat == "CG3") {
