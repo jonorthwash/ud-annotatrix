@@ -116,7 +116,7 @@ function plainText2ConlluMod(text) {
     if (text.match(/[^ ].+?[.!?](?=( |\n)[^ \n])/)) { // match sentence break, e.g. "blah. hargle"
         corpus = text;
     }
-    if (corpus.trim() != "") {
+    if (CONTENTS.trim() != "") {
         var newContents = [];
         var splitted = corpus.match(/[^ ].+?[.!?](?=( |$|\n))/g);
         $.each(splitted, function(i, sentence) {
