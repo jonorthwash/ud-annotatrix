@@ -776,12 +776,13 @@ function viewAsConllu() {
     var curSent = $("#indata").val();
     var currentFormat = detectFormat(curSent);
 
-	if ($("#viewOther").text() == "plain text" || $("#viewOther").text() == "SD") {
-		  toConllu();
-	}
 
-    if (FORMAT == "plain text") {
-        loadDataInIndex(); // TODO: this will certainly cause unexpected behavior. refactor when you have time.
+    if (currentFormat == "plain text") {
+        var contents = getTreebank();
+        plainText2Conllu(contents);
+    } else if ($("#viewOther").text() == "SD") {
+        var contents = getTreebank();
+        SD2Conllu(contents);
     } else if (currentFormat == "CG3") {
         curSent = CG2conllu(curSent);
         if (curSent == undefined) {
