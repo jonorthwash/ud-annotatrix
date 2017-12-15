@@ -1,25 +1,3 @@
-function toConllu() {
-    /* Converts the input to CoNLL-U and redraws the tree */
-    console.log('toConllu() ' + FORMAT);
-    var newContents = getTreebank();
-    if (FORMAT == "plain text") {
-        plainText2Conllu(newContents);
-    } else if (FORMAT == "SD") {
-        SD2Conllu(newContents);
-    } else {
-        for (var i = 0; i < RESULTS.length; ++i) {
-            var currentFormat = detectFormat(RESULTS[i]);
-            if (currentFormat = "CG3") {
-                RESULTS[i] = CG2conllu(RESULTS[i]);
-            }
-        }
-        showDataIndiv();
-    }
-    FORMAT = "CoNLL-U";
-    drawTree();
-}
-
-
 function plainSent2Conllu(text) {
     /* Takes a plain text sentence, returns a sentence in CoNLL-U format. */
 
