@@ -327,7 +327,7 @@ function makeDependencies(token, nodeId, graph) {
 		// mark it as an error.
 		var res = is_leaf(TREE_[head].upostag);
 		if(res[0]) {
-			console.log('[1] writeDeprel @valid=false ' + deprel + ' // ' + res[1]);
+			// console.log('[1] writeDeprel @valid=false ' + deprel + ' // ' + res[1]);
 			validDep = false;
 		}
 	}
@@ -337,7 +337,7 @@ function makeDependencies(token, nodeId, graph) {
 		if(!res[0]) {
 			// if the deprel is not valid, mark it as an error, but 
 			// don't mark it as an error if it's blank. 
-			console.log('[2] writeDeprel @valid=false ' + deprel + ' // ' + res[1]);
+			// console.log('[2] writeDeprel @valid=false ' + deprel + ' // ' + res[1]);
 			validDep = false;
 		}
 	}
@@ -587,7 +587,7 @@ function setEdgePosition(thisEdge, thisHeight, coef, diff) {
 	var factor4 = 10 * (edgeHeight/(Math.abs(thisHeight)));
 	var factor = factor4;
 
-	console.log("setEdgePosition()", thisHeight, coef, factor);
+	// console.log("setEdgePosition()", thisHeight, coef, factor);
 	if (diff == 1) {
 		thisEdge.style({"control-point-weights": "0.15 0.25 0.75 1"});
 		thisEdge.data({'ctrl': [thisHeight/1.25, thisHeight, thisHeight, thisHeight]});
