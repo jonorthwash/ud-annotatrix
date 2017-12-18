@@ -377,7 +377,6 @@ function makeDependencies(token, nodeId, graph) {
                 //    validDep = false;
                 //    console.log('WARNING: Non-projective punctuation');
                 //}
-
 		// if it's not valid, mark it as an error (see cy-style.js)
 		if(validDep && deprel != "" && deprel != undefined) {
 			graph.push({"data": edgeDep, "classes": "dependency"});
@@ -389,8 +388,22 @@ function makeDependencies(token, nodeId, graph) {
 			graph.push({"data": edgeDep, "classes": "dependency error"});
 			//console.log("makeDependencies(): error @" + deprel);
 		}
-
 		var res = is_cyclic(TREE_);
+
+                // If dependency cycle exists, mark the cycle as red.
+                var res2 = is_depend_cycles(TREE_);
+                if (res2 !== null) {
+                    for(var cycl = 0; cycl < res2.length; cycl++) {
+                        for (var cycleInd = 0; cycleInd < res2[cycl].length; cycleInd++) {
+                            var wrapInd = cycleInd + 1 >= res2[cycl].length ? 0 : cycleInd + 1;
+                            for (var graphInd = 0; graphInd < graph.length; graphInd++) {
+                                if(graph[graphInd].data.source !== undefined && graph[graphInd].data.target !== undefined && parseInt(graph[graphInd].data.target.substr(2)) === res2[cycl][cycleInd] && parseInt(graph[graphInd].data.source.substr(2)) === res2[cycl][wrapInd]) {
+                                    graph[graphInd].classes = "dependency error";
+                                }
+                            }
+                        }
+                    }
+                }
 		/*if(!res[0]) {
 			//console.log('[3] writeDeprel is_cyclic=true');
 		} else {
