@@ -19,8 +19,11 @@ var staggersize = 15;
 // require lib for CoNLL-U parsing
 var conllu = require("conllu");
 
+/**
+ * Draws the tree.
+ * @param {String} content Content of the input textbox.
+ */
 function conlluDraw(content) {
-    /* Draw the tree. */
     var sent = new conllu.Sentence();
     sent.serial = content;
     changeBoxSize(sent);
@@ -70,6 +73,10 @@ function conlluDraw(content) {
     $(window).bind('DOMMouseScroll wheel', onScroll);
 }
 
+/**
+ * Resizes the visualiser window.
+ * @param {Object} e Event.
+ */
 function onResize(e) {
     CURRENT_ZOOM = cy.zoom(); // Get the current zoom factor.
     console.log('< resize event', CURRENT_ZOOM, cy.width(), cy.height());
@@ -85,8 +92,12 @@ function onResize(e) {
     console.log('> resize event', CURRENT_ZOOM, cy.width(), cy.height());
 }
 
+/**
+ * Detects if the user is shift-scrolling and zooms.
+ * @param  {Object}  event  Key Event.
+ * @return {Boolean}        False.
+ */
 function onScroll(event) {
-    
     if(event.shiftKey) {
       // console.log('SHIFT SCROLL', event.shiftKey, event.originalEvent.wheelDelta, event.originalEvent.detail, event.originalEvent.deltaY);
       if(event.originalEvent.wheelDelta > 0 || event.originalEvent.detail < 0 || event.originalEvent.deltaY < 0) { // up
@@ -108,8 +119,11 @@ function onScroll(event) {
     //  return;
 }
 
+/**
+ * Changes the size of the cytoscape viewport.
+ * @param {Object} sent A conllu.Sentence().
+ */
 function changeBoxSize(sent) {
-    // Changes the size of the cytoscape viewport
     var length = sent.tokens.length;
     if (VERT_ALIGNMENT) {
         //$("#cy").css("width", "1500px");
@@ -122,9 +136,11 @@ function changeBoxSize(sent) {
     }
 }
 
-
+/**
+ * Layout nodes on a grid, condense means.
+ * return {Object} A tree containing formatting.
+ */
 function formLayout() {
-    //  Layout nodes on a grid, condense means 
     var layout = {name: "tree", 
                     padding: 0, 
                     nodeDimensionsIncludeLabels: false
@@ -143,7 +159,9 @@ function formLayout() {
     return layout;
 }
 
-
+/**
+ * Changes the edge style based on alignment.
+ */
 function changeEdgeStyle() {
     var depEdgeStyle = CY_STYLE[11]["style"];
     if (VERT_ALIGNMENT) {
@@ -169,6 +187,11 @@ function changeEdgeStyle() {
     }
 }
 
+/**
+ * Creates a graph out of the conllu.Sentence().
+ * @param  {Object} sent A conllu.Sentence().
+ * @return {Array}       Returns the graph.
+ */
 function conllu2cy(sent) {
     var graph = [];
     TREE_ = {};
@@ -204,16 +227,18 @@ function conllu2cy(sent) {
         }
     })
     }
-
     return graph;
 }
-
 
 function findSupTokId(subtokens) {
     return subtokens[0].id + "-" + subtokens[subtokens.length - 1].id;
 }
 
-
+/**
+ * Converts a string to subscripts.
+ * @param  {String} str A string.
+ * @return {String}     Returns the subscript conversion of the string.
+ */
 function toSubscript(str) {
     var lowDigits = {0: "₀", 1: "₁", 2: "₂", 3: "₃", 4: "₄", 5: "₅",
     6: "₆", 7: "₇", 8: "₈", 9: "₉", "-": "₋", "(" : "₍", ")" : "₎"};
@@ -228,7 +253,13 @@ function toSubscript(str) {
     return substr;
 }
 
-
+/**
+ * Creates the wf node, the POS node and dependencies.
+ * @param  {Array}  graph  A graph containing all the nodes and dependencies.
+ * @param  {Object} token  Token object.
+ * @param  {String} spId   Id of supertoken.
+ * @return {Array}         Returns the graph.
+ */
 function createToken(graph, token, spId) {
     //console.log('createToken() '+ token.id + ' / ' + spId + ' / ' + token.form + ' / ' + token.upostag);
     /* Takes the tree graph, a token object and the id of the supertoken.
@@ -312,8 +343,14 @@ function makeEnhancedDependency(token, nodeId, head, deprel, graph) {
     return graph;
 }
 
+/**
+ * Creates edges for dependency if head exists.
+ * @param  {Object} token  Token object.
+ * @param  {String} nodeId Id of node.
+ * @param  {Array}  graph  A graph containing all the nodes and dependencies.
+ * @return {Array}         Returns the graph.
+ */
 function makeDependencies(token, nodeId, graph) {
-	/* if there is head, create an edge for dependency */
 	var deprel = (token.deprel) ? token.deprel : "";
 	var head = token.head; // The id of the head
 
@@ -414,6 +451,13 @@ function makeDependencies(token, nodeId, graph) {
 	return graph;
 }
 
+/**
+ * Creates nodes for POS and edges between wf and POS nodes.
+ * @param  {Object} token  Token object.
+ * @param  {String} nodeId Id of node.
+ * @param  {Array}  graph  A graph containing all the nodes and dependencies.
+ * @return {Array}         Returns the graph.
+ */
 function makePOS(token, nodeId, graph) {
     /* Creates nodes for POS and edges between wf and POS nodes */
 
@@ -447,6 +491,10 @@ function makePOS(token, nodeId, graph) {
 /**
  * Creates a range of numbers in an array, starting at a specified number and
  * ending before a different specified number.
+ * @param  {Number} start  Beginning number.
+ * @param  {Number} finish Ending number.
+ * @param  {Number} step   Step size.
+ * @return {Array}         A range from start to finish with a certain step size
  */
 function rangeExclusive(start, finish, step) {
 	// If only one number was passed in make it the finish and 0 the start.
@@ -475,6 +523,9 @@ function rangeExclusive(start, finish, step) {
 	return ret;
 }
 
+/**
+ * Makes the dependency edges easier to see and overlap less.
+ */
 function cleanEdges() {
 	var sources = {}
 	var edges = {}
@@ -583,9 +634,15 @@ function cleanEdges() {
 		thisHeight += verticalStagger;
 		//setEdgePosition(thisEdge, thisHeight, 1);
 	});
-
 }
 
+/**
+ * Sets the position of an edge.
+ * @param {Object} thisEdge   The edge being positioned.
+ * @param {Number} thisHeight The height the edge should be positioned at.
+ * @param {Number} coef       The direction the edge is going: either -1 or 1.
+ * @param {Number} diff       How far the edge stretches between nodes.
+ */
 function setEdgePosition(thisEdge, thisHeight, coef, diff) {
 	if (!LEFT_TO_RIGHT) {coef *= -1}; // support for RTL
 	if (VERT_ALIGNMENT) {edgeDep.ctrl = [45, 45, 45, 45]};
