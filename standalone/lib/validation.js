@@ -233,3 +233,147 @@ function is_cyclic(tree) {
 
     return [cyclic, "", {}];
 }
+
+function is_depend_cycles(tree) {
+    var g = new Map();
+    var vertices;
+    var data = tree;
+    vertices = Object.keys(data).length + 1;
+    var id_to_word = new Map();
+    for (var k in data) {
+        if (data.hasOwnProperty(k)) {
+            var word = data[k];
+            if(isNaN(parseInt(word["head"])) === false) {
+                add_edge(parseInt(word["head"]), parseId(word["id"]));
+                id_to_word.set(parseId(word["id"]), word["form"]);
+            }
+        }
+    }
+    console.log("Has Cycles:");
+    console.log(_is_cyclic());
+    if (_is_cyclic()) {
+        console.log("Cycle List:");
+        var c_list = cycle_list();
+        for (var i = 0; i < c_list.length; i++) {
+            var cycle = c_list[i];
+            console.log(cycle);
+            var word_form = [];
+            for (var j = 0; j < cycle.length; j++) {
+                word_form.push(id_to_word.get(cycle[j]));
+            }
+            var output = "";
+            for (var j = 0; j < word_form.length; j++) {
+                output += String(word_form[j]) + "-->"
+            }
+            console.log(output);
+        }
+    }
+    return _is_cyclic();
+
+    function add_edge(u,v) {
+        if (g.get(u) === undefined) {
+            g.set(u,[v]);
+        }
+        else {
+            var getVal = g.get(u);
+            getVal.push(v);
+            g.set(u, getVal);
+        }
+    };
+
+    var globalCycle = [];
+
+    function dfsFunc(start, node, visited, cycle) {
+        if (visited[node]) {
+            if (node === start) {
+                globalCycle = cycle.slice(0);
+            }
+            return;
+        }
+        cycle.push(node);
+        visited[node] = true;
+        if (g.get(node) !== undefined && isNaN(g.get(node)[0]) === false) {
+            for (var i = 0; i < g.get(node).length; i++) {
+                dfsFunc(start, g.get(node)[i], visited, cycle);
+            }
+        }
+        visited[node] = false;
+        return;
+    };
+
+    function _is_cyclic_util(start_vertex) {
+        var visited = [];
+        for(var i = 0; i < vertices; i++) {
+            visited.push(false);
+        }
+        dfsFunc(start_vertex, start_vertex, visited, []);
+        return [globalCycle];
+    }
+
+    function normalize_cycle(a) {
+        var b = a.slice().sort();
+        b.sort();
+        var loc = a.indexOf(b[0]);
+        var c = [];
+        for (var i = 0; i < a.length; i++) {
+            c.push(0);
+        }
+        for (var i = 0; i < a.length; i++) {
+            var index = i - loc;
+            if (index < 0) {
+                index = a.length + i - loc;
+            }
+            c[index] = a[i];
+        }
+        return c;
+    };
+
+    function cycle_list() {
+        var cycles = [];
+        for (var node = 0; node < vertices; node++) {
+            //console.log("start");
+            //console.log(node);
+            globalCycle = [];
+            var c_datas = _is_cyclic_util(node);
+            //console.log("complete");
+            for (var i = 0; i < c_datas.length; i++) {
+                var c_data = c_datas[i];
+                if (c_data.length > 0) {
+                    c_data = normalize_cycle(c_data);
+                    var checkEqual = 0;
+                    for (var j = 0; j < cycles.length; j++) {
+                        if (checkIfEqual(cycles[j],c_data) === true) {
+                            checkEqual = 1;
+                            break;
+                        }
+                    }
+                    if (checkEqual === 0) {
+                        cycles.push(c_data);
+                    }
+                }
+            }
+        }
+        return cycles;
+    };
+
+    function checkIfEqual(a,b) {
+        if (a.length !== b.length) {
+            return false;
+        }
+        for (var i = 0; i < a.length; i++) {
+            if (a[i] !== b[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function parseId(id) {
+        var nfid = id.substr(2);
+        return parseInt(nfid);
+    }
+
+    function _is_cyclic() {
+        return cycle_list().length > 0;
+    };
+}
