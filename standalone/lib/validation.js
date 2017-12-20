@@ -186,71 +186,24 @@ function is_projective(tree) {
     return res;
 }
 
-function dfs(tree, i, visited) { 
-    console.log('DFS: tree |',tree);
-    console.log('DFS: i    |',i);
-    console.log('DFS: visit|',visited);
-    if(!(i in visited)) {
-        visited[i] = 0;
-    }
-    visited[i] += 1;
-    for(let child in tree[i]) {
-        dfs(tree, child, visited);
-    } 
-}
-
-function is_cyclic(tree) {
-    // Checks if a given tree is cyclic 
-    // Questions: (1) do we want to deal with partial trees ? 
-    // @tree = input tree
-    //console.log('is_cyclic() ' + tree);
-
-    // Let's do a DFS for each of the valid nodes in the tree,
-    var nodes = [];
-    for(let node in tree) {
-        if(!tree[node] || tree[node] == undefined) { 
-            continue;
-        }
-        var head = tree[node].head;
-        var id = tree[node].id;
-        if(!head || !id) { 
-            continue;
-        }
-        head = parseInt(head);
-        id = parseInt(id.slice(2));
-        if(!(head in nodes)) {
-            nodes[head] = [];
-        }
-        nodes[head].push(id);
-    }
-
-    var cyclic = false;
-
-    for(let node in nodes){ 
-        var visited = {};
-//        dfs(nodes, node, visited);
-    }
-
-    return [cyclic, "", {}];
-}
-
 function is_depend_cycles(tree) {
+    //Finds the cycles in the tree
     var g = new Map();
     var vertices;
     var data = tree;
     vertices = Object.keys(data).length + 1;
     var id_to_word = new Map();
-
+    
     for (var k in data) {
         if (data.hasOwnProperty(k)) {
             var word = data[k];
             if(isNaN(parseInt(word["head"])) === false && isNaN(parseId(word["id"])) === false) {
-                add_edge(parseId(word["id"]), parseInt(word["head"]));
+		console.log(parseId(word["id"]));
+                g.set(parseId(word["id"]), parseInt(word["head"]));
                 id_to_word.set(parseId(word["id"]), word["form"]);
             }
         }
     }
-
     console.log("Has Cycles:");
     console.log(_is_cyclic());
     if (_is_cyclic()) {
@@ -272,34 +225,23 @@ function is_depend_cycles(tree) {
     }
     return _is_cyclic();
 
-    function add_edge(u,v) {
-        if (g.get(u) === undefined) {
-            g.set(u,[v]);
-        }
-        else {
-            var getVal = g.get(u);
-            getVal.push(v);
-            g.set(u, getVal);
-        }
-    };
-
     function _is_cyclic_util(start_vertex) {
+	//Finds cycles starting at a vertex
         var current_vertex = start_vertex;
         var visited = [current_vertex];
-        while (g.get(current_vertex) !== undefined && g.get(current_vertex).length > 0 && g.get(current_vertex)[0] !== start_vertex && visited.indexOf(g.get(current_vertex)[0]) === -1) {
-            current_vertex = g.get(current_vertex)[0];
+        while (g.get(current_vertex) !== undefined  && g.get(current_vertex) !== start_vertex && visited.indexOf(g.get(current_vertex)) === -1) {
+            current_vertex = g.get(current_vertex);
             visited.push(current_vertex);
+        }    
+	if (g.get(current_vertex) !== undefined && g.get(current_vertex)==start_vertex) {
+            return visited;
         }
-        if (g.get(current_vertex) !== undefined && g.get(current_vertex)[0] !== start_vertex && visited.indexOf(g.get(current_vertex)[0]) !== -1) {
-            return [];
-        }
-        if (g.get(current_vertex) !== undefined && g.get(current_vertex).length > 0) {
-            return [visited];
-        }
-        return [];
+	return [];
+
     };
 
     function normalize_cycle(a) {
+	//Normalizes cycles for easy comparisons	
         var b = a.slice().sort();
         b.sort();
         var loc = a.indexOf(b[0]);
@@ -318,30 +260,30 @@ function is_depend_cycles(tree) {
     };
 
     function cycle_list() {
+	//Finds all cycles
         var cycles = [];
         for (var node = 0; node < vertices; node++) {
-            var c_datas = _is_cyclic_util(node);
-            for (var i = 0; i < c_datas.length; i++) {
-                var c_data = c_datas[i];
-                if (c_data.length > 0) {
-                    c_data = normalize_cycle(c_data);
-                    var checkEqual = 0;
-                    for (var j = 0; j < cycles.length; j++) {
-                        if (checkIfEqual(cycles[j],c_data) === true) {
-                            checkEqual = 1;
-                            break;
-                        }
-                    }
-                    if (checkEqual === 0) {
-                        cycles.push(c_data);
+            var c_data = _is_cyclic_util(node);
+            if (c_data.length > 0) {
+                c_data = normalize_cycle(c_data);
+                var checkEqual = 0;
+                for (var j = 0; j < cycles.length; j++) {
+                    if (checkIfEqual(cycles[j],c_data) === true) {
+                        checkEqual = 1;
+                        break;
                     }
                 }
+                if (checkEqual === 0) {
+                    cycles.push(c_data);
+                }
+               
             }
         }
         return cycles;
     };
 
     function checkIfEqual(a,b) {
+	//Checks if two cycles are equal
         if (a.length !== b.length) {
             return false;
         }

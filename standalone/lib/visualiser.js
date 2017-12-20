@@ -425,7 +425,7 @@ function makeDependencies(token, nodeId, graph) {
 			graph.push({"data": edgeDep, "classes": "dependency error"});
 			//console.log("makeDependencies(): error @" + deprel);
 		}
-		var res = is_cyclic(TREE_);
+	
 
                 // If dependency cycle exists, mark the cycle as red.
                 var res2 = is_depend_cycles(TREE_);
