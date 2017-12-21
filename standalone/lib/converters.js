@@ -171,7 +171,7 @@ function conllu2plainSent(text) {
 }
 
 /**
- * Takes a string in CoNLL-U, converts it to plain text.
+ * Cleans up CoNNL-U content.
  * @param {String} content Content of input area
  * @return {String}     Cleaned up content
  */
