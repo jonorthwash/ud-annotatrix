@@ -309,3 +309,50 @@ function is_depend_cycles(tree) {
         }
     };
 };
+
+function is_relation_conflict(tree) {
+    var data = tree;
+    console.log(tree);
+    var count = new Map();
+    for(var k in data) {
+        if(data.hasOwnProperty(k)) {
+            var word = data[k];
+            if(word.deprel !== undefined) {
+                if(count.has(word.deprel)) {
+                   count.set(word.deprel, count.get(word.deprel)+1);
+                }
+                else {
+                   count.set(word.deprel, 1);
+                }
+            }
+        }
+    }
+    console.log("Count: ", count);
+    var conflicts = [];
+    var totalsubjects = 0;
+    if(count.has("nsubj")) {
+        totalsubjects += count.get("nsubj");
+    }
+    if(count.has("csubj")) {
+        totalsubjects += count.get("csubj");
+    }
+    if(totalsubjects > 1) {
+        conflicts.push("subj");
+    }
+    var totalobjects = 0;
+    if(count.has("obj")) {
+        totalobjects += count.get("obj");
+    }
+    if(totalobjects > 1) {
+        conflicts.push("obj");
+    }
+    var ccomp = 0;
+    if(count.has("ccomp")) {
+        ccomp += count.get("ccomp");
+    }
+    if(totalobjects >= 1 && ccomp >= 1) {
+        conflicts.push("objccomp");
+    }
+    console.log("Conflicts: ", conflicts);
+    return conflicts;
+}
