@@ -441,6 +441,22 @@ function makeDependencies(token, nodeId, graph) {
                         }
                     }
                 }
+
+                var res3 = is_relation_conflict(TREE_);
+                for (var graphInd = 0; graphInd < graph.length; graphInd++) {
+                   if(graph[graphInd].classes.substring(0,10) === "dependency") {
+                       var graphLabel = graph[graphInd].data.label;
+                       if(res3.indexOf("obj") !== -1 && (graphLabel === "obj⊳" || graphLabel === "⊲obj")) {
+                           graph[graphInd].classes = "dependency error";
+                       }
+                       if(res3.indexOf("subj") !== -1 && (graphLabel === "csubj⊳" || graphLabel === "⊲csubj" || graphLabel === "⊲nsubj" || graphLabel === "nsubj⊳")) {
+                           graph[graphInd].classes = "dependency error";
+                       }
+                       if(res3.indexOf("objccomp") !== -1 && (graphLabel === "obj⊳" || graphLabel === "⊲obj" || graphLabel === "ccomp⊳" || graphLabel === "⊲ccomp")) {
+                           graph[graphInd].classes = "dependency error";
+                       }
+                   }
+                }
 		/*if(!res[0]) {
 			//console.log('[3] writeDeprel is_cyclic=true');
 		} else {
