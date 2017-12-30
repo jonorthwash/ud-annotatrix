@@ -220,11 +220,16 @@ function keyUpClassifier(key) {
     // looking if some node waits to be merged to supertoken
     var toSup = cy.$(".supertoken");
 
+    $(document).bind('keydown', function(e) {
+        if (key.which == ESC) {
+            e.preventDefault();
+            drawTree();
+        }
+    });
+
     if (selArcs.length) {
         if (key.which == DEL_KEY || key.which == BACKSPACE) {
             removeArc(destNodes);
-        } else if (key.which == ESC) {
-            drawTree();
         } else if (key.which == D) {
             moveArc();
         };
@@ -514,7 +519,6 @@ function changeConlluAttr(sent, indices, attrName, newVal) {
     }
     return [sent, pervVal]
 }
-
 
 function writeWF(wfInp) {
     /* Either writes changes to token or retokenises the sentence. */
