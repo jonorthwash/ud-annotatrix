@@ -389,6 +389,8 @@ function changeNode() {
 
     if(nodeType == "DEPREL") {
         $("#edit").focus().select();
+    } else {
+        $("#edit").focus();
     }
 
 }
