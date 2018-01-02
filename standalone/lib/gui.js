@@ -387,8 +387,7 @@ function changeNode() {
         .addClass("activated")
         .addClass(id);
 
-
-    $("#edit").focus();
+    $("#edit").focus().select();
 
 }
 
