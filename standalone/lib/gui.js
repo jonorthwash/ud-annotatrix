@@ -381,7 +381,7 @@ function changeNode() {
     $("#edit").css("top", param.y1)
         .css("left", param.x1)
         .css("height", param.h)
-        .css("width", param.w)
+        .css("width", param.w+35)
         //.css("background-color", param.color)
         .attr("value", this.data("label"))
         .addClass("activated")
