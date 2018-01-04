@@ -70,7 +70,8 @@ function saveData() {
         saveOnServer()
     } else {
         if (LOC_ST_AVAILABLE) {
-            localStorage.setItem("corpus", getTreebank())
+            localStorage.setItem("corpus", getTreebank());
+            // localStorage.setItem("treebank", RESULTS);
         }
     }
 }
@@ -189,6 +190,26 @@ function loadFromFile(e) {
 }
 
 
+function loadFromFileNew(e) {
+    /* loads a corpus from a file from the user's computer,
+    changes the FILENAME variable. */
+    var file = e.target.files[0];
+    if (!file) {return}
+    var reader = new FileReader();
+    localStorage.setItem("filename", file.name);
+
+    reader.onload = function(e) {
+        if (SERVER_RUNNING) {
+            // TODO: do something
+        } else {
+            localStorage.setItem("corpus", e.target.result);
+            loadDataInIndex();
+        }
+    }
+    reader.readAsText(file);
+}
+
+
 function addSent() { // TODO: this is probably not what we want? what if we turn it into "insert a new sentence _here_"?
         AVAILABLESENTENCES = AVAILABLESENTENCES + 1;
         showDataIndiv();
@@ -245,6 +266,10 @@ function loadDataInIndex() {
         RESULTS.push(check);
     }
     showDataIndiv();
+}
+
+function loadDataInIndexNew() {
+    // body...
 }
 
 function showDataIndiv() {
