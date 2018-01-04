@@ -309,3 +309,90 @@ function is_depend_cycles(tree) {
         }
     };
 };
+
+function is_relation_conflict(tree) {
+    var data = tree;
+    var count = new Map();
+    for(var k in data) {
+        if(data.hasOwnProperty(k)) {
+            var word = data[k];
+            if(word.deprel !== undefined) {
+                if(count.has(word.deprel)) {
+                   var newCount = count.get(word.deprel);
+                   newCount.push(word.head);
+                   count.set(word.deprel, newCount);
+                }
+                else {
+                   count.set(word.deprel, [word.head]);
+                }
+            }
+        }
+    }
+    console.log("Count: ", count);
+    var conflicts = new Map();
+    var totalsubjects = new Map();
+    if(count.has("nsubj")) {
+        var nsubjarr = count.get("nsubj");
+        for(var i = 0; i < nsubjarr.length; i++) {
+            if(totalsubjects.has(nsubjarr[i])) {
+                totalsubjects.set(nsubjarr[i], totalsubjects.get(nsubjarr[i]) + 1);
+            }
+            else {
+                totalsubjects.set(nsubjarr[i], 1);
+            }
+        }
+    }
+    if(count.has("csubj")) {
+        var csubjarr = count.get("csubj");
+        for(var i = 0; i < csubjarr.length; i++) {
+            if(totalsubjects.has(csubjarr[i])) {
+                totalsubjects.set(csubjarr[i], totalsubjects.get(csubjarr[i]) + 1);
+            }
+            else {
+                totalsubjects.set(csubjarr[i], 1);
+            }
+        }
+    }
+    totalsubjects.forEach(function(i,k,m) {
+        if(i > 1) {
+            if(conflicts.has(k)) {
+                var newconflict = conflicts.get(k);
+                newconflict.push("subj");
+                conflicts.set(k,newconflict);
+            }
+            else {
+                conflicts.set(k,["subj"]);
+            }
+        }
+    });
+    var totalobjects = new Map();
+    if(count.has("obj")) {
+        var objarr = count.get("obj");
+        for(var i = 0; i < objarr.length; i++) {
+            if(totalobjects.has(objarr[i])) {
+                totalobjects.set(objarr[i], totalobjects.get(objarr[i]) + 1);
+            }
+            else {
+                totalobjects.set(objarr[i], 1);
+            }
+        }
+    }
+    totalobjects.forEach(function(i,k,m) {
+        console.log(i,k,m);
+        if(i > 1) {
+            if(conflicts.has(k)) {
+                var newconflict = conflicts.get(k);
+                newconflict.push("obj");
+                conflicts.set(k,newconflict);
+            }
+            else {
+                conflicts.set(k,["obj"]);
+            }
+        }
+    });
+    if(count.has("obj") && count.has("ccomp")) {
+        conflicts.set("objccomp",[]);
+    }
+    console.log("Conflicts: ", conflicts);
+    return conflicts;
+}

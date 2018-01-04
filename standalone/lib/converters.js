@@ -1,6 +1,9 @@
+/**
+ * Takes a plain text sentence, returns a sentence in CoNLL-U format.
+ * @param {String} text Input text (sentence)
+ * @return {String}     Sentence in CoNLL-U format
+ */
 function plainSent2Conllu(text) {
-    /* Takes a plain text sentence, returns a sentence in CoNLL-U format. */
-
     // TODO: if there's punctuation in the middle of a sentence,
     // indices shift when drawing an arc
     // punctuation
@@ -16,7 +19,7 @@ function plainSent2Conllu(text) {
 
     // enumerating tokens
     $.each(tokens, function(i, token) {tokens[i] = (i + 1) + "\t" + token});
- 
+
     lines = lines.concat(tokens);
     sent.serial = lines.join("\n");
 
@@ -38,7 +41,10 @@ function plainSent2Conllu(text) {
     return sent.serial;
 }
 
-
+/**
+ * Takes a string in CG, converts it to CoNLL-U format.
+ * @param {String} text Input string(CG format)
+ */
 function SD2Conllu(text) {
         var newContents = [];
         newContents.push(SD2conllu(text));
@@ -49,8 +55,11 @@ function SD2Conllu(text) {
         showDataIndiv();
 }
 
+/**
+ * Takes a plain text, converts it to CoNLL-U format.
+ * @param {String} text Input text
+ */
 function plainText2Conllu(text) {
-    /* Takes plain text, converts it to CoNLL-U format. */
     console.log('plainText2Conllu() ' + text);
 
     // if text consists of several sentences, process it as imported file
@@ -72,7 +81,7 @@ function plainText2Conllu(text) {
         loadDataInIndex();
     } else {
         // If the CONTENTS is empty, then we need to fill it (this is the first time
-        // we have put something into the annotatrix and CONTENTS will be empty if 
+        // we have put something into the annotatrix and CONTENTS will be empty if
         // it's the first time
         FORMAT = "CoNLL-U";
         //console.log('plainText2Conllu() ELSE ' + text);
@@ -84,9 +93,11 @@ function plainText2Conllu(text) {
     }
 }
 
-
+/**
+ * Takes a plain text, converts it to CoNLL-U format.
+ * @param {String} text Input text
+ */
 function plainText2ConlluMod(text) {
-    /* Takes plain text, converts it to CoNLL-U format. */
     console.log('plainText2Conllu() ' + text);
 
     var corpus;
@@ -104,7 +115,7 @@ function plainText2ConlluMod(text) {
         AVAILABLESENTENCES = splitted.length;
     } else {
         // If the CONTENTS is empty, then we need to fill it (this is the first time
-        // we have put something into the annotatrix and CONTENTS will be empty if 
+        // we have put something into the annotatrix and CONTENTS will be empty if
         // it's the first time
         corpus = plainSent2Conllu(text) + "\n";
         AVAILABLESENTENCES = 1;
@@ -116,9 +127,11 @@ function plainText2ConlluMod(text) {
     loadDataInIndex();
 }
 
-
+/**
+ * Checks if the input box has > 1 sentence.
+ * @param {String} text Input text
+ */
 function conlluMultiInput(text) {
-    /* Checks if the input box has > 1 sentence. */
     if(text.match(/\n\n(#.*\n)?1\t/)) {
         console.log('conlluMultiInput()');
 
@@ -142,7 +155,11 @@ function conlluMultiInput(text) {
     }
 }
 
-
+/**
+ * Takes a string in CoNLL-U, converts it to plain text.
+ * @param {String} text Input string
+ * @return {String}     Plain text
+ */
 function conllu2plainSent(text) {
     var sent = new conllu.Sentence();
     sent.serial = text;
@@ -153,7 +170,11 @@ function conllu2plainSent(text) {
     return plain;
 }
 
-
+/**
+ * Cleans up CoNNL-U content.
+ * @param {String} content Content of input area
+ * @return {String}     Cleaned up content
+ */
 function cleanConllu(content) {
     // if we don't find any tabs, then convert >1 space to tabs
     // TODO: this should probably go somewhere else, and be more

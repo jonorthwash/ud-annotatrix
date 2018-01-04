@@ -39,14 +39,14 @@ function conlluDraw(content) {
         zoomingEnabled: true,
         userZoomingEnabled: false,
         wheelSensitivity: 0.1,
-        layout: layout, 
+        layout: layout,
         style: CY_STYLE,
         elements: conllu2cy(sent)
     });
 
 //    if(content.split('\n').length > 10) {
-//          if(!VIEW_ENHANCED){ 
-              cleanEdges(); 
+//          if(!VIEW_ENHANCED){
+              cleanEdges();
 //          }
 //    }
 
@@ -68,7 +68,7 @@ function conlluDraw(content) {
     // console.log('[3] CURRENT_ZOOM:', CURRENT_ZOOM);
     cy.zoom(CURRENT_ZOOM);
     // console.log('[4] CURRENT_ZOOM:', CURRENT_ZOOM);
-    cy.center(); 
+    cy.center();
     $(window).bind('resize', onResize);
     $(window).bind('DOMMouseScroll wheel', onScroll);
 }
@@ -84,7 +84,7 @@ function onResize(e) {
     cy.fit();
     cy.resize();
     cy.reset();
-    
+
     CURRENT_ZOOM = cy.zoom(); // Get the current zoom factor.
 //    cy.center();
 //    CURRENT_ZOOM = cy.zoom();
@@ -102,12 +102,12 @@ function onScroll(event) {
       // console.log('SHIFT SCROLL', event.shiftKey, event.originalEvent.wheelDelta, event.originalEvent.detail, event.originalEvent.deltaY);
       if(event.originalEvent.wheelDelta > 0 || event.originalEvent.detail < 0 || event.originalEvent.deltaY < 0) { // up
           //console.log('SHIFT SCROLL', event.shiftKey, 'UP', CURRENT_ZOOM);
-          CURRENT_ZOOM += SCROLL_ZOOM_INCREMENT; 
+          CURRENT_ZOOM += SCROLL_ZOOM_INCREMENT;
           cy.zoom(CURRENT_ZOOM);
           cy.center();
       } else { //down
           //console.log('SHIFT SCROLL', event.shiftKey, 'DOWN', CURRENT_ZOOM);
-          CURRENT_ZOOM -= SCROLL_ZOOM_INCREMENT; 
+          CURRENT_ZOOM -= SCROLL_ZOOM_INCREMENT;
           cy.zoom(CURRENT_ZOOM);
           cy.center();
       }
@@ -138,11 +138,11 @@ function changeBoxSize(sent) {
 
 /**
  * Layout nodes on a grid, condense means.
- * return {Object} A tree containing formatting.
+ * @return {Object} A tree containing formatting.
  */
 function formLayout() {
-    var layout = {name: "tree", 
-                    padding: 0, 
+    var layout = {name: "tree",
+                    padding: 0,
                     nodeDimensionsIncludeLabels: false
     };
     if (VERT_ALIGNMENT) {
@@ -268,7 +268,7 @@ function createToken(graph, token, spId) {
     // handling empty form
     // if (spId) {token.form = token.lemma};
     if (token.form == undefined) {token.form = " "};
- 
+
     // TODO: We shouldn't need to hold information in multiple places
     // at least not like this.
     TREE_[token.id] = token;
@@ -309,7 +309,7 @@ function createToken(graph, token, spId) {
     if(!VIEW_ENHANCED) {
         graph = makeDependencies(token, nodeId, graph);
     }
- 
+
 
     return graph;
 }
@@ -369,17 +369,17 @@ function makeDependencies(token, nodeId, graph) {
 		}
 	}
 
-	if(deprel != "") { 
+	if(deprel != "") {
 		var res = is_udeprel(deprel);
 		if(!res[0]) {
-			// if the deprel is not valid, mark it as an error, but 
-			// don't mark it as an error if it's blank. 
+			// if the deprel is not valid, mark it as an error, but
+			// don't mark it as an error if it's blank.
 			// console.log('[2] writeDeprel @valid=false ' + deprel + ' // ' + res[1]);
 			validDep = false;
 		}
 	}
 
-	// Append ⊲ or ⊳ to indicate direction of the arc (helpful if 
+	// Append ⊲ or ⊳ to indicate direction of the arc (helpful if
 	// there are many arcs.
 	var deprelLabel = deprel;
 	if(parseInt(head) < parseInt(nodeId) && LEFT_TO_RIGHT) {
@@ -401,7 +401,7 @@ function makeDependencies(token, nodeId, graph) {
 			"length": (deprelLabel.length / 3) + "em",
 			"label": deprelLabel,
 			"ctrl": [edgeHeight, edgeHeight, edgeHeight, edgeHeight] // ARC HEIGHT STUFFS
-			
+
 		}
 		var coef = (head - nodeId);
 		if (!LEFT_TO_RIGHT) {coef *= -1}; // support for RTL
@@ -425,7 +425,7 @@ function makeDependencies(token, nodeId, graph) {
 			graph.push({"data": edgeDep, "classes": "dependency error"});
 			//console.log("makeDependencies(): error @" + deprel);
 		}
-	
+
 
                 // If dependency cycle exists, mark the cycle as red.
                 var res2 = is_depend_cycles(TREE_);
@@ -438,6 +438,26 @@ function makeDependencies(token, nodeId, graph) {
                                     graph[graphInd].classes = "dependency error";
                                 }
                             }
+                        }
+                    }
+                }
+
+                var res3 = is_relation_conflict(TREE_);
+                for (var graphInd = 0; graphInd < graph.length; graphInd++) {
+                    if(graph[graphInd].classes.substring(0,10) === "dependency") {
+                        var graphLabel = graph[graphInd].data.label;
+                        var graphSource = String(parseInt(graph[graphInd].data.source.substring(2)));
+                        if(res3.has(graphSource)) {
+                            var conflicts = res3.get(graphSource);
+                            if(conflicts.indexOf("obj") !== -1 && (graphLabel === "obj⊳" || graphLabel === "⊲obj")) {
+                                graph[graphInd].classes = "dependency error";
+                            }
+                            if(conflicts.indexOf("subj") !== -1 && (graphLabel === "csubj⊳" || graphLabel === "⊲csubj" || graphLabel === "⊲nsubj" || graphLabel === "nsubj⊳")) {
+                                graph[graphInd].classes = "dependency error";
+                            }
+                        }                            
+                        if(res3.has("objccomp") && (graphLabel === "obj⊳" || graphLabel === "⊲obj" || graphLabel === "ccomp⊳" || graphLabel === "⊲ccomp")) {
+                                graph[graphInd].classes = "dependency error";
                         }
                     }
                 }
@@ -502,7 +522,7 @@ function rangeExclusive(start, finish, step) {
 		finish = start;
 		start = 0;
 	}
-	
+
 	// Validate the finish and step numbers.
 	finish = finish || 0;
 	step = step || 1;
@@ -647,7 +667,7 @@ function setEdgePosition(thisEdge, thisHeight, coef, diff) {
 	if (!LEFT_TO_RIGHT) {coef *= -1}; // support for RTL
 	if (VERT_ALIGNMENT) {edgeDep.ctrl = [45, 45, 45, 45]};
 	//if (Math.abs(coef) != 1) {coef *= defaultCoef};
-	
+
 	thisHeight *= coef;
 
 	//console.log(thisEdge);
