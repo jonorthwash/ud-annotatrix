@@ -220,13 +220,16 @@ function keyUpClassifier(key) {
     // looking if some node waits to be merged to supertoken
     var toSup = cy.$(".supertoken");
 
-    $(document).bind('keydown', function(e) {
-        if (key.which == ESC) {
-            e.preventDefault();
-            drawTree();
-        }
-    });
+    // $(document).bind('keydown', function(e) {
+    //     if (key.which == ESC) {
+    //         e.preventDefault();
+    //         drawTree();
+    //     }
+    // });
 
+    if (key.which == ESC) {
+        drawTree();
+    };
     if (selArcs.length) {
         if (key.which == DEL_KEY || key.which == BACKSPACE) {
             removeArc(destNodes);
