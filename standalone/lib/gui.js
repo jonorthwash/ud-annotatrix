@@ -228,6 +228,7 @@ function keyUpClassifier(key) {
     // });
 
     if (key.which == ESC) {
+        key.preventDefault();
         drawTree();
     };
     if (selArcs.length) {
