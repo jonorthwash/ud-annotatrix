@@ -391,8 +391,11 @@ function changeNode() {
         .addClass("activated")
         .addClass(id);
 
-
-    $("#edit").focus();
+    if(nodeType == "DEPREL") {
+        $("#edit").focus().select();
+    } else {
+        $("#edit").focus();
+    }
 
 }
 
