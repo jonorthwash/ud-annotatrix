@@ -119,7 +119,7 @@ function bindHanlers() {
     /* Binds handlers to DOM elements. */
 
     // TODO: causes errors if called before the cy is initialised
-    $(document).keyup(keyUpClassifier);
+    $(document).keydown(keyUpClassifier);
 
     $("#indata").bind("keyup", drawTree);
     $("#indata").bind("keyup", focusOut);
