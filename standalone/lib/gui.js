@@ -87,6 +87,12 @@ function writeArc(sourceNode, destNode) {
     // For some reason we need all of this code otherwise stuff becomes undefined
     var idx = findConlluId(destNode)[1];
     var sent = buildSent();
+    
+    // Log changes
+    var outerIndex = indices[1];
+    var innerIndex = indices[2];
+    logger(sent, outerIndex, innerIndex)
+    
     var tokens = sent.tokens;
     console.log(idx + ' ' + tokens);
     var thisToken = tokens[idx];
@@ -449,8 +455,12 @@ function writeDeprel(deprelInp, indices) { // TODO: DRY
     } 
 
     var sent = buildSent();
- 
+    
+    // Log changes
     var outerIndex = indices[1];
+    var innerIndex = indices[2];
+    logger(sent, outerIndex, innerIndex);
+    
     var cur = parseInt(sent.tokens[outerIndex].id);
     var head = parseInt(sent.tokens[outerIndex].head);
     console.log('writeDeprel');
@@ -554,6 +564,23 @@ function writeWF(wfInp) {
     }
 }
 
+function logger(sent, outerIndex, innerIndex) {
+    // Log last changed time
+    var unixTime = Date.now();
+    if(innerIndex != undefined) {
+        if(sent.tokens[outerIndex].tokens[innerIndex].misc != undefined) {
+            sent.tokens[outerIndex].tokens[innerIndex].misc += ', ' + unixTime;
+        } else {
+            sent.tokens[outerIndex].tokens[innerIndex].misc = 'AnnoTime=' + unixTime;
+        }
+    } else {
+        if(sent.tokens[outerIndex].misc != undefined) {
+            sent.tokens[outerIndex].misc += ', ' + unixTime;
+        } else {
+            sent.tokens[outerIndex].misc = 'AnnoTime=' + unixTime;
+        }
+    }
+}
 
 function findConlluId(wfNode) { // TODO: refactor the arcitecture.
     // takes a cy wf node
