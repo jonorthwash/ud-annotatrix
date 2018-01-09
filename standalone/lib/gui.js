@@ -201,7 +201,7 @@ function selectSup() {
 }
 
 
-function keyUpClassifier(key) {
+function keyDownClassifier(key) {
     // looking if there are selected arcs
     var selArcs = cy.$("edge.dependency.selected");  // + cy.$("edge.dependency.error");
     var destNodes = cy.$("node[state='arc-dest']");
