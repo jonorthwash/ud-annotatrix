@@ -900,7 +900,7 @@ function switchRtlMode() {
 
 function switchLogger() {
     $('#logger .fa').toggleClass('fa-remove');
-    $('#logger .fa').toggleClass('fa-pencil');
+    $('#logger .fa').toggleClass('fa-video-camera');
     if (LOGGER_ENABLED) {
         LOGGER_ENABLED = false;
     } else {
