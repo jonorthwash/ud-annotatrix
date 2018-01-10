@@ -566,18 +566,28 @@ function writeWF(wfInp) {
 
 function logger(sent, outerIndex, innerIndex) {
     // Log last changed time
-    var unixTime = Date.now();
-    if(innerIndex != undefined) {
-        if(sent.tokens[outerIndex].tokens[innerIndex].misc != undefined) {
-            sent.tokens[outerIndex].tokens[innerIndex].misc += ', ' + unixTime;
+    if (LOGGER_ENABLED) {
+        var unixTime = Date.now();
+        if(innerIndex != undefined) {
+            if(sent.tokens[outerIndex].tokens[innerIndex].misc != undefined) {
+                var firstTime = (sent.tokens[outerIndex].tokens[innerIndex].misc).split(',')[0];
+                firstTime = parseInt(firstTime.split('=')[1])
+                var timeDelta = unixTime - firstTime
+
+                sent.tokens[outerIndex].tokens[innerIndex].misc += ',' + timeDelta;
+            } else {
+                sent.tokens[outerIndex].tokens[innerIndex].misc = 'AnnoTime=' + unixTime;
+            }
         } else {
-            sent.tokens[outerIndex].tokens[innerIndex].misc = 'AnnoTime=' + unixTime;
-        }
-    } else {
-        if(sent.tokens[outerIndex].misc != undefined) {
-            sent.tokens[outerIndex].misc += ', ' + unixTime;
-        } else {
-            sent.tokens[outerIndex].misc = 'AnnoTime=' + unixTime;
+            if(sent.tokens[outerIndex].misc != undefined) {
+                var firstTime = (sent.tokens[outerIndex].misc).split(',')[0];
+                firstTime = parseInt(firstTime.split('=')[1])
+                var timeDelta = unixTime - firstTime
+
+                sent.tokens[outerIndex].misc += ',' + timeDelta;
+            } else {
+                sent.tokens[outerIndex].misc = 'AnnoTime=' + unixTime;
+            }
         }
     }
 }
@@ -888,6 +898,15 @@ function switchRtlMode() {
     drawTree();
 }
 
+function switchLogger() {
+    $('#logger .fa').toggleClass('fa-remove');
+    $('#logger .fa').toggleClass('fa-pencil');
+    if (LOGGER_ENABLED) {
+        LOGGER_ENABLED = false;
+    } else {
+        LOGGER_ENABLED = true;
+    }
+}
 
 function switchAlignment() {
 	$('#vertical .fa').toggleClass('fa-rotate-90');

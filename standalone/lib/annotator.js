@@ -126,6 +126,7 @@ function bindHanlers() {
     $("#indata").bind("keyup", fitTable);
     $("#indata").bind("keyup", formatTabsView);
     $("#RTL").on("click", switchRtlMode);
+    $("#logger").on("click", switchLogger);
     $("#vertical").on("click", switchAlignment);
     $("#enhanced").on("click", switchEnhanced);
     document.getElementById('filename').addEventListener('change', loadFromFile, false);
