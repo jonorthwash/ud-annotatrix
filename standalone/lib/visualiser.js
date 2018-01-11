@@ -43,6 +43,30 @@ function conlluDraw(content) {
         style: CY_STYLE,
         elements: conllu2cy(sent)
     });
+    
+    cy.$('edge.error').qtip({
+        content: function(){
+            var l = this[0]['_private']['data']['label'].replace(/[⚠⊳⊲]/g, '');
+            return l + ' is not in the list of Universal dependency relations.';
+        },
+        position: {
+            my: 'top center',
+            at: 'bottom center'
+        },
+        show: {
+            event: 'mouseover'
+        },
+        hide: {
+            event: 'mouseout unfocus'  
+        },
+        style: {
+            classes: 'qtip-bootstrap',
+            tip: {
+                width: 16,
+                height: 8
+            }
+        }
+    });
 
 //    if(content.split('\n').length > 10) {
 //          if(!VIEW_ENHANCED){
@@ -71,6 +95,22 @@ function conlluDraw(content) {
     cy.center();
     $(window).bind('resize', onResize);
     $(window).bind('DOMMouseScroll wheel', onScroll);
+}
+
+function check_deprel(s) {
+    var s_deprel = s;
+    // Language specific relations are a universal relation + : + some string
+    console.log(s);
+    if(s.search(":") >= 0) {
+      s_deprel = s.split(":")[0];
+    }
+    // Check if the deprel is in the list of valid relations
+    for(var i = 0; i < U_DEPRELS.length; i++) {
+      if(U_DEPRELS[i] == s_deprel) { 
+        return [true, "", {}];
+      }
+    }
+    return [false, "err_udeprel_invalid", {"label": s}];
 }
 
 /**

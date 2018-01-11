@@ -17,7 +17,9 @@ function main() {
     head.js(
         pathRoot + 'ext/jquery-3.2.1.min.js',
         pathRoot + 'ext/jquery-ui-1.12.1/jquery-ui.min.js',
+        pathRoot + 'ext/qtip/jquery.qtip.min.js',
         pathRoot + 'ext/cytoscape.min.js',
+        pathRoot + 'ext/qtip/cytoscape-qtip.js',
         pathRoot + 'ext/undomanager.js',
         pathRoot + 'ext/popper.min.js',
         pathRoot + 'ext/jquery.autocomplete.js',
