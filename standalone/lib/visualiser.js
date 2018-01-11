@@ -97,22 +97,6 @@ function conlluDraw(content) {
     $(window).bind('DOMMouseScroll wheel', onScroll);
 }
 
-function check_deprel(s) {
-    var s_deprel = s;
-    // Language specific relations are a universal relation + : + some string
-    console.log(s);
-    if(s.search(":") >= 0) {
-      s_deprel = s.split(":")[0];
-    }
-    // Check if the deprel is in the list of valid relations
-    for(var i = 0; i < U_DEPRELS.length; i++) {
-      if(U_DEPRELS[i] == s_deprel) { 
-        return [true, "", {}];
-      }
-    }
-    return [false, "err_udeprel_invalid", {"label": s}];
-}
-
 /**
  * Resizes the visualiser window.
  * @param {Object} e Event.
