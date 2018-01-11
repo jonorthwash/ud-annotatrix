@@ -211,7 +211,6 @@ function conllu2cy(sent) {
 
         } else {
             graph = createToken(graph, token);
-            console.log(graph);
         }
     })
 
@@ -353,7 +352,6 @@ function makeEnhancedDependency(token, nodeId, head, deprel, graph) {
  */
 function makeDependencies(token, nodeId, graph) {
 	var deprel = (token.deprel) ? token.deprel : "";
-    console.log(deprel);
 	var head = token.head; // The id of the head
 
 	var validDep = true;

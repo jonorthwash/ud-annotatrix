@@ -141,7 +141,7 @@ var CY_STYLE = [{
     "control-point-weights": "0 0.25 0.75 1",
     "edge-distances": "node-position",
     "label": "data(label)",
-    "text-events": "yes",
+    "text-events": "yes"
   }
 }, {
     "selector": "edge.dependency.selected",
