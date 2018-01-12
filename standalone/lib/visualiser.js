@@ -10,6 +10,7 @@ var ST_COLOR = "#bcd2ff"
 var SCROLL_ZOOM_INCREMENT = 0.05;
 var TREE_ = {}; // This map allows us to address the Token object given an ID
 var VIEW_ENHANCED = false;
+var DISMISSED_DEPRELS = [];
 
 var edgeHeight = 40;
 var defaultCoef = 1; // 0.7
@@ -47,11 +48,24 @@ function conlluDraw(content) {
     cy.$('edge.error').qtip({
         content: function(){
             var l = this[0]['_private']['data']['label'].replace(/[⚠⊳⊲]/g, '');
-            return l + ' is not in the list of Universal dependency relations.';
+            var id = this.id();
+            $('.qtip').click(function() {
+                DISMISSED_DEPRELS.push(id);
+                $('.qtip', window.parent.document).qtip("hide");
+                drawTree();
+            });
+            if($.inArray(id, DISMISSED_DEPRELS) != -1) {
+                return l + ' is not in the list of Universal dependency relations.';
+            } else {
+                return l + ' is not in the list of Universal dependency relations.';
+            }
         },
         position: {
             my: 'top center',
-            at: 'bottom center'
+            at: 'bottom center',
+            adjust: {
+                y: 10
+            }
         },
         show: {
             event: 'mouseover'
@@ -60,11 +74,7 @@ function conlluDraw(content) {
             event: 'mouseout unfocus'  
         },
         style: {
-            classes: 'qtip-bootstrap',
-            tip: {
-                width: 16,
-                height: 8
-            }
+            classes: 'qtip-annotatrix',
         }
     });
 
@@ -471,6 +481,17 @@ function makeDependencies(token, nodeId, graph) {
                         }                            
                         if(res3.has("objccomp") && (graphLabel === "obj⊳" || graphLabel === "⊲obj" || graphLabel === "ccomp⊳" || graphLabel === "⊲ccomp")) {
                                 graph[graphInd].classes = "dependency error";
+                        }
+                    }
+                }
+        
+                if(DISMISSED_DEPRELS.length > 0) {
+                    for(var i = 0; i < graph.length; i++) {
+                        for(var j = 0; j < DISMISSED_DEPRELS.length; j++) {
+                            if(graph[i].classes == 'dependency error' && graph[i].data.id == DISMISSED_DEPRELS[j]) {
+                                graph[i].classes = 'dependency'
+                                graph[i].data.label = graph[i].data.label.replace('⚠', '');
+                            }
                         }
                     }
                 }

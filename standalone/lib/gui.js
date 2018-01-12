@@ -133,6 +133,7 @@ function removeArc(destNodes) {
 
     var sent = buildSent();
     var prevRelations = {}
+    DISMISSED_DEPRELS = []
 
     // support for multiple arcs
     $.each(destNodes, function(i, node) {
