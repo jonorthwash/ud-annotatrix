@@ -79,6 +79,17 @@ function saveData() {
 }
 
 
+// function saveDataNew() {
+//     if (SERVER_RUNNING) {
+//         saveOnServer()
+//     } else {
+//         if (LOC_ST_AVAILABLE) {
+//             // localStorage.setItem("treebank", RESULTS);
+//         }
+//     }
+// }
+
+
 function getContents() { // TODO: replace getTreebank with this func
     /* Gets the corpus data saving the changes in current sentence,
     dependlessly of whether it's on server or in localStorage.
@@ -193,8 +204,12 @@ function loadFromFile(e) {
 
 
 function loadFromFileNew(e) {
-    /* loads a corpus from a file from the user's computer,
-    changes the FILENAME variable. */
+    /*
+    Loads a corpus from a file from the user's computer,
+    puts the filename into localStorage.
+    If the server is running, ... TODO
+    Else, loads the corpus to localStorage.
+    */
     var file = e.target.files[0];
     if (!file) {return}
     var reader = new FileReader();
@@ -263,16 +278,35 @@ function loadDataInIndex() {
         document.getElementById('nextSenBtn').disabled = false;
     }
 
-    for (var i = 0; i < splitted.length; ++i) {
+    for (var i = 0; i < splitted.length; ++i) { // TODO: delete this code. WORKING ON THIS.
         var check = splitted[i];
         RESULTS.push(check);
     }
     showDataIndiv();
 }
 
-function loadDataInIndexNew() {
-    // body...
+
+function splitIntoSentences(corpus) { // TODO: not called anywhere yet
+    /* Takes a string with the corpus and returns an array of sentences. */
+
+    var format = detectFormat(corpus);
+
+    // splitting
+    if (format == "plain text") {
+        var splitted = corpus.match(/[^ ].+?[.!?](?=( |$))/g);
+    } else {
+        var splitted = corpus.split("\n\n");
+    }
+
+    // removing empty lines
+    for (var i = splitted.length - 1; i >= 0; i--) {
+        if (splitted[i].trim() === "") {
+            splitted.splice(i, 1);
+        }
+    }
+    return splitted;
 }
+
 
 function showDataIndiv() {
     /* This function is called each time the current sentence is changed
