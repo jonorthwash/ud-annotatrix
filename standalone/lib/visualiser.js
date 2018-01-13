@@ -11,6 +11,10 @@ var SCROLL_ZOOM_INCREMENT = 0.05;
 var TREE_ = {}; // This map allows us to address the Token object given an ID
 var VIEW_ENHANCED = false;
 
+// Used for calculating progress
+var ALL_WORK = 0
+var DONE_WORK = 0
+
 var edgeHeight = 40;
 var defaultCoef = 1; // 0.7
 var staggersize = 15;
@@ -187,6 +191,13 @@ function changeEdgeStyle() {
     }
 }
 
+function showProgress() {
+    var progressPercentage = DONE_WORK/(ALL_WORK-1)*100;
+    $('#progressBar').animate({
+        width: progressPercentage + '%'
+    });
+}
+
 /**
  * Creates a graph out of the conllu.Sentence().
  * @param  {Object} sent A conllu.Sentence().
@@ -226,6 +237,25 @@ function conllu2cy(sent) {
             graph = makeEnhancedDependency(token, nodeId, enhancedHead, enhancedDeprel, graph);
         }
     })
+    }
+    
+    ALL_WORK = 0;
+    DONE_WORK = 0;
+    for(var i = 0; i < graph.length; i++) {
+        if(graph[i].classes == 'wf') {
+            ALL_WORK += 2;
+            if(graph[i].data.head != undefined) {
+                DONE_WORK += 1;
+            }
+            if(graph[i].data.upostag != undefined) {
+                DONE_WORK += 1;
+            }
+        } else if(graph[i].classes.indexOf('dependency') != -1) {
+            ALL_WORK++;
+            if(graph[i].classes != 'dependency incomplete') {
+                DONE_WORK++;
+            }
+        }
     }
     return graph;
 }

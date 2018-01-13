@@ -459,6 +459,7 @@ function drawTree() {
     // -- to be moved out -- 
 
     conlluDraw(content);
+    showProgress();
     var inpSupport = $("<div id='mute'>"
         + "<input type='text' id='edit' class='hidden-input'/></div>");
     $("#cy").prepend(inpSupport);
