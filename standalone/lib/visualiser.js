@@ -163,7 +163,7 @@ function formLayout() {
  * Changes the edge style based on alignment.
  */
 function changeEdgeStyle() {
-    var depEdgeStyle = CY_STYLE[11]["style"];
+    var depEdgeStyle = CY_STYLE[12]["style"];
     if (VERT_ALIGNMENT) {
         depEdgeStyle["text-margin-y"] = 0;
         depEdgeStyle["text-background-opacity"] = 1;
@@ -455,7 +455,7 @@ function makeDependencies(token, nodeId, graph) {
                             if(conflicts.indexOf("subj") !== -1 && (graphLabel === "csubj⊳" || graphLabel === "⊲csubj" || graphLabel === "⊲nsubj" || graphLabel === "nsubj⊳")) {
                                 graph[graphInd].classes = "dependency error";
                             }
-                        }                            
+                        }
                         if(res3.has("objccomp") && (graphLabel === "obj⊳" || graphLabel === "⊲obj" || graphLabel === "ccomp⊳" || graphLabel === "⊲ccomp")) {
                                 graph[graphInd].classes = "dependency error";
                         }
@@ -665,7 +665,7 @@ function cleanEdges() {
  */
 function setEdgePosition(thisEdge, thisHeight, coef, diff) {
 	if (!LEFT_TO_RIGHT) {coef *= -1}; // support for RTL
-	if (VERT_ALIGNMENT) {edgeDep.ctrl = [45, 45, 45, 45]};
+	//if (VERT_ALIGNMENT) {edgeDep.ctrl = [45, 45, 45, 45]};
 	//if (Math.abs(coef) != 1) {coef *= defaultCoef};
 
 	thisHeight *= coef;
