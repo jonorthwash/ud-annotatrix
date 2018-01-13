@@ -60,6 +60,8 @@ function onReady() {
     setTimeout(function(){ // setTimeout, because we have to wait checkServer to finish working
         if (!SERVER_RUNNING) {
             loadFromLocalStorage(); // trying to load the corpus from localStorage
+        } else {
+            getCorpusData(); // loading the corpus from the server
         }
     }, 500)
 }
