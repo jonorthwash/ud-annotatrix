@@ -287,12 +287,9 @@ function createToken(graph, token, spId) {
 
     var nodeWF = token;
     // nodeWF.parent = spId;
-    nodeWF.length = nodeWF.form.length + "em";
-    if(nodeWF.form.length > 3) {
-      var canvas = document.createElement("canvas");
-      var context = canvas.getContext("2d");
-      nodeWF.length = context.measureText(nodeWF.form).width * 2 + "px";
-    }
+    var canvas = document.createElement("canvas");
+    var context = canvas.getContext("2d");
+    nodeWF.length = context.measureText(nodeWF.form).width * 2 + "px";
     nodeWF.id = "nf" + nodeId;
     nodeWF.label = nodeWF.form;
     nodeWF.state = "normal";
