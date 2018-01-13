@@ -129,7 +129,7 @@
     };
 
     function _lookupFilter(suggestion, originalQuery, queryLowerCase) {
-        return suggestion.value.toLowerCase().indexOf(queryLowerCase) !== -1;
+        return suggestion.value.toLowerCase().startsWith(queryLowerCase) !== false;
     };
 
     function _transformResult(response) {
