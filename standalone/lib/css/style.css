@@ -678,10 +678,4 @@ color: #3399FF;
     border-radius: 5px;
     height: 100%;
     background-color: #157EFB;
-    -khtml-transition: height 0.3s ease;
-    -moz-transition: height 0.3s ease;
-    -ms-transition: height 0.3s ease;
-    -o-transition: height 0.3s ease;
-    -webkit-transition: height 0.3s ease;
-    transition: height 0.3s ease;
 }
