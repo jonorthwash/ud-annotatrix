@@ -11,7 +11,6 @@ function checkServer() {
     // https://qntm.org/files/promise/promise.html
     fetch('running').then(function(data){
         console.log("Response from server, status: " + data["status"]);
-        getCorpusData();
         SERVER_RUNNING = true;
     });
 }

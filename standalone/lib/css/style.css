@@ -664,3 +664,18 @@ color: #3399FF;
 .thead-default th:last-child {
 	border-right: 1px solid #e9ecef !important ;
 }
+
+#progressContainer {
+    position: fixed;
+    left: 0px;
+    bottom: 0px;
+    height: 4px;
+    width: 100%;
+}
+
+#progressBar {
+    width: 0%;
+    border-radius: 5px;
+    height: 100%;
+    background-color: #157EFB;
+}

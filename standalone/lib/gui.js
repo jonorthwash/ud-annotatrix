@@ -8,6 +8,7 @@ var DEL_KEY = 46;
 var BACKSPACE = 8;
 var ENTER = 13;
 var ESC = 27;
+var TAB = 9;
 var RIGHT = 39;
 var LEFT = 37;
 var CURRENT_ZOOM = 1.0;
@@ -23,6 +24,7 @@ var S = 83;
 var R = 82;
 var M = 77;
 var SIDES = {39: "right", 37: "left"};
+var ISEDITING = false;
 var POS2RELmappings = {
 	"PUNCT": "punct",
 	"DET": "det",
@@ -172,23 +174,25 @@ function selectArc() {
     /* 
     Activated when an arc is selected. Adds classes showing what is selected.
     */
+    
+    if(!ISEDITING) {
+        // if the user clicked an activated node
+        if (this.hasClass("selected")) {
+            this.removeClass("selected");
 
-    // if the user clicked an activated node
-    if (this.hasClass("selected")) {
-        this.removeClass("selected");
+            // removing visual effects from destNode
+            var destNodeId = this.data("target");
+            cy.$("#" + destNodeId).removeClass("arc-selected");
 
-        // removing visual effects from destNode
-        var destNodeId = this.data("target");
-        cy.$("#" + destNodeId).removeClass("arc-selected");
+        } else {
+            this.addClass("selected");
+            var destNodeId = this.data("target"); // getting info about nodes
+            cy.$("#" + destNodeId).addClass("arc-selected"); // css for destNode
+        }
 
-    } else {
-        this.addClass("selected");
-        var destNodeId = this.data("target"); // getting info about nodes
-        cy.$("#" + destNodeId).addClass("arc-selected"); // css for destNode
+        // for identifying the node
+        cy.$("#" + destNodeId).data("state", "arc-dest");
     }
-
-    // for identifying the node
-    cy.$("#" + destNodeId).data("state", "arc-dest");
 }
 
 
@@ -201,7 +205,7 @@ function selectSup() {
 }
 
 
-function keyUpClassifier(key) {
+function keyDownClassifier(key) {
     // looking if there are selected arcs
     var selArcs = cy.$("edge.dependency.selected");  // + cy.$("edge.dependency.error");
     var destNodes = cy.$("node[state='arc-dest']");
@@ -226,11 +230,19 @@ function keyUpClassifier(key) {
     //         drawTree();
     //     }
     // });
-
+    
     if (key.which == ESC) {
         key.preventDefault();
         drawTree();
     };
+    
+    var isEditFocused = $('#edit').is(':focus');
+    if(isEditFocused) {
+        if (key.which == TAB) {
+            key.preventDefault();
+        }
+    }
+    
     if (selArcs.length) {
         if (key.which == DEL_KEY || key.which == BACKSPACE) {
             removeArc(destNodes);
@@ -334,6 +346,8 @@ function removeSup(st) {
 
 function changeNode() {
     console.log("changeNode() " + Object.entries(this) + " // " + this.id());
+    
+    ISEDITING = true;
 
     this.addClass("input");
     var id = this.id().slice(0, 2);

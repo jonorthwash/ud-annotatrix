@@ -5,7 +5,7 @@ var U_POS = ["ADJ", "ADP", "ADV", "AUX", "CCONJ", "DET", "INTJ", "NOUN", "NUM", 
 
 // TODO: Make this more clever, e.g. CCONJ can have a dependent in certain 
 // circumstances, e.g. and / or 
-var U_POS_LEAF = ["ADP", "AUX", "CCONJ", "PART", "PUNCT", "SCONJ"];
+var U_POS_LEAF = ["AUX", "CCONJ", "PART", "PUNCT", "SCONJ"]; // no ADP
 
 function is_upos(s) {
     // Checks if a relation is in the list of valid parts of speech
