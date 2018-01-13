@@ -499,6 +499,7 @@ function drawTree() {
         + "<input type='text' id='edit' class='hidden-input'/></div>");
     $("#cy").prepend(inpSupport);
     bindCyHandlers();
+    saveData();
 }
 
 
