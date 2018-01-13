@@ -61,6 +61,11 @@ def index():
     return redirect(url_for('annotatrix'))
 
 
+@app.route('/<treebank_id>', methods=['GET', 'POST'])
+def index_corpus(treebank_id):
+    return redirect(url_for('corpus_page', treebank_id=treebank_id))
+
+
 @app.route('/annotatrix/<treebank_id>')
 def corpus_page(treebank_id):
     return send_from_directory('../standalone', 'annotator.html')
