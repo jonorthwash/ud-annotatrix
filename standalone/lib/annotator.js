@@ -413,7 +413,9 @@ function drawTree() {
     1. removes the previous tree, if there's one
     2. takes the data from the textarea
     3. */
-
+    
+    ISEDITING = false;
+    
     // TODO: update the sentence
     try {cy.destroy()} catch (err) {}; // remove the previous tree, if there is one
 

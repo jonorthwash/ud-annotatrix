@@ -24,6 +24,7 @@ var S = 83;
 var R = 82;
 var M = 77;
 var SIDES = {39: "right", 37: "left"};
+var ISEDITING = false;
 var POS2RELmappings = {
 	"PUNCT": "punct",
 	"DET": "det",
@@ -173,23 +174,25 @@ function selectArc() {
     /* 
     Activated when an arc is selected. Adds classes showing what is selected.
     */
+    
+    if(!ISEDITING) {
+        // if the user clicked an activated node
+        if (this.hasClass("selected")) {
+            this.removeClass("selected");
 
-    // if the user clicked an activated node
-    if (this.hasClass("selected")) {
-        this.removeClass("selected");
+            // removing visual effects from destNode
+            var destNodeId = this.data("target");
+            cy.$("#" + destNodeId).removeClass("arc-selected");
 
-        // removing visual effects from destNode
-        var destNodeId = this.data("target");
-        cy.$("#" + destNodeId).removeClass("arc-selected");
+        } else {
+            this.addClass("selected");
+            var destNodeId = this.data("target"); // getting info about nodes
+            cy.$("#" + destNodeId).addClass("arc-selected"); // css for destNode
+        }
 
-    } else {
-        this.addClass("selected");
-        var destNodeId = this.data("target"); // getting info about nodes
-        cy.$("#" + destNodeId).addClass("arc-selected"); // css for destNode
+        // for identifying the node
+        cy.$("#" + destNodeId).data("state", "arc-dest");
     }
-
-    // for identifying the node
-    cy.$("#" + destNodeId).data("state", "arc-dest");
 }
 
 
@@ -343,6 +346,8 @@ function removeSup(st) {
 
 function changeNode() {
     console.log("changeNode() " + Object.entries(this) + " // " + this.id());
+    
+    ISEDITING = true;
 
     this.addClass("input");
     var id = this.id().slice(0, 2);
