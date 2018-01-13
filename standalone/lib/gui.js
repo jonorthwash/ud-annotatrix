@@ -8,6 +8,7 @@ var DEL_KEY = 46;
 var BACKSPACE = 8;
 var ENTER = 13;
 var ESC = 27;
+var TAB = 9;
 var RIGHT = 39;
 var LEFT = 37;
 var CURRENT_ZOOM = 1.0;
@@ -204,7 +205,7 @@ function selectSup() {
 }
 
 
-function keyUpClassifier(key) {
+function keyDownClassifier(key) {
     // looking if there are selected arcs
     var selArcs = cy.$("edge.dependency.selected");  // + cy.$("edge.dependency.error");
     var destNodes = cy.$("node[state='arc-dest']");
@@ -229,11 +230,19 @@ function keyUpClassifier(key) {
     //         drawTree();
     //     }
     // });
-
+    
     if (key.which == ESC) {
         key.preventDefault();
         drawTree();
     };
+    
+    var isEditFocused = $('#edit').is(':focus');
+    if(isEditFocused) {
+        if (key.which == TAB) {
+            key.preventDefault();
+        }
+    }
+    
     if (selArcs.length) {
         if (key.which == DEL_KEY || key.which == BACKSPACE) {
             removeArc(destNodes);
