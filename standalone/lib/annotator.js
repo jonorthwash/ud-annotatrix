@@ -424,6 +424,10 @@ function clearCorpus() {
     drawTree();
 }
 
+function copyTree() {
+    $("#indata").select();
+    document.execCommand("copy")
+}
 
 function getTreebank() {
 
