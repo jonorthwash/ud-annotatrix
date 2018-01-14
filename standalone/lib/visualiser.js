@@ -23,6 +23,10 @@ var staggersize = 15;
 // require lib for CoNLL-U parsing
 var conllu = require("conllu");
 
+var codeLateX = '';
+var png_exported = false;
+var latex_exported = false;
+
 /**
  * Draws the tree.
  * @param {String} content Content of the input textbox.
@@ -257,7 +261,115 @@ function conllu2cy(sent) {
             }
         }
     }
+    codeLateX = generateLateX(graph);
+    
     return graph;
+}
+
+function exportPNG() {
+    if(!png_exported) {
+        var b64key = 'base64,';
+        var b64 = cy.png().substring( cy.png().indexOf(b64key) + b64key.length);
+        var imgBlob = b64toBlob(b64, 'image/png');
+
+        var image = new Image();
+        image.src = URL.createObjectURL(imgBlob);
+        $(image).css('width', '100%');
+        $('#exportModal').find('.modal-body').append('</br>');
+        $('#exportModal').find('.modal-body').append(image);
+        png_exported = true;
+    }
+}
+
+function b64toBlob(b64Data, contentType, sliceSize) {
+    contentType = contentType || '';
+    sliceSize = sliceSize || 512;
+
+    var byteCharacters = atob(b64Data);
+    var byteArrays = [];
+
+    for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+        var slice = byteCharacters.slice(offset, offset + sliceSize);
+
+        var byteNumbers = new Array(slice.length);
+        for (var i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+        }
+
+        var byteArray = new Uint8Array(byteNumbers);
+
+        byteArrays.push(byteArray);
+    }
+
+    var blob = new Blob(byteArrays, {type: contentType});
+    return blob;
+}
+
+
+function exportLATEX() {
+    if(!latex_exported) {
+        if(codeLateX == 'error') {
+            $('#exportModal').find('.modal-body').append(
+                '</br>' +
+                'Sorry, the graph has to have all UPOS tags defined!'
+            );
+        } else {
+            for(var i = 0; i < codeLateX.length; i++) {
+                $('#exportModal').find('.modal-body').append(
+                    '</br>' +
+                    codeLateX[i]
+                );
+            }
+        }
+        latex_exported = true;
+    }
+}
+
+function generateLateX(graph) {
+    
+    var latexLines = [];
+    
+    var tokensLine = '';
+    var posLine = '';
+    var deprelLines = [];
+    for(var i = 0; i < graph.length; i++) {
+        if(graph[i].classes == 'wf') {
+            if(graph[i].data.upostag == undefined) {
+                return 'error';
+            }
+            tokensLine += ' \\& ' + graph[i].data.label;
+            posLine += '\\&{\\tt ' + graph[i].data.upostag + '}';
+        }
+        
+        if(graph[i].classes == 'dependency' || graph[i].classes == 'dependency error') {
+            if(graph[i].data.label == undefined) {
+                return 'error';
+            }
+            var source = parseInt(graph[i].data.source.replace('nf', ''));
+            var target = parseInt(graph[i].data.target.replace('nf', ''));
+            var label = ''
+            if(graph[i].data.label != undefined) {
+                label = graph[i].data.label.replace(/[⊳⊲]/, '');
+            }
+            deprelLines.push('\depedge{' + source + '}{' + target + '}' + '{' + label + '}');
+        }
+    }
+    tokensLine += ' \\\\';
+    tokensLine = tokensLine.replace('\\&', '');
+    
+    posLine += '\\\\';
+    posLine = posLine.replace('\\&', '');
+    
+    latexLines.push('\\begin{dependency}',
+                    '   \\begin{deptext}[column sep=0.4cm]');
+    latexLines.push('       ' + tokensLine);
+    latexLines.push('       ' + posLine);
+    latexLines.push('   \\end{deptext}');
+    for(var i = 0; i < deprelLines.length; i++) {
+        latexLines.push('   \\' + deprelLines[i]);
+    }
+    latexLines.push('\\end{dependency} \\\\');
+    return latexLines;
 }
 
 function findSupTokId(subtokens) {

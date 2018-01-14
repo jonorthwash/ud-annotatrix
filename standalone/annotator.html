@@ -90,6 +90,25 @@ err_udep_leaf_node = Nodes with the « { $tag } » part-of-speech tag should nor
 				</div>
 			</div>
 		</div>
+      
+        <div class="modal fade" id="exportModal" tabindex="-1" role="dialog" aria-labelledby="exportModalLabel" aria-hidden="true">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content" id="exportModalContent">
+					<div class="modal-header">
+						<h5 class="modal-title" id="exportModalLabel">Export to:</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						&nbsp;
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
 
 
 		<!--<p style="float: left; ">Enter trees below in any supported format (SD, CG3, CoNLL-U):</p>-->
@@ -138,8 +157,8 @@ err_udep_leaf_node = Nodes with the « { $tag } » part-of-speech tag should nor
 						</a>
 					</div>
 					<div class="btn-group" style="float:left; padding-right: 1em;">
-						<a class="btn btn-secondary" href="#" data-toggle="modal" onClick="javascript:copyTree();">
-							<i class="fa fa-copy" title="Copy"></i>
+						<a class="btn btn-secondary" href="#" data-toggle="modal" data-target="#exportModal">
+							Export
 						</a>
 					</div>
 					<div class="btn-group" style="float:left; padding-right: 1em;">

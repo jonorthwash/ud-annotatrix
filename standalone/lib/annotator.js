@@ -21,7 +21,6 @@ function main() {
         pathRoot + 'ext/undomanager.js',
         pathRoot + 'ext/popper.min.js',
         pathRoot + 'ext/jquery.autocomplete.js',
-        pathRoot + 'ext/FileSaver.min.js',
         pathRoot + 'ext/bootstrap.min.js',
         pathRoot + 'ext/l20n.js',
         pathRoot + 'ext/conllu/conllu.js', // CoNLL-U parser from https://github.com/FrancessFractal/conllu
@@ -423,37 +422,6 @@ function clearCorpus() {
     showDataIndiv()
     window.location.reload();
     drawTree();
-}
-
-function copyTree() {
-    var b64key = 'base64,';
-    var b64 = cy.png().substring( cy.png().indexOf(b64key) + b64key.length);
-    var imgBlob = b64toBlob(b64, 'image/png');
-    saveAs(imgBlob, 'tree.png');
-}
-
-function b64toBlob(b64Data, contentType, sliceSize) {
-    contentType = contentType || '';
-    sliceSize = sliceSize || 512;
-
-    var byteCharacters = atob(b64Data);
-    var byteArrays = [];
-
-    for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-        var slice = byteCharacters.slice(offset, offset + sliceSize);
-
-        var byteNumbers = new Array(slice.length);
-        for (var i = 0; i < slice.length; i++) {
-            byteNumbers[i] = slice.charCodeAt(i);
-        }
-
-        var byteArray = new Uint8Array(byteNumbers);
-
-        byteArrays.push(byteArray);
-    }
-
-    var blob = new Blob(byteArrays, {type: contentType});
-    return blob;
 }
 
 function getTreebank() {
