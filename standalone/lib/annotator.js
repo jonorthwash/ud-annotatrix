@@ -193,15 +193,36 @@ function loadFromFile(e) {
     if (!file) {
         return;
     }
+    $("#fileUploadProgressBar").attr("value", 0);
     var reader = new FileReader();
     reader.onload = function(e) {
         CONTENTS = e.target.result;
-        localStorage.setItem("corpus", CONTENTS);
-        loadDataInIndex();
+    };
+
+    reader.onloadend = function(data) {
+        $("#uploadFileButton").removeAttr("disabled");
+        var finalprogress = parseInt(((data.loaded / data.total) * 100), 10);
+        console.log(finalprogress+"%");
+        $("#fileUploadProgressBar").attr("value", finalprogress);
+    };
+
+    reader.onprogress = function(data) {
+        if (data.lengthComputable) {
+            var progress = parseInt(((data.loaded / data.total) * 100), 10);
+            $("#fileUploadProgressBar").attr("max", e.total);
+            $("#fileUploadProgressBar").attr("value", progress);
+            console.log(progress+"%");
+        }
     };
     reader.readAsText(file);
 }
 
+
+function handleUploadButtonPressed() {
+    $("#uploadFileButton").attr("disabled", "disabled");
+    localStorage.setItem("corpus", CONTENTS);
+    loadDataInIndex();
+}
 
 function loadFromFileNew(e) {
     /*
