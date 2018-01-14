@@ -209,7 +209,6 @@ function loadFromFile(e) {
     reader.onprogress = function(data) {
         if (data.lengthComputable) {
             var progress = parseInt(((data.loaded / data.total) * 100), 10);
-            $("#fileUploadProgressBar").attr("max", e.total);
             $("#fileUploadProgressBar").attr("value", progress);
             console.log(progress+"%");
         }
@@ -219,9 +218,10 @@ function loadFromFile(e) {
 
 
 function handleUploadButtonPressed() {
-    $("#uploadFileButton").attr("disabled", "disabled");
     localStorage.setItem("corpus", CONTENTS);
     loadDataInIndex();
+    $("#uploadFileButton").attr("disabled", "disabled");
+    $('#fileModal').modal('hide')
 }
 
 function loadFromFileNew(e) {
