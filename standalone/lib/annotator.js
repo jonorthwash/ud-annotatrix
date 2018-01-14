@@ -254,20 +254,9 @@ function loadDataInIndex() {
     AVAILABLESENTENCES = 0;
     CURRENTSENTENCE = 0;
 
-    if (FORMAT == "plain text") {
-        var splitted = CONTENTS.match(/[^ ].+?[.!?](?=( |$))/g);
-    // } else if (FORMAT == undefined) {
-    //     var splitted = [];
-    } else {
-        var splitted = CONTENTS.split("\n\n");
-    }
-
-    // console.log('loadDataInIndex |' + FORMAT + " | " + splitted.length)
-    for (var i = splitted.length - 1; i >= 0; i--) {
-        if (splitted[i].trim() === "") {
-            splitted.splice(i, 1);
-        }
-    }
+    var splitted = splitIntoSentences(CONTENTS);
+    localStorage.setItem('treebank', splitted);
+    RESULTS = splitted;
 
     AVAILABLESENTENCES = splitted.length;
     //console.log('loadDataInIndex |' + FORMAT + " | AVAILABLESENTENCES = " + AVAILABLESENTENCES)
@@ -278,10 +267,6 @@ function loadDataInIndex() {
         document.getElementById('nextSenBtn').disabled = false;
     }
 
-    for (var i = 0; i < splitted.length; ++i) { // TODO: delete this code. WORKING ON THIS.
-        var check = splitted[i];
-        RESULTS.push(check);
-    }
     showDataIndiv();
 }
 
