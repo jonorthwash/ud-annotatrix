@@ -315,9 +315,9 @@ function exportLATEX() {
             );
         } else {
             for(var i = 0; i < codeLateX.length; i++) {
-                $('#exportModal').find('.modal-body').append(
-                    '</br>' +
-                    codeLateX[i]
+                $('#exportModal').find('#exportModal-textarea').append(
+                    codeLateX[i] +
+                    '\n'
                 );
             }
         }
