@@ -320,6 +320,11 @@ function exportLATEX() {
                     '\n'
                 );
             }
+            if($('#exportModal').find('#exportModal-textarea').attr("rows") > codeLateX.length) {
+                $('#exportModal').find('#exportModal-textarea').attr('rows', codeLateX.length + 2);
+            } else {
+                $('#exportModal').find('#exportModal-textarea').attr('rows', $('#exportModal').find('#exportModal-textarea').attr("rows"));
+            }
         }
         latex_exported = true;
     }
