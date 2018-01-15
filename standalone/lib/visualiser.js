@@ -94,6 +94,10 @@ function onResize(e) {
 //    CURRENT_ZOOM = cy.zoom();
     console.log('[7] CURRENT_ZOOM:', CURRENT_ZOOM);
     console.log('> resize event', CURRENT_ZOOM, cy.width(), cy.height());
+
+    if(!VERT_ALIGNMENT) {
+        $("#cy").css("height", $(window).height()-$(".inarea").height()-80);
+    }
 }
 
 /**
@@ -134,9 +138,10 @@ function changeBoxSize(sent) {
         $("#cy").css("width", $(window).width()-10);
         $("#cy").css("height", (length * 50) + "px");
     } else {
-        //$("#cy").css("width", "1500px");
-        $("#cy").css("width", $(window).width()-10);
-        $("#cy").css("height", "400px");
+        // scales width according to viewport
+        $("#cy").css("width", "100%");
+        // window height - height of top area - height of controls
+        $("#cy").css("height", $(window).height()-$(".inarea").height()-80);
     }
 }
 

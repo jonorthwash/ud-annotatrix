@@ -179,4 +179,7 @@ function toggleCodeWindow() {
     $(".indataarea").toggle();
     $("#tabBox").toggle();
     $("#viewButton").toggle();
+    if(!VERT_ALIGNMENT) {
+        $("#cy").css("height", $(window).height()-$(".inarea").height()-80);
+    }
 }
