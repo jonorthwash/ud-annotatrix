@@ -2,7 +2,6 @@
 
 var FORMAT = "";
 var FILENAME = 'ud-annotatrix-corpus.conllu'; // default name
-var TEMPCONTENTS = "";
 var CONTENTS = "";
 var AVAILABLESENTENCES = 0;
 var LOCALSTORAGE_AVAILABLE = -1;
@@ -181,16 +180,14 @@ function loadFromUrl(argument) {
 function loadFromFile(e) {
     /* loads a corpus from a file from the user's computer,
     changes the FILENAME variable. */
-    TEMPCONTENTS = "";
+    CONTENTS = "";
     var file = e.target.files[0];
     FILENAME = file.name; // TODO: you can get rid of FILENAME if you store it in localStorage
     var fileSize = file.size;
     console.log(formatUploadSize(fileSize));
 
     $("#uploadFileButton").attr("disabled", "disabled");
-    $("#appendFileButton").attr("disabled", "disabled");
     $("#uploadFileSizeError").hide();
-    $("#uploadReplaceOnly").hide();
 
     // check if the code is invoked
     var ext = FILENAME.split(".")[FILENAME.split(".").length - 1]; // TODO: should be more beautiful way
@@ -204,7 +201,7 @@ function loadFromFile(e) {
     $("#fileUploadProgressBar").attr("value", 0);
     var reader = new FileReader();
     reader.onload = function(e) {
-        TEMPCONTENTS = e.target.result;
+        CONTENTS = e.target.result;
     };
 
     reader.onloadend = function(data) {
@@ -213,15 +210,8 @@ function loadFromFile(e) {
         $("#fileUploadProgressBar").attr("value", finalprogress);
         $("#uploadFileSize").text("Size: " + formatUploadSize(fileSize));
         try {
-            localStorage.setItem("corpus", TEMPCONTENTS);
+            localStorage.setItem("corpus", CONTENTS);
             $("#uploadFileButton").removeAttr("disabled");
-            if(fileSize > LOCALSTORAGE_AVAILABLE) {
-                console.log("WARNING: File size is too large to append to current corpus.");
-                $("#uploadReplaceOnly").show();
-            }
-            else {
-                $("#appendFileButton").removeAttr("disabled");
-            }
         }
         catch(e) {
             if(isQuotaExceeded(e)) {
@@ -278,28 +268,11 @@ function isQuotaExceeded(e) {
 
 function handleUploadButtonPressed() {
     // Replaces current content
-    CONTENTS = TEMPCONTENTS;
     getLocalStorageMaxSize()
     $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
     loadDataInIndex();
     $("#uploadFileButton").attr("disabled", "disabled");
-    $("#appendFileButton").attr("disabled", "disabled");
     $("#uploadFileSizeError").hide();
-    $("#uploadReplaceOnly").hide();
-    $('#fileModal').modal('hide');
-}
-
-function handleUploadAppendButtonPressed() {
-    // Appends current content
-    CONTENTS += "\n\n" + TEMPCONTENTS;
-    localStorage.setItem("corpus", CONTENTS);
-    getLocalStorageMaxSize()
-    $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
-    loadDataInIndex();
-    $("#uploadFileButton").attr("disabled", "disabled");
-    $("#appendFileButton").attr("disabled", "disabled");
-    $("#uploadFileSizeError").hide();
-    $("#uploadReplaceOnly").hide();
     $('#fileModal').modal('hide');
 }
 
