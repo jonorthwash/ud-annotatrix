@@ -272,7 +272,6 @@ function conllu2cy(sent) {
 }
 
 function exportPNG() {
-    $('#exportModal').find('#exportedGraph').css('display', 'inline');
     if(latex_exported) {
         $('#exportModal').find('#exportModal-textarea').css('display', 'none');
     }
@@ -289,6 +288,7 @@ function exportPNG() {
         $('#exportModal').find('.modal-body').append(image);
         png_exported = true;
     }
+    $('#exportModal').find('#exportedGraph').css('display', 'inline');
 }
 
 function b64toBlob(b64Data, contentType, sliceSize) {
