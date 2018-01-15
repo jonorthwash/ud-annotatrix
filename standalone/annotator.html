@@ -57,14 +57,19 @@ err_udep_leaf_node = Nodes with the « { $tag } » part-of-speech tag should nor
                                                 <p>This will upload your treebank to your browser's local storage. If there is not 
                                                 enough space then the file will not be uploaded successfully. The amount of 
                                                 available space according to your browser is reported below.</p>
-						<span title="When you select a file it will automatically upload it into the interface"><u>Choose and upload file</u></span>:
-						<input type="file" id="filename"/><br/>
+						<span title="Select a file to upload into the interface"><u>Choose and upload file</u></span>:
+						<input type="file" id="filename"/><progress id="fileUploadProgressBar" value="0" max="100"></progress>
+						<div id="uploadFileSize">Size:</div>
+						<div id="uploadFileSizeError" style="color: #ff0000; display: none;">ERROR: File exceeds local storage quota.</div>
+						<div id="uploadReplaceOnly" style="color: #ff0000; display: none;">WARNING: File size is too large to append to current corpus.</div><br/>
                                                 <div>
                                                 Treebank size: <span id="treebankSize"></span>
-                                                Available space: <span id="localStorageAvailable"></span> 
+                                                Available space: <span id="localStorageAvailable"></span>
                                                 </div>
 					</div>
 					<div class="modal-footer">
+						<button id="uploadFileButton" type="button" class="btn btn-primary" data-dismiss="modal" onclick="handleUploadButtonPressed()" disabled>Upload and Replace</button>
+						<button id="appendFileButton" type="button" class="btn btn-primary" data-dismiss="modal" onclick="handleUploadAppendButtonPressed()" disabled>Upload and Append</button>
 						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
 						<!-- button type="button" class="btn btn-primary">Save changes</button -->
 					</div>
