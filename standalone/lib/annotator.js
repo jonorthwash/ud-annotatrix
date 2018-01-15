@@ -2,6 +2,8 @@
 
 var FORMAT = "";
 var FILENAME = 'ud-annotatrix-corpus.conllu'; // default name
+var FIRSTLOAD = true;
+var TEMPCONTENTS = "";
 var CONTENTS = "";
 var TEMPCONTENTS = "";
 var AVAILABLESENTENCES = 0;
@@ -65,8 +67,6 @@ function onReady() {
             getCorpusData(); // loading the corpus from the server
         }
     }, 500)
-
-    fetchSavedFeatures();
 }
 
 
@@ -91,30 +91,6 @@ function saveData() {
 //         }
 //     }
 // }
-
-function fetchSavedFeatures() {
-    var setView = localStorage.getItem("setView");
-    if (setView != null) {
-        if(setView === "conllu") {
-            viewAsConllu();
-        }
-        else if(setView === "cg") {
-            viewAsCG();
-        }
-    }
-
-    var tableViewActive = localStorage.getItem("tableView");
-    if (tableViewActive != null) {
-        if(tableViewActive === "true") {
-            toggleTableView();
-        }
-    }
-
-    var savedSentence = localStorage.getItem("sentence");
-    if (savedSentence != null) {
-        goToSenSent(savedSentence);
-    }
-}
 
 function getContents() { // TODO: replace getTreebank with this func
     /* Gets the corpus data saving the changes in current sentence,
@@ -141,6 +117,9 @@ function loadFromLocalStorage() {
             CONTENTS = localStorage.getItem("corpus");
             loadDataInIndex();
         };
+        if(FIRSTLOAD) {
+            fetchSavedFeatures();
+        }
     }
     else {
         console.log("localStorage is not available :(")
@@ -151,6 +130,33 @@ function loadFromLocalStorage() {
         warnLoc.appendChild(warnMsg);
 
     }
+}
+
+function fetchSavedFeatures() {
+    var setView = localStorage.getItem("setView");
+    var savedSentence = localStorage.getItem("sentence");
+    var tableViewActive = localStorage.getItem("tableView");
+
+    if (tableViewActive != null) {
+        if(tableViewActive === "true") {
+            toggleTableView();
+        }
+    }
+
+    if (savedSentence != null) {
+        goToSenSent(savedSentence);
+    }
+
+    if (setView != null) {
+        if(setView === "conllu") {
+            viewAsConllu();
+        }
+        else if(setView === "cg") {
+            viewAsCG();
+        }
+    }
+
+    FIRSTLOAD = false;
 }
 
 
@@ -621,13 +627,17 @@ function formatTabsView() {
         $("#viewCG").removeClass("active");
         $("#viewOther").removeClass("active");
         $("#viewConllu").addClass("active");
-        localStorage.setItem("setView", "conllu");
+        if(!FIRSTLOAD) {
+             localStorage.setItem("setView", "conllu");
+        }
     } else if (format == "CG3") {
         $("#viewOther").hide();
         $("#viewConllu").removeClass("active");
         $("#viewOther").removeClass("active");
         $("#viewCG").addClass("active");
-        localStorage.setItem("setView", "cg");
+        if(!FIRSTLOAD) {
+            localStorage.setItem("setView", "cg");
+        }
     } else {
         $("#viewOther").show();
         $("#viewOther").addClass("active");

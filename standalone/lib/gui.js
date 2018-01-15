@@ -803,7 +803,6 @@ function viewAsConllu() {
     var curSent = $("#indata").val();
     var currentFormat = detectFormat(curSent);
 
-
     if (currentFormat == "plain text") {
         var contents = getTreebank();
         plainText2Conllu(contents);
