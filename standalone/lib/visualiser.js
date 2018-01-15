@@ -193,6 +193,10 @@ function changeEdgeStyle() {
 
 function showProgress() {
     var progressPercentage = DONE_WORK/(ALL_WORK-1)*100;
+    if(progressPercentage > 100) {
+        progressPercentage = 100;
+    }
+
     $('#progressBar').animate({
         width: progressPercentage + '%'
     });
