@@ -3,7 +3,7 @@
 var FORMAT = "";
 var FILENAME = 'ud-annotatrix-corpus.conllu'; // default name
 var CONTENTS = "";
-var TEMPCONTENTS = "";
+// var TEMPCONTENTS = "";
 var AVAILABLESENTENCES = 0;
 var LOCALSTORAGE_AVAILABLE = -1;
 var CURRENTSENTENCE = 0;
@@ -177,17 +177,36 @@ function loadFromUrl(argument) {
 }
 
 
+function loadFromFileNew(e) {
+    /*
+    Loads a corpus from a file from the user's computer,
+    puts the filename into localStorage.
+    If the server is running, ... TODO
+    Else, loads the corpus to localStorage.
+    */
+    var file = e.target.files[0];
+    if (!file) {return}
+    var reader = new FileReader();
+    localStorage.setItem("filename", file.name);
+
+    reader.onload = function(e) {
+        if (SERVER_RUNNING) {
+            // TODO: do something
+        } else {
+            localStorage.setItem("corpus", e.target.result);
+            loadDataInIndex();
+        }
+    }
+    reader.readAsText(file);
+}
+
+
 function loadFromFile(e) {
     /* loads a corpus from a file from the user's computer,
     changes the FILENAME variable. */
-    TEMPCONTENTS = "";
+    CONTENTS = "";
     var file = e.target.files[0];
     FILENAME = file.name; // TODO: you can get rid of FILENAME if you store it in localStorage
-    var fileSize = file.size;
-    console.log(formatUploadSize(fileSize));
-
-    $("#uploadFileButton").attr("disabled", "disabled");
-    $("#uploadFileSizeError").hide();
 
     // check if the code is invoked
     var ext = FILENAME.split(".")[FILENAME.split(".").length - 1]; // TODO: should be more beautiful way
@@ -198,39 +217,15 @@ function loadFromFile(e) {
     if (!file) {
         return;
     }
-    $("#fileUploadProgressBar").attr("value", 0);
     var reader = new FileReader();
     reader.onload = function(e) {
-        TEMPCONTENTS = e.target.result;
-    };
-
-    reader.onloadend = function(data) {
-        var finalprogress = parseInt(((data.loaded / data.total) * 100), 10);
-        console.log(finalprogress+"%");
-        $("#fileUploadProgressBar").attr("value", finalprogress);
-        $("#uploadFileSize").text("Size: " + formatUploadSize(fileSize));
-        try {
-            localStorage.setItem("corpus", TEMPCONTENTS);
-            $("#uploadFileButton").removeAttr("disabled");
-            localStorage.setItem("corpus", CONTENTS);
-        }
-        catch(e) {
-            if(isQuotaExceeded(e)) {
-                $("#uploadFileSizeError").show();
-                console.log("ERROR: File exceeds local storage quota.");
-            }
-        }
-   };
-
-    reader.onprogress = function(data) {
-        if (data.lengthComputable) {
-            var progress = parseInt(((data.loaded / data.total) * 100), 10);
-            $("#fileUploadProgressBar").attr("value", progress);
-            console.log(progress+"%");
-        }
+        CONTENTS = e.target.result;
+        localStorage.setItem("corpus", CONTENTS);
+        loadDataInIndex();
     };
     reader.readAsText(file);
 }
+
 
 function formatUploadSize(fileSize) {
     if(fileSize < 1024) {
@@ -267,40 +262,17 @@ function isQuotaExceeded(e) {
   return quotaExceeded;
 }
 
-function handleUploadButtonPressed() {
-    // Replaces current content
-    CONTENTS = TEMPCONTENTS;
-    localStorage.setItem("corpus", CONTENTS);
-    getLocalStorageMaxSize()
-    $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
-    loadDataInIndex();
-    $("#uploadFileButton").attr("disabled", "disabled");
-    $("#uploadFileSizeError").hide();
-    $('#fileModal').modal('hide');
-}
-
-function loadFromFileNew(e) {
-    /*
-    Loads a corpus from a file from the user's computer,
-    puts the filename into localStorage.
-    If the server is running, ... TODO
-    Else, loads the corpus to localStorage.
-    */
-    var file = e.target.files[0];
-    if (!file) {return}
-    var reader = new FileReader();
-    localStorage.setItem("filename", file.name);
-
-    reader.onload = function(e) {
-        if (SERVER_RUNNING) {
-            // TODO: do something
-        } else {
-            localStorage.setItem("corpus", e.target.result);
-            loadDataInIndex();
-        }
-    }
-    reader.readAsText(file);
-}
+// function handleUploadButtonPressed() {
+//     // Replaces current content
+//     CONTENTS = TEMPCONTENTS;
+//     localStorage.setItem("corpus", CONTENTS);
+//     getLocalStorageMaxSize()
+//     $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
+//     loadDataInIndex();
+//     $("#uploadFileButton").attr("disabled", "disabled");
+//     $("#uploadFileSizeError").hide();
+//     $('#fileModal').modal('hide');
+// }
 
 
 function addSent() { // TODO: this is probably not what we want? what if we turn it into "insert a new sentence _here_"?
@@ -330,7 +302,7 @@ function loadDataInIndex() {
     AVAILABLESENTENCES = 0;
     CURRENTSENTENCE = 0;
 
-    var splitted = splitIntoSentences(CONTENTS);
+    var splitted = splitIntoSentences();
     localStorage.setItem('treebank', splitted);
     RESULTS = splitted;
 
@@ -347,9 +319,10 @@ function loadDataInIndex() {
 }
 
 
-function splitIntoSentences(corpus) { // TODO: not called anywhere yet
+function splitIntoSentences() {
     /* Takes a string with the corpus and returns an array of sentences. */
 
+    var corpus = localStorage.getItem("corpus");
     var format = detectFormat(corpus);
 
     // splitting
