@@ -948,7 +948,9 @@ $(document).ready(function(){
     $('#exportModal').on('shown.bs.modal', function(e) {
 		//alert('HARGLE BARGLE');
         // $("#treebankSize").text(CONTENTS.length); // TODO: Report the current loaded treebank size to user
-		$(e.target).find('.modal-body').load('export.html');
+		$(e.target).find('.modal-body').load('export.html', function() {
+            exportPNG(); 
+        });
 	});
     
     $('#exportModal').on('hidden.bs.modal', function (e) {
