@@ -193,7 +193,8 @@ function loadFromFileNew(e) {
         if (SERVER_RUNNING) {
             // TODO: do something
         } else {
-            localStorage.setItem("corpus", e.target.result);
+            localStorage.setItem('corpus', e.target.result);
+            CONTENTS = localStorage.getItem('corpus');
             loadDataInIndex();
         }
     }
@@ -437,7 +438,9 @@ function exportCorpora() {
     var link = document.createElement('a');
     var mimeType = 'text/plain';
     document.body.appendChild(link); // needed for FF
-    link.setAttribute('download', FILENAME);
+    var fname = localStorage.getItem("filename");
+    if (!fname) {fname = 'ud-annotatrix-corpus.conllu'} // default name
+    link.setAttribute('download', fname);
     link.setAttribute('href', 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(finalcontent));
     link.click();
 }
@@ -568,7 +571,7 @@ function detectFormat(content) {
     content = content.trim();
 
     if(content == "") {
-        console.log('[0] detectFormat() WARNING EMPTY CONTENT');
+        // console.log('[0] detectFormat() WARNING EMPTY CONTENT');
         return  "Unknown";
     }
  
