@@ -198,20 +198,20 @@ function is_depend_cycles(tree) {
         if (data.hasOwnProperty(k)) {
             var word = data[k];
             if(isNaN(parseInt(word["head"])) === false && isNaN(parseId(word["id"])) === false) {
-		console.log(parseId(word["id"]));
+		// console.log(parseId(word["id"]));
                 g.set(parseId(word["id"]), parseInt(word["head"]));
                 id_to_word.set(parseId(word["id"]), word["form"]);
             }
         }
     }
-    console.log("Has Cycles:");
-    console.log(_is_cyclic());
+    // console.log("Has Cycles:");
+    // console.log(_is_cyclic());
     if (_is_cyclic()) {
-        console.log("Cycle List:");
+        // console.log("Cycle List:");
         var c_list = cycle_list();
         for (var i = 0; i < c_list.length; i++) {
             var cycle = c_list[i];
-            console.log(cycle);
+            // console.log(cycle);
             var word_form = [];
             for (var j = 0; j < cycle.length; j++) {
                 word_form.push(id_to_word.get(cycle[j]));
@@ -220,7 +220,7 @@ function is_depend_cycles(tree) {
             for (var j = 0; j < word_form.length; j++) {
                 output += String(word_form[j]) + "-->"
             }
-            console.log(output);
+            // console.log(output);
         }
     }
     return _is_cyclic();
