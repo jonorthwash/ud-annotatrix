@@ -58,14 +58,17 @@ err_udep_leaf_node = Nodes with the « { $tag } » part-of-speech tag should nor
                                                 enough space then the file will not be uploaded successfully. The amount of 
                                                 available space according to your browser is reported below.</p>
 						<span title="Select a file to upload into the interface"><u>Choose and upload file</u></span>:
-						<input type="file" id="filename"/><progress id="fileUploadProgressBar" value="0" max="100"></progress><br/>
+						<input type="file" id="filename"/><progress id="fileUploadProgressBar" value="0" max="100"></progress>
+						<div id="uploadFileSizeError" style="color: #ff0000; display: none;">ERROR: File exceeds local storage quota.</div>
+						<div id="uploadReplaceOnly" style="color: #ff0000; display: none;">WARNING: File size is too large to append to current corpus.</div><br/>
                                                 <div>
                                                 Treebank size: <span id="treebankSize"></span>
-                                                Available space: <span id="localStorageAvailable"></span> 
+                                                Available space: <span id="localStorageAvailable"></span>
                                                 </div>
 					</div>
 					<div class="modal-footer">
-						<button id="uploadFileButton" type="button" class="btn btn-primary" data-dismiss="modal" onclick="handleUploadButtonPressed()" disabled>Upload</button>
+						<button id="uploadFileButton" type="button" class="btn btn-primary" data-dismiss="modal" onclick="handleUploadButtonPressed()" disabled>Upload and Replace</button>
+						<button id="appendFileButton" type="button" class="btn btn-primary" data-dismiss="modal" onclick="handleUploadAppendButtonPressed()" disabled>Upload and Append</button>
 						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
 						<!-- button type="button" class="btn btn-primary">Save changes</button -->
 					</div>

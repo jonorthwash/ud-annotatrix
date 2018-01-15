@@ -2,6 +2,7 @@
 
 var FORMAT = "";
 var FILENAME = 'ud-annotatrix-corpus.conllu'; // default name
+var TEMPCONTENTS = "";
 var CONTENTS = "";
 var AVAILABLESENTENCES = 0;
 var LOCALSTORAGE_AVAILABLE = -1;
@@ -180,9 +181,13 @@ function loadFromUrl(argument) {
 function loadFromFile(e) {
     /* loads a corpus from a file from the user's computer,
     changes the FILENAME variable. */
-    CONTENTS = "";
+    TEMPCONTENTS = "";
     var file = e.target.files[0];
     FILENAME = file.name; // TODO: you can get rid of FILENAME if you store it in localStorage
+    var fileSize = file.size;
+    console.log(fileSize + " bytes");
+    $("#uploadFileSizeError").hide();
+    $("#uploadReplaceOnly").hide();
 
     // check if the code is invoked
     var ext = FILENAME.split(".")[FILENAME.split(".").length - 1]; // TODO: should be more beautiful way
@@ -196,15 +201,31 @@ function loadFromFile(e) {
     $("#fileUploadProgressBar").attr("value", 0);
     var reader = new FileReader();
     reader.onload = function(e) {
-        CONTENTS = e.target.result;
+        TEMPCONTENTS = e.target.result;
     };
 
     reader.onloadend = function(data) {
-        $("#uploadFileButton").removeAttr("disabled");
         var finalprogress = parseInt(((data.loaded / data.total) * 100), 10);
         console.log(finalprogress+"%");
         $("#fileUploadProgressBar").attr("value", finalprogress);
-    };
+        try {
+            localStorage.setItem("corpus", TEMPCONTENTS);
+            $("#uploadFileButton").removeAttr("disabled");
+            if(fileSize > LOCALSTORAGE_AVAILABLE) {
+                console.log("WARNING: File size is too large to append to current corpus.");
+                $("#uploadReplaceOnly").show();
+            }
+            else {
+                $("#appendFileButton").removeAttr("disabled");
+            }
+        }
+        catch(e) {
+            if(isQuotaExceeded(e)) {
+                $("#uploadFileSizeError").show();
+                console.log("ERROR: File exceeds local storage quota.");
+            }
+        }
+   };
 
     reader.onprogress = function(data) {
         if (data.lengthComputable) {
@@ -216,12 +237,54 @@ function loadFromFile(e) {
     reader.readAsText(file);
 }
 
+function isQuotaExceeded(e) {
+  var quotaExceeded = false;
+  if (e) {
+    if (e.code) {
+      switch (e.code) {
+        case 22:
+          quotaExceeded = true;
+          break;
+        case 1014:
+          // Firefox
+          if (e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+            quotaExceeded = true;
+          }
+          break;
+      }
+    } else if (e.number === -2147024882) {
+      // Internet Explorer 8
+      quotaExceeded = true;
+    }
+  }
+  return quotaExceeded;
+}
 
 function handleUploadButtonPressed() {
-    localStorage.setItem("corpus", CONTENTS);
+    // Replaces current content
+    CONTENTS = TEMPCONTENTS;
+    getLocalStorageMaxSize()
+    $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
     loadDataInIndex();
     $("#uploadFileButton").attr("disabled", "disabled");
-    $('#fileModal').modal('hide')
+    $("#appendFileButton").attr("disabled", "disabled");
+    $("#uploadFileSizeError").hide();
+    $("#uploadReplaceOnly").hide();
+    $('#fileModal').modal('hide');
+}
+
+function handleUploadAppendButtonPressed() {
+    // Appends current content
+    CONTENTS += "\n\n" + TEMPCONTENTS;
+    localStorage.setItem("corpus", CONTENTS);
+    getLocalStorageMaxSize()
+    $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
+    loadDataInIndex();
+    $("#uploadFileButton").attr("disabled", "disabled");
+    $("#appendFileButton").attr("disabled", "disabled");
+    $("#uploadFileSizeError").hide();
+    $("#uploadReplaceOnly").hide();
+    $('#fileModal').modal('hide');
 }
 
 function loadFromFileNew(e) {
