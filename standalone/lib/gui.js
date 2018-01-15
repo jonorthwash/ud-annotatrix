@@ -90,9 +90,9 @@ function writeArc(sourceNode, destNode) {
     var idx = findConlluId(destNode)[1];
     var sent = buildSent();
     var tokens = sent.tokens;
-    console.log(idx + ' ' + tokens);
+    // console.log(idx + ' ' + tokens);
     var thisToken = tokens[idx];
-    console.log('writeArc ' + destIndex + ' ' + thisToken['upostag']); 
+    // console.log('writeArc ' + destIndex + ' ' + thisToken['upostag']); 
     var sentAndPrev = changeConlluAttr(sent, indices, "head", sourceIndex);
 
     // If the target POS tag is PUNCT set the deprel to @punct [99%]
@@ -345,7 +345,7 @@ function removeSup(st) {
 
 
 function changeNode() {
-    console.log("changeNode() " + Object.entries(this) + " // " + this.id());
+    // console.log("changeNode() " + Object.entries(this) + " // " + this.id());
     
     ISEDITING = true;
 
@@ -386,7 +386,7 @@ function changeNode() {
     } else if(nodeType == "DEPREL") { 
         availableLabels = U_DEPRELS;
     }
-    console.log('availableLabels:', availableLabels);
+    // console.log('availableLabels:', availableLabels);
  
     // autocomplete
 
@@ -442,7 +442,7 @@ function setRoot(wf) {
    var outerIndex = indices[1];
    var cur = parseInt(sent.tokens[outerIndex].id);
    var head = 0;
-   console.log('setRoot()', outerIndex, cur, head);
+   // console.log('setRoot()', outerIndex, cur, head);
    var sentAndPrev = changeConlluAttr(sent, indices, "deprel", "root");
    var sentAndPrev = changeConlluAttr(sent, indices, "head", head);
 
@@ -467,8 +467,8 @@ function writeDeprel(deprelInp, indices) { // TODO: DRY
     var outerIndex = indices[1];
     var cur = parseInt(sent.tokens[outerIndex].id);
     var head = parseInt(sent.tokens[outerIndex].head);
-    console.log('writeDeprel');
-    console.log(head + ' ' + cur);
+    // console.log('writeDeprel');
+    // console.log(head + ' ' + cur);
 
     var sentAndPrev = changeConlluAttr(sent, indices, "deprel", deprelInp);
     sent = sentAndPrev[0];
@@ -547,7 +547,7 @@ function writeWF(wfInp) {
 
     var active = cy.$(".input");
     var indices = findConlluId(active);
-    console.log(indices);
+    // console.log(indices);
     var isSubtoken = indices[0];
     var outerIndex = indices[1];
     var innerIndex = indices[2];
