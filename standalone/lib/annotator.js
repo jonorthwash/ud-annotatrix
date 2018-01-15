@@ -3,6 +3,7 @@
 var FORMAT = "";
 var FILENAME = 'ud-annotatrix-corpus.conllu'; // default name
 var CONTENTS = "";
+var TEMPCONTENTS = "";
 var AVAILABLESENTENCES = 0;
 var LOCALSTORAGE_AVAILABLE = -1;
 var CURRENTSENTENCE = 0;
@@ -180,7 +181,7 @@ function loadFromUrl(argument) {
 function loadFromFile(e) {
     /* loads a corpus from a file from the user's computer,
     changes the FILENAME variable. */
-    CONTENTS = "";
+    TEMPCONTENTS = "";
     var file = e.target.files[0];
     FILENAME = file.name; // TODO: you can get rid of FILENAME if you store it in localStorage
     var fileSize = file.size;
@@ -201,7 +202,7 @@ function loadFromFile(e) {
     $("#fileUploadProgressBar").attr("value", 0);
     var reader = new FileReader();
     reader.onload = function(e) {
-        CONTENTS = e.target.result;
+        TEMPCONTENTS = e.target.result;
     };
 
     reader.onloadend = function(data) {
@@ -210,8 +211,9 @@ function loadFromFile(e) {
         $("#fileUploadProgressBar").attr("value", finalprogress);
         $("#uploadFileSize").text("Size: " + formatUploadSize(fileSize));
         try {
-            localStorage.setItem("corpus", CONTENTS);
+            localStorage.setItem("corpus", TEMPCONTENTS);
             $("#uploadFileButton").removeAttr("disabled");
+            localStorage.setItem("corpus", CONTENTS);
         }
         catch(e) {
             if(isQuotaExceeded(e)) {
@@ -268,6 +270,8 @@ function isQuotaExceeded(e) {
 
 function handleUploadButtonPressed() {
     // Replaces current content
+    CONTENTS = TEMPCONTENTS;
+    localStorage.setItem("corpus", CONTENTS);
     getLocalStorageMaxSize()
     $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
     loadDataInIndex();
