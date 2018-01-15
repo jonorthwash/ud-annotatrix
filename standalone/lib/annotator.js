@@ -125,9 +125,6 @@ function loadFromLocalStorage() {
             else if(setView === "cg") {
                 viewAsCG();
             }
-            else {
-                viewAsPlain();
-            }
         }
 
         var tableViewActive = localStorage.getItem("tableView");
@@ -135,6 +132,11 @@ function loadFromLocalStorage() {
             if(tableViewActive === "true") {
                 toggleTableView();
             }
+        }
+
+        var savedSentence = localStorage.getItem("sentence");
+        if (savedSentence != null) {
+            goToSenSent(savedSentence);
         }
     }
     else {
@@ -425,11 +427,16 @@ function showDataIndiv() {
     drawTree();
 }
 
-function goToSenSent() {
+function goToSenSent(sentence) {
     saveData();
 
     RESULTS[CURRENTSENTENCE] = document.getElementById("indata").value;
-    CURRENTSENTENCE = parseInt(document.getElementById("currentsen").value) - 1;
+    if(sentence) {
+        CURRENTSENTENCE = parseInt(sentence);
+    }
+    else {
+        CURRENTSENTENCE = parseInt(document.getElementById("currentsen").value) - 1;
+    }
     if (CURRENTSENTENCE < 0)  {
         CURRENTSENTENCE = 0;
     }
@@ -443,6 +450,7 @@ function goToSenSent() {
         document.getElementById("prevSenBtn").disabled = true;
     }
 
+    localStorage.setItem("sentence", CURRENTSENTENCE);
     clearLabels();
     showDataIndiv();
 }
@@ -461,6 +469,7 @@ function prevSenSent() {
     if (CURRENTSENTENCE == 0) {
         document.getElementById("prevSenBtn").disabled = true;
     }
+    localStorage.setItem("sentence", CURRENTSENTENCE);
     clearLabels();
     showDataIndiv();
 }
@@ -480,6 +489,7 @@ function nextSenSent() {
     if (CURRENTSENTENCE > 0) {
         document.getElementById("prevSenBtn").disabled = false;
     }
+    localStorage.setItem("sentence", CURRENTSENTENCE);
     clearLabels();
     showDataIndiv();
 }
@@ -608,17 +618,20 @@ function formatTabsView() {
         $("#viewCG").removeClass("active");
         $("#viewOther").removeClass("active");
         $("#viewConllu").addClass("active");
+        localStorage.setItem("setView", "conllu");
     } else if (format == "CG3") {
         $("#viewOther").hide();
         $("#viewConllu").removeClass("active");
         $("#viewOther").removeClass("active");
         $("#viewCG").addClass("active");
+        localStorage.setItem("setView", "cg");
     } else {
         $("#viewOther").show();
         $("#viewOther").addClass("active");
         $("#viewConllu").removeClass("active");
         $("#viewCG").removeClass("active");
         $("#viewOther").text(format);
+        localStorage.setItem("setView", "other");
     }
 }
 

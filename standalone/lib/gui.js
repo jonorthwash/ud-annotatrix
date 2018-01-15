@@ -832,17 +832,16 @@ function viewAsCG() {
     if (currentFormat == "CoNLL-U") {
         text = conllu2CG(text);
         $("#viewConllu").removeClass("active");
-    }
-    $("#viewCG").addClass("active");
-    $("#indata").val(text);
+        $("#viewCG").addClass("active");
+        $("#indata").val(text);
 
-    if(TABLE_VIEW) {
-        $("#tableViewButton").toggleClass('fa-code', 'fa-table');
-        $("#indataTable").toggle();
-        $("#indata").toggle();
-        TABLE_VIEW = false ;
+        if(TABLE_VIEW) {
+            $("#tableViewButton").toggleClass('fa-code', 'fa-table');
+            $("#indataTable").toggle();
+            $("#indata").toggle();
+            TABLE_VIEW = false ;
+        }
     }
-
 }
 
 
