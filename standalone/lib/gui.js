@@ -779,6 +779,7 @@ function writeSent(makeChanges) {
 
 
 function viewAsPlain() { // TODO: DRY?
+    localStorage.setItem("setView", "plain");
     var text = $("#indata").val();
     var currentFormat = detectFormat(text);
 
@@ -798,6 +799,7 @@ function viewAsPlain() { // TODO: DRY?
 
 
 function viewAsConllu() {
+    localStorage.setItem("setView", "conllu");
     var curSent = $("#indata").val();
     var currentFormat = detectFormat(curSent);
 
@@ -822,6 +824,7 @@ function viewAsConllu() {
 
 
 function viewAsCG() {
+    localStorage.setItem("setView", "cg");
     var text = $("#indata").val();
     var currentFormat = detectFormat(text);
 

@@ -116,6 +116,26 @@ function loadFromLocalStorage() {
             CONTENTS = localStorage.getItem("corpus");
             loadDataInIndex();
         };
+
+        var setView = localStorage.getItem("setView");
+        if (setView != null) {
+            if(setView === "conllu") {
+                viewAsConllu();
+            }
+            else if(setView === "cg") {
+                viewAsCG();
+            }
+            else {
+                viewAsPlain();
+            }
+        }
+
+        var tableViewActive = localStorage.getItem("tableView");
+        if (tableViewActive != null) {
+            if(tableViewActive === "true") {
+                toggleTableView();
+            }
+        }
     }
     else {
         console.log("localStorage is not available :(")

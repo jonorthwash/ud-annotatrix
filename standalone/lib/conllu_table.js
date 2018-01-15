@@ -61,8 +61,10 @@ function toggleTableView() {
     $("#indataTable").toggle();
     if (TABLE_VIEW) {
         TABLE_VIEW = false;
+        localStorage.setItem("tableView", false);
     } else {
         TABLE_VIEW = true;
+        localStorage.setItem("tableView", true);
     }
 }
 
