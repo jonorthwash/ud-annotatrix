@@ -4,11 +4,12 @@ var TABLE_VIEW = false;
 var TABLE_COLUMNS_HEADERS = {"ID": 0, "FORM": 1, "LEMMA": 2, "UPOSTAG": 3, "XPOSTAG": 4, "FEATS": 5, "HEAD": 6, "DEPREL": 7, "DEPS": 8, "MISC": 9};
 var TABLE_COLUMNS_VISIBILITY = [true, true, true, true, true, true, true, true, true, true];
 
+var tableRowsDefault = 20
+
 function fitTable() {
     /* If there're less lines in conllu than the default number of rows
     in the table, fit the number of rows to the number of lines. */
     var curSentence = $("#indata").val();
-    var tableRowsDefault = $("#indata").attr("rows");
     if (curSentence.split("\n").length < tableRowsDefault) {
         $("#indata").attr("rows", curSentence.split("\n").length + 1);
     } else {
@@ -179,4 +180,7 @@ function toggleCodeWindow() {
     $(".indataarea").toggle();
     $("#tabBox").toggle();
     $("#viewButton").toggle();
+    if(!VERT_ALIGNMENT) {
+        $("#cy").css("height", $(window).height()-$(".inarea").height()-80);
+    }
 }

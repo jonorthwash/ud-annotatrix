@@ -944,6 +944,19 @@ $(document).ready(function(){
         // $("#treebankSize").text(CONTENTS.length); // TODO: Report the current loaded treebank size to user
 		$(e.target).find('.modal-body').load('help.html');
 	});
+    
+    $('#exportModal').on('shown.bs.modal', function(e) {
+		//alert('HARGLE BARGLE');
+        // $("#treebankSize").text(CONTENTS.length); // TODO: Report the current loaded treebank size to user
+		$(e.target).find('.modal-body').load('export.html', function() {
+            exportPNG(); 
+        });
+	});
+    
+    $('#exportModal').on('hidden.bs.modal', function (e) {
+        png_exported = false;
+        latex_exported = false;
+    });
 
 //	$('.ui-autocomplete').keydown(function(e) {
 //		if(e.keyCode == 9) { // Tab

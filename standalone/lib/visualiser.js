@@ -23,6 +23,20 @@ var staggersize = 15;
 // require lib for CoNLL-U parsing
 var conllu = require("conllu");
 
+var codeLateX = '';
+var png_exported = false;
+var latex_exported = false;
+
+function measureText(text) {
+    // actual canvas not created yet
+    var context = document.createElement("canvas").getContext("2d");
+    context.font = "1rem sans-serif";
+
+    text = text || "#"; // width for empty string
+    text = "." + text + "."; // minor padding
+    return context.measureText(text).width + "px";
+}
+
 /**
  * Draws the tree.
  * @param {String} content Content of the input textbox.
@@ -94,6 +108,10 @@ function onResize(e) {
 //    CURRENT_ZOOM = cy.zoom();
     console.log('[7] CURRENT_ZOOM:', CURRENT_ZOOM);
     console.log('> resize event', CURRENT_ZOOM, cy.width(), cy.height());
+
+    if(!VERT_ALIGNMENT) {
+        $("#cy").css("height", $(window).height()-$(".inarea").height()-80);
+    }
 }
 
 /**
@@ -134,9 +152,10 @@ function changeBoxSize(sent) {
         $("#cy").css("width", $(window).width()-10);
         $("#cy").css("height", (length * 50) + "px");
     } else {
-        //$("#cy").css("width", "1500px");
-        $("#cy").css("width", $(window).width()-10);
-        $("#cy").css("height", "400px");
+        // scales width according to viewport
+        $("#cy").css("width", "100%");
+        // window height - height of top area - height of controls
+        $("#cy").css("height", $(window).height()-$(".inarea").height()-80);
     }
 }
 
@@ -257,7 +276,130 @@ function conllu2cy(sent) {
             }
         }
     }
+    codeLateX = generateLateX(graph);
+    
     return graph;
+}
+
+function exportPNG() {
+    if(latex_exported) {
+        $('#exportModal').find('#exportModal-textarea').css('display', 'none');
+    }
+    if(!png_exported) {
+        var b64key = 'base64,';
+        var b64 = cy.png().substring( cy.png().indexOf(b64key) + b64key.length);
+        var imgBlob = b64toBlob(b64, 'image/png');
+
+        var image = new Image();
+        image.src = URL.createObjectURL(imgBlob);
+        image.id = 'exportedGraph';
+        $(image).css('width', '100%');
+        $('#exportModal').find('.modal-body').append('</br>');
+        $('#exportModal').find('.modal-body').append(image);
+        png_exported = true;
+    }
+    $('#exportModal').find('#exportedGraph').css('display', 'inline');
+}
+
+function b64toBlob(b64Data, contentType, sliceSize) {
+    contentType = contentType || '';
+    sliceSize = sliceSize || 512;
+
+    var byteCharacters = atob(b64Data);
+    var byteArrays = [];
+
+    for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+        var slice = byteCharacters.slice(offset, offset + sliceSize);
+
+        var byteNumbers = new Array(slice.length);
+        for (var i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+        }
+
+        var byteArray = new Uint8Array(byteNumbers);
+
+        byteArrays.push(byteArray);
+    }
+
+    var blob = new Blob(byteArrays, {type: contentType});
+    return blob;
+}
+
+
+function exportLATEX() {
+    $('#exportModal').find('#exportModal-textarea').css('display', 'inline');
+    if(png_exported) {
+        $('#exportModal').find('#exportedGraph').css('display', 'none');
+    }
+    $('#exportModal').find('#exportModal-textarea').css('display', 'inline');
+    if(!latex_exported) {
+        if(codeLateX == 'error') {
+            $('#exportModal').find('.modal-body').append(
+                '</br>' +
+                'Sorry, the graph has to have all UPOS tags defined!'
+            );
+        } else {
+            for(var i = 0; i < codeLateX.length; i++) {
+                $('#exportModal').find('#exportModal-textarea').append(
+                    codeLateX[i] +
+                    '\n'
+                );
+            }
+            if($('#exportModal').find('#exportModal-textarea').attr("rows") > codeLateX.length) {
+                $('#exportModal').find('#exportModal-textarea').attr('rows', codeLateX.length + 2);
+            } else {
+                $('#exportModal').find('#exportModal-textarea').attr('rows', $('#exportModal').find('#exportModal-textarea').attr("rows"));
+            }
+        }
+        latex_exported = true;
+    }
+}
+
+function generateLateX(graph) {
+    
+    var latexLines = [];
+    
+    var tokensLine = '';
+    var posLine = '';
+    var deprelLines = [];
+    for(var i = 0; i < graph.length; i++) {
+        if(graph[i].classes == 'wf') {
+            if(graph[i].data.upostag == undefined) {
+                return 'error';
+            }
+            tokensLine += ' \\& ' + graph[i].data.label;
+            posLine += '\\&{\\tt ' + graph[i].data.upostag + '}';
+        }
+        
+        if(graph[i].classes == 'dependency' || graph[i].classes == 'dependency error') {
+            if(graph[i].data.label == undefined) {
+                return 'error';
+            }
+            var source = parseInt(graph[i].data.source.replace('nf', ''));
+            var target = parseInt(graph[i].data.target.replace('nf', ''));
+            var label = ''
+            if(graph[i].data.label != undefined) {
+                label = graph[i].data.label.replace(/[⊳⊲]/, '');
+            }
+            deprelLines.push('\depedge{' + source + '}{' + target + '}' + '{' + label + '}');
+        }
+    }
+    tokensLine += ' \\\\';
+    tokensLine = tokensLine.replace('\\&', '');
+    
+    posLine += '\\\\';
+    posLine = posLine.replace('\\&', '');
+    
+    latexLines.push('\\begin{dependency}',
+                    '   \\begin{deptext}[column sep=0.4cm]');
+    latexLines.push('       ' + tokensLine);
+    latexLines.push('       ' + posLine);
+    latexLines.push('   \\end{deptext}');
+    for(var i = 0; i < deprelLines.length; i++) {
+        latexLines.push('   \\' + deprelLines[i]);
+    }
+    latexLines.push('\\end{dependency} \\\\');
+    return latexLines;
 }
 
 function findSupTokId(subtokens) {
@@ -317,12 +459,7 @@ function createToken(graph, token, spId) {
 
     var nodeWF = token;
     // nodeWF.parent = spId;
-
-    var context = document.createElement("canvas").getContext("2d");
-    context.font = "16px sans-serif";
-    var pad = ".";
-    nodeWF.length = context.measureText(pad + nodeWF.form + pad).width + "px";
-
+    nodeWF.length = measureText(nodeWF.form);
     nodeWF.id = "nf" + nodeId;
     nodeWF.label = nodeWF.form;
     nodeWF.state = "normal";
@@ -524,7 +661,7 @@ function makePOS(token, nodeId, graph) {
     var nodePOS = {
         "id": "np" + nodeId,
         "label": pos,
-        "length": (pos.length + 1) + "em"
+        "length": measureText(pos)
     }
     graph.push({"data": nodePOS, "classes": "pos"});
 

@@ -3,6 +3,7 @@
 var FORMAT = "";
 var FILENAME = 'ud-annotatrix-corpus.conllu'; // default name
 var CONTENTS = "";
+var TEMPCONTENTS = "";
 var AVAILABLESENTENCES = 0;
 var LOCALSTORAGE_AVAILABLE = -1;
 var CURRENTSENTENCE = 0;
@@ -56,7 +57,7 @@ function onReady() {
     window.undoManager = new UndoManager();  // undo support
     setUndos(window.undoManager);
     loadFromUrl();
-    bindHanlers();
+    bindHandlers();
     setTimeout(function(){ // setTimeout, because we have to wait checkServer to finish working
         if (!SERVER_RUNNING) {
             loadFromLocalStorage(); // trying to load the corpus from localStorage
@@ -128,7 +129,7 @@ function loadFromLocalStorage() {
 }
 
 
-function bindHanlers() {
+function bindHandlers() {
     /* Binds handlers to DOM elements. */
 
     // TODO: causes errors if called before the cy is initialised
@@ -136,7 +137,6 @@ function bindHanlers() {
 
     $("#indata").bind("keyup", drawTree);
     $("#indata").bind("keyup", focusOut);
-    $("#indata").bind("keyup", fitTable);
     $("#indata").bind("keyup", formatTabsView);
     $("#RTL").on("click", switchRtlMode);
     $("#vertical").on("click", switchAlignment);
@@ -180,9 +180,14 @@ function loadFromUrl(argument) {
 function loadFromFile(e) {
     /* loads a corpus from a file from the user's computer,
     changes the FILENAME variable. */
-    CONTENTS = "";
+    TEMPCONTENTS = "";
     var file = e.target.files[0];
     FILENAME = file.name; // TODO: you can get rid of FILENAME if you store it in localStorage
+    var fileSize = file.size;
+    console.log(formatUploadSize(fileSize));
+
+    $("#uploadFileButton").attr("disabled", "disabled");
+    $("#uploadFileSizeError").hide();
 
     // check if the code is invoked
     var ext = FILENAME.split(".")[FILENAME.split(".").length - 1]; // TODO: should be more beautiful way
@@ -193,15 +198,86 @@ function loadFromFile(e) {
     if (!file) {
         return;
     }
+    $("#fileUploadProgressBar").attr("value", 0);
     var reader = new FileReader();
     reader.onload = function(e) {
-        CONTENTS = e.target.result;
-        localStorage.setItem("corpus", CONTENTS);
-        loadDataInIndex();
+        TEMPCONTENTS = e.target.result;
+    };
+
+    reader.onloadend = function(data) {
+        var finalprogress = parseInt(((data.loaded / data.total) * 100), 10);
+        console.log(finalprogress+"%");
+        $("#fileUploadProgressBar").attr("value", finalprogress);
+        $("#uploadFileSize").text("Size: " + formatUploadSize(fileSize));
+        try {
+            localStorage.setItem("corpus", TEMPCONTENTS);
+            $("#uploadFileButton").removeAttr("disabled");
+            localStorage.setItem("corpus", CONTENTS);
+        }
+        catch(e) {
+            if(isQuotaExceeded(e)) {
+                $("#uploadFileSizeError").show();
+                console.log("ERROR: File exceeds local storage quota.");
+            }
+        }
+   };
+
+    reader.onprogress = function(data) {
+        if (data.lengthComputable) {
+            var progress = parseInt(((data.loaded / data.total) * 100), 10);
+            $("#fileUploadProgressBar").attr("value", progress);
+            console.log(progress+"%");
+        }
     };
     reader.readAsText(file);
 }
 
+function formatUploadSize(fileSize) {
+    if(fileSize < 1024) {
+        return fileSize + ' B';
+    }
+    else if(fileSize >= 1024 && fileSize < 1048576) {
+        return (fileSize/1024).toFixed(1) + " kB";
+    }
+    else {
+        return (fileSize/1048576).toFixed(1) + " mB";
+    }
+}
+
+function isQuotaExceeded(e) {
+  var quotaExceeded = false;
+  if (e) {
+    if (e.code) {
+      switch (e.code) {
+        case 22:
+          quotaExceeded = true;
+          break;
+        case 1014:
+          // Firefox
+          if (e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+            quotaExceeded = true;
+          }
+          break;
+      }
+    } else if (e.number === -2147024882) {
+      // Internet Explorer 8
+      quotaExceeded = true;
+    }
+  }
+  return quotaExceeded;
+}
+
+function handleUploadButtonPressed() {
+    // Replaces current content
+    CONTENTS = TEMPCONTENTS;
+    localStorage.setItem("corpus", CONTENTS);
+    getLocalStorageMaxSize()
+    $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
+    loadDataInIndex();
+    $("#uploadFileButton").attr("disabled", "disabled");
+    $("#uploadFileSizeError").hide();
+    $('#fileModal').modal('hide');
+}
 
 function loadFromFileNew(e) {
     /*
@@ -423,7 +499,6 @@ function clearCorpus() {
     window.location.reload();
     drawTree();
 }
-
 
 function getTreebank() {
 
