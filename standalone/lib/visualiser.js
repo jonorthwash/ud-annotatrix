@@ -27,6 +27,16 @@ var codeLateX = '';
 var png_exported = false;
 var latex_exported = false;
 
+function measureText(text) {
+    // actual canvas not created yet
+    var context = document.createElement("canvas").getContext("2d");
+    context.font = "1rem sans-serif";
+
+    text = text || "#"; // width for empty string
+    text = "." + text + "."; // minor padding
+    return context.measureText(text).width + "px";
+}
+
 /**
  * Draws the tree.
  * @param {String} content Content of the input textbox.
@@ -449,10 +459,7 @@ function createToken(graph, token, spId) {
 
     var nodeWF = token;
     // nodeWF.parent = spId;
-    nodeWF.length = nodeWF.form.length + "em";
-    if(nodeWF.form.length > 3) {
-      nodeWF.length = nodeWF.form.length*0.7 + "em";
-    }
+    nodeWF.length = measureText(nodeWF.form);
     nodeWF.id = "nf" + nodeId;
     nodeWF.label = nodeWF.form;
     nodeWF.state = "normal";
@@ -654,7 +661,7 @@ function makePOS(token, nodeId, graph) {
     var nodePOS = {
         "id": "np" + nodeId,
         "label": pos,
-        "length": (pos.length + 1) + "em"
+        "length": measureText(pos)
     }
     graph.push({"data": nodePOS, "classes": "pos"});
 
