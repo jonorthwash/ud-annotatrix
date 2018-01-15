@@ -524,7 +524,6 @@ function clearCorpus() {
     drawTree();
 }
 
-
 function getTreebank() {
 
     RESULTS[CURRENTSENTENCE] = document.getElementById("indata").value;
