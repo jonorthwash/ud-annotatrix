@@ -2,8 +2,8 @@
 
 var FORMAT = "";
 var FILENAME = 'ud-annotatrix-corpus.conllu'; // default name
-var TEMPCONTENTS = "";
 var CONTENTS = "";
+var TEMPCONTENTS = "";
 var AVAILABLESENTENCES = 0;
 var LOCALSTORAGE_AVAILABLE = -1;
 var CURRENTSENTENCE = 0;
@@ -188,9 +188,7 @@ function loadFromFile(e) {
     console.log(formatUploadSize(fileSize));
 
     $("#uploadFileButton").attr("disabled", "disabled");
-    $("#appendFileButton").attr("disabled", "disabled");
     $("#uploadFileSizeError").hide();
-    $("#uploadReplaceOnly").hide();
 
     // check if the code is invoked
     var ext = FILENAME.split(".")[FILENAME.split(".").length - 1]; // TODO: should be more beautiful way
@@ -215,13 +213,7 @@ function loadFromFile(e) {
         try {
             localStorage.setItem("corpus", TEMPCONTENTS);
             $("#uploadFileButton").removeAttr("disabled");
-            if(fileSize > LOCALSTORAGE_AVAILABLE) {
-                console.log("WARNING: File size is too large to append to current corpus.");
-                $("#uploadReplaceOnly").show();
-            }
-            else {
-                $("#appendFileButton").removeAttr("disabled");
-            }
+            localStorage.setItem("corpus", CONTENTS);
         }
         catch(e) {
             if(isQuotaExceeded(e)) {
@@ -279,27 +271,12 @@ function isQuotaExceeded(e) {
 function handleUploadButtonPressed() {
     // Replaces current content
     CONTENTS = TEMPCONTENTS;
-    getLocalStorageMaxSize()
-    $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
-    loadDataInIndex();
-    $("#uploadFileButton").attr("disabled", "disabled");
-    $("#appendFileButton").attr("disabled", "disabled");
-    $("#uploadFileSizeError").hide();
-    $("#uploadReplaceOnly").hide();
-    $('#fileModal').modal('hide');
-}
-
-function handleUploadAppendButtonPressed() {
-    // Appends current content
-    CONTENTS += "\n\n" + TEMPCONTENTS;
     localStorage.setItem("corpus", CONTENTS);
     getLocalStorageMaxSize()
     $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
     loadDataInIndex();
     $("#uploadFileButton").attr("disabled", "disabled");
-    $("#appendFileButton").attr("disabled", "disabled");
     $("#uploadFileSizeError").hide();
-    $("#uploadReplaceOnly").hide();
     $('#fileModal').modal('hide');
 }
 
