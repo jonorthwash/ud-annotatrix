@@ -57,7 +57,7 @@ function onReady() {
     window.undoManager = new UndoManager();  // undo support
     setUndos(window.undoManager);
     loadFromUrl();
-    bindHanlers();
+    bindHandlers();
     setTimeout(function(){ // setTimeout, because we have to wait checkServer to finish working
         if (!SERVER_RUNNING) {
             loadFromLocalStorage(); // trying to load the corpus from localStorage
@@ -129,7 +129,7 @@ function loadFromLocalStorage() {
 }
 
 
-function bindHanlers() {
+function bindHandlers() {
     /* Binds handlers to DOM elements. */
 
     // TODO: causes errors if called before the cy is initialised
@@ -137,7 +137,6 @@ function bindHanlers() {
 
     $("#indata").bind("keyup", drawTree);
     $("#indata").bind("keyup", focusOut);
-    $("#indata").bind("keyup", fitTable);
     $("#indata").bind("keyup", formatTabsView);
     $("#RTL").on("click", switchRtlMode);
     $("#vertical").on("click", switchAlignment);
