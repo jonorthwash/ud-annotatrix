@@ -186,6 +186,7 @@ function loadFromFile(e) {
     var fileSize = file.size;
     console.log(formatUploadSize(fileSize));
 
+    // Disable upload button and hide errors
     $("#uploadFileButton").attr("disabled", "disabled");
     $("#uploadFileSizeError").hide();
 
@@ -198,9 +199,15 @@ function loadFromFile(e) {
     if (!file) {
         return;
     }
+
     $("#fileUploadProgressBar").attr("value", 0);
+
     var reader = new FileReader();
     reader.onload = function(e) {
+        /* Save the new uploaded file into TEMPCONTENTS
+           This is to prevent writing over the current
+           CONTENTS without actually clicking the
+           upload button. */
         TEMPCONTENTS = e.target.result;
     };
 
@@ -209,12 +216,21 @@ function loadFromFile(e) {
         console.log(finalprogress+"%");
         $("#fileUploadProgressBar").attr("value", finalprogress);
         $("#uploadFileSize").text("Size: " + formatUploadSize(fileSize));
+
+        // Try to set the new file to the local storage.
         try {
+            /* The only way to test if a file is too big
+               is to actually attempt to set it into the
+               localStorage. */
             localStorage.setItem("corpus", TEMPCONTENTS);
             $("#uploadFileButton").removeAttr("disabled");
+
+            /* We revert the set of TEMPCONTENTS in case
+               the user clicks close. */
             localStorage.setItem("corpus", CONTENTS);
         }
         catch(e) {
+            // If it is too big, show error.
             if(isQuotaExceeded(e)) {
                 $("#uploadFileSizeError").show();
                 console.log("ERROR: File exceeds local storage quota.");
@@ -223,6 +239,7 @@ function loadFromFile(e) {
    };
 
     reader.onprogress = function(data) {
+        // Change the progress bar as the upload progresses.
         if (data.lengthComputable) {
             var progress = parseInt(((data.loaded / data.total) * 100), 10);
             $("#fileUploadProgressBar").attr("value", progress);
@@ -232,6 +249,7 @@ function loadFromFile(e) {
     reader.readAsText(file);
 }
 
+// Format the file size ending
 function formatUploadSize(fileSize) {
     if(fileSize < 1024) {
         return fileSize + ' B';
@@ -244,6 +262,8 @@ function formatUploadSize(fileSize) {
     }
 }
 
+/* Checks if the error given by local storage
+   is because the file exceeds local storage quota */
 function isQuotaExceeded(e) {
   var quotaExceeded = false;
   if (e) {
@@ -271,9 +291,14 @@ function handleUploadButtonPressed() {
     // Replaces current content
     CONTENTS = TEMPCONTENTS;
     localStorage.setItem("corpus", CONTENTS);
+
+    // Update local storage available text
     getLocalStorageMaxSize()
     $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
+
     loadDataInIndex();
+
+    // Disable buttons, hide errors, and close modal
     $("#uploadFileButton").attr("disabled", "disabled");
     $("#uploadFileSizeError").hide();
     $('#fileModal').modal('hide');
