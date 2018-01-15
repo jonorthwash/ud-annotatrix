@@ -65,6 +65,8 @@ function onReady() {
             getCorpusData(); // loading the corpus from the server
         }
     }, 500)
+
+    fetchSavedFeatures();
 }
 
 
@@ -90,6 +92,29 @@ function saveData() {
 //     }
 // }
 
+function fetchSavedFeatures() {
+    var setView = localStorage.getItem("setView");
+    if (setView != null) {
+        if(setView === "conllu") {
+            viewAsConllu();
+        }
+        else if(setView === "cg") {
+            viewAsCG();
+        }
+    }
+
+    var tableViewActive = localStorage.getItem("tableView");
+    if (tableViewActive != null) {
+        if(tableViewActive === "true") {
+            toggleTableView();
+        }
+    }
+
+    var savedSentence = localStorage.getItem("sentence");
+    if (savedSentence != null) {
+        goToSenSent(savedSentence);
+    }
+}
 
 function getContents() { // TODO: replace getTreebank with this func
     /* Gets the corpus data saving the changes in current sentence,
@@ -116,28 +141,6 @@ function loadFromLocalStorage() {
             CONTENTS = localStorage.getItem("corpus");
             loadDataInIndex();
         };
-
-        var setView = localStorage.getItem("setView");
-        if (setView != null) {
-            if(setView === "conllu") {
-                viewAsConllu();
-            }
-            else if(setView === "cg") {
-                viewAsCG();
-            }
-        }
-
-        var tableViewActive = localStorage.getItem("tableView");
-        if (tableViewActive != null) {
-            if(tableViewActive === "true") {
-                toggleTableView();
-            }
-        }
-
-        var savedSentence = localStorage.getItem("sentence");
-        if (savedSentence != null) {
-            goToSenSent(savedSentence);
-        }
     }
     else {
         console.log("localStorage is not available :(")
