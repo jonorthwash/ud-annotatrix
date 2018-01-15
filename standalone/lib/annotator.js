@@ -185,7 +185,10 @@ function loadFromFile(e) {
     var file = e.target.files[0];
     FILENAME = file.name; // TODO: you can get rid of FILENAME if you store it in localStorage
     var fileSize = file.size;
-    console.log(fileSize + " bytes");
+    console.log(formatUploadSize(fileSize));
+
+    $("#uploadFileButton").attr("disabled", "disabled");
+    $("#appendFileButton").attr("disabled", "disabled");
     $("#uploadFileSizeError").hide();
     $("#uploadReplaceOnly").hide();
 
@@ -208,6 +211,7 @@ function loadFromFile(e) {
         var finalprogress = parseInt(((data.loaded / data.total) * 100), 10);
         console.log(finalprogress+"%");
         $("#fileUploadProgressBar").attr("value", finalprogress);
+        $("#uploadFileSize").text("Size: " + formatUploadSize(fileSize));
         try {
             localStorage.setItem("corpus", TEMPCONTENTS);
             $("#uploadFileButton").removeAttr("disabled");
@@ -235,6 +239,18 @@ function loadFromFile(e) {
         }
     };
     reader.readAsText(file);
+}
+
+function formatUploadSize(fileSize) {
+    if(fileSize < 1024) {
+        return fileSize + ' B';
+    }
+    else if(fileSize >= 1024 && fileSize < 1048576) {
+        return (fileSize/1024).toFixed(1) + " kB";
+    }
+    else {
+        return (fileSize/1048576).toFixed(1) + " mB";
+    }
 }
 
 function isQuotaExceeded(e) {
