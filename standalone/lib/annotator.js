@@ -2,8 +2,8 @@
 
 var FORMAT = "";
 var FILENAME = 'ud-annotatrix-corpus.conllu'; // default name
-var TEMPCONTENTS = "";
 var CONTENTS = "";
+var TEMPCONTENTS = "";
 var AVAILABLESENTENCES = 0;
 var LOCALSTORAGE_AVAILABLE = -1;
 var CURRENTSENTENCE = 0;
@@ -57,7 +57,7 @@ function onReady() {
     window.undoManager = new UndoManager();  // undo support
     setUndos(window.undoManager);
     loadFromUrl();
-    bindHanlers();
+    bindHandlers();
     setTimeout(function(){ // setTimeout, because we have to wait checkServer to finish working
         if (!SERVER_RUNNING) {
             loadFromLocalStorage(); // trying to load the corpus from localStorage
@@ -129,7 +129,7 @@ function loadFromLocalStorage() {
 }
 
 
-function bindHanlers() {
+function bindHandlers() {
     /* Binds handlers to DOM elements. */
 
     // TODO: causes errors if called before the cy is initialised
@@ -137,7 +137,6 @@ function bindHanlers() {
 
     $("#indata").bind("keyup", drawTree);
     $("#indata").bind("keyup", focusOut);
-    $("#indata").bind("keyup", fitTable);
     $("#indata").bind("keyup", formatTabsView);
     $("#RTL").on("click", switchRtlMode);
     $("#vertical").on("click", switchAlignment);
@@ -188,9 +187,7 @@ function loadFromFile(e) {
     console.log(formatUploadSize(fileSize));
 
     $("#uploadFileButton").attr("disabled", "disabled");
-    $("#appendFileButton").attr("disabled", "disabled");
     $("#uploadFileSizeError").hide();
-    $("#uploadReplaceOnly").hide();
 
     // check if the code is invoked
     var ext = FILENAME.split(".")[FILENAME.split(".").length - 1]; // TODO: should be more beautiful way
@@ -215,13 +212,7 @@ function loadFromFile(e) {
         try {
             localStorage.setItem("corpus", TEMPCONTENTS);
             $("#uploadFileButton").removeAttr("disabled");
-            if(fileSize > LOCALSTORAGE_AVAILABLE) {
-                console.log("WARNING: File size is too large to append to current corpus.");
-                $("#uploadReplaceOnly").show();
-            }
-            else {
-                $("#appendFileButton").removeAttr("disabled");
-            }
+            localStorage.setItem("corpus", CONTENTS);
         }
         catch(e) {
             if(isQuotaExceeded(e)) {
@@ -279,27 +270,12 @@ function isQuotaExceeded(e) {
 function handleUploadButtonPressed() {
     // Replaces current content
     CONTENTS = TEMPCONTENTS;
-    getLocalStorageMaxSize()
-    $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
-    loadDataInIndex();
-    $("#uploadFileButton").attr("disabled", "disabled");
-    $("#appendFileButton").attr("disabled", "disabled");
-    $("#uploadFileSizeError").hide();
-    $("#uploadReplaceOnly").hide();
-    $('#fileModal').modal('hide');
-}
-
-function handleUploadAppendButtonPressed() {
-    // Appends current content
-    CONTENTS += "\n\n" + TEMPCONTENTS;
     localStorage.setItem("corpus", CONTENTS);
     getLocalStorageMaxSize()
     $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
     loadDataInIndex();
     $("#uploadFileButton").attr("disabled", "disabled");
-    $("#appendFileButton").attr("disabled", "disabled");
     $("#uploadFileSizeError").hide();
-    $("#uploadReplaceOnly").hide();
     $('#fileModal').modal('hide');
 }
 
@@ -523,7 +499,6 @@ function clearCorpus() {
     window.location.reload();
     drawTree();
 }
-
 
 function getTreebank() {
 

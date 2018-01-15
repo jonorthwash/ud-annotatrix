@@ -61,15 +61,13 @@ err_udep_leaf_node = Nodes with the « { $tag } » part-of-speech tag should nor
 						<input type="file" id="filename"/><progress id="fileUploadProgressBar" value="0" max="100"></progress>
 						<div id="uploadFileSize">Size:</div>
 						<div id="uploadFileSizeError" style="color: #ff0000; display: none;">ERROR: File exceeds local storage quota.</div>
-						<div id="uploadReplaceOnly" style="color: #ff0000; display: none;">WARNING: File size is too large to append to current corpus.</div><br/>
                                                 <div>
                                                 Treebank size: <span id="treebankSize"></span>
                                                 Available space: <span id="localStorageAvailable"></span>
                                                 </div>
 					</div>
 					<div class="modal-footer">
-						<button id="uploadFileButton" type="button" class="btn btn-primary" data-dismiss="modal" onclick="handleUploadButtonPressed()" disabled>Upload and Replace</button>
-						<button id="appendFileButton" type="button" class="btn btn-primary" data-dismiss="modal" onclick="handleUploadAppendButtonPressed()" disabled>Upload and Append</button>
+						<button id="uploadFileButton" type="button" class="btn btn-primary" data-dismiss="modal" onclick="handleUploadButtonPressed()" disabled>Upload</button>
 						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
 						<!-- button type="button" class="btn btn-primary">Save changes</button -->
 					</div>
@@ -82,6 +80,25 @@ err_udep_leaf_node = Nodes with the « { $tag } » part-of-speech tag should nor
 				<div class="modal-content" id="helpModalContent">
 					<div class="modal-header">
 						<h5 class="modal-title" id="helpModalLabel">User guide</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						&nbsp;
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+      
+        <div class="modal fade" id="exportModal" tabindex="-1" role="dialog" aria-labelledby="exportModalLabel" aria-hidden="true">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content" id="exportModalContent">
+					<div class="modal-header">
+						<h5 class="modal-title" id="exportModalLabel">Export to:</h5>
 						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 							<span aria-hidden="true">&times;</span>
 						</button>
@@ -140,6 +157,11 @@ err_udep_leaf_node = Nodes with the « { $tag } » part-of-speech tag should nor
 						</a>
 						<a class="btn btn-secondary" href="#" onClick="javascript: clearCorpus();">
 							<i class="fa fa-trash" title="Discard corpus"></i>
+						</a>
+					</div>
+					<div class="btn-group" style="float:left; padding-right: 1em;">
+						<a class="btn btn-secondary" href="#" data-toggle="modal" data-target="#exportModal">
+                            <i class="fa fa-print" title="Export"></i>
 						</a>
 					</div>
 					<div class="btn-group" style="float:left; padding-right: 1em;">
@@ -249,7 +271,7 @@ err_udep_leaf_node = Nodes with the « { $tag } » part-of-speech tag should nor
         <div id="progressContainer">
             <div id="progressBar"></div>
         </div>
-			<div class="graph"> <!-- Graph -->
+        <div class="graph"> <!-- Graph -->
 			<div id="cy"></div>
 		</div>
 	</div>
