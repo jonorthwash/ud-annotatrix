@@ -267,6 +267,10 @@ function conllu2cy(sent) {
 }
 
 function exportPNG() {
+    $('#exportModal').find('#exportedGraph').css('display', 'inline');
+    if(latex_exported) {
+        $('#exportModal').find('#exportModal-textarea').css('display', 'none');
+    }
     if(!png_exported) {
         var b64key = 'base64,';
         var b64 = cy.png().substring( cy.png().indexOf(b64key) + b64key.length);
@@ -274,6 +278,7 @@ function exportPNG() {
 
         var image = new Image();
         image.src = URL.createObjectURL(imgBlob);
+        image.id = 'exportedGraph';
         $(image).css('width', '100%');
         $('#exportModal').find('.modal-body').append('</br>');
         $('#exportModal').find('.modal-body').append(image);
@@ -307,6 +312,11 @@ function b64toBlob(b64Data, contentType, sliceSize) {
 
 
 function exportLATEX() {
+    $('#exportModal').find('#exportModal-textarea').css('display', 'inline');
+    if(png_exported) {
+        $('#exportModal').find('#exportedGraph').css('display', 'none');
+    }
+    $('#exportModal').find('#exportModal-textarea').css('display', 'inline');
     if(!latex_exported) {
         if(codeLateX == 'error') {
             $('#exportModal').find('.modal-body').append(
