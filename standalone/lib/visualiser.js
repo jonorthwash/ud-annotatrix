@@ -271,7 +271,7 @@ function exportSVG() {
     $('#exportModal').find('#latexExportError').css('display', 'none');
     $('#exportModal').find('#exportLATEX-textarea').css('display', 'none');
 
-    var ctx = new C2S(1000,1000);
+    var ctx = new C2S(cy.width, cy.height);
     cy.renderer().renderTo( ctx);
     var mySerializedSVG = ctx.getSerializedSvg();
 
