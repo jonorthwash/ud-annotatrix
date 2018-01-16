@@ -576,7 +576,7 @@ function drawTree() {
         var textareaContent = $("#indata").val();
         TogetherJS.send({
             type: "conlluDraw",
-            sentence: content,
+            sentence: content
         });
     }
     showProgress();
