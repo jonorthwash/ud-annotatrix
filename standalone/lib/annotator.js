@@ -25,6 +25,7 @@ function main() {
         pathRoot + 'ext/bootstrap.min.js',
         pathRoot + 'ext/l20n.js',
         pathRoot + 'ext/conllu/conllu.js', // CoNLL-U parser from https://github.com/FrancessFractal/conllu
+        pathRoot + 'ext/togetherjs-min.js',
 
         // native project code
         pathRoot + 'CG2conllu.js',
@@ -36,7 +37,8 @@ function main() {
         pathRoot + 'conllu_table.js',
         pathRoot + 'visualiser.js',
         pathRoot + 'validation.js',
-        pathRoot + 'cy-style.js'
+        pathRoot + 'cy-style.js',
+        pathRoot + 'together_config.js'
     );
 
     head.ready(onReady);
@@ -570,6 +572,13 @@ function drawTree() {
     // -- to be moved out -- 
 
     conlluDraw(content);
+    if (TogetherJS.running) {
+        var textareaContent = $("#indata").val();
+        TogetherJS.send({
+            type: "conlluDraw",
+            sentence: content,
+        });
+    }
     showProgress();
     var inpSupport = $("<div id='mute'>"
         + "<input type='text' id='edit' class='hidden-input'/></div>");
