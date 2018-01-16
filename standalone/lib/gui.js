@@ -801,14 +801,7 @@ function viewAsConllu() {
     var curSent = $("#indata").val();
     var currentFormat = detectFormat(curSent);
 
-
-    if (currentFormat == "plain text") {
-        var contents = getTreebank();
-        plainText2Conllu(contents);
-    } else if (currentFormat == "SD") {
-        var contents = getTreebank();
-        SD2Conllu(contents);
-    } else if (currentFormat == "CG3") {
+    if (currentFormat == "CG3") {
         curSent = CG2conllu(curSent);
         if (curSent == undefined) {
             cantConvertCG();
@@ -817,6 +810,17 @@ function viewAsConllu() {
         $("#viewCG").removeClass("active");
         $("#viewConllu").addClass("active");
         $("#indata").val(curSent);
+    } else {
+        var contents = getTreebank(); // TODO: replace with getContents()
+        if (currentFormat == "plain text") {
+            contents = txtCorpus2Conllu(contents);
+            localStorage.setItem('corpus', contents);
+            loadDataInIndex();
+        } else if (currentFormat == "SD") {
+            // newContents = SD2Conllu(contents);
+            SD2Conllu(contents); // TODO: make it like for txt
+        }
+        localStorage.setItem('format', 'CoNLL-U');
     }
 }
 
