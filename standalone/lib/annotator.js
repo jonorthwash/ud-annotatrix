@@ -23,6 +23,7 @@ function main() {
         pathRoot + 'ext/jquery.autocomplete.js',
         pathRoot + 'ext/bootstrap.min.js',
         pathRoot + 'ext/l20n.js',
+        pathRoot + 'ext/canvas2svg.js',
         pathRoot + 'ext/conllu/conllu.js', // CoNLL-U parser from https://github.com/FrancessFractal/conllu
 
         // native project code
