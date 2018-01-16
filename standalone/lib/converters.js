@@ -52,39 +52,6 @@ function SD2Conllu(text) {
  * Takes a plain text, converts it to CoNLL-U format.
  * @param {String} text Input text
  */
-function plainText2Conllu(text) { // WORKING ON THIS
-    console.log('plainText2Conllu() ' + text);
-
-    // if text consists of several sentences, process it as imported file
-    if (text.match(/[^ ].+?[.!?](?=( |\n)[^ \n])/)) { // match sentence break, e.g. "blah. hargle"
-        CONTENTS = text;
-    }
-    if (CONTENTS.trim() != "") {
-        var newContents = [];
-        var splitted = CONTENTS.match(/[^ ].+?[.!?](?=( |$|\n))/g);
-        $.each(splitted, function(i, sentence) {
-            newContents.push(plainSent2Conllu(sentence));
-        })
-        CONTENTS = newContents.join("\n");
-        FORMAT = "CoNLL-U";
-        AVAILABLESENTENCES = splitted.length;
-        loadDataInIndex();
-    } else {
-        // If the CONTENTS is empty, then we need to fill it (this is the first time
-        // we have put something into the annotatrix and CONTENTS will be empty if
-        // it's the first time
-        FORMAT = "CoNLL-U";
-        CONTENTS = plainSent2Conllu(text) + "\n";
-        AVAILABLESENTENCES = 1;
-        $("#indata").val(newContents); // TODO: wtf, is newContents global var, or just undefined here?
-        loadDataInIndex();
-    }
-}
-
-/**
- * Takes a plain text, converts it to CoNLL-U format.
- * @param {String} text Input text
- */
 function txtCorpus2Conllu(text) {
     console.log('converting: ' + text);
 
@@ -99,16 +66,6 @@ function txtCorpus2Conllu(text) {
     })
     corpus = newContents.join("\n");
     AVAILABLESENTENCES = splitted.length;
-    // } else {
-        // If the CONTENTS is empty, then we need to fill it (this is the first time
-        // we have put something into the annotatrix and CONTENTS will be empty if
-        // it's the first time
-    //     corpus = plainSent2Conllu(text) + "\n";
-    //     AVAILABLESENTENCES = 1;
-    //     $("#indata").val(newContents); // TODO: wtf, is newContents global var, or just undefined here?
-
-    //     CONTENTS = corpus;
-    // }
     console.log('converted: ' + corpus);
     return corpus;
 }
