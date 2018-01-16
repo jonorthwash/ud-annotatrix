@@ -80,27 +80,18 @@ function saveData() {
 }
 
 
-// function saveDataNew() {
-//     if (SERVER_RUNNING) {
-//         saveOnServer()
-//     } else {
-//         if (LOC_ST_AVAILABLE) {
-//             // localStorage.setItem("treebank", RESULTS);
-//         }
-//     }
-// }
-
-
 function getContents() { // TODO: replace getTreebank with this func
     /* Gets the corpus data saving the changes in current sentence,
     dependlessly of whether it's on server or in localStorage.
     Should replace getTreebank. */
-    var corpus;
-    if (SERVER_RUNNING) {
-        // TODO: implement
-    } else if (LOC_ST_AVAILABLE) {
-        
-    }
+
+    // if (SERVER_RUNNING) {
+    //     // TODO: implement
+    // } else {
+    var splitted = localStorage.getItem('treebank'); // TODO: implement a more memory-friendly func
+    splitted[CURRENTSENTENCE] = $("#indata").val();
+    return splitted.join('\n\n');
+    // }
 }
 
 
@@ -477,7 +468,6 @@ function getTreebank() {
     // output final newline
     return finalcontent + "\n\n";
 }
-
 
 
 function drawTree() {
