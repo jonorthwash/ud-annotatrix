@@ -257,7 +257,7 @@ function conllu2cy(sent) {
         }
     })
     }
-    
+
     ALL_WORK = 0;
     DONE_WORK = 0;
     for(var i = 0; i < graph.length; i++) {
@@ -277,7 +277,7 @@ function conllu2cy(sent) {
         }
     }
     codeLateX = generateLateX(graph);
-    
+
     return graph;
 }
 
@@ -356,9 +356,9 @@ function exportLATEX() {
 }
 
 function generateLateX(graph) {
-    
+
     var latexLines = [];
-    
+
     var tokensLine = '';
     var posLine = '';
     var deprelLines = [];
@@ -370,7 +370,7 @@ function generateLateX(graph) {
             tokensLine += ' \\& ' + graph[i].data.label;
             posLine += '\\&{\\tt ' + graph[i].data.upostag + '}';
         }
-        
+
         if(graph[i].classes == 'dependency' || graph[i].classes == 'dependency error') {
             if(graph[i].data.label == undefined) {
                 return 'error';
@@ -386,10 +386,10 @@ function generateLateX(graph) {
     }
     tokensLine += ' \\\\';
     tokensLine = tokensLine.replace('\\&', '');
-    
+
     posLine += '\\\\';
     posLine = posLine.replace('\\&', '');
-    
+
     latexLines.push('\\begin{dependency}',
                     '   \\begin{deptext}[column sep=0.4cm]');
     latexLines.push('       ' + tokensLine);
@@ -836,6 +836,7 @@ function setEdgePosition(thisEdge, thisHeight, coef, diff) {
 	if (!LEFT_TO_RIGHT) {coef *= -1}; // support for RTL
 	//if (VERT_ALIGNMENT) {edgeDep.ctrl = [45, 45, 45, 45]};
 	//if (Math.abs(coef) != 1) {coef *= defaultCoef};
+  if(VERT_ALIGNMENT) {thisHeight += 30} // so the ctrl points are better placed
 
 	thisHeight *= coef;
 
@@ -854,8 +855,15 @@ function setEdgePosition(thisEdge, thisHeight, coef, diff) {
 		thisEdge.style({"control-point-weights": String(0.01*factor)+" 0.25 0.75 1"});
 		thisEdge.data({'ctrl': [thisHeight, thisHeight, thisHeight, thisHeight]});
 	}
-	thisEdge.style({"source-endpoint": String(-10*coef)+"px -50%"});
-	thisEdge.style({"target-endpoint": String(0*coef)+"% -50%"});
+  if (!VERT_ALIGNMENT) {
+	  thisEdge.style({"source-endpoint": String(-10*coef)+"px -50%"});
+	  thisEdge.style({"target-endpoint": String(0*coef)+"% -50%"});
+  } else {
+    var sourceNum = String(parseInt(thisEdge.data('source').replace("nf", ""), 10)).length*10 + "px"
+    var targetNum = String(parseInt(thisEdge.data('target').replace("nf", ""), 10)).length*10 + "px"
+    thisEdge.style({"source-distance-from-node": sourceNum})
+    thisEdge.style({"target-distance-from-node": targetNum})
+  }
 
 	//edgeDep.ctrl = edgeDep.ctrl.map(function(el){ return el*coef; });
 }
