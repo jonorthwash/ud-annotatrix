@@ -273,9 +273,9 @@ function exportSVG() {
 
     var ctx = new C2S(1000,1000);
     cy.renderer().renderTo( ctx);
-    var mySerializedSVG = ctx.getSerializedSvg();
+    var ctxSerializedSVG = ctx.getSerializedSvg();
 
-    $('#exportModal').find('#exportSVG-textarea').val(mySerializedSVG);
+    $('#exportModal').find('#exportSVG-textarea').val(ctxSerializedSVG);
 
     $('#exportModal').find('#exportSVG-textarea').css('display', 'inline');
     $('#exportModal').find('#exportSVG-textarea').select();
