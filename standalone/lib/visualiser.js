@@ -363,7 +363,7 @@ function generateLateX(graph) {
     var posLine = '';
     var deprelLines = [];
     for(var i = 0; i < graph.length; i++) {
-        if(graph[i].classes == 'wf') {
+        if(graph[i].classes.indexOf('wf') !== -1) {
             if(graph[i].data.upostag == undefined) {
                 return 'error';
             }
