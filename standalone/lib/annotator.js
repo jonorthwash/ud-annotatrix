@@ -88,7 +88,9 @@ function getContents() { // TODO: replace getTreebank with this func
     // if (SERVER_RUNNING) {
     //     // TODO: implement
     // } else {
-    var splitted = localStorage.getItem('treebank'); // TODO: implement a more memory-friendly func
+    var splitted = localStorage.getItem('treebank'); // TODO: implement a more memory-friendly func?
+    splitted = JSON.parse(splitted); // string to array
+    console.log('getContents: ' + typeof(splitted))
     splitted[CURRENTSENTENCE] = $("#indata").val();
     return splitted.join('\n\n');
     // }
@@ -295,8 +297,8 @@ function loadDataInIndex() {
     CURRENTSENTENCE = 0;
 
     var splitted = splitIntoSentences();
-    localStorage.setItem('treebank', splitted);
-    RESULTS = splitted;
+    localStorage.setItem('treebank', JSON.stringify(splitted));
+    RESULTS = splitted; // TODO: get rid of RESULTS
 
     AVAILABLESENTENCES = splitted.length;
     //console.log('loadDataInIndex |' + FORMAT + " | AVAILABLESENTENCES = " + AVAILABLESENTENCES)
@@ -424,7 +426,7 @@ function clearLabels() {
 
 function exportCorpora() {
     //Export Corpora to file
-    var finalcontent = getTreebank();
+    var finalcontent = getContents();
 
     var link = document.createElement('a');
     var mimeType = 'text/plain';
