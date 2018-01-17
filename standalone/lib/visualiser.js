@@ -281,23 +281,32 @@ function conllu2cy(sent) {
     return graph;
 }
 
-function exportPNG() {
-    if(latex_exported) {
-        $('#exportModal').find('#exportModal-textarea').css('display', 'none');
-    }
-    if(!png_exported) {
-        var b64key = 'base64,';
-        var b64 = cy.png().substring( cy.png().indexOf(b64key) + b64key.length);
-        var imgBlob = b64toBlob(b64, 'image/png');
+function exportSVG() {
+    $('#exportModal').find('#exportedGraph').css('display', 'none');
+    $('#exportModal').find('#latexExportError').css('display', 'none');
+    $('#exportModal').find('#exportLATEX-textarea').css('display', 'none');
 
-        var image = new Image();
-        image.src = URL.createObjectURL(imgBlob);
-        image.id = 'exportedGraph';
-        $(image).css('width', '100%');
-        $('#exportModal').find('.modal-body').append('</br>');
-        $('#exportModal').find('.modal-body').append(image);
-        png_exported = true;
-    }
+    var ctx = new C2S(cy.width, cy.height);
+    cy.renderer().renderTo(ctx);
+    var ctxSerializedSVG = ctx.getSerializedSvg();
+    
+    $('#exportModal').find('#svgResult').attr('src', 'data:image/svg+xml;charset=utf-8,'+ctxSerializedSVG);
+
+    $('#exportModal').find('#svgResult').css('display', 'inline');
+}
+
+function exportPNG() {
+    $('#exportModal').find('#svgResult').css('display', 'none');
+    $('#exportModal').find('#latexExportError').css('display', 'none');
+    $('#exportModal').find('#exportLATEX-textarea').css('display', 'none');
+
+    var b64key = 'base64,';
+    var b64 = cy.png().substring( cy.png().indexOf(b64key) + b64key.length);
+    var imgBlob = b64toBlob(b64, 'image/png');
+
+    $('#exportModal').find('#exportedGraph').attr('src', URL.createObjectURL(imgBlob));
+    $('#exportModal').find('#exportedGraph').css('width', '100%');
+
     $('#exportModal').find('#exportedGraph').css('display', 'inline');
 }
 
@@ -327,31 +336,23 @@ function b64toBlob(b64Data, contentType, sliceSize) {
 
 
 function exportLATEX() {
-    $('#exportModal').find('#exportModal-textarea').css('display', 'inline');
-    if(png_exported) {
-        $('#exportModal').find('#exportedGraph').css('display', 'none');
-    }
-    $('#exportModal').find('#exportModal-textarea').css('display', 'inline');
-    if(!latex_exported) {
-        if(codeLateX == 'error') {
-            $('#exportModal').find('.modal-body').append(
-                '</br>' +
-                'Sorry, the graph has to have all UPOS tags defined!'
-            );
+    $('#exportModal').find('#exportLATEX-textarea').val('');
+
+    $('#exportModal').find('#exportLATEX-textarea').css('display', 'none');
+    $('#exportModal').find('#svgResult').css('display', 'none');
+    $('#exportModal').find('#latexExportError').css('display', 'none');
+    $('#exportModal').find('#exportedGraph').css('display', 'none');
+
+    if(codeLateX == 'error') {
+        $('#exportModal').find('#latexExportError').css('display', 'inline');
+    } else {
+        $('#exportModal').find('#exportLATEX-textarea').val(codeLateX.join('\n'));
+        if($('#exportModal').find('#exportLATEX-textarea').attr("rows") > codeLateX.length) {
+            $('#exportModal').find('#exportLATEX-textarea').attr('rows', codeLateX.length + 2);
         } else {
-            for(var i = 0; i < codeLateX.length; i++) {
-                $('#exportModal').find('#exportModal-textarea').append(
-                    codeLateX[i] +
-                    '\n'
-                );
-            }
-            if($('#exportModal').find('#exportModal-textarea').attr("rows") > codeLateX.length) {
-                $('#exportModal').find('#exportModal-textarea').attr('rows', codeLateX.length + 2);
-            } else {
-                $('#exportModal').find('#exportModal-textarea').attr('rows', $('#exportModal').find('#exportModal-textarea').attr("rows"));
-            }
+            $('#exportModal').find('#exportLATEX-textarea').attr('rows', $('#exportModal').find('#exportLATEX-textarea').attr("rows"));
         }
-        latex_exported = true;
+        $('#exportModal').find('#exportLATEX-textarea').css('display', 'inline');
     }
 }
 
