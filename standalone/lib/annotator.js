@@ -68,12 +68,12 @@ function onReady() {
 }
 
 
-function saveData() {
+function saveData() { // TODO: rename to updateData
     if (SERVER_RUNNING) {
         saveOnServer()
     } else {
         if (LOC_ST_AVAILABLE) {
-            localStorage.setItem("corpus", getTreebank());
+            localStorage.setItem("corpus", getContents());
             // localStorage.setItem("treebank", RESULTS);
         }
     }
@@ -90,7 +90,6 @@ function getContents() { // TODO: replace getTreebank with this func
     // } else {
     var splitted = localStorage.getItem('treebank'); // TODO: implement a more memory-friendly func?
     splitted = JSON.parse(splitted); // string to array
-    console.log('getContents: ' + typeof(splitted))
     splitted[CURRENTSENTENCE] = $("#indata").val();
     return splitted.join('\n\n');
     // }
@@ -301,8 +300,6 @@ function loadDataInIndex() {
     RESULTS = splitted; // TODO: get rid of RESULTS
 
     AVAILABLESENTENCES = splitted.length;
-    //console.log('loadDataInIndex |' + FORMAT + " | AVAILABLESENTENCES = " + AVAILABLESENTENCES)
-
     if (AVAILABLESENTENCES == 1 || AVAILABLESENTENCES == 0) {
         document.getElementById('nextSenBtn').disabled = true;
     } else {
