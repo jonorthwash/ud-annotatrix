@@ -17,7 +17,7 @@ function checkServer() {
 
 
 function saveOnServer() {
-    var finalcontent = getTreebank();
+    var finalcontent = getContent();
 
     // sending data on server
     var treebank_id = location.href.split('/')[4];

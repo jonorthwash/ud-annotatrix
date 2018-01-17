@@ -77,10 +77,9 @@ function saveData() { // TODO: rename to updateData
 }
 
 
-function getContents() { // TODO: replace getTreebank with this func
+function getContents() {
     /* Gets the corpus data saving the changes in current sentence,
-    dependlessly of whether it's on server or in localStorage.
-    Should replace getTreebank. */
+    dependlessly of whether it's on server or in localStorage. */
 
     // if (SERVER_RUNNING) {
     //     // TODO: implement
@@ -446,23 +445,6 @@ function clearCorpus() {
     showDataIndiv()
     window.location.reload();
     drawTree();
-}
-
-function getTreebank() {
-
-    RESULTS[CURRENTSENTENCE] = document.getElementById("indata").value;
-    var finalcontent = "";
-    // loop through all the trees
-    for(var x=0; x < RESULTS.length; x++){
-        // add them to the final file, but get rid of any trailing whitespace
-        finalcontent = finalcontent + RESULTS[x].trim();
-        // if it's not the last tree, add two ewlines (e.g. one blank line)
-        if(x != ((RESULTS.length)-1)){
-            finalcontent = finalcontent + "\n\n";
-        }
-    }
-    // output final newline
-    return finalcontent + "\n\n";
 }
 
 

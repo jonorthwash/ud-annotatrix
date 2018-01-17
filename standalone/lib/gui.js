@@ -811,7 +811,7 @@ function viewAsConllu() {
         $("#viewConllu").addClass("active");
         $("#indata").val(curSent);
     } else {
-        var contents = getTreebank(); // TODO: replace with getContents()
+        var contents = getContents();
         if (currentFormat == "plain text") {
             contents = txtCorpus2Conllu(contents);
             localStorage.setItem('corpus', contents);
