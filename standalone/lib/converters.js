@@ -53,20 +53,15 @@ function SD2Conllu(text) {
  * @param {String} text Input text
  */
 function txtCorpus2Conllu(text) {
-    console.log('converting: ' + text);
-
     var corpus;
-    // if (CONTENTS.trim() != "") {
     var newContents = [];
     var splitted = text.match(/[^ ].+?[.!?](?=( |$|\n))/g);
-    console.log('splitted: ' + splitted);
     $.each(splitted, function(i, sentence) {
         sentence = plainSent2Conllu(sentence.trim());
         newContents.push(sentence);
     })
     corpus = newContents.join("\n");
     AVAILABLESENTENCES = splitted.length;
-    console.log('converted: ' + corpus);
     return corpus;
 }
 
@@ -74,7 +69,7 @@ function txtCorpus2Conllu(text) {
  * Checks if the input box has > 1 sentence.
  * @param {String} text Input text
  */
-function conlluMultiInput(text) {
+function conlluMultiInput(text) { // TOFIX: this might break after rewriting architecture. fix later.
     if(text.match(/\n\n(#.*\n)?1\t/)) {
         console.log('conlluMultiInput()');
 
@@ -96,6 +91,7 @@ function conlluMultiInput(text) {
         }
     }
 }
+
 
 /**
  * Takes a string in CoNLL-U, converts it to plain text.
