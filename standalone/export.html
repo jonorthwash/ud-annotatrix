@@ -12,11 +12,17 @@
 
 <!-- h1>Export options<h1 -->
 <button type="button" class="btn btn-primary" onclick="javascript:exportPNG();" style="width: 100px;">PNG</button>
+<button type="button" class="btn btn-primary" onclick="javascript:exportSVG();" style="width: 100px;">SVG</button>
 <button type="button" class="btn btn-primary" onclick="javascript:exportLATEX();" style="width: 100px;">LaTeX</button>
 </br>
 <div class="form-group">
   <label for="comment"></label>
-  <textarea class="form-control" rows="15" id="exportModal-textarea" readonly style="display: none;"></textarea>
+  <div id="exportResult">
+  	<img id="exportedGraph" style="display: none;">
+  	<div id="latexExportError" style="display: none;">Sorry, the graph has to have all UPOS tags defined!</div>
+	<textarea class="form-control" rows="10" id="exportLATEX-textarea" readonly style="display: none;"></textarea>
+	 <iframe id="svgResult" style="width: 100%; border: 1px solid gray; border-radius: 5px;"></iframe>
+  </div>
 </div>
 
 <!-- /body>
