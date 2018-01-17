@@ -273,9 +273,9 @@ function exportSVG() {
 
     var ctx = new C2S(cy.width, cy.height);
     cy.renderer().renderTo(ctx);
-    var mySerializedSVG = ctx.getSerializedSvg();
+    var ctxSerializedSVG = ctx.getSerializedSvg();
     
-    $('#exportModal').find('#svgResult').attr('src', 'data:image/svg+xml;charset=utf-8,'+mySerializedSVG);
+    $('#exportModal').find('#svgResult').attr('src', 'data:image/svg+xml;charset=utf-8,'+ctxSerializedSVG);
 
     $('#exportModal').find('#svgResult').css('display', 'inline');
 }
