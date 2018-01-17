@@ -72,10 +72,7 @@ function saveData() { // TODO: rename to updateData
     if (SERVER_RUNNING) {
         saveOnServer()
     } else {
-        if (LOC_ST_AVAILABLE) {
-            localStorage.setItem("corpus", getContents());
-            // localStorage.setItem("treebank", RESULTS);
-        }
+        localStorage.setItem("corpus", getContents()); // TODO: get rid of 'corpus', move the treebank updating here from getContents
     }
 }
 
@@ -91,6 +88,7 @@ function getContents() { // TODO: replace getTreebank with this func
     var splitted = localStorage.getItem('treebank'); // TODO: implement a more memory-friendly func?
     splitted = JSON.parse(splitted); // string to array
     splitted[CURRENTSENTENCE] = $("#indata").val();
+    localStorage.setItem('treebank', JSON.stringify(splitted)); // update the treebank
     return splitted.join('\n\n');
     // }
 }
@@ -169,7 +167,7 @@ function loadFromUrl(argument) {
 }
 
 
-function loadFromFileNew(e) {
+function loadFromFileNew(e) { // WORKING ON THIS
     /*
     Loads a corpus from a file from the user's computer,
     puts the filename into localStorage.
@@ -281,7 +279,7 @@ function removeCurSent() {
         saveData();
         var curSent = CURRENTSENTENCE; // это нужно, т.к. в loadDataInIndex всё переназначается. это как-то мега костыльно, и надо исправить.
         $("#indata").val("");
-        CONTENTS = getTreebank();
+        localStorage.setItem('corpus', getContents());
         loadDataInIndex();
         CURRENTSENTENCE = curSent;
         if (CURRENTSENTENCE >= AVAILABLESENTENCES) {CURRENTSENTENCE--};
@@ -295,7 +293,8 @@ function loadDataInIndex() {
     AVAILABLESENTENCES = 0;
     CURRENTSENTENCE = 0;
 
-    var splitted = splitIntoSentences();
+    var corpus = localStorage.getItem('corpus');
+    var splitted = splitIntoSentences(corpus);
     localStorage.setItem('treebank', JSON.stringify(splitted));
     RESULTS = splitted; // TODO: get rid of RESULTS
 
@@ -310,10 +309,8 @@ function loadDataInIndex() {
 }
 
 
-function splitIntoSentences() {
+function splitIntoSentences(corpus) {
     /* Takes a string with the corpus and returns an array of sentences. */
-
-    var corpus = localStorage.getItem("corpus");
     var format = detectFormat(corpus);
 
     // splitting
