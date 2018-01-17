@@ -272,17 +272,16 @@ function exportSVG() {
     $('#exportModal').find('#exportLATEX-textarea').css('display', 'none');
 
     var ctx = new C2S(cy.width, cy.height);
-    cy.renderer().renderTo( ctx);
+    cy.renderer().renderTo(ctx);
     var mySerializedSVG = ctx.getSerializedSvg();
+    
+    $('#exportModal').find('#svgResult').attr('src', 'data:image/svg+xml;charset=utf-8,'+mySerializedSVG);
 
-    $('#exportModal').find('#exportSVG-textarea').val(mySerializedSVG);
-
-    $('#exportModal').find('#exportSVG-textarea').css('display', 'inline');
-    $('#exportModal').find('#exportSVG-textarea').select();
+    $('#exportModal').find('#svgResult').css('display', 'inline');
 }
 
 function exportPNG() {
-    $('#exportModal').find('#exportSVG-textarea').css('display', 'none');
+    $('#exportModal').find('#svgResult').css('display', 'none');
     $('#exportModal').find('#latexExportError').css('display', 'none');
     $('#exportModal').find('#exportLATEX-textarea').css('display', 'none');
 
@@ -325,7 +324,7 @@ function exportLATEX() {
     $('#exportModal').find('#exportLATEX-textarea').val('');
 
     $('#exportModal').find('#exportLATEX-textarea').css('display', 'none');
-    $('#exportModal').find('#exportSVG-textarea').css('display', 'none');
+    $('#exportModal').find('#svgResult').css('display', 'none');
     $('#exportModal').find('#latexExportError').css('display', 'none');
     $('#exportModal').find('#exportedGraph').css('display', 'none');
 
