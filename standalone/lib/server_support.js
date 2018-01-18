@@ -16,21 +16,23 @@ function checkServer() {
 }
 
 
-function saveOnServer() {
-    var finalcontent = getContent();
+function updateOnServer() {
+    var curSent = $('#indata').val()
+    var sentNum = $('#currentsen').val()
 
     // sending data on server
     var treebank_id = location.href.split('/')[4];
     $.ajax({
-        type: "POST",
+        type: 'POST',
         url: '/save',
         data: {
-            "content": finalcontent,
-            "treebank_id": treebank_id
+            'content': curSent,
+            'treebank_id': treebank_id,
+            'sentNum': sentNum
         },
         dataType: "json",
         success: function(data){
-            console.log('Load was performed.');
+            console.log('Update was performed.');
         }
     });
 }

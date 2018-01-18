@@ -22,20 +22,17 @@ if not os.path.exists(PATH_TO_CORPORA):
     os.mkdir(PATH_TO_CORPORA)
 
 
-def write_to_db():
-    pass
-
-
 @app.route('/save', methods=['GET', 'POST'])
-def save_corpus(): # TODO: remove this view
+def save_corpus():
     if request.form:
-        data = request.form['content']
+        sent = request.form['content']
         treebank_id = request.form['treebank_id']
-        treebank_id = treebank_id.strip('#')
-
-        with open(PATH_TO_CORPORA + '/' + treebank_id, 'w') as f:
-            f.write(data)
-        return jsonify({'id': treebank_id, 'content': data})
+        path = treebank_id.strip('#') + '.db'
+        sent_num = request.form['sentNum']
+        if os.path.exists(PATH_TO_CORPORA + '/' + path):
+            db = CorpusDB(PATH_TO_CORPORA + '/' + path)
+            db.update_db(sent, sent_num)
+        return jsonify()
     return jsonify()
 
 

@@ -51,3 +51,11 @@ class CorpusDB():
         db.commit()
         db.close()
         return sentence, max_sent
+
+    def update_db(self, sentence, sent_num):
+        db = sqlite3.connect(self.path)
+        cur = db.cursor()
+        sent_num = int(sent_num) - 1
+        cur.execute('UPDATE corpus SET sentence = (?) WHERE SentNum = (?)', (sentence, sent_num))
+        db.commit()
+        db.close()

@@ -70,7 +70,7 @@ function onReady() {
 
 function saveData() { // TODO: rename to updateData
     if (SERVER_RUNNING) {
-        saveOnServer()
+        updateOnServer()
     } else {
         localStorage.setItem("corpus", getContents()); // TODO: get rid of 'corpus', move the treebank updating here from getContents
     }
@@ -349,6 +349,7 @@ function showDataIndiv() {
     fitTable(); // make table's size optimal
     drawTree();
 }
+
 
 function goToSenSent() {
     saveData();
