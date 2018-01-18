@@ -40,6 +40,7 @@ function updateOnServer() {
 
 function getSentence(sentNum) {
     var treebank_id = location.href.split('/')[4];
+    console.log('getSentence');
     $.ajax({
         type: "POST",
         url: "/load",

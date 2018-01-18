@@ -351,6 +351,17 @@ function showDataIndiv() {
 }
 
 
+function goToSentence(argument) {
+    if (SERVER_RUNNING) {
+        console.log('goToSentence');
+        var sentNum = $('#currentsen').val();
+        getSentence(sentNum);
+    } else {
+        goToSenSent();
+    }
+}
+
+
 function goToSenSent() {
     saveData();
 

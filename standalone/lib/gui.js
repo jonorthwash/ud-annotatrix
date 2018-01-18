@@ -905,7 +905,7 @@ function switchEnhanced() {
 $(document).ready(function(){
 	$('#currentsen').keyup(function(e){
 		if(e.keyCode == 13) {
-			goToSenSent();
+			goToSentence();
 		} else if(e.keyCode == UP || e.keyCode == K) {
 			prevSenSent();
 		} else if(e.keyCode == DOWN || e.keyCode == J) {
