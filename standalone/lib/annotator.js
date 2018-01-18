@@ -467,6 +467,7 @@ function drawTree() {
     3. */
     
     ISEDITING = false;
+    console.log('drawTree');
     
     // TODO: update the sentence
     try {cy.destroy()} catch (err) {}; // remove the previous tree, if there is one

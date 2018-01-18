@@ -328,7 +328,7 @@ function is_relation_conflict(tree) {
             }
         }
     }
-    console.log("Count: ", count);
+    // console.log("Count: ", count);
     var conflicts = new Map();
     var totalsubjects = new Map();
     if(count.has("nsubj")) {
@@ -378,7 +378,7 @@ function is_relation_conflict(tree) {
         }
     }
     totalobjects.forEach(function(i,k,m) {
-        console.log(i,k,m);
+        // console.log(i,k,m);
         if(i > 1) {
             if(conflicts.has(k)) {
                 var newconflict = conflicts.get(k);
@@ -393,6 +393,6 @@ function is_relation_conflict(tree) {
     if(count.has("obj") && count.has("ccomp")) {
         conflicts.set("objccomp",[]);
     }
-    console.log("Conflicts: ", conflicts);
+    // console.log("Conflicts: ", conflicts);
     return conflicts;
 }
