@@ -36,3 +36,18 @@ class CorpusDB():
         cur.execute('INSERT INTO meta VALUES (?)', (corpus_name, ))
         db.commit()
         db.close()
+
+    def get_sentence(self, sent_num):
+        """
+        Takes an integer with sentence number and returns a sentence with this number.
+        """
+        db = sqlite3.connect(self.path)
+        cur = db.cursor()
+        cur.execute('SELECT sentence FROM corpus WHERE SentNum = ?', (int(sent_num) - 1,))
+        sentence = cur.fetchone()[0]
+        db.commit()
+        cur.execute('SELECT COUNT(sentence) FROM corpus')
+        max_sent = cur.fetchone()[0]
+        db.commit()
+        db.close()
+        return sentence, max_sent

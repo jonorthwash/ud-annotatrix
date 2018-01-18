@@ -40,13 +40,17 @@ def save_corpus(): # TODO: remove this view
 
 
 @app.route('/load', methods=['GET', 'POST'])
-def load_corpus(): # TODO: change / remove this view
-    treebank_id = request.form['treebank_id']
-    path = treebank_id.strip('#') + '.db'
-    if os.path.exists(PATH_TO_CORPORA + '/' + path):
-        # with open(PATH_TO_CORPORA + '/' + path) as f:
-        #     corpus = f.read()
-        return jsonify({'content': 'For correct working, "load_corpus" should be rewritten.'})
+def load_sentence():
+    if request.form:
+        treebank_id = request.form['treebank_id']
+        path = treebank_id.strip('#') + '.db'
+        sent_num = request.form['sentNum']
+        if os.path.exists(PATH_TO_CORPORA + '/' + path):
+            db = CorpusDB(PATH_TO_CORPORA + '/' + path)
+            sent, max_sent = db.get_sentence(sent_num)
+            return jsonify({'content': sent, 'max': max_sent})
+        else:
+            return jsonify({'content': 'something went wrong'})
     return jsonify()
 
 
@@ -57,9 +61,6 @@ def upload_new_corpus():
         corpus_name = f.filename
         corpus = f.read().decode()
         treebank_id = str(uuid.uuid4())
-
-        # with open(PATH_TO_CORPORA + '/' + treebank_id + '.txt', 'w') as f:
-        #     f.write(corpus)
         db = CorpusDB(PATH_TO_CORPORA + '/' + treebank_id + '.db')
         db.write_corpus(corpus, corpus_name)
         return redirect(url_for('corpus_page', treebank_id=treebank_id))

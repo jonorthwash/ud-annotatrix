@@ -36,44 +36,27 @@ function saveOnServer() {
 }
 
 
-function getCorpusData() {
+function getSentence(sentNum) {
     var treebank_id = location.href.split('/')[4];
     $.ajax({
         type: "POST",
         url: "/load",
-        data: {"treebank_id": treebank_id},
+        data: {"treebank_id": treebank_id, "sentNum": sentNum},
         dataType: "json",
-        success: loadData
+        success: loadSentence
     });
+    $('#currentsen').val(sentNum);
+    // CURRENTSENTENCE = sentNum;
 }
 
 
-function loadData(data) {
-    console.log("loadData");
-    if (data["content"]) {
-        var corpus = data["content"];
-        localStorage.setItem('corpus', corpus);
+function loadSentence(data) {
+    console.log('loadSentence');
+    if (data['content']) {
+        var sentence = data['content'];
+        var max = data['max'];
+        $('#indata').val(sentence);
+        $('#max').val(max)
+        AVAILABLESENTENCES = max;
     }
-    loadDataInIndex();
-}
-
-
-function loadSentence(sentIndex) {
-    var treebank_id = location.href.split('/')[4];
-    $.ajax({
-        type: "POST",
-        url: "/load",
-        data: {
-            "treebank_id": treebank_id,
-            "sentIndex": sentIndex
-        },
-        dataType: "json",
-        success: function() {
-            console.log("loaded sent");
-            if (data["content"]){
-                localStorage.setItem("current", data["content"]);
-                // TODO: change showDataIndiv
-            }
-        }
-    });
 }

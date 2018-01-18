@@ -62,7 +62,7 @@ function onReady() {
         if (!SERVER_RUNNING) {
             loadFromLocalStorage(); // trying to load the corpus from localStorage
         } else {
-            getCorpusData(); // loading the corpus from the server
+            getSentence(1); // loading a sentence from the server
         }
     }, 500)
 }
