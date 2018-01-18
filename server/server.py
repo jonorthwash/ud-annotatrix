@@ -11,6 +11,7 @@ from flask import send_from_directory
 from flask import url_for
 import os
 import uuid
+from db import CorpusDB
 
 
 PATH_TO_CORPORA = 'corpora'
@@ -19,6 +20,10 @@ app = Flask(__name__, static_folder='../standalone', static_url_path='/annotatri
 
 if not os.path.exists(PATH_TO_CORPORA):
     os.mkdir(PATH_TO_CORPORA)
+
+
+def write_to_db():
+    pass
 
 
 @app.route('/save', methods=['GET', 'POST'])
@@ -37,25 +42,26 @@ def save_corpus(): # TODO: remove this view
 @app.route('/load', methods=['GET', 'POST'])
 def load_corpus(): # TODO: change / remove this view
     treebank_id = request.form['treebank_id']
-    path = treebank_id.strip('#') + '.txt'
+    path = treebank_id.strip('#') + '.db'
     if os.path.exists(PATH_TO_CORPORA + '/' + path):
-        with open(PATH_TO_CORPORA + '/' + path) as f:
-            corpus = f.read()
-        return jsonify({'content': corpus})
+        # with open(PATH_TO_CORPORA + '/' + path) as f:
+        #     corpus = f.read()
+        return jsonify({'content': 'For correct working, "load_corpus" should be rewritten.'})
     return jsonify()
 
 
 @app.route('/annotatrix/upload', methods=['GET', 'POST'])
 def upload_new_corpus():
     if request.method == 'POST':
-        # corpus_name = request.form['file']
-        corpus = request.files['file']
-        corpus = corpus.read().decode()
-        # print(corpus_name)
+        f = request.files['file']
+        corpus_name = f.filename
+        corpus = f.read().decode()
         treebank_id = str(uuid.uuid4())
 
-        with open(PATH_TO_CORPORA + '/' + treebank_id + '.txt', 'w') as f:
-            f.write(corpus)
+        # with open(PATH_TO_CORPORA + '/' + treebank_id + '.txt', 'w') as f:
+        #     f.write(corpus)
+        db = CorpusDB(PATH_TO_CORPORA + '/' + treebank_id + '.db')
+        db.write_corpus(corpus, corpus_name)
         return redirect(url_for('corpus_page', treebank_id=treebank_id))
     return jsonify({'something': 'went wrong'})
 
