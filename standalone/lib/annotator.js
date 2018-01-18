@@ -3,7 +3,6 @@
 var FORMAT = "";
 var FILENAME = 'ud-annotatrix-corpus.conllu'; // default name
 var FIRSTLOAD = true;
-var TEMPCONTENTS = "";
 var CONTENTS = "";
 var TEMPCONTENTS = "";
 var AVAILABLESENTENCES = 0;
