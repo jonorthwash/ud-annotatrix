@@ -46,7 +46,7 @@ function getSentence(sentNum) {
         success: loadSentence
     });
     $('#currentsen').val(sentNum);
-    // CURRENTSENTENCE = sentNum;
+    CURRENTSENTENCE = sentNum;
 }
 
 
@@ -56,7 +56,11 @@ function loadSentence(data) {
         var sentence = data['content'];
         var max = data['max'];
         $('#indata').val(sentence);
-        $('#max').val(max)
+        $('#totalsen').html(max);
         AVAILABLESENTENCES = max;
     }
+    updateTable(); // Update the table view at the same time
+    formatTabsView(document.getElementById('indata')); // update the format taps
+    fitTable(); // make table's size optimal
+    drawTree();
 }
