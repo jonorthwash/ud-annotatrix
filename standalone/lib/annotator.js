@@ -351,13 +351,35 @@ function showDataIndiv() {
 }
 
 
-function goToSentence(argument) {
+function goToSentence() { // TODO: refactor goToSenSent and merge to this func
     if (SERVER_RUNNING) {
+        // saveData();
         console.log('goToSentence');
         var sentNum = $('#currentsen').val();
         getSentence(sentNum);
     } else {
         goToSenSent();
+    }
+}
+
+
+function prevSentence() { // TODO: refactor prevSenSent and merge to this func
+    if (SERVER_RUNNING) {
+        // saveData();
+        var sentNum = $('#currentsen').val() - 1;
+        getSentence(sentNum);
+    } else {
+        prevSenSent();
+    }
+}
+
+
+function nextSentence() {
+    if (SERVER_RUNNING) {
+        var sentNum = Number($('#currentsen').val()) + 1;
+        getSentence(sentNum);
+    } else {
+        prevSenSent();
     }
 }
 
