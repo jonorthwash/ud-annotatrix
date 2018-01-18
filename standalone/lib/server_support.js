@@ -51,7 +51,8 @@ function getCorpusData() {
 function loadData(data) {
     console.log("loadData");
     if (data["content"]) {
-        CONTENTS = data["content"];
+        var corpus = data["content"];
+        localStorage.setItem('corpus', corpus);
     }
     loadDataInIndex();
 }

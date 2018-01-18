@@ -22,7 +22,7 @@ if not os.path.exists(PATH_TO_CORPORA):
 
 
 @app.route('/save', methods=['GET', 'POST'])
-def save_corpus():
+def save_corpus(): # TODO: remove this view
     if request.form:
         data = request.form['content']
         treebank_id = request.form['treebank_id']
@@ -35,14 +35,29 @@ def save_corpus():
 
 
 @app.route('/load', methods=['GET', 'POST'])
-def load_corpus():
+def load_corpus(): # TODO: change / remove this view
     treebank_id = request.form['treebank_id']
-    treebank_id = treebank_id.strip('#')
-    if os.path.exists(PATH_TO_CORPORA + '/' + treebank_id):
-        with open(PATH_TO_CORPORA + '/' + treebank_id) as f:
+    path = treebank_id.strip('#') + '.txt'
+    if os.path.exists(PATH_TO_CORPORA + '/' + path):
+        with open(PATH_TO_CORPORA + '/' + path) as f:
             corpus = f.read()
         return jsonify({'content': corpus})
     return jsonify()
+
+
+@app.route('/annotatrix/upload', methods=['GET', 'POST'])
+def upload_new_corpus():
+    if request.method == 'POST':
+        # corpus_name = request.form['file']
+        corpus = request.files['file']
+        corpus = corpus.read().decode()
+        # print(corpus_name)
+        treebank_id = str(uuid.uuid4())
+
+        with open(PATH_TO_CORPORA + '/' + treebank_id + '.txt', 'w') as f:
+            f.write(corpus)
+        return redirect(url_for('corpus_page', treebank_id=treebank_id))
+    return jsonify({'something': 'went wrong'})
 
 
 @app.route('/annotatrix/running', methods=['GET'])
@@ -58,7 +73,7 @@ def annotatrix():
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    return redirect(url_for('annotatrix'))
+    return send_from_directory('../standalone', 'welcome_page.html')
 
 
 @app.route('/<treebank_id>', methods=['GET', 'POST'])
