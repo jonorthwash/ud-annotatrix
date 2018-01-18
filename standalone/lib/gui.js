@@ -567,26 +567,65 @@ function writeWF(wfInp) {
 function logger(sent, outerIndex, innerIndex) {
     // Log last changed time
     if (LOGGER_ENABLED) {
+        var hasTimeSet = true;
+        
         var unixTime = Date.now();
+        var timeDelta;
+        if(anno_time == 0) {
+            anno_time = Date.now();
+            hasTimeSet = false;
+        }
+        timeDelta = unixTime - anno_time;
+        
         if(innerIndex != undefined) {
-            if(sent.tokens[outerIndex].tokens[innerIndex].misc != undefined) {
-                var firstTime = (sent.tokens[outerIndex].tokens[innerIndex].misc).split(',')[0];
-                firstTime = parseInt(firstTime.split('=')[1])
-                var timeDelta = unixTime - firstTime
+            var misc = sent.tokens[outerIndex].tokens[innerIndex].misc;
+            if(misc != undefined) {
+                if(misc.indexOf('AnnoTime=') != -1) {
+                    var finalMiscContent = '';
 
-                sent.tokens[outerIndex].tokens[innerIndex].misc += ',' + timeDelta;
+                    if(misc.indexOf('|') != -1) {
+                        var miscContent = misc.split('|');
+                        for(var i = 0; i < miscContent.length; i++) {
+                            if(miscContent[i].startsWith('AnnoTime=')) {
+                                miscContent[i] += ',' + timeDelta;
+                            }
+                        }
+                        finalMiscContent = miscContent.join("|");
+                    } else {
+                        finalMiscContent = misc + ',' + timeDelta;
+                    }
+                    sent.tokens[outerIndex].tokens[innerIndex].misc = finalMiscContent;
+                } else {
+                    sent.tokens[outerIndex].tokens[innerIndex].misc += '|AnnoTime=' + timeDelta;
+                    sent.tokens[outerIndex].tokens[innerIndex].misc = sent.tokens[outerIndex].tokens[innerIndex].misc.replace(/\|\|/g, '|');
+                }    
             } else {
-                sent.tokens[outerIndex].tokens[innerIndex].misc = 'AnnoTime=' + unixTime;
+                sent.tokens[outerIndex].tokens[innerIndex].misc = 'AnnoTime=' + timeDelta;
             }
         } else {
-            if(sent.tokens[outerIndex].misc != undefined) {
-                var firstTime = (sent.tokens[outerIndex].misc).split(',')[0];
-                firstTime = parseInt(firstTime.split('=')[1])
-                var timeDelta = unixTime - firstTime
+            var misc = sent.tokens[outerIndex].misc;
+            if(misc != undefined) {
+                if(misc.indexOf('AnnoTime=') != -1) {
+                    var finalMiscContent = '';
 
-                sent.tokens[outerIndex].misc += ',' + timeDelta;
+                    if(misc.indexOf('|') != -1) {
+                        var miscContent = misc.split('|');
+                        for(var i = 0; i < miscContent.length; i++) {
+                            if(miscContent[i].startsWith('AnnoTime=')) {
+                                miscContent[i] += ',' + timeDelta;
+                            }
+                        }
+                        finalMiscContent = miscContent.join("|");
+                    } else {
+                        finalMiscContent = misc + ',' + timeDelta;
+                    }
+                    sent.tokens[outerIndex].misc = finalMiscContent;
+                } else {
+                    sent.tokens[outerIndex].misc += '|AnnoTime=' + timeDelta;
+                    sent.tokens[outerIndex].misc = sent.tokens[outerIndex].misc.replace(/\|\|/g, '|');
+                }    
             } else {
-                sent.tokens[outerIndex].misc = 'AnnoTime=' + unixTime;
+                sent.tokens[outerIndex].misc = 'AnnoTime=' + timeDelta;
             }
         }
     }

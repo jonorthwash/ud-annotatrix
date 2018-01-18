@@ -3,6 +3,7 @@
  * @param {String} text Input text (sentence)
  * @return {String}     Sentence in CoNLL-U format
  */
+var anno_time = 0;
 function plainSent2Conllu(text) {
     // TODO: if there's punctuation in the middle of a sentence,
     // indices shift when drawing an arc
@@ -14,7 +15,15 @@ function plainSent2Conllu(text) {
     console.log('plainSent2Conllu() ' + text);
 
     var sent = new conllu.Sentence();
-    var lines = ["# sent_id = _" + "\n# text = " + text]; // creating comment
+    
+    // creating comments
+    var lines;
+    if (LOGGER_ENABLED) {
+        anno_time = Date.now(); // Get first edit time
+        lines = ["# sent_id = _" + "\n# text = " + text.replace('\n', '' + '\n# anno_time = ' + anno_time)];
+    } else {
+        lines = ["# sent_id = _" + "\n# text = " + text];
+    }
     var tokens = text.split(" ");
 
     // enumerating tokens
