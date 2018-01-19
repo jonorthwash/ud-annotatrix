@@ -453,16 +453,21 @@ function clearLabels() {
 
 function exportCorpora() {
     //Export Corpora to file
-    var finalcontent = getContents();
+    if (SERVER_RUNNING) {
+        console.log('exportCorpora');
+        downloadCorpus();
+    } else {    
+        var finalcontent = getContents();
 
-    var link = document.createElement('a');
-    var mimeType = 'text/plain';
-    document.body.appendChild(link); // needed for FF
-    var fname = localStorage.getItem("filename");
-    if (!fname) {fname = 'ud-annotatrix-corpus.conllu'} // default name
-    link.setAttribute('download', fname);
-    link.setAttribute('href', 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(finalcontent));
-    link.click();
+        var link = document.createElement('a');
+        var mimeType = 'text/plain';
+        document.body.appendChild(link); // needed for FF
+        var fname = localStorage.getItem("filename");
+        if (!fname) {fname = 'ud-annotatrix-corpus.conllu'} // default name
+        link.setAttribute('download', fname);
+        link.setAttribute('href', 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(finalcontent));
+        link.click();
+    }
 }
 
 

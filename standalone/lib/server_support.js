@@ -67,3 +67,19 @@ function loadSentence(data) {
     fitTable(); // make table's size optimal
     drawTree();
 }
+
+
+function downloadCorpus() {
+	var treebank_id = location.href.split('/')[4];
+	console.log(treebank_id);
+    $.ajax({
+        type: "POST",
+        url: "./download",
+        data: {"treebank_id": treebank_id},
+        dataType: "json",
+        success: function (data) {
+        	var corpus = data['corpus'];
+        	console.log(corpus);
+        }
+    });
+}

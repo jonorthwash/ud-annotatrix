@@ -3,10 +3,12 @@ This is the backend for the annotatrix tool. It allows to save a project
 on a server and load it when needed.
 """
 
+from io import BytesIO
 from flask import Flask
 from flask import jsonify
 from flask import request
 from flask import redirect
+from flask import send_file
 from flask import send_from_directory
 from flask import url_for
 import os
@@ -20,6 +22,7 @@ app = Flask(__name__, static_folder='../standalone', static_url_path='/annotatri
 
 if not os.path.exists(PATH_TO_CORPORA):
     os.mkdir(PATH_TO_CORPORA)
+
 
 
 @app.route('/save', methods=['GET', 'POST'])
@@ -51,6 +54,21 @@ def load_sentence():
     return jsonify()
 
 
+@app.route('/annotatrix/download', methods=['GET', 'POST'])
+def download_corpus():
+    if request.form:
+        treebank_id = request.form['treebank_id'].strip('#')
+        db_path = treebank_id + '.db'
+        if os.path.exists(PATH_TO_CORPORA + '/' + db_path):
+            db = CorpusDB(PATH_TO_CORPORA + '/' + db_path)
+            # corpus, corpus_name = db.get_file()
+            with open(treebank_id, 'w') as f:
+                f.write('This is a test.')
+            # return send_file(treebank_id, as_attachment=True, attachment_filename='test.txt')
+            return jsonify({'corpus': 'This is a test.'})
+    return jsonify({'something': 'went wrong'})
+
+
 @app.route('/annotatrix/upload', methods=['GET', 'POST'])
 def upload_new_corpus():
     if request.method == 'POST':
@@ -80,9 +98,9 @@ def index():
     return send_from_directory('../standalone', 'welcome_page.html')
 
 
-@app.route('/<treebank_id>', methods=['GET', 'POST'])
-def index_corpus(treebank_id):
-    return redirect(url_for('corpus_page', treebank_id=treebank_id))
+# @app.route('/<treebank_id>', methods=['GET', 'POST'])
+# def index_corpus(treebank_id):
+#     return redirect(url_for('corpus_page', treebank_id=treebank_id))
 
 
 @app.route('/annotatrix/<treebank_id>')
