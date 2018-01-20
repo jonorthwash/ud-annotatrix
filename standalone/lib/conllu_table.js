@@ -6,7 +6,18 @@ var TABLE_COLUMNS_VISIBILITY = [true, true, true, true, true, true, true, true, 
 
 var tableRowsDefault = 20
 
+function calculateRows() {
+    var windowHeight = $(window).height();
+    var graphDivHeight = $('.controls').outerHeight();
+    var controlsDivHeight = $('.row').outerHeight();
+    var fontSize = $('#indata').css('font-size');
+    var lineHeight = Math.floor(parseInt(fontSize.replace('px','')) * 1.5);
+    var remainingSpace = windowHeight - graphDivHeight - controlsDivHeight - 65;
+    tableRowsDefault = parseInt(remainingSpace/lineHeight);
+}
+
 function fitTable() {
+    calculateRows();
     /* If there're less lines in conllu than the default number of rows
     in the table, fit the number of rows to the number of lines. */
     var curSentence = $("#indata").val();

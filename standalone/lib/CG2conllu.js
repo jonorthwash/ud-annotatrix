@@ -160,7 +160,7 @@ function conllu2CG(conlluText, indent) {
 
 
 function newCgAna(i, tok) {
-    var lemma = (tok.lemma) ? ('"' + tok.lemma + '"') : '';
+    var lemma = (tok.lemma) ? ('"' + tok.lemma + '"') : '""'; // lemma should have "" if blank  #228
     var pos = (tok.upostag) ? tok.upostag : tok.xpostag;
     if (pos == undefined) { pos = "_" };
     var feats = (tok.feats) ? " " + tok.feats.replace(/\|/g, " ") : '';

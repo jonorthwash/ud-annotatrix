@@ -27,6 +27,16 @@ var codeLateX = '';
 var png_exported = false;
 var latex_exported = false;
 
+function measureText(text) {
+    // actual canvas not created yet
+    var context = document.createElement("canvas").getContext("2d");
+    context.font = "1rem sans-serif";
+
+    text = text || "#"; // width for empty string
+    text = "." + text + "."; // minor padding
+    return context.measureText(text).width + "px";
+}
+
 /**
  * Draws the tree.
  * @param {String} content Content of the input textbox.
@@ -176,7 +186,7 @@ function formLayout() {
  * Changes the edge style based on alignment.
  */
 function changeEdgeStyle() {
-    var depEdgeStyle = CY_STYLE[11]["style"];
+    var depEdgeStyle = CY_STYLE[12]["style"];
     if (VERT_ALIGNMENT) {
         depEdgeStyle["text-margin-y"] = 0;
         depEdgeStyle["text-background-opacity"] = 1;
@@ -247,7 +257,7 @@ function conllu2cy(sent) {
         }
     })
     }
-    
+
     ALL_WORK = 0;
     DONE_WORK = 0;
     for(var i = 0; i < graph.length; i++) {
@@ -267,27 +277,36 @@ function conllu2cy(sent) {
         }
     }
     codeLateX = generateLateX(graph);
-    
+
     return graph;
 }
 
-function exportPNG() {
-    if(latex_exported) {
-        $('#exportModal').find('#exportModal-textarea').css('display', 'none');
-    }
-    if(!png_exported) {
-        var b64key = 'base64,';
-        var b64 = cy.png().substring( cy.png().indexOf(b64key) + b64key.length);
-        var imgBlob = b64toBlob(b64, 'image/png');
+function exportSVG() {
+    $('#exportModal').find('#exportedGraph').css('display', 'none');
+    $('#exportModal').find('#latexExportError').css('display', 'none');
+    $('#exportModal').find('#exportLATEX-textarea').css('display', 'none');
 
-        var image = new Image();
-        image.src = URL.createObjectURL(imgBlob);
-        image.id = 'exportedGraph';
-        $(image).css('width', '100%');
-        $('#exportModal').find('.modal-body').append('</br>');
-        $('#exportModal').find('.modal-body').append(image);
-        png_exported = true;
-    }
+    var ctx = new C2S(cy.width, cy.height);
+    cy.renderer().renderTo(ctx);
+    var ctxSerializedSVG = ctx.getSerializedSvg();
+    
+    $('#exportModal').find('#svgResult').attr('src', 'data:image/svg+xml;charset=utf-8,'+ctxSerializedSVG);
+
+    $('#exportModal').find('#svgResult').css('display', 'inline');
+}
+
+function exportPNG() {
+    $('#exportModal').find('#svgResult').css('display', 'none');
+    $('#exportModal').find('#latexExportError').css('display', 'none');
+    $('#exportModal').find('#exportLATEX-textarea').css('display', 'none');
+
+    var b64key = 'base64,';
+    var b64 = cy.png().substring( cy.png().indexOf(b64key) + b64key.length);
+    var imgBlob = b64toBlob(b64, 'image/png');
+
+    $('#exportModal').find('#exportedGraph').attr('src', URL.createObjectURL(imgBlob));
+    $('#exportModal').find('#exportedGraph').css('width', '100%');
+
     $('#exportModal').find('#exportedGraph').css('display', 'inline');
 }
 
@@ -317,50 +336,42 @@ function b64toBlob(b64Data, contentType, sliceSize) {
 
 
 function exportLATEX() {
-    $('#exportModal').find('#exportModal-textarea').css('display', 'inline');
-    if(png_exported) {
-        $('#exportModal').find('#exportedGraph').css('display', 'none');
-    }
-    $('#exportModal').find('#exportModal-textarea').css('display', 'inline');
-    if(!latex_exported) {
-        if(codeLateX == 'error') {
-            $('#exportModal').find('.modal-body').append(
-                '</br>' +
-                'Sorry, the graph has to have all UPOS tags defined!'
-            );
+    $('#exportModal').find('#exportLATEX-textarea').val('');
+
+    $('#exportModal').find('#exportLATEX-textarea').css('display', 'none');
+    $('#exportModal').find('#svgResult').css('display', 'none');
+    $('#exportModal').find('#latexExportError').css('display', 'none');
+    $('#exportModal').find('#exportedGraph').css('display', 'none');
+
+    if(codeLateX == 'error') {
+        $('#exportModal').find('#latexExportError').css('display', 'inline');
+    } else {
+        $('#exportModal').find('#exportLATEX-textarea').val(codeLateX.join('\n'));
+        if($('#exportModal').find('#exportLATEX-textarea').attr("rows") > codeLateX.length) {
+            $('#exportModal').find('#exportLATEX-textarea').attr('rows', codeLateX.length + 2);
         } else {
-            for(var i = 0; i < codeLateX.length; i++) {
-                $('#exportModal').find('#exportModal-textarea').append(
-                    codeLateX[i] +
-                    '\n'
-                );
-            }
-            if($('#exportModal').find('#exportModal-textarea').attr("rows") > codeLateX.length) {
-                $('#exportModal').find('#exportModal-textarea').attr('rows', codeLateX.length + 2);
-            } else {
-                $('#exportModal').find('#exportModal-textarea').attr('rows', $('#exportModal').find('#exportModal-textarea').attr("rows"));
-            }
+            $('#exportModal').find('#exportLATEX-textarea').attr('rows', $('#exportModal').find('#exportLATEX-textarea').attr("rows"));
         }
-        latex_exported = true;
+        $('#exportModal').find('#exportLATEX-textarea').css('display', 'inline');
     }
 }
 
 function generateLateX(graph) {
-    
+
     var latexLines = [];
-    
+
     var tokensLine = '';
     var posLine = '';
     var deprelLines = [];
     for(var i = 0; i < graph.length; i++) {
-        if(graph[i].classes == 'wf') {
+        if(graph[i].classes.indexOf('wf') !== -1) {
             if(graph[i].data.upostag == undefined) {
                 return 'error';
             }
             tokensLine += ' \\& ' + graph[i].data.label;
             posLine += '\\&{\\tt ' + graph[i].data.upostag + '}';
         }
-        
+
         if(graph[i].classes == 'dependency' || graph[i].classes == 'dependency error') {
             if(graph[i].data.label == undefined) {
                 return 'error';
@@ -376,10 +387,10 @@ function generateLateX(graph) {
     }
     tokensLine += ' \\\\';
     tokensLine = tokensLine.replace('\\&', '');
-    
+
     posLine += '\\\\';
     posLine = posLine.replace('\\&', '');
-    
+
     latexLines.push('\\begin{dependency}',
                     '   \\begin{deptext}[column sep=0.4cm]');
     latexLines.push('       ' + tokensLine);
@@ -449,10 +460,7 @@ function createToken(graph, token, spId) {
 
     var nodeWF = token;
     // nodeWF.parent = spId;
-    nodeWF.length = nodeWF.form.length + "em";
-    if(nodeWF.form.length > 3) {
-      nodeWF.length = nodeWF.form.length*0.7 + "em";
-    }
+    nodeWF.length = measureText(nodeWF.form);
     nodeWF.id = "nf" + nodeId;
     nodeWF.label = nodeWF.form;
     nodeWF.state = "normal";
@@ -617,7 +625,7 @@ function makeDependencies(token, nodeId, graph) {
                             if(conflicts.indexOf("subj") !== -1 && (graphLabel === "csubj⊳" || graphLabel === "⊲csubj" || graphLabel === "⊲nsubj" || graphLabel === "nsubj⊳")) {
                                 graph[graphInd].classes = "dependency error";
                             }
-                        }                            
+                        }
                         if(res3.has("objccomp") && (graphLabel === "obj⊳" || graphLabel === "⊲obj" || graphLabel === "ccomp⊳" || graphLabel === "⊲ccomp")) {
                                 graph[graphInd].classes = "dependency error";
                         }
@@ -654,7 +662,7 @@ function makePOS(token, nodeId, graph) {
     var nodePOS = {
         "id": "np" + nodeId,
         "label": pos,
-        "length": (pos.length + 1) + "em"
+        "length": measureText(pos)
     }
     graph.push({"data": nodePOS, "classes": "pos"});
 
@@ -827,8 +835,9 @@ function cleanEdges() {
  */
 function setEdgePosition(thisEdge, thisHeight, coef, diff) {
 	if (!LEFT_TO_RIGHT) {coef *= -1}; // support for RTL
-	if (VERT_ALIGNMENT) {edgeDep.ctrl = [45, 45, 45, 45]};
+	//if (VERT_ALIGNMENT) {edgeDep.ctrl = [45, 45, 45, 45]};
 	//if (Math.abs(coef) != 1) {coef *= defaultCoef};
+  if(VERT_ALIGNMENT) {thisHeight += 30} // so the ctrl points are better placed
 
 	thisHeight *= coef;
 
@@ -847,8 +856,15 @@ function setEdgePosition(thisEdge, thisHeight, coef, diff) {
 		thisEdge.style({"control-point-weights": String(0.01*factor)+" 0.25 0.75 1"});
 		thisEdge.data({'ctrl': [thisHeight, thisHeight, thisHeight, thisHeight]});
 	}
-	thisEdge.style({"source-endpoint": String(-10*coef)+"px -50%"});
-	thisEdge.style({"target-endpoint": String(0*coef)+"% -50%"});
+  if (!VERT_ALIGNMENT) {
+	  thisEdge.style({"source-endpoint": String(-10*coef)+"px -50%"});
+	  thisEdge.style({"target-endpoint": String(0*coef)+"% -50%"});
+  } else {
+    var sourceNum = String(parseInt(thisEdge.data('source').replace("nf", ""), 10)).length*10 + "px"
+    var targetNum = String(parseInt(thisEdge.data('target').replace("nf", ""), 10)).length*10 + "px"
+    thisEdge.style({"source-distance-from-node": sourceNum})
+    thisEdge.style({"target-distance-from-node": targetNum})
+  }
 
 	//edgeDep.ctrl = edgeDep.ctrl.map(function(el){ return el*coef; });
 }
