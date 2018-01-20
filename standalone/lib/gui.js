@@ -135,6 +135,7 @@ function removeArc(destNodes) {
 
     var sent = buildSent();
     var prevRelations = {}
+    DISMISSED_DEPRELS = []
 
     // support for multiple arcs
     $.each(destNodes, function(i, node) {
@@ -260,8 +261,8 @@ function keyDownClassifier(key) {
     } else if (deprelInp.length) {
         if (key.which == ENTER) {
             var res = deprelInp.val();
-            // to get rid of the magic direction arrows
-            res = res.replace(/[⊳⊲]/, '');
+            // to get rid of the magic direction arrows and warning signs
+            res = res.replace(/[⚠⊳⊲]/g, '');
             writeDeprel(res);
         };
     } else if (wf.length == 1) {
@@ -363,8 +364,8 @@ function changeNode() {
     // for some reason, there are problems with label in deprels without this 
     if (this.data("label") == undefined) {this.data("label", "")};
 
-    // to get rid of the magic direction arrows
-    var res = this.data("label").replace(/[⊳⊲]/, '');
+    // to get rid of the magic direction arrows and warning signs
+    var res = this.data("label").replace(/[⚠⊳⊲]/g, '');
     this.data("label", res);
 
  //   console.log("[2] changeNode() " + this.data("label") + " " + res);

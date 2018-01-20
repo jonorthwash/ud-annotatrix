@@ -10,6 +10,7 @@ var ST_COLOR = "#bcd2ff"
 var SCROLL_ZOOM_INCREMENT = 0.05;
 var TREE_ = {}; // This map allows us to address the Token object given an ID
 var VIEW_ENHANCED = false;
+var DISMISSED_DEPRELS = [];
 
 // Used for calculating progress
 var ALL_WORK = 0
@@ -60,6 +61,39 @@ function conlluDraw(content) {
         layout: layout,
         style: CY_STYLE,
         elements: conllu2cy(sent)
+    });
+    
+    cy.$('edge.error').qtip({
+        content: function(){
+            var l = this[0]['_private']['data']['label'].replace(/[⚠⊳⊲]/g, '');
+            var id = this.id();
+            $('.qtip').click(function() {
+                DISMISSED_DEPRELS.push(id);
+                $('.qtip', window.parent.document).qtip("hide");
+                drawTree();
+            });
+            if($.inArray(id, DISMISSED_DEPRELS) != -1) {
+                return l + ' is not in the list of Universal dependency relations.';
+            } else {
+                return l + ' is not in the list of Universal dependency relations.';
+            }
+        },
+        position: {
+            my: 'top center',
+            at: 'bottom center',
+            adjust: {
+                y: 10
+            }
+        },
+        show: {
+            event: 'mouseover'
+        },
+        hide: {
+            event: 'mouseout unfocus'  
+        },
+        style: {
+            classes: 'qtip-annotatrix',
+        }
     });
 
 //    if(content.split('\n').length > 10) {
@@ -549,18 +583,7 @@ function makeDependencies(token, nodeId, graph) {
 		}
 	}
 
-	// Append ⊲ or ⊳ to indicate direction of the arc (helpful if
-	// there are many arcs.
-	var deprelLabel = deprel;
-	if(parseInt(head) < parseInt(nodeId) && LEFT_TO_RIGHT) {
-		deprelLabel = deprelLabel + '⊳';
-	} else if(parseInt(head) > parseInt(nodeId) && LEFT_TO_RIGHT) {
-		deprelLabel = '⊲' + deprelLabel;
-	} else if(parseInt(head) < parseInt(nodeId) && !LEFT_TO_RIGHT) {
-		deprelLabel = '⊲' + deprelLabel;
-	} else if(parseInt(head) > parseInt(nodeId) && !LEFT_TO_RIGHT) {
-		deprelLabel = deprelLabel + '⊳';
-	}
+	var deprelLabel = deprelClass(deprel, head, nodeId, validDep);
 
 	if (token.head && token.head != 0) {
 		var headId = strWithZero(head);
@@ -591,7 +614,7 @@ function makeDependencies(token, nodeId, graph) {
 		} else if (deprel == "" || deprel == undefined) {
 			graph.push({"data": edgeDep, "classes": "dependency incomplete"});
 			//console.log("makeDependencies(): incomplete @" + deprel);
-		}else{
+		} else {
 			graph.push({"data": edgeDep, "classes": "dependency error"});
 			//console.log("makeDependencies(): error @" + deprel);
 		}
@@ -631,6 +654,17 @@ function makeDependencies(token, nodeId, graph) {
                         }
                     }
                 }
+        
+                if(DISMISSED_DEPRELS.length > 0) {
+                    for(var i = 0; i < graph.length; i++) {
+                        for(var j = 0; j < DISMISSED_DEPRELS.length; j++) {
+                            if(graph[i].classes == 'dependency error' && graph[i].data.id == DISMISSED_DEPRELS[j]) {
+                                graph[i].classes = 'dependency'
+                                graph[i].data.label = graph[i].data.label.replace('⚠', '');
+                            }
+                        }
+                    }
+                }
 		/*if(!res[0]) {
 			//console.log('[3] writeDeprel is_cyclic=true');
 		} else {
@@ -639,6 +673,33 @@ function makeDependencies(token, nodeId, graph) {
 		//console.log(edgeDep);
 	};
 	return graph;
+}
+
+function deprelClass(deprel, head, nodeId, isValid) {
+    // Append ⊲ or ⊳ to indicate direction of the arc (helpful if
+	// there are many arcs.
+    var warningSign = '⚠';
+    if(isValid) {
+        if(parseInt(head) < parseInt(nodeId) && LEFT_TO_RIGHT) {
+            return deprel + '⊳';
+        } else if(parseInt(head) > parseInt(nodeId) && LEFT_TO_RIGHT) {
+            return '⊲' + deprel;
+        } else if(parseInt(head) < parseInt(nodeId) && !LEFT_TO_RIGHT) {
+            return '⊲' + deprel;
+        } else if(parseInt(head) > parseInt(nodeId) && !LEFT_TO_RIGHT) {
+            return deprel + '⊳';
+        }
+    } else {
+        if(parseInt(head) < parseInt(nodeId) && LEFT_TO_RIGHT) {
+            return warningSign + '\n' + deprel + '⊳';
+        } else if(parseInt(head) > parseInt(nodeId) && LEFT_TO_RIGHT) {
+            return warningSign + '\n' + '⊲' + deprel;
+        } else if(parseInt(head) < parseInt(nodeId) && !LEFT_TO_RIGHT) {
+            return warningSign + '\n' + '⊲' + deprel;
+        } else if(parseInt(head) > parseInt(nodeId) && !LEFT_TO_RIGHT) {
+            return warningSign + '\n' + deprel + '⊳';
+        }
+    }
 }
 
 /**
