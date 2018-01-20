@@ -56,19 +56,15 @@ def load_sentence():
 
 @app.route('/annotatrix/download', methods=['GET', 'POST'])
 def download_corpus():
-    if request.form:
-        treebank_id = request.form['treebank_id'].strip('#')
+    if request.args:
+        treebank_id = request.args['treebank_id'].strip('#')
         db_path = treebank_id + '.db'
         if os.path.exists(PATH_TO_CORPORA + '/' + db_path):
             db = CorpusDB(PATH_TO_CORPORA + '/' + db_path)
             corpus, corpus_name = db.get_file()
-            # with open(treebank_id, 'w') as f: 
-            #     f.write('This is a test.')
-            # return send_file(treebank_id, as_attachment=True, attachment_filename='test.txt')
-            return jsonify({ # TODO: implement a way to download files directly from server ↑
-                'corpus': corpus,
-                'filename': corpus_name
-                })
+            with open(PATH_TO_CORPORA + '/' + treebank_id, 'w') as f: 
+                f.write(corpus)
+            return send_file(PATH_TO_CORPORA + '/' + treebank_id, as_attachment=True, attachment_filename=corpus_name)
     return jsonify({'corpus': 'something went wrong'})
 
 

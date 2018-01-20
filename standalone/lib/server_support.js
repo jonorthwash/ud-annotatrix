@@ -71,25 +71,9 @@ function loadSentence(data) {
 
 function downloadCorpus() {
     var treebank_id = location.href.split('/')[4];
-    console.log(treebank_id);
-    $.ajax({
-        type: "POST",
-        url: "./download",
-        data: {"treebank_id": treebank_id},
-        dataType: "json",
-        success: function (data) {
-        	console.log('AAAAA');
-            var corpus = data['corpus']; // TODO: implement a way to download files directly from server
-            console.log(typeof(corpus));
-            var fname = data['filename'];
-            var link = document.createElement('a');
-            var mimeType = 'text/plain';
-            document.body.appendChild(link); // needed for FF
-            if (!fname) {fname = 'ud-annotatrix-corpus.conllu'} // default name
-            link.setAttribute('download', fname);
-            link.setAttribute('href', 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(corpus));
-            link.click();
-            console.log('done');
-        }
-    });
+    var link = document.createElement('a');
+    document.body.appendChild(link); // needed for FF
+    link.setAttribute('href', './download?treebank_id=' + treebank_id);
+    link.setAttribute('target', '_blank')
+    link.click();
 }
