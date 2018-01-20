@@ -61,12 +61,15 @@ def download_corpus():
         db_path = treebank_id + '.db'
         if os.path.exists(PATH_TO_CORPORA + '/' + db_path):
             db = CorpusDB(PATH_TO_CORPORA + '/' + db_path)
-            # corpus, corpus_name = db.get_file()
-            with open(treebank_id, 'w') as f:
-                f.write('This is a test.')
+            corpus, corpus_name = db.get_file()
+            # with open(treebank_id, 'w') as f: 
+            #     f.write('This is a test.')
             # return send_file(treebank_id, as_attachment=True, attachment_filename='test.txt')
-            return jsonify({'corpus': 'This is a test.'})
-    return jsonify({'something': 'went wrong'})
+            return jsonify({ # TODO: implement a way to download files directly from server ↑
+                'corpus': corpus,
+                'filename': corpus_name
+                })
+    return jsonify({'corpus': 'something went wrong'})
 
 
 @app.route('/annotatrix/upload', methods=['GET', 'POST'])

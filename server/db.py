@@ -59,3 +59,15 @@ class CorpusDB():
         cur.execute('UPDATE corpus SET sentence = (?) WHERE SentNum = (?)', (sentence, sent_num))
         db.commit()
         db.close()
+
+    def get_file(self):
+        db = sqlite3.connect(self.path)
+        cur = db.cursor()
+        cur.execute('SELECT sentence FROM corpus ORDER BY SentNum')
+        corpus = cur.fetchall()
+        corpus = '\n\n'.join([tu[0] for tu in corpus])
+        db.commit()
+        cur.execute('SELECT corp_name FROM meta')
+        corpus_name = cur.fetchone()[0]
+        db.close()
+        return corpus, corpus_name
