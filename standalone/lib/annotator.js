@@ -167,7 +167,7 @@ function loadFromUrl(argument) {
 }
 
 
-function loadFromFileNew(e) { // WORKING ON THIS
+function loadFromFile(e) { // WORKING ON THIS
     /*
     Loads a corpus from a file from the user's computer,
     puts the filename into localStorage.
@@ -188,32 +188,6 @@ function loadFromFileNew(e) { // WORKING ON THIS
             loadDataInIndex();
         }
     }
-    reader.readAsText(file);
-}
-
-
-function loadFromFile(e) {
-    /* loads a corpus from a file from the user's computer,
-    changes the FILENAME variable. */
-    CONTENTS = "";
-    var file = e.target.files[0];
-    FILENAME = file.name; // TODO: you can get rid of FILENAME if you store it in localStorage
-
-    // check if the code is invoked
-    var ext = FILENAME.split(".")[FILENAME.split(".").length - 1]; // TODO: should be more beautiful way
-    if (ext == "txt") {
-        FORMAT = "plain text";
-    }
-
-    if (!file) {
-        return;
-    }
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        CONTENTS = e.target.result;
-        localStorage.setItem("corpus", CONTENTS);
-        loadDataInIndex();
-    };
     reader.readAsText(file);
 }
 
