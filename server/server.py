@@ -50,7 +50,7 @@ def load_sentence():
             sent, max_sent = db.get_sentence(sent_num)
             return jsonify({'content': sent, 'max': max_sent})
         else:
-            return jsonify({'content': 'something went wrong'})
+            return jsonify({'content': 'something wrong'})
     return jsonify()
 
 
@@ -104,6 +104,10 @@ def index():
 
 @app.route('/annotatrix/<treebank_id>')
 def corpus_page(treebank_id):
+    if treebank_id == 'help.html':
+        return send_from_directory('../standalone', 'help.html')
+    if treebank_id == 'export.html':
+        return send_from_directory('../standalone', 'export.html')
     return send_from_directory('../standalone', 'annotator.html')
 
 
