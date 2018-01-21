@@ -508,7 +508,7 @@
      inkscape:pageshadow="2"
      inkscape:zoom="0.18826688"
      inkscape:cx="1581.6315"
-     inkscape:cy="2429.4563"
+     inkscape:cy="2137.3178"
      inkscape:document-units="in"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -540,12 +540,12 @@
        id="guide13802"
        inkscape:locked="false" />
     <sodipodi:guide
-       position="624.02808,298.84172"
+       position="624.02804,284.02505"
        orientation="0,1"
        id="guide6129"
        inkscape:locked="false" />
     <sodipodi:guide
-       position="349.93541,486.25563"
+       position="308.10735,480.43479"
        orientation="0,1"
        id="guide6131"
        inkscape:locked="false" />
@@ -677,12 +677,12 @@
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.16666603px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="22.587362"
-       y="-9.9508076"
+       y="4.8658581"
        id="text13800"><tspan
          sodipodi:role="line"
          id="tspan13798"
          x="22.587362"
-         y="-9.9508076"
+         y="4.8658581"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.16666603px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke-width:0.26458332">TREE-ONLY, ZOOM</tspan></text>
     <text
        xml:space="preserve"
@@ -696,7 +696,8 @@
          style="font-size:16.93333244px;line-height:7.05555534px;text-align:center;text-anchor:middle;stroke-width:0.26458332"
          id="tspan5644">Francis Tyers, Maria Sheyanova, Jonathan Washington</tspan></text>
     <g
-       id="g9872">
+       id="g9872"
+       transform="translate(0,5.8208336)">
       <text
          id="text13792"
          y="-194.92804"
@@ -719,7 +720,7 @@
     </g>
     <g
        id="g9862"
-       transform="translate(-1.6830882)">
+       transform="translate(-1.6830882,5.8208336)">
       <text
          id="text13796"
          y="-197.05556"
@@ -742,7 +743,7 @@
     </g>
     <g
        id="g9867"
-       transform="translate(3.107539e-5)">
+       transform="translate(3.107539e-5,5.8208336)">
       <text
          id="text14386"
          y="-194.37396"
@@ -1056,7 +1057,7 @@
          id="tspan5758">possible by:</tspan></text>
     <g
        id="g9901"
-       transform="translate(-3.3843755e-5)">
+       transform="translate(-3.3843755e-5,14.81667)">
       <text
          id="text5986"
          y="-11.473796"
@@ -5095,7 +5096,7 @@ sVgsMpksEAigOAAAAAAAAADG8T8D5H45Jv9SbgAAAABJRU5ErkJggg==
        height="247.82803"
        width="368.29999" />
     <image
-       y="-1.8417535"
+       y="12.974909"
        x="11.44645"
        id="image6048"
        xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA/YAAAMHCAIAAAActFu/AAAAA3NCSVQICAjb4U/gAAAAEHRFWHRT
@@ -7241,21 +7242,20 @@ whwU4/Uc480AAAAASUVORK5CYII=
          style="font-size:16.93333244px;line-height:0.69999999;text-align:center;text-anchor:middle;fill:#0000ff;fill-opacity:1;stroke-width:0.26458332"
          id="tspan6079">https://github.com/jonorthwash/ud-annotatrix/</tspan></text>
     <g
-       id="g9896"
-       transform="translate(17.127659)">
+       id="g9958">
       <text
          id="text13800-2"
-         y="-10.858651"
-         x="367.48019"
+         y="3.9580188"
+         x="302.69037"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.16666603px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
          xml:space="preserve"><tspan
            style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.16666603px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke-width:0.26458332"
-           y="-10.858651"
-           x="367.48019"
+           y="3.9580188"
+           x="302.69037"
            id="tspan13798-2"
-           sodipodi:role="line">EXPORT</tspan></text>
+           sodipodi:role="line">MULTI-FORMAT EXPORT</tspan></text>
       <g
-         transform="matrix(1.2185592,0,0,1.2185592,-428.06766,221.25408)"
+         transform="matrix(1.2185592,0,0,1.2185592,-410.94,236.07075)"
          id="g6120">
         <image
            y="-183.08165"
@@ -8745,5 +8745,16 @@ NE0776FcP6Np2nUvAACwAL76BADAWv8EoUKUYLXIxQ4AAAAASUVORK5CYII=
            width="128.60023" />
       </g>
     </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:25.39999962px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="11.446449"
+       y="-220.52043"
+       id="text10895-7"><tspan
+         sodipodi:role="line"
+         id="tspan10893-3"
+         x="11.446449"
+         y="-220.52043"
+         style="stroke-width:0.26458332">Other useful features include:</tspan></text>
   </g>
 </svg>
