@@ -380,7 +380,7 @@ function nextSentence() {
         var sentNum = Number($('#currentsen').val()) + 1;
         getSentence(sentNum);
     } else {
-        prevSenSent();
+        nextSenSent();
     }
 }
 

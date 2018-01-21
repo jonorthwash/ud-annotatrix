@@ -63,7 +63,7 @@ function loadSentence(data) {
         AVAILABLESENTENCES = max;
     }
     updateTable(); // Update the table view at the same time
-    formatTabsView(document.getElementById('indata')); // update the format taps
+    formatTabsView(); // update the format taps
     fitTable(); // make table's size optimal
     drawTree();
 }
