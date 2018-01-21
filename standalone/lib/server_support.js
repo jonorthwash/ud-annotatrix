@@ -4,15 +4,24 @@ var SERVER_RUNNING = false;
 
 
 function checkServer() {
-    /* Tries to read a file from /running. If it works, sets SERVER_RUNNING
+    /* Tries to send a request to /annotatrix/running. If it works, sets SERVER_RUNNING
     to true and loads data from server. */
-
-    // TODO: to get rid of the error, read about promisses:
-    // https://qntm.org/files/promise/promise.html
-    fetch('running').then(function(data){
-        console.log("Response from server, status: " + data["status"]);
-        SERVER_RUNNING = true;
-    });
+    try {
+        $.ajax({
+            type: 'POST',
+            url: '/annotatrix/running',
+            data: {
+                'content': 'check'
+            },
+            dataType: "json",
+            success: function(data){
+                console.log(data);
+                SERVER_RUNNING = true;
+            }    
+        }) 
+    } catch (e) {
+    	SERVER_RUNNING = false;
+    }
 }
 
 

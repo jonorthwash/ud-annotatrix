@@ -54,7 +54,7 @@ function onReady() {
     - binds handlers to DOM emements
     */
 
-    checkServer() // check if server is running
+    checkServer(); // check if server is running
     window.undoManager = new UndoManager();  // undo support
     setUndos(window.undoManager);
     loadFromUrl();

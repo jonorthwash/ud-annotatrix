@@ -81,9 +81,9 @@ def upload_new_corpus():
     return jsonify({'something': 'went wrong'})
 
 
-@app.route('/annotatrix/running', methods=['GET'])
+@app.route('/annotatrix/running', methods=['GET', 'POST'])
 def running():
-    return jsonify()
+    return jsonify({'status': 'running'})
 
 
 @app.route('/annotatrix/', methods=['GET', 'POST'])
