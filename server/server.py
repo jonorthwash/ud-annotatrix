@@ -3,6 +3,7 @@ This is the backend for the annotatrix tool. It allows to save a project
 on a server and load it when needed.
 """
 
+import sys
 from io import BytesIO
 from flask import Flask
 from flask import jsonify
@@ -110,10 +111,13 @@ def index():
 
 @app.route('/annotatrix/<treebank_id>')
 def corpus_page(treebank_id):
-    if treebank_id == 'help.html':
-        return send_from_directory('../standalone', 'help.html')
-    if treebank_id == 'export.html':
-        return send_from_directory('../standalone', 'export.html')
+    print('XX:',treebank_id, file=sys.stderr)
+    if '.' in treebank_id:
+        return send_from_directory('../standalone', treebank_id)
+#    if treebank_id == 'help.html':
+#        return send_from_directory('../standalone', 'help.html')
+#    if treebank_id == 'export.html':
+#        return send_from_directory('../standalone', 'export.html')
     return send_from_directory('../standalone', 'annotator.html')
 
 
