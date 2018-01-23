@@ -63,6 +63,7 @@ function onReady() {
         if (!SERVER_RUNNING) {
             loadFromLocalStorage(); // trying to load the corpus from localStorage
         } else {
+            $('#upload').css('display', 'none');
             getSentence(1); // loading a sentence from the server
         }
     }, 300)
