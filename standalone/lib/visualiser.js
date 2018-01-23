@@ -456,10 +456,16 @@ function createToken(graph, token, spId) {
     // nodeWF.parent = spId;
     nodeWF.id = "nf" + nodeId;
     nodeWF.label = nodeWF.form;
+// FAIL test: Kibbutzgrundarna kom från en miljö, som utmärktes av ett strängt patriarkaliskt system, där första budet löd:
+/*
     if(isUpperCase(nodeWF.label)) {
         nodeWF.length = nodeWF.label.length * 13;
     } else {
         nodeWF.length = nodeWF.label.length * 11;
+    }*/ 
+    nodeWF.length = nodeWF.form.length + "em";
+    if(nodeWF.form.length > 3) {
+      nodeWF.length = nodeWF.form.length*0.7 + "em";
     }
     nodeWF.state = "normal";
 
