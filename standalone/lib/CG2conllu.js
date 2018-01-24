@@ -75,6 +75,7 @@ function formTokens(CGtext) {
 
 
 function getAnalyses(line, analyses) {
+    console.log(analyses);
     // first replace space (0020) with · for lemmas and forms containing
     // whitespace, so that the parser doesn't get confused.
     var quoted = line.replace(/.*(".*?").*/, '$1');
@@ -87,6 +88,10 @@ function getAnalyses(line, analyses) {
             analyses.lemma = ana.replace(/"([^<>]*)"/, '$1');
         } else if (ana.match(/#[0-9]+->[0-9]+/)) {
             analyses.head = ana.replace(/#([0-9]+)->([0-9]+)/, '$2').trim();
+            // in CG sometimes heads are the same as the token id, this breaks visualisation #264
+            if(analyses.id == analyses.head) {
+                analyses.head = '';
+            }
         } else if (ana.match(/#[0-9]+->/)) {
             // pass
         } else if (ana.match(/@[a-z:]+/)) {
