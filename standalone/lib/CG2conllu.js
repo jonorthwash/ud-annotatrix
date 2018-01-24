@@ -94,8 +94,8 @@ function getAnalyses(line, analyses) {
             }
         } else if (ana.match(/#[0-9]+->/)) {
             // pass
-        } else if (ana.match(/@[a-z:]+/)) {
-            analyses.deprel = ana.replace(/@([a-z:]+)/, '$1');
+        } else if (ana.match(/@[A-Za-z:]+/)) {
+            analyses.deprel = ana.replace(/@([A-Za-z:]+)/, '$1');
         } else if (n < 2) {
             analyses.upostag = ana; // TODO: what about xpostag?
         } else {
