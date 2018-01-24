@@ -7,6 +7,8 @@ The online interface is currently available from several places:
 
 To use it offline, clone this repository to your local machine and open the file `index.html` in your browser.
 
+Alternatively, you can serve the files using a web server.  An easy way to do this locally is to run `python3 -m http.server` in the cloned directory.
+
 ## Support
 
 Having a problem with Annotatrix ? Want some one-on-one support ? You can try <tt>#_u-dep</tt> on <tt>irc.freenode.net</tt> or
