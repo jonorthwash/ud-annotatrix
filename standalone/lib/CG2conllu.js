@@ -3,6 +3,9 @@
 function CG2conllu(CGtext) {
     /* Takes a string in CG, returns a string in conllu. */
 
+    // TODO: Check for "<s>" ... "</s>" and if you have matching things treat them
+    // as comments with #
+
     if (ambiguetyPresent(CGtext)) { // to abort conversion if there are ambiguous analyses
         return;
     }
