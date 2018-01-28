@@ -941,15 +941,12 @@ $(document).ready(function(){
 		//return false;  // only needed if want to override all the shortcuts
 	}
 
-	//$('#helpModal').on('show.bs.modal', console.log);
-
 	$('#helpModal').on('shown.bs.modal', function(e) {
         // $("#treebankSize").text(CONTENTS.length); // TODO: Report the current loaded treebank size to user
 		$(e.target).find('.modal-body').load('help.html');
 	});
     
     $('#exportModal').on('shown.bs.modal', function(e) {
-		//alert('HARGLE BARGLE');
         // $("#treebankSize").text(CONTENTS.length); // TODO: Report the current loaded treebank size to user
 		$(e.target).find('.modal-body').load('export.html', function() {
             exportPNG(); 
@@ -976,8 +973,4 @@ $(document).ready(function(){
 			toggleTableColumn(columnHeader.title);
 		}
 	});
-	// this way of doing it only responds when icon is clicked:
-	//$('.tableColHeader').on('click', function(e) {
-	//	toggleTableColumn(this.title);
-	//});
 });
