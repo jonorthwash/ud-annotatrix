@@ -907,9 +907,9 @@ $(document).ready(function(){
 		if(e.keyCode == 13) {
 			goToSentence();
 		} else if(e.keyCode == UP || e.keyCode == K) {
-			prevSenSent();
+			prevSentence();
 		} else if(e.keyCode == DOWN || e.keyCode == J) {
-			nextSenSent();
+			nextSentence();
 		} else if(e.keyCode == MINUS) {
 			removeCurSent();
 		} else if(e.keyCode == EQUALS ) {
@@ -924,11 +924,11 @@ $(document).ready(function(){
 		map[e.key] = e.type == 'keydown';
 		/* insert conditional here */
 		if(map["Shift"] && map["PageDown"]){
-			nextSenSent();
+			nextSentence();
 			map = [];
 			map["Shift"] = true; // leave Shift so that another event can be fired
 		}else if(map["Shift"] && map["PageUp"]){
-			prevSenSent();
+			prevSentence();
 			map = [];
 			map["Shift"] = true; // leave Shift so that another event can be fired
 		}else if(map["Control"] && map["z"]) {
