@@ -4,6 +4,7 @@ The online interface is currently available from several places:
 
 * [Masha's GitHub pages](https://maryszmary.github.io/ud-annotatrix/standalone/annotator.html). 
 * [Fran's GitHub pages](https://ftyers.github.io/ud-annotatrix/). 
+* [Server version on web-corpora](http://web-corpora.net/wsgi3/annotatrix/)(beta).
 
 To use it offline, clone this repository to your local machine and open the file `index.html` in your browser.
 
