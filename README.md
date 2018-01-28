@@ -7,6 +7,8 @@ The online interface is currently available from several places:
 
 To use it offline, clone this repository to your local machine and open the file `index.html` in your browser.
 
+Alternatively, you can serve the files using a web server.  An easy way to do this locally is to run `python3 -m http.server` in the cloned directory.
+
 ## Support
 
 Having a problem with Annotatrix ? Want some one-on-one support ? You can try <tt>#_u-dep</tt> on <tt>irc.freenode.net</tt> or
@@ -79,3 +81,11 @@ The server package provides additional support for deploying the web-interface o
 * Mariya Sheyanova (@maryszmary; [documentation of the changes](http://wiki.apertium.org/wiki/UD_annotatrix/UD_annotatrix_at_GSoC_2017))
 * Tai Vongsathorn Warner (@MidasDoas; [documentation of the changes](https://wikis.swarthmore.edu/ling073/User:Twarner2/Final_project))
 * Francis Tyers (@ftyers)
+* Grzegorz Stark (@gstark0)
+* Jonathan Pan (@JPJPJPOPOP)
+* Suresh Michael Peiris (@tsuresh)
+* Diogo Fernandes (@diogoscf)
+* Robin Richtsfeld (@Androbin)
+* Sushain Cherivirala (@sushain97)
+* Kevin Brubeck Unhammer (@unhammer)
+* Ethan Yang (@thatprogrammer1)
