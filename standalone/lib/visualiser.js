@@ -616,6 +616,7 @@ function makeDependencies(token, nodeId, graph) {
                     }
                 }
 
+/*
                 var res3 = is_relation_conflict(TREE_);
                 for (var graphInd = 0; graphInd < graph.length; graphInd++) {
                     if(graph[graphInd].classes.substring(0,10) === "dependency") {
@@ -634,7 +635,7 @@ function makeDependencies(token, nodeId, graph) {
                                 graph[graphInd].classes = "dependency error";
                         }
                     }
-                }
+                }*/
 		/*if(!res[0]) {
 			//console.log('[3] writeDeprel is_cyclic=true');
 		} else {
