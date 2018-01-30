@@ -475,13 +475,13 @@ function drawTree() {
     try {cy.destroy()} catch (err) {}; // remove the previous tree, if there is one
 
     var content = $("#indata").val(); // TODO: rename
+    var format = detectFormat(content);
 
     // -- to be moved out-- 
-    content = content.replace(/ +\n/, '\n'); // remove extra spaces at the end of lines. #89
-    $("#indata").val(content); // TODO: what is this line for?
+    // content = content.replace(/ +\n/, '\n'); // remove extra spaces at the end of lines. #89
+    // $("#indata").val(content); // TODO: what is this line for?
 
-    var format = detectFormat(content);
-    $("#detected").html("Detected: " + format + " format");
+    // $("#detected").html("Detected: " + format + " format");
     // to be moved out --
 
     if (format == "CG3") {
@@ -505,12 +505,12 @@ function drawTree() {
     var newContent = cleanConllu(content); // TODO: move this one inside of this func
 
     // If there are >1 CoNLL-U format sentences is in the input, treat them as such
-    conlluMultiInput(newContent); // TODO: move this one also inside of this func, and make a separate func for calling them all at the same time 
+    // conlluMultiInput(newContent); // TODO: move this one also inside of this func, and make a separate func for calling them all at the same time 
 
-    if(newContent != content) {
-        content = newContent;
-        $("#indata").val(content);
-    }
+    // if(newContent != content) {
+    //     content = newContent;
+    //     $("#indata").val(content);
+    // }
     // -- to be moved out -- 
 
     conlluDraw(content);
