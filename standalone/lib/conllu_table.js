@@ -10,9 +10,10 @@ function calculateRows() {
     var windowHeight = $(window).height();
     var graphDivHeight = $('.controls').outerHeight();
     var controlsDivHeight = $('.row').outerHeight();
+    var labelHeight = $('#filemanagement').outerHeight();
     var fontSize = $('#indata').css('font-size');
     var lineHeight = Math.floor(parseInt(fontSize.replace('px','')) * 1.5);
-    var remainingSpace = windowHeight - graphDivHeight - controlsDivHeight - 65;
+    var remainingSpace = windowHeight - graphDivHeight - controlsDivHeight - labelHeight - 65;
     tableRowsDefault = parseInt(remainingSpace/lineHeight);
 }
 
