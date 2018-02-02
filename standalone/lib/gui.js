@@ -67,7 +67,7 @@ function drawArcs(evt) {
         var actNode = cy.$(".activated");
 
         this.addClass("activated");
-        
+
         // if there is an activated node already
         if (actNode.length == 1) {
             writeArc(actNode, this);
@@ -90,9 +90,9 @@ function writeArc(sourceNode, destNode) {
     var idx = findConlluId(destNode)[1];
     var sent = buildSent();
     var tokens = sent.tokens;
-    console.log(idx + ' ' + tokens);
+    // console.log(idx + ' ' + tokens);
     var thisToken = tokens[idx];
-    console.log('writeArc ' + destIndex + ' ' + thisToken['upostag']); 
+    // console.log('writeArc ' + destIndex + ' ' + thisToken['upostag']);
     var sentAndPrev = changeConlluAttr(sent, indices, "head", sourceIndex);
 
     // If the target POS tag is PUNCT set the deprel to @punct [99%]
@@ -171,10 +171,10 @@ function removeArc(destNodes) {
 
 
 function selectArc() {
-    /* 
+    /*
     Activated when an arc is selected. Adds classes showing what is selected.
     */
-    
+
     if(!ISEDITING) {
         // if the user clicked an activated node
         if (this.hasClass("selected")) {
@@ -230,19 +230,19 @@ function keyDownClassifier(key) {
     //         drawTree();
     //     }
     // });
-    
+
     if (key.which == ESC) {
         key.preventDefault();
         drawTree();
     };
-    
+
     var isEditFocused = $('#edit').is(':focus');
     if(isEditFocused) {
         if (key.which == TAB) {
             key.preventDefault();
         }
     }
-    
+
     if (selArcs.length) {
         if (key.which == DEL_KEY || key.which == BACKSPACE) {
             removeArc(destNodes);
@@ -261,7 +261,7 @@ function keyDownClassifier(key) {
         if (key.which == ENTER) {
             var res = deprelInp.val();
             // to get rid of the magic direction arrows
-            res = res.replace(/[⊳⊲]/, '');
+            res = res.replace(/[⊳⊲∆∇]/, '');
             writeDeprel(res);
         };
     } else if (wf.length == 1) {
@@ -297,13 +297,13 @@ function keyDownClassifier(key) {
             if(key.shiftKey) { // zoom in
                 CURRENT_ZOOM += 0.1;
             }  else {  // fit to screen
-                CURRENT_ZOOM = cy.fit(); 
+                CURRENT_ZOOM = cy.fit();
             }
             cy.zoom(CURRENT_ZOOM);
             cy.center();
         } else if((key.which == MINUS || key.which == 173) ) { // zoom out
             CURRENT_ZOOM = cy.zoom();
-            //if(key.shiftKey) { 
+            //if(key.shiftKey) {
                 CURRENT_ZOOM -= 0.1;
             //}
             cy.zoom(CURRENT_ZOOM);
@@ -325,7 +325,7 @@ function moveArc() {
     $.each(nodes, function(n, node){
         node.removeEventListener("click", drawArcs);
         node.addEventListener("click", getArc);
-    });  
+    });
 }
 
 
@@ -345,8 +345,9 @@ function removeSup(st) {
 
 
 function changeNode() {
-    console.log("changeNode() " + Object.entries(this) + " // " + this.id());
-    
+
+    // console.log("changeNode() " + Object.entries(this) + " // " + this.id());
+
     ISEDITING = true;
 
     this.addClass("input");
@@ -360,11 +361,11 @@ function changeNode() {
     }
     if (id == "np") {nodeType = "UPOS"};
 
-    // for some reason, there are problems with label in deprels without this 
+    // for some reason, there are problems with label in deprels without this
     if (this.data("label") == undefined) {this.data("label", "")};
 
     // to get rid of the magic direction arrows
-    var res = this.data("label").replace(/[⊳⊲]/, '');
+    var res = this.data("label").replace(/[⊳⊲∆∇]/, '');
     this.data("label", res);
 
  //   console.log("[2] changeNode() " + this.data("label") + " " + res);
@@ -379,18 +380,18 @@ function changeNode() {
         $(".activated#mute").css("width", $(window).width()-10);
     }
 
-    // TODO: rank the labels + make the style better  
+    // TODO: rank the labels + make the style better
     var availableLabels = [];
     if(nodeType == "UPOS") {
-        availableLabels = U_POS; 
-    } else if(nodeType == "DEPREL") { 
+        availableLabels = U_POS;
+    } else if(nodeType == "DEPREL") {
         availableLabels = U_DEPRELS;
     }
-    console.log('availableLabels:', availableLabels);
- 
+    //console.log('availableLabels:', availableLabels);
+
     // autocomplete
 
-    $('#edit').selfcomplete({lookup: availableLabels, 
+    $('#edit').selfcomplete({lookup: availableLabels,
         tabDisabled: false,
         autoSelectFirst:true,
         lookupLimit:5
@@ -442,7 +443,7 @@ function setRoot(wf) {
    var outerIndex = indices[1];
    var cur = parseInt(sent.tokens[outerIndex].id);
    var head = 0;
-   console.log('setRoot()', outerIndex, cur, head);
+   // console.log('setRoot()', outerIndex, cur, head);
    var sentAndPrev = changeConlluAttr(sent, indices, "deprel", "root");
    var sentAndPrev = changeConlluAttr(sent, indices, "head", head);
 
@@ -460,15 +461,15 @@ function writeDeprel(deprelInp, indices) { // TODO: DRY
         var Id = active.id().slice(2);
         var wfNode = cy.$("#nf" + Id);
         var indices = findConlluId(wfNode);
-    } 
+    }
 
     var sent = buildSent();
- 
+
     var outerIndex = indices[1];
     var cur = parseInt(sent.tokens[outerIndex].id);
     var head = parseInt(sent.tokens[outerIndex].head);
-    console.log('writeDeprel');
-    console.log(head + ' ' + cur);
+    // console.log('writeDeprel');
+    // console.log(head + ' ' + cur);
 
     var sentAndPrev = changeConlluAttr(sent, indices, "deprel", deprelInp);
     sent = sentAndPrev[0];
@@ -527,7 +528,7 @@ function changeConlluAttr(sent, indices, attrName, newVal) {
     var isSubtoken = indices[0];
     var outerIndex = indices[1];
     var innerIndex = indices[2];
- 
+
     //if(attrName == "deprel") {
     //  newVal = newVal.replace(/[⊲⊳]/g, '');
     //}
@@ -547,7 +548,7 @@ function writeWF(wfInp) {
 
     var active = cy.$(".input");
     var indices = findConlluId(active);
-    console.log(indices);
+    // console.log(indices);
     var isSubtoken = indices[0];
     var outerIndex = indices[1];
     var innerIndex = indices[2];
@@ -614,7 +615,7 @@ function thereIsSupertoken(sent) {
     $.each(sent.tokens, function(n, tok) {
         if (tok instanceof conllu.MultiwordToken) {
             supTokFound = true;
-        } 
+        }
     })
     return supTokFound;
 }
@@ -699,7 +700,7 @@ function mergeNodes(toMerge, side, how) {
         drawTree();
         return;
     }
-    
+
     var nodeId = indices[1];
     var otherId = (side == "right") ? nodeId + 1 : nodeId - 1;
     var sent = buildSent();
@@ -758,7 +759,7 @@ function redrawTree(sent) {
 
     $("#indata").val(changedSent);
     updateTable();
-    drawTree(); 
+    drawTree();
     cy.zoom(CURRENT_ZOOM);
 }
 
@@ -774,7 +775,7 @@ function writeSent(makeChanges) {
 
     // redraw tree
     $("#indata").val(sent.serial);
-    drawTree();    
+    drawTree();
 }
 
 
@@ -801,14 +802,7 @@ function viewAsConllu() {
     var curSent = $("#indata").val();
     var currentFormat = detectFormat(curSent);
 
-
-    if (currentFormat == "plain text") {
-        var contents = getTreebank();
-        plainText2Conllu(contents);
-    } else if (currentFormat == "SD") {
-        var contents = getTreebank();
-        SD2Conllu(contents);
-    } else if (currentFormat == "CG3") {
+    if (currentFormat == "CG3") {
         curSent = CG2conllu(curSent);
         if (curSent == undefined) {
             cantConvertCG();
@@ -817,6 +811,17 @@ function viewAsConllu() {
         $("#viewCG").removeClass("active");
         $("#viewConllu").addClass("active");
         $("#indata").val(curSent);
+    } else {
+        var contents = getContents();
+        if (currentFormat == "plain text") {
+            contents = txtCorpus2Conllu(contents);
+            localStorage.setItem('corpus', contents);
+            loadDataInIndex();
+        } else if (currentFormat == "SD") {
+            // newContents = SD2Conllu(contents);
+            SD2Conllu(contents); // TODO: make it like for txt
+        }
+        localStorage.setItem('format', 'CoNLL-U');
     }
 }
 
@@ -901,11 +906,11 @@ function switchEnhanced() {
 $(document).ready(function(){
 	$('#currentsen').keyup(function(e){
 		if(e.keyCode == 13) {
-			goToSenSent();
+			goToSentence();
 		} else if(e.keyCode == UP || e.keyCode == K) {
-			prevSenSent();
+			prevSentence();
 		} else if(e.keyCode == DOWN || e.keyCode == J) {
-			nextSenSent();
+			nextSentence();
 		} else if(e.keyCode == MINUS) {
 			removeCurSent();
 		} else if(e.keyCode == EQUALS ) {
@@ -920,11 +925,11 @@ $(document).ready(function(){
 		map[e.key] = e.type == 'keydown';
 		/* insert conditional here */
 		if(map["Shift"] && map["PageDown"]){
-			nextSenSent();
+			nextSentence();
 			map = [];
 			map["Shift"] = true; // leave Shift so that another event can be fired
 		}else if(map["Shift"] && map["PageUp"]){
-			prevSenSent();
+			prevSentence();
 			map = [];
 			map["Shift"] = true; // leave Shift so that another event can be fired
 		}else if(map["Control"] && map["z"]) {
@@ -937,22 +942,18 @@ $(document).ready(function(){
 		//return false;  // only needed if want to override all the shortcuts
 	}
 
-	//$('#helpModal').on('show.bs.modal', console.log);
-
 	$('#helpModal').on('shown.bs.modal', function(e) {
-		//alert('HARGLE BARGLE');
         // $("#treebankSize").text(CONTENTS.length); // TODO: Report the current loaded treebank size to user
 		$(e.target).find('.modal-body').load('help.html');
 	});
-    
+
     $('#exportModal').on('shown.bs.modal', function(e) {
-		//alert('HARGLE BARGLE');
         // $("#treebankSize").text(CONTENTS.length); // TODO: Report the current loaded treebank size to user
 		$(e.target).find('.modal-body').load('export.html', function() {
-            exportPNG(); 
+            exportPNG();
         });
 	});
-    
+
     $('#exportModal').on('hidden.bs.modal', function (e) {
         png_exported = false;
         latex_exported = false;
@@ -973,9 +974,4 @@ $(document).ready(function(){
 			toggleTableColumn(columnHeader.title);
 		}
 	});
-	// this way of doing it only responds when icon is clicked:
-	//$('.tableColHeader').on('click', function(e) {
-	//	toggleTableColumn(this.title);
-	//});
 });
-

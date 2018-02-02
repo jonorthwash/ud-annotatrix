@@ -58,8 +58,8 @@ function is_leaf(s) {
 
 function is_projective_nodes(tree, nodeSet) {
     // Checks to see if a particular dependent has a non-projective head
-   console.log('is_projective_nodes()', tree) ;
-   console.log('is_projective_nodes()', nodeSet) ;
+   // console.log('is_projective_nodes()', tree) ;
+   // console.log('is_projective_nodes()', nodeSet) ;
     var nodes = [];
     var heads = {};
     for(let node in tree) {
@@ -75,8 +75,8 @@ function is_projective_nodes(tree, nodeSet) {
         nodes.push(id);
     }
 
-    console.log('is_projective()','heads', heads);
-    console.log('is_projective()','nodes', nodes);
+    // console.log('is_projective()','heads', heads);
+    // console.log('is_projective()','nodes', nodes);
 
     var res = true;
     
@@ -88,28 +88,28 @@ function is_projective_nodes(tree, nodeSet) {
             if((nodes[j] > nodes[n_i]) && (nodes[j] < heads[n_i])) { 
                 if((heads[n_j] > heads[n_i]) || (heads[n_j] < nodes[n_i])) {
                     res = false;
-                    console.log('[0] is_projective()',res);
+                    // console.log('[0] is_projective()',res);
                     return res;
                 }
             }
             if((nodes[j] > heads[n_i]) && (nodes[j] < nodes[n_i])) {
                 if((heads[n_j] > nodes[n_i]) || (heads[n_j] < heads[n_i])) {
                     res = false;
-                    console.log('[1] is_projective()',res);
+                    // console.log('[1] is_projective()',res);
                     return res;
                 }
             }
             if(heads[n_j] > nodes[n_i] && heads[n_j] < heads[n_i]) {
                 if(nodes[j] < nodes[n_i] || nodes[j] > heads[n_i]) {
                     res = false;
-                    console.log('[2] is_projective()',res);
+                    // console.log('[2] is_projective()',res);
                     return res;
                 }
             }
             if(heads[n_j] > heads[n_i] && heads[n_j] < nodes[n_i]) {
                 if(nodes[j] > nodes[n_i] || nodes[j] < heads[n_i]) {
                     res = false;
-                    console.log('[3] is_projective()',res);
+                    // console.log('[3] is_projective()',res);
                     return res;
                 }
             }
@@ -198,20 +198,20 @@ function is_depend_cycles(tree) {
         if (data.hasOwnProperty(k)) {
             var word = data[k];
             if(isNaN(parseInt(word["head"])) === false && isNaN(parseId(word["id"])) === false) {
-		console.log(parseId(word["id"]));
+		// console.log(parseId(word["id"]));
                 g.set(parseId(word["id"]), parseInt(word["head"]));
                 id_to_word.set(parseId(word["id"]), word["form"]);
             }
         }
     }
-    console.log("Has Cycles:");
-    console.log(_is_cyclic());
+    // console.log("Has Cycles:");
+    // console.log(_is_cyclic());
     if (_is_cyclic()) {
-        console.log("Cycle List:");
+        // console.log("Cycle List:");
         var c_list = cycle_list();
         for (var i = 0; i < c_list.length; i++) {
             var cycle = c_list[i];
-            console.log(cycle);
+            // console.log(cycle);
             var word_form = [];
             for (var j = 0; j < cycle.length; j++) {
                 word_form.push(id_to_word.get(cycle[j]));
@@ -220,7 +220,7 @@ function is_depend_cycles(tree) {
             for (var j = 0; j < word_form.length; j++) {
                 output += String(word_form[j]) + "-->"
             }
-            console.log(output);
+            // console.log(output);
         }
     }
     return _is_cyclic();
@@ -328,7 +328,7 @@ function is_relation_conflict(tree) {
             }
         }
     }
-    console.log("Count: ", count);
+    // console.log("Count: ", count);
     var conflicts = new Map();
     var totalsubjects = new Map();
     if(count.has("nsubj")) {
@@ -378,7 +378,7 @@ function is_relation_conflict(tree) {
         }
     }
     totalobjects.forEach(function(i,k,m) {
-        console.log(i,k,m);
+        // console.log(i,k,m);
         if(i > 1) {
             if(conflicts.has(k)) {
                 var newconflict = conflicts.get(k);
@@ -393,6 +393,6 @@ function is_relation_conflict(tree) {
     if(count.has("obj") && count.has("ccomp")) {
         conflicts.set("objccomp",[]);
     }
-    console.log("Conflicts: ", conflicts);
+    // console.log("Conflicts: ", conflicts);
     return conflicts;
 }

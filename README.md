@@ -4,8 +4,11 @@ The online interface is currently available from several places:
 
 * [Masha's GitHub pages](https://maryszmary.github.io/ud-annotatrix/standalone/annotator.html). 
 * [Fran's GitHub pages](https://ftyers.github.io/ud-annotatrix/). 
+* [Server version on web-corpora](http://web-corpora.net/wsgi3/annotatrix/)(beta).
 
 To use it offline, clone this repository to your local machine and open the file `index.html` in your browser.
+
+Alternatively, you can serve the files using a web server.  An easy way to do this locally is to run `python3 -m http.server` in the cloned directory.
 
 ## Support
 
@@ -79,3 +82,11 @@ The server package provides additional support for deploying the web-interface o
 * Mariya Sheyanova (@maryszmary; [documentation of the changes](http://wiki.apertium.org/wiki/UD_annotatrix/UD_annotatrix_at_GSoC_2017))
 * Tai Vongsathorn Warner (@MidasDoas; [documentation of the changes](https://wikis.swarthmore.edu/ling073/User:Twarner2/Final_project))
 * Francis Tyers (@ftyers)
+* Grzegorz Stark (@gstark0)
+* Jonathan Pan (@JPJPJPOPOP)
+* Suresh Michael Peiris (@tsuresh)
+* Diogo Fernandes (@diogoscf)
+* Robin Richtsfeld (@Androbin)
+* Sushain Cherivirala (@sushain97)
+* Kevin Brubeck Unhammer (@unhammer)
+* Ethan Yang (@thatprogrammer1)

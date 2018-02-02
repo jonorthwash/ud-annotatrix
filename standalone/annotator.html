@@ -125,14 +125,14 @@ err_udep_leaf_node = Nodes with the « { $tag } » part-of-speech tag should nor
 				<div class="btn-toolbar col-xs-6 corpusNavigation" role="toolbar">
 					<div class="input-group" style="padding-right: 1em;">
 						<div class="input-group-btn">
-							<a class="btn btn-secondary" href="#" id="prevSenBtn" onClick="javascript:prevSenSent();">
+							<a class="btn btn-secondary" href="#" id="prevSenBtn" onClick="javascript:prevSentence();">
 								<i class="fa fa-arrow-left" title="Previous sentence"></i>
 							</a>
 						</div>
-						<input class="form-control col-xs-2" id="currentsen" value="0" size="2" onBlur="javascript:goToSenSent();"/>
+						<input class="form-control col-xs-2" id="currentsen" value="0" size="2" onBlur="javascript:goToSentence();"/>
 						<span class="input-group-addon">/&nbsp;<span id="totalsen">00</span></span>
 						<div class="input-group-btn ml-auto">
-							<a class="btn btn-secondary" href="#" id="nextSenBtn" onClick="javascript:nextSenSent();">
+							<a class="btn btn-secondary" href="#" id="nextSenBtn" onClick="javascript:nextSentence();">
 								<i class="fa fa-arrow-right" title="Next sentence"></i>
 							</a>
 						</div>
@@ -146,15 +146,15 @@ err_udep_leaf_node = Nodes with the « { $tag } » part-of-speech tag should nor
 						</a>
 					</div>
 					<div class="btn-group ml-sx-auto" style="padding-right: 1em;" >
-						<a class="btn btn-secondary" href="#" data-toggle="modal" data-target="#fileModal">
+						<a class="btn btn-secondary" href="#" data-toggle="modal" data-target="#fileModal" id="upload">
 							<i class="fa fa-upload" title="Import corpus"></i>
 						</a>
 						<a class="btn btn-secondary" href="#" onClick="javascript:exportCorpora();">
 							<i class="fa fa-download" title="Download corpus"></i>
 						</a>
-						<a class="btn btn-secondary" href="#" onClick="javascript:saveOnServer();">
+<!--						<a class="btn btn-secondary" href="#" onClick="javascript:saveOnServer();">
 							<i class="fa fa-cloud-upload" title="Save on server"></i>
-						</a>
+						</a>-->
 						<a class="btn btn-secondary" href="#" onClick="javascript: clearCorpus();">
 							<i class="fa fa-trash" title="Discard corpus"></i>
 						</a>

@@ -7,25 +7,18 @@ function plainSent2Conllu(text) {
     // TODO: if there's punctuation in the middle of a sentence,
     // indices shift when drawing an arc
     // punctuation
-
-
     text = text.replace(/([^ ])([.?!;:,])/g, "$1 $2");
-
-    console.log('plainSent2Conllu() ' + text);
 
     var sent = new conllu.Sentence();
     var lines = ["# sent_id = _" + "\n# text = " + text]; // creating comment
     var tokens = text.split(" ");
-
     // enumerating tokens
     $.each(tokens, function(i, token) {tokens[i] = (i + 1) + "\t" + token});
 
     lines = lines.concat(tokens);
     sent.serial = lines.join("\n");
-
     // TODO: automatical recognition of punctuation's POS
     for(var i = 0; i < sent.tokens.length; i++) {
-//       console.log(sent.tokens[i])
        if(sent.tokens[i]['form'].match(/^[!.)(»«:;?¡,"\-><]+$/)) {
 //       if(sent.tokens[i]['form'].match(/\W/)) {
          sent.tokens[i]['upostag'] = 'PUNCT';
@@ -36,7 +29,7 @@ function plainSent2Conllu(text) {
        if(sent.tokens[i]['form'].match(/^[$%€£¥Æ§©]+$/)) {
          sent.tokens[i]['upostag'] = 'SYM';
        }
-    }
+    }    
 
     return sent.serial;
 }
@@ -59,79 +52,24 @@ function SD2Conllu(text) {
  * Takes a plain text, converts it to CoNLL-U format.
  * @param {String} text Input text
  */
-function plainText2Conllu(text) {
-    console.log('plainText2Conllu() ' + text);
-
-    // if text consists of several sentences, process it as imported file
-    if (text.match(/[^ ].+?[.!?](?=( |\n)[^ \n])/)) { // match sentence break, e.g. "blah. hargle"
-        CONTENTS = text;
-    }
-    //console.log('plainText2Conllu() ' + text.length + ' // ' + text);
-    if (CONTENTS.trim() != "") {
-        var newContents = [];
-        var splitted = CONTENTS.match(/[^ ].+?[.!?](?=( |$|\n))/g);
-        //console.log('@ CONTENTS: ' + splitted.length);
-        $.each(splitted, function(i, sentence) {
-            newContents.push(plainSent2Conllu(sentence));
-        })
-        CONTENTS = newContents.join("\n");
-        //console.log('@ CONTENTS: ' + CONTENTS);
-        FORMAT = "CoNLL-U";
-        AVAILABLESENTENCES = splitted.length;
-        loadDataInIndex();
-    } else {
-        // If the CONTENTS is empty, then we need to fill it (this is the first time
-        // we have put something into the annotatrix and CONTENTS will be empty if
-        // it's the first time
-        FORMAT = "CoNLL-U";
-        //console.log('plainText2Conllu() ELSE ' + text);
-        CONTENTS = plainSent2Conllu(text) + "\n";
-        //console.log('plainText2Conllu() ELSE newContents ' + newContents);
-        AVAILABLESENTENCES = 1;
-        $("#indata").val(newContents);
-        loadDataInIndex();
-    }
-}
-
-/**
- * Takes a plain text, converts it to CoNLL-U format.
- * @param {String} text Input text
- */
-function plainText2ConlluMod(text) {
-    console.log('plainText2Conllu() ' + text);
-
+function txtCorpus2Conllu(text) {
     var corpus;
-    // if text consists of several sentences, process it as imported file
-    if (text.match(/[^ ].+?[.!?](?=( |\n)[^ \n])/)) { // match sentence break, e.g. "blah. hargle"
-        corpus = text;
-    }
-    if (CONTENTS.trim() != "") {
-        var newContents = [];
-        var splitted = corpus.match(/[^ ].+?[.!?](?=( |$|\n))/g);
-        $.each(splitted, function(i, sentence) {
-            newContents.push(plainSent2Conllu(sentence));
-        })
-        corpus = newContents.join("\n");
-        AVAILABLESENTENCES = splitted.length;
-    } else {
-        // If the CONTENTS is empty, then we need to fill it (this is the first time
-        // we have put something into the annotatrix and CONTENTS will be empty if
-        // it's the first time
-        corpus = plainSent2Conllu(text) + "\n";
-        AVAILABLESENTENCES = 1;
-        $("#indata").val(newContents); // TODO: wtf, is newContents global var, or just undefined here?
-
-        CONTENTS = corpus;
-    }
-    FORMAT = "CoNLL-U";
-    loadDataInIndex();
+    var newContents = [];
+    var splitted = text.match(/[^ ].+?[.!?](?=( |$|\n))/g);
+    $.each(splitted, function(i, sentence) {
+        sentence = plainSent2Conllu(sentence.trim());
+        newContents.push(sentence);
+    })
+    corpus = newContents.join("\n");
+    AVAILABLESENTENCES = splitted.length;
+    return corpus;
 }
 
 /**
  * Checks if the input box has > 1 sentence.
  * @param {String} text Input text
  */
-function conlluMultiInput(text) {
+function conlluMultiInput(text) { // TOFIX: this might break after rewriting architecture. fix later.
     if(text.match(/\n\n(#.*\n)?1\t/)) {
         console.log('conlluMultiInput()');
 
@@ -139,7 +77,6 @@ function conlluMultiInput(text) {
         if (text.match(/\n\n/)) { // match doublenewline
             CONTENTS = text;
         }
-    //    console.log('plainText2Conllu() ' + text.length + ' // ' + text);
         if (CONTENTS.trim() != "") {
             var newContents = [];
             var splitted = CONTENTS.split("\n\n");
@@ -154,6 +91,7 @@ function conlluMultiInput(text) {
         }
     }
 }
+
 
 /**
  * Takes a string in CoNLL-U, converts it to plain text.
