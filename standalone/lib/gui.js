@@ -92,7 +92,7 @@ function writeArc(sourceNode, destNode) {
     var tokens = sent.tokens;
     // console.log(idx + ' ' + tokens);
     var thisToken = tokens[idx];
-    // console.log('writeArc ' + destIndex + ' ' + thisToken['upostag']);
+    // console.log('writeArc ' + destIndex + ' ' + thisToken['upostag']); 
     var sentAndPrev = changeConlluAttr(sent, indices, "head", sourceIndex);
 
     // If the target POS tag is PUNCT set the deprel to @punct [99%]
@@ -345,9 +345,8 @@ function removeSup(st) {
 
 
 function changeNode() {
-
     // console.log("changeNode() " + Object.entries(this) + " // " + this.id());
-
+    
     ISEDITING = true;
 
     this.addClass("input");
@@ -387,8 +386,8 @@ function changeNode() {
     } else if(nodeType == "DEPREL") {
         availableLabels = U_DEPRELS;
     }
-    //console.log('availableLabels:', availableLabels);
-
+    // console.log('availableLabels:', availableLabels);
+ 
     // autocomplete
 
     $('#edit').selfcomplete({lookup: availableLabels,
