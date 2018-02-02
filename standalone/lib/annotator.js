@@ -507,10 +507,10 @@ function drawTree() {
     // If there are >1 CoNLL-U format sentences is in the input, treat them as such
     // conlluMultiInput(newContent); // TODO: move this one also inside of this func, and make a separate func for calling them all at the same time 
 
-    // if(newContent != content) {
-    //     content = newContent;
-    //     $("#indata").val(content);
-    // }
+    if(newContent != content) {
+        content = newContent;
+        $("#indata").val(content);
+    }
     // -- to be moved out -- 
 
     conlluDraw(content);
