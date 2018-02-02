@@ -166,6 +166,7 @@ var CY_STYLE = [{
         "text-border-width": "1px",
         "text-background-shape": "roundrectangle",
         "text-halign": "right",
+        "text-margin-x": "-2px",
         "label": "data(label)",
         "events": "no"
   }

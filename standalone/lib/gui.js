@@ -31,6 +31,7 @@ var POS2RELmappings = {
 	"CCONJ": "cc",
 	"SCONJ": "mark"
 }
+var cy = window.cy;
 
 
 function setUndos(undoManager) {

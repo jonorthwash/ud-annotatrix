@@ -27,6 +27,16 @@ var codeLateX = '';
 var png_exported = false;
 var latex_exported = false;
 
+function measureText(text) {
+    // actual canvas not created yet
+    var context = document.createElement("canvas").getContext("2d");
+    context.font = "16px sans-serif"; // 1rem == 16px
+
+    text = text || "#"; // width for empty string
+    text = "." + text + "."; // minor padding
+    return context.measureText(text).width + "px";
+}
+
 /**
  * Draws the tree.
  * @param {String} content Content of the input textbox.
@@ -154,9 +164,10 @@ function changeBoxSize(sent) {
  * @return {Object} A tree containing formatting.
  */
 function formLayout() {
-    var layout = {name: "tree",
-                    padding: 0,
-                    nodeDimensionsIncludeLabels: false
+    var layout = {
+        name: "tree",
+        padding: 0,
+        nodeDimensionsIncludeLabels: true
     };
     if (VERT_ALIGNMENT) {
         layout.cols = 2;
@@ -416,10 +427,6 @@ function toSubscript(str) {
     return substr;
 }
 
-function isUpperCase(str) {
-    return str === str.toUpperCase();
-}
-
 /**
  * Creates the wf node, the POS node and dependencies.
  * @param  {Array}  graph  A graph containing all the nodes and dependencies.
@@ -456,18 +463,8 @@ function createToken(graph, token, spId) {
     // nodeWF.parent = spId;
     nodeWF.id = "nf" + nodeId;
     nodeWF.label = nodeWF.form;
-// FAIL test: Kibbutzgrundarna kom från en miljö, som utmärktes av ett strängt patriarkaliskt system, där första budet löd:
-/*
-    if(isUpperCase(nodeWF.label)) {
-        nodeWF.length = nodeWF.label.length * 13;
-    } else {
-        nodeWF.length = nodeWF.label.length * 11;
-    }*/ 
-    nodeWF.length = nodeWF.form.length + "em";
-    if(nodeWF.form.length > 3) {
-      nodeWF.length = nodeWF.form.length*0.7 + "em";
-    }
     nodeWF.state = "normal";
+    nodeWF.length = measureText(nodeWF.label);
 
     nodeWF.parent = "num" + nodeId;
     if (token.head && token.head == 0 ) { // for root node
@@ -667,7 +664,7 @@ function makePOS(token, nodeId, graph) {
     var nodePOS = {
         "id": "np" + nodeId,
         "label": pos,
-        "length": (pos.length + 1) + "em"
+        "length": measureText(pos)
     }
     graph.push({"data": nodePOS, "classes": "pos"});
 
