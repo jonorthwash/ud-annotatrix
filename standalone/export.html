@@ -8,12 +8,29 @@
   <script src="./lib/ext/jquery.load.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
-<body --> 
+<body -->
 
 <!-- h1>Export options<h1 -->
-<button type="button" class="btn btn-primary" onclick="javascript:exportPNG();" style="width: 100px;">PNG</button>
-<button type="button" class="btn btn-primary" onclick="javascript:exportSVG();" style="width: 100px;">SVG</button>
-<button type="button" class="btn btn-primary" onclick="javascript:exportLATEX();" style="width: 100px;">LaTeX</button>
+  <nav>
+    <div class="nav nav-tabs" id="nav-tab" role="tablist">
+      <a class="nav-item nav-link active" id="nav-png-tab" data-toggle="tab" href="#nav-png" role="tab" aria-controls="nav-png" aria-selected="true" onclick="javascript:exportPNG();">PNG</a>
+
+      <a class="nav-item nav-link" id="nav-svg-tab" data-toggle="tab" href="#nav-svg" role="tab" aria-controls="nav-svg" aria-selected="false" onclick="javascript:exportSVG();">SVG</a>
+
+      <a class="nav-item nav-link" id="nav-latex-tab" data-toggle="tab" href="#nav-latex" role="tab" aria-controls="nav-latex" aria-selected="false" onclick="javascript:exportLATEX();">LaTeX</a>
+    </div>
+  </nav>
+  &nbsp;
+   <div class="tab-content" id="nav-tabContent">
+    <div class="tab-pane text-center fade show active" id="nav-png" role="tabpanel" aria-labelledby="nav-png-tab">
+      <button type="button" class="btn btn-primary" onclick="javascript:downloadPNG();">Download</button>
+    </div>
+    <div class="tab-pane fade text-center" id="nav-svg" role="tabpanel" aria-labelledby="nav-svg-tab">
+      <button type="button" class="btn btn-primary" onclick="javascript:downloadSVG();">Download</button>
+    </div>
+    <div class="tab-pane fade" id="nav-latex" role="tabpanel" aria-labelledby="nav-latex-tab">
+    </div>
+  </div>
 </br>
 <div class="form-group">
   <label for="comment"></label>
@@ -25,5 +42,5 @@
   </div>
 </div>
 
-<!-- /body>
-</html -->
+<!-- /body>-->
+</html>
