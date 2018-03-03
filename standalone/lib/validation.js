@@ -3,8 +3,8 @@
 var U_DEPRELS = ["acl", "advcl", "advmod", "amod", "appos", "aux", "case", "cc", "ccomp", "clf", "compound", "conj", "cop", "csubj", "dep", "det", "discourse", "dislocated", "expl", "fixed", "flat", "goeswith", "iobj", "list", "mark", "nmod", "nsubj", "nummod", "obj", "obl", "orphan", "parataxis", "punct", "reparandum", "root", "vocative", "xcomp"];
 var U_POS = ["ADJ", "ADP", "ADV", "AUX", "CCONJ", "DET", "INTJ", "NOUN", "NUM", "PART", "PRON", "PROPN", "PUNCT", "SCONJ", "SYM", "VERB", "X"];
 
-// TODO: Make this more clever, e.g. CCONJ can have a dependent in certain 
-// circumstances, e.g. and / or 
+// TODO: Make this more clever, e.g. CCONJ can have a dependent in certain
+// circumstances, e.g. and / or
 var U_POS_LEAF = ["AUX", "CCONJ", "PART", "PUNCT", "SCONJ"]; // no ADP
 
 function is_upos(s) {
@@ -12,13 +12,12 @@ function is_upos(s) {
     // @s = the input relation
     // returns a tuple of [bool, message]
     for(var i = 0; i < U_POS.length; i++) {
-      if(U_POS[i] == s) { 
+      if(U_POS[i] == s) {
         return [true, "", {}];
       }
     }
-    return [false, "err_upos_invalid", {"tag": s}];    
+    return [false, "err_upos_invalid", {"tag": s}];
 }
-
 
 function is_udeprel(s) {
     // Checks if a relation is in the list of valid relations
@@ -31,7 +30,7 @@ function is_udeprel(s) {
     }
     // Check if the deprel is in the list of valid relations
     for(var i = 0; i < U_DEPRELS.length; i++) {
-      if(U_DEPRELS[i] == s_deprel) { 
+      if(U_DEPRELS[i] == s_deprel) {
         return [true, "", {}];
       }
     }
@@ -39,7 +38,7 @@ function is_udeprel(s) {
 }
 
 function is_leaf(s) {
-    // Checks if a node is in the list of part-of-speech tags which 
+    // Checks if a node is in the list of part-of-speech tags which
     // are usually leaf nodes
     // @s = part of speech tag
 
@@ -47,11 +46,11 @@ function is_leaf(s) {
     // Tokens with the relation punct always attach to content words (except in cases of ellipsis) and can never have dependents.
 
     for(var i = 0; i < U_POS_LEAF.length; i++) {
-      if(U_POS_LEAF[i] == s) { 
+      if(U_POS_LEAF[i] == s) {
         return [true, "", {}];
       }
     }
-    return [false, "err_udep_leaf_node", {"tag": s}];  
+    return [false, "err_udep_leaf_node", {"tag": s}];
 
 }
 
@@ -63,12 +62,12 @@ function is_projective_nodes(tree, nodeSet) {
     var nodes = [];
     var heads = {};
     for(let node in tree) {
-        if(!tree[node] || tree[node] == undefined) { 
+        if(!tree[node] || tree[node] == undefined) {
             continue;
         }
         var head = tree[node].head;
         var id = tree[node].id;
-        if(!head || !id) { 
+        if(!head || !id) {
             continue;
         }
         heads[id] = head;
@@ -79,13 +78,13 @@ function is_projective_nodes(tree, nodeSet) {
     // console.log('is_projective()','nodes', nodes);
 
     var res = true;
-    
+
     for(let i in nodeSet) {          // i here is the index of the node in nodeSet e.g. i = 0, nodeSet = [9]
         var n_i =  nodeSet[i];
         for(let j in nodes) {
             var n_j =  nodes[j];
             console.log('i:',nodes[n_i],'j:',nodes[j],'h(i):',heads[n_i],'h(j):',heads[n_j]);
-            if((nodes[j] > nodes[n_i]) && (nodes[j] < heads[n_i])) { 
+            if((nodes[j] > nodes[n_i]) && (nodes[j] < heads[n_i])) {
                 if((heads[n_j] > heads[n_i]) || (heads[n_j] < nodes[n_i])) {
                     res = false;
                     // console.log('[0] is_projective()',res);
@@ -116,23 +115,23 @@ function is_projective_nodes(tree, nodeSet) {
         }
     }
 //    console.log('is_projective()', res);
-    
+
     return res;
 }
 
 
 
 function is_projective(tree) {
-    // Checks to see if a graph is projective 
+    // Checks to see if a graph is projective
     var nodes = [];
     var heads = {};
     for(let node in tree) {
-        if(!tree[node] || tree[node] == undefined) { 
+        if(!tree[node] || tree[node] == undefined) {
             continue;
         }
         var head = tree[node].head;
         var id = tree[node].id;
-        if(!head || !id) { 
+        if(!head || !id) {
             continue;
         }
         head = parseInt(head);
@@ -145,13 +144,13 @@ function is_projective(tree) {
 //    console.log('is_projective()','nodes', nodes);
 
     var res = true;
-    
+
     for(let i in nodes) {
         var n_i =  nodes[i];
         for(let j in nodes) {
             var n_j =  nodes[j];
             //console.log('i:',nodes[i],'j:',nodes[j],'h(i):',heads[n_i],'h(j):',heads[n_j]);
-            if((nodes[j] > nodes[i]) && (nodes[j] < heads[n_i])) { 
+            if((nodes[j] > nodes[i]) && (nodes[j] < heads[n_i])) {
                 if((heads[n_j] > heads[n_i]) || (heads[n_j] < nodes[i])) {
                     res = false;
                     console.log('[0] is_projective()',res);
@@ -182,7 +181,7 @@ function is_projective(tree) {
         }
     }
 //    console.log('is_projective()', res);
-    
+
     return res;
 }
 
@@ -193,7 +192,7 @@ function is_depend_cycles(tree) {
     var data = tree;
     vertices = Object.keys(data).length + 1;
     var id_to_word = new Map();
-    
+
     for (var k in data) {
         if (data.hasOwnProperty(k)) {
             var word = data[k];
@@ -232,7 +231,7 @@ function is_depend_cycles(tree) {
         while (g.get(current_vertex) !== undefined  && g.get(current_vertex) !== start_vertex && visited.indexOf(g.get(current_vertex)) === -1) {
             current_vertex = g.get(current_vertex);
             visited.push(current_vertex);
-        }    
+        }
 	if (g.get(current_vertex) !== undefined && g.get(current_vertex)==start_vertex) {
             return visited;
         }
@@ -241,7 +240,7 @@ function is_depend_cycles(tree) {
     };
 
     function normalize_cycle(a) {
-	//Normalizes cycles for easy comparisons	
+	//Normalizes cycles for easy comparisons
         var b = a.slice().sort();
         b.sort();
         var loc = a.indexOf(b[0]);
@@ -276,7 +275,7 @@ function is_depend_cycles(tree) {
                 if (checkEqual === 0) {
                     cycles.push(c_data);
                 }
-               
+
             }
         }
         return cycles;
