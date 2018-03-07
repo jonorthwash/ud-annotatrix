@@ -89,6 +89,12 @@ function writeArc(sourceNode, destNode) {
     // For some reason we need all of this code otherwise stuff becomes undefined
     var idx = findConlluId(destNode)[1];
     var sent = buildSent();
+    
+    // Log changes
+    var outerIndex = indices[1];
+    var innerIndex = indices[2];
+    logger(sent, outerIndex, innerIndex)
+    
     var tokens = sent.tokens;
     // console.log(idx + ' ' + tokens);
     var thisToken = tokens[idx];
@@ -463,8 +469,12 @@ function writeDeprel(deprelInp, indices) { // TODO: DRY
     } 
 
     var sent = buildSent();
- 
+    
+    // Log changes
     var outerIndex = indices[1];
+    var innerIndex = indices[2];
+    logger(sent, outerIndex, innerIndex);
+    
     var cur = parseInt(sent.tokens[outerIndex].id);
     var head = parseInt(sent.tokens[outerIndex].head);
     // console.log('writeDeprel');
@@ -568,6 +578,72 @@ function writeWF(wfInp) {
     }
 }
 
+function logger(sent, outerIndex, innerIndex) {
+    // Log last changed time
+    if (LOGGER_ENABLED) {
+        var hasTimeSet = true;
+        
+        var unixTime = Date.now();
+        var timeDelta;
+        if(anno_time == 0) {
+            anno_time = Date.now();
+            hasTimeSet = false;
+        }
+        timeDelta = unixTime - anno_time;
+        
+        if(innerIndex != undefined) {
+            var misc = sent.tokens[outerIndex].tokens[innerIndex].misc;
+            if(misc != undefined) {
+                if(misc.indexOf('AnnoTime=') != -1) {
+                    var finalMiscContent = '';
+
+                    if(misc.indexOf('|') != -1) {
+                        var miscContent = misc.split('|');
+                        for(var i = 0; i < miscContent.length; i++) {
+                            if(miscContent[i].startsWith('AnnoTime=')) {
+                                miscContent[i] += ',' + timeDelta;
+                            }
+                        }
+                        finalMiscContent = miscContent.join("|");
+                    } else {
+                        finalMiscContent = misc + ',' + timeDelta;
+                    }
+                    sent.tokens[outerIndex].tokens[innerIndex].misc = finalMiscContent;
+                } else {
+                    sent.tokens[outerIndex].tokens[innerIndex].misc += '|AnnoTime=' + timeDelta;
+                    sent.tokens[outerIndex].tokens[innerIndex].misc = sent.tokens[outerIndex].tokens[innerIndex].misc.replace(/\|\|/g, '|');
+                }    
+            } else {
+                sent.tokens[outerIndex].tokens[innerIndex].misc = 'AnnoTime=' + timeDelta;
+            }
+        } else {
+            var misc = sent.tokens[outerIndex].misc;
+            if(misc != undefined) {
+                if(misc.indexOf('AnnoTime=') != -1) {
+                    var finalMiscContent = '';
+
+                    if(misc.indexOf('|') != -1) {
+                        var miscContent = misc.split('|');
+                        for(var i = 0; i < miscContent.length; i++) {
+                            if(miscContent[i].startsWith('AnnoTime=')) {
+                                miscContent[i] += ',' + timeDelta;
+                            }
+                        }
+                        finalMiscContent = miscContent.join("|");
+                    } else {
+                        finalMiscContent = misc + ',' + timeDelta;
+                    }
+                    sent.tokens[outerIndex].misc = finalMiscContent;
+                } else {
+                    sent.tokens[outerIndex].misc += '|AnnoTime=' + timeDelta;
+                    sent.tokens[outerIndex].misc = sent.tokens[outerIndex].misc.replace(/\|\|/g, '|');
+                }    
+            } else {
+                sent.tokens[outerIndex].misc = 'AnnoTime=' + timeDelta;
+            }
+        }
+    }
+}
 
 function findConlluId(wfNode) { // TODO: refactor the arcitecture.
     // takes a cy wf node
@@ -879,6 +955,13 @@ function switchRtlMode() {
     drawTree();
 }
 
+function switchLogger() {
+    if (LOGGER_ENABLED) {
+        LOGGER_ENABLED = false;
+    } else {
+        LOGGER_ENABLED = true;
+    }
+}
 
 function switchAlignment() {
 	$('#vertical .fa').toggleClass('fa-rotate-90');

@@ -2,6 +2,7 @@
 
 var VERT_ALIGNMENT = false;
 var LEFT_TO_RIGHT = true;
+var LOGGER_ENABLED = false;
 var ACTIVE = "#2653c9";
 var NORMAL = "#7fa2ff";
 var FANCY = "#cc22fc";
