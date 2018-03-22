@@ -87,10 +87,10 @@ function getContents() {
     //     // TODO: implement
     // } else {
     var splitted = localStorage.getItem('treebank'); // TODO: implement a more memory-friendly func?
-    splitted = JSON.parse(splitted); // string to array
+    splitted = JSON.parse(splitted) || {}; // string to array
     splitted[CURRENTSENTENCE] = $("#indata").val();
     localStorage.setItem('treebank', JSON.stringify(splitted)); // update the treebank
-    return splitted.join('\n\n');
+    // return splitted.join('\n\n'); NOTE: doesn't make sense to call .join() on an Object ...
     // }
 }
 
@@ -140,6 +140,7 @@ function bindCyHandlers() {
     /* Binds event handlers to cy elements.
     NOTE: If you change the style of a node (e.g. its selector) then
     you also need to update it here. */
+    cy.on('click', 'node, edge', clickInCy);
     cy.on('click', 'node.wf', drawArcs);
     cy.on('cxttapend', 'edge.dependency', selectArc);
     cy.on('click', 'node.pos', changeNode);
@@ -147,6 +148,16 @@ function bindCyHandlers() {
     cy.on('cxttapend', 'node.wf', changeNode);
     cy.on('click', 'edge.dependency', changeNode);
     cy.on('zoom', cy.center); // center the view port when the page zoom is changed
+}
+
+function clickInCy() {
+  console.log(this);
+
+  let oldValue = $('#edit').attr( 'value' );
+  let newValue = $('#edit').val();
+
+  if ( ISEDITING && (oldValue!==newValue) )
+    writePOS( newValue );
 }
 
 
@@ -290,9 +301,9 @@ function splitIntoSentences(corpus) {
 
     // splitting
     if (format == "plain text") {
-        var splitted = corpus.match(/[^ ].+?[.!?](?=( |$))/g);
+        var splitted = corpus.match(/[^ ].+?[.!?](?=( |$))/g) || [];
     } else {
-        var splitted = corpus.split("\n\n");
+        var splitted = corpus.split("\n\n") || [];
     }
 
     // removing empty lines
@@ -316,7 +327,7 @@ function showDataIndiv() {
     }
     if(AVAILABLESENTENCES != 0) {
         document.getElementById('currentsen').value = (CURRENTSENTENCE+1);
-    } else { 
+    } else {
         document.getElementById('currentsen').value = 0;
     }
     document.getElementById('totalsen').innerHTML = AVAILABLESENTENCES;
@@ -432,7 +443,7 @@ function exportCorpora() {
     if (SERVER_RUNNING) {
         console.log('exportCorpora');
         downloadCorpus();
-    } else {    
+    } else {
         var finalcontent = getContents();
 
         var link = document.createElement('a');
@@ -468,16 +479,16 @@ function drawTree() {
     1. removes the previous tree, if there's one
     2. takes the data from the textarea
     3. */
-    
+
     ISEDITING = false;
-    
+
     // TODO: update the sentence
     try {cy.destroy()} catch (err) {}; // remove the previous tree, if there is one
 
     var content = $("#indata").val(); // TODO: rename
     var format = detectFormat(content);
 
-    // -- to be moved out-- 
+    // -- to be moved out--
     // content = content.replace(/ +\n/, '\n'); // remove extra spaces at the end of lines. #89
     // $("#indata").val(content); // TODO: what is this line for?
 
@@ -505,13 +516,13 @@ function drawTree() {
     var newContent = cleanConllu(content); // TODO: move this one inside of this func
 
     // If there are >1 CoNLL-U format sentences is in the input, treat them as such
-    // conlluMultiInput(newContent); // TODO: move this one also inside of this func, and make a separate func for calling them all at the same time 
+    // conlluMultiInput(newContent); // TODO: move this one also inside of this func, and make a separate func for calling them all at the same time
 
     if(newContent != content) {
         content = newContent;
         $("#indata").val(content);
     }
-    // -- to be moved out -- 
+    // -- to be moved out --
 
     conlluDraw(content);
     showProgress();
@@ -557,7 +568,7 @@ function detectFormat(content) {
         // console.log('[0] detectFormat() WARNING EMPTY CONTENT');
         return  "Unknown";
     }
- 
+
     var firstWord = content.replace(/\n/g, " ").split(" ")[0];
 
     //console.log('[0] detectFormat() ' + content.length + " | " + FORMAT);
@@ -677,12 +688,12 @@ function getLocalStorageMaxSize(error) {
         minimalFound = 0,
         error = error || 25e4;
 
-    // fill a string with 1024 symbols / bytes    
+    // fill a string with 1024 symbols / bytes
     while (i--) string1024 += 1e16;
 
     i = max / 1024;
 
-    // fill a string with 'max' amount of symbols / bytes    
+    // fill a string with 'max' amount of symbols / bytes
     while (i--) string += string1024;
 
     i = max;
