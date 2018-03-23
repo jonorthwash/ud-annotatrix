@@ -32,9 +32,11 @@ var POS2RELmappings = {
 	"SCONJ": "mark"
 }
 
-function getSlicedID(ele) {
+function getSlicedID(ele, beg, end) {
 	try {
-		return ele.id().slice(2);
+		if (beg===undefined || end===undefined)
+			return ele.id().slice(2);
+		return ele.id().slice(beg,end);
 	} catch (TypeError) {
 		return '';
 	}
@@ -357,7 +359,7 @@ function changeNode() {
     ISEDITING = true;
 
     this.addClass("input");
-    var id = getSlicedID(this);
+    var id = getSlicedID(this, 0, 2);
     var param = this.renderedBoundingBox();
     param.color = this.style("background-color");
     var nodeType;
@@ -396,7 +398,7 @@ function changeNode() {
     // console.log('availableLabels:', availableLabels);
 
     // autocomplete
-
+		console.log(availableLabels);
     $('#edit').selfcomplete({lookup: availableLabels,
         tabDisabled: false,
         autoSelectFirst:true,
