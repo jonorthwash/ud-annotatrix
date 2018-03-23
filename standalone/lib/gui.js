@@ -398,7 +398,6 @@ function changeNode() {
     // console.log('availableLabels:', availableLabels);
 
     // autocomplete
-		console.log(availableLabels);
     $('#edit').selfcomplete({lookup: availableLabels,
         tabDisabled: false,
         autoSelectFirst:true,
