@@ -15,7 +15,7 @@ from flask import url_for
 import os
 import uuid
 from db import CorpusDB
-
+import config
 
 PATH_TO_CORPORA = 'corpora'
 
@@ -114,14 +114,10 @@ def corpus_page(treebank_id):
     print('XX:',treebank_id, file=sys.stderr)
     if '.' in treebank_id:
         return send_from_directory('../standalone', treebank_id)
-#    if treebank_id == 'help.html':
-#        return send_from_directory('../standalone', 'help.html')
-#    if treebank_id == 'export.html':
-#        return send_from_directory('../standalone', 'export.html')
     return send_from_directory('../standalone', 'annotator.html')
 
 
 if __name__ == '__main__':
     print(welcome)
-    app.secret_key = 'toshcpri]7f2ba027b824h6[hs87nja5enact'
+    app.secret_key = config.SECRET_KEY
     app.run(debug = True, port = 5316)
