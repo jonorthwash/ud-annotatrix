@@ -76,6 +76,20 @@ The server package provides additional support for deploying the web-interface o
 
 * Flask
 
+## Acknowledgements
+
+If you use Annotatrix in your work, please cite:
+
+```
+@inproceedings{tyers-etal:2018,
+  author = {Francis M. Tyers and Mariya Sheyanova and Jonathan North Washington},
+  title = {UD Annotatrix: An annotation tool for Universal Dependencies},
+  booktitle ={Proceedings of the 16th International Workshop on Treebanks and Linguistic Theories (TLT16)},
+  pages = {10--17},
+  year = 2018
+}
+```
+
 ## Contributors
 
 * Jonathan North Washington (@jonorthwash)
