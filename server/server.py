@@ -13,10 +13,11 @@ from flask import send_file
 from flask import send_from_directory
 from flask import url_for
 from flask_github import GitHub
-from dotenv import load_dotenv
+
 import os
 import uuid
 from db import CorpusDB
+from env import Env
 
 
 PATH_TO_CORPORA = 'corpora'
@@ -27,10 +28,10 @@ welcome = '''
 *******************************************************************************
 '''
 
-load_dotenv('.env')
+environment = Env('.env')
 app = Flask(__name__, static_folder='../standalone', static_url_path='/annotatrix')
 app.config['GITHUB_CLIENT_ID'] = '2aed75d6a4e13b9dd029'
-app.config['GITHUB_CLIENT_SECRET'] = os.getenv('GITHUB_CLIENT_SECRET')
+app.config['GITHUB_CLIENT_SECRET'] = environment.get('GITHUB_CLIENT_SECRET')
 github = GitHub(app)
 
 if not os.path.exists(PATH_TO_CORPORA):
@@ -117,7 +118,7 @@ def login():
 @github.authorized_handler
 def authorized(oauth_token):
     print('token', oauth_token)
-    
+
     next_url = request.args.get('next') or url_for('index')
     if oauth_token is None:
         return redirect(next_url)
