@@ -12,6 +12,8 @@ from flask import redirect
 from flask import send_file
 from flask import send_from_directory
 from flask import url_for
+from flask_github import GitHub
+from dotenv import load_dotenv
 import os
 import uuid
 from db import CorpusDB
@@ -25,7 +27,11 @@ welcome = '''
 *******************************************************************************
 '''
 
+load_dotenv('.env')
 app = Flask(__name__, static_folder='../standalone', static_url_path='/annotatrix')
+app.config['GITHUB_CLIENT_ID'] = '2aed75d6a4e13b9dd029'
+app.config['GITHUB_CLIENT_SECRET'] = os.getenv('GITHUB_CLIENT_SECRET')
+github = GitHub(app)
 
 if not os.path.exists(PATH_TO_CORPORA):
     os.mkdir(PATH_TO_CORPORA)
@@ -69,7 +75,7 @@ def download_corpus():
         if os.path.exists(PATH_TO_CORPORA + '/' + db_path):
             db = CorpusDB(PATH_TO_CORPORA + '/' + db_path)
             corpus, corpus_name = db.get_file()
-            with open(PATH_TO_CORPORA + '/' + treebank_id, 'w') as f: 
+            with open(PATH_TO_CORPORA + '/' + treebank_id, 'w') as f:
                 f.write(corpus)
             return send_file(PATH_TO_CORPORA + '/' + treebank_id, as_attachment=True, attachment_filename=corpus_name)
     return jsonify({'corpus': 'something went wrong'})
@@ -103,7 +109,28 @@ def annotatrix():
 def index():
     return send_from_directory('../standalone', 'welcome_page.html')
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    return github.authorize()
 
+@app.route('/github-callback', methods=['GET', 'POST'])
+@github.authorized_handler
+def authorized(oauth_token):
+    print('token', oauth_token)
+    
+    next_url = request.args.get('next') or url_for('index')
+    if oauth_token is None:
+        return redirect(next_url)
+
+    '''
+    user = User.query.filter_by(github_access_token=oauth_token).first()
+    if user is None:
+        user = User(oauth_token)
+        db_session.add(user)
+
+    user.github_access_token = oauth_token
+    db_session.commit()'''
+    return redirect(next_url)
 # @app.route('/<treebank_id>', methods=['GET', 'POST'])
 # def index_corpus(treebank_id):
 #     return redirect(url_for('corpus_page', treebank_id=treebank_id))
