@@ -32,6 +32,15 @@ var POS2RELmappings = {
 	"SCONJ": "mark"
 }
 
+function getSlicedID(ele, beg, end) {
+	try {
+		if (beg===undefined || end===undefined)
+			return ele.id().slice(2);
+		return ele.id().slice(beg,end);
+	} catch (TypeError) {
+		return '';
+	}
+}
 
 function setUndos(undoManager) {
     var btnUndo = document.getElementById("btnUndo");
@@ -67,7 +76,7 @@ function drawArcs(evt) {
         var actNode = cy.$(".activated");
 
         this.addClass("activated");
-        
+
         // if there is an activated node already
         if (actNode.length == 1) {
             writeArc(actNode, this);
@@ -92,7 +101,7 @@ function writeArc(sourceNode, destNode) {
     var tokens = sent.tokens;
     // console.log(idx + ' ' + tokens);
     var thisToken = tokens[idx];
-    // console.log('writeArc ' + destIndex + ' ' + thisToken['upostag']); 
+    // console.log('writeArc ' + destIndex + ' ' + thisToken['upostag']);
     var sentAndPrev = changeConlluAttr(sent, indices, "head", sourceIndex);
 
     // If the target POS tag is PUNCT set the deprel to @punct [99%]
@@ -138,7 +147,7 @@ function removeArc(destNodes) {
 
     // support for multiple arcs
     $.each(destNodes, function(i, node) {
-        var destIndex = node.id().slice(2);
+        var destIndex = getSlicedID(node);
         var indices = findConlluId(node);
         var sentAndPrev = changeConlluAttr(sent, indices, "head", undefined);
         sent = sentAndPrev[0];
@@ -152,7 +161,7 @@ function removeArc(destNodes) {
         undo: function(){
             var sent = buildSent();
             $.each(destNodes, function(i, node) {
-                var destIndex = node.id().slice(2);
+                var destIndex = getSlicedID(node);
                 var indices = findConlluId(node);
                 var sentAndPrev = changeConlluAttr(sent, indices, "head", prevRelations.head);
                 sent = sentAndPrev[0];
@@ -171,10 +180,10 @@ function removeArc(destNodes) {
 
 
 function selectArc() {
-    /* 
+    /*
     Activated when an arc is selected. Adds classes showing what is selected.
     */
-    
+
     if(!ISEDITING) {
         // if the user clicked an activated node
         if (this.hasClass("selected")) {
@@ -230,19 +239,19 @@ function keyDownClassifier(key) {
     //         drawTree();
     //     }
     // });
-    
+
     if (key.which == ESC) {
         key.preventDefault();
         drawTree();
     };
-    
+
     var isEditFocused = $('#edit').is(':focus');
     if(isEditFocused) {
         if (key.which == TAB) {
             key.preventDefault();
         }
     }
-    
+
     if (selArcs.length) {
         if (key.which == DEL_KEY || key.which == BACKSPACE) {
             removeArc(destNodes);
@@ -297,13 +306,13 @@ function keyDownClassifier(key) {
             if(key.shiftKey) { // zoom in
                 CURRENT_ZOOM += 0.1;
             }  else {  // fit to screen
-                CURRENT_ZOOM = cy.fit(); 
+                CURRENT_ZOOM = cy.fit();
             }
             cy.zoom(CURRENT_ZOOM);
             cy.center();
         } else if((key.which == MINUS || key.which == 173) ) { // zoom out
             CURRENT_ZOOM = cy.zoom();
-            //if(key.shiftKey) { 
+            //if(key.shiftKey) {
                 CURRENT_ZOOM -= 0.1;
             //}
             cy.zoom(CURRENT_ZOOM);
@@ -325,7 +334,7 @@ function moveArc() {
     $.each(nodes, function(n, node){
         node.removeEventListener("click", drawArcs);
         node.addEventListener("click", getArc);
-    });  
+    });
 }
 
 
@@ -334,7 +343,7 @@ function removeSup(st) {
     The function takes the cy-element of superoken that was selected,
     removes it and inserts its former subtokens. */
     var sent = buildSent();
-    var currentId = +st.id().slice(2); // the id of the supertoken to be removed
+    var currentId = getSlicedID(st); // the id of the supertoken to be removed
     var subTokens = sent.tokens[currentId].tokens; // getting its children
     sent.tokens.splice(currentId, 1); // removing the multiword token
     $.each(subTokens, function(n, tok) { // inserting the subtokens
@@ -346,11 +355,11 @@ function removeSup(st) {
 
 function changeNode() {
     // console.log("changeNode() " + Object.entries(this) + " // " + this.id());
-    
+
     ISEDITING = true;
 
     this.addClass("input");
-    var id = this.id().slice(0, 2);
+    var id = getSlicedID(this, 0, 2);
     var param = this.renderedBoundingBox();
     param.color = this.style("background-color");
     var nodeType;
@@ -360,8 +369,8 @@ function changeNode() {
     }
     if (id == "np") {nodeType = "UPOS"};
 
-    // for some reason, there are problems with label in deprels without this 
-    if (this.data("label") == undefined) {this.data("label", "")};
+    // for some reason, there are problems with label in deprels without this
+    if (this.data("label") === undefined) {this.data("label", "")};
 
     // to get rid of the magic direction arrows
     var res = this.data("label").replace(/[⊳⊲]/, '');
@@ -379,18 +388,17 @@ function changeNode() {
         $(".activated#mute").css("width", $(window).width()-10);
     }
 
-    // TODO: rank the labels + make the style better  
+    // TODO: rank the labels + make the style better
     var availableLabels = [];
     if(nodeType == "UPOS") {
-        availableLabels = U_POS; 
-    } else if(nodeType == "DEPREL") { 
+        availableLabels = U_POS;
+    } else if(nodeType == "DEPREL") {
         availableLabels = U_DEPRELS;
     }
     // console.log('availableLabels:', availableLabels);
- 
-    // autocomplete
 
-    $('#edit').selfcomplete({lookup: availableLabels, 
+    // autocomplete
+    $('#edit').selfcomplete({lookup: availableLabels,
         tabDisabled: false,
         autoSelectFirst:true,
         lookupLimit:5
@@ -431,7 +439,7 @@ function changeEdgeParam(param) {
 function find2change() {
     /* Selects a cy element to be changed, returns its index. */
     var active = cy.$(".input");
-    var Id = active.id().slice(2) - 1;
+    var Id = getSlicedID(active); // -1;
     return Id;
 }
 
@@ -455,15 +463,15 @@ function writeDeprel(deprelInp, indices) { // TODO: DRY
     /* Writes changes to deprel label. */
 
     // getting indices
-    if (indices == undefined) {
+    if (indices === undefined) {
         var active = cy.$(".input");
-        var Id = active.id().slice(2);
+        var Id = getSlicedID(active);
         var wfNode = cy.$("#nf" + Id);
         var indices = findConlluId(wfNode);
-    } 
+    }
 
     var sent = buildSent();
- 
+
     var outerIndex = indices[1];
     var cur = parseInt(sent.tokens[outerIndex].id);
     var head = parseInt(sent.tokens[outerIndex].head);
@@ -494,9 +502,9 @@ function writePOS(posInp, indices) {
     /* Writes changes to POS label. */
 
     // getting indices
-    if (indices == undefined) {
+    if (indices === undefined) {
         var active = cy.$(".input");
-        var Id = active.id().slice(2);
+        var Id = getSlicedID(active);
         var wfNode = cy.$("#nf" + Id);
         var indices = findConlluId(wfNode);
     }
@@ -527,7 +535,7 @@ function changeConlluAttr(sent, indices, attrName, newVal) {
     var isSubtoken = indices[0];
     var outerIndex = indices[1];
     var innerIndex = indices[2];
- 
+
     //if(attrName == "deprel") {
     //  newVal = newVal.replace(/[⊲⊳]/g, '');
     //}
@@ -587,7 +595,7 @@ function findConlluId(wfNode) { // TODO: refactor the arcitecture.
             }
         }
     } else {
-        var tokNumber = +wfNode.id().slice(2);
+        var tokNumber = getSlicedID(wfNode);
         var sent = buildSent();
         for (var i = 0; i < sent.tokens.length; ++i) {
             if (sent.tokens[i].id == tokNumber) {
@@ -614,7 +622,7 @@ function thereIsSupertoken(sent) {
     $.each(sent.tokens, function(n, tok) {
         if (tok instanceof conllu.MultiwordToken) {
             supTokFound = true;
-        } 
+        }
     })
     return supTokFound;
 }
@@ -699,7 +707,7 @@ function mergeNodes(toMerge, side, how) {
         drawTree();
         return;
     }
-    
+
     var nodeId = indices[1];
     var otherId = (side == "right") ? nodeId + 1 : nodeId - 1;
     var sent = buildSent();
@@ -734,7 +742,7 @@ function buildSent() {
     var currentFormat = detectFormat(currentSent);
     if (currentFormat == "CG3") {
         currentSent = CG2conllu(currentSent);
-        if (currentSent == undefined) {
+        if (currentSent === undefined) {
             drawTree();
             return;
         }
@@ -758,7 +766,7 @@ function redrawTree(sent) {
 
     $("#indata").val(changedSent);
     updateTable();
-    drawTree(); 
+    drawTree();
     cy.zoom(CURRENT_ZOOM);
 }
 
@@ -774,7 +782,7 @@ function writeSent(makeChanges) {
 
     // redraw tree
     $("#indata").val(sent.serial);
-    drawTree();    
+    drawTree();
 }
 
 
@@ -786,7 +794,7 @@ function viewAsPlain() { // TODO: DRY?
         text = conllu2plainSent(text);
     } else if (currentFormat == "CG3") {
         text = CG2conllu(text);
-        if (text == undefined) {
+        if (text === undefined) {
             cantConvertCG(); // show the error message
             return;
         } else {
@@ -803,7 +811,7 @@ function viewAsConllu() {
 
     if (currentFormat == "CG3") {
         curSent = CG2conllu(curSent);
-        if (curSent == undefined) {
+        if (curSent === undefined) {
             cantConvertCG();
             return;
         }
@@ -945,14 +953,14 @@ $(document).ready(function(){
         // $("#treebankSize").text(CONTENTS.length); // TODO: Report the current loaded treebank size to user
 		$(e.target).find('.modal-body').load('help.html');
 	});
-    
+
     $('#exportModal').on('shown.bs.modal', function(e) {
         // $("#treebankSize").text(CONTENTS.length); // TODO: Report the current loaded treebank size to user
 		$(e.target).find('.modal-body').load('export.html', function() {
-            exportPNG(); 
+            exportPNG();
         });
 	});
-    
+
     $('#exportModal').on('hidden.bs.modal', function (e) {
         png_exported = false;
         latex_exported = false;
