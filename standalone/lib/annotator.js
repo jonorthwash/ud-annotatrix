@@ -146,7 +146,7 @@ function bindCyHandlers() {
     cy.on('click', '$node > node', selectSup);
     cy.on('cxttapend', 'node.wf', changeNode);
     cy.on('click', 'edge.dependency', changeNode);
-    cy.on('zoom', cy.center); // center the view port when the page zoom is changed
+//    cy.on('zoom', cy.center); // center the view port when the page zoom is changed
 }
 
 

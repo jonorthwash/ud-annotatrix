@@ -10,6 +10,7 @@ var ST_COLOR = "#bcd2ff"
 var SCROLL_ZOOM_INCREMENT = 0.05;
 var TREE_ = {}; // This map allows us to address the Token object given an ID
 var VIEW_ENHANCED = false;
+var CURRENT_PAN = {};
 
 // Used for calculating progress
 var ALL_WORK = 0
@@ -32,6 +33,7 @@ var latex_exported = false;
  * @param {String} content Content of the input textbox.
  */
 function conlluDraw(content) {
+    console.log('conlluDraw.');
     var sent = new conllu.Sentence();
     sent.serial = content;
     changeBoxSize(sent);
@@ -51,6 +53,8 @@ function conlluDraw(content) {
         style: CY_STYLE,
         elements: conllu2cy(sent)
     });
+
+//    CURRENT_PAN = cy.pan();
 
 //    if(content.split('\n').length > 10) {
 //          if(!VIEW_ENHANCED){
@@ -79,6 +83,14 @@ function conlluDraw(content) {
     cy.center();
     $(window).bind('resize', onResize);
     $(window).bind('DOMMouseScroll wheel', onScroll);
+    cy.on("pan", onPan);
+    cy.pan(CURRENT_PAN);
+}
+
+function onPan(e) {
+    console.log('[0] CURRENT_PAN:', CURRENT_PAN);
+    CURRENT_PAN = cy.pan();
+    console.log('[1] CURRENT_PAN:', CURRENT_PAN);
 }
 
 /**
@@ -92,7 +104,6 @@ function onResize(e) {
     cy.fit();
     cy.resize();
     cy.reset();
-
     CURRENT_ZOOM = cy.zoom(); // Get the current zoom factor.
 //    cy.center();
 //    CURRENT_ZOOM = cy.zoom();
@@ -102,6 +113,7 @@ function onResize(e) {
     if(!VERT_ALIGNMENT) {
         $("#cy").css("height", $(window).height()-$(".inarea").height()-80);
     }
+    cy.pan(CURRENT_PAN);
 }
 
 /**
@@ -125,6 +137,7 @@ function onScroll(event) {
       }
       return false;
     }
+    cy.pan(CURRENT_PAN);
 
     //} else {
     //  console.log('SCROLL', event.shiftKey);
