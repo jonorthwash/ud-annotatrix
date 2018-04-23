@@ -2,9 +2,11 @@
 
 The online interface is currently available from several places:
 
-* [Masha's GitHub pages](https://maryszmary.github.io/ud-annotatrix/standalone/annotator.html). 
-* [Fran's GitHub pages](https://ftyers.github.io/ud-annotatrix/). 
+* [Jonathan's GitHub pages](https://jonorthwash.github.io/ud-annotatrix/) - latest code of main repo.
+* [Masha's GitHub pages](https://maryszmary.github.io/ud-annotatrix/standalone/annotator.html).
+* [Fran's GitHub pages](https://ftyers.github.io/ud-annotatrix/).
 * [Server version on web-corpora](http://web-corpora.net/wsgi3/annotatrix/)(beta).
+* [Jonathan's alternate GitHub pages](https://jonorthwash.github.io/visualiser.html) - synchronised to v0.1.3, a late version of just the visualiser code.
 
 To use it offline, clone this repository to your local machine and open the file `index.html` in your browser.
 
