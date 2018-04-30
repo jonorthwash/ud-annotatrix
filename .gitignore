@@ -5,3 +5,6 @@ ud-env
 # python compiled files
 __pycache__
 *.pyc
+
+# db files
+corpora

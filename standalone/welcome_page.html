@@ -11,16 +11,25 @@
 
 </head>
 <body>
-  <div id="content">
-  <div style="text-align:center">
-<h1>Welcome to UD Annotatrix</h1>
-<br/>
-<form method=post enctype=multipart/form-data action="./annotatrix/upload" id="filename">
+  <div id="welcome-content">
+
+		<h1 id="welcome-banner">Welcome to UD Annotatrix</h1>
+
+		<form method=post enctype=multipart/form-data action="./annotatrix/upload" id="filename">
       <input type=file name=file>
       <input type=submit value="Upload to server">
-</form>
-  </div>
+		</form>
 
-</div>
+		<div id="links">
+			<strong>Links:</strong>
+			<a id="to_annotatrix" href="/annotatrix/annotator.html">
+				Online annotator
+			</a>
+			<a id="to_help" href="/annotatrix/help.html">
+				Help
+			</a>
+		</div>
+
+	</div>
 </body>
 </html>
