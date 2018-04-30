@@ -28,7 +28,7 @@ welcome = '''
 *******************************************************************************
 * NOW POINT YOUR BROWSER AT: http://{}:{}/                           *
 *******************************************************************************
-'''.format(HOST, PORT)
+'''
 
 app = Flask(__name__, static_folder='../standalone', static_url_path='/annotatrix')
 
@@ -83,14 +83,17 @@ def download_corpus():
 @app.route('/annotatrix/upload', methods=['GET', 'POST'])
 def upload_new_corpus():
     if request.method == 'POST':
-        f = request.files['file']
-        corpus_name = f.filename
-        corpus = f.read().decode()
-        treebank_id = str(uuid.uuid4())
-        db_path = treebank_path(treebank_id)
-        db = CorpusDB(db_path)
-        db.write_corpus(corpus, corpus_name)
-        return redirect(url_for('corpus_page', treebank_id=treebank_id))
+        if 'file' in request.files:
+            f = request.files['file']
+            corpus_name = f.filename
+            corpus = f.read().decode()
+            treebank_id = str(uuid.uuid4())
+            db_path = treebank_path(treebank_id)
+            db = CorpusDB(db_path)
+            db.write_corpus(corpus, corpus_name)
+            return redirect(url_for('corpus_page', treebank_id=treebank_id))
+        else:
+            print('no file uploaded')
     return jsonify({'something': 'went wrong'})
 
 
@@ -117,7 +120,7 @@ def index():
 
 @app.route('/annotatrix/<treebank_id>')
 def corpus_page(treebank_id):
-    print('XX:',treebank_id, file=sys.stderr)
+    sys.stderr.write('XX: ' + treebank_id)
     if '.' in treebank_id:
         return send_from_directory('../standalone', treebank_id)
     return send_from_directory('../standalone', 'annotator.html')
@@ -140,6 +143,6 @@ def treebank_path(treebank_id, extension='.db'):
 
 
 if __name__ == '__main__':
-    print(welcome)
+    print(welcome.format(HOST, PORT))
     app.secret_key = SECRET_KEY
     app.run(debug = True, port = PORT)
