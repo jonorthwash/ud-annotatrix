@@ -36,16 +36,15 @@ if not os.path.exists(PATH_TO_CORPORA):
     os.mkdir(PATH_TO_CORPORA)
 
 
-
 @app.route('/save', methods=['GET', 'POST'])
 def save_corpus():
     if request.form:
         sent = request.form['content']
         treebank_id = request.form['treebank_id']
-        path = treebank_id.strip('#') + '.db'
+        db_path = treebank_path(treebank_id)
         sent_num = request.form['sentNum']
-        if os.path.exists(PATH_TO_CORPORA + '/' + path):
-            db = CorpusDB(PATH_TO_CORPORA + '/' + path)
+        if os.path.exists(db_path):
+            db = CorpusDB(db_path)
             db.update_db(sent, sent_num)
         return jsonify()
     return jsonify()
@@ -55,10 +54,10 @@ def save_corpus():
 def load_sentence():
     if request.form:
         treebank_id = request.form['treebank_id']
-        path = treebank_id.strip('#') + '.db'
+        db_path = treebank_path(treebank_id)
         sent_num = request.form['sentNum']
-        if os.path.exists(PATH_TO_CORPORA + '/' + path):
-            db = CorpusDB(PATH_TO_CORPORA + '/' + path)
+        if os.path.exists(db_path):
+            db = CorpusDB(db_path)
             sent, max_sent = db.get_sentence(sent_num)
             return jsonify({'content': sent, 'max': max_sent})
         else:
@@ -70,13 +69,14 @@ def load_sentence():
 def download_corpus():
     if request.args:
         treebank_id = request.args['treebank_id'].strip('#')
-        db_path = treebank_id + '.db'
-        if os.path.exists(PATH_TO_CORPORA + '/' + db_path):
-            db = CorpusDB(PATH_TO_CORPORA + '/' + db_path)
+        db_path = treebank_path(treebank_id)
+        file_path = treebank_id(treebank_id, extension='')
+        if os.path.exists(db_path):
+            db = CorpusDB(db_path)
             corpus, corpus_name = db.get_file()
-            with open(PATH_TO_CORPORA + '/' + treebank_id, 'w') as f:
+            with open(file_path, 'w') as f:
                 f.write(corpus)
-            return send_file(PATH_TO_CORPORA + '/' + treebank_id, as_attachment=True, attachment_filename=corpus_name)
+            return send_file(file_path, as_attachment=True, attachment_filename=corpus_name)
     return jsonify({'corpus': 'something went wrong'})
 
 
@@ -87,7 +87,8 @@ def upload_new_corpus():
         corpus_name = f.filename
         corpus = f.read().decode()
         treebank_id = str(uuid.uuid4())
-        db = CorpusDB(PATH_TO_CORPORA + '/' + treebank_id + '.db')
+        db_path = treebank_path(treebank_id)
+        db = CorpusDB(db_path)
         db.write_corpus(corpus, corpus_name)
         return redirect(url_for('corpus_page', treebank_id=treebank_id))
     return jsonify({'something': 'went wrong'})
@@ -120,6 +121,22 @@ def corpus_page(treebank_id):
     if '.' in treebank_id:
         return send_from_directory('../standalone', treebank_id)
     return send_from_directory('../standalone', 'annotator.html')
+
+
+def treebank_path(treebank_id, extension='.db'):
+    '''
+    Provides a consistent way to get the path to a corpus from the treebank_id.
+    Note that the path used by the db will have a `.db` extension, but files
+    sent from the server will not.  In this case, the function should be called
+    with extension=''.
+
+    @param treebank_id
+    @param extension
+    @return path to corpus file (with extension)
+    '''
+    return os.path.join(PATH_TO_CORPORA, treebank_id.strip('#') + extension)
+
+
 
 
 if __name__ == '__main__':
