@@ -1,7 +1,7 @@
-"""
+'''
 This is the backend for the annotatrix tool. It allows to save a project
 on a server and load it when needed.
-"""
+'''
 
 import sys
 from io import BytesIO
@@ -15,15 +15,20 @@ from flask import url_for
 import os
 import uuid
 from db import CorpusDB
-import config
+from env import Env
 
-PATH_TO_CORPORA = 'corpora'
+env = Env('.env')
+
+PATH_TO_CORPORA = env.get('PATH_TO_CORPORA', 'corpora')
+SECRET_KEY = env.get('SECRET_KEY', 'secret-key-123')
+HOST = env.get('HOST', '127.0.0.1')
+PORT = env.get('PORT', '5316')
 
 welcome = '''
 *******************************************************************************
-* NOW POINT YOUR BROWSER AT: http://127.0.0.1:5316/                           *
+* NOW POINT YOUR BROWSER AT: http://{}:{}/                           *
 *******************************************************************************
-'''
+'''.format(HOST, PORT)
 
 app = Flask(__name__, static_folder='../standalone', static_url_path='/annotatrix')
 
@@ -69,7 +74,7 @@ def download_corpus():
         if os.path.exists(PATH_TO_CORPORA + '/' + db_path):
             db = CorpusDB(PATH_TO_CORPORA + '/' + db_path)
             corpus, corpus_name = db.get_file()
-            with open(PATH_TO_CORPORA + '/' + treebank_id, 'w') as f: 
+            with open(PATH_TO_CORPORA + '/' + treebank_id, 'w') as f:
                 f.write(corpus)
             return send_file(PATH_TO_CORPORA + '/' + treebank_id, as_attachment=True, attachment_filename=corpus_name)
     return jsonify({'corpus': 'something went wrong'})
@@ -119,5 +124,5 @@ def corpus_page(treebank_id):
 
 if __name__ == '__main__':
     print(welcome)
-    app.secret_key = config.SECRET_KEY
-    app.run(debug = True, port = 5316)
+    app.secret_key = SECRET_KEY
+    app.run(debug = True, port = PORT)

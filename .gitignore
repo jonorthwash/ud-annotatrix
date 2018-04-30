@@ -1,5 +1,6 @@
-# environment settings
+# environment stuff
 .env
+ud-env
 
 # python compiled files
 __pycache__
