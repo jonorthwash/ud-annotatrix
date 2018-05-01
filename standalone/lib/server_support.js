@@ -6,6 +6,7 @@ var SERVER_RUNNING = false;
 function checkServer() {
     /* Tries to send a request to /annotatrix/running. If it works, sets SERVER_RUNNING
     to true and loads data from server. */
+    SERVER_RUNNING = false;
     try {
         $.ajax({
             type: 'POST',
@@ -17,10 +18,15 @@ function checkServer() {
             success: function(data){
                 console.log(data);
                 SERVER_RUNNING = true;
-            }    
-        }) 
+                $('#upload').hide();
+                getSentence(1); // loading a sentence from the server
+            },
+            error: function(data){
+              loadFromLocalStorage();
+            }
+        })
     } catch (e) {
-    	SERVER_RUNNING = false;
+      console.log(e);
     }
 }
 
