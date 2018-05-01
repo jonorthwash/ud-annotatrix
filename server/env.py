@@ -1,7 +1,7 @@
 import os
 
 class Env(object):
-	def __init__(self, filename):
+	def __init__(self, filename='.env'):
 
 		self.root = os.path.abspath(os.path.join(os.path.dirname(__file__),'..'))
 		self.filepath = os.path.join(self.root, filename)
@@ -10,15 +10,13 @@ class Env(object):
 		if os.path.exists(self.filepath):
 			print('doesn\'t exist')
 			self.read()
-		print(self.root)
+
 		self.set('ROOT', self.root)
-		print(self.filepath)
-		print(self.variables)
+
 	def read(self):
 		with open(self.filepath) as f:
 			for line in f.readlines():
 				key,value = line.split('=')
-				print(key, value)
 				self.variables[key] = value.strip('\n')
 		self.save()
 

@@ -4,7 +4,7 @@ import sys
 
 class Logger():
 
-    def __init__(self, name, env):
+    def __init__(self, env=None, name='DEFAULT'):
 
         self.name = name
 
@@ -21,7 +21,7 @@ class Logger():
 
         # write status stuff
         self.write(file=self.file, message='\n\n\n')
-        self.debug('Logger initializing ({})'.format(self))
+        self.debug('Initializing: {}'.format(self))
 
 
     def format(self, show_time=True, prefix=None, message=''):
