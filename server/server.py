@@ -110,15 +110,18 @@ def upload_new_corpus():
     logger.info('{} /annotatrix/upload'.format(request.method))
     if request.method == 'POST':
         if 'file' in request.files:
-            logger.debug('/annotatrix/upload files: {}'.format(request.files))
-            f = request.files['file']
-            corpus_name = f.filename
-            corpus = f.read().decode()
-            treebank_id = str(uuid.uuid4())
-            db_path = treebank_path(treebank_id)
-            db = CorpusDB(db_path)
-            db.write_corpus(corpus, corpus_name)
-            return redirect(url_for('corpus_page', treebank_id=treebank_id))
+            try:
+                logger.debug('/annotatrix/upload files: {}'.format(request.files))
+                f = request.files['file']
+                corpus_name = f.filename
+                corpus = f.read().decode()
+                treebank_id = str(uuid.uuid4())
+                db_path = treebank_path(treebank_id)
+                db = CorpusDB(db_path)
+                db.write_corpus(corpus, corpus_name)
+                return redirect(url_for('corpus_page', treebank_id=treebank_id))
+            except Exception as e:
+                logger.error('/annotatrix/upload error: {}'.format(e))
         else:
             logger.warn('/annotatrix/upload no file received')
     return jsonify({'something': 'went wrong'})
