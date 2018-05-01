@@ -32,4 +32,5 @@ if [ ! -f $ENV ]; then
   echo "SECRET_KEY=annotatrixareforkids" >> $ENV
   echo "HOST=127.0.0.1" >> $ENV
   echo "PORT=5316" >> $ENV
+  echo "DEBUG=DEBUG" >> $ENV
 fi

@@ -19,6 +19,7 @@ from env import Env
 
 env = Env('.env')
 
+exit()
 PATH_TO_CORPORA = env.get('PATH_TO_CORPORA', 'corpora')
 SECRET_KEY = env.get('SECRET_KEY', 'secret-key-123')
 HOST = env.get('HOST', '127.0.0.1')

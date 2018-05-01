@@ -7,16 +7,20 @@ class Env(object):
 		self.filepath = os.path.join(self.root, filename)
 		self.variables = {}
 
-		self.set('ROOT', self.root)
-
 		if os.path.exists(self.filepath):
+			print('doesn\'t exist')
 			self.read()
-
+		print(self.root)
+		self.set('ROOT', self.root)
+		print(self.filepath)
+		print(self.variables)
 	def read(self):
 		with open(self.filepath) as f:
 			for line in f.readlines():
 				key,value = line.split('=')
+				print(key, value)
 				self.variables[key] = value.strip('\n')
+		self.save()
 
 	def get(self, key, default=None):
 		if key in self.variables:
