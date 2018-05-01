@@ -126,13 +126,16 @@ function bindHandlers() {
     // TODO: causes errors if called before the cy is initialised
     $(document).keydown(keyDownClassifier);
 
-    $("#indata").bind("keyup", drawTree);
-    $("#indata").bind("keyup", focusOut);
-    $("#indata").bind("keyup", formatTabsView);
-    $("#RTL").on("click", switchRtlMode);
-    $("#vertical").on("click", switchAlignment);
-    $("#enhanced").on("click", switchEnhanced);
-    document.getElementById('filename').addEventListener('change', loadFromFile, false);
+    $('#indata')
+      .keyup(drawTree)
+      .keyup(focusOut)
+      .keyup(formatTabsView)
+
+    $('#RTL').click(switchRtlMode);
+    $('#vertical').click(switchAlignment);
+    $('#enhanced').click(switchEnhanced);
+
+    $('#filename').change(loadFromFile);
 }
 
 
