@@ -67,7 +67,7 @@ function drawArcs(evt) {
         var actNode = cy.$(".activated");
 
         this.addClass("activated");
-        
+
         // if there is an activated node already
         if (actNode.length == 1) {
             writeArc(actNode, this);
@@ -92,7 +92,7 @@ function writeArc(sourceNode, destNode) {
     var tokens = sent.tokens;
     // console.log(idx + ' ' + tokens);
     var thisToken = tokens[idx];
-    // console.log('writeArc ' + destIndex + ' ' + thisToken['upostag']); 
+    // console.log('writeArc ' + destIndex + ' ' + thisToken['upostag']);
     var sentAndPrev = changeConlluAttr(sent, indices, "head", sourceIndex);
 
     // If the target POS tag is PUNCT set the deprel to @punct [99%]
@@ -171,10 +171,10 @@ function removeArc(destNodes) {
 
 
 function selectArc() {
-    /* 
+    /*
     Activated when an arc is selected. Adds classes showing what is selected.
     */
-    
+
     if(!ISEDITING) {
         // if the user clicked an activated node
         if (this.hasClass("selected")) {
@@ -230,19 +230,19 @@ function keyDownClassifier(key) {
     //         drawTree();
     //     }
     // });
-    
+
     if (key.which == ESC) {
         key.preventDefault();
         drawTree();
     };
-    
+
     var isEditFocused = $('#edit').is(':focus');
     if(isEditFocused) {
         if (key.which == TAB) {
             key.preventDefault();
         }
     }
-    
+
     if (selArcs.length) {
         if (key.which == DEL_KEY || key.which == BACKSPACE) {
             removeArc(destNodes);
@@ -297,13 +297,13 @@ function keyDownClassifier(key) {
             if(key.shiftKey) { // zoom in
                 CURRENT_ZOOM += 0.1;
             }  else {  // fit to screen
-                CURRENT_ZOOM = cy.fit(); 
+                CURRENT_ZOOM = cy.fit();
             }
             cy.zoom(CURRENT_ZOOM);
             cy.center();
         } else if((key.which == MINUS || key.which == 173) ) { // zoom out
             CURRENT_ZOOM = cy.zoom();
-            //if(key.shiftKey) { 
+            //if(key.shiftKey) {
                 CURRENT_ZOOM -= 0.1;
             //}
             cy.zoom(CURRENT_ZOOM);
@@ -325,7 +325,7 @@ function moveArc() {
     $.each(nodes, function(n, node){
         node.removeEventListener("click", drawArcs);
         node.addEventListener("click", getArc);
-    });  
+    });
 }
 
 
@@ -346,7 +346,7 @@ function removeSup(st) {
 
 function changeNode() {
     // console.log("changeNode() " + Object.entries(this) + " // " + this.id());
-    
+
     ISEDITING = true;
 
     this.addClass("input");
@@ -360,7 +360,7 @@ function changeNode() {
     }
     if (id == "np") {nodeType = "UPOS"};
 
-    // for some reason, there are problems with label in deprels without this 
+    // for some reason, there are problems with label in deprels without this
     if (this.data("label") == undefined) {this.data("label", "")};
 
     // to get rid of the magic direction arrows
@@ -379,18 +379,18 @@ function changeNode() {
         $(".activated#mute").css("width", $(window).width()-10);
     }
 
-    // TODO: rank the labels + make the style better  
+    // TODO: rank the labels + make the style better
     var availableLabels = [];
     if(nodeType == "UPOS") {
-        availableLabels = U_POS; 
-    } else if(nodeType == "DEPREL") { 
+        availableLabels = U_POS;
+    } else if(nodeType == "DEPREL") {
         availableLabels = U_DEPRELS;
     }
     // console.log('availableLabels:', availableLabels);
- 
+
     // autocomplete
 
-    $('#edit').selfcomplete({lookup: availableLabels, 
+    $('#edit').selfcomplete({lookup: availableLabels,
         tabDisabled: false,
         autoSelectFirst:true,
         lookupLimit:5
@@ -460,10 +460,10 @@ function writeDeprel(deprelInp, indices) { // TODO: DRY
         var Id = active.id().slice(2);
         var wfNode = cy.$("#nf" + Id);
         var indices = findConlluId(wfNode);
-    } 
+    }
 
     var sent = buildSent();
- 
+
     var outerIndex = indices[1];
     var cur = parseInt(sent.tokens[outerIndex].id);
     var head = parseInt(sent.tokens[outerIndex].head);
@@ -527,7 +527,7 @@ function changeConlluAttr(sent, indices, attrName, newVal) {
     var isSubtoken = indices[0];
     var outerIndex = indices[1];
     var innerIndex = indices[2];
- 
+
     //if(attrName == "deprel") {
     //  newVal = newVal.replace(/[⊲⊳]/g, '');
     //}
@@ -614,7 +614,7 @@ function thereIsSupertoken(sent) {
     $.each(sent.tokens, function(n, tok) {
         if (tok instanceof conllu.MultiwordToken) {
             supTokFound = true;
-        } 
+        }
     })
     return supTokFound;
 }
@@ -699,7 +699,7 @@ function mergeNodes(toMerge, side, how) {
         drawTree();
         return;
     }
-    
+
     var nodeId = indices[1];
     var otherId = (side == "right") ? nodeId + 1 : nodeId - 1;
     var sent = buildSent();
@@ -758,7 +758,7 @@ function redrawTree(sent) {
 
     $("#indata").val(changedSent);
     updateTable();
-    drawTree(); 
+    drawTree();
     cy.zoom(CURRENT_ZOOM);
 }
 
@@ -774,7 +774,7 @@ function writeSent(makeChanges) {
 
     // redraw tree
     $("#indata").val(sent.serial);
-    drawTree();    
+    drawTree();
 }
 
 
@@ -871,34 +871,25 @@ function focusOut(key) {
 function switchRtlMode() {
 	$('#RTL .fa').toggleClass('fa-align-right');
 	$('#RTL .fa').toggleClass('fa-align-left');
-	 if (LEFT_TO_RIGHT) {
-        LEFT_TO_RIGHT = false;
-    } else {
-        LEFT_TO_RIGHT = true;
-    }
-    drawTree();
+	LEFT_TO_RIGHT = !LEFT_TO_RIGHT;
+
+  drawTree();
 }
 
 
 function switchAlignment() {
 	$('#vertical .fa').toggleClass('fa-rotate-90');
-    if (VERT_ALIGNMENT) {
-        VERT_ALIGNMENT = false;
-    } else {
-        VERT_ALIGNMENT = true;
-    }
-    drawTree();
+	VERT_ALIGNMENT = !VERT_ALIGNMENT;
+
+	drawTree();
 }
 
 function switchEnhanced() {
-    $('#enhanced .fa').toggleClass('fa-tree');
-    $('#enhanced .fa').toggleClass('fa-magic');
-    if (VIEW_ENHANCED) {
-        VIEW_ENHANCED = false;
-    } else {
-        VIEW_ENHANCED = true;
-    }
-    drawTree();
+  $('#enhanced .fa').toggleClass('fa-tree');
+  $('#enhanced .fa').toggleClass('fa-magic');
+	VIEW_ENHANCED = !VIEW_ENHANCED;
+
+	drawTree();
 }
 
 
@@ -945,14 +936,14 @@ $(document).ready(function(){
         // $("#treebankSize").text(CONTENTS.length); // TODO: Report the current loaded treebank size to user
 		$(e.target).find('.modal-body').load('help.html');
 	});
-    
+
     $('#exportModal').on('shown.bs.modal', function(e) {
         // $("#treebankSize").text(CONTENTS.length); // TODO: Report the current loaded treebank size to user
 		$(e.target).find('.modal-body').load('export.html', function() {
-            exportPNG(); 
+            exportPNG();
         });
 	});
-    
+
     $('#exportModal').on('hidden.bs.modal', function (e) {
         png_exported = false;
         latex_exported = false;
