@@ -89,7 +89,7 @@ def download_corpus():
         logger.info('/annotatrix/download args: {}'.format(request.args))
         treebank_id = request.args['treebank_id'].strip('#')
         db_path = treebank_path(treebank_id)
-        file_path = treebank_id(treebank_id, extension='')
+        file_path = treebank_path(treebank_id, extension='')
         if os.path.exists(db_path):
             logger.debug('/annotatrix/download updating db at {}'.format(db_path))
             db = CorpusDB(db_path)

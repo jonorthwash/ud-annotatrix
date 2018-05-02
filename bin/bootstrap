@@ -5,6 +5,7 @@ GREEN="\033[1;32m"
 RESET="\033[0m"
 
 alias echo="echo -e"
+alias runserver="python server/server.py"
 
 # python virtual environment setup
 VENV=ud-env
