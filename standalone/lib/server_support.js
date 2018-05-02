@@ -1,6 +1,6 @@
 "use strict"
 
-var SERVER_RUNNING = false;
+var SERVER_RUNNING;
 
 
 function checkServer() {

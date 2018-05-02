@@ -37,7 +37,12 @@ function main() {
         pathRoot + 'conllu_table.js',
         pathRoot + 'visualiser.js',
         pathRoot + 'validation.js',
-        pathRoot + 'cy-style.js'
+        pathRoot + 'cy-style.js',
+
+        // KM classes
+        pathRoot + 'logger.js',
+        pathRoot + 'tester.js',
+        pathRoot + 'errors.js'
     );
 
     head.ready(onReady);
@@ -53,6 +58,9 @@ function onReady() {
     - checks if someone loads data in url
     - binds handlers to DOM emements
     */
+
+    window.log = new Logger('DEBUG');
+    window.test = new Tester();
 
     var cy = window.cy = cytoscape({ // avoid those `cy.$ is not a function errors`
         container: document.getElementById("cy"),
