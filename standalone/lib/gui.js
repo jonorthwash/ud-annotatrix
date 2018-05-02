@@ -798,6 +798,7 @@ function viewAsPlain() { // TODO: DRY?
 
 
 function viewAsConllu() {
+		console.log('view as conllu');
     var curSent = $("#indata").val();
     var currentFormat = detectFormat(curSent);
 

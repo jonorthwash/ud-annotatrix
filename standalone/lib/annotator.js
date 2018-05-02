@@ -54,6 +54,20 @@ function onReady() {
     - binds handlers to DOM emements
     */
 
+    var cy = window.cy = cytoscape({ // avoid those `cy.$ is not a function errors`
+        container: document.getElementById("cy"),
+
+        boxSelectionEnabled: false,
+        autounselectify: true,
+        autoungrabify: true,
+        zoomingEnabled: true,
+        userZoomingEnabled: false,
+        wheelSensitivity: 0.1,
+        layout: formLayout(),
+        style: CY_STYLE,
+        elements: []
+    });
+
     checkServer(); // check if server is running
     window.undoManager = new UndoManager();  // undo support
     setUndos(window.undoManager);
@@ -79,9 +93,12 @@ function getContents() {
     // if (SERVER_RUNNING) {
     //     // TODO: implement
     // } else {
+    console.log(CURRENTSENTENCE);
     var splitted = localStorage.getItem('treebank'); // TODO: implement a more memory-friendly func?
-    splitted = JSON.parse(splitted); // string to array
+    splitted = JSON.parse(splitted);// || new Array(); // string to array
+    console.log('splitted no ||', splitted);
     splitted[CURRENTSENTENCE] = $("#indata").val();
+    console.log('splitted', splitted);
     localStorage.setItem('treebank', JSON.stringify(splitted)); // update the treebank
     return splitted.join('\n\n');
     // }
