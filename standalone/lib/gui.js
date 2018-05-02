@@ -23,6 +23,7 @@ var I = 73;
 var S = 83;
 var R = 82;
 var M = 77;
+var P = 80;
 var SIDES = {39: "right", 37: "left"};
 var ISEDITING = false;
 var POS2RELmappings = {
@@ -312,6 +313,8 @@ function keyDownClassifier(key) {
             CURRENT_ZOOM = 1.0;
             cy.zoom(CURRENT_ZOOM);
             cy.center();
+        } else if(key.which == P ) {
+            setPunct();
         }
     }
 }
@@ -449,6 +452,198 @@ function setRoot(wf) {
    redrawTree(sent);
 }
 
+
+function setPunct() {
+    console.log('PUNCTUATION TIME!');
+    var sent = buildSent();
+    //var undolist = []; // [ [indeces, arg, was, is], ... ]
+    var puncts = [];
+    var sentAndPrev;
+    var headFind = [];
+    var bracketStack = [];
+    var matches = [];
+    var tok;
+    var headList = [];
+    var relList = [];
+    var bracketMatch = {"(":")", "[":"]", "{":"}"};
+    var connect = function(src, dest, rel) {
+        sentAndPrev = changeConlluAttr(sent, [false, src, src], "deprel", rel);
+        sentAndPrev = changeConlluAttr(sent, [false, src, src], "head", dest+1);
+        headList[src] = dest;
+        relList[src] = rel;
+        sent = sentAndPrev[0];
+    };
+    for (var i = 0; i < sent.tokens.length; i++) {
+        tok = sent.tokens[i];
+        headList.push(tok.head);
+        relList.push(tok.deprel);
+        if (tok.deprel == "punct" && tok.upostag == undefined) {
+            sentAndPrev = changeConlluAttr(sent, [false, i, i], "upostag", "PUNCT");
+            sent = sentAndPrev[0];
+            tok = sent.tokens[i];
+            //undolist.push([[false, i, i], "upostag", sentAndPrev[1], "PUNCT"]);
+        }
+        if (tok.upostag == "PUNCT") {
+            if ('([{'.includes(tok.form)) {
+                bracketStack.push([i, bracketMatch[tok.form]]);
+            } else if ('}])'.includes(tok.form)) {
+                if (bracketStack[bracketStack.length-1][1] == tok.form) {
+                    matches.push([bracketStack.pop()[0], i]);
+                } else {
+                    console.log("Mismatched brackets, ignoring closing bracket '" + tok.form + "'.");
+                }
+            } else if (tok.form == '"' || tok.form == "'") {
+                if (bracketStack[bracketStack.length-1][1] == tok.form) {
+                    matches.push([bracketStack.pop()[0], i]);
+                } else {
+                    bracketStack.push([i, tok.form]);
+                }
+            } else {
+                puncts.push(i);
+            }
+        }
+        // This ignores opening punctuation that doesn't have a closing counterpart
+        // Is there some other way to do this?
+    }
+    var l;
+    var r;
+    var top;
+    var alttop;
+    for (var i = 0; i < matches.length; i++) {
+        l = matches[i][0];
+        r = matches[i][1];
+        top = [];
+        alttop = [];
+        for (var j = l+1; j < r-1; j++) {
+            if (headList[j] && (headList[j] < l || headList[j] > r)) {
+                top.push(j);
+            } else if (!headList[j]) {
+                alttop.push(j);
+            }
+        }
+        if (top.length == 0) {
+            if (l+1 == r) {
+                // An immediately adjacent pair of punctuation marks
+            } else {
+                // No enclosed elements point beyond the brackets
+                // So just pick one and attatch to it
+                // Namely, the left-most one that isn't a dependent
+                connect(l, alttop[0], "punct");
+                connect(r, alttop[0], "punct");
+            }
+        } else {
+            // Attatching both to the same element will break projectivity
+            // So attatch each to the nearest one
+            // This also does the right thing when top.length == 1
+            connect(l, top[0], "punct");
+            connect(r, top[top.length-1], "punct");
+        }
+    }
+    var mn;
+    var mx;
+    var conj = [];
+    var ltop;
+    var rtop;
+    var lalttop;
+    var ralttop;
+    for (var i = 0; i < puncts.length; i++) {
+        mn = 0;
+        mx = headList.length-1;
+        for (var j = puncts[i]+1; j < headList.length; j++) {
+            if (headList[j] < puncts[i]) {
+                mx = j;
+                break;
+            }
+        }
+        for (var j = puncts[i]-1; j > 0; j--) {
+            if (headList[j] > puncts[i]) {
+                mn = j;
+                break;
+            }
+        }
+        while (true) {
+            if (headList[mn] && headList[mn] < mx && headList[mn] > puncts[i]) {
+                mx = headList[mn];
+            } else if (headList[mx] && headList[mx] > mn && headList[mx] < puncts[i]) {
+                mn = headList[mx]
+            } else {
+                break;
+            }
+        }
+        // Attatching to something between mn and mx (inclusive) definitely can't break projectivity
+        if (relList[mx] == "conj" && headList[mx] == mn) {
+            connect(i, mx, "punct");
+        }
+        ltop = [];
+        top = [];
+        alttop = [];
+        for (var j = mn; j < mx; j++) {
+            if (j == i) {
+                ltop = top;
+                top = [];
+                lalttop = alttop;
+                alttop = [];
+            } else if (relList[j] == "root") {
+                connect(puncts[i], j, "punct");
+                break;
+            } else if (headList[j] && (headList[j] < mn || headList[j] > mx)) {
+                top.push(j);
+            } else if (headList[j] == undefined) {
+                alttop.push(j);
+            }
+        }
+        rtop = top;
+        top = ltop.concat(rtop);
+        ralttop = alttop;
+        if (top.length == 0) {
+            ltop = lalttop;
+            rtop = ralttop;
+            top = ltop.concat(rtop);
+            // Since the code for alttop.length > 0 && top.length == 0
+            // would be identical to top.length > 0
+        }
+        if (top.length == 0) {
+            console.log("Couldn't find anything to attatch punctuation " + i + " to.");
+            // This should be impossible unless it is the only element
+        } else if (top.length == 1) {
+            connect(puncts[i], top[0], "punct");
+        } else {
+            if (ltop.length == 0) {
+                connect(puncts[i], rtop[0], "punct");
+            }
+            if (rtop.length == 0 || i - ltop[ltop.length-1] < rtop[0] - i) {
+                connect(puncts[i], ltop[ltop.length-1], "punct");
+            } else {
+                connect(puncts[i], rtop[0], "punct");
+            }
+        }
+    }
+    
+    redrawTree(sent);
+    
+    // Undo not working, fix later
+    /*window.undoManager.add({
+        undo: function(){
+            console.log('UNDO!');
+            var snp;
+            var sent = buildSent();
+            for (var i = 0; i < undolist.length; i++) {
+                snp = changeConlluAttr(sent, undolist[i][0], undolist[i][1], undolist[i][2]);
+                sent = snp[0];
+            }
+            redrawTree(init);
+        },
+        redo: function(){
+            var snp;
+            var sent = buildSent();
+            for (var i = 0; i < undolist.length; i++) {
+                snp = changeConlluAttr(sent, undolist[i][0], undolist[i][1], undolist[i][3]);
+                sent = snp[0];
+            }
+            redrawTree(sent);
+        }
+    });*/
+}
 
 
 function writeDeprel(deprelInp, indices) { // TODO: DRY
