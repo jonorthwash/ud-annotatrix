@@ -468,14 +468,14 @@ function setPunct() {
     var bracketMatch = {"(":")", "[":"]", "{":"}"};
     var connect = function(src, dest, rel) {
         sentAndPrev = changeConlluAttr(sent, [false, src, src], "deprel", rel);
-        sentAndPrev = changeConlluAttr(sent, [false, src, src], "head", dest+1);
+        sentAndPrev = changeConlluAttr(sent, [false, src, src], "head", (parseInt(dest)+1).toString());
         headList[src] = dest;
         relList[src] = rel;
         sent = sentAndPrev[0];
     };
     for (var i = 0; i < sent.tokens.length; i++) {
         tok = sent.tokens[i];
-        headList.push(tok.head);
+        headList.push(parseInt(tok.head)-1);
         relList.push(tok.deprel);
         if (tok.deprel == "punct" && tok.upostag == undefined) {
             sentAndPrev = changeConlluAttr(sent, [false, i, i], "upostag", "PUNCT");
@@ -549,8 +549,8 @@ function setPunct() {
     for (var i = 0; i < puncts.length; i++) {
         mn = 0;
         mx = headList.length-1;
-        for (var j = puncts[i]+1; j < headList.length; j++) {
-            if (headList[j] < puncts[i]) {
+        for (var j = puncts[i]; j < headList.length; j++) {
+            if (headList[j]-1 < puncts[i]) {
                 mx = j;
                 break;
             }
