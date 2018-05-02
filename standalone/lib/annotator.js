@@ -93,12 +93,9 @@ function getContents() {
     // if (SERVER_RUNNING) {
     //     // TODO: implement
     // } else {
-    console.log(CURRENTSENTENCE);
     var splitted = localStorage.getItem('treebank'); // TODO: implement a more memory-friendly func?
-    splitted = JSON.parse(splitted);// || new Array(); // string to array
-    console.log('splitted no ||', splitted);
+    splitted = JSON.parse(splitted) || new Array(); // string to array
     splitted[CURRENTSENTENCE] = $("#indata").val();
-    console.log('splitted', splitted);
     localStorage.setItem('treebank', JSON.stringify(splitted)); // update the treebank
     return splitted.join('\n\n');
     // }
