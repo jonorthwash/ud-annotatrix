@@ -4,25 +4,27 @@
 GREEN="\033[1;32m"
 RESET="\033[0m"
 
+alias echo="echo -e"
+alias runserver="python server/server.py"
+
 # python virtual environment setup
 VENV=ud-env
 if hash virtualenv 2>/dev/null; then
   if [ ! -d $VENV ]; then
     virtualenv --no-site-packages $VENV
   fi
-  source ./$VENV/bin/activate
+  . ./$VENV/bin/activate
+
+  # virtual environment use instructions
+  echo ""
+  echo "NOTE: Python virtual environment activated;"
+  echo "  to deactivate, type ${GREEN}$ deactivate${RESET}."
+  echo ""
+
 fi
 
 # install required python packages
-pip install -r requirements.txt
-
-# virtual environment use instructions
-echo ""
-echo "to activate virtual environment, type"
-echo -e "  ${GREEN}$ . $VENV/bin/activate${RESET}"
-echo "to deactivate, type"
-echo -e "  ${GREEN}$ deactivate${RESET}"
-echo ""
+pip install -r requirements.txt 1> >(grep -v 'Requirement already satisfied' 1>&2)
 
 # basic ENV file
 ENV=.env
@@ -32,4 +34,5 @@ if [ ! -f $ENV ]; then
   echo "SECRET_KEY=annotatrixareforkids" >> $ENV
   echo "HOST=127.0.0.1" >> $ENV
   echo "PORT=5316" >> $ENV
+  echo "DEBUG=DEBUG" >> $ENV
 fi
