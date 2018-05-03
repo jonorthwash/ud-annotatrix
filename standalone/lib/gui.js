@@ -475,7 +475,7 @@ function setPunct() {
     };
     for (var i = 0; i < sent.tokens.length; i++) {
         tok = sent.tokens[i];
-        headList.push(parseInt(tok.head)-1);
+        headList.push(parseInt(tok.head)-1 || undefined);
         relList.push(tok.deprel);
         if (tok.deprel == "punct" && tok.upostag == undefined) {
             sentAndPrev = changeConlluAttr(sent, [false, i, i], "upostag", "PUNCT");
@@ -549,7 +549,7 @@ function setPunct() {
     for (var i = 0; i < puncts.length; i++) {
         mn = 0;
         mx = headList.length-1;
-        for (var j = puncts[i]; j < headList.length; j++) {
+        for (var j = puncts[i]+1; j < headList.length; j++) {
             if (headList[j]-1 < puncts[i]) {
                 mx = j;
                 break;
@@ -576,25 +576,33 @@ function setPunct() {
         }
         ltop = [];
         top = [];
+        lalttop = [];
         alttop = [];
         for (var j = mn; j < mx; j++) {
-            if (j == i) {
+            if (j == puncts[i]) {
                 ltop = top;
                 top = [];
                 lalttop = alttop;
                 alttop = [];
             } else if (relList[j] == "root") {
-                connect(puncts[i], j, "punct");
+                top = [j];
+                ltop = [];
                 break;
             } else if (headList[j] && (headList[j] < mn || headList[j] > mx)) {
                 top.push(j);
-            } else if (headList[j] == undefined) {
+            } else if (relList[j] == undefined || relList[j] == "x") {
                 alttop.push(j);
             }
         }
+        if (puncts[i] >= mx) {
+            ltop = top;
+            top = [];
+            lalttop = alttop;
+            alttop = [];
+        }
         rtop = top;
-        top = ltop.concat(rtop);
         ralttop = alttop;
+        top = ltop.concat(rtop);
         if (top.length == 0) {
             ltop = lalttop;
             rtop = ralttop;
@@ -611,7 +619,7 @@ function setPunct() {
             if (ltop.length == 0) {
                 connect(puncts[i], rtop[0], "punct");
             }
-            if (rtop.length == 0 || i - ltop[ltop.length-1] < rtop[0] - i) {
+            if (rtop.length == 0 || puncts[i] - ltop[ltop.length-1] < rtop[0] - puncts[i]) {
                 connect(puncts[i], ltop[ltop.length-1], "punct");
             } else {
                 connect(puncts[i], rtop[0], "punct");
