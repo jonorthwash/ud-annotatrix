@@ -26,6 +26,8 @@ function main() {
         pathRoot + 'ext/l20n.js',
         pathRoot + 'ext/canvas2svg.js',
         pathRoot + 'ext/conllu/conllu.js', // CoNLL-U parser from https://github.com/FrancessFractal/conllu
+        pathRoot + 'ext/FileSaver.js',
+        pathRoot + 'ext/FileSaver.min.js',
 
         // native project code
         pathRoot + 'CG2conllu.js',

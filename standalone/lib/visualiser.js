@@ -292,8 +292,10 @@ function exportSVG() {
     var ctx = new C2S(cy.width, cy.height);
     cy.renderer().renderTo(ctx);
     var ctxSerializedSVG = ctx.getSerializedSvg();
-    
-    $('#exportModal').find('#svgResult').attr('src', 'data:image/svg+xml;charset=utf-8,'+ctxSerializedSVG);
+    window.svgBlob = new Blob([ctxSerializedSVG]);
+
+
+    $('#exportModal').find('#svgResult').attr('src', 'data:image/svg+xml;charset=utf-8,'+ ctxSerializedSVG);
 
     $('#exportModal').find('#svgResult').css('display', 'inline');
 }
@@ -305,12 +307,28 @@ function exportPNG() {
 
     var b64key = 'base64,';
     var b64 = cy.png().substring( cy.png().indexOf(b64key) + b64key.length);
-    var imgBlob = b64toBlob(b64, 'image/png');
+    window.imgBlob = b64toBlob(b64, 'image/png');
 
     $('#exportModal').find('#exportedGraph').attr('src', URL.createObjectURL(imgBlob));
     $('#exportModal').find('#exportedGraph').css('width', '100%');
 
     $('#exportModal').find('#exportedGraph').css('display', 'inline');
+}
+
+function downloadPNG() {
+  if (imgBlob) {
+    saveAs(imgBlob, "ud-annotatrix.png");
+  } else {
+    throw 'Could not generate image';
+  }
+}
+
+function downloadSVG() {
+  if (svgBlob) {
+    saveAs(svgBlob, "ud-annotratrix.svg");
+  } else {
+    throw 'Could not generate image';
+  }
 }
 
 function b64toBlob(b64Data, contentType, sliceSize) {
@@ -475,7 +493,7 @@ function createToken(graph, token, spId) {
         nodeWF.length = nodeWF.label.length * 13;
     } else {
         nodeWF.length = nodeWF.label.length * 11;
-    }*/ 
+    }*/
     nodeWF.length = nodeWF.form.length + "em";
     if(nodeWF.form.length > 3) {
       nodeWF.length = nodeWF.form.length*0.7 + "em";
