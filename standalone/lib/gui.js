@@ -454,27 +454,51 @@ function setRoot(wf) {
 
 
 function setPunct() {
+    // Commas and so forth should attach to dependent nodes in these relationships
+    var commaEaters = ["acl", "appos", "amod", "nmod"];
+    // Paired punctuation that has different left and right forms
+    var pairedPunctDiff = {"(":")", "[":"]", "{":"}"};
+    // Paired punctuation where left and right are identical
+    var pairedPunctSame = ["'", '"'];
+    
     console.log('PUNCTUATION TIME!');
-    var sent = buildSent();
     //var undolist = []; // [ [indeces, arg, was, is], ... ]
+    //var sentAndPrev;
+    
+    var sent = buildSent();
     var puncts = [];
-    var sentAndPrev;
-    var headFind = [];
     var bracketStack = [];
     var matches = [];
     var tok;
     var headList = [];
     var relList = [];
-    var bracketMatch = {"(":")", "[":"]", "{":"}"};
+    var pairedPDLeft = Object.keys(pairedPunctDiff);
+    var pairedPDRight = [];
+    for (var i = 0; i < pairedPDLeft.length; i++) {
+        pairedPDRight.push(pairedPunctDiff[pairedPDLeft[i]]);
+    }
+    var offsets = []
+    var subnodes = 0;
     var connect = function(src, dest, rel) {
-        sentAndPrev = changeConlluAttr(sent, [false, src, src], "deprel", rel);
-        sentAndPrev = changeConlluAttr(sent, [false, src, src], "head", (parseInt(dest)+1).toString());
+        var sentAndPrev = changeConlluAttr(sent, [false, src, src], "deprel", rel);
+        sentAndPrev = changeConlluAttr(sent, [false, src, src], "head", (parseInt(dest)+1+offsets[dest]).toString());
         headList[src] = dest;
         relList[src] = rel;
         sent = sentAndPrev[0];
     };
     for (var i = 0; i < sent.tokens.length; i++) {
         tok = sent.tokens[i];
+        offsets.push(subnodes);
+        if (tok.hasOwnProperty("tokens")) {
+            for (var j = 0; j < tok.tokens.length; j++) {
+                if (tok.tokens[j].head < i+subnodes || tok.tokens[j].head > i+subnodes+tok.tokens.length) {
+                    offsets[i] += j;
+                    break;
+                }
+            }
+            subnodes += tok.tokens.length-1;
+            tok = tok.tokens[j];
+        }
         headList.push(parseInt(tok.head)-1 || undefined);
         relList.push(tok.deprel);
         if (tok.deprel == "punct" && tok.upostag == undefined) {
@@ -484,16 +508,16 @@ function setPunct() {
             //undolist.push([[false, i, i], "upostag", sentAndPrev[1], "PUNCT"]);
         }
         if (tok.upostag == "PUNCT") {
-            if ('([{'.includes(tok.form)) {
-                bracketStack.push([i, bracketMatch[tok.form]]);
-            } else if ('}])'.includes(tok.form)) {
-                if (bracketStack[bracketStack.length-1][1] == tok.form) {
+            if (pairedPDLeft.includes(tok.form)) {
+                bracketStack.push([i, pairedPunctDiff[tok.form]]);
+            } else if (pairedPDRight.includes(tok.form)) {
+                if (bracketStack.length > 0 && bracketStack[bracketStack.length-1][1] == tok.form) {
                     matches.push([bracketStack.pop()[0], i]);
                 } else {
                     console.log("Mismatched brackets, ignoring closing bracket '" + tok.form + "'.");
                 }
-            } else if (tok.form == '"' || tok.form == "'") {
-                if (bracketStack[bracketStack.length-1][1] == tok.form) {
+            } else if (pairedPunctSame.includes(tok.form)) {
+                if (bracketStack.length > 0 && bracketStack[bracketStack.length-1][1] == tok.form) {
                     matches.push([bracketStack.pop()[0], i]);
                 } else {
                     bracketStack.push([i, tok.form]);
@@ -514,7 +538,7 @@ function setPunct() {
         r = matches[i][1];
         top = [];
         alttop = [];
-        for (var j = l+1; j < r-1; j++) {
+        for (var j = l+1; j < r; j++) {
             if (headList[j] && (headList[j] < l || headList[j] > r)) {
                 top.push(j);
             } else if (!headList[j]) {
@@ -539,91 +563,79 @@ function setPunct() {
             connect(r, top[top.length-1], "punct");
         }
     }
-    var mn;
-    var mx;
-    var conj = [];
-    var ltop;
-    var rtop;
-    var lalttop;
-    var ralttop;
+    var possible;
     for (var i = 0; i < puncts.length; i++) {
-        mn = 0;
-        mx = headList.length-1;
-        for (var j = puncts[i]+1; j < headList.length; j++) {
-            if (headList[j]-1 < puncts[i]) {
-                mx = j;
-                break;
+        if (puncts[i] == headList.length-1 && relList.includes("root")) {
+            connect(puncts[i], relList.indexOf("root"), "punct");
+            continue;
+        }
+        possible = [];
+        for (var j = 0; j < headList.length; j++) {
+            if (j != puncts[i]) {
+                possible.push(j);
             }
         }
-        for (var j = puncts[i]-1; j > 0; j--) {
-            if (headList[j] > puncts[i]) {
-                mn = j;
-                break;
-            }
-        }
-        while (true) {
-            if (headList[mn] && headList[mn] < mx && headList[mn] > puncts[i]) {
-                mx = headList[mn];
-            } else if (headList[mx] && headList[mx] > mn && headList[mx] < puncts[i]) {
-                mn = headList[mx]
+        var idx = 0;
+        var cur;
+        var head;
+        var headidx;
+        while (idx < possible.length-1) {
+            cur = possible[idx];
+            if (possible.includes(headList[cur])) {
+                head = headList[cur];
+                headidx = possible.indexOf(head);
+                l = Math.min(idx, headidx);
+                r = Math.max(idx, headidx);
+                if (l+1 == r) {
+                    idx++;
+                } else if (Math.max(cur, head) < puncts[i] || Math.min(cur, head) > puncts[i]) {
+                    possible = possible.slice(0, l+1).concat(possible.slice(r));
+                    idx = l+1;
+                } else {
+                    // arc encloses puncts[i]
+                    possible = possible.slice(l, r+1);
+                    idx = 1;
+                }
             } else {
-                break;
+                idx++;
             }
         }
-        // Attatching to something between mn and mx (inclusive) definitely can't break projectivity
-        if (relList[mx] == "conj" && headList[mx] == mn) {
-            connect(i, mx, "punct");
+        if (relList[possible[possible.length-1]] == "conj" && headList[possible[possible.length-1]] == possible[0]) {
+            connect(puncts[i], possible[possible.length-1], "punct");
         }
-        ltop = [];
-        top = [];
-        lalttop = [];
-        alttop = [];
-        for (var j = mn; j < mx; j++) {
-            if (j == puncts[i]) {
-                ltop = top;
-                top = [];
-                lalttop = alttop;
-                alttop = [];
-            } else if (relList[j] == "root") {
-                top = [j];
-                ltop = [];
-                break;
-            } else if (headList[j] && (headList[j] < mn || headList[j] > mx)) {
-                top.push(j);
-            } else if (relList[j] == undefined || relList[j] == "x") {
-                alttop.push(j);
-            }
-        }
-        if (puncts[i] >= mx) {
-            ltop = top;
-            top = [];
-            lalttop = alttop;
-            alttop = [];
-        }
-        rtop = top;
-        ralttop = alttop;
-        top = ltop.concat(rtop);
-        if (top.length == 0) {
-            ltop = lalttop;
-            rtop = ralttop;
-            top = ltop.concat(rtop);
-            // Since the code for alttop.length > 0 && top.length == 0
-            // would be identical to top.length > 0
-        }
-        if (top.length == 0) {
-            console.log("Couldn't find anything to attatch punctuation " + i + " to.");
-            // This should be impossible unless it is the only element
-        } else if (top.length == 1) {
-            connect(puncts[i], top[0], "punct");
-        } else {
-            if (ltop.length == 0) {
-                connect(puncts[i], rtop[0], "punct");
-            }
-            if (rtop.length == 0 || puncts[i] - ltop[ltop.length-1] < rtop[0] - puncts[i]) {
-                connect(puncts[i], ltop[ltop.length-1], "punct");
+        possible.sort(function(a, b) {
+            var ai = Math.abs(a - puncts[i]);
+            var bi = Math.abs(b - puncts[i]);
+            if (ai < bi) {
+                return -1;
+            } else if (bi > ai) {
+                return 1;
             } else {
-                connect(puncts[i], rtop[0], "punct");
+                return 0;
             }
+        });
+        var done = false;
+        for (var j = 0; j < possible.length; j++) {
+            if (commaEaters.includes(relList[possible[j]])) {
+                connect(puncts[i], possible[j], "punct");
+                done = true;
+                break;
+            }
+        }
+        if (!done) {
+            for (var j = 0; j < possible.length; j++) {
+                if (relList[possible[j]] != undefined && relList[possible[j]] != "x") {
+                    connect(puncts[i], possible[j], "punct");
+                    done = true;
+                    break;
+                }
+            }
+        }
+        if (!done && possible.length > 0) {
+            connect(puncts[i], possible[0], "punct");
+        }
+        if (!done) {
+            console.log("Couldn't find anything to attatch punctuation " + puncts[i] + " to.");
         }
     }
     
