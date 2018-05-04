@@ -477,7 +477,8 @@ function setPunct() {
     for (var i = 0; i < pairedPDLeft.length; i++) {
         pairedPDRight.push(pairedPunctDiff[pairedPDLeft[i]]);
     }
-    var offsets = []
+    var offsets = [];
+    var idToIndex = {undefined:undefined};
     var subnodes = 0;
     var connect = function(src, dest, rel) {
         var sentAndPrev = changeConlluAttr(sent, [false, src, src], "deprel", rel);
@@ -486,20 +487,27 @@ function setPunct() {
         relList[src] = rel;
         sent = sentAndPrev[0];
     };
+    var settok;
+    var found;
     for (var i = 0; i < sent.tokens.length; i++) {
         tok = sent.tokens[i];
         offsets.push(subnodes);
         if (tok.hasOwnProperty("tokens")) {
+            settok = 0;
+            found = false;
             for (var j = 0; j < tok.tokens.length; j++) {
-                if (tok.tokens[j].head < i+subnodes || tok.tokens[j].head > i+subnodes+tok.tokens.length) {
+                idToIndex[tok.tokens[j].id] = i;
+                if (!found && (tok.tokens[j].head < tok.tokens[0].id || tok.tokens[j].head > tok.tokens[tok.tokens.length-1].id)) {
                     offsets[i] += j;
-                    break;
+                    settok = j;
+                    found = true;
                 }
             }
             subnodes += tok.tokens.length-1;
-            tok = tok.tokens[j];
+            tok = tok.tokens[settok];
         }
-        headList.push(parseInt(tok.head)-1 || undefined);
+        headList.push(tok.head);
+        idToIndex[tok.id] = i;
         relList.push(tok.deprel);
         if (tok.deprel == "punct" && tok.upostag == undefined) {
             sentAndPrev = changeConlluAttr(sent, [false, i, i], "upostag", "PUNCT");
@@ -528,6 +536,9 @@ function setPunct() {
         }
         // This ignores opening punctuation that doesn't have a closing counterpart
         // Is there some other way to do this?
+    }
+    for (var i = 0; i < headList.length; i++) {
+        headList[i] = idToIndex[headList[i]];
     }
     var l;
     var r;
@@ -563,31 +574,59 @@ function setPunct() {
             connect(r, top[top.length-1], "punct");
         }
     }
+    var findBounds = function(idx) {
+        var l = [0];
+        var r = [headList.length-1];
+        for (var j = 0; j < headList.length-1; j++) {
+            if (headList[j] == undefined) {
+                continue;
+            } else if (j < idx && headList[j] > idx) {
+                l.push(j);
+                r.push(headList[j]);
+            } else if (j > idx && headList[j] < idx) {
+                l.push(headList[j]);
+                r.push(j);
+            }
+        }
+        return [Math.max(...l), Math.min(...r)];
+    };
     var possible;
+    var stop;
+    var edge;
     for (var i = 0; i < puncts.length; i++) {
         if (puncts[i] == headList.length-1 && relList.includes("root")) {
             connect(puncts[i], relList.indexOf("root"), "punct");
             continue;
         }
+        stop = findBounds(puncts[i]);
         possible = [];
-        for (var j = 0; j < headList.length; j++) {
-            if (j != puncts[i]) {
-                possible.push(j);
+        for (var j = stop[0]; j < stop[1]+1; j++) {
+            if (j != puncts[i] && relList[j] != "punct") {
+                edge = findBounds(j);
+                if (edge[0] < puncts[i] && edge[1] > puncts[i]) {
+                    possible.push(j);
+                }
             }
         }
-        var idx = 0;
+        /*var idx = 0;
         var cur;
         var head;
         var headidx;
-        while (idx < possible.length-1) {
+        while (idx < possible.length) {
             cur = possible[idx];
             if (possible.includes(headList[cur])) {
                 head = headList[cur];
                 headidx = possible.indexOf(head);
                 l = Math.min(idx, headidx);
                 r = Math.max(idx, headidx);
-                if (l+1 == r) {
+                if (l == r) {
                     idx++;
+                } else if (l+1 == r) {
+                    if (commaEaters.includes(relList[cur])) {
+                        idx++;
+                    } else {
+                        possible = possible.slice(0, idx).concat(possible.slice(idx+1));
+                    }
                 } else if (Math.max(cur, head) < puncts[i] || Math.min(cur, head) > puncts[i]) {
                     possible = possible.slice(0, l+1).concat(possible.slice(r));
                     idx = l+1;
@@ -595,11 +634,14 @@ function setPunct() {
                     // arc encloses puncts[i]
                     possible = possible.slice(l, r+1);
                     idx = 1;
+                    if (headidx == 0) {
+                        break;
+                    }
                 }
             } else {
                 idx++;
             }
-        }
+        }*/
         if (relList[possible[possible.length-1]] == "conj" && headList[possible[possible.length-1]] == possible[0]) {
             connect(puncts[i], possible[possible.length-1], "punct");
         }
@@ -624,7 +666,7 @@ function setPunct() {
         }
         if (!done) {
             for (var j = 0; j < possible.length; j++) {
-                if (relList[possible[j]] != undefined && relList[possible[j]] != "x") {
+                if (![undefined, "x", "root"].includes(relList[possible[j]])) {
                     connect(puncts[i], possible[j], "punct");
                     done = true;
                     break;
