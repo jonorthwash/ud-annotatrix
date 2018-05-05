@@ -49,6 +49,23 @@ class AnnotatrixError extends Error {
 
 
 
+
+/*
+ * AssertionError
+ *
+ * throw this if Tester.assert() fails
+ */
+class AssertionError extends AnnotatrixError {
+  constructor(...args) {
+
+    super(...args);
+    if (Error.captureStackTrace)
+      Error.captureStackTrace(this, AssertionError);
+
+    this.name = 'AssertionError';
+  }
+}
+
 /*
  * GUIError
  */

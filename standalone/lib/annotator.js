@@ -11,41 +11,54 @@ var RESULTS = [];
 var LOC_ST_AVAILABLE = false;
 var LABELS = [];
 
-function main() {
-    /* Loads all the js libraries and project modules, then calles onReady.
-    If server is running, makes a button for saving data.*/
-    var pathRoot = './lib/';
-    head.js(
-        pathRoot + 'ext/jquery-3.2.1.min.js',
-        pathRoot + 'ext/jquery-ui-1.12.1/jquery-ui.min.js',
-        pathRoot + 'ext/cytoscape.min.js',
-        pathRoot + 'ext/undomanager.js',
-        pathRoot + 'ext/popper.min.js',
-        pathRoot + 'ext/jquery.autocomplete.js',
-        pathRoot + 'ext/bootstrap.min.js',
-        pathRoot + 'ext/l20n.js',
-        pathRoot + 'ext/canvas2svg.js',
-        pathRoot + 'ext/conllu/conllu.js', // CoNLL-U parser from https://github.com/FrancessFractal/conllu
+window.onload = () => {
 
-        // native project code
-        pathRoot + 'CG2conllu.js',
-        pathRoot + 'SD2conllu.js',
-        pathRoot + 'Brackets2conllu.js',
-        pathRoot + 'converters.js',
-        pathRoot + 'server_support.js',
-        pathRoot + 'gui.js',
-        pathRoot + 'conllu_table.js',
-        pathRoot + 'visualiser.js',
-        pathRoot + 'validation.js',
-        pathRoot + 'cy-style.js',
+  // save all global configuration stuff here (to avoid name collisions and
+  // help with maintenance/tweaking)
+  window.cfg = {
+    FORMAT = '',
+    FILENAME = 'ud-annotatrix-corpus.conllu',
+    CONTENTS = '',
+    AVAILABLE_SENTENCES = 0,
+    LOCALSTORAGE_AVAILABLE = false,
+    CURRENTSENTENCE = 0,
+    RESULTS = [],
+    LABELS = ''
+  }
 
-        // KM classes
-        pathRoot + 'logger.js',
-        pathRoot + 'tester.js',
-        pathRoot + 'errors.js'
-    );
+  /* Loads all the js libraries and project modules, then calles onReady.
+  If server is running, makes a button for saving data.*/
+  let path = './lib';
+  head.js(
+    `${path}/ext/jquery-3.2.1.min.js`,
+    `${path}/ext/jquery-ui-1.12.1/jquery-ui.min.js`,
+    `${path}/ext/cytoscape.min.js`,
+    `${path}/ext/undomanager.js`,
+    `${path}/ext/popper.min.js`,
+    `${path}/ext/jquery.autocomplete.js`,
+    `${path}/ext/bootstrap.min.js`,
+    `${path}/ext/l20n.js`,
+    `${path}/ext/canvas2svg.js`,
+    `${path}/ext/conllu/conllu.js`, // CoNLL-U parser from https://github.com/FrancessFractal/conllu
 
-    head.ready(onReady);
+    // native project code
+    `${path}/CG2conllu.js`,
+    `${path}/SD2conllu.js`,
+    `${path}/Brackets2conllu.js`,
+    `${path}/converters.js`,
+    `${path}/server_support.js`,
+    `${path}/gui.js`,
+    `${path}/conllu_table.js`,
+    `${path}/visualiser.js`,
+    `${path}/validation.js`,
+    `${path}/cy-style.js`,
+
+    // KM classes
+    `${path}/logger.js`,
+    `${path}/tester.js`,
+    `${path}/errors.js`
+  );
+  head.ready(onReady);
 }
 
 
@@ -59,8 +72,9 @@ function onReady() {
     - binds handlers to DOM emements
     */
 
-    window.log = new Logger('DEBUG');
+    window.log = new Logger(cfg.debugLevel);
     window.test = new Tester();
+    window.test.all();
 
     var cy = window.cy = cytoscape({ // avoid those `cy.$ is not a function errors`
         container: document.getElementById("cy"),
@@ -725,5 +739,3 @@ function getLocalStorageMaxSize(error) {
     LOCALSTORAGE_AVAILABLE = minimalFound;
   }
 }
-
-window.onload = main;

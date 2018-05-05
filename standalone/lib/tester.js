@@ -5,16 +5,52 @@
  *
  * put unit tests inside here as functions, and then add the function call to
  * the all() function ... to invoke, use window.test.all() or test.all()
+ *
+ * also implements an assert() function, which throws AssertionError exceptions
  */
 class Tester extends Object {
   constructor() { super(); }
 
+
+  /*
+   *
+   */
+  assert(expression, message='') {
+    if (!expression)
+      throw new AssertionError(message);
+    log.debug(`Tester.assert() got a truthy expression (message: "${message}")`);
+  }
+
+
+
+
+
+  /*
+   * TEST functions
+   */
   all() {
     log.out('\nExecuting Tester.all()');
+    this.tester();
     this.logger();
     this.errors();
   }
+  tester() {
 
+    log.out('\nExecuting Tester.tester()');
+
+    this.assert(1==1, `1==1`);
+    this.assert(1=='1', `1=='1'`);
+    this.assert(1!=='1', `1!=='1'`);
+    this.assert(undefined==null, `undefined==null`);
+    this.assert(undefined!==null, `undefined!==null`);
+    this.assert(0==false, `0==false`);
+    this.assert(0!==false, `0!==false`);
+    this.assert(1==true, `1==true`);
+    this.assert((()=>{})()==undefined, `(()=>{})()==undefined`);
+    this.assert((()=>{})()===undefined, `(()=>{})()===undefined`);
+    this.assert('foo'!='bar', `'foo'!=bar`);
+
+  }
   logger() {
 
     log.out('\nExecuting Tester.logger()');
@@ -40,7 +76,6 @@ class Tester extends Object {
 
     }
   }
-
   errors() {
 
     log.out('\nExecuting Tester.errors()');
@@ -52,6 +87,7 @@ class Tester extends Object {
       new TypeError(testMessage),
       new SyntaxError(testMessage),
       new AnnotatrixError(testMessage),
+      new AssertionError(testMessage),
       new GUIError(testMessage),
       new ParseError(testMessage)
     ];

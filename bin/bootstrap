@@ -19,7 +19,7 @@ if hash virtualenv 2>/dev/null; then
 
   # virtual environment use instructions
   echo ""
-  echo "NOTE: Python virtual environment activated;"
+  echo "NOTE: Python virtual environment activated ($GREEN$VENV$RESET);"
   echo "  to deactivate, type ${GREEN}$ deactivate${RESET}."
   echo ""
 
