@@ -455,15 +455,13 @@ function setRoot(wf) {
 
 function setPunct() {
     // Commas and so forth should attach to dependent nodes in these relationships
-    var commaEaters = ["acl", "appos", "amod", "nmod"];
+    var commaEaters = ["acl", "advcl", "amod", "appos", "ccomp", "obl"];
     // Paired punctuation that has different left and right forms
-    var pairedPunctDiff = {"(":")", "[":"]", "{":"}"};
+    var pairedPunctDiff = {"(":")", "[":"]", "{":"}", "¡":"!"};
     // Paired punctuation where left and right are identical
     var pairedPunctSame = ["'", '"'];
     
     console.log('PUNCTUATION TIME!');
-    //var undolist = []; // [ [indeces, arg, was, is], ... ]
-    //var sentAndPrev;
     
     var sent = buildSent();
     var puncts = [];
@@ -478,7 +476,7 @@ function setPunct() {
         pairedPDRight.push(pairedPunctDiff[pairedPDLeft[i]]);
     }
     var offsets = [];
-    var idToIndex = {undefined:undefined};
+    var idToIndex = {undefined:undefined, "0":-1};
     var subnodes = 0;
     var connect = function(src, dest, rel) {
         var sentAndPrev = changeConlluAttr(sent, [false, src, src], "deprel", rel);
@@ -513,7 +511,6 @@ function setPunct() {
             sentAndPrev = changeConlluAttr(sent, [false, i, i], "upostag", "PUNCT");
             sent = sentAndPrev[0];
             tok = sent.tokens[i];
-            //undolist.push([[false, i, i], "upostag", sentAndPrev[1], "PUNCT"]);
         }
         if (tok.upostag == "PUNCT") {
             if (pairedPDLeft.includes(tok.form)) {
@@ -522,7 +519,8 @@ function setPunct() {
                 if (bracketStack.length > 0 && bracketStack[bracketStack.length-1][1] == tok.form) {
                     matches.push([bracketStack.pop()[0], i]);
                 } else {
-                    console.log("Mismatched brackets, ignoring closing bracket '" + tok.form + "'.");
+                    //console.log("Mismatched brackets, ignoring closing bracket '" + tok.form + "'.");
+                    puncts.push(i);
                 }
             } else if (pairedPunctSame.includes(tok.form)) {
                 if (bracketStack.length > 0 && bracketStack[bracketStack.length-1][1] == tok.form) {
@@ -536,6 +534,9 @@ function setPunct() {
         }
         // This ignores opening punctuation that doesn't have a closing counterpart
         // Is there some other way to do this?
+    }
+    for (var i = 0; i < bracketStack.length; i++) {
+        puncts.push(bracketStack[i][0]);
     }
     for (var i = 0; i < headList.length; i++) {
         headList[i] = idToIndex[headList[i]];
@@ -575,82 +576,48 @@ function setPunct() {
         }
     }
     var findBounds = function(idx) {
-        var l = [0];
-        var r = [headList.length-1];
-        for (var j = 0; j < headList.length-1; j++) {
-            if (headList[j] == undefined) {
+        var l = 0;
+        var r = headList.length-1;
+        for (var x = 0; x < headList.length-1; x++) {
+            if ([undefined, "x", "root"].includes(relList[x])) {
                 continue;
-            } else if (j < idx && headList[j] > idx) {
-                l.push(j);
-                r.push(headList[j]);
-            } else if (j > idx && headList[j] < idx) {
-                l.push(headList[j]);
-                r.push(j);
+            } else if (x < idx && headList[x] > idx) {
+                l = Math.max(x, l);
+                r = Math.min(headList[x], r);
+            } else if (x > idx && headList[x] < idx) {
+                l = Math.max(headList[x], l);
+                r = Math.min(x, r);
             }
         }
-        return [Math.max(...l), Math.min(...r)];
+        return [l, r];
     };
     var possible;
     var stop;
     var edge;
     for (var i = 0; i < puncts.length; i++) {
-        if (puncts[i] == headList.length-1 && relList.includes("root")) {
-            connect(puncts[i], relList.indexOf("root"), "punct");
-            continue;
-        }
         stop = findBounds(puncts[i]);
         possible = [];
         for (var j = stop[0]; j < stop[1]+1; j++) {
             if (j != puncts[i] && relList[j] != "punct") {
                 edge = findBounds(j);
-                if (edge[0] < puncts[i] && edge[1] > puncts[i]) {
+                if (edge[0] <= puncts[i] && edge[1] >= puncts[i]) {
                     possible.push(j);
                 }
             }
         }
-        /*var idx = 0;
-        var cur;
-        var head;
-        var headidx;
-        while (idx < possible.length) {
-            cur = possible[idx];
-            if (possible.includes(headList[cur])) {
-                head = headList[cur];
-                headidx = possible.indexOf(head);
-                l = Math.min(idx, headidx);
-                r = Math.max(idx, headidx);
-                if (l == r) {
-                    idx++;
-                } else if (l+1 == r) {
-                    if (commaEaters.includes(relList[cur])) {
-                        idx++;
-                    } else {
-                        possible = possible.slice(0, idx).concat(possible.slice(idx+1));
-                    }
-                } else if (Math.max(cur, head) < puncts[i] || Math.min(cur, head) > puncts[i]) {
-                    possible = possible.slice(0, l+1).concat(possible.slice(r));
-                    idx = l+1;
-                } else {
-                    // arc encloses puncts[i]
-                    possible = possible.slice(l, r+1);
-                    idx = 1;
-                    if (headidx == 0) {
-                        break;
-                    }
-                }
-            } else {
-                idx++;
-            }
-        }*/
-        if (relList[possible[possible.length-1]] == "conj" && headList[possible[possible.length-1]] == possible[0]) {
+        if (puncts[i] == headList.length-1 && possible.includes(relList.indexOf("root"))) {
+            connect(puncts[i], relList.indexOf("root"), "punct");
+            continue;
+        }
+        if (relList[possible[possible.length-1]] == "conj" && headList[possible[possible.length-1]] <= possible[0]) {
             connect(puncts[i], possible[possible.length-1], "punct");
         }
         possible.sort(function(a, b) {
             var ai = Math.abs(a - puncts[i]);
             var bi = Math.abs(b - puncts[i]);
-            if (ai < bi) {
+            if (ai < bi || (ai == bi && a < b)) {
                 return -1;
-            } else if (bi > ai) {
+            } else if (bi > ai || (ai == bi && a > b)) {
                 return 1;
             } else {
                 return 0;
@@ -682,29 +649,6 @@ function setPunct() {
     }
     
     redrawTree(sent);
-    
-    // Undo not working, fix later
-    /*window.undoManager.add({
-        undo: function(){
-            console.log('UNDO!');
-            var snp;
-            var sent = buildSent();
-            for (var i = 0; i < undolist.length; i++) {
-                snp = changeConlluAttr(sent, undolist[i][0], undolist[i][1], undolist[i][2]);
-                sent = snp[0];
-            }
-            redrawTree(init);
-        },
-        redo: function(){
-            var snp;
-            var sent = buildSent();
-            for (var i = 0; i < undolist.length; i++) {
-                snp = changeConlluAttr(sent, undolist[i][0], undolist[i][1], undolist[i][3]);
-                sent = snp[0];
-            }
-            redrawTree(sent);
-        }
-    });*/
 }
 
 
