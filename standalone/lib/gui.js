@@ -611,6 +611,7 @@ function setPunct() {
         }
         if (relList[possible[possible.length-1]] == "conj" && headList[possible[possible.length-1]] <= possible[0]) {
             connect(puncts[i], possible[possible.length-1], "punct");
+            continue;
         }
         possible.sort(function(a, b) {
             var ai = Math.abs(a - puncts[i]);
