@@ -457,7 +457,7 @@ function setPunct() {
     // Commas and so forth should attach to dependent nodes in these relationships
     var commaEaters = ["acl", "advcl", "amod", "appos", "ccomp", "obl"];
     // Paired punctuation that has different left and right forms
-    var pairedPunctDiff = {"(":")", "[":"]", "{":"}", "¡":"!"};
+    var pairedPunctDiff = {"(":")", "[":"]", "{":"}",  "“":"”", "„":"“", "«":"»", "‹":"›", "《":"》", "「":"」", "『":"』", "¿":"?",  "¡":"!"};
     // Paired punctuation where left and right are identical
     var pairedPunctSame = ["'", '"'];
     
@@ -519,7 +519,6 @@ function setPunct() {
                 if (bracketStack.length > 0 && bracketStack[bracketStack.length-1][1] == tok.form) {
                     matches.push([bracketStack.pop()[0], i]);
                 } else {
-                    //console.log("Mismatched brackets, ignoring closing bracket '" + tok.form + "'.");
                     puncts.push(i);
                 }
             } else if (pairedPunctSame.includes(tok.form)) {
@@ -532,48 +531,12 @@ function setPunct() {
                 puncts.push(i);
             }
         }
-        // This ignores opening punctuation that doesn't have a closing counterpart
-        // Is there some other way to do this?
     }
     for (var i = 0; i < bracketStack.length; i++) {
         puncts.push(bracketStack[i][0]);
     }
     for (var i = 0; i < headList.length; i++) {
         headList[i] = idToIndex[headList[i]];
-    }
-    var l;
-    var r;
-    var top;
-    var alttop;
-    for (var i = 0; i < matches.length; i++) {
-        l = matches[i][0];
-        r = matches[i][1];
-        top = [];
-        alttop = [];
-        for (var j = l+1; j < r; j++) {
-            if (headList[j] && (headList[j] < l || headList[j] > r)) {
-                top.push(j);
-            } else if (!headList[j]) {
-                alttop.push(j);
-            }
-        }
-        if (top.length == 0) {
-            if (l+1 == r) {
-                // An immediately adjacent pair of punctuation marks
-            } else {
-                // No enclosed elements point beyond the brackets
-                // So just pick one and attatch to it
-                // Namely, the left-most one that isn't a dependent
-                connect(l, alttop[0], "punct");
-                connect(r, alttop[0], "punct");
-            }
-        } else {
-            // Attatching both to the same element will break projectivity
-            // So attatch each to the nearest one
-            // This also does the right thing when top.length == 1
-            connect(l, top[0], "punct");
-            connect(r, top[top.length-1], "punct");
-        }
     }
     var findBounds = function(idx) {
         var l = 0;
@@ -591,20 +554,70 @@ function setPunct() {
         }
         return [l, r];
     };
-    var possible;
-    var stop;
-    var edge;
-    for (var i = 0; i < puncts.length; i++) {
-        stop = findBounds(puncts[i]);
-        possible = [];
-        for (var j = stop[0]; j < stop[1]+1; j++) {
-            if (j != puncts[i] && relList[j] != "punct") {
-                edge = findBounds(j);
-                if (edge[0] <= puncts[i] && edge[1] >= puncts[i]) {
-                    possible.push(j);
+    var findPossible = function(idx) {
+        var ret = [];
+        var bounds = findBounds(idx);
+        var edge;
+        for (var x = bounds[0]; x <= bounds[1]; x++) {
+            if (x != idx && relList[x] != "punct") {
+                edge = findBounds(x);
+                if (edge[0] <= idx && idx <= edge[1]) {
+                    ret.push(x);
                 }
             }
         }
+        return ret;
+    };
+    var l;
+    var r;
+    var lpos;
+    var rpos;
+    var lpos2;
+    var rpos2;
+    var possible;
+    var done;
+    for (var i = 0; i < matches.length; i++) {
+        l = matches[i][0];
+        r = matches[i][1];
+        lpos = findPossible(l);
+        rpos = findPossible(r);
+        possible = [];
+        lpos2 = [];
+        rpos2 = [];
+        for (var j = 0; j < lpos.length; j++) {
+            if (lpos[j] > l && lpos[j] < r) {
+                if (rpos.includes(lpos[j]) {
+                    possible.push(lpos[j]);
+                }
+                lpos2.push(lpos[j]);
+            }
+        }
+        for (var j = 0; j < rpos.length; j++) {
+            if (rpos[j] > l && rpos[j] < r) {
+                rpos2.push(rpos[j]);
+            }
+        }
+        if (possible.length > 0) {
+            done = false;
+            for (var j = 0; j < possible.length; j++) {
+                if (headList[possible[j]] < l || headList[possible[j]] > r) {
+                    connect(l, headList[possible[j]], "punct");
+                    connect(r, headList[possible[j]], "punct");
+                    done = true;
+                    break;
+                }
+            }
+            if (!done) {
+                connect(l, headList[possible[0]], "punct");
+                connect(r, headList[possible[0]], "punct");
+            }
+        } else {
+            connect(l, lpos2[0], "punct");
+            connect(r, rpos2[rpos2.length-1], "punct");
+        }
+    }
+    for (var i = 0; i < puncts.length; i++) {
+        possible = findPossible(puncts[i]);
         if (puncts[i] == headList.length-1 && possible.includes(relList.indexOf("root"))) {
             connect(puncts[i], relList.indexOf("root"), "punct");
             continue;
@@ -624,7 +637,7 @@ function setPunct() {
                 return 0;
             }
         });
-        var done = false;
+        done = false;
         for (var j = 0; j < possible.length; j++) {
             if (commaEaters.includes(relList[possible[j]])) {
                 connect(puncts[i], possible[j], "punct");
