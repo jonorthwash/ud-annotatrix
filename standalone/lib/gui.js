@@ -586,7 +586,7 @@ function setPunct() {
         rpos2 = [];
         for (var j = 0; j < lpos.length; j++) {
             if (lpos[j] > l && lpos[j] < r) {
-                if (rpos.includes(lpos[j]) {
+                if (rpos.includes(lpos[j])) {
                     possible.push(lpos[j]);
                 }
                 lpos2.push(lpos[j]);
