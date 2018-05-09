@@ -537,6 +537,11 @@ function setPunct() {
     }
     for (var i = 0; i < headList.length; i++) {
         headList[i] = idToIndex[headList[i]];
+        if (headList[i] == undefined) {
+            headList[i] = i;
+            // pretend that unconnected nodes are pointing at themselves
+            // rather than at nothing so we don't have pesky type-conversion issues
+        }
     }
     var findBounds = function(idx) {
         var l = 0;
@@ -601,15 +606,15 @@ function setPunct() {
             done = false;
             for (var j = 0; j < possible.length; j++) {
                 if (headList[possible[j]] < l || headList[possible[j]] > r) {
-                    connect(l, headList[possible[j]], "punct");
-                    connect(r, headList[possible[j]], "punct");
+                    connect(l, possible[j], "punct");
+                    connect(r, possible[j], "punct");
                     done = true;
                     break;
                 }
             }
             if (!done) {
-                connect(l, headList[possible[0]], "punct");
-                connect(r, headList[possible[0]], "punct");
+                connect(l, possible[0], "punct");
+                connect(r, possible[0], "punct");
             }
         } else {
             connect(l, lpos2[0], "punct");
