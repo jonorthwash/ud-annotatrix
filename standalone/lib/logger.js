@@ -68,7 +68,7 @@ class Logger extends Object {
     }
     if (tag !== null)
       string += `${tag.toUpperCase()}: `;
-    string += message
+    string += message;//JSON.stringify(message);
 
     return string;
 

@@ -6,6 +6,7 @@ var SERVER_RUNNING;
 function checkServer() {
     /* Tries to send a request to /annotatrix/running. If it works, sets SERVER_RUNNING
     to true and loads data from server. */
+    log.debug('called checkServer()');
     SERVER_RUNNING = false;
     try {
         $.ajax({
@@ -15,23 +16,25 @@ function checkServer() {
                 'content': 'check'
             },
             dataType: "json",
-            success: function(data){
-                console.log(data);
+            success: (data) => {
+                log.info(`checkServer AJAX response: ${JSON.stringify(data)}`);
                 SERVER_RUNNING = true;
-                $('#upload').hide();
-                getSentence(1); // loading a sentence from the server
+                getSentence(1);
             },
             error: function(data){
-              loadFromLocalStorage();
+                log.info('Unable to complete AJAX request for checkServer()');
+                loadFromLocalStorage();
             }
         })
     } catch (e) {
-      console.log(e);
+      log.error(`AJAX error in checkServer: ${e.message}`);
     }
 }
 
 
 function updateOnServer() {
+    log.debug('called updateOnServer()');
+
     var curSent = $('#indata').val()
     var sentNum = $('#currentsen').val()
 
@@ -47,15 +50,17 @@ function updateOnServer() {
         },
         dataType: "json",
         success: function(data){
-            console.log('Update was performed.');
+            log.info('Update was performed');
         }
     });
 }
 
 
 function getSentence(sentNum) {
+    log.debug(`called getSentence(${sentNum})`);
+
     var treebank_id = location.href.split('/')[4];
-    console.log('getSentence');
+
     $.ajax({
         type: "POST",
         url: "/load",
@@ -69,7 +74,8 @@ function getSentence(sentNum) {
 
 
 function loadSentence(data) {
-    console.log('loadSentence');
+    log.debug(`called loadSentence(${JSON.stringify(data)})`);
+
     if (data['content']) {
         var sentence = data['content'];
         var max = data['max'];
@@ -85,10 +91,8 @@ function loadSentence(data) {
 
 
 function downloadCorpus() {
+    log.debug(`called downloadCorpus()`);
+
     var treebank_id = location.href.split('/')[4];
-    var link = document.createElement('a');
-    document.body.appendChild(link); // needed for FF
-    link.setAttribute('href', './download?treebank_id=' + treebank_id);
-    link.setAttribute('target', '_blank')
-    link.click();
+    window.open(`./download?treebank_id=${treebank_id}`, '_blank');
 }

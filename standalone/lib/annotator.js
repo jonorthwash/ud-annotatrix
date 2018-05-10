@@ -13,19 +13,6 @@ var LABELS = [];
 
 window.onload = () => {
 
-  // save all global configuration stuff here (to avoid name collisions and
-  // help with maintenance/tweaking)
-  window.cfg = {
-    FORMAT = '',
-    FILENAME = 'ud-annotatrix-corpus.conllu',
-    CONTENTS = '',
-    AVAILABLE_SENTENCES = 0,
-    LOCALSTORAGE_AVAILABLE = false,
-    CURRENTSENTENCE = 0,
-    RESULTS = [],
-    LABELS = ''
-  }
-
   /* Loads all the js libraries and project modules, then calles onReady.
   If server is running, makes a button for saving data.*/
   let path = './lib';
@@ -34,9 +21,9 @@ window.onload = () => {
     `${path}/ext/jquery-ui-1.12.1/jquery-ui.min.js`,
     `${path}/ext/cytoscape.min.js`,
     `${path}/ext/undomanager.js`,
-    `${path}/ext/popper.min.js`,
+    //`${path}/ext/popper.min.js`,
     `${path}/ext/jquery.autocomplete.js`,
-    `${path}/ext/bootstrap.min.js`,
+    //`${path}/ext/bootstrap.min.js`,
     `${path}/ext/l20n.js`,
     `${path}/ext/canvas2svg.js`,
     `${path}/ext/conllu/conllu.js`, // CoNLL-U parser from https://github.com/FrancessFractal/conllu
@@ -72,7 +59,7 @@ function onReady() {
     - binds handlers to DOM emements
     */
 
-    window.log = new Logger(cfg.debugLevel);
+    window.log = new Logger('DEBUG');
     window.test = new Tester();
     window.test.all();
 

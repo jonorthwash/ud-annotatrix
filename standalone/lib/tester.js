@@ -13,7 +13,7 @@ class Tester extends Object {
 
 
   /*
-   *
+   * simple assert function
    */
   assert(expression, message='') {
     if (!expression)
