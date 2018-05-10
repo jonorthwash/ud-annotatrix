@@ -34,95 +34,95 @@ var POS2RELmappings = {
 
 
 function setUndos(undoManager) {
-    var btnUndo = document.getElementById("btnUndo");
-    var btnRedo = document.getElementById("btnRedo");
+    log.debug('called setUndos()');
 
-    function updateUI() {
-        btnUndo.disabled = !undoManager.hasUndo();
-        btnRedo.disabled = !undoManager.hasRedo();
+    const updateUI = () => {
+        log.debug('called updateUI()');
+        btnUndo.prop('disabled', !undoManager.hasUndo());
+        btnRedo.prop('disabled', !undoManager.hasRedo());
     }
-    undoManager.setCallback(updateUI);
 
-    btnUndo.onclick = function () {
+    const btnUndo = $('#btnUndo').click(() => {
+        log.debug('clicked undo');
         undoManager.undo();
         updateUI();
-    };
-    btnRedo.onclick = function () {
+    });
+    const btnRedo = $('#btnRedo').click(() => {
+        log.debug('clicked redo');
         undoManager.redo();
-        updateUI();
-    };
+        updateUI()
+    });
+
+    undoManager.setCallback(updateUI);
 
     updateUI();
 }
 
 
-function drawArcs(evt) {
+function clickWF(evt) {
+    log.debug(`called clickWF(id: ${this.attr('id')}) on an ${this.hasClass('activated') ? '' : 'in'}active node`);
+
     /* Called when a node is clicked. */
 
     // if the user clicked an activated node
     if (this.hasClass("activated")) {
+
         this.removeClass("activated");
+
     } else {
+        
         // look for other activated nodes
-        var actNode = cy.$(".activated");
+        let source = cy.$(".activated");
 
         this.addClass("activated");
 
         // if there is an activated node already
-        if (actNode.length == 1) {
-            writeArc(actNode, this);
-        }
+        if (source.length == 1)
+            writeArc(source, this);
     };
 }
 
 
-function writeArc(sourceNode, destNode) {
+function writeArc(source, target) {
+    log.debug(`called writeArc(source id: ${source.attr('id')}, target id:${target.attr('id')}`);
+    
     /*
-    Called in drawArcs. Makes changes to the text data and calls the function
+    Called in clickWF. Makes changes to the text data and calls the function
     redrawing the tree. Currently supports only conllu.
     */
 
-    var sourceIndex = +sourceNode.data("id").slice(2);
-    var destIndex = +destNode.data("id").slice(2);
+    // NOTE: can just define a new attr `index` or something on the DOM
+    const sourceIndex = parseInt(source.attr('id').slice(2));
+    const targetIndex = parseInt(target.attr('id').slice(2));
 
-    var indices = findConlluId(destNode);
-    // For some reason we need all of this code otherwise stuff becomes undefined
-    var idx = findConlluId(destNode)[1];
-    var sent = buildSent();
-    var tokens = sent.tokens;
-    // console.log(idx + ' ' + tokens);
-    var thisToken = tokens[idx];
-    // console.log('writeArc ' + destIndex + ' ' + thisToken['upostag']);
-    var sentAndPrev = changeConlluAttr(sent, indices, "head", sourceIndex);
+    const indices = findConlluId2(target);
+
+    let sent = buildSent(),
+        thisToken = sent.tokens[indices.outerIndex],
+        sentAndPrev = changeConlluAttr2(sent, indices, 'head', sourceIndex);
 
     // If the target POS tag is PUNCT set the deprel to @punct [99%]
     // IF the target POS tag is CCONJ set the deprel to @cc [88%]
     // IF the target POS tag is SCONJ set the deprel to @mark [86%]
     // IF the target POS tag is DET set the deprel to @det [83%]
     // TODO: Put this somewhere better
-    if(thisToken['upostag'] in POS2RELmappings) {
-        sentAndPrev = changeConlluAttr(sent, indices, "deprel", POS2RELmappings[thisToken['upostag']])
+    if (thisToken.upostag in POS2RELmappings)
+        sentAndPrev = changeConlluAttr2(sent, indices, 'deprel', POS2RELmappings[thisToken.upostag]);
+
+    let isValidDep = true;
+    if (thisToken.upostag === 'PUNCT' && !is_projective_nodes(sent.tokens, [targetIndex])) {
+        log.warn('writeArc(): Non-projective punctuation');
+        isValidDep = false
     }
-
-    var validDep = true;
-    if(thisToken['upostag'] == 'PUNCT' && !is_projective_nodes(sent.tokens, [destIndex])){
-        validDep = false;
-        console.log('WARNING: Non-projective punctuation');
-    }
-
-
-    sent = sentAndPrev[0];
-    var pervVal = sentAndPrev[1];
 
     window.undoManager.add({
-        undo: function(){
-            var sent = buildSent();
-            var sentAndPrev = changeConlluAttr(sent, indices, "head", pervVal);
-            sent = sentAndPrev[0];
-            redrawTree(sent);
+        undo: () => {
+            let sent = buildSent(),
+                sentAndPrev = changeConlluAttr2(sent, indices, 'head', sentAndPrev.previous);
+            redrawTree(sentAndPrev.sent);
         },
-        redo: function(){
-            writeArc(sourceNode, destNode);
+        redo: () => {
+            writeArc(source, target);
         }
     });
 
@@ -130,39 +130,46 @@ function writeArc(sourceNode, destNode) {
 }
 
 
-function removeArc(destNodes) {
+function removeArc(targets) {
+    log.debug('called removeArc()');
+
     /* Removes all the selected edges. */
 
-    var sent = buildSent();
-    var prevRelations = {}
+    let sent = buildSent(),
+        prevRelations = {};
 
     // support for multiple arcs
-    $.each(destNodes, function(i, node) {
-        var destIndex = node.id().slice(2);
-        var indices = findConlluId(node);
-        var sentAndPrev = changeConlluAttr(sent, indices, "head", undefined);
-        sent = sentAndPrev[0];
-        prevRelations["head"] = sentAndPrev[1];
-        var sentAndPrev = changeConlluAttr(sent, indices, "deprel", undefined);
-        sent = sentAndPrev[0];
-        prevRelations["deprel"] = sentAndPrev[1];
+    $.each(targetNodes, (i, target) => {
+        const targetIndex = target.attr('id').slice(2),
+            indices = findConlluId2(target);
+
+        let sentAndPrev = changeConlluAttr2(sent, indices, 'head', undefined);
+
+        sent = sentAndPrev.sent;
+        prevRelations.head = sentAndPrev.previous;
+        sentAndPrev = changeConlluAttr2(sent, indices, 'deprel', undefined);
+        sent = sentAndPrev.sent;
+        prevRelations.deprel = sentAndPrev.previous;
+
     });
 
     window.undoManager.add({
-        undo: function(){
-            var sent = buildSent();
-            $.each(destNodes, function(i, node) {
-                var destIndex = node.id().slice(2);
-                var indices = findConlluId(node);
-                var sentAndPrev = changeConlluAttr(sent, indices, "head", prevRelations.head);
-                sent = sentAndPrev[0];
-                var sentAndPrev = changeConlluAttr(sent, indices, "deprel", prevRelations.deprel);
-                sent = sentAndPrev[0];
-            })
+        undo: () => {
+            let sent = buildSent();
+            $.each(targetNodes, (i, target) => {
+                const targetIndex = target.attr('id').slice(2),
+                    indices = findConlluId2(target);
+
+                let sentAndPrev = changeConlluAttr2(sent, indices, 'head', prevRelations.head);
+                sent = sentAndPrev.sent;
+                sentAndPrev = changeConlluAttr2(sent, indices, 'deprel', prevRelations.deprel);
+                sent = sentAndPrev.sent;
+            });
+
             redrawTree(sent);
         },
-        redo: function(){
-            removeArc(destNodes);
+        redo: () => {
+            removeArc(targets);
         }
     });
 
@@ -171,58 +178,61 @@ function removeArc(destNodes) {
 
 
 function selectArc() {
+    log.debug(`called selectArc(id: ${this.attr('id')}) on an ${this.hasClass('selected') ? '' : 'un'}selected arc`);
+
     /*
-    Activated when an arc is selected. Adds classes showing what is selected.
-    */
+     * Activated when an arc is selected. Adds classes showing what is selected.
+     */
 
     if(!ISEDITING) {
+
+        const targetIndex = this.data('target');
+
         // if the user clicked an activated node
         if (this.hasClass("selected")) {
-            this.removeClass("selected");
 
-            // removing visual effects from destNode
-            var destNodeId = this.data("target");
-            cy.$("#" + destNodeId).removeClass("arc-selected");
+            this.removeClass("selected");
+            cy.$(`#${targetIndex}`).removeClass('arc-selected'); // removing visual effects from targetNode
 
         } else {
+
             this.addClass("selected");
-            var destNodeId = this.data("target"); // getting info about nodes
-            cy.$("#" + destNodeId).addClass("arc-selected"); // css for destNode
+            cy.$(`#${targetIndex}`).addClass('arc-selected'); // css for targetNode
+
         }
 
         // for identifying the node
-        cy.$("#" + destNodeId).data("state", "arc-dest");
+        cy.$(`#${targetIndex}`).data('state', 'arc-dest');
     }
 }
 
 
 function selectSup() {
-    if (this.hasClass("supAct")) {
-        this.removeClass("supAct");
-    } else {
-        this.addClass("supAct");
-    }
+    log.debug(`called selectSup(id: ${this.attr('id')}, hasClass('supAct'): ${this.hasClass('supAct')}) `);
+    this.toggleClass('supAct');
 }
 
 
 function keyDownClassifier(key) {
+    log.debug(`called keyDownClassifier(${key})`);
+
     // looking if there are selected arcs
-    var selArcs = cy.$("edge.dependency.selected");  // + cy.$("edge.dependency.error");
-    var destNodes = cy.$("node[state='arc-dest']");
-    // looking if there is a POS label to be modified
-    var posInp = $(".activated.np");
-    // looking if there is a wf label to be modified
-    var wfInp = $(".activated.nf");
-    // looking if there is a deprel label to be modified
-    var deprelInp = $(".activated.ed");
-    // looking if some wf node is selected
-    var wf = cy.$("node.wf.activated");
-    // looking if a supertoken node is selected
-    var st = cy.$(".supAct");
-    // looking if some node waits to be merged
-    var toMerge = cy.$(".merge");
-    // looking if some node waits to be merged to supertoken
-    var toSup = cy.$(".supertoken");
+    const selArcs = cy.$("edge.dependency.selected"),  // + cy.$("edge.dependency.error");
+        targetNodes = cy.$("node[state='arc-dest']"),
+        // looking if there is a POS label to be modified
+        posInp = $(".activated.np"),
+        // looking if there is a wf label to be modified
+        wfInp = $(".activated.nf"),
+        // looking if there is a deprel label to be modified
+        deprelInp = $(".activated.ed"),
+        // looking if some wf node is selected
+        wf = cy.$("node.wf.activated"),
+        // looking if a supertoken node is selected
+        st = cy.$(".supAct"),
+        // looking if some node waits to be merged
+        toMerge = cy.$(".merge"),
+        // looking if some node waits to be merged to supertoken
+        toSup = cy.$(".supertoken");
 
     // $(document).bind('keydown', function(e) {
     //     if (key.which == ESC) {
@@ -231,47 +241,46 @@ function keyDownClassifier(key) {
     //     }
     // });
 
-    if (key.which == ESC) {
+    if (key.which === ESC) {
         key.preventDefault();
         drawTree();
-    };
+    }
 
-    var isEditFocused = $('#edit').is(':focus');
-    if(isEditFocused) {
-        if (key.which == TAB) {
+    if ($('#edit').is(':focus')) {
+        if (key.which === TAB) {
             key.preventDefault();
         }
     }
 
     if (selArcs.length) {
-        if (key.which == DEL_KEY || key.which == BACKSPACE) {
-            removeArc(destNodes);
-        } else if (key.which == D) {
+        if (key.which === DEL_KEY || key.which === BACKSPACE) {
+            removeArc(targetNodes);
+        } else if (key.which === D) {
             moveArc();
         };
     } else if (posInp.length) {
-        if (key.which == ENTER) {
+        if (key.which === ENTER) {
             writePOS(posInp.val());
         };
     } else if (wfInp.length) {
-        if (key.which == ENTER) {
+        if (key.which === ENTER) {
             writeWF(wfInp);
         };
     } else if (deprelInp.length) {
-        if (key.which == ENTER) {
+        if (key.which === ENTER) {
             var res = deprelInp.val();
             // to get rid of the magic direction arrows
             res = res.replace(/[⊳⊲]/, '');
             writeDeprel(res);
         };
-    } else if (wf.length == 1) {
-        if (key.which == M) {
+    } else if (wf.length === 1) {
+        if (key.which === M) {
             wf.addClass("merge");
             wf.removeClass("activated");
-        } else if (key.which == S) {
+        } else if (key.which === S) {
             wf.addClass("supertoken");
             wf.removeClass("activated");
-        } else if (key.which == R) {
+        } else if (key.which === R) {
             setRoot(wf);
         };
     } else if (toMerge.length) {
@@ -283,38 +292,38 @@ function keyDownClassifier(key) {
             mergeNodes(toSup, SIDES[key.which], "supertoken");
         }
     } else if (st.length) {
-        if (key.which == DEL_KEY || key.which == BACKSPACE) {
+        if (key.which === DEL_KEY || key.which === BACKSPACE) {
             removeSup(st);
         }
     }
-    //console.log('KEY: ' + key.which);
-    var inputAreaFocus = $("#indata").is(":focus");
-    // console.log('KEY: ' + key.which, inputAreaFocus);
-    if(!inputAreaFocus) {
+
+    if(!$("#indata").is(":focus")) {
         // console.log('ZOOM: ', CURRENT_ZOOM, inputAreaFocus);
-        if((key.which == EQUALS || key.which == 61) ){
+        if((key.which === EQUALS || key.which === 61) ){
             CURRENT_ZOOM = cy.zoom();
-            if(key.shiftKey) { // zoom in
+            if (key.shiftKey) { // zoom in
                 CURRENT_ZOOM += 0.1;
             }  else {  // fit to screen
                 CURRENT_ZOOM = cy.fit();
             }
             cy.zoom(CURRENT_ZOOM);
             cy.center();
-        } else if((key.which == MINUS || key.which == 173) ) { // zoom out
+        } else if((key.which === MINUS || key.which === 173) ) { // zoom out
             CURRENT_ZOOM = cy.zoom();
             //if(key.shiftKey) {
                 CURRENT_ZOOM -= 0.1;
             //}
             cy.zoom(CURRENT_ZOOM);
             cy.center();
-        } else if(key.which == 48 ) { // 0 = zoom 1.0
+        } else if(key.which === 48 ) { // 0 = zoom 1.0
             CURRENT_ZOOM = 1.0;
             cy.zoom(CURRENT_ZOOM);
             cy.center();
         }
     }
 }
+
+// PROGRESS MARKER
 
 
 function moveArc() {
@@ -323,7 +332,7 @@ function moveArc() {
     // reset the handlers
     var nodes = $("rect[data-span-id]");
     $.each(nodes, function(n, node){
-        node.removeEventListener("click", drawArcs);
+        node.removeEventListener("click", clickWF);
         node.addEventListener("click", getArc);
     });
 }
@@ -523,22 +532,28 @@ function writePOS(posInp, indices) {
 }
 
 
+function changeConlluAttr2(sent, indices, attrName, newVal) {
+    const arr = changeConlluAttr(sent, indices, attrName, newVal);
+    const ret = { sent:arr[0], previous:arr[1] };
+
+    log.debug(`changeConlluAttr() returned: ${JSON.stringify(ret)}`);
+    return ret;
+}
 function changeConlluAttr(sent, indices, attrName, newVal) {
-    var isSubtoken = indices[0];
-    var outerIndex = indices[1];
-    var innerIndex = indices[2];
+    log.debug('called changeConlluAttr()');
 
     //if(attrName == "deprel") {
     //  newVal = newVal.replace(/[⊲⊳]/g, '');
     //}
-    if (isSubtoken) {
-        var pervVal = sent.tokens[outerIndex].tokens[innerIndex][attrName];
-        sent.tokens[outerIndex].tokens[innerIndex][attrName] = newVal;
+    let previous;
+    if (indices.isSubtoken) {
+        previous = sent.tokens[ indices.outerIndex ].tokens[ indices.innerIndex ][attrName];
+        sent.tokens[ indices.outerIndex ].tokens[ indices.innerIndex ][attrName] = newVal;
     } else {
-        var pervVal = sent.tokens[outerIndex][attrName];
-        sent.tokens[outerIndex][attrName] = newVal;
+        previous = sent.tokens[ indices.outerIndex ][attrName];
+        sent.tokens[ indices.outerIndex ][attrName] = newVal;
     }
-    return [sent, pervVal]
+    return [sent, previous];
 }
 
 function writeWF(wfInp) {
@@ -569,32 +584,37 @@ function writeWF(wfInp) {
 }
 
 
-function findConlluId(wfNode) { // TODO: refactor the arcitecture.
+function findConlluId2(wf) {
+    const arr = findConlluId(wf);
+    const ret = { isSubtoken:arr[0], outerIndex:arr[1], innerIndex:arr[2] };
+
+    log.debug(`findConlluId() returned: ${JSON.stringify(ret)}`);
+    return ret;
+}
+
+function findConlluId(wf) { // TODO: refactor the arcitecture.
+    log.debug(`called findConlluId(id: ${wf.attr('id')})`);
+
     // takes a cy wf node
 
-    var isSubtoken = false;
-    var outerIndex;
-    var innerIndex;
+    let isSubtoken = false, outerIndex = null, innerIndex = null;
+    const parentIndex = findParentId(wf);
 
-    var parentId = findParentId(wfNode);
-    if (parentId != undefined) {
+    if (parentIndex !== undefined) {
         isSubtoken = true;
-        var children = cy.$("#" + parentId).children();
-        outerIndex = +parentId.slice(2);
-        for (var i = 0; i < children.length; ++i) {
-            if (children[i].children()[0].id() == wfNode.id()){
+        outerIndex = parseInt(parentIndex.slice(2));
+        cy.$(`#${parentIndex}`).children().each((i, child) => {
+            if (child.attr('id') === wf.attr('id')) 
                 innerIndex = i;
-            }
-        }
+        });
     } else {
-        var tokNumber = +wfNode.id().slice(2);
-        var sent = buildSent();
-        for (var i = 0; i < sent.tokens.length; ++i) {
-            if (sent.tokens[i].id == tokNumber) {
+        const wfIndex = parseInt(wf.attr('id').slice(2));
+        $.each(buildSent().tokens, (i, token) => {
+            if (token.id === wfIndex)
                 outerIndex = i;
-            }
-        }
+        });
     }
+
     return [isSubtoken, outerIndex, innerIndex];
 }
 

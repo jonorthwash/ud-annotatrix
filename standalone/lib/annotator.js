@@ -159,7 +159,7 @@ function bindCyHandlers() {
     /* Binds event handlers to cy elements.
     NOTE: If you change the style of a node (e.g. its selector) then
     you also need to update it here. */
-    cy.on('click', 'node.wf', drawArcs);
+    cy.on('click', 'node.wf', clickWF);
     cy.on('cxttapend', 'edge.dependency', selectArc);
     cy.on('click', 'node.pos', changeNode);
     cy.on('click', '$node > node', selectSup);

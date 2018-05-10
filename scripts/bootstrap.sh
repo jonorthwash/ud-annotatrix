@@ -13,7 +13,7 @@ if hash virtualenv 2>/dev/null; then
   VENV="ud-env"
 
   if [ ! -d $VENV ]; then
-    virtualenv --no-site-packages $VENV
+    virtualenv --no-site-packages $VENV --python=python3.6
   fi
   . ./$VENV/bin/activate
 
@@ -27,7 +27,7 @@ fi
 
 # install required python packages
 # without "Requirement already satisfied warnings"
-pip install -r requirements.txt 1> >(grep -v 'Requirement already satisfied' 1>&2)
+pip3 install -r requirements.txt 1> >(grep -v 'Requirement already satisfied' 1>&2)
 
 # basic ENV file
 ENV=.env
