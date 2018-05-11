@@ -154,10 +154,14 @@ function bindHandlers() {
     $('#codeVisibleBtn').click(toggleCodeWindow);
     $('#currentsen').blur(goToSentence);
 
+    $('#exportPNGBtn').click(exportPNG);
+    $('#exportSVGBtn').click(exportSVG);
+    $('#exportLATEXBtn').click(exportLATEX);
+
     $('#indata')
-      .keyup(drawTree)
-      .keyup(focusOut)
-      .keyup(formatTabsView)
+        .keyup(drawTree)
+        .keyup(focusOut)
+        .keyup(formatTabsView)
 
     $('#RTL').click(switchRtlMode);
     $('#vertical').click(switchAlignment);
