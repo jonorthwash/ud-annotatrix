@@ -140,6 +140,20 @@ function bindHandlers() {
     // TODO: causes errors if called before the cy is initialised
     $(document).keydown(keyDownClassifier);
 
+    $('#uploadFileButton').click(handleUploadButtonPressed);
+    $('#prevSenBtn').click(prevSentence);
+    $('#nextSenBtn').click(nextSentence);
+    $('#remove').click(removeCurSent);
+    $('#add').click(addSent);
+    $('#exportBtn').click(exportCorpora);
+    //$('#saveOnServerBtn').click(saveOnServer);
+    $('#clearBtn').click(clearCorpus);
+    $('#viewConllu').click(viewAsConllu);
+    $('#viewCG').click(viewAsCG);
+    $('#tableViewBtn').click(toggleTableView);
+    $('#codeVisibleBtn').click(toggleCodeWindow);
+    $('#currentsen').blur(goToSentence);
+
     $('#indata')
       .keyup(drawTree)
       .keyup(focusOut)

@@ -54,8 +54,8 @@ err_udep_leaf_node = Nodes with the « { $tag } » part-of-speech tag should nor
 					</div>
 					<div class="modal-body">
                                                 <!-- This message can be removed when we have better error handling. -->
-                                                <p>This will upload your treebank to your browser's local storage. If there is not 
-                                                enough space then the file will not be uploaded successfully. The amount of 
+                                                <p>This will upload your treebank to your browser's local storage. If there is not
+                                                enough space then the file will not be uploaded successfully. The amount of
                                                 available space according to your browser is reported below.</p>
 						<span title="Select a file to upload into the interface"><u>Choose and upload file</u></span>:
 						<input type="file" id="filename"/><progress id="fileUploadProgressBar" value="0" max="100"></progress>
@@ -67,7 +67,7 @@ err_udep_leaf_node = Nodes with the « { $tag } » part-of-speech tag should nor
                                                 </div>
 					</div>
 					<div class="modal-footer">
-						<button id="uploadFileButton" type="button" class="btn btn-primary" data-dismiss="modal" onclick="handleUploadButtonPressed()" disabled>Upload</button>
+						<button id="uploadFileButton" type="button" class="btn btn-primary" data-dismiss="modal" disabled>Upload</button>
 						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
 						<!-- button type="button" class="btn btn-primary">Save changes</button -->
 					</div>
@@ -93,7 +93,7 @@ err_udep_leaf_node = Nodes with the « { $tag } » part-of-speech tag should nor
 				</div>
 			</div>
 		</div>
-      
+
         <div class="modal fade" id="exportModal" tabindex="-1" role="dialog" aria-labelledby="exportModalLabel" aria-hidden="true">
 			<div class="modal-dialog" role="document">
 				<div class="modal-content" id="exportModalContent">
@@ -125,23 +125,23 @@ err_udep_leaf_node = Nodes with the « { $tag } » part-of-speech tag should nor
 				<div class="btn-toolbar col-xs-6 corpusNavigation" role="toolbar">
 					<div class="input-group" style="padding-right: 1em;">
 						<div class="input-group-btn">
-							<a class="btn btn-secondary" href="#" id="prevSenBtn" onClick="javascript:prevSentence();">
+							<a class="btn btn-secondary" href="#" id="prevSenBtn">
 								<i class="fa fa-arrow-left" title="Previous sentence"></i>
 							</a>
 						</div>
-						<input class="form-control col-xs-2" id="currentsen" value="0" size="2" onBlur="javascript:goToSentence();"/>
+						<input class="form-control col-xs-2" id="currentsen" value="0" size="2"/>
 						<span class="input-group-addon">/&nbsp;<span id="totalsen">00</span></span>
 						<div class="input-group-btn ml-auto">
-							<a class="btn btn-secondary" href="#" id="nextSenBtn" onClick="javascript:nextSentence();">
+							<a class="btn btn-secondary" href="#" id="nextSenBtn">
 								<i class="fa fa-arrow-right" title="Next sentence"></i>
 							</a>
 						</div>
 					</div>
 					<div class="btn-group ml-sx-auto" style="padding-right: 1em;">
-						<a class="btn btn-secondary" href="#"  id="remove" onClick="javascript:removeCurSent();">
+						<a class="btn btn-secondary" href="#"  id="remove">
 							<i class="fa fa-minus-circle" title="Delete sentence"></i>
 						</a>
-						<a class="btn btn-secondary" href="#"  id="add" onClick="javascript:addSent();">
+						<a class="btn btn-secondary" href="#"  id="add">
 							<i class="fa fa-plus-circle" title="Add sentence"></i>
 						</a>
 					</div>
@@ -149,13 +149,13 @@ err_udep_leaf_node = Nodes with the « { $tag } » part-of-speech tag should nor
 						<a class="btn btn-secondary" href="#" data-toggle="modal" data-target="#fileModal" id="upload">
 							<i class="fa fa-upload" title="Import corpus"></i>
 						</a>
-						<a class="btn btn-secondary" href="#" onClick="javascript:exportCorpora();">
+						<a class="btn btn-secondary" id="exportBtn" href="#">
 							<i class="fa fa-download" title="Download corpus"></i>
 						</a>
-<!--						<a class="btn btn-secondary" href="#" onClick="javascript:saveOnServer();">
+<!--						<a class="btn btn-secondary" id="saveOnServerBtn" href="#">
 							<i class="fa fa-cloud-upload" title="Save on server"></i>
 						</a>-->
-						<a class="btn btn-secondary" href="#" onClick="javascript: clearCorpus();">
+						<a class="btn btn-secondary" id="clearBtn" href="#">
 							<i class="fa fa-trash" title="Discard corpus"></i>
 						</a>
 					</div>
@@ -190,20 +190,20 @@ err_udep_leaf_node = Nodes with the « { $tag } » part-of-speech tag should nor
 							<a href="#" class="nav-link" id="viewOther"></a>
 						</li>
 						<li class="nav-item">
-							<a href="#" class="nav-link active" id="viewConllu" onClick="javascript:viewAsConllu();">CoNLL-U</a>
+							<a href="#" class="nav-link active" id="viewConllu">CoNLL-U</a>
 						</li>
 						<li class="nav-item">
-							<a href="#" class="nav-link" id="viewCG" onClick="javascript:viewAsCG();">CG3</a>
+							<a href="#" class="nav-link" id="viewCG">CG3</a>
 						</li>
 					</div>
 					<div id="viewButton" class="btn-group ml-auto corpusNavigation" style="padding-right: 1em;">
-						<a class="btn btn-secondary" href="#" onClick="javascript: toggleTableView();">
+						<a class="btn btn-secondary" id="tableViewBtn" href="#">
 							<i id="tableViewButton" class="fa fa-table" title="Table view"></i>
 						</a>
 					</div>
 
 					<div class="btn-group ml-auto corpusNavigation">
-						<a class="btn btn-secondary" href="#" onClick="javascript: toggleCodeWindow();">
+						<a class="btn btn-secondary" id="codeVisibleBtn" href="#">
 							<i id="codeVisibleButton" class="fa fa-chevron-up" title="Show/hide text area"></i>
 						</a>
 					</div>
@@ -212,9 +212,9 @@ err_udep_leaf_node = Nodes with the « { $tag } » part-of-speech tag should nor
 
 
 			<!-- div class="viewoptions">
-				<button role="tab" id="viewConllu" class="selected" onClick="javascript:viewAsConllu();">as CoNLL-U</button>
-				<button role="tab" id="viewCG" onClick="javascript:viewAsCG();">as CG</button>
-				<button role="tab" id="remove" onClick="javascript:removeCurSent();">Remove sentence</button>
+				<button role="tab" id="viewConllu" class="selected">as CoNLL-U</button>
+				<button role="tab" id="viewCG">as CG</button>
+				<button role="tab" id="remove">Remove sentence</button>
 			</div -->
 			<div class="indataarea" style="position: relative">
 				<textarea id="indata" class="w-100" style="font-size: 85%" rows="20"></textarea>
