@@ -49,6 +49,21 @@ class AnnotatrixError extends Error {
 
 
 
+/*
+ * NotImplementedError
+ *
+ * throw this if we get somewhere that we know has not been implemented
+ */
+class NotImplementedError extends AnnotatrixError {
+  constructor(...args) {
+
+    super(...args);
+    if (Error.captureStackTrace)
+      Error.captureStackTrace(this, NotImplementedError);
+
+    this.name = 'NotImplementedError';
+  }
+}
 
 /*
  * AssertionError

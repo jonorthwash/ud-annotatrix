@@ -249,22 +249,25 @@ function isQuotaExceeded(e) {
   return quotaExceeded;
 }
 
-// function handleUploadButtonPressed() {
-//     // Replaces current content
-//     CONTENTS = TEMPCONTENTS;
-//     localStorage.setItem("corpus", CONTENTS);
-//     getLocalStorageMaxSize()
-//     $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
-//     loadDataInIndex();
-//     $("#uploadFileButton").attr("disabled", "disabled");
-//     $("#uploadFileSizeError").hide();
-//     $('#fileModal').modal('hide');
-// }
+function handleUploadButtonPressed() {
+
+    throw new NotImplementedError('handle upload button not implemented');
+    /*
+    // Replaces current content
+    CONTENTS = TEMPCONTENTS;
+    localStorage.setItem("corpus", CONTENTS);
+    getLocalStorageMaxSize()
+    $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
+    loadDataInIndex();
+    $("#uploadFileButton").attr("disabled", "disabled");
+    $("#uploadFileSizeError").hide();
+    $('#fileModal').modal('hide');*/
+}
 
 
 function addSent() { // TODO: this is probably not what we want? what if we turn it into "insert a new sentence _here_"?
-        AVAILABLESENTENCES = AVAILABLESENTENCES + 1;
-        showDataIndiv();
+    AVAILABLESENTENCES = AVAILABLESENTENCES + 1;
+    showDataIndiv();
 }
 
 function removeCurSent() {

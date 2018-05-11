@@ -4,33 +4,39 @@
 This scripts contains makes support for graphical editing.
 */
 
-var DEL_KEY = 46;
-var BACKSPACE = 8;
-var ENTER = 13;
-var ESC = 27;
-var TAB = 9;
-var RIGHT = 39;
-var LEFT = 37;
-var CURRENT_ZOOM = 1.0;
-var UP = 38;
-var DOWN = 40;
-var MINUS = 189;
-var EQUALS = 187; // also PLUS
-var J = 74;
-var K = 75;
-var D = 68;
-var I = 73;
-var S = 83;
-var R = 82;
-var M = 77;
-var SIDES = {39: 'right', 37: 'left'};
-var ISEDITING = false;
-var POS2RELmappings = {
+const KEYS = {
+		DELETE: 46,
+		BACKSPACE: 8,
+		ENTER: 13,
+		ESC: 27,
+		TAB: 9,
+		RIGHT: 39,
+		LEFT: 37,
+		UP: 38,
+		DOWN: 40,
+		MINUS: 189,
+		EQUALS: 187, // also PLUS
+		J: 74,
+		K: 75,
+		D: 68,
+		I: 73,
+		S: 83,
+		R: 82,
+		M: 77,
+		SIDES: {
+				39: 'right',
+				37: 'left'
+		}
+}
+const POS2RELmappings = {
 	'PUNCT': 'punct',
 	'DET': 'det',
 	'CCONJ': 'cc',
 	'SCONJ': 'mark'
 }
+
+var CURRENT_ZOOM = 1.0;
+var ISEDITING = false;
 
 
 function setUndos(undoManager) {
@@ -235,71 +241,71 @@ function keyDownClassifier(key) {
         toSup = cy.$('.supertoken');
 
     // $(document).bind('keydown', function(e) {
-    //     if (key.which === ESC) {
+    //     if (key.which === KEYS.ESC) {
     //         e.preventDefault();
     //         drawTree();
     //     }
     // });
 
-    if (key.which === ESC) {
+    if (key.which === KEYS.ESC) {
         key.preventDefault();
         drawTree();
     }
 
     if ($('#edit').is(':focus')) {
-        if (key.which === TAB) {
+        if (key.which === KEYS.TAB) {
             key.preventDefault();
         }
     }
 
     if (selArcs.length) {
-        if (key.which === DEL_KEY || key.which === BACKSPACE) {
+        if (key.which === KEYS.DELETE || key.which === KEYS.BACKSPACE) {
             removeArc(targetNodes);
-        } else if (key.which === D) {
+        } else if (key.which === KEYS.D) {
             moveArc();
         };
     } else if (posInp.length) {
-        if (key.which === ENTER) {
+        if (key.which === KEYS.ENTER) {
             writePOS(posInp.val());
         };
     } else if (wfInp.length) {
-        if (key.which === ENTER) {
+        if (key.which === KEYS.ENTER) {
             writeWF(wfInp);
         };
     } else if (deprelInp.length) {
-        if (key.which === ENTER) {
+        if (key.which === KEYS.ENTER) {
             var res = deprelInp.val();
             // to get rid of the magic direction arrows
             res = res.replace(/[⊳⊲]/, '');
             writeDeprel(res);
         };
     } else if (wf.length === 1) {
-        if (key.which === M) {
+        if (key.which === KEYS.M) {
             wf.addClass('merge');
             wf.removeClass('activated');
-        } else if (key.which === S) {
+        } else if (key.which === KEYS.S) {
             wf.addClass('supertoken');
             wf.removeClass('activated');
-        } else if (key.which === R) {
+        } else if (key.which === KEYS.R) {
             setRoot(wf);
         };
     } else if (toMerge.length) {
-        if (key.which in SIDES) {
-            mergeNodes(toMerge, SIDES[key.which], 'subtoken');
+        if (key.which in KEYS.SIDES) {
+            mergeNodes(toMerge, KEYS.SIDES[key.which], 'subtoken');
         }
     } else if (toSup.length) {
-        if (key.which in SIDES) {
-            mergeNodes(toSup, SIDES[key.which], 'supertoken');
+        if (key.which in KEYS.SIDES) {
+            mergeNodes(toSup, KEYS.SIDES[key.which], 'supertoken');
         }
     } else if (st.length) {
-        if (key.which === DEL_KEY || key.which === BACKSPACE) {
+        if (key.which === KEYS.DELETE || key.which === BACKSPACE) {
             removeSup(st);
         }
     }
 
     if(!$('#indata').is(':focus')) {
         // console.log('ZOOM: ', CURRENT_ZOOM, inputAreaFocus);
-        if((key.which === EQUALS || key.which === 61) ){
+        if((key.which === KEYS.EQUALS || key.which === 61) ){
             CURRENT_ZOOM = cy.zoom();
             if (key.shiftKey) { // zoom in
                 CURRENT_ZOOM += 0.1;
@@ -308,7 +314,7 @@ function keyDownClassifier(key) {
             }
             cy.zoom(CURRENT_ZOOM);
             cy.center();
-        } else if((key.which === MINUS || key.which === 173) ) { // zoom out
+        } else if((key.which === KEYS.MINUS || key.which === 173) ) { // zoom out
             CURRENT_ZOOM = cy.zoom();
             //if(key.shiftKey) {
                 CURRENT_ZOOM -= 0.1;
@@ -923,7 +929,7 @@ function clearWarning() {
 function focusOut(key) {
 		log.debug(`called focusOut(${key.which})`);
 
-    if (key.which === ESC) {
+    if (key.which === KEYS.ESC) {
         this.blur();
     }
 }
@@ -964,13 +970,13 @@ $(document).ready(function(){
 		$('#currentsen').keyup((e) => {
 				if (e.keyCode === 13) {
 						goToSentence();
-				} else if (e.keyCode === UP || e.keyCode === K) {
+				} else if (e.keyCode === KEYS.UP || e.keyCode === KEYS.K) {
 						prevSentence();
-				} else if (e.keyCode === DOWN || e.keyCode === J) {
+				} else if (e.keyCode === KEYS.DOWN || e.keyCode === KEYS.J) {
 						nextSentence();
-				} else if (e.keyCode === MINUS) {
+				} else if (e.keyCode === KEYS.MINUS) {
 						removeCurSent();
-				} else if (e.keyCode === EQUALS) {
+				} else if (e.keyCode === KEYS.EQUALS) {
 						addSent();
 				}
 		});
