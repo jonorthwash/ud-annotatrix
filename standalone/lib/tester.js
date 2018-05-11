@@ -18,7 +18,7 @@ class Tester extends Object {
   assert(expression, message='') {
     if (!expression)
       throw new AssertionError(message);
-    log.debug(`Tester.assert() got a truthy expression (message: "${message}")`);
+    log.debug(`OK: Tester.assert() got a truthy expression (message: "${message}")`);
   }
 
 

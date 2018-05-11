@@ -8,7 +8,6 @@ var AVAILABLESENTENCES = 0;
 var LOCALSTORAGE_AVAILABLE = -1;
 var CURRENTSENTENCE = 0;
 var RESULTS = [];
-var LOC_ST_AVAILABLE = false;
 var LABELS = [];
 
 window.onload = () => {
@@ -116,7 +115,6 @@ function loadFromLocalStorage() {
     from localStorage. If no, warn user that localStorage is not avaliable. */
 
     if (storageAvailable('localStorage')) {
-        LOC_ST_AVAILABLE = true;
         getLocalStorageMaxSize();
         $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
         if (localStorage.getItem("corpus") != null) {
@@ -125,7 +123,7 @@ function loadFromLocalStorage() {
         };
     }
     else {
-        console.log("localStorage is not available :(")
+        log.warn('localStorage is not available :(');
         // add a nice message so the user has some idea how to fix this
         var warnMsg = document.createElement('p');
         warnMsg.innerHTML = "Unable to save to localStorage, maybe third-party cookies are blocked?";
@@ -152,20 +150,6 @@ function bindHandlers() {
     $('#enhanced').click(switchEnhanced);
 
     $('#filename').change(loadFromFile);
-}
-
-
-function bindCyHandlers() {
-    /* Binds event handlers to cy elements.
-    NOTE: If you change the style of a node (e.g. its selector) then
-    you also need to update it here. */
-    cy.on('click', 'node.wf', clickWF);
-    cy.on('cxttapend', 'edge.dependency', selectArc);
-    cy.on('click', 'node.pos', changeNode);
-    cy.on('click', '$node > node', selectSup);
-    cy.on('cxttapend', 'node.wf', changeNode);
-    cy.on('click', 'edge.dependency', changeNode);
-//    cy.on('zoom', cy.center); // center the view port when the page zoom is changed
 }
 
 
@@ -537,7 +521,7 @@ function drawTree() {
     var inpSupport = $("<div id='mute'>"
         + "<input type='text' id='edit' class='hidden-input'/></div>");
     $("#cy").prepend(inpSupport);
-    bindCyHandlers();
+    bindCyHandlers(); // moved to gui.js
     saveData();
 }
 

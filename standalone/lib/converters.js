@@ -29,7 +29,7 @@ function plainSent2Conllu(text) {
        if(sent.tokens[i]['form'].match(/^[$%€£¥Æ§©]+$/)) {
          sent.tokens[i]['upostag'] = 'SYM';
        }
-    }    
+    }
 
     return sent.serial;
 }
@@ -62,6 +62,7 @@ function txtCorpus2Conllu(text) {
     })
     corpus = newContents.join("\n");
     AVAILABLESENTENCES = splitted.length;
+    //AVAILABLESENTENCES = (splitted === null ? 1 : splitted.length);
     return corpus;
 }
 
