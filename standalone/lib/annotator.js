@@ -134,42 +134,6 @@ function loadFromLocalStorage() {
 }
 
 
-function bindHandlers() {
-    /* Binds handlers to DOM elements. */
-
-    // TODO: causes errors if called before the cy is initialised
-    $(document).keydown(keyDownClassifier);
-
-    $('#uploadFileButton').click(handleUploadButtonPressed);
-    $('#prevSenBtn').click(prevSentence);
-    $('#nextSenBtn').click(nextSentence);
-    $('#remove').click(removeCurSent);
-    $('#add').click(addSent);
-    $('#exportBtn').click(exportCorpora);
-    //$('#saveOnServerBtn').click(saveOnServer);
-    $('#clearBtn').click(clearCorpus);
-    $('#viewConllu').click(viewAsConllu);
-    $('#viewCG').click(viewAsCG);
-    $('#tableViewBtn').click(toggleTableView);
-    $('#codeVisibleBtn').click(toggleCodeWindow);
-    $('#currentsen').blur(goToSentence);
-
-    $('#exportPNGBtn').click(exportPNG);
-    $('#exportSVGBtn').click(exportSVG);
-    $('#exportLATEXBtn').click(exportLATEX);
-
-    $('#indata')
-        .keyup(drawTree)
-        .keyup(focusOut)
-        .keyup(formatTabsView)
-
-    $('#RTL').click(switchRtlMode);
-    $('#vertical').click(switchAlignment);
-    $('#enhanced').click(switchEnhanced);
-
-    $('#filename').change(loadFromFile);
-}
-
 
 function loadFromUrl() {
     /* Check if the URL contains arguments. If it does, takes first

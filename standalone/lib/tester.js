@@ -33,6 +33,7 @@ class Tester extends Object {
     this.tester();
     this.logger();
     this.errors();
+    this.buttons();
   }
   tester() {
 
@@ -55,8 +56,8 @@ class Tester extends Object {
 
     log.out('\nExecuting Tester.logger()');
 
-    let testMessage = 'This is the logger test message';
-    let loggers = [ log, // defined in annotator.js
+    const testMessage = 'This is the logger test message';
+    const loggers = [ log, // defined in annotator.js
       new Logger('CRITICAL'),
       new Logger('ERROR'),
       new Logger('WARN'),
@@ -64,8 +65,7 @@ class Tester extends Object {
       new Logger('DEBUG'),
       new Logger('INVALID') ];
 
-    for (let i=0; i<loggers.length; i++) {
-      let logger = loggers[i];
+    $.each(loggers, (i, logger) => {
 
       logger.out(`\nNow testing logger: ${logger}`);
       logger.critical(testMessage);
@@ -74,14 +74,14 @@ class Tester extends Object {
       logger.info(testMessage);
       logger.debug(testMessage);
 
-    }
+    });
   }
   errors() {
 
     log.out('\nExecuting Tester.errors()');
 
-    let testMessage = 'This is the error test message';
-    let errors = [
+    const testMessage = 'This is the error test message';
+    const errors = [
       new Error(testMessage),
       new ReferenceError(testMessage),
       new TypeError(testMessage),
@@ -92,15 +92,44 @@ class Tester extends Object {
       new ParseError(testMessage)
     ];
 
-    for (let i=0; i<errors.length; i++) {
-      let error = errors[i];
-
+    $.each(errors, (i, error) => {
       try {
         throw error;
       } catch (e) {
         console.log(`Caught ${e.name} with message "${e.message
           }", (custom:${e instanceof AnnotatrixError ? 'yes' : 'no'})`);
       }
-    }
+    });
+  }
+  buttons() {
+
+    log.out('\nExecuting Tester.buttons()');
+
+    const buttons = [
+      $('#prevSenBtn'),
+      $('#nextSenBtn'),
+      $('#remove'),
+      $('#add'),
+      $('#upload'),
+      $('#exportBtn'),
+      $('#clearBtn'),
+      $('#printBtn'),
+      $('#btnUndo'),
+      $('#btnRedo'),
+      $('#helpBtn'),
+      $('#settingsBtn'),
+      $('#viewOther'),
+      $('#viewConllu'),
+      $('#viewCG'),
+      $('#tableViewBtn'),
+      $('#codeVisibleBtn'),
+      $('#RTL'),
+      $('#vertical'),
+      $('#enhanced')
+    ];
+
+    $.each(buttons, (i, button) => {
+      button.click();
+    });
   }
 }

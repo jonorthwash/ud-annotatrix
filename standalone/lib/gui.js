@@ -64,6 +64,58 @@ function setUndos(undoManager) {
     updateUI();
 }
 
+function bindHandlers() {
+    /* Binds handlers to DOM elements. */
+
+    // TODO: causes errors if called before the cy is initialised
+    $(document).keydown(keyDownClassifier);
+
+    $('#uploadFileButton').click(handleUploadButtonPressed);
+    $('#prevSenBtn').click(prevSentence);
+    $('#nextSenBtn').click(nextSentence);
+    $('#remove').click(removeCurSent);
+    $('#add').click(addSent);
+    $('#exportBtn').click(exportCorpora);
+    //$('#saveOnServerBtn').click(saveOnServer);
+    $('#clearBtn').click(clearCorpus);
+    $('#viewConllu').click(viewAsConllu);
+    $('#viewCG').click(viewAsCG);
+    $('#tableViewBtn').click(toggleTableView);
+    $('#codeVisibleBtn').click(toggleCodeWindow);
+    $('#currentsen').blur(goToSentence);
+
+    $('#exportPNGBtn').click(exportPNG);
+    $('#exportSVGBtn').click(exportSVG);
+    $('#exportLATEXBtn').click(exportLATEX);
+
+    $('#indata')
+        .keyup(drawTree)
+        .keyup(focusOut)
+        .keyup(formatTabsView)
+
+    $('#RTL').click(switchRtlMode);
+    $('#vertical').click(switchAlignment);
+    $('#enhanced').click(switchEnhanced);
+
+    $('#filename').change(loadFromFile);
+}
+
+function bindCyHandlers() {
+		log.debug('called bindCyHandlers()');
+
+    /* Binds event handlers to cy elements.
+    NOTE: If you change the style of a node (e.g. its selector) then
+    you also need to update it here. */
+    cy.on('click', 'node.wf', clickWF);
+    cy.on('cxttapend', 'edge.dependency', selectArc);
+    cy.on('click', 'node.pos', changeNode);
+    cy.on('click', '$node > node', selectSup);
+    cy.on('cxttapend', 'node.wf', changeNode);
+    cy.on('click', 'edge.dependency', changeNode);
+		// cy.on('zoom', cy.center); // center the view port when the page zoom is changed
+}
+
+
 
 function clickWF(evt) {
     log.debug(`called clickWF(id: ${this.attr('id')}) on an ${this.hasClass('activated') ? '' : 'in'}active node`);
@@ -327,22 +379,6 @@ function keyDownClassifier(key) {
             cy.center();
         }
     }
-}
-
-
-function bindCyHandlers() {
-		log.debug('called bindCyHandlers()');
-
-    /* Binds event handlers to cy elements.
-    NOTE: If you change the style of a node (e.g. its selector) then
-    you also need to update it here. */
-    cy.on('click', 'node.wf', clickWF);
-    cy.on('cxttapend', 'edge.dependency', selectArc);
-    cy.on('click', 'node.pos', changeNode);
-    cy.on('click', '$node > node', selectSup);
-    cy.on('cxttapend', 'node.wf', changeNode);
-    cy.on('click', 'edge.dependency', changeNode);
-//    cy.on('zoom', cy.center); // center the view port when the page zoom is changed
 }
 
 
