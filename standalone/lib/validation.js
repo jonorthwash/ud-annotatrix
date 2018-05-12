@@ -1,16 +1,16 @@
 'use strict'
 
-var U_DEPRELS = ['acl', 'advcl', 'advmod', 'amod', 'appos', 'aux', 'case',
+const U_DEPRELS = ['acl', 'advcl', 'advmod', 'amod', 'appos', 'aux', 'case',
     'cc', 'ccomp', 'clf', 'compound', 'conj', 'cop', 'csubj', 'dep', 'det',
     'discourse', 'dislocated', 'expl', 'fixed', 'flat', 'goeswith', 'iobj',
     'list', 'mark', 'nmod', 'nsubj', 'nummod', 'obj', 'obl', 'orphan',
     'parataxis', 'punct', 'reparandum', 'root', 'vocative', 'xcomp'];
-var U_POS = ['ADJ', 'ADP', 'ADV', 'AUX', 'CCONJ', 'DET', 'INTJ', 'NOUN',
+const U_POS = ['ADJ', 'ADP', 'ADV', 'AUX', 'CCONJ', 'DET', 'INTJ', 'NOUN',
     'NUM', 'PART', 'PRON', 'PROPN', 'PUNCT', 'SCONJ', 'SYM', 'VERB', 'X'];
 
 // TODO: Make this more clever, e.g. CCONJ can have a dependent in certain
 // circumstances, e.g. and / or
-var U_POS_LEAF = ['AUX', 'CCONJ', 'PART', 'PUNCT', 'SCONJ']; // no ADP
+const U_POS_LEAF = ['AUX', 'CCONJ', 'PART', 'PUNCT', 'SCONJ']; // no ADP
 
 function is_upos(s) {
     log.debug(`called is_pos(${s})`);
@@ -381,7 +381,7 @@ function is_relation_conflict(tree) {
         }
     });
     if (count.has('obj') && count.has('ccomp'))
-        conflicts.set('objccomp', []);        
+        conflicts.set('objccomp', []);
     log.debug(`conflicts: ${JSON.stringify(conflicts)}`);
 
 

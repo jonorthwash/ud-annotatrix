@@ -28,7 +28,7 @@ const KEYS = {
 				37: 'left'
 		}
 }
-const POS2RELmappings = {
+const POS_TO_REL = {
 	'PUNCT': 'punct',
 	'DET': 'det',
 	'CCONJ': 'cc',
@@ -36,7 +36,7 @@ const POS2RELmappings = {
 }
 
 var CURRENT_ZOOM = 1.0;
-var ISEDITING = false;
+var IS_EDITING = false;
 
 
 function setUndos(undoManager) {
@@ -164,8 +164,8 @@ function writeArc(source, target) {
     // IF the target POS tag is SCONJ set the deprel to @mark [86%]
     // IF the target POS tag is DET set the deprel to @det [83%]
     // TODO: Put this somewhere better
-    if (thisToken.upostag in POS2RELmappings)
-        sentAndPrev = changeConlluAttr(sent, indices, 'deprel', POS2RELmappings[thisToken.upostag]);
+    if (thisToken.upostag in POS_TO_REL)
+        sentAndPrev = changeConlluAttr(sent, indices, 'deprel', POS_TO_REL[thisToken.upostag]);
 
     let isValidDep = true;
     if (thisToken.upostag === 'PUNCT' && !is_projective_nodes(sent.tokens, [targetIndex])) {
@@ -242,7 +242,7 @@ function selectArc() {
      * Activated when an arc is selected. Adds classes showing what is selected.
      */
 
-    if(!ISEDITING) {
+    if(!IS_EDITING) {
 
         const targetIndex = this.data('target');
 
@@ -417,7 +417,7 @@ function removeSup(st) {
 function changeNode() {
 		log.debug(`called changeNode() (entries: ${Object.entries(this)}, id: ${this.attr('id')})`);
 
-    ISEDITING = true;
+    IS_EDITING = true;
 
 		this.addClass('input');
 		const id = this.attr('id').slice(0, 2);
@@ -441,7 +441,7 @@ function changeNode() {
     this.data('label', res);
 
 		$('#mute').addClass('activated');
-		$('.activated#mute').css('height', (VERT_ALIGNMENT
+		$('.activated#mute').css('height', (IS_VERTICAL
 				? `${buildSent().tokens.length * 50}px`
 				:	$(window).width() - 10) );
 
@@ -489,7 +489,7 @@ function changeEdgeParam(param) {
     param.w = 100;
     param.h = cy.nodes()[0].renderedHeight();
 
-    if (VERT_ALIGNMENT) {
+    if (IS_VERTICAL) {
         param.y1 = param.y1 + (param.y2 - param.y1)/2 - 15;
         param.x1 = param.x2 - 70;
     } else {
@@ -969,7 +969,7 @@ function switchRtlMode() {
 
 		$('#RTL .fa').toggleClass('fa-align-right');
 		$('#RTL .fa').toggleClass('fa-align-left');
-		LEFT_TO_RIGHT = !LEFT_TO_RIGHT;
+		IS_LTR = !IS_LTR;
 
 	  drawTree();
 }
@@ -979,7 +979,7 @@ function switchAlignment() {
 		log.debug(`called switchAlignment()`);
 
 		$('#vertical .fa').toggleClass('fa-rotate-90');
-		VERT_ALIGNMENT = !VERT_ALIGNMENT;
+		IS_VERTICAL = !IS_VERTICAL;
 
 		drawTree();
 }
@@ -989,7 +989,7 @@ function switchEnhanced() {
 
 	  $('#enhanced .fa').toggleClass('fa-tree');
 	  $('#enhanced .fa').toggleClass('fa-magic');
-		VIEW_ENHANCED = !VIEW_ENHANCED;
+		IS_ENHANCED = !IS_ENHANCED;
 
 		drawTree();
 }
@@ -1040,13 +1040,13 @@ $(document).ready(function(){
 		});
 
     $('#exportModal').on('shown.bs.modal', (e) => {
-				// $("#treebankSize").text(CONTENTS.length); // TODO: Report the current loaded treebank size to user
+				// $('#treebankSize').text(CONTENTS.length); // TODO: Report the current loaded treebank size to user
 				$(e.target).find('.modal-body').load('export.html', exportPNG);
 		});
 
     $('#exportModal').on('hidden.bs.modal', (e) => {
-        png_exported = false;
-        latex_exported = false;
+        IS_PNG_EXPORTED = false;
+        IS_LATEX_EXPORTED = false;
     });
 
 		/*

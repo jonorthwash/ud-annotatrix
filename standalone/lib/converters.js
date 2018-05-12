@@ -7,16 +7,16 @@ function plainSent2Conllu(text) {
     // TODO: if there's punctuation in the middle of a sentence,
     // indices shift when drawing an arc
     // punctuation
-    text = text.replace(/([^ ])([.?!;:,])/g, "$1 $2");
+    text = text.replace(/([^ ])([.?!;:,])/g, '$1 $2');
 
     var sent = new conllu.Sentence();
-    var lines = ["# sent_id = _" + "\n# text = " + text]; // creating comment
-    var tokens = text.split(" ");
+    var lines = ['# sent_id = _' + '\n# text = ' + text]; // creating comment
+    var tokens = text.split(' ');
     // enumerating tokens
-    $.each(tokens, function(i, token) {tokens[i] = (i + 1) + "\t" + token});
+    $.each(tokens, function(i, token) {tokens[i] = (i + 1) + '\t' + token});
 
     lines = lines.concat(tokens);
-    sent.serial = lines.join("\n");
+    sent.serial = lines.join('\n');
     // TODO: automatical recognition of punctuation's POS
     for(var i = 0; i < sent.tokens.length; i++) {
        if(sent.tokens[i]['form'].match(/^[!.)(»«:;?¡,"\-><]+$/)) {
@@ -41,9 +41,9 @@ function plainSent2Conllu(text) {
 function SD2Conllu(text) {
         var newContents = [];
         newContents.push(SD2conllu(text));
-        CONTENTS = newContents.join("\n");
+        CONTENTS = newContents.join('\n');
         console.log('!!!' + CONTENTS);
-        FORMAT = "CoNLL-U";
+        FORMAT = 'CoNLL-U';
         loadDataInIndex();
         showDataIndiv();
 }
@@ -60,9 +60,9 @@ function txtCorpus2Conllu(text) {
         sentence = plainSent2Conllu(sentence.trim());
         newContents.push(sentence);
     })
-    corpus = newContents.join("\n");
-    AVAILABLESENTENCES = splitted.length;
-    //AVAILABLESENTENCES = (splitted === null ? 1 : splitted.length);
+    corpus = newContents.join('\n');
+    AVAILABLE_SENTENCES = splitted.length;
+    //AVAILABLE_SENTENCES = (splitted === null ? 1 : splitted.length);
     return corpus;
 }
 
@@ -78,16 +78,16 @@ function conlluMultiInput(text) { // TOFIX: this might break after rewriting arc
         if (text.match(/\n\n/)) { // match doublenewline
             CONTENTS = text;
         }
-        if (CONTENTS.trim() != "") {
+        if (CONTENTS.trim() != '') {
             var newContents = [];
-            var splitted = CONTENTS.split("\n\n");
+            var splitted = CONTENTS.split('\n\n');
             //console.log('@! ' + splitted.length);
             for(var i = 0; i < splitted.length; i++) {
                 newContents.push(splitted[i]);
             }
-            CONTENTS = newContents.join("\n\n");
+            CONTENTS = newContents.join('\n\n');
             //console.log('!!!' + CONTENTS);
-            FORMAT = "CoNLL-U";
+            FORMAT = 'CoNLL-U';
             loadDataInIndex();
         }
     }
@@ -105,7 +105,7 @@ function conllu2plainSent(text) {
     var tokens = sent.tokens.map(function(token) {
         return token.form;
     })
-    var plain = tokens.join(" ");
+    var plain = tokens.join(' ');
     return plain;
 }
 
@@ -118,7 +118,7 @@ function cleanConllu(content) {
     // if we don't find any tabs, then convert >1 space to tabs
     // TODO: this should probably go somewhere else, and be more
      // robust, think about vietnamese D:
-    var res = content.search("\n");
+    var res = content.search('\n');
     if(res < 0) {
         return content;
     }
@@ -127,26 +127,26 @@ function cleanConllu(content) {
     if(res <= 2) {
         return content;
     }
-    var res = content.search("\t");
+    var res = content.search('\t');
     var spaceToTab = false;
     // If we don't find any tabs, then we want to replace multiple spaces with tabs
     if(res < 0) {
         spaceToTab = true;
     }
     // remove blank lines
-    var lines = content.trim().split("\n");
-    var newContent = "";
+    var lines = content.trim().split('\n');
+    var newContent = '';
     for(var i = 0; i < lines.length; i++) {
         var newLine = lines[i].trim();
 //        if(newLine.length == 0) {
 //            continue;
 //        }
         // If there are no spaces and the line isn't a comment, then replace more than one space with a tab
-        if(newLine[0] != "#" && spaceToTab) {
-            newLine = newLine.replace(/  */g, "\t");
+        if(newLine[0] != '#' && spaceToTab) {
+            newLine = newLine.replace(/  */g, '\t');
         }
         // strip the extra tabs/spaces at the end of the line
-        newContent = newContent + newLine + "\n";
+        newContent = newContent + newLine + '\n';
     }
     return newContent;
 }

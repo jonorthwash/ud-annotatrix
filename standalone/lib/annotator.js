@@ -1,14 +1,14 @@
-"use strict"
+'use strict'
 
-var FORMAT = "";
-var FILENAME = 'ud-annotatrix-corpus.conllu'; // default name
-var CONTENTS = "";
-// var TEMPCONTENTS = "";
-var AVAILABLESENTENCES = 0;
-var LOCALSTORAGE_AVAILABLE = -1;
-var CURRENTSENTENCE = 0;
-var RESULTS = [];
-var LABELS = [];
+var FORMAT = '',
+    FILENAME = 'ud-annotatrix-corpus.conllu', // default name
+    CONTENTS = '';
+    // var TEMPCONTENTS = '';
+    AVAILABLE_SENTENCES = 0,
+    LOCALSTORAGE_AVAILABLE = -1,
+    CURRENT_SENTENCE = 0
+    RESULTS = [],
+    LABELS = [];
 
 window.onload = () => {
 
@@ -63,7 +63,7 @@ function onReady() {
     window.test.all();
 
     var cy = window.cy = cytoscape({ // avoid those `cy.$ is not a function errors`
-        container: document.getElementById("cy"),
+        container: document.getElementById('cy'),
 
         boxSelectionEnabled: false,
         autounselectify: true,
@@ -86,10 +86,10 @@ function onReady() {
 
 
 function saveData() { // TODO: rename to updateData
-    if (SERVER_RUNNING) {
+    if (IS_SERVER_RUNNING) {
         updateOnServer()
     } else {
-        localStorage.setItem("corpus", getContents()); // TODO: get rid of 'corpus', move the treebank updating here from getContents
+        localStorage.setItem('corpus', getContents()); // TODO: get rid of 'corpus', move the treebank updating here from getContents
     }
 }
 
@@ -98,12 +98,12 @@ function getContents() {
     /* Gets the corpus data saving the changes in current sentence,
     dependlessly of whether it's on server or in localStorage. */
 
-    // if (SERVER_RUNNING) {
+    // if (IS_SERVER_RUNNING) {
     //     // TODO: implement
     // } else {
     var splitted = localStorage.getItem('treebank'); // TODO: implement a more memory-friendly func?
     splitted = JSON.parse(splitted) || new Array(); // string to array
-    splitted[CURRENTSENTENCE] = $("#indata").val();
+    splitted[CURRENT_SENTENCE] = $('#indata').val();
     localStorage.setItem('treebank', JSON.stringify(splitted)); // update the treebank
     return splitted.join('\n\n');
     // }
@@ -116,9 +116,9 @@ function loadFromLocalStorage() {
 
     if (storageAvailable('localStorage')) {
         getLocalStorageMaxSize();
-        $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
-        if (localStorage.getItem("corpus") != null) {
-            CONTENTS = localStorage.getItem("corpus");
+        $('#localStorageAvailable').text(LOCALSTORAGE_AVAILABLE / 1024 + 'k');
+        if (localStorage.getItem('corpus') != null) {
+            CONTENTS = localStorage.getItem('corpus');
             loadDataInIndex();
         };
     }
@@ -126,7 +126,7 @@ function loadFromLocalStorage() {
         log.warn('localStorage is not available :(');
         // add a nice message so the user has some idea how to fix this
         var warnMsg = document.createElement('p');
-        warnMsg.innerHTML = "Unable to save to localStorage, maybe third-party cookies are blocked?";
+        warnMsg.innerHTML = 'Unable to save to localStorage, maybe third-party cookies are blocked?';
         var warnLoc = document.getElementById('warning');
         warnLoc.appendChild(warnMsg);
 
@@ -144,10 +144,10 @@ function loadFromUrl() {
         parameters = parameters.split('&')
         var variables = parameters.map(
             function(arg){
-                return arg.split('=')[1].replace(/\+/g, " ");
+                return arg.split('=')[1].replace(/\+/g, ' ');
             })
 
-        $("#indata").val(variables);
+        $('#indata').val(variables);
         drawTree();
     }
 }
@@ -163,10 +163,10 @@ function loadFromFile(e) {
     var file = e.target.files[0];
     if (!file) {return}
     var reader = new FileReader();
-    localStorage.setItem("filename", file.name);
+    localStorage.setItem('filename', file.name);
 
     reader.onload = function(e) {
-        if (SERVER_RUNNING) {
+        if (IS_SERVER_RUNNING) {
             // TODO: do something
         } else {
             localStorage.setItem('corpus', e.target.result);
@@ -183,10 +183,10 @@ function formatUploadSize(fileSize) {
         return fileSize + ' B';
     }
     else if(fileSize >= 1024 && fileSize < 1048576) {
-        return (fileSize/1024).toFixed(1) + " kB";
+        return (fileSize/1024).toFixed(1) + ' kB';
     }
     else {
-        return (fileSize/1048576).toFixed(1) + " mB";
+        return (fileSize/1048576).toFixed(1) + ' mB';
     }
 }
 
@@ -219,33 +219,33 @@ function handleUploadButtonPressed() {
     /*
     // Replaces current content
     CONTENTS = TEMPCONTENTS;
-    localStorage.setItem("corpus", CONTENTS);
+    localStorage.setItem('corpus', CONTENTS);
     getLocalStorageMaxSize()
-    $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
+    $('#localStorageAvailable').text(LOCALSTORAGE_AVAILABLE / 1024 + 'k');
     loadDataInIndex();
-    $("#uploadFileButton").attr("disabled", "disabled");
-    $("#uploadFileSizeError").hide();
+    $('#uploadFileButton').attr('disabled', 'disabled');
+    $('#uploadFileSizeError').hide();
     $('#fileModal').modal('hide');*/
 }
 
 
-function addSent() { // TODO: this is probably not what we want? what if we turn it into "insert a new sentence _here_"?
-    AVAILABLESENTENCES = AVAILABLESENTENCES + 1;
+function addSent() { // TODO: this is probably not what we want? what if we turn it into 'insert a new sentence _here_'?
+    AVAILABLE_SENTENCES = AVAILABLE_SENTENCES + 1;
     showDataIndiv();
 }
 
 function removeCurSent() {
-    /* Called when the button "remove sentence" is pressed.
+    /* Called when the button 'remove sentence' is pressed.
     Calls confirm window. If affirmed, */
-    var conf = confirm("Do you want to remove the sentence?");
+    var conf = confirm('Do you want to remove the sentence?');
     if (conf) {
         saveData();
-        var curSent = CURRENTSENTENCE; // это нужно, т.к. в loadDataInIndex всё переназначается. это как-то мега костыльно, и надо исправить.
-        $("#indata").val("");
+        var curSent = CURRENT_SENTENCE; // это нужно, т.к. в loadDataInIndex всё переназначается. это как-то мега костыльно, и надо исправить.
+        $('#indata').val('');
         localStorage.setItem('corpus', getContents());
         loadDataInIndex();
-        CURRENTSENTENCE = curSent;
-        if (CURRENTSENTENCE >= AVAILABLESENTENCES) {CURRENTSENTENCE--};
+        CURRENT_SENTENCE = curSent;
+        if (CURRENT_SENTENCE >= AVAILABLE_SENTENCES) {CURRENT_SENTENCE--};
         showDataIndiv();
     }
 }
@@ -253,16 +253,16 @@ function removeCurSent() {
 
 function loadDataInIndex() {
     RESULTS = [];
-    AVAILABLESENTENCES = 0;
-    CURRENTSENTENCE = 0;
+    AVAILABLE_SENTENCES = 0;
+    CURRENT_SENTENCE = 0;
 
     var corpus = localStorage.getItem('corpus');
     var splitted = splitIntoSentences(corpus);
     localStorage.setItem('treebank', JSON.stringify(splitted));
     RESULTS = splitted; // TODO: get rid of RESULTS
 
-    AVAILABLESENTENCES = splitted.length;
-    if (AVAILABLESENTENCES == 1 || AVAILABLESENTENCES == 0) {
+    AVAILABLE_SENTENCES = splitted.length;
+    if (AVAILABLE_SENTENCES == 1 || AVAILABLE_SENTENCES == 0) {
         document.getElementById('nextSenBtn').disabled = true;
     } else {
         document.getElementById('nextSenBtn').disabled = false;
@@ -277,15 +277,15 @@ function splitIntoSentences(corpus) {
     var format = detectFormat(corpus);
 
     // splitting
-    if (format == "plain text") {
+    if (format == 'plain text') {
         var splitted = corpus.match(/[^ ].+?[.!?](?=( |$))/g);
     } else {
-        var splitted = corpus.split("\n\n");
+        var splitted = corpus.split('\n\n');
     }
 
     // removing empty lines
     for (var i = splitted.length - 1; i >= 0; i--) {
-        if (splitted[i].trim() === "") {
+        if (splitted[i].trim() === '') {
             splitted.splice(i, 1);
         }
     }
@@ -297,17 +297,17 @@ function showDataIndiv() {
     /* This function is called each time the current sentence is changed
     to update the CoNLL-U in the textarea and the indices. */
 
-    if(RESULTS[CURRENTSENTENCE] != undefined) {
-      document.getElementById('indata').value = (RESULTS[CURRENTSENTENCE]);
+    if(RESULTS[CURRENT_SENTENCE] != undefined) {
+      document.getElementById('indata').value = (RESULTS[CURRENT_SENTENCE]);
     } else {
-      document.getElementById('indata').value = "";
+      document.getElementById('indata').value = '';
     }
-    if(AVAILABLESENTENCES != 0) {
-        document.getElementById('currentsen').value = (CURRENTSENTENCE+1);
+    if(AVAILABLE_SENTENCES != 0) {
+        document.getElementById('currentsen').value = (CURRENT_SENTENCE+1);
     } else {
         document.getElementById('currentsen').value = 0;
     }
-    document.getElementById('totalsen').innerHTML = AVAILABLESENTENCES;
+    document.getElementById('totalsen').innerHTML = AVAILABLE_SENTENCES;
     updateTable(); // Update the table view at the same time
     formatTabsView(document.getElementById('indata')); // update the format taps
     fitTable(); // make table's size optimal
@@ -316,7 +316,7 @@ function showDataIndiv() {
 
 
 function goToSentence() { // TODO: refactor goToSenSent and merge to this func
-    if (SERVER_RUNNING) {
+    if (IS_SERVER_RUNNING) {
         // saveData();
         console.log('goToSentence');
         var sentNum = $('#currentsen').val();
@@ -328,7 +328,7 @@ function goToSentence() { // TODO: refactor goToSenSent and merge to this func
 
 
 function prevSentence() { // TODO: refactor prevSenSent and merge to this func
-    if (SERVER_RUNNING) {
+    if (IS_SERVER_RUNNING) {
         // saveData();
         var sentNum = $('#currentsen').val() - 1;
         getSentence(sentNum);
@@ -339,7 +339,7 @@ function prevSentence() { // TODO: refactor prevSenSent and merge to this func
 
 
 function nextSentence() {
-    if (SERVER_RUNNING) {
+    if (IS_SERVER_RUNNING) {
         var sentNum = Number($('#currentsen').val()) + 1;
         getSentence(sentNum);
     } else {
@@ -351,19 +351,19 @@ function nextSentence() {
 function goToSenSent() {
     saveData();
 
-    RESULTS[CURRENTSENTENCE] = document.getElementById("indata").value;
-    CURRENTSENTENCE = parseInt(document.getElementById("currentsen").value) - 1;
-    if (CURRENTSENTENCE < 0)  {
-        CURRENTSENTENCE = 0;
+    RESULTS[CURRENT_SENTENCE] = document.getElementById('indata').value;
+    CURRENT_SENTENCE = parseInt(document.getElementById('currentsen').value) - 1;
+    if (CURRENT_SENTENCE < 0)  {
+        CURRENT_SENTENCE = 0;
     }
-    if (CURRENTSENTENCE > (AVAILABLESENTENCES - 1))  {
-        CURRENTSENTENCE = AVAILABLESENTENCES - 1;
+    if (CURRENT_SENTENCE > (AVAILABLE_SENTENCES - 1))  {
+        CURRENT_SENTENCE = AVAILABLE_SENTENCES - 1;
     }
-    if (CURRENTSENTENCE < (AVAILABLESENTENCES - 1)) {
-        document.getElementById("nextSenBtn").disabled = false;
+    if (CURRENT_SENTENCE < (AVAILABLE_SENTENCES - 1)) {
+        document.getElementById('nextSenBtn').disabled = false;
     }
-    if (CURRENTSENTENCE == 0) {
-        document.getElementById("prevSenBtn").disabled = true;
+    if (CURRENT_SENTENCE == 0) {
+        document.getElementById('prevSenBtn').disabled = true;
     }
 
     clearLabels();
@@ -373,16 +373,16 @@ function goToSenSent() {
 function prevSenSent() {
     saveData();
 
-    RESULTS[CURRENTSENTENCE] = document.getElementById("indata").value;
-    CURRENTSENTENCE--;
-    if (CURRENTSENTENCE < 0)  {
-        CURRENTSENTENCE = 0;
+    RESULTS[CURRENT_SENTENCE] = document.getElementById('indata').value;
+    CURRENT_SENTENCE--;
+    if (CURRENT_SENTENCE < 0)  {
+        CURRENT_SENTENCE = 0;
     }
-    if (CURRENTSENTENCE < (AVAILABLESENTENCES - 1)) {
-        document.getElementById("nextSenBtn").disabled = false;
+    if (CURRENT_SENTENCE < (AVAILABLE_SENTENCES - 1)) {
+        document.getElementById('nextSenBtn').disabled = false;
     }
-    if (CURRENTSENTENCE == 0) {
-        document.getElementById("prevSenBtn").disabled = true;
+    if (CURRENT_SENTENCE == 0) {
+        document.getElementById('prevSenBtn').disabled = true;
     }
     clearLabels();
     showDataIndiv();
@@ -392,16 +392,16 @@ function nextSenSent() {
     /* When the user navigates to the next sentence. */
     saveData();
 
-    RESULTS[CURRENTSENTENCE] = document.getElementById("indata").value;
-    CURRENTSENTENCE++;
-    if(CURRENTSENTENCE >= AVAILABLESENTENCES) {
-      CURRENTSENTENCE = AVAILABLESENTENCES;
+    RESULTS[CURRENT_SENTENCE] = document.getElementById('indata').value;
+    CURRENT_SENTENCE++;
+    if(CURRENT_SENTENCE >= AVAILABLE_SENTENCES) {
+      CURRENT_SENTENCE = AVAILABLE_SENTENCES;
     }
-    if (CURRENTSENTENCE >= (AVAILABLESENTENCES - 1)) {
-        document.getElementById("nextSenBtn").disabled = true;
+    if (CURRENT_SENTENCE >= (AVAILABLE_SENTENCES - 1)) {
+        document.getElementById('nextSenBtn').disabled = true;
     }
-    if (CURRENTSENTENCE > 0) {
-        document.getElementById("prevSenBtn").disabled = false;
+    if (CURRENT_SENTENCE > 0) {
+        document.getElementById('prevSenBtn').disabled = false;
     }
     clearLabels();
     showDataIndiv();
@@ -417,7 +417,7 @@ function clearLabels() {
 
 function exportCorpora() {
     //Export Corpora to file
-    if (SERVER_RUNNING) {
+    if (IS_SERVER_RUNNING) {
         console.log('exportCorpora');
         downloadCorpus();
     } else {
@@ -426,7 +426,7 @@ function exportCorpora() {
         var link = document.createElement('a');
         var mimeType = 'text/plain';
         document.body.appendChild(link); // needed for FF
-        var fname = localStorage.getItem("filename");
+        var fname = localStorage.getItem('filename');
         if (!fname) {fname = 'ud-annotatrix-corpus.conllu'} // default name
         link.setAttribute('download', fname);
         link.setAttribute('href', 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(finalcontent));
@@ -438,13 +438,13 @@ function exportCorpora() {
 function clearCorpus() {
     /* Removes all the corpus data from CONTENTS and localStorage,
     clears all the ralated global variables. */
-    CONTENTS = "";
-    AVAILABLESENTENCES = 0;
-    CURRENTSENTENCE = 0;
+    CONTENTS = '';
+    AVAILABLE_SENTENCES = 0;
+    CURRENT_SENTENCE = 0;
     RESULTS = [];
-    FORMAT = ""
-    localStorage.setItem("corpus", "");
-    $("#indata").val("");
+    FORMAT = '';
+    localStorage.setItem('corpus', '');
+    $('#indata').val('');
     showDataIndiv()
     window.location.reload();
     drawTree();
@@ -457,22 +457,22 @@ function drawTree() {
     2. takes the data from the textarea
     3. */
 
-    ISEDITING = false;
+    IS_EDITING = false;
 
     // TODO: update the sentence
     try {cy.destroy()} catch (err) {}; // remove the previous tree, if there is one
 
-    var content = $("#indata").val(); // TODO: rename
+    var content = $('#indata').val(); // TODO: rename
     var format = detectFormat(content);
 
     // -- to be moved out--
     // content = content.replace(/ +\n/, '\n'); // remove extra spaces at the end of lines. #89
-    // $("#indata").val(content); // TODO: what is this line for?
+    // $('#indata').val(content); // TODO: what is this line for?
 
-    // $("#detected").html("Detected: " + format + " format");
+    // $('#detected').html('Detected: ' + format + ' format');
     // to be moved out --
 
-    if (format == "CG3") {
+    if (format == 'CG3') {
         content = CG2conllu(content)
         if (content == undefined) { // it means that the CG is ambiguous
             cantConvertCG(); // showing the worning
@@ -480,12 +480,12 @@ function drawTree() {
         } else {
             clearWarning();
         }
-    } else if (format == "SD") {
+    } else if (format == 'SD') {
         content = SD2conllu(content)
-    } else if (format == "Brackets") {
+    } else if (format == 'Brackets') {
         content = Brackets2conllu(content)
-    } else if (format == "plain text" || format == "Unknown"){
-        return; // it neans, the format is either "plain text" or "Unknown" and it wasn't converted to conllu
+    } else if (format == 'plain text' || format == 'Unknown'){
+        return; // it neans, the format is either 'plain text' or 'Unknown' and it wasn't converted to conllu
     }
 
 
@@ -497,15 +497,15 @@ function drawTree() {
 
     if(newContent != content) {
         content = newContent;
-        $("#indata").val(content);
+        $('#indata').val(content);
     }
     // -- to be moved out --
 
     conlluDraw(content);
     showProgress();
-    var inpSupport = $("<div id='mute'>"
-        + "<input type='text' id='edit' class='hidden-input'/></div>");
-    $("#cy").prepend(inpSupport);
+    var inpSupport = $('<div id="mute">'
+        + '<input type="text" id="edit" class="hidden-input"/></div>');
+    $('#cy').prepend(inpSupport);
     bindCyHandlers(); // moved to gui.js
     saveData();
 }
@@ -514,41 +514,41 @@ function drawTree() {
 function formatTabsView() {
     /* The function handles the format tabs above the textarea.
     Takes a string with a format name, changes the classes on tabs. */
-    var format = detectFormat($("#indata").val());
-    if (format == "CoNLL-U") {
-        $("#viewOther").hide();
-        $("#viewCG").removeClass("active");
-        $("#viewOther").removeClass("active");
-        $("#viewConllu").addClass("active");
-    } else if (format == "CG3") {
-        $("#viewOther").hide();
-        $("#viewConllu").removeClass("active");
-        $("#viewOther").removeClass("active");
-        $("#viewCG").addClass("active");
+    var format = detectFormat($('#indata').val());
+    if (format == 'CoNLL-U') {
+        $('#viewOther').hide();
+        $('#viewCG').removeClass('active');
+        $('#viewOther').removeClass('active');
+        $('#viewConllu').addClass('active');
+    } else if (format == 'CG3') {
+        $('#viewOther').hide();
+        $('#viewConllu').removeClass('active');
+        $('#viewOther').removeClass('active');
+        $('#viewCG').addClass('active');
     } else {
-        $("#viewOther").show();
-        $("#viewOther").addClass("active");
-        $("#viewConllu").removeClass("active");
-        $("#viewCG").removeClass("active");
-        $("#viewOther").text(format);
+        $('#viewOther').show();
+        $('#viewOther').addClass('active');
+        $('#viewConllu').removeClass('active');
+        $('#viewCG').removeClass('active');
+        $('#viewOther').text(format);
     }
 }
 
 
 function detectFormat(content) {
     clearLabels();
-    //TODO: too many "hacks" and presuppositions. refactor.
+    //TODO: too many 'hacks' and presuppositions. refactor.
 
     content = content.trim();
 
-    if(content == "") {
+    if(content == '') {
         // console.log('[0] detectFormat() WARNING EMPTY CONTENT');
-        return  "Unknown";
+        return  'Unknown';
     }
 
-    var firstWord = content.replace(/\n/g, " ").split(" ")[0];
+    var firstWord = content.replace(/\n/g, ' ').split(' ')[0];
 
-    //console.log('[0] detectFormat() ' + content.length + " | " + FORMAT);
+    //console.log('[0] detectFormat() ' + content.length + ' | ' + FORMAT);
     //console.log('[1] detectFormat() ' + content);
 
     // handling # comments at the beginning
@@ -556,11 +556,11 @@ function detectFormat(content) {
         var following = 1;
         while (firstWord[0] === '#' && following < content.length){
             // TODO: apparently we need to log the thing or it won't register???
-            firstWord = content.split("\n")[following];
+            firstWord = content.split('\n')[following];
             // pull out labels and put them in HTML, TODO: this probably
             // wants to go somewhere else.
             if(firstWord.search('# labels') >= 0) {
-                var labels = firstWord.split("=")[1].split(" ");
+                var labels = firstWord.split('=')[1].split(' ');
                 for(var i = 0; i < labels.length; i++) {
                     var seen = false;
                     for(var j = 0; j < LABELS.length; j++) {
@@ -574,7 +574,7 @@ function detectFormat(content) {
                 }
                 var htmlLabels = $('#treeLabels');
                 for(var k = 0; k < LABELS.length; k++) {
-                    if(LABELS[k].trim() == "") {
+                    if(LABELS[k].trim() == '') {
                         continue;
                     }
                     htmlLabels.append($('<span></span>')
@@ -582,35 +582,35 @@ function detectFormat(content) {
                         .text(LABELS[k])
                     );
                 }
-                //console.log("FOUND LABELS:" + LABELS);
+                //console.log('FOUND LABELS:' + LABELS);
             }
             following ++;
         }
     }
 
-    var trimmedContent = content.trim("\n");
+    var trimmedContent = content.trim('\n');
     //console.log(trimmedContent + ' | ' + trimmedContent[trimmedContent.length-1]);
-    if (firstWord.match(/"<.*/)) {
-    // SAFE: The first token in the string should start with "<
-        FORMAT = "CG3";
+    if (firstWord.match(/'<.*/)) {
+    // SAFE: The first token in the string should start with '<
+        FORMAT = 'CG3';
     } else if (firstWord.match(/1/)) {
     // UNSAFE: The first token in the string should be 1
-        FORMAT = "CoNLL-U";
-    } else if (trimmedContent.includes("(") && trimmedContent.includes("\n") && (trimmedContent.includes(")\n") || trimmedContent[trimmedContent.length-1] == ")")) {
+        FORMAT = 'CoNLL-U';
+    } else if (trimmedContent.includes('(') && trimmedContent.includes('\n') && (trimmedContent.includes(')\n') || trimmedContent[trimmedContent.length-1] == ')')) {
     // SAFE: To be SDParse as opposed to plain text we need at least 2 lines.
     // UNSAFE: SDParse should include at least one line ending in ) followed by a newline
     // UNSAFE: The last character in the string should be a )
-        FORMAT = "SD";
+        FORMAT = 'SD';
     // UNSAFE: The first character is an open square bracket
     } else if (firstWord.match(/\[/)) {
-                FORMAT = "Brackets";
+                FORMAT = 'Brackets';
     // TODO: better plaintext recognition
-    } else if (!trimmedContent.includes("\t") && trimmedContent[trimmedContent.length-1] != ")") {
+    } else if (!trimmedContent.includes('\t') && trimmedContent[trimmedContent.length-1] != ')') {
     // SAFE: Plain text and SDParse should not include tabs. CG3/CoNLL-U should include tabs
     // UNSAFE: SDParse should end the line with a ), but plain text conceivably could too
-        FORMAT = "plain text";
+        FORMAT = 'plain text';
     } else {
-        FORMAT = "Unknown";
+        FORMAT = 'Unknown';
     }
     //console.log('[3] detectFormat() ' + FORMAT);
 
@@ -620,7 +620,7 @@ function detectFormat(content) {
 
 function showHelp() {
     /* Opens help in the same tab. */
-    var win = window.open("help.html", '_blank');
+    var win = window.open('help.html', '_blank');
     win.focus();
 }
 
