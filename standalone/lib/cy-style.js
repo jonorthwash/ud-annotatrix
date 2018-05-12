@@ -108,6 +108,32 @@ const CY_STYLE = [{
     'text-events': 'yes'
   }
 }, {
+  'selector': 'edge.incomplete.vertical',
+  'style': {
+    'text-margin-y':  0,
+    'text-background-opacity':  1,
+    'text-background-color':  'white',
+    'text-background-shape':  'roundrectangle',
+    'text-border-color':  'black',
+    'text-border-width':  1,
+    'text-border-opacity':  1,
+    'control-point-weights':  '0.15 0.45 0.55 0.85',
+    'text-margin-x':  'data(length)',
+    'source-distance-from-node':  10,
+    'target-distance-from-node':  10
+  }
+}, {
+  'selector': 'edge.incomplete.horizontal',
+  'style': {
+    'text-margin-y':  -10,
+    'text-margin-x':  0,
+    'text-background-opacity':  0,
+    'text-border-opacity':  0,
+    'control-point-weights':  '0 0.25 0.75 1',
+    'source-distance-from-node':  0,
+    'target-distance-from-node':  0
+  }
+}, {
   'selector': 'edge.error',
   'style': {
     'target-arrow-shape': 'triangle',

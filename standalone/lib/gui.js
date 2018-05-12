@@ -86,7 +86,7 @@ function bindHandlers() {
 
     $('#exportPNGBtn').click(exportPNG);
     $('#exportSVGBtn').click(exportSVG);
-    $('#exportLATEXBtn').click(exportLATEX);
+    $('#exportLaTeXBtn').click(exportLaTeX);
 
     $('#indata')
         .keyup(drawTree)

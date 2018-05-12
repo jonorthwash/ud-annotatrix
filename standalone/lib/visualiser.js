@@ -15,7 +15,21 @@ var TREE = {}, // This map allows us to address the Token object given an ID
     // export trackers
     CODE_LATEX = '',
     IS_PNG_EXPORTED = false,
-    IS_LATEX_EXPORTED = false;
+    IS_LATEX_EXPORTED = false,
+
+    // Cytoscape defaults
+    CY_OPTIONS = {
+        container: $('#cy'),
+        boxSelectionEnabled: false,
+        autounselectify: true,
+        autoungrabify: true,
+        zoomingEnabled: true,
+        userZoomingEnabled: false,
+        wheelSensitivity: 0.1,
+        style: CY_STYLE,
+        layout: getCyLayout(),
+        elements: []
+    };
 
 const SCROLL_ZOOM_INCREMENT = 0.05,
 
@@ -33,191 +47,114 @@ const SCROLL_ZOOM_INCREMENT = 0.05,
  * @param {String} content Content of the input textbox.
  */
 function conlluDraw(content) {
-    console.log('conlluDraw.');
-    var sent = new conllu.Sentence();
+    log.debug(`called conlluDraw(${content})`);
+
+    let sent = new conllu.Sentence();
     sent.serial = content;
-    changeBoxSize(sent);
-    changeEdgeStyle();
-    var layout = formLayout(); // This is the thing that lays out nodes on the grid
 
-    var cy = window.cy = cytoscape({
-        container: document.getElementById('cy'),
-
-        boxSelectionEnabled: false,
-        autounselectify: true,
-        autoungrabify: true,
-        zoomingEnabled: true,
-        userZoomingEnabled: false,
-        wheelSensitivity: 0.1,
-        layout: layout,
-        style: CY_STYLE,
-        elements: conllu2cy(sent)
-    });
-
-//    CURRENT_PAN = cy.pan();
-
-//    if(content.split('\n').length > 10) {
-//          if(!IS_ENHANCED){
-              cleanEdges();
-//          }
-//    }
-
-    cy.minZoom(0.1);
-    cy.maxZoom(10.0);
-
-    // Fit the graph to the window size
-    CURRENT_ZOOM = cy.zoom(); // Get the current zoom factor.
-    // console.log('[0] CURRENT_ZOOM:', CURRENT_ZOOM);
-    cy.fit();
-    // console.log('[1] CURRENT_ZOOM:', CURRENT_ZOOM);
-    CURRENT_ZOOM = cy.zoom(); // Get the current zoom factor.
-    // console.log('[2] CURRENT_ZOOM:', CURRENT_ZOOM);
-    if(CURRENT_ZOOM >= 1.7) { // If the current zoom factor is more than 1.7, then set it to 1.7
-      CURRENT_ZOOM = 1.7;           // This is to make sure that small trees don't appear massive.
-    } else if (CURRENT_ZOOM <= 0.7) {
-      CURRENT_ZOOM = 0.7;
-    }
-    // console.log('[3] CURRENT_ZOOM:', CURRENT_ZOOM);
-    cy.zoom(CURRENT_ZOOM);
-    // console.log('[4] CURRENT_ZOOM:', CURRENT_ZOOM);
-    cy.center();
-    $(window).bind('resize', onResize);
-    $(window).bind('DOMMouseScroll wheel', onScroll);
-    cy.on('pan', onPan);
-    cy.pan(CURRENT_PAN);
-}
-
-function onPan(e) {
-    console.log('[0] CURRENT_PAN:', CURRENT_PAN);
-    CURRENT_PAN = cy.pan();
-    console.log('[1] CURRENT_PAN:', CURRENT_PAN);
-}
-
-/**
- * Resizes the visualiser window.
- * @param {Object} e Event.
- */
-function onResize(e) {
-    CURRENT_ZOOM = cy.zoom(); // Get the current zoom factor.
-    console.log('< resize event', CURRENT_ZOOM, cy.width(), cy.height());
-    console.log('[6] CURRENT_ZOOM:', CURRENT_ZOOM);
-    cy.fit();
-    cy.resize();
-    cy.reset();
-    CURRENT_ZOOM = cy.zoom(); // Get the current zoom factor.
-//    cy.center();
-//    CURRENT_ZOOM = cy.zoom();
-    console.log('[7] CURRENT_ZOOM:', CURRENT_ZOOM);
-    console.log('> resize event', CURRENT_ZOOM, cy.width(), cy.height());
-
-    if(!IS_VERTICAL) {
-        $('#cy').css('height', $(window).height()-$('.inarea').height()-80);
-    }
-    cy.pan(CURRENT_PAN);
-}
-
-/**
- * Detects if the user is shift-scrolling and zooms.
- * @param  {Object}  event  Key Event.
- * @return {Boolean}        False.
- */
-function onScroll(event) {
-    if(event.shiftKey) {
-      // console.log('SHIFT SCROLL', event.shiftKey, event.originalEvent.wheelDelta, event.originalEvent.detail, event.originalEvent.deltaY);
-      if(event.originalEvent.wheelDelta > 0 || event.originalEvent.detail < 0 || event.originalEvent.deltaY < 0) { // up
-          //console.log('SHIFT SCROLL', event.shiftKey, 'UP', CURRENT_ZOOM);
-          CURRENT_ZOOM += SCROLL_ZOOM_INCREMENT;
-          cy.zoom(CURRENT_ZOOM);
-          cy.center();
-      } else { //down
-          //console.log('SHIFT SCROLL', event.shiftKey, 'DOWN', CURRENT_ZOOM);
-          CURRENT_ZOOM -= SCROLL_ZOOM_INCREMENT;
-          cy.zoom(CURRENT_ZOOM);
-          cy.center();
-      }
-      return false;
-    }
-    cy.pan(CURRENT_PAN);
-
-    //} else {
-    //  console.log('SCROLL', event.shiftKey);
-    //  return;
-}
-
-/**
- * Changes the size of the cytoscape viewport.
- * @param {Object} sent A conllu.Sentence().
- */
-function changeBoxSize(sent) {
-    var length = sent.tokens.length;
+    // change box size and edge style
     if (IS_VERTICAL) {
-        //$('#cy').css('width', '1500px');
-        $('#cy').css('width', $(window).width()-10);
-        $('#cy').css('height', (length * 50) + 'px');
+        $('#cy').css('width', `${$(window).width()-10}px`);
+        $('#cy').css('height', `${sent.tokens.length * 50}px`);
+        $('edge.incomplete').addClass('vertical').removeClass('horizontal');
     } else {
         // scales width according to viewport
         $('#cy').css('width', '100%');
         // window height - height of top area - height of controls
-        $('#cy').css('height', $(window).height()-$('.inarea').height()-80);
+        $('#cy').css('height', `${$(window).height()-$('.inarea').height()-80}px`);
+        $('edge.incomplete').addClass('horizontal').removeClass('vertical');
     }
+
+    // new global cy object
+    CY_OPTIONS.layout = getCyLayout();
+    CY_OPTIONS.elements = conllu2cy(sent);
+    resetCy(CY_OPTIONS);
 }
+
+function resetCy(options) {
+    log.debug(`called makeNewCyFromOptions(${JSON.stringify(Object.keys(options))})`);
+    window.cy = new cytoscape(options);
+
+    // zooming, fitting, centering
+    cy.minZoom(0.1);
+    cy.maxZoom(10.0);
+    cy.fit();
+    const zoom = cy.zoom();
+    CURRENT_ZOOM = (zoom >= 1.7 ? 1.7 : zoom <= 0.7 ? 0.7 : zoom); // pick a reasonable zoom level
+    cy.zoom(CURRENT_ZOOM);
+    cy.center();
+
+    // bind pan event
+    cy.on('pan', () => {
+
+        log.debug(`called cy->onPan(): (old) CURRENT_PAN: ${JSON.stringify(CURRENT_PAN)}`);
+        CURRENT_PAN = window.cy.pan();
+
+    });
+    cy.pan(CURRENT_PAN);
+
+    // bind some window-level events
+    $(window)
+        .resize(() => {
+
+            // change browser window size
+            log.debug(`called window->resize()`);
+
+            cy.fit();
+            cy.resize();
+            cy.reset();
+
+            CURRENT_ZOOM = cy.zoom(); // Get the current zoom factor
+
+            if (!IS_VERTICAL)
+                $('#cy').css('height', $(window).height()-$('.inarea').height()-80);
+
+            cy.pan(CURRENT_PAN);
+
+        }).bind('DOMMouseScroll wheel mousewheel', (e) => { // different browsers have different events
+
+            const delta = (-e.originalEvent.wheelDelta || e.originalEvent.detail || e.originalEvent.deltaY);
+            log.debug(`called window->wheel(delta: ${delta}, shift: ${e.shiftKey})`);
+
+            if (e.shiftKey) {
+                CURRENT_ZOOM += (delta < 0 ? 1 : -1) * SCROLL_ZOOM_INCREMENT;
+                cy.zoom(CURRENT_ZOOM);
+                cy.center();
+            } else {
+                cy.pan(CURRENT_PAN);
+            }
+
+        });
+}
+
+
 
 /**
  * Layout nodes on a grid, condense means.
  * @return {Object} A tree containing formatting.
  */
-function formLayout() {
-    var layout = {name: 'tree',
-                    padding: 0,
-                    nodeDimensionsIncludeLabels: false
+function getCyLayout() {
+
+    let layout = {
+        name: 'tree',
+        padding: 0,
+        nodeDimensionsIncludeLabels: false
     };
+
     if (IS_VERTICAL) {
-        layout.cols = 2;
-        layout.sort = vertAlSort;
+      layout.cols = 2;
+      layout.sort = vertAlSort;
     } else {
-        layout.rows = 2;
-        if (IS_LTR) {
-            layout.sort = simpleIdSorting;
-        } else {
-            layout.sort = rtlSorting;
-        }
+      layout.rows = 2;
+      layout.sort = (IS_LTR ? simpleIdSorting : rtlSorting);
     }
+
     return layout;
 }
 
-/**
- * Changes the edge style based on alignment.
- */
-function changeEdgeStyle() {
-    var depEdgeStyle = CY_STYLE[12]['style'];
-    if (IS_VERTICAL) {
-        depEdgeStyle['text-margin-y'] = 0;
-        depEdgeStyle['text-background-opacity'] = 1;
-        depEdgeStyle['text-background-color'] = 'white';
-        depEdgeStyle['text-background-shape'] = 'roundrectangle';
-        depEdgeStyle['text-border-color'] = 'black';
-        depEdgeStyle['text-border-width'] = 1;
-        depEdgeStyle['text-border-opacity'] = 1;
-        depEdgeStyle['control-point-weights'] = '0.15 0.45 0.55 0.85';
-        depEdgeStyle['text-margin-x'] = 'data(length)';
-        depEdgeStyle['source-distance-from-node'] = 10;
-        depEdgeStyle['target-distance-from-node'] = 10;
-    } else {
-        depEdgeStyle['text-margin-y'] = -10;
-        depEdgeStyle['text-margin-x'] = 0;
-        depEdgeStyle['text-background-opacity'] = 0;
-        depEdgeStyle['text-border-opacity'] = 0;
-        depEdgeStyle['control-point-weights'] = '0 0.25 0.75 1';
-        depEdgeStyle['source-distance-from-node'] = 0;
-        depEdgeStyle['target-distance-from-node'] = 0;
-    }
-}
-
 function showProgress() {
-    var progressPercentage = DONE_WORK/(ALL_WORK-1)*100;
-    $('#progressBar').animate({
-        width: progressPercentage + '%'
-    });
+    log.debug(`called showProgress()`);
+    $('#progressBar').animate({ width:`${DONE_WORK/(ALL_WORK-1) * 100}%` });
 }
 
 /**
@@ -226,188 +163,179 @@ function showProgress() {
  * @return {Array}       Returns the graph.
  */
 function conllu2cy(sent) {
-    var graph = [];
-    TREE = {};
-    $.each(sent.tokens, function(n, token) {
+    log.debug(`called conllu2cy(${sent})`);
+
+    let graph = []; TREE = {};
+    $.each(sent.tokens, (i, token) => {
         if (token instanceof conllu.MultiwordToken){
-            // ns = supertoken
-            var spId = 'ns' + strWithZero(n);
-            var id = toSubscript(' (' + findSupTokId(token.tokens) + ')');
-            var MultiwordToken = {
-                'data': {'id': spId,'label': token.form + id},
-                'classes': 'MultiwordToken'
-            };
+
+            // NOTE: ns = supertoken
+            const superId = `ns${String(i).padStart(2, '0')}`,
+                subtokens = token.tokens,
+                id = toSubscript(` (${subtokens[0].id}-${subtokens[subtokens.length - 1].id})`);
+                MultiwordToken = {
+                    data: { id:superId, label:`${token.form}${id}` },
+                    classes: 'MultiwordToken'
+                };
+
             graph.push(MultiwordToken);
-            $.each(token.tokens, function(n, subTok) {
-                graph = createToken(graph, subTok, spId);
+            $.each(token.tokens, (j, subToken) => {
+                graph = createToken(graph, subToken, superToken);
             });
 
         } else {
             graph = createToken(graph, token);
         }
-    })
+    });
 
-    if(IS_ENHANCED) {
-    $.each(sent.tokens, function(n, token) {
-        console.log('IS_ENHANCED');
-        var enhancedDepsCol = token.deps.split('|');
-        for(var i = 0; i < enhancedDepsCol.length; i++) {
-            var enhancedRow = enhancedDepsCol[i].split(':');
-            var enhancedHead = parseInt(enhancedRow[0]);
-            var enhancedDeprel = enhancedRow.slice(1).join();
-    var nodeId = token.id;
-            graph = makeEnhancedDependency(token, nodeId, enhancedHead, enhancedDeprel, graph);
-        }
-    })
+    if (IS_ENHANCED) {
+        $.each(sent.tokens, (i, token) => {
+            log.debug(`conllu2cy(): processing enhanced dependency for token: ${token}`);
+            $.each(token.deps.split('|'), (j, dep) => {
+
+                const enhancedRow = dep.split(':'),
+                    enhancedHead  = parseInt(enhancedRow[0]),
+                    enhancedDeprel= enhancedRow.slice(1).join(),
+                    nodeId = token.id;
+
+                graph = makeEnhancedDependency(token, nodeId, enhancedHead, enhancedDeprel, graph);
+            });
+        });
     }
+
+    CODE_LATEX = generateLaTeX(graph);
 
     ALL_WORK = 0;
     DONE_WORK = 0;
-    for(var i = 0; i < graph.length; i++) {
-        if(graph[i].classes == 'wf') {
+    $.each(graph, (i, node) => {
+        if (node.classes === 'wf') {
             ALL_WORK += 2;
-            if(graph[i].data.head != undefined) {
+            if (node.head !== undefined)
                 DONE_WORK += 1;
-            }
-            if(graph[i].data.upostag != undefined) {
+            if (node.upostag !== undefined)
                 DONE_WORK += 1;
-            }
-        } else if(graph[i].classes.indexOf('dependency') != -1) {
-            ALL_WORK++;
-            if(graph[i].classes != 'dependency incomplete') {
-                DONE_WORK++;
-            }
+        } else if (node.classes.indexOf('dependency') > -1) {
+            ALL_WORK += 1;
+            if (node.classes !== 'dependency incomplete')
+                DONE_WORK += 1;
         }
-    }
-    CODE_LATEX = generateLateX(graph);
+    });
 
     return graph;
 }
 
 function exportSVG() {
+    log.debug(`called exportSVG()`);
+
     $('#exportModal').find('#exportedGraph').css('display', 'none');
     $('#exportModal').find('#latexExportError').css('display', 'none');
-    $('#exportModal').find('#exportLATEX-textarea').css('display', 'none');
+    $('#exportModal').find('#exportLaTeX-textarea').css('display', 'none');
 
-    var ctx = new C2S(cy.width, cy.height);
+    const ctx = new C2S(cy.width, cy.height);
     cy.renderer().renderTo(ctx);
-    var ctxSerializedSVG = ctx.getSerializedSvg();
 
-    $('#exportModal').find('#svgResult').attr('src', 'data:image/svg+xml;charset=utf-8,'+ctxSerializedSVG);
-
+    $('#exportModal').find('#svgResult').attr('src', `data:image/svg+xml;charset=utf-8,${ctx.getSerializedSvg()}`);
     $('#exportModal').find('#svgResult').css('display', 'inline');
 }
 
 function exportPNG() {
+    log.debug(`called exportPNG()`);
+
     $('#exportModal').find('#svgResult').css('display', 'none');
     $('#exportModal').find('#latexExportError').css('display', 'none');
-    $('#exportModal').find('#exportLATEX-textarea').css('display', 'none');
+    $('#exportModal').find('#exportLaTeX-textarea').css('display', 'none');
 
-    var b64key = 'base64,';
-    var b64 = cy.png().substring( cy.png().indexOf(b64key) + b64key.length);
-    var imgBlob = b64toBlob(b64, 'image/png');
+    const b64key = 'base64,',
+        b64 = cy.png().substring(cy.png().indexOf(b64key) + b64key.length),
+        imgBlob = b64toBlob(b64, 'image/png');
 
     $('#exportModal').find('#exportedGraph').attr('src', URL.createObjectURL(imgBlob));
-    $('#exportModal').find('#exportedGraph').css('width', '100%');
+    $('#exportModal').find('#exportedGraph').css('width', '100%').css('display', 'inline');
 
-    $('#exportModal').find('#exportedGraph').css('display', 'inline');
+    return URL.createObjectURL(imgBlob);
 }
 
 function b64toBlob(b64Data, contentType, sliceSize) {
+    log.debug(`called b64toBloc(b64Data:${b64Data.slice(0,25)}..., contentType: ${contentType}, sliceSize: ${sliceSize})`);
+
+    // defaults
     contentType = contentType || '';
     sliceSize = sliceSize || 512;
 
-    var byteCharacters = atob(b64Data);
-    var byteArrays = [];
-
-    for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-        var slice = byteCharacters.slice(offset, offset + sliceSize);
-
-        var byteNumbers = new Array(slice.length);
-        for (var i = 0; i < slice.length; i++) {
-            byteNumbers[i] = slice.charCodeAt(i);
-        }
-
-        var byteArray = new Uint8Array(byteNumbers);
-
-        byteArrays.push(byteArray);
+    const byteCharacters = atob(b64Data);
+    let byteArrays = [];
+    for (let offset = 0, bytesChars = byteCharacters.length; offset < bytesChars; offset += sliceSize) {
+        byteArrays.push( new Uint8Array(byteCharacters.slice(offset, offset + sliceSize).replace('/./g', (char, i) => {
+          return slice.charCodeAt(i);
+        })) );
     }
 
-    var blob = new Blob(byteArrays, {type: contentType});
-    return blob;
+    return new Blob(byteArrays, { type:contentType });
 }
 
 
-function exportLATEX() {
-    $('#exportModal').find('#exportLATEX-textarea').val('');
+function exportLaTeX() {
+    log.debug(`called exportLaTeX()`);
 
-    $('#exportModal').find('#exportLATEX-textarea').css('display', 'none');
+    $('#exportModal').find('#exportLaTeX-textarea').val('').css('display', 'none');
     $('#exportModal').find('#svgResult').css('display', 'none');
     $('#exportModal').find('#latexExportError').css('display', 'none');
     $('#exportModal').find('#exportedGraph').css('display', 'none');
 
-    if(CODE_LATEX == 'error') {
+    if (CODE_LATEX === 'error') {
         $('#exportModal').find('#latexExportError').css('display', 'inline');
     } else {
-        $('#exportModal').find('#exportLATEX-textarea').val(CODE_LATEX.join('\n'));
-        if($('#exportModal').find('#exportLATEX-textarea').attr('rows') > CODE_LATEX.length) {
-            $('#exportModal').find('#exportLATEX-textarea').attr('rows', CODE_LATEX.length + 2);
-        } else {
-            $('#exportModal').find('#exportLATEX-textarea').attr('rows', $('#exportModal').find('#exportLATEX-textarea').attr('rows'));
-        }
-        $('#exportModal').find('#exportLATEX-textarea').css('display', 'inline');
+        const textareaRows = $('#exportModal').find('#exportLaTeX-textarea').attr('rows');
+        $('#exportModal').find('#exportLaTeX-textarea')
+            .val(CODE_LATEX.join('\n'))
+            .attr('rows', Math.max(textareaRows, CODE_LATEX.length + 2) )
+            .css('display', 'inline');
     }
 }
 
-function generateLateX(graph) {
+function generateLaTeX(graph) {
+    log.debug(`called generateLaTeX(${JSON.stringify(graph)})`);
 
-    var latexLines = [];
+    let tokensLine = '',
+        posLine = '',
+        deprelLines = [];
 
-    var tokensLine = '';
-    var posLine = '';
-    var deprelLines = [];
-    for(var i = 0; i < graph.length; i++) {
-        if(graph[i].classes.indexOf('wf') !== -1) {
-            if(graph[i].data.upostag == undefined) {
+    $.each(graph, (i, node) => {
+        if (node.classes.indexOf('wf') > -1) {
+            if (node.data.upostag === undefined)
                 return 'error';
-            }
-            tokensLine += ' \\& ' + graph[i].data.label;
-            posLine += '\\&{\\tt ' + graph[i].data.upostag + '}';
+
+            tokensLine += ` \\& ${node.data.label}`;
+            posLine += `\\&{\\tt ${node.data.upostag}}`;
         }
 
-        if(graph[i].classes == 'dependency' || graph[i].classes == 'dependency error') {
-            if(graph[i].data.label == undefined) {
+        if (node.classes === 'dependency' || node.classes === 'dependency error') {
+            if (node.data.label === undefined)
                 return 'error';
-            }
-            var source = parseInt(graph[i].data.source.replace('nf', ''));
-            var target = parseInt(graph[i].data.target.replace('nf', ''));
-            var label = ''
-            if(graph[i].data.label != undefined) {
-                label = graph[i].data.label.replace(/[⊳⊲]/, '');
-            }
-            deprelLines.push('\depedge{' + source + '}{' + target + '}' + '{' + label + '}');
+
+            const source = parseInt(node.data.source.replace('nf', '')),
+                target = parseInt(node.data.target.replace('nf', '')),
+                label = (node.data.label === undefined ? '' : node.data.label.replace(/[⊳⊲]/, ''));
+
+            deprelLines.push(`\depedge{${source}}{${target}}{${label}}`);
         }
-    }
-    tokensLine += ' \\\\';
-    tokensLine = tokensLine.replace('\\&', '');
+    });
 
-    posLine += '\\\\';
-    posLine = posLine.replace('\\&', '');
+    tokensLine = `${tokensLine.replace('\\&', '')} \\\\`;
+    posLine = `${posLine.replace('\\&', '')} \\\\`;
 
-    latexLines.push('\\begin{dependency}',
-                    '   \\begin{deptext}[column sep=0.4cm]');
-    latexLines.push('       ' + tokensLine);
-    latexLines.push('       ' + posLine);
-    latexLines.push('   \\end{deptext}');
-    for(var i = 0; i < deprelLines.length; i++) {
-        latexLines.push('   \\' + deprelLines[i]);
-    }
-    latexLines.push('\\end{dependency} \\\\');
-    return latexLines;
-}
+    // now make the LaTeX from it
+    const LaTeX = [
+        '\\begin{dependency}',
+        '  \\begin{deptext}[column sep=0.4cm]',
+        `    ${tokensLine}`,
+        `    ${posLine}`,
+        `  \\end{deptext}` ].concat(deprelLines.map((line) => {
+            return `  \\${line}`;
+        }), '\\end{dependency} \\\\');
 
-function findSupTokId(subtokens) {
-    return subtokens[0].id + '-' + subtokens[subtokens.length - 1].id;
+    log.debug(`generateLaTeX() generated: ${LaTeX}`);
+    return LaTeX;
 }
 
 /**
@@ -416,21 +344,12 @@ function findSupTokId(subtokens) {
  * @return {String}     Returns the subscript conversion of the string.
  */
 function toSubscript(str) {
-    var lowDigits = {0: '₀', 1: '₁', 2: '₂', 3: '₃', 4: '₄', 5: '₅',
-    6: '₆', 7: '₇', 8: '₈', 9: '₉', '-': '₋', '(' : '₍', ')' : '₎'};
-    var substr = '';
-    for(var i = 0; i < str.length; i++) {
-        var newChar = str[i];
-        if(newChar in lowDigits) {
-            newChar = lowDigits[newChar];
-        }
-        substr += newChar;
-    }
-    return substr;
-}
+    const subscripts = { 0:'₀', 1:'₁', 2:'₂', 3:'₃', 4:'₄', 5:'₅',
+        6:'₆', 7:'₇', 8:'₈', 9:'₉', '-':'₋', '(':'₍', ')':'₎' };
 
-function isUpperCase(str) {
-    return str === str.toUpperCase();
+    return str.map((char) => {
+        return (subscripts[char] || char);
+    });
 }
 
 /**
@@ -440,93 +359,73 @@ function isUpperCase(str) {
  * @param  {String} spId   Id of supertoken.
  * @return {Array}         Returns the graph.
  */
-function createToken(graph, token, spId) {
-    //console.log('createToken() '+ token.id + ' / ' + spId + ' / ' + token.form + ' / ' + token.upostag);
+function createToken(graph, token, superTokenId) {
+    log.debug(`called createToken(graph: <Graph>, token: ${JSON.stringify(token)}, superTokenId: ${superTokenId})`);
+
     /* Takes the tree graph, a token object and the id of the supertoken.
     Creates the wf node, the POS node and dependencies. Returns the graph. */
 
     // handling empty form
-    // if (spId) {token.form = token.lemma};
-    if (token.form == undefined) {token.form = ' '};
+    if (token.form === undefined)
+        token.form = ' ';
 
     // TODO: We shouldn't need to hold information in multiple places
     // at least not like this.
     TREE[token.id] = token;
 
-    var nodeId = strWithZero(token.id);
-    // token number
+    // token  number
+    const nodeId = String(token.id).padStart(2, '0');
     graph.push({
-        'data': {
-            'id': 'num' + nodeId,
-            'label': +nodeId,         // do we need the '+' here ?
-            'pos': +token.upostag,
-            'parent': spId
+        data: {
+            id: `num${nodeId}`,
+            label: token.id,
+            pos: token.upostag, // +token.upostag
+            parent: superTokenId
         },
-        'classes': 'tokenNumber'
-    })
+        classes: 'tokenNumber'
+    });
 
-    var nodeWF = token;
-    // nodeWF.parent = spId;
-    nodeWF.id = 'nf' + nodeId;
+    let nodeWF = token;
+    nodeWF.id = `nf${nodeId}`;
     nodeWF.label = nodeWF.form;
-// FAIL test: Kibbutzgrundarna kom från en miljö, som utmärktes av ett strängt patriarkaliskt system, där första budet löd:
-/*
-    if(isUpperCase(nodeWF.label)) {
-        nodeWF.length = nodeWF.label.length * 13;
-    } else {
-        nodeWF.length = nodeWF.label.length * 11;
-    }*/
-    nodeWF.length = nodeWF.form.length + 'em';
-    if(nodeWF.form.length > 3) {
-      nodeWF.length = nodeWF.form.length*0.7 + 'em';
-    }
+    nodeWF.length = `${nodeWF.form.length > 3 ? nodeWF.form.length*0.7 : nodeWF.form.length}em`;
     nodeWF.state = 'normal';
+    nodeWF.parent = `num${nodeId}`;
 
-    nodeWF.parent = 'num' + nodeId;
-    if (token.head && token.head == 0 ) { // for root node
-        var rootNode = ' root';
-    } else {
-        var rootNode = '';
-    }
-
-    graph.push({'data': nodeWF, 'classes': 'wf'+rootNode});
-
+    graph.push({ data:nodeWF, classes:`wf${token.head === 0 ? ' root' : ''}`});
     graph = makePOS(token, nodeId, graph);
 
-    if(!IS_ENHANCED) {
+    if(!IS_ENHANCED)
         graph = makeDependencies(token, nodeId, graph);
-    }
-
 
     return graph;
 }
 
 function makeEnhancedDependency(token, nodeId, head, deprel, graph) {
-    console.log('makeEnhancedDependencies()', nodeId, head, deprel);
-    console.log('makeEnhancedDependencies()', token);
+    log.debug(`called makeEnhancedDependency(token: ${JSON.stringify(token)}, nodeId: ${nodeId}, head: ${head}, deprel: ${deprel}, graph: <Graph>)`);
 
-    var nId = parseInt(nodeId.slice(2));
-    if (head != 0) {
-	var headId = strWithZero(head);
-        var edgeDep = {
-            'id': 'ed' + nodeId + ':' + headId,
-            'source': 'nf' + headId,
-            //'target': 'nf' + nodeId,
-            'target': nodeId,
-            'length': (deprel.length / 3) + 'em',
-            'label': deprel,
-            'ctrl': [EDGE_HEIGHT, EDGE_HEIGHT, EDGE_HEIGHT, EDGE_HEIGHT] // ARC HEIGHT STUFFS
-        }
-        console.log('makeEnhancedDependency()',edgeDep['id'], edgeDep['source'], edgeDep['target'], edgeDep['label']);
-        console.log('makeEnhancedDependency()',edgeDep['ctrl']);
-        var coef = (head - nId);
-        if (Math.abs(coef) != 1) {coef *= DEFAULT_COEFF};
-        edgeDep.ctrl = edgeDep.ctrl.map(function(el){ return el*coef; });
+    if (head !== 0) {
+        let edgeHeight = EDGE_HEIGHT * (head - parseInt(nodeId.slice(2)));
+        if (Math.abs(coeff) !== 1)
+            edgeHeight *= DEFAULT_COEFF;
 
-        console.log('makeEnhancedDependency()',edgeDep['ctrl']);
+        const headId = String(head).padStart(2, '0'),
+            edgeDep = {
+                id: `ed${nodeId}:${headId}`,
+                source: `nf${headId}`,
+                target: nodeId,
+                length: `${deprel.length / 3}em`,
+                label: deprel,
+                ctrl: new Array(4).fill(edgeHeight) // ARC HEIGHT STUFFS
+            };
 
-        graph.push({'data': edgeDep, 'classes': 'enhanced'});
-    };
+        log.debug(`makeEnhancedDependency(): edgeDep: ${JSON.stringify(edgeDep)}`);
+        graph.push({
+            data: edgeDep,
+            classes: 'enhanced'
+        });
+    }
+
     return graph;
 }
 
@@ -538,125 +437,92 @@ function makeEnhancedDependency(token, nodeId, head, deprel, graph) {
  * @return {Array}         Returns the graph.
  */
 function makeDependencies(token, nodeId, graph) {
-	var deprel = (token.deprel) ? token.deprel : '';
-	var head = token.head; // The id of the head
+    log.debug(`called makeDependencies(token: ${JSON.stringify(token)}, nodeId: ${nodeId}, graph: <Graph>)`);
 
-	var validDep = true;
+    const deprel = token.deprel || '',
+        head = token.head;
+    let isValid = false;
 
-	//console.log(TREE);
-//	console.log(TREE[head]);
+    if (head in TREE) // if the pos tag of the head is in the list of leaf nodes, then mark it as an error
+        isValid = !is_leaf(TREE[head].upostag);
 
-	if(head in TREE) { // for some reason we need this part
-		// if the pos tag of the head is in the list of leaf nodes, then
-		// mark it as an error.
-		var res = is_leaf(TREE[head].upostag);
-		if(res[0]) {
-			// console.log('[1] writeDeprel @valid=false ' + deprel + ' // ' + res[1]);
-			validDep = false;
-		}
-	}
-
-	if(deprel != '') {
-		var res = is_udeprel(deprel);
-		if(!res[0]) {
-			// if the deprel is not valid, mark it as an error, but
-			// don't mark it as an error if it's blank.
-			// console.log('[2] writeDeprel @valid=false ' + deprel + ' // ' + res[1]);
-			validDep = false;
-		}
-	}
-
-	// Append ⊲ or ⊳ to indicate direction of the arc (helpful if
-	// there are many arcs.
-	var deprelLabel = deprel;
-	if(parseInt(head) < parseInt(nodeId) && IS_LTR) {
-		deprelLabel = deprelLabel + '⊳';
-	} else if(parseInt(head) > parseInt(nodeId) && IS_LTR) {
-		deprelLabel = '⊲' + deprelLabel;
-	} else if(parseInt(head) < parseInt(nodeId) && !IS_LTR) {
-		deprelLabel = '⊲' + deprelLabel;
-	} else if(parseInt(head) > parseInt(nodeId) && !IS_LTR) {
-		deprelLabel = deprelLabel + '⊳';
-	}
-
-	if (token.head && token.head != 0) {
-		var headId = strWithZero(head);
-		var edgeDep = {
-			'id': 'ed' + nodeId,
-			'source': 'nf' + headId,
-			'target': 'nf' + nodeId,
-			'length': (deprelLabel.length / 3) + 'em',
-			'label': deprelLabel,
-			'ctrl': [EDGE_HEIGHT, EDGE_HEIGHT, EDGE_HEIGHT, EDGE_HEIGHT] // ARC HEIGHT STUFFS
-
-		}
-		var coef = (head - nodeId);
-		if (!IS_LTR) {coef *= -1}; // support for RTL
-		//if (IS_VERTICAL) {edgeDep.ctrl = [90, 90, 90, 90]};
-		if (IS_VERTICAL) {edgeDep.ctrl = [45, 45, 45, 45]};
-		if (Math.abs(coef) != 1) {coef *= DEFAULT_COEFF};
-		edgeDep.ctrl = edgeDep.ctrl.map(function(el){ return el*coef; });
-
-                //if(token.upostag == 'PUNCT' && !is_projective(TREE, [parseInt(nodeId)])){
-                //    validDep = false;
-                //    console.log('WARNING: Non-projective punctuation');
-                //}
-		// if it's not valid, mark it as an error (see cy-style.js)
-		if(validDep && deprel != '' && deprel != undefined) {
-			graph.push({'data': edgeDep, 'classes': 'dependency'});
-			//console.log('makeDependencies(): valid @' + deprel);
-		} else if (deprel == '' || deprel == undefined) {
-			graph.push({'data': edgeDep, 'classes': 'dependency incomplete'});
-			//console.log('makeDependencies(): incomplete @' + deprel);
-		}else{
-			graph.push({'data': edgeDep, 'classes': 'dependency error'});
-			//console.log('makeDependencies(): error @' + deprel);
-		}
+    if (deprel !== '') // if the deprel is not valid, mark it as an error, unless it's blank
+        isValid = is_udeprel(deprel)
 
 
-                // If dependency cycle exists, mark the cycle as red.
-                var res2 = is_depend_cycles(TREE);
-                if (res2 !== null) {
-                    for(var cycl = 0; cycl < res2.length; cycl++) {
-                        for (var cycleInd = 0; cycleInd < res2[cycl].length; cycleInd++) {
-                            var wrapInd = cycleInd + 1 >= res2[cycl].length ? 0 : cycleInd + 1;
-                            for (var graphInd = 0; graphInd < graph.length; graphInd++) {
-                                if(graph[graphInd].data.source !== undefined && graph[graphInd].data.target !== undefined && parseInt(graph[graphInd].data.target.substr(2)) === res2[cycl][cycleInd] && parseInt(graph[graphInd].data.source.substr(2)) === res2[cycl][wrapInd]) {
-                                    graph[graphInd].classes = 'dependency error';
-                                }
-                            }
-                        }
-                    }
-                }
+  	// Append ⊲ or ⊳ to indicate direction of the arc (helpful if
+  	// there are many arcs.
+  	let deprelLabel;
+  	if(parseInt(head) < parseInt(nodeId) && IS_LTR) {
+      	deprelLabel = `${deprel}⊳`;
+  	} else if(parseInt(head) > parseInt(nodeId) && IS_LTR) {
+    		deprelLabel = `⊲${deprel}`;
+  	} else if(parseInt(head) < parseInt(nodeId) && !IS_LTR) {
+    		deprelLabel = `⊲${deprel}`;
+  	} else if(parseInt(head) > parseInt(nodeId) && !IS_LTR) {
+    		deprelLabel = `${deprel}⊳`;
+  	}
 
-/*
-                var res3 = is_relation_conflict(TREE);
-                for (var graphInd = 0; graphInd < graph.length; graphInd++) {
-                    if(graph[graphInd].classes.substring(0,10) === 'dependency') {
-                        var graphLabel = graph[graphInd].data.label;
-                        var graphSource = String(parseInt(graph[graphInd].data.source.substring(2)));
-                        if(res3.has(graphSource)) {
-                            var conflicts = res3.get(graphSource);
-                            if(conflicts.indexOf('obj') !== -1 && (graphLabel === 'obj⊳' || graphLabel === '⊲obj')) {
-                                graph[graphInd].classes = 'dependency error';
-                            }
-                            if(conflicts.indexOf('subj') !== -1 && (graphLabel === 'csubj⊳' || graphLabel === '⊲csubj' || graphLabel === '⊲nsubj' || graphLabel === 'nsubj⊳')) {
-                                graph[graphInd].classes = 'dependency error';
-                            }
-                        }
-                        if(res3.has('objccomp') && (graphLabel === 'obj⊳' || graphLabel === '⊲obj' || graphLabel === 'ccomp⊳' || graphLabel === '⊲ccomp')) {
-                                graph[graphInd].classes = 'dependency error';
-                        }
-                    }
-                }*/
-		/*if(!res[0]) {
-			//console.log('[3] writeDeprel is_cyclic=true');
-		} else {
-			//console.log('[3] writeDeprel is_cyclic=false');
-		}*/
-		//console.log(edgeDep);
-	};
-	return graph;
+
+  	if (token.head !== 0) {
+
+        let edgeHeight = EDGE_HEIGHT * (head - nodeId);
+        if (!IS_LTR)
+            edgeHeight *= -1;
+        if (Math.abs(edgeHeight) !== 1)
+            edgeHeight *= DEFAULT_COEFF;
+        if (IS_VERTICAL)
+            edgeHeight = 45;
+
+        const headId = String(head).padStart(2, '0'),
+            edgeDep = {
+                id: `ed${nodeId}`,
+                source: `nf${headId}`,
+                target: `nf${nodeId}`,
+                length: `${deprel.length / 3}em`,
+                label: deprelLabel,
+                ctrl: new Array(4).fill(edgeHeight) // ARC HEIGHT STUFFS
+            };
+
+        /*
+        if (token.upostag === 'PUNCT' && !is_projective(TREE, [parseInt(nodeId)])) {
+            isValid = false;
+            log.warn(`makeDependencies(): Non-projective punctuation`);
+        }
+        */
+
+    		// if it's not valid, mark it as an error (see cy-style.js)
+        if (deprel === '' || deprel === undefined) {
+            log.debug(`makeDependencies(): incomplete @${deprel}`);
+      			graph.push({'data': edgeDep, 'classes': 'dependency incomplete'});
+        } else if (!isValid) {
+            log.debug(`makeDependencies(): error @${deprel}`);
+      			graph.push({'data': edgeDep, 'classes': 'dependency error'});
+        } else {
+            log.debug(`makeDependencies(): valid @${deprel}`);
+      			graph.push({'data': edgeDep, 'classes': 'dependency'});
+  		  }
+
+
+        // If dependency cycle exists, mark the cycle as red.
+        const cycles = is_depend_cycles(TREE);
+        if (cycles !== null) {
+            $.each(cycles, (i, cycle) => {
+                $.each(cycle, (j, curr) => {
+                    const next = cycle[j+1 >= cycle.length ? 0 : j+1];
+                    $.each(graph, (k, node) => {
+                        if (node.data.source !== undefined
+                            && node.data.target !== undefined
+                            && parseInt(node.data.target.substr(2)) === curr
+                            && parseInt(node.data.source.substr(2)) === next )
+                            node.classes = 'dependency error';
+                    });
+                });
+            });
+        }
+  	}
+
+  	return graph;
 }
 
 /**
@@ -667,30 +533,28 @@ function makeDependencies(token, nodeId, graph) {
  * @return {Array}         Returns the graph.
  */
 function makePOS(token, nodeId, graph) {
+    log.debug(`called makePOS(token: ${JSON.stringify(token)}, nodeId: ${nodeId}, graph: <Graph>)`);
+
     /* Creates nodes for POS and edges between wf and POS nodes */
+    const POS = token.upostag || token.xpostag || '';
 
-    var pos = '';
-    if (token.upostag != undefined) {
-        pos = token.upostag;
-    } else if (token.xpostag != undefined) {
-        pos = token.xpostag;
-    };
+    graph.push({
+        data: {
+            id: `np${nodeId}`,
+            label: POS,
+            length: `${POS.length + 1}em`
+        },
+        classes: 'pos'
+    });
 
-    // creating pos node
-    var nodePOS = {
-        'id': 'np' + nodeId,
-        'label': pos,
-        'length': (pos.length + 1) + 'em'
-    }
-    graph.push({'data': nodePOS, 'classes': 'pos'});
-
-    // the edge from token to POS
-    var edgePOS = {
-        'id': 'ep' + nodeId,
-        'source': 'nf' + nodeId,
-        'target': nodePOS.id
-    }
-    graph.push({'data': edgePOS, 'classes': 'pos'});
+    graph.push({
+        data: {
+            id: `ep${nodeId}`,
+            source: `nf${nodeId}`,
+            target: `np${nodeId}`
+        },
+        classes: 'pos'
+    });
 
     return graph;
 }
@@ -705,192 +569,151 @@ function makePOS(token, nodeId, graph) {
  * @return {Array}         A range from start to finish with a certain step size
  */
 function rangeExclusive(start, finish, step) {
-	// If only one number was passed in make it the finish and 0 the start.
-	if (arguments.length == 1) {
-		finish = start;
-		start = 0;
-	}
+    log.debug(`called rangeExclusive(start: ${start}, finish: ${finish}, step: ${step})`);
 
-	// Validate the finish and step numbers.
-	finish = finish || 0;
-	step = step || 1;
+  	// If only one number was passed in make it the finish and 0 the start.
+  	if (arguments.length === 1) {
+    		finish = start;
+    		start = 0;
+  	}
 
-	// If start is greater than finish, reverse.
-	if (start > finish) {
-		var temp = start;
-		start = finish;
-		finish = temp;
-	}
+  	// default for the finish and step numbers
+  	finish = finish || 0;
+  	step = step || 1;
 
-	start = start+1;
-	//finish = finish-1;
-	// Create the array of numbers, stopping before the finish.
-	for (var ret = []; (finish - start) * step > 0; start += step) {
-		ret.push(start);
-	}
-	return ret;
+  	// If start is greater than finish, swap
+    if (start > finish) {
+        const _tmp = start;
+        start = finish;
+        finish = _tmp;
+    }
+
+    // exclude the start
+  	start += 1;
+
+    // create an array of numbers, stopping before the finish
+    let range = [], current = start;
+    while (current < finish) {
+        range.push(current);
+        current += step;
+    }
+
+  	return range;
 }
 
 /**
  * Makes the dependency edges easier to see and overlap less.
  */
 function cleanEdges() {
-	var sources = {}
-	var edges = {}
-	$.each(cy.filter('edge[id*="ed"]'), function (a, thisEdge) {
-		if (thisEdge.data('source') != thisEdge.data('target')) {
-			//console.log(thisEdge);
-			var sourceNode = parseInt(thisEdge.data('source').replace('nf',''));
-			var targetNode = parseInt(thisEdge.data('target').replace('nf',''));
-			sources[targetNode] = sourceNode;
-			edges[targetNode] = thisEdge;
-			//var diff = Math.abs(sourceNode - targetNode);
-			//console.log(thisEdge.data(), sourceNode, targetNode);
-			//		 (thisEdge.data(), thisEdge.data('source').replace('nf',''), thisEdge.data('target').replace('nf',''));
-			//thisEdge.data({'ctrl': [thisHeight, thisHeight, thisHeight, thisHeight]});
-		}
+    log.debug(`called cleanEdges()`);
 
-	});
+    let sources = {}, edges = {};
+    $.each(cy.filter('edge[id*="ed"]'), (i, edge) => {
+        if (edge.data.source !== edge.data.target) {
+            const target = parseInt(edge.data.target.replace('nf',''));
+            sources[target] = parseInt(edge.data.source.replace('nf',''));
+            edges[target] = edge;
+        }
+    });
 
-	// calculate max heights
-	var maxes = {}
-	$.each(edges, function (targetNode, thisEdge) {
-		var howHigh = 1;
-		var diff = Math.abs(targetNode - sources[targetNode]);
-		//console.log(diff);
-		maxes[parseInt(targetNode)] = diff;
-	});
-	//console.log('[0] cleanEdges() maxes:' + maxes);
+    // calculate max heights
+    let maxes = edges.map((edge, i) => {
+        return Math.abs(i - sources[i]);
+    });
+    log.debug(`cleanEdges(): maxes: ${JSON.stringify(maxes)}, sources: ${JSON.stringify(sources)}`);
 
-	// set height to max intervening height + 1
-	//console.log('Sources', sources);
-	//console.log('Maxes', maxes);
-	$.each(edges, function (targetNode, thisEdge) {
-		var sourceNode = sources[targetNode] ;
-		var targ = parseInt(targetNode)
-		var sorc = parseInt(sourceNode)
-		var diff = Math.abs(targ - sorc);
-		var howHigh = 1;
-		var increment = -1 ;
-		if (targetNode<sourceNode) { increment = 1; } // else { increment = -1 };
-		if (diff > 1) {
-			var maxFound = 1;
-			var highest = (targ > sorc) ? targ : sorc;
-			var lowest = (targ < sorc) ? targ : sorc;
-			var toCheck = rangeExclusive(targ, sorc, Math.abs(increment));
-			//console.log(maxes);
-			//console.log('[1] cleanEdges() BEFORE LOOP:', targ, sorc, toCheck, rangeExclusive(targ, sorc, 1));
-			$.each(toCheck, function(x, i) {
-				if (maxes[i] > maxFound) {
-					maxFound = maxes[i];
-				}
-				//console.log('[2] cleanEdges()', targ, sorc, i, maxFound);
-			});
-			//console.log('BEFORE LOOP', targ, sorc, increment, targ+increment, sorc-increment);
-			/**for (i=targ+increment; i=sorc-increment; i+=increment) {
-				console.log(targ, i, maxFound);
-				if (maxes[i] > maxFound) {
-					maxFound = maxes[i];
-				}
-			}**/
-			howHigh = maxFound +1;
-			maxes[targetNode] = howHigh;
-			//console.log(targetNode, howHigh, '—', maxes);
-			//if (!is_projective_nodes(TREE, [sourceNode])) {
-			//	alert('ISN'T PROJECTIVE', sourceNode);
-			//}
-			//console.log(highest, lowest, sources[i]);
-			//if (sources[i] >= highest || sources[i] <= lowest) {
-			//	console.log('cleanEdges()', i, 'CROSSES');
-		}
+    // set height to max intervening height + 1
+    $.each(edges, (tar, edge) => {
+        const src = sources[i],
+            diff = Math.abs(tar - src),
+            incr = (tar < src ? 1 : -1);
 
-		//if (!IS_LTR) {var RTL = -1} else {var RTL = 1}; // support for RTL
-		//var thisHeight = EDGE_HEIGHT * DEFAULT_COEFF * howHigh * increment * RTL;
-		//console.log('[0]', sorc, targ, increment, howHigh);
-		var thisHeight = EDGE_HEIGHT * DEFAULT_COEFF * howHigh;
-		//console.log('HARGLE '+thisHeight);
-		setEdgePosition(thisEdge, thisHeight, increment, diff);
-		//thisEdge.style({'control-point-weights': '0.05 0.25 0.75 0.95'});
-		//thisEdge.data({'ctrl': [thisHeight/1.5, thisHeight, thisHeight, thisHeight/1.5]});
-		//thisEdge.style({'source-endpoint': String(-15*increment)+'% -50%'});
-		//thisEdge.style({'target-endpoint': String(0*increment)+'% -50%'});
-	});
-	//console.log(sources);
-	//cy.filter('edge[id='ed12']').data({'ctrl': [thisHeight, thisHeight, thisHeight, thisHeight]});
-	//cy.filter('edge[id='ed12']').data({'ctrl': [34,50,40,20]}); //.ctrl = [50,34,34,40]); //graph.filter('edge[id='n12']');//, TREE);
+        let height = 1;
 
-	// go back through and test if any intervening nodes have arcs that cross this one
-	$.each(edges, function (targetNode, thisEdge) {
-		var sourceNode = sources[targetNode] ;
-		var targ = parseInt(targetNode);
-		var sorc = parseInt(sourceNode);
-		var diff = Math.abs(targ - sorc);
-		var verticalStagger = 0;
-		if (diff > 1) {
-			var toCheck = rangeExclusive(targ, sorc, 1);
-			var thisMax = maxes[targetNode];
-			$.each(toCheck, function(x, i) {
-				//console.log('HARGLE', sorc, thisMax, maxes[i]);
-				if (maxes[i] == thisMax+1 || maxes[i] == undefined) {
-					verticalStagger = STAGGER_SIZE;
-				}
-			});
-		}
-		var thisHeight = thisEdge.data()['ctrl'][0];
-		//console.log('HARGLE '+thisHeight, verticalStagger);
-		//console.log('HARGLE '+thisHeight, verticalStagger);
-		thisHeight += verticalStagger;
-		//setEdgePosition(thisEdge, thisHeight, 1);
-	});
+        if (diff > 1) {
+            let max = 1;
+
+            const highest = Math.max(tar, src),
+                lowest = Math.min(tar, src);
+
+            $.each(rangeExclusive(tar, src, Math.abs(incr)), (i, j) => {
+                max = Math.max(max, maxes[j]);
+            });
+
+            height = max + 1;
+            maxes[i] = height;
+        }
+
+        // adjust w/ our parameters
+        height *= EDGE_HEIGHT * DEFAULT_COEFF;
+        setEdgePosition(edge, height, incr, diff);
+    });
+    log.debug(`cleanEdges(): sources: ${JSON.stringify(sources)}`);
+
+  	// go back through and test if any intervening nodes have arcs that cross this one
+    $.each(edges, (tar, edge) => {
+        const src = sources[i],
+            diff = Math.abs(tar - src);
+
+        let stagger = 0;
+
+        if (diff > 1) {
+            const max = maxes[tar];
+            $.each(rangeExclusive(tar, src, 1), (i, j) => {
+                if (maxes[j] === max + j || maxes[j] === undefined)
+                    stagger = STAGGER_SIZE;
+            });
+        }
+
+        const height = edge.data.ctrl[0] + stagger;
+        log.debug(`cleanEdges(): should we do something here? height: ${height}`);
+        // setEdgePosition(edge, height, 1);
+    });
 }
 
 /**
  * Sets the position of an edge.
- * @param {Object} thisEdge   The edge being positioned.
- * @param {Number} thisHeight The height the edge should be positioned at.
- * @param {Number} coef       The direction the edge is going: either -1 or 1.
+ * @param {Object} edge       The edge being positioned.
+ * @param {Number} height     The height the edge should be positioned at.
+ * @param {Number} coeff      The direction the edge is going: either -1 or 1.
  * @param {Number} diff       How far the edge stretches between nodes.
  */
-function setEdgePosition(thisEdge, thisHeight, coef, diff) {
-	if (!IS_LTR) {coef *= -1}; // support for RTL
-	//if (IS_VERTICAL) {edgeDep.ctrl = [45, 45, 45, 45]};
-	//if (Math.abs(coef) != 1) {coef *= DEFAULT_COEFF};
-  if(IS_VERTICAL) {thisHeight += 30} // so the ctrl points are better placed
+function setEdgePosition(edge, height, coeff, diff) {
+    log.debug(`called setEdgePosition(edge: ${JSON.stringify(edge)}, height: ${height}, coeff: ${coeff}, diff: ${diff})`);
 
-	thisHeight *= coef;
+    if (!IS_LTR) // support for RTL
+        coeff *= -1;
+    if (IS_VERTICAL) // so the ctrl points are better placed
+        height += 30;
 
-	//console.log(thisEdge);
-	var factor1 = 2 - (Math.abs(thisHeight)/EDGE_HEIGHT)/10;
-	var factor2 = 1 + ((Math.abs(thisHeight) - EDGE_HEIGHT)/EDGE_HEIGHT)/10;
-	var factor3 = 1 + (EDGE_HEIGHT/(Math.abs(thisHeight)/EDGE_HEIGHT))/80;
-	var factor4 = 10 * (EDGE_HEIGHT/(Math.abs(thisHeight)));
-	var factor = factor4;
+    height *= coeff;
 
-	// console.log('setEdgePosition()', thisHeight, coef, factor);
-	if (diff == 1) {
-		thisEdge.style({'control-point-weights': '0.15 0.25 0.75 1'});
-		thisEdge.data({'ctrl': [thisHeight/1.25, thisHeight, thisHeight, thisHeight]});
-	} else {
-		thisEdge.style({'control-point-weights': String(0.01*factor)+' 0.25 0.75 1'});
-		thisEdge.data({'ctrl': [thisHeight, thisHeight, thisHeight, thisHeight]});
-	}
-  if (!IS_VERTICAL) {
-	  thisEdge.style({'source-endpoint': String(-10*coef)+'px -50%'});
-	  thisEdge.style({'target-endpoint': String(0*coef)+'% -50%'});
-  } else {
-    var sourceNum = String(parseInt(thisEdge.data('source').replace('nf', ''), 10)).length*10 + 'px'
-    var targetNum = String(parseInt(thisEdge.data('target').replace('nf', ''), 10)).length*10 + 'px'
-    thisEdge.style({'source-distance-from-node': sourceNum})
-    thisEdge.style({'target-distance-from-node': targetNum})
-  }
+    // const factor = 2 - Math.abs(height) / EDGE_HEIGHT/10;
+    // const factor = 1 + (Math.abs(height) - EDGE_HEIGHT) / EDGE_HEIGHT / 10;
+    // const factor = 1 + EDGE_HEIGHT**2 / Math.abs(height) / 80
+    const factor = 10 * EDGE_HEIGHT / Math.abs(height);
+    edge.style({ 'control-point-weights': `${diff === 1 ? 0.15 : 0.01*factor} 0.25 0.75 1` });
+    edge.data({ 'ctrl': [(diff === 1 ? height/1.25 : height), height, height, height] });
 
-	//edgeDep.ctrl = edgeDep.ctrl.map(function(el){ return el*coef; });
+    if (!IS_VERTICAL) {
+        edge.style({
+            'source-endpoint': `${-10*coeff}px -50%`
+            'target-endpoint': `0% -50%`
+        });
+    } else {
+        edge.style({
+            'source-distance-from-node': `${String(parseInt(edge.data.source.replace('nf', ''))).length*10}px`,
+            'target-distance-from-node': `${String(parseInt(edge.data.target.replace('nf', ''))).length*10}px`,
+        });
+    }
 }
 
 function simpleIdSorting(n1, n2) {
-    if( n1.id() < n2.id() ){
+    log.debug(`called simpleIdSorting(${n1.id()}, ${n2.id()})`);
+
+    if (n1.id() < n2.id()) {
         return -1;
-    } else if( n1.id() > n2.id() ){
+    } else if (n1.id() > n2.id()) {
         return 1;
     } else {
         return 0;
@@ -899,6 +722,8 @@ function simpleIdSorting(n1, n2) {
 
 
 function rtlSorting(n1, n2) {
+    log.debug(`called rtlSorting(${n1.id()}, ${n2.id()})`);
+
     if ((n1.hasClass('wf') && n2.hasClass('wf')) // if the nodes have the same class
         || (n1.hasClass('pos') && n2.hasClass('pos'))) {
         return simpleIdSorting(n1, n2) * -1;
@@ -913,9 +738,12 @@ function rtlSorting(n1, n2) {
 
 
 function vertAlSort(n1, n2) {
-    var num1 = +n1.id().slice(2);
-    var num2 = +n2.id().slice(2);
-    if (num1 != num2) {
+    log.debug(`called vertAlSort(${n1.id()}, ${n2.id()})`);
+
+    const num1 = parseInt(n1.id().slice(2)),
+        num2 = parseInt(n2.id().slice(2));
+
+    if (num1 !== num2) {
         return num1 - num2;
     } else {
         if (n1.hasClass('wf') && n2.hasClass('pos')) {
@@ -928,10 +756,6 @@ function vertAlSort(n1, n2) {
     }
 }
 
-
-function strWithZero(num) {
-    return (String(num).length > 1) ? '' + num : '0' + num;
-}
 
 
 /* TODO:

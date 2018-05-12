@@ -61,7 +61,7 @@ function SD2Conllu(text) {
 function txtCorpus2Conllu(text) {
     log.debug(`called txtCorpus2Conllu(${text})`);
 
-    const splitted = text.match(/[^ ].+?[.!?](?=( |$|\n))/g) || [];
+    const splitted = text.match(/[^ ].+?[.!?](?=( |$|\n))/g) || [text];
     AVAILABLE_SENTENCES = splitted.length;
 
     // corpus: convert to CoNLL-U by sentence
@@ -127,15 +127,16 @@ function cleanConllu(content) {
     if (res <= 2)
         return content;
 
-    res = content.search('\t');
-    const spaceToTab = (res < 0); // If we don't find any tabs, then we want to replace multiple spaces with tabs
-
+    // If we don't find any tabs, then we want to replace multiple spaces with tabs
+    const spaceToTab = (content.search('\t') < 0);
     return content.trim().split('\n').map((line) => {
         line = line.trim();
-        
+
         // If there are no spaces and the line isn't a comment,
         // then replace more than one space with a tab
         if (line[0] !== '#' && spaceToTab)
             line = line.replace(/  */g, '\t');
+
+        return line
     }).join('\n');
 }

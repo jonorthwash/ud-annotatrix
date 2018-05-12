@@ -56,13 +56,12 @@ function is_leaf(s) {
     // http://universaldependencies.org/u/dep/punct.html
     // Tokens with the relation punct always attach to content words (except in cases of ellipsis) and can never have dependents.
 
-    for(var i = 0; i < U_POS_LEAF.length; i++) {
-      if(U_POS_LEAF[i] == s) {
-        return [true, '', {}];
-      }
-    }
-    return [false, 'err_udep_leaf_node', {'tag': s}];
+    $.each(U_POS_LEAF, (i, leaf) => {
+        if (leaf === s)
+            return true;
+    });
 
+    return false;
 }
 
 

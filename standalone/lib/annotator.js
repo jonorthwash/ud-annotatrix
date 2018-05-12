@@ -35,9 +35,9 @@ window.onload = () => {
     `${path}/server_support.js`,
     `${path}/gui.js`,
     `${path}/conllu_table.js`,
+    `${path}/cy-style.js`,
     `${path}/visualiser.js`,
     `${path}/validation.js`,
-    `${path}/cy-style.js`,
 
     // KM classes
     `${path}/logger.js`,
@@ -61,20 +61,7 @@ function onReady() {
     window.log = new Logger('DEBUG');
     window.test = new Tester();
     window.test.all();
-
-    var cy = window.cy = cytoscape({ // avoid those `cy.$ is not a function errors`
-        container: document.getElementById('cy'),
-
-        boxSelectionEnabled: false,
-        autounselectify: true,
-        autoungrabify: true,
-        zoomingEnabled: true,
-        userZoomingEnabled: false,
-        wheelSensitivity: 0.1,
-        layout: formLayout(),
-        style: CY_STYLE,
-        elements: []
-    });
+    resetCy(CY_OPTIONS); // initialize w/ defaults to avoid cy.$ is not a function errors
 
     checkServer(); // check if server is running
     window.undoManager = new UndoManager();  // undo support
@@ -508,6 +495,7 @@ function drawTree() {
     $('#cy').prepend(inpSupport);
     bindCyHandlers(); // moved to gui.js
     saveData();
+    return content;
 }
 
 

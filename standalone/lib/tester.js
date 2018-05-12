@@ -21,6 +21,15 @@ class Tester extends Object {
     log.debug(`OK: Tester.assert() got a truthy expression (message: "${message}")`);
   }
 
+  arraysEqual(arr1, arr2) {
+    if (arr1.length !== arr2.length)
+      return false
+    for (let i=0, l=arr1.length; i<l; i++) {
+      if (arr1[i] !== arr2[i])
+        return false
+    }
+    return true;
+  }
 
 
 
@@ -30,13 +39,14 @@ class Tester extends Object {
    */
   all() {
     log.out('\nExecuting Tester.all()');
+
     this.tester();
     this.logger();
     this.errors();
     this.buttons();
+    this.rangeExclusive();
   }
   tester() {
-
     log.out('\nExecuting Tester.tester()');
 
     this.assert(1==1, `1==1`);
@@ -53,7 +63,6 @@ class Tester extends Object {
 
   }
   logger() {
-
     log.out('\nExecuting Tester.logger()');
 
     const testMessage = 'This is the logger test message';
@@ -77,7 +86,6 @@ class Tester extends Object {
     });
   }
   errors() {
-
     log.out('\nExecuting Tester.errors()');
 
     const testMessage = 'This is the error test message';
@@ -102,7 +110,6 @@ class Tester extends Object {
     });
   }
   buttons() {
-
     log.out('\nExecuting Tester.buttons()');
 
     const buttons = [
@@ -130,6 +137,29 @@ class Tester extends Object {
 
     $.each(buttons, (i, button) => {
       //button.click();
+    });
+  }
+  rangeExclusive() {
+    log.out('\nExecuting Tester.rangeExclusive()');
+
+    const cases = [
+        { params:[0,10,1], ret:[1,2,3,4,5,6,7,8,9] },
+        { params:[0,10,2], ret:[1,3,5,7,9] },
+        { params:[1,10,2], ret:[2,4,6,8] },
+        { params:[0,10,3], ret:[1,4,7] },
+        { params:[10,0,1], ret:[1,2,3,4,5,6,7,8,9] },
+        { params:[10,0,2], ret:[1,3,5,7,9] },
+        { params:[10,1,2], ret:[2,4,6,8] },
+        { params:[10,0,3], ret:[1,4,7] },
+        { params:[6], ret:[1,2,3,4,5] },
+        { params:[3,6], ret:[4,5] },
+        { params:[6,3], ret:[4,5] },
+        { params:[], ret:[] }
+    ];
+
+    $.each(cases, (i, _case) => {
+        const ret = rangeExclusive(..._case.params);
+        this.assert(this.arraysEqual(ret, _case.ret), `expected: [${_case.ret.join(',')}], got: [${ret.join(',')}]`);
     });
   }
 }
