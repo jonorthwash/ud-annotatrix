@@ -17,12 +17,12 @@ function is_upos(s) {
 
     // Checks if a relation is in the list of valid parts of speech
     // @s = the input relation
-    // returns a tuple of [bool, message]
-    $.each(U_POS, (i, u_pos) => {
-        if (u_pos === s)
-            return [true, '', {}];
+    // returns a bool
+    $.each(U_POS, (i, pos) => {
+        if (pos === s)
+            return true;
     });
-    return [false, 'err_upos_invalid', {'tag': s}];
+    return false;
 }
 
 
@@ -31,19 +31,16 @@ function is_udeprel(s) {
 
     // Checks if a relation is in the list of valid relations
     // @s = the input relation
-    // returns a tuple of [bool, message]
-    var s_deprel = s;
-    // Language specific relations are a universal relation + : + some string
-    if(s.search(':') >= 0) {
-      s_deprel = s.split(':')[0];
-    }
-    // Check if the deprel is in the list of valid relations
-    for(var i = 0; i < U_DEPRELS.length; i++) {
-      if(U_DEPRELS[i] == s_deprel) {
-        return [true, '', {}];
-      }
-    }
-    return [false, 'err_udeprel_invalid', {'label': s}];
+    // returns a bool
+
+    // Language-specific relations are `${universal_relation}:${some_string}`
+    s = (s.search(':') >= 0 ? s.split(':')[0] : s);
+
+    $.each(U_DEPRELS, (i, deprel) => {
+        if (deprel === s)
+            return true;
+    });
+    return false;
 }
 
 function is_leaf(s) {
@@ -60,79 +57,56 @@ function is_leaf(s) {
         if (leaf === s)
             return true;
     });
-
     return false;
 }
 
 
-function is_projective_nodes(tree, nodeSet) {
-    log.debug(`called is_projective_nodes(tree: ${JSON.stringify(tree)}, nodeSet: ${JSON.stringify(nodeSet)})`);
+function is_projective_nodes(tree, nodeList) {
+    log.debug(`called is_projective_nodes(tree: ${JSON.stringify(tree)}, nodeList: ${JSON.stringify(nodeList)})`);
 
-    // Checks to see if a particular dependent has a non-projective head
-   // console.log('is_projective_nodes()', tree) ;
-   // console.log('is_projective_nodes()', nodeSet) ;
-    var nodes = [];
-    var heads = {};
-    for(let node in tree) {
-        if(!tree[node] || tree[node] == undefined) {
-            continue;
-        }
-        var head = tree[node].head;
-        var id = tree[node].id;
-        if(!head || !id) {
-            continue;
-        }
-        heads[id] = head;
-        nodes.push(id);
-    }
+    let heads = {};
 
-    // console.log('is_projective()','heads', heads);
-    // console.log('is_projective()','nodes', nodes);
-
-    var res = true;
-
-    for(let i in nodeSet) {          // i here is the index of the node in nodeSet e.g. i = 0, nodeSet = [9]
-        var n_i =  nodeSet[i];
-        for(let j in nodes) {
-            var n_j =  nodes[j];
-            console.log('i:',nodes[n_i],'j:',nodes[j],'h(i):',heads[n_i],'h(j):',heads[n_j]);
-            if((nodes[j] > nodes[n_i]) && (nodes[j] < heads[n_i])) {
-                if((heads[n_j] > heads[n_i]) || (heads[n_j] < nodes[n_i])) {
-                    res = false;
-                    // console.log('[0] is_projective()',res);
-                    return res;
-                }
-            }
-            if((nodes[j] > heads[n_i]) && (nodes[j] < nodes[n_i])) {
-                if((heads[n_j] > nodes[n_i]) || (heads[n_j] < heads[n_i])) {
-                    res = false;
-                    // console.log('[1] is_projective()',res);
-                    return res;
-                }
-            }
-            if(heads[n_j] > nodes[n_i] && heads[n_j] < heads[n_i]) {
-                if(nodes[j] < nodes[n_i] || nodes[j] > heads[n_i]) {
-                    res = false;
-                    // console.log('[2] is_projective()',res);
-                    return res;
-                }
-            }
-            if(heads[n_j] > heads[n_i] && heads[n_j] < nodes[n_i]) {
-                if(nodes[j] > nodes[n_i] || nodes[j] < heads[n_i]) {
-                    res = false;
-                    // console.log('[3] is_projective()',res);
-                    return res;
-                }
+    $.each(tree, (i, node) => {
+        if (node) {
+            if (node.head && node.id) {
+                heads[id] = head;
+                nodes.push(id);
             }
         }
-    }
-//    console.log('is_projective()', res);
+    });
 
-    return res;
+    const nodes = Object.keys(heads);
+    log.debug(`is_projective_nodes(): heads: ${JSON.stringify(heads)}`);
+
+    $.each(nodeList, (i, nodeIdFromList) => {
+        const nodeToCheck = nodes[nodeIdFromList],
+            headToCheck = heads[nodeIdFromList];
+
+        $.each(nodes, (j, node) => {
+            const head = heads[node];
+
+            log.debug(`is_projective_nodes(): checking (node: ${nodeToCheck}, head: ${headToCheck}) against (node: ${node}, head: ${head})`);
+            if (node > nodeToCheck && node < headToCheck
+                && (head > headToCheck || head < nodeToCheck))
+                return false;
+            if (node > headToCheck && node < nodeToCheck
+                && (head > nodeToCheck || head < headToCheck))
+                return false;
+            if (head > nodeToCheck && head < headToCheck
+                && (node < nodeToCheck || node > headToCheck))
+                return false;
+            if (head > headToCheck && head < nodeToCheck
+                && (node > nodeToCheck || node < headToCheck))
+                return false;
+        });
+    });
+
+    log.debug(`is_projective_nodes(): got true`);
+    return true;
 }
 
 
-
+/*
 function is_projective(tree) {
     log.debug(`called is_projective(${JSON.stringify(tree)})`);
 
@@ -198,6 +172,7 @@ function is_projective(tree) {
 
     return res;
 }
+*/
 
 function is_depend_cycles(tree) {
     log.debug(`called is_depend_cycles(${JSON.stringify(tree)})`);

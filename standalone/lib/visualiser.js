@@ -697,7 +697,7 @@ function setEdgePosition(edge, height, coeff, diff) {
 
     if (!IS_VERTICAL) {
         edge.style({
-            'source-endpoint': `${-10*coeff}px -50%`
+            'source-endpoint': `${-10*coeff}px -50%`,
             'target-endpoint': `0% -50%`
         });
     } else {
