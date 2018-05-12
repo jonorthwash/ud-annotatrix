@@ -926,11 +926,11 @@ function viewAsCG() {
     $('#viewCG').addClass('active');
     $('#indata').val(text);
 
-    if (TABLE_VIEW) {
+    if (IS_TABLE_VIEW) {
         $('#tableViewButton').toggleClass('fa-code', 'fa-table');
         $('#indataTable').toggle();
         $('#indata').toggle();
-        TABLE_VIEW = false ;
+        IS_TABLE_VIEW = false ;
     }
 
 }

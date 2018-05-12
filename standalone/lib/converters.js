@@ -4,32 +4,37 @@
  * @return {String}     Sentence in CoNLL-U format
  */
 function plainSent2Conllu(text) {
+    log.debug(`called plainSent2Conllu(${text})`);
+
     // TODO: if there's punctuation in the middle of a sentence,
     // indices shift when drawing an arc
     // punctuation
     text = text.replace(/([^ ])([.?!;:,])/g, '$1 $2');
 
-    var sent = new conllu.Sentence();
-    var lines = ['# sent_id = _' + '\n# text = ' + text]; // creating comment
-    var tokens = text.split(' ');
-    // enumerating tokens
-    $.each(tokens, function(i, token) {tokens[i] = (i + 1) + '\t' + token});
-
-    lines = lines.concat(tokens);
+    /* get it into this form:
+     *
+     * # sent_id = _
+     * # text = $text
+     * 1    $textLine0
+     * 2    $textLine1 [...]
+     *
+     */
+    let sent = new conllu.Sentence();
+    const lines = [`# sent_id = _\n# text = ${text}`].concat(  // creating comment
+        text.split(' ').map((token, i) => {
+            return `${i+1}\t${token}`; // enumerating tokens
+        }) );
     sent.serial = lines.join('\n');
-    // TODO: automatical recognition of punctuation's POS
-    for(var i = 0; i < sent.tokens.length; i++) {
-       if(sent.tokens[i]['form'].match(/^[!.)(»«:;?¡,"\-><]+$/)) {
-//       if(sent.tokens[i]['form'].match(/\W/)) {
-         sent.tokens[i]['upostag'] = 'PUNCT';
-       }
-       if(sent.tokens[i]['form'].match(/^[0-9]+([,.][0-9]+)*$/)) {
-         sent.tokens[i]['upostag'] = 'NUM';
-       }
-       if(sent.tokens[i]['form'].match(/^[$%€£¥Æ§©]+$/)) {
-         sent.tokens[i]['upostag'] = 'SYM';
-       }
-    }
+
+    // TODO: automatical recognition of punctuation's POS ==> done?
+    $.each(sent.tokens, (i, token) => {
+        if (token.form.match(/^[!.)(»«:;?¡,"\-><]+$/))
+            token.upostag = 'PUNCT';
+        if (token.form.match(/^[0-9]+([,.][0-9]+)*$/))
+            token.upostag = 'NUM';
+        if (token.form.match(/^[$%€£¥Æ§©]+$/))
+            token.upostag = 'SYM';
+    });
 
     return sent.serial;
 }
@@ -39,13 +44,14 @@ function plainSent2Conllu(text) {
  * @param {String} text Input string(CG format)
  */
 function SD2Conllu(text) {
-        var newContents = [];
-        newContents.push(SD2conllu(text));
-        CONTENTS = newContents.join('\n');
-        console.log('!!!' + CONTENTS);
-        FORMAT = 'CoNLL-U';
-        loadDataInIndex();
-        showDataIndiv();
+    log.debug(`called SD2Conllu(${text})`);
+
+    CONTENTS = SD2conllu(text); // external function, see standalone/lib/SD2conllu.js
+    FORMAT = 'CoNLL-U';
+    log.debug(`SD2Conllu changed CONTENTS to "${CONTENTS}"`);
+
+    loadDataInIndex();
+    showDataIndiv();
 }
 
 /**
@@ -53,40 +59,31 @@ function SD2Conllu(text) {
  * @param {String} text Input text
  */
 function txtCorpus2Conllu(text) {
-    var corpus;
-    var newContents = [];
-    var splitted = text.match(/[^ ].+?[.!?](?=( |$|\n))/g);
-    $.each(splitted, function(i, sentence) {
-        sentence = plainSent2Conllu(sentence.trim());
-        newContents.push(sentence);
-    })
-    corpus = newContents.join('\n');
+    log.debug(`called txtCorpus2Conllu(${text})`);
+
+    const splitted = text.match(/[^ ].+?[.!?](?=( |$|\n))/g) || [];
     AVAILABLE_SENTENCES = splitted.length;
-    //AVAILABLE_SENTENCES = (splitted === null ? 1 : splitted.length);
-    return corpus;
+
+    // corpus: convert to CoNLL-U by sentence
+    return splitted.map((sentence, i) => {
+        return plainSent2Conllu(sentence.trim());
+    }).join('\n');
 }
 
 /**
  * Checks if the input box has > 1 sentence.
  * @param {String} text Input text
  */
-function conlluMultiInput(text) { // TOFIX: this might break after rewriting architecture. fix later.
-    if(text.match(/\n\n(#.*\n)?1\t/)) {
-        console.log('conlluMultiInput()');
+function conlluMultiInput(text) { // TODO: this might break after rewriting architecture. fix later.
+    log.debug(`called conlluMultiInput(${text})`);
+
+    if (text.match(/\n\n(#.*\n)?1\t/)) {
 
         // if text consists of several sentences, process it as imported file
-        if (text.match(/\n\n/)) { // match doublenewline
+        if (text.match(/\n\n/)) // match doublenewline
             CONTENTS = text;
-        }
-        if (CONTENTS.trim() != '') {
-            var newContents = [];
-            var splitted = CONTENTS.split('\n\n');
-            //console.log('@! ' + splitted.length);
-            for(var i = 0; i < splitted.length; i++) {
-                newContents.push(splitted[i]);
-            }
-            CONTENTS = newContents.join('\n\n');
-            //console.log('!!!' + CONTENTS);
+
+        if (CONTENTS.trim() !== '') { // NOTE: removed some code that didn't do anything :)
             FORMAT = 'CoNLL-U';
             loadDataInIndex();
         }
@@ -100,13 +97,14 @@ function conlluMultiInput(text) { // TOFIX: this might break after rewriting arc
  * @return {String}     Plain text
  */
 function conllu2plainSent(text) {
-    var sent = new conllu.Sentence();
+    log.debug(`called conllu2plainSent(${text})`);
+
+    let sent = new conllu.Sentence();
     sent.serial = text;
-    var tokens = sent.tokens.map(function(token) {
+
+    return sent.tokens.map((token) => {
         return token.form;
-    })
-    var plain = tokens.join(' ');
-    return plain;
+    }).join(' ');
 }
 
 /**
@@ -115,38 +113,29 @@ function conllu2plainSent(text) {
  * @return {String}     Cleaned up content
  */
 function cleanConllu(content) {
+    log.debug(`called cleanConllu(${content})`);
+
     // if we don't find any tabs, then convert >1 space to tabs
     // TODO: this should probably go somewhere else, and be more
-     // robust, think about vietnamese D:
-    var res = content.search('\n');
-    if(res < 0) {
+    // robust, think about vietnamese D:
+    let res = content.search('\n');
+    if (res < 0)
         return content;
-    }
+
     // maybe someone is just trying to type conllu directly...
-    var res = (content.match(/_/g)||[]).length;
-    if(res <= 2) {
+    res = (content.match(/_/g) || []).length;
+    if (res <= 2)
         return content;
-    }
-    var res = content.search('\t');
-    var spaceToTab = false;
-    // If we don't find any tabs, then we want to replace multiple spaces with tabs
-    if(res < 0) {
-        spaceToTab = true;
-    }
-    // remove blank lines
-    var lines = content.trim().split('\n');
-    var newContent = '';
-    for(var i = 0; i < lines.length; i++) {
-        var newLine = lines[i].trim();
-//        if(newLine.length == 0) {
-//            continue;
-//        }
-        // If there are no spaces and the line isn't a comment, then replace more than one space with a tab
-        if(newLine[0] != '#' && spaceToTab) {
-            newLine = newLine.replace(/  */g, '\t');
-        }
-        // strip the extra tabs/spaces at the end of the line
-        newContent = newContent + newLine + '\n';
-    }
-    return newContent;
+
+    res = content.search('\t');
+    const spaceToTab = (res < 0); // If we don't find any tabs, then we want to replace multiple spaces with tabs
+
+    return content.trim().split('\n').map((line) => {
+        line = line.trim();
+        
+        // If there are no spaces and the line isn't a comment,
+        // then replace more than one space with a tab
+        if (line[0] !== '#' && spaceToTab)
+            line = line.replace(/  */g, '\t');
+    }).join('\n');
 }

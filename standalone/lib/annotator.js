@@ -2,11 +2,11 @@
 
 var FORMAT = '',
     FILENAME = 'ud-annotatrix-corpus.conllu', // default name
-    CONTENTS = '';
+    CONTENTS = '',
     // var TEMPCONTENTS = '';
     AVAILABLE_SENTENCES = 0,
     LOCALSTORAGE_AVAILABLE = -1,
-    CURRENT_SENTENCE = 0
+    CURRENT_SENTENCE = 0,
     RESULTS = [],
     LABELS = [];
 
