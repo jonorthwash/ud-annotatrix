@@ -4,195 +4,191 @@ const TABLE_COLUMNS_HEADERS = {'ID': 0, 'FORM': 1, 'LEMMA': 2, 'UPOSTAG': 3,
     'XPOSTAG': 4, 'FEATS': 5, 'HEAD': 6, 'DEPREL': 7, 'DEPS': 8, 'MISC': 9 };
 
 var TABLE_COLUMNS_VISIBILITY = new Array(10).fill(true),
-    TABLE_VIEW = false,
+    IS_TABLE_VIEW = false,
     DEFAULT_NUM_TABLE_ROWS = 20
 
 function calculateRows() {
-    var windowHeight = $(window).height();
-    var graphDivHeight = $('.controls').outerHeight();
-    var controlsDivHeight = $('.row').outerHeight();
-    var fontSize = $('#indata').css('font-size');
-    var lineHeight = Math.floor(parseInt(fontSize.replace('px','')) * 1.5);
-    var remainingSpace = windowHeight - graphDivHeight - controlsDivHeight - 65;
+    log.debug('called calculateRows()');
+
+    const windowHeight = $(window).height(),
+        graphDivHeight = $('.controls').outerHeight(),
+        controlsDivHeight = $('.row').outerHeight(),
+        remainingSpace = windowHeight - graphDivHeight - controlsDivHeight - 65;
+
+    const fontSize = $('#indata').css('font-size'),
+        lineHeight = Math.floor(parseInt(fontSize.replace('px','')) * 1.5);
+
     DEFAULT_NUM_TABLE_ROWS = parseInt(remainingSpace/lineHeight);
 }
 
 function fitTable() {
+    log.debug('called fitTable()');
+
     calculateRows();
+
     /* If there're less lines in conllu than the default number of rows
     in the table, fit the number of rows to the number of lines. */
-    var curSentence = $('#indata').val();
-    if (curSentence.split('\n').length < DEFAULT_NUM_TABLE_ROWS) {
-        $('#indata').attr('rows', curSentence.split('\n').length + 1);
-    } else {
-        $('#indata').attr('rows', DEFAULT_NUM_TABLE_ROWS);
-    }
+    const currentRows = $('#indata').val().split('\n').length;
+    const numRows = (currentRows < DEFAULT_NUM_TABLE_ROWS
+        ? currentRows + 1 : DEFAULT_NUM_TABLE_ROWS);
+
+    $('#indata').attr('rows', numRows);
 }
 
 
 function tableEditCell(loc) {
-    // Yes I'm sorry I don't know Jquery, I'm sure this could be done much better.
+    log.debug(`called tableEditCell(${loc})`);
+
     loc = loc.trim();
-    var table = document.getElementById('indataTable');
-    var cell = document.getElementById(loc).innerHTML;
-    console.log('tableEditCell() ' + loc + ' ' + cell);
+    const table = $('#indataTable'),
+        cell = $(`${loc}`).html();
+
+    log.debug(`tableEditCell() cell: ${cell}`);
 
     // Update the CoNLL-U and set the value in the textbox
-
-    var conllu = '';
-    var r;
-    var c;
-    var thisCell;
-
-    for (r = 1; r < table.rows.length; r += 1) {
-        for (c = 0; c < table.rows[r].cells.length; c += 1) {
-            thisCell = table.rows[r].cells[c].childNodes[0].innerHTML;
-            if (thisCell.trim() === '') {
+    let conllu = '';
+    $.each(table.rows, (i, row) => {
+        $.each(row.cells, (j, cell) => {
+            let thisCell = cell.children()[0].html();
+            if (thisCell.trim() === '')
                 thisCell = '_';
-            }
             thisCell = thisCell.replace(/<br>/g, ''); // Get rid of extra spaces
-//            console.log('@' + table.rows[r].cells[c].innerHTML + ' // ' + thisCell);
-            if (c > 0) {
-                conllu = conllu + '\t' + thisCell;
-            } else {
-                conllu = conllu + thisCell;
-            }
-        }
-        conllu = conllu + '\n';
-    }
-    console.log('!@', conllu);
-    $('#indata').val(conllu);
 
+            conllu += (j > 0 ? '\t' : '') + thisCell;
+        });
+        conllu += '\n';
+    });
+
+    log.debug(`tableEditCell() conllu: ${conllu}`);
+
+    $('#indata').val(conllu);
     drawTree();
 }
 
 function toggleTableView() {
+    log.debug('called toggleTableView()');
+
     // This function toggles the table view
     $('#tableViewButton').toggleClass('fa-code', 'fa-table');
     $('#indata').toggle();
     $('#indataTable').toggle();
-    if (TABLE_VIEW) {
-        TABLE_VIEW = false;
-    } else {
-        TABLE_VIEW = true;
-    }
+
+    IS_TABLE_VIEW = !IS_TABLE_VIEW;
 }
 
 function updateTable() {
+    log.debug('called updateTable()');
+
     // Update the data in the table from the data in the textarea
     $('#indataTable tbody').empty();
-    var conlluLines = $('#indata').val().split('\n');
-    var row = 0;
-    var col;
+    $.each($('#indata').val().split('\n'), (i, line) => {
+        log.debug(`updateTable() line: ${line}`);
+        if (line.trim() === '')
+            return
 
-    conlluLines.forEach(function (line) {
-        if (line.trim() === '') {
-            return;
-        }
-        //console.log(line);
         if (line[0] === '#') {
-            $('#indataTable tbody').append('<tr style="display:none" id="table_' + row + '"><td colspan="10"><span>' + line + '</span></td></tr>');
+            $('#indataTable tbody').append(`<tr style="display:none;" id="table_${i}"><td colspan="10"><span>${line}</span></td></tr>`);
         } else if (line.split('\t').length !== 10) {
-            // console.log('WEIRDNESS:', line.split('\t').length ,line);
-            $('#indataTable tbody').append('<tr style="display:none" id="table_' + row + '"><td colspan="10"><span>' + line + '</span></td></tr>');
+            log.debug(`updateTable() weirdness!`);
+            $('#indataTable tbody').append(`<tr style="display:none;" id="table_${i}"><td colspan="10"><span>${line}</span></td></tr>`);
         } else {
-            var lineRow = $('<tr>');
-            var cells = line.split('\t');
-            var valid;
-            var loc;
-            var td;
-            var span0;
-            var span1;
-            for (col = 0; col < 10; col += 1) {
-                valid = [true, '', {}];
-                loc = 'table_' + row + ':' + col;
-                if (cells[col].trim() === '') {
-                    cells[col] = '_';
-                }
-                if (cells[col] !== '_') {
-                    if (col === 3) {
-                        valid = is_upos(cells[col]);
-                    }
-                    if (col === 7) {
-                        valid = is_udeprel(cells[col]);
-                    }
+
+            let tr = $('<tr>'), // create a new <tr> node
+                cells = line.split('\t');
+
+            for (let j=0; j < 10; j++) {
+                let valid = [true, '', {}],
+                    loc = `table_${i}:${j}`;
+
+                if (cells[j].trim() === '')
+                    cells[j] = '_';
+
+                if (cells[j] !== '_') {
+                    if (j === 3)
+                        valid = is_upos(cells[j]);
+                    if (j === 7)
+                        valid = is_udeprel(cells[j]);
                 }
 
-                td = $('<td>');
-                span0 = $('<span data-value="' + cells[col] + '"onBlur="updateTable();" onKeyUp="tableEditCell(\'' + loc + '"\');" id="' + loc + '" contenteditable>' + cells[col] + '</span>"');
-                td.append(span0);
+                let td = $('<td>').append( $('<span>')
+                    .attr('id', loc)
+                    .attr('data-value', cells[j])
+                    .prop('contenteditable', true)
+                    .blur(updateTable)
+                    .keyup(() => { tableEditCell(loc); }) );
+
                 if (!valid[0]) {
-                    span1 = $(`<span><i class="fa fa-exclamation-triangle" aria-hidden="true"></i></span>`);
-                    document.l10n.formatValue(valid[1], valid[2]).then(function (t) {
-                        span1.attr('title', t);
+                    document.l10n.formatValue(valid[1], valid[2]).then( (t) => {
+                      td.append( $('<span>').append('<i>')
+                          .addClass('fa fa-exclamation-triangle')
+                          .attr('aria-hidden', 'true')
+                          .attr('title', t) );
                     });
-                    td.append(span1);
                 }
-                lineRow.append(td);
+                tr.append(td);
+
+                // Make sure hidden columns stay hidden
+                if (!TABLE_COLUMNS_VISIBILITY[j])
+                    $(`[id^=table_][id$=${j}]`).css('display', 'none');
             }
-            $('#indataTable tbody').append(lineRow);
+
+            $('#indataTable tbody').append(tr);
         }
-        row += 1;
     });
 
-    // Make sure hidden columns stay hidden
-    // This could probably go in the for loop above
-    for (col = 0; col < 10; col += 1) {
-        if (!TABLE_COLUMNS_VISIBILITY[col]) {
-            $('[id^=table_][id$=' + col + ']').css('display', 'none');
-        }
-    }
-// Sushain's original, more beautiful code:
-//    $('#indataTable tbody').append(
-//        $('#indata').val().split('\n')
-//            .filter(line => line.length && !line.startsWith('#'))
-//            .map(rowText => $('<tr>').append(
-//                rowText.split('\t').map(cellText => $('<td>').text(cellText))
-//            ))
-//    );
+    /* Sushain's original, more beautiful code:
+    $('#indataTable tbody').append(
+        $('#indata').val().split('\n')
+            .filter(line => line.length && !line.startsWith('#'))
+            .map(rowText => $('<tr>').append(
+                rowText.split('\t').map(cellText => $('<td>').text(cellText))
+            ));
+    ); */
 }
 
 function toggleTableColumn(col) {
-   // Toggle the visibility of a table column. It only hides the values in the cells,
-   // not the column header.
-   // @col = the column that was clicked
+    log.debug(`called toggleTableColumn(${col})`);
 
-   // the HTML id of the table cell is #table_<ROW>:<COLUMN>, the hash maps
-   // from column ID to column offset
-    var colId = TABLE_COLUMNS_HEADERS[col];
-    var button = $('#tableCol_' + col).text();  // The text (e.g. dot)
+    // Toggle the visibility of a table column. It only hides the values in the cells,
+    // not the column header.
+    // @col = the column that was clicked
 
-    console.log('toggleTableColumn() ' + ' ' + col + ' ' + button);
-   // $('#tableCol_' + col).empty(); // Empty the text
+    // the HTML id of the table cell is #table_<ROW>:<COLUMN>, the hash maps
+    // from column ID to column offset
+    const colId = TABLE_COLUMNS_HEADERS[col],
+        button = $(`#tableCol_${col}`).text();
 
-    $('#tableCol_' + col + ' i').toggleClass('fa-angle-double-right', 'fa-angle-double-left');
-    $('#tableHead_' + col).toggle();
-    $('[id^=table_][id$=' + colId + ']').toggle();
+    log.debug(`toggleTableColumn() colId: ${colId}, button: ${button}`);
+
+    $(`#tableCol_${col} i`).toggleClass('fa-angle-double-right', 'fa-angle-double-left');
+    $(`#tableHead_${col}`).toggle();
+    $(`[id^=table_][id$=${colId}]`).toggle();
+
     TABLE_COLUMNS_VISIBILITY[colId] = !TABLE_COLUMNS_VISIBILITY[colId];
 
     if (button === '⚪') {  // If the column is currently hidden, make it visible
-     //$('#tableCol_' + col).append('⚫');
-     //$('#tableHead_' + col).css('display','inline-block');
-     //$('[id^=table_][id$=' + colId+']').css('display','inline-block');
-     //TABLE_COLUMNS_VISIBILITY[colId] = true;
+        /* $('#tableCol_' + col).append('⚫');
+        $('#tableHead_' + col).css('display','inline-block');
+        $('[id^=table_][id$=' + colId+']').css('display','inline-block');
+        TABLE_COLUMNS_VISIBILITY[colId] = true; */
     } else { // If the column is visible make it hidden
-     //$('#tableCol_' + col).append('⚪');
-     //$('#tableHead_' + col).css('display','none');
-     //$('[id^=table_][id$=' + colId+']').css('display','none');
-     //TABLE_COLUMNS_VISIBILITY[colId] = false;
+        /* $('#tableCol_' + col).append('⚪');
+        $('#tableHead_' + col).css('display','none');
+        $('[id^=table_][id$=' + colId+']').css('display','none');
+        TABLE_COLUMNS_VISIBILITY[colId] = false; */
     }
 
-   // TODO: Maybe use greying out of the headers in addition to/instead of
-   // the filled/empty dots to indicate hidden or not
+    // TODO: Maybe use greying out of the headers in addition to/instead of
+    // the filled/empty dots to indicate hidden or not
 }
 
 function toggleCodeWindow() {
+    log.debug(`called toggleCodeWindow()`);
+
     $('#codeVisibleButton').toggleClass('fa-chevron-down', 'fa-chevron-up');
-    //console.log('toggleCodeWindow()');
     $('.indataarea').toggle();
     $('#tabBox').toggle();
     $('#viewButton').toggle();
-    if(!IS_VERTICAL) {
+    if (!IS_VERTICAL)
         $('#cy').css('height', $(window).height()-$('.inarea').height()-80);
-    }
 }
