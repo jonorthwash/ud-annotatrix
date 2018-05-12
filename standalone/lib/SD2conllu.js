@@ -1,25 +1,20 @@
 'use strict'
 
 function SD2conllu(text) {
-    /* Takes a string in CG, returns a string in conllu. */
-    var sent = new conllu.Sentence();
-    var inputLines = text.split('\n');
-    var comments = '';
-//    var comments = '# sent_id = _' + '\n# text = ' + inputLines[0];
-    var textTokens = inputLines[0].split(' ');
+    log.debug(`called SD2conllu(${text})`);
 
-    var tokId = 1;
-    var tokens = []; // list of tokens
-    var tokenToId = {}; // convert from a token to index
-    var tokenCounter = {}; // keep a count of duplicate tokens
-    var heads = []; // e.g. heads[1] = 3
-    var deprels = []; // e.g. deprels[1] = nsubj
+    /* Takes a string in CG, returns a string in conllu. */
+    const inputLines = text.split('\n');
+    let tokenId = 1,
+        tokenToId = {}, // convert from a token to an index
+        heads = [], // e.g. heads[1] = 3
+        deprels = []; // e.g. deprels[1] = nsubj
 
     // first enumerate the tokens
-    for(var i = 0; i < textTokens.length; i++) {
-      tokenToId[textTokens[i]] = tokId;
-      tokId = tokId + 1;
-    }
+    $.each(inputLines[0].split(' '), (i, token) => {
+        tokenToId[token] = tokenId;
+        tokenId += 1;
+    });
 
     // When there are two surface forms that are the same, you have to specify the one you
     // are referring to.
@@ -33,71 +28,68 @@ function SD2conllu(text) {
     // In fact, these numbers are optional for all, so det(bear-2, the-1) would also be valid
 
     // now process the dependency relations
-    for(var i = 1; i < inputLines.length; i++) {
-      //console.log(inputLines[i]);
-      var curLine = inputLines[i];
+    $.each(inputLines, (i, line) => {
+        if (line.indexOf(',') > -1) { // not root node
+            let deprel = '',
+                headToken = '',
+                depToken = '',
+                reading = 'deprel';  // reading \elem [ 'deprel', 'head', 'dep' ]
 
-      if(curLine.search(',') < 0) { // root node
-        continue;
-      }
+            $.each(line, (j, word) => {
+                switch (reading) {
+                    case ('deprel'):
+                        if (word === '(') {
+                            reading = 'head';
+                        } else {
+                            deprel += word;
+                        }
+                        break;
+                    case ('head'):
+                        if (word === ',') {
+                            reading = 'dep';
+                        } else {
+                            headToken += word;
+                        }
+                        break;
+                    case ('dep'):
+                        if ( !((line[j-1] === ',' && word === ' ') || word === ')') )
+                            depToken += word;
+                        break;
+                }
+            });
 
-      var deprel = '';
-      var headTok = '';
-      var depTok = '';
-      var state = 0; // 0 = reading deprel, 1 = reading head, 2 = reading dep
-      for(var j = 0; j < curLine.length; j++) { // I have a feeling it should be easier to do this
-        if(state == 0 && curLine[j] == '(') {
-          state = 1;
-          continue;
-        }
-        if(state == 1 && curLine[j] == ',') {
-          state = 2;
-          continue;
-        }
-        if(state == 2 && curLine[j-1] == ',' && curLine[j] == ' ') {
-          continue;
-        }
-        if(state == 2 && curLine[j] == ')') {
-          continue;
-        }
-        if(state == 0) {
-          deprel = deprel + curLine[j];
-        }else if(state == 1) {
-          headTok = headTok + curLine[j];
-        }else if(state == 2) {
-          depTok = depTok + curLine[j];
-        }
-      }
-      var depId = tokenToId[depTok];
-      var headId = tokenToId[headTok];
-      if(depTok.search(/-[0-9]+/) > 0) {
-        depId = parseInt(depTok.split('-')[1]);
-      }
-      if(headTok.search(/-[0-9]+/) > 0) {
-        headId = parseInt(headTok.split('-')[1]);
-      }
-      //console.log(depTok + ' → ' + headTok + ' @' + deprel + ' | ' + tokenToId[depTok] + ' : ' + tokenToId[headTok] + ' // ' + depId + '→' + headId);
-      heads[depId] = headId;
-      deprels[depId] = deprel;
-    }
+            let depId, headId;
+            if (depToken.search(/-[0-9]+/) > 0)
+                depId = parseInt(depToken.split('-')[1]);
+            if (headToken.search(/-[0-9]+/) > 0)
+                headId = parseInt(headToken.split('-')[1]);
 
+            log.debug(`SD2conllu(): ${depToken} → ${headToken} @${deprel} | ${tokenToId[depToken]} : tokenToId[headToken] // ${depId} → ${headId}`);
+            heads[depId] = headId;
+            deprels[depId] = deprel;
+        }
+    });
 
-    for(var i = 0; i < textTokens.length; i++) {
-      var newToken = new conllu.Token();
-      tokId = i+1;
-      newToken['form'] = textTokens[i];
-      // TODO: automatical recognition of punctuation's POS
-      if(textTokens[i].match(/\W/)) {
-        newToken['upostag'] = 'PUNCT';
-      }
-      newToken['id'] = tokId;
-      newToken['head'] = heads[tokId];
-      newToken['deprel'] = deprels[tokId];
-      //console.log('@@@' + newToken['form'] + ' ' + newToken['id'] + ' ' + newToken['head'] + ' ' + newToken['deprel']);
-      tokens.push(newToken);
-    }
+    let sent = new conllu.Sentence();
+    sent.comments = '';
+    sent.tokens = inputLines[0].split(' ').map((token) => {
 
-    sent.comments = comments;
-    sent.tokens = tokens;
+        let newToken = new conllu.Token();
+        tokenId += 1;
+
+        newToken.form = token;
+
+        // TODO: automatic recognition of punctation's POS
+        if (token.match(/\W/))
+            token.upostag = 'PUNCT';
+
+        newToken.id = tokenId;
+        newToken.head = heads[tokenId];
+        newToken.deprel = deprels[tokenId];
+        log.debug(`SD2conllu(): @@@${newToken.form} ${newToken.id} ${newToken.head} ${newToken.deprel}`);
+
+        return newToken
+    });
+
     return sent.serial;
 }
