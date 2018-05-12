@@ -129,7 +129,7 @@ class Tester extends Object {
     ];
 
     $.each(buttons, (i, button) => {
-      button.click();
+      //button.click();
     });
   }
 }

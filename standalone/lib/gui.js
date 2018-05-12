@@ -153,11 +153,11 @@ function writeArc(source, target) {
     const sourceIndex = parseInt(source.attr('id').slice(2));
     const targetIndex = parseInt(target.attr('id').slice(2));
 
-    const indices = findConlluId2(target);
+    const indices = findConlluId(target);
 
     let sent = buildSent(),
-        thisToken = sent.tokens[indices.outerIndex],
-        sentAndPrev = changeConlluAttr2(sent, indices, 'head', sourceIndex);
+        thisToken = sent.tokens[indices.outer],
+        sentAndPrev = changeConlluAttr(sent, indices, 'head', sourceIndex);
 
     // If the target POS tag is PUNCT set the deprel to @punct [99%]
     // IF the target POS tag is CCONJ set the deprel to @cc [88%]
@@ -165,7 +165,7 @@ function writeArc(source, target) {
     // IF the target POS tag is DET set the deprel to @det [83%]
     // TODO: Put this somewhere better
     if (thisToken.upostag in POS2RELmappings)
-        sentAndPrev = changeConlluAttr2(sent, indices, 'deprel', POS2RELmappings[thisToken.upostag]);
+        sentAndPrev = changeConlluAttr(sent, indices, 'deprel', POS2RELmappings[thisToken.upostag]);
 
     let isValidDep = true;
     if (thisToken.upostag === 'PUNCT' && !is_projective_nodes(sent.tokens, [targetIndex])) {
@@ -176,8 +176,8 @@ function writeArc(source, target) {
     window.undoManager.add({
         undo: () => {
             let sent = buildSent(),
-                sentAndPrev = changeConlluAttr2(sent, indices, 'head', sentAndPrev.previous);
-            redrawTree(sentAndPrev.sent);
+                sentAndPrev = changeConlluAttr(sent, indices, 'head', sentAndPrev.previous);
+            redrawTree(sentAndPrev.sentence);
         },
         redo: () => {
             writeArc(source, target);
@@ -199,14 +199,14 @@ function removeArc(targets) {
     // support for multiple arcs
     $.each(targetNodes, (i, target) => {
         const targetIndex = target.attr('id').slice(2),
-            indices = findConlluId2(target);
+            indices = findConlluId(target);
 
-        let sentAndPrev = changeConlluAttr2(sent, indices, 'head', undefined);
+        let sentAndPrev = changeConlluAttr(sent, indices, 'head', undefined);
 
-        sent = sentAndPrev.sent;
+        sent = sentAndPrev.sentence;
         prevRelations.head = sentAndPrev.previous;
-        sentAndPrev = changeConlluAttr2(sent, indices, 'deprel', undefined);
-        sent = sentAndPrev.sent;
+        sentAndPrev = changeConlluAttr(sent, indices, 'deprel', undefined);
+        sent = sentAndPrev.sentence;
         prevRelations.deprel = sentAndPrev.previous;
 
     });
@@ -216,12 +216,12 @@ function removeArc(targets) {
             let sent = buildSent();
             $.each(targetNodes, (i, target) => {
                 const targetIndex = target.attr('id').slice(2),
-                    indices = findConlluId2(target);
+                    indices = findConlluId(target);
 
-                let sentAndPrev = changeConlluAttr2(sent, indices, 'head', prevRelations.head);
-                sent = sentAndPrev.sent;
-                sentAndPrev = changeConlluAttr2(sent, indices, 'deprel', prevRelations.deprel);
-                sent = sentAndPrev.sent;
+                let sentAndPrev = changeConlluAttr(sent, indices, 'head', prevRelations.head);
+                sent = sentAndPrev.sentence;
+                sentAndPrev = changeConlluAttr(sent, indices, 'deprel', prevRelations.deprel);
+                sent = sentAndPrev.sentence;
             });
 
             redrawTree(sent);
@@ -505,14 +505,14 @@ function setRoot(wf) {
 		log.debug(`called setRoot(id: ${wf.attr('id')})`);
 
 		let sent = buildSent();
-		const indices = findConlluId2(wf),
-				cur = parseInt(sent.tokens[ indices.outerIndex ].id),
+		const indices = findConlluId(wf),
+				cur = parseInt(sent.tokens[indices.outer].id),
 				head = 0;
 
-		log.debug(`setRoot() (outerIndex: ${indices.outerIndex}, cur: ${cur}, head: ${head})`);
+		log.debug(`setRoot() (outerIndex: ${indices.outer}, cur: ${cur}, head: ${head})`);
 
-		changeConlluAttr2(sent, indices, 'deprel', 'root');
-		changeConlluAttr2(sent, indices, 'head', head);
+		changeConlluAttr(sent, indices, 'deprel', 'root');
+		changeConlluAttr(sent, indices, 'head', head);
 
 		redrawTree(sent);
 }
@@ -527,29 +527,29 @@ function writeDeprel(deprelInp, indices) { // TODO: DRY
 		if (indices === undefined) {
 				const id = cy.$(`.input`).attr('id').slice(2),
 						wfNode = cy.$(`#nf${id}`);
-				indices = findConlluId2(wfNode);
+				indices = findConlluId(wfNode);
 		}
 
 		let sent = buildSent(),
-				cur  = parseInt(sent.tokens[ indices.outerIndex ].id);
-				head = parseInt(sent.tokens[ indices.outerIndex ].head);
+				cur  = parseInt(sent.tokens[indices.outer].id);
+				head = parseInt(sent.tokens[indices.outer].head);
 
 		log.debug(`writeDeprel (head: ${head}, cur: ${cur})`);
 
-		const sentAndPrev = changeConlluAttr2(sent, indices, 'deprel', deprelInp);
+		const sentAndPrev = changeConlluAttr(sent, indices, 'deprel', deprelInp);
 
 		window.undoManager.add({
 				undo: () => {
 						const sent = buildSent(),
-								sentAndPrev = changeConlluAttr2(sent, indices, 'deprel', sentAndPrev.previous);
-						redrawTree(sentAndPrev.sent);
+								sentAndPrev = changeConlluAttr(sent, indices, 'deprel', sentAndPrev.previous);
+						redrawTree(sentAndPrev.sentence);
 				},
 				redo: () => {
 						writeDeprel(deprelInp, indices);
 				}
 		});
 
-    redrawTree(sentAndPrev.sent);
+    redrawTree(sentAndPrev.sentence);
 }
 
 
@@ -562,50 +562,47 @@ function writePOS(posInp, indices) {
 		if (indices === undefined) {
 				const id = cy.$(`.input`).attr('id').slice(2),
 						wfNode = cy.$(`#nf${id}`);
-				indices = findConlluId2(wfNode);
+				indices = findConlluId(wfNode);
 		}
 
 		let sent = buildSent(),
-				sentAndPrev = changeConlluAttr2(sent, indices, 'upostag', posInp);
+				sentAndPrev = changeConlluAttr(sent, indices, 'upostag', posInp);
 
 		window.undoManager.add({
 				undo: () => {
 						const sent = buildSent(),
-								sentAndPrev = changeConlluAttr2(sent, indices, 'upostag', sentAndPrev.previous);
-						redrawTree(sentAndPrev.sent);
+								sentAndPrev = changeConlluAttr(sent, indices, 'upostag', sentAndPrev.previous);
+						redrawTree(sentAndPrev.sentence);
 				},
 				redo: () => {
 						writePOS(posInp, indices);
 				}
 		})
 
-    redrawTree(sentAndPrev.sent);
+    redrawTree(sentAndPrev.sentence);
 
 }
 
 
-function changeConlluAttr2(sent, indices, attrName, newVal) {
-    const arr = changeConlluAttr(sent, indices, attrName, newVal);
-    const ret = { sent:arr[0], previous:arr[1] };
-
-    log.debug(`changeConlluAttr() returned: ${JSON.stringify(ret)}`);
-    return ret;
-}
 function changeConlluAttr(sent, indices, attrName, newVal) {
     log.debug('called changeConlluAttr()');
-		console.log(indices);
+
     //if(attrName === 'deprel') {
     //  newVal = newVal.replace(/[⊲⊳]/g, '');
     //}
     let previous;
     if (indices.isSubtoken) {
-        previous = sent.tokens[ indices.outerIndex ].tokens[ indices.innerIndex ][attrName];
-        sent.tokens[ indices.outerIndex ].tokens[ indices.innerIndex ][attrName] = newVal;
+        previous = sent.tokens[indices.outer].tokens[indices.inner][attrName];
+        sent.tokens[indices.outer].tokens[indices.inner][attrName] = newVal;
     } else {
-        previous = sent.tokens[ indices.outerIndex ][attrName];
-        sent.tokens[ indices.outerIndex ][attrName] = newVal;
+        previous = sent.tokens[indices.outer][attrName];
+        sent.tokens[indices.outer][attrName] = newVal;
     }
-    return [sent, previous];
+
+		return {
+				sentence: sent,
+				previous: previous
+		};
 }
 
 function writeWF(wfInp) {
@@ -613,7 +610,7 @@ function writeWF(wfInp) {
 
     /* Either writes changes to token or retokenises the sentence. */
     const newToken = wfInp.val().trim(),
-				indices = findConlluId2(cy.$('.input'));
+				indices = findConlluId(cy.$('.input'));
 
 		log.debug(`writeWF() (indices: ${JSON.stringify(indices)})`);
 
@@ -624,10 +621,10 @@ function writeWF(wfInp) {
     } else {
         if (indices.isSubtoken) {
             // TODO: think, whether it should be lemma or form.
-            // sent.tokens[outerIndex].tokens[innerIndex].lemma = newToken;
-            sent.tokens[indices.outerIndex].tokens[indices.innerIndex].form = newToken;
+            // sent.tokens[indices.outer].tokens[indices.inner].lemma = newToken;
+            sent.tokens[indices.outer].tokens[indices.inner].form = newToken;
         } else {
-            sent.tokens[indices.outerIndex].form = newToken;
+            sent.tokens[indices.outer].form = newToken;
         }
 
         redrawTree(sent);
@@ -635,15 +632,7 @@ function writeWF(wfInp) {
 }
 
 
-function findConlluId2(wf) {
-    const arr = findConlluId(wf);
-    const ret = { isSubtoken:arr[0], outerIndex:arr[1], innerIndex:arr[2] };
-
-    log.debug(`findConlluId() returned: ${JSON.stringify(ret)}`);
-    return ret;
-}
-
-function findConlluId(wf) { // TODO: refactor the arcitecture.
+function findConlluId(wf) { // TODO: refactor the architecture.
     log.debug(`called findConlluId(id: ${wf.attr('id')})`);
 
     // takes a cy wf node
@@ -666,7 +655,11 @@ function findConlluId(wf) { // TODO: refactor the arcitecture.
         });
     }
 
-    return [isSubtoken, outerIndex, innerIndex];
+		return {
+				isSubtoken: isSubtoken,
+				outer: outerIndex,
+				inner: innerIndex
+		};
 }
 
 
@@ -679,23 +672,23 @@ function splitTokens(oldToken, sent, indices) {
     All the attributes default to belong to the first part. */
 
 		const newTokens = oldToken.split(' ');
-		let token = sent.tokens[indices.outerIndex];
+		let token = sent.tokens[indices.outer];
 
 		if (indices.isSubtoken) {
 
-				sent.tokens[indices.outerIndex].tokens[indices.innerIndex].form = newTokens[0];
+				sent.tokens[indices.outer].tokens[indices.inner].form = newTokens[0];
 				// creating and inserting the second part
-				const tokenId = sent.tokens[indices.outerIndex].tokens[indices.innerIndex].id;
+				const tokenId = sent.tokens[indices.outer].tokens[indices.inner].id;
 				const restToken = formNewToken({ 'id':tokenId, 'form':newTokens[1] });
-				sent.tokens[indices.outerIndex].tokens.splice(indices.innerIndex + 1, 0, restToken);
+				sent.tokens[indices.outer].tokens.splice(indices.inner + 1, 0, restToken);
 
 		} else {
 
-				sent.tokens[indices.outerIndex].form = newTokens[0];
+				sent.tokens[indices.outer].form = newTokens[0];
 				// creating and inserting the second part
-				const tokenId = sent.tokens[indices.outerIndex].id;
+				const tokenId = sent.tokens[indices.outer].id;
 				const restToken = formNewToken({ 'id':tokenId, 'form':newTokens[1] });
-				sent.tokens.splice(indices.outerIndex + 1, 0, restToken);
+				sent.tokens.splice(indices.outer + 1, 0, restToken);
 
 		}
 
@@ -703,10 +696,10 @@ function splitTokens(oldToken, sent, indices) {
     $.each(sent.tokens, function(i, token) {
         if (token instanceof conllu.MultiwordToken) {
             $.each(token.tokens, function(j, subToken) {
-                subToken = shiftIndices(subToken, i, indices.outerIndex, indices.innerIndex, j);
+                subToken = shiftIndices(subToken, i, indices, j);
             });
         } else if (token instanceof conllu.Token) {
-            token = shiftIndices(token, i, indices.outerIndex);
+            token = shiftIndices(token, i, indices);
         }
     });
 
@@ -714,13 +707,13 @@ function splitTokens(oldToken, sent, indices) {
 }
 
 
-function shiftIndices(token, i, outerIndex, innerIndex, j) {
-		log.debug(`called shiftIndices(token:${token}, i:${i}, outerIndex:${outerIndex}, innerIndex:${innerIndex})`);
+function shiftIndices(token, i, indices, j) {
+		log.debug(`called shiftIndices(token:${token}, i:${i}, indices:${JSON.stringify(indices)}, j:${j}`);
 
-    if (i > outerIndex || (innerIndex !== undefined && j > innerIndex))
+    if (i > indices.outer || (indices.inner !== undefined && j > indices.inner))
         token.id += 1;
 
-    if (token.head > outerIndex + 1)
+    if (token.head > indices.outer + 1)
         token.head = parseInt(token.head) + 1;
 
     return token;
@@ -754,7 +747,7 @@ function mergeNodes(toMerge, side, how) {
     Recieves the node to merge, side (right or left) and a string denoting
     how to merge the nodes. In case of success, redraws the tree. */
 
-		const indices = findConlluId2(toMerge);
+		const indices = findConlluId(toMerge);
 
 		if (indices.isSubtoken) {
 				const message = 'Sorry, merging subtokens is not supported!';
@@ -764,7 +757,7 @@ function mergeNodes(toMerge, side, how) {
 				return;
 		}
 
-		const nodeId = indices.outerIndex,
+		const nodeId = indices.outer,
 				otherId  = nodeId + (side === 'right' ? 1 : -1);
 
 		let sent = buildSent();
