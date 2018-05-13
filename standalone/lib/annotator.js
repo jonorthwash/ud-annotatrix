@@ -12,39 +12,39 @@ var FORMAT = '',
 
 window.onload = () => {
 
-  /* Loads all the js libraries and project modules, then calles onReady.
-  If server is running, makes a button for saving data.*/
-  let path = './lib';
-  head.js(
-    `${path}/ext/jquery-3.2.1.min.js`,
-    `${path}/ext/jquery-ui-1.12.1/jquery-ui.min.js`,
-    `${path}/ext/cytoscape.min.js`,
-    `${path}/ext/undomanager.js`,
-    //`${path}/ext/popper.min.js`,
-    `${path}/ext/jquery.autocomplete.js`,
-    //`${path}/ext/bootstrap.min.js`,
-    `${path}/ext/l20n.js`,
-    `${path}/ext/canvas2svg.js`,
-    `${path}/ext/conllu/conllu.js`, // CoNLL-U parser from https://github.com/FrancessFractal/conllu
+    /* Loads all the js libraries and project modules, then calles onReady.
+    If server is running, makes a button for saving data.*/
+    let path = './lib';
+    head.js(
+        `${path}/ext/jquery-3.2.1.min.js`,
+        `${path}/ext/jquery-ui-1.12.1/jquery-ui.min.js`,
+        `${path}/ext/cytoscape.min.js`,
+        `${path}/ext/undomanager.js`,
+        //`${path}/ext/popper.min.js`,
+        `${path}/ext/jquery.autocomplete.js`,
+        //`${path}/ext/bootstrap.min.js`,
+        `${path}/ext/l20n.js`,
+        `${path}/ext/canvas2svg.js`,
+        `${path}/ext/conllu/conllu.js`, // CoNLL-U parser from https://github.com/FrancessFractal/conllu
 
-    // native project code
-    `${path}/CG2conllu.js`,
-    `${path}/SD2conllu.js`,
-    `${path}/Brackets2conllu.js`,
-    `${path}/converters.js`,
-    `${path}/server_support.js`,
-    `${path}/gui.js`,
-    `${path}/conllu_table.js`,
-    `${path}/cy-style.js`,
-    `${path}/visualiser.js`,
-    `${path}/validation.js`,
+        // native project code
+        `${path}/CG2conllu.js`,
+        `${path}/SD2conllu.js`,
+        `${path}/Brackets2conllu.js`,
+        `${path}/converters.js`,
+        `${path}/server_support.js`,
+        `${path}/gui.js`,
+        `${path}/conllu_table.js`,
+        `${path}/cy-style.js`,
+        `${path}/visualiser.js`,
+        `${path}/validation.js`,
 
-    // KM classes
-    `${path}/logger.js`,
-    `${path}/tester.js`,
-    `${path}/errors.js`
-  );
-  head.ready(onReady);
+        // KM classes
+        `${path}/logger.js`,
+        `${path}/tester.js`,
+        `${path}/errors.js`
+    );
+    head.ready(onReady);
 }
 
 
@@ -73,6 +73,8 @@ function onReady() {
 
 
 function saveData() { // TODO: rename to updateData
+    log.debug(`called saveData()`);
+
     if (IS_SERVER_RUNNING) {
         updateOnServer()
     } else {
@@ -82,18 +84,21 @@ function saveData() { // TODO: rename to updateData
 
 
 function getContents() {
+    log.debug(`called getContents()`);
+
     /* Gets the corpus data saving the changes in current sentence,
     dependlessly of whether it's on server or in localStorage. */
 
-    // if (IS_SERVER_RUNNING) {
-    //     // TODO: implement
-    // } else {
-    var splitted = localStorage.getItem('treebank'); // TODO: implement a more memory-friendly func?
-    splitted = JSON.parse(splitted) || new Array(); // string to array
-    splitted[CURRENT_SENTENCE] = $('#indata').val();
-    localStorage.setItem('treebank', JSON.stringify(splitted)); // update the treebank
-    return splitted.join('\n\n');
-    // }
+    /* if (IS_SERVER_RUNNING) {
+        // TODO: implement different functionality here
+    } else { */
+
+        var splitted = localStorage.getItem('treebank'); // TODO: implement a more memory-friendly func?
+        splitted = JSON.parse(splitted) || new Array(); // string to array
+        splitted[CURRENT_SENTENCE] = $('#indata').val();
+        localStorage.setItem('treebank', JSON.stringify(splitted)); // update the treebank
+        return splitted.join('\n\n');
+    /* } */
 }
 
 
@@ -524,6 +529,7 @@ function formatTabsView() {
 
 
 function detectFormat(content) {
+    // returns one of [ 'Unknown', 'CG3', 'CoNLL-U', 'SD', 'Brackets', 'plain text' ]
     clearLabels();
     //TODO: too many 'hacks' and presuppositions. refactor.
 
