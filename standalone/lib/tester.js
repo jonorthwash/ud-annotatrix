@@ -9,195 +9,204 @@
  * also implements an assert() function, which throws AssertionError exceptions
  */
 class Tester extends Object {
-  constructor() { super(); }
+	constructor() { super(); }
 
 
-  /*
-   * simple assert function
-   */
-  assert(expression, message='') {
-    if (!expression)
-      throw new AssertionError(message);
-    log.debug(`OK: Tester.assert() got a truthy expression (message: "${message}")`);
-  }
+	/*
+	 * simple assert function
+	 */
+	assert(expression, message='') {
+		if (!expression)
+			throw new AssertionError(message);
+		log.debug(`OK: Tester.assert() got a truthy expression (message: "${message}")`);
+	}
 
-  arraysEqual(arr1, arr2) {
-    if (arr1.length !== arr2.length)
-      return false
-    for (let i=0, l=arr1.length; i<l; i++) {
-      if (arr1[i] !== arr2[i])
-        return false
-    }
-    return true;
-  }
-
-
+	arraysEqual(arr1, arr2) {
+		if (arr1.length !== arr2.length)
+			return false
+		for (let i=0, l=arr1.length; i<l; i++) {
+			if (arr1[i] !== arr2[i])
+				return false
+		}
+		return true;
+	}
 
 
-  /*
-   * TEST functions
-   */
-  all() {
-    log.out('\nExecuting Tester.all()');
 
-    this.tester();
-    this.logger();
-    this.errors();
-    this.buttons();
-    this.rangeExclusive();
-    this.detectFormat();
-  }
-  tester() {
-    log.out('\nExecuting Tester.tester()');
 
-    this.assert(1==1, `1==1`);
-    this.assert(1=='1', `1=='1'`);
-    this.assert(1!=='1', `1!=='1'`);
-    this.assert(undefined==null, `undefined==null`);
-    this.assert(undefined!==null, `undefined!==null`);
-    this.assert(0==false, `0==false`);
-    this.assert(0!==false, `0!==false`);
-    this.assert(1==true, `1==true`);
-    this.assert((()=>{})()==undefined, `(()=>{})()==undefined`);
-    this.assert((()=>{})()===undefined, `(()=>{})()===undefined`);
-    this.assert('foo'!='bar', `'foo'!=bar`);
+	/*
+	 * TEST functions
+	 */
+	all() {
+		log.out('\nExecuting Tester.all()');
 
-  }
-  logger() {
-    log.out('\nExecuting Tester.logger()');
+		this.tester();
+		this.logger();
+		this.errors();
+		this.buttons();
+		this.rangeExclusive();
+		this.detectFormat();
+	}
+	tester() {
+		log.out('\nExecuting Tester.tester()');
 
-    const testMessage = 'This is the logger test message';
-    const loggers = [ log, // defined in annotator.js
-      new Logger('CRITICAL'),
-      new Logger('ERROR'),
-      new Logger('WARN'),
-      new Logger('INFO'),
-      new Logger('DEBUG'),
-      new Logger('INVALID') ];
+		this.assert(1==1, `1==1`);
+		this.assert(1=='1', `1=='1'`);
+		this.assert(1!=='1', `1!=='1'`);
+		this.assert(undefined==null, `undefined==null`);
+		this.assert(undefined!==null, `undefined!==null`);
+		this.assert(0==false, `0==false`);
+		this.assert(0!==false, `0!==false`);
+		this.assert(1==true, `1==true`);
+		this.assert((()=>{})()==undefined, `(()=>{})()==undefined`);
+		this.assert((()=>{})()===undefined, `(()=>{})()===undefined`);
+		this.assert('foo'!='bar', `'foo'!=bar`);
 
-    $.each(loggers, (i, logger) => {
+	}
+	logger() {
+		log.out('\nExecuting Tester.logger()');
 
-      logger.out(`\nNow testing logger: ${logger}`);
-      logger.critical(testMessage);
-      logger.error(testMessage);
-      logger.warn(testMessage);
-      logger.info(testMessage);
-      logger.debug(testMessage);
+		const testMessage = 'This is the logger test message';
+		const loggers = [ log, // defined in annotator.js
+			new Logger('CRITICAL'),
+			new Logger('ERROR'),
+			new Logger('WARN'),
+			new Logger('INFO'),
+			new Logger('DEBUG'),
+			new Logger('INVALID') ];
 
-    });
-  }
-  errors() {
-    log.out('\nExecuting Tester.errors()');
+		$.each(loggers, (i, logger) => {
 
-    const testMessage = 'This is the error test message';
-    const errors = [
-      new Error(testMessage),
-      new ReferenceError(testMessage),
-      new TypeError(testMessage),
-      new SyntaxError(testMessage),
-      new AnnotatrixError(testMessage),
-      new AssertionError(testMessage),
-      new GUIError(testMessage),
-      new ParseError(testMessage)
-    ];
+			logger.out(`\nNow testing logger: ${logger}`);
+			logger.critical(testMessage);
+			logger.error(testMessage);
+			logger.warn(testMessage);
+			logger.info(testMessage);
+			logger.debug(testMessage);
 
-    $.each(errors, (i, error) => {
-      try {
-        throw error;
-      } catch (e) {
-        console.log(`Caught ${e.name} with message "${e.message
-          }", (custom:${e instanceof AnnotatrixError ? 'yes' : 'no'})`);
-      }
-    });
-  }
-  buttons() {
-    log.out('\nExecuting Tester.buttons()');
+		});
+	}
+	errors() {
+		log.out('\nExecuting Tester.errors()');
 
-    const buttons = [
-      $('#prevSenBtn'),
-      $('#nextSenBtn'),
-      $('#remove'),
-      $('#add'),
-      $('#upload'),
-      $('#exportBtn'),
-      $('#clearBtn'),
-      $('#printBtn'),
-      $('#btnUndo'),
-      $('#btnRedo'),
-      $('#helpBtn'),
-      $('#settingsBtn'),
-      $('#viewOther'),
-      $('#viewConllu'),
-      $('#viewCG'),
-      $('#tableViewBtn'),
-      $('#codeVisibleBtn'),
-      $('#RTL'),
-      $('#vertical'),
-      $('#enhanced')
-    ];
+		const testMessage = 'This is the error test message';
+		const errors = [
+			new Error(testMessage),
+			new ReferenceError(testMessage),
+			new TypeError(testMessage),
+			new SyntaxError(testMessage),
+			new AnnotatrixError(testMessage),
+			new AssertionError(testMessage),
+			new GUIError(testMessage),
+			new ParseError(testMessage)
+		];
 
-    $.each(buttons, (i, button) => {
-      //button.click();
-    });
-  }
-  rangeExclusive() {
-    log.out('\nExecuting Tester.rangeExclusive()');
+		$.each(errors, (i, error) => {
+			try {
+				throw error;
+			} catch (e) {
+				console.log(`Caught ${e.name} with message "${e.message
+					}", (custom:${e instanceof AnnotatrixError ? 'yes' : 'no'})`);
+			}
+		});
+	}
+	buttons() {
+		log.out('\nExecuting Tester.buttons()');
 
-    const cases = [
-        { params:[0,10,1], ret:[1,2,3,4,5,6,7,8,9] },
-        { params:[0,10,2], ret:[1,3,5,7,9] },
-        { params:[1,10,2], ret:[2,4,6,8] },
-        { params:[0,10,3], ret:[1,4,7] },
-        { params:[10,0,1], ret:[1,2,3,4,5,6,7,8,9] },
-        { params:[10,0,2], ret:[1,3,5,7,9] },
-        { params:[10,1,2], ret:[2,4,6,8] },
-        { params:[10,0,3], ret:[1,4,7] },
-        { params:[6], ret:[1,2,3,4,5] },
-        { params:[3,6], ret:[4,5] },
-        { params:[6,3], ret:[4,5] },
-        { params:[], ret:[] }
-    ];
+		const buttons = [
+			$('#prevSenBtn'),
+			$('#nextSenBtn'),
+			$('#remove'),
+			$('#add'),
+			$('#upload'),
+			$('#exportBtn'),
+			$('#clearBtn'),
+			$('#printBtn'),
+			$('#btnUndo'),
+			$('#btnRedo'),
+			$('#helpBtn'),
+			$('#settingsBtn'),
+			$('#viewOther'),
+			$('#viewConllu'),
+			$('#viewCG'),
+			$('#tableViewBtn'),
+			$('#codeVisibleBtn'),
+			$('#RTL'),
+			$('#vertical'),
+			$('#enhanced')
+		];
 
-    $.each(cases, (i, _case) => {
-        const ret = rangeExclusive(..._case.params),
-            message = `expected: [${_case.ret.join(',')}], got: [${ret.join(',')}]`;
-        this.assert(this.arraysEqual(ret, _case.ret), message);
-    });
-  }
-  detectFormat() {
-    log.out('\nExecuting Tester.detectFormat()');
+		$.each(buttons, (i, button) => {
+			//button.click();
+		});
+	}
+	rangeExclusive() {
+		log.out('\nExecuting Tester.rangeExclusive()');
 
-    $.each(TEST_DATA.parseableTexts, (format, texts) => {
-      $.each(texts, (j, text) => {
-        const ret = detectFormat(text),
-            message = `expected (${text}) to be detected as "${format}", but got "${ret}".`;
-        this.assert(ret === format, message);
-      });
-    });
-  }
+		const inputs = [
+				{ params:[0,10,1], ret:[1,2,3,4,5,6,7,8,9] },
+				{ params:[0,10,2], ret:[1,3,5,7,9] },
+				{ params:[1,10,2], ret:[2,4,6,8] },
+				{ params:[0,10,3], ret:[1,4,7] },
+				{ params:[10,0,1], ret:[1,2,3,4,5,6,7,8,9] },
+				{ params:[10,0,2], ret:[1,3,5,7,9] },
+				{ params:[10,1,2], ret:[2,4,6,8] },
+				{ params:[10,0,3], ret:[1,4,7] },
+				{ params:[6], ret:[1,2,3,4,5] },
+				{ params:[3,6], ret:[4,5] },
+				{ params:[6,3], ret:[4,5] },
+				{ params:[], ret:[] }
+		];
+
+		$.each(inputs, (i, input) => {
+				const ret = rangeExclusive(...input.params),
+						message = `expected: [${input.ret.join(',')}], got: [${ret.join(',')}]`;
+				this.assert(this.arraysEqual(ret, input.ret), message);
+		});
+	}
+	detectFormat() {
+		log.out('\nExecuting Tester.detectFormat()');
+
+		$.each(TEST_DATA.parseableTexts, (format, texts) => {
+			$.each(texts, (j, text) => {
+				const ret = detectFormat(text),
+						message = `expected (${text}) to be detected as "${format}", but got "${ret}".`;
+				this.assert(ret === format, message);
+			});
+		});
+	}
 }
 
+
+
+
+
+
+
+
+
+// DATA
 const TEST_DATA = {
-  parseableTexts: {
-    Unknown: [
-      '',
-      '\n',
-      ' ',
-      '\t',
-      ' \t\n',
-      '   '
-    ],
-    'plain text': [
-      'this is a test',
-      'this is a test.',
-      'this is a test...',
-      'this is a test?',
-      '\tthis is a test'
-    ],
-    Brackets: [
-      `[root [nsubj I] have [obj [amod [advmod too] many] commitments] [advmod right now] [punct .]]`
-    ],
-    SD: [
+	parseableTexts: {
+		Unknown: [
+			'',
+			'\n',
+			' ',
+			'\t',
+			' \t\n',
+			'   '
+		],
+		'plain text': [
+			'this is a test',
+			'this is a test.',
+			'this is a test...',
+			'this is a test?',
+			'\tthis is a test'
+		],
+		Brackets: [
+			`[root [nsubj I] have [obj [amod [advmod too] many] commitments] [advmod right now] [punct .]]`
+		],
+		SD: [
 
 `ROOT And Robert the fourth place .
 root(ROOT, Robert)
@@ -210,8 +219,8 @@ det(place, the)`,
 `ROOT I love French fries .
 root(ROOT, love)`
 
-    ],
-    'CoNLL-U': [
+		],
+		'CoNLL-U': [
 
 `# sent_id = _
 # text = this is a test
@@ -260,52 +269,52 @@ root(ROOT, love)`
 30	ETT	ETT	PROPN	PROPN	_	24	appos	_	SpaceAfter=No
 31	.	.	PUNCT	PUNCT	PunctType=Peri	13	punct	_	_`
 
-    ],
-    CG3: [
+		],
+		CG3: [
 
 `"<Өскеменнің>"
-  "Өскемен" np top gen @nmod:poss #1->3
+	"Өскемен" np top gen @nmod:poss #1->3
 "<ар>"
-  "ар" adj @amod #2->3
+	"ар" adj @amod #2->3
 "<жағында>"
-  "жақ" n px3sp loc @conj #3->7
+	"жақ" n px3sp loc @conj #3->7
 "<,>"
-  "," cm @punct #4->7
+	"," cm @punct #4->7
 "<Бұқтырманың>"
-  "Бұқтырма" np top gen @nmod:poss #5->7
+	"Бұқтырма" np top gen @nmod:poss #5->7
 "<оң>"
-  "оң" adj @amod #6->7
+	"оң" adj @amod #6->7
 "<жағында>"
-  "жақ" n px3sp loc @nmod #7->11
+	"жақ" n px3sp loc @nmod #7->11
 "<әлемге>"
-  "әлем" n dat @nmod #8->9
+	"әлем" n dat @nmod #8->9
 "<аян>"
-  "аян" adj @acl #9->10
+	"аян" adj @acl #9->10
 "<Алтай>"
-  "Алтай" np top nom @nsubj #10->11
+	"Алтай" np top nom @nsubj #10->11
 "<бар>"
-  "бар" adj @root #11->0
-    "е" cop aor p3 sg @cop #12->11
+	"бар" adj @root #11->0
+		"е" cop aor p3 sg @cop #12->11
 "<.>"
-  "." sent @punct #13->11`,
+	"." sent @punct #13->11`,
 
 `"<Аттан>"
-  "аттан" v iv imp p2 sg @root #1->0
+	"аттан" v iv imp p2 sg @root #1->0
 "<!>"
-  "!" sent @punct #2->1`,
+	"!" sent @punct #2->1`,
 
 `"<Манағы>"
-  "манағы" det dem @det #1->3
+	"манағы" det dem @det #1->3
 "<ала>"
-  "ала" adj @amod #2->3
+	"ала" adj @amod #2->3
 "<атты>"
-  "атты" adj subst nom @nsubj #3->4
+	"атты" adj subst nom @nsubj #3->4
 "<кім>"
-  "кім" prn itg nom @root #4->0
-    "е" cop aor p3 sg @cop #5->4
+	"кім" prn itg nom @root #4->0
+		"е" cop aor p3 sg @cop #5->4
 "<?>"
-  "?" sent @punct #6->4`,
+	"?" sent @punct #6->4`,
 
-    ]
-  }
+		]
+	}
 };
