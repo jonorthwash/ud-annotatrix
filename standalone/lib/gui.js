@@ -313,7 +313,7 @@ function keyDownClassifier(key) {
             CURRENT_ZOOM = 1.0;
             cy.zoom(CURRENT_ZOOM);
             cy.center();
-        } else if(key.which == P ) {
+        } else if(key.which == P && !posInp.length && !wfInp.length && !deprelInp.length) {
             setPunct();
         }
     }
