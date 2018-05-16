@@ -11,7 +11,7 @@ const TEST_DATA = {
 			3: '\t',
 			4: ' \t\n',
 			5: '    ',
-cg3ish_ambiguous: `# text = He boued e tebr Mona er gegin.
+ambiguous_cg3: `# text = He boued e tebr Mona er gegin.
 # text[eng] = Mona eats her food here in the kitchen.
 # labels = press_1986 ch_syntax p_197 to_check
 "<He>"
@@ -33,7 +33,7 @@ cg3ish_ambiguous: `# text = He boued e tebr Mona er gegin.
 "<.>"
 	"." sent @punct #9->4`,
 
-cg3ish_ambiguous_with_semicolumn: `"<Dlaczego>"
+ambiguous_cg3_with_semicolumn: `"<Dlaczego>"
 	"dlaczego" adv itg
 "<nie>"
 	"nie" adv
@@ -55,7 +55,11 @@ cg3ish_ambiguous_with_semicolumn: `"<Dlaczego>"
 			1: 'this is a test.',
 			2: 'this is a test...',
 			3: 'this is a test?',
-			4: '\tthis is a test'
+			4: '\tthis is a test',
+			5: 'This is my first sentence.  But I also have this sentence.',
+			6: 'I have this sentence.  Now I\'m writing a second sentence.  Should I include a third',
+			7: 'Yes!? No??',
+			8: 'More sentences = more data; ipso facto, yes.'
 		},
 		Brackets: {
 			0: `[root [nsubj I] have [obj [amod [advmod too] many] commitments] [advmod right now] [punct .]]`
@@ -71,7 +75,25 @@ amod(place, fourth)
 det(place, the)`,
 
 1: `ROOT I love French fries .
-root(ROOT, love)`
+root(ROOT, love)`,
+
+// https://github.com/UniversalDependencies/docs/blob/pages-source/_u-dep/ccomp.md
+ccomp_1: `He says that you like to swim
+ccomp(says, like)
+mark(like, that)`,
+ccomp_2: `He says you like to swim
+ccomp(says, like)`,
+ccomp_3: `The boss said to start digging
+ccomp(said, start)
+mark(start, to)`,
+ccomp_4: `We started digging
+xcomp(started, digging)`,
+ccomp_5: `The important thing is to keep calm.
+ccomp(is, keep)
+nsubj(is, thing)`,
+ccomp_6: `The problem is that this has never been tried .
+ccomp(is, tried)
+nsubj(is, problem)`
 
 		},
 		'CoNLL-U': {
@@ -88,7 +110,8 @@ root(ROOT, love)`
 3	a	_	_	_	_	_	_	_	_
 4	test	_	_	_	_	_	_	_	_`,
 
-2: `# sent_id = test-s1
+cat_ancora: `# url = https://raw.githubusercontent.com/UniversalDependencies/UD_Catalan-AnCora/dev/ca_ancora-ud-test.conllu
+# sent_id = test-s1
 # text = El darrer número de l'Observatori del Mercat de Treball d'Osona inclou un informe especial sobre la contractació a través de les empreses de treball temporal, les ETT.
 # orig_file_sentence 001#1
 1	El	el	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	3	det	_	_
@@ -198,9 +221,10 @@ from_cg3_with_spans: `# text = He boued e tebr Mona er gegin.
 `
 
 		},
-		CG3: {
+		CG3: {/* detectFormat() is having trouble with CG3 :(
 
-0: `"<Өскеменнің>"
+kdt_tagged_1: `# https://github.com/apertium/apertium-kaz/blob/master/texts/kdt.tagged.txt
+"<Өскеменнің>"
 	"Өскемен" np top gen @nmod:poss #1->3
 "<ар>"
 	"ар" adj @amod #2->3
@@ -226,12 +250,14 @@ from_cg3_with_spans: `# text = He boued e tebr Mona er gegin.
 "<.>"
 	"." sent @punct #13->11`,
 
-1: `"<Аттан>"
+kdt_tagged_2: `# https://github.com/apertium/apertium-kaz/blob/master/texts/kdt.tagged.txt
+"<Аттан>"
 	"аттан" v iv imp p2 sg @root #1->0
 "<!>"
 	"!" sent @punct #2->1`,
 
-2: `"<Манағы>"
+kdt_tagged_3: `# https://github.com/apertium/apertium-kaz/blob/master/texts/kdt.tagged.txt
+"<Манағы>"
 	"манағы" det dem @det #1->3
 "<ала>"
 	"ала" adj @amod #2->3
@@ -243,7 +269,7 @@ from_cg3_with_spans: `# text = He boued e tebr Mona er gegin.
 "<?>"
 	"?" sent @punct #6->4`,
 
-3: `"<Патшамен>"
+0: `"<Патшамен>"
         "патша" n ins @nmod #1->3
 "<соғыс>"
         "соғыс" n nom @obj #2->3
@@ -270,7 +296,7 @@ from_cg3_with_spans: `# text = He boued e tebr Mona er gegin.
 "<.>"
         "." sent @punct #13->12`,
 
-4: `# text = He boued e tebr Mona er gegin.
+1: `# text = He boued e tebr Mona er gegin.
 # text[eng] = Mona eats her food here in the kitchen.
 # labels = press_1986 ch_syntax p_197 to_check
 "<He>"
@@ -291,7 +317,7 @@ from_cg3_with_spans: `# text = He boued e tebr Mona er gegin.
 "<.>"
 	"." sent @punct #9->4`,
 
-5: `# text = He boued e tebr Mona er gegin.
+2: `# text = He boued e tebr Mona er gegin.
 # text[eng] = Mona eats her food here in the kitchen.
 # labels = press_1986 ch_syntax p_197 to_check
 "<He>"
@@ -411,9 +437,122 @@ with_spans: `# text = He boued e tebr Mona er gegin.
 "<gegin>"
 	"kegin" n f sg @obl #8->4
 "<.>"
-	"." sent @punct #9->4`
+	"." sent @punct #9->4`,
 
-		}
+apertium_kaz_1: `# https://bpaste.net/show/be7c03e6213e
+"<Чау>"
+	"*Чау"
+"<->"
+	"х" guio
+	"-" guio
+"<чау>"
+	"*чау"
+"<шығу>"
+	"шығу" n attr
+	"шық" v tv ger nom
+	"шық" v iv ger nom
+	"шығу" n nom
+;	"шығу" n nom
+;		"е" cop aor p3 pl REMOVE:294
+;	"шығу" n nom
+;		"е" cop aor p3 sg REMOVE:294
+;	"шық" vaux ger nom REMOVE:766
+"<тегінен>"
+	"тек" n px3sp abl
+;	"тек" n px3sp abl
+;		"е" cop aor p3 pl REMOVE:294
+;	"тек" n px3sp abl
+;		"е" cop aor p3 sg REMOVE:294
+"<шпицтер>"
+	"*шпицтер"
+"<тобына>"
+	"топ" n px3sp dat
+"<жатады>"
+	"жат" v iv aor p3 sg
+;	"жат" vaux aor p3 pl REMOVE:766
+;	"жат" vaux aor p3 sg REMOVE:766
+;	"жат" v iv aor p3 pl REMOVE:846
+"<.>"
+	"." sent`,
+
+apertium_kaz_2: `# https://bpaste.net/show/be7c03e6213e
+"<Қанында>"
+	"қан" n px3sp loc
+;	"қан" n px3sp loc
+;		"е" cop aor p3 pl REMOVE:294
+;	"қан" n px3sp loc
+;		"е" cop aor p3 sg REMOVE:294
+"<тибет>"
+	"*тибет"
+"<итінің>"
+	"ит" n px3sp gen
+"<(>"
+	"(" lpar
+"<мастиф>"
+	"*мастиф"
+"<)>"
+	")" rpar
+"<қаны>"
+	"қан" n px3sp nom
+;	"қан" n px3sp nom
+;		"е" cop aor p3 pl REMOVE:294
+;	"қан" n px3sp nom
+;		"е" cop aor p3 sg REMOVE:294
+"<бар>"
+	"бар" adj SELECT:1118
+	"бар" adj subst nom SELECT:1118
+		"е" cop aor p3 sg
+	"бар" adj subst nom SELECT:1118
+	"бар" adj SELECT:1118
+		"е" cop aor p3 sg
+;	"бар" n attr REMOVE:567
+;	"бар" adj
+;		"е" cop aor p3 pl REMOVE:853
+;	"бар" n nom
+;		"е" cop aor p3 pl REMOVE:853
+;	"бар" adj subst nom
+;		"е" cop aor p3 pl REMOVE:853
+;	"бар" n nom SELECT:1118
+;	"бар" det qnt SELECT:1118
+;	"бар" v iv imp p2 sg SELECT:1118
+;	"бар" n nom SELECT:1118
+;		"е" cop aor p3 sg
+"<деген>"
+	"де" v tv gpr_past SELECT:813
+	"де" v tv gpr_past subst nom SELECT:813
+;	"де" v tv ger_past nom SELECT:813
+;	"де" v tv past p3 pl SELECT:813
+;	"де" v tv past p3 sg SELECT:813
+"<тұжырым>"
+	"тұжырым" n nom
+	"тұжырым" n attr
+;	"тұжырым" n nom
+;		"е" cop aor p3 pl REMOVE:294
+;	"тұжырым" n nom
+;		"е" cop aor p3 sg REMOVE:294
+"<бар>"
+	"бар" adj
+	"бар" n nom
+	"бар" adj
+		"е" cop aor p3 sg
+	"бар" adj subst nom
+		"е" cop aor p3 sg
+	"бар" adj subst nom
+	"бар" v iv imp p2 sg
+	"бар" n nom
+		"е" cop aor p3 sg
+;	"бар" det qnt REMOVE:551
+;	"бар" n attr REMOVE:567
+;	"бар" adj subst nom
+;		"е" cop aor p3 pl REMOVE:853
+;	"бар" adj
+;		"е" cop aor p3 pl REMOVE:853
+;	"бар" n nom
+;		"е" cop aor p3 pl REMOVE:853
+"<.>"
+	"." sent`
+
+		*/}
 	}
 };
 

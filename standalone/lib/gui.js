@@ -71,18 +71,19 @@ function bindHandlers() {
     $(document).keydown(keyDownClassifier);
 
     $('#uploadFileButton').click(handleUploadButtonPressed);
-    $('#prevSenBtn').click(prevSentence);
-    $('#nextSenBtn').click(nextSentence);
+    $('#prevSenBtn').click(prevSenSent);
+    $('#nextSenBtn').click(nextSenSent);
     $('#remove').click(removeCurSent);
     $('#add').click(addSent);
     $('#exportBtn').click(exportCorpora);
     //$('#saveOnServerBtn').click(saveOnServer);
     $('#clearBtn').click(clearCorpus);
+		$('#helpBtn').click(showHelp);
     $('#viewConllu').click(viewAsConllu);
     $('#viewCG').click(viewAsCG);
     $('#tableViewBtn').click(toggleTableView);
     $('#codeVisibleBtn').click(toggleCodeWindow);
-    $('#currentsen').blur(goToSentence);
+    $('#currentsen').blur(goToSenSent);
 
     $('#exportPNGBtn').click(exportPNG);
     $('#exportSVGBtn').click(exportSVG);
@@ -998,11 +999,11 @@ function switchEnhanced() {
 $(document).ready(function(){
 		$('#currentsen').keyup((e) => {
 				if (e.keyCode === 13) {
-						goToSentence();
+						goToSenSent();
 				} else if (e.keyCode === KEYS.UP || e.keyCode === KEYS.K) {
-						prevSentence();
+						prevSenSent();
 				} else if (e.keyCode === KEYS.DOWN || e.keyCode === KEYS.J) {
-						nextSentence();
+						nextSenSent();
 				} else if (e.keyCode === KEYS.MINUS) {
 						removeCurSent();
 				} else if (e.keyCode === KEYS.EQUALS) {
@@ -1017,11 +1018,11 @@ $(document).ready(function(){
 				map[e.key] = e.type === 'keydown';
 				/* insert conditional here */
 				if (map['Shift'] && map['PageDown']) {
-						nextSentence();
+						nextSenSent();
 						map = [];
 						map['Shift'] = true; // leave Shift so that another event can be fired
 				} else if (map['Shift'] && map['PageUp']) {
-						prevSentence();
+						prevSenSent();
 						map = [];
 						map['Shift'] = true; // leave Shift so that another event can be fired
 				} else if (map['Control'] && map['z']) {

@@ -7,7 +7,7 @@ get_func() {
 
 get_inner_func() {
   echo "$line" |\
-  perl -lane 'if (! /(\/\/)/) { print "$_" }' |\
+  perl -lane 'if (! /\/\//) { print "$_" }' |\
   perl -lane 'if (! /\W*\*/) { print "$_" }' |\
   perl -lane 'if (/\W([^ |^\(]*)\(.*\)/) { print "$1" }'
 }

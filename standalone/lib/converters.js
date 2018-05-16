@@ -136,7 +136,7 @@ function cleanConllu(content) {
 
     // If we don't find any tabs, then we want to replace multiple spaces with tabs
     const spaceToTab = (content.search('\t') < 0);
-    return content.trim().split('\n').map((line) => {
+    const newContent = content.trim().split('\n').map((line) => {
         line = line.trim();
 
         // If there are no spaces and the line isn't a comment,
@@ -146,4 +146,12 @@ function cleanConllu(content) {
 
         return line
     }).join('\n');
+
+    // If there are >1 CoNLL-U format sentences is in the input, treat them as such
+    // conlluMultiInput(newContent); // TODO: move this one also inside of this func, and make a separate func for calling them all at the same time
+
+    if (newContent !== content)
+        $('#indata').val(newContent);
+
+    return newContent;
 }
