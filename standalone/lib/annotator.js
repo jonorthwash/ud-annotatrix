@@ -171,10 +171,10 @@ function loadFromFile(e) {
 
 
 function formatUploadSize(fileSize) {
-    if(fileSize < 1024) {
+    if (fileSize < 1024) {
         return fileSize + ' B';
     }
-    else if(fileSize >= 1024 && fileSize < 1048576) {
+    else if (fileSize >= 1024 && fileSize < 1048576) {
         return (fileSize/1024).toFixed(1) + ' kB';
     }
     else {
@@ -289,12 +289,12 @@ function showDataIndiv() {
     /* This function is called each time the current sentence is changed
     to update the CoNLL-U in the textarea and the indices. */
 
-    if(RESULTS[CURRENT_SENTENCE] != undefined) {
+    if (RESULTS[CURRENT_SENTENCE] != undefined) {
       document.getElementById('indata').value = (RESULTS[CURRENT_SENTENCE]);
     } else {
       document.getElementById('indata').value = '';
     }
-    if(AVAILABLE_SENTENCES != 0) {
+    if (AVAILABLE_SENTENCES != 0) {
         document.getElementById('currentsen').value = (CURRENT_SENTENCE+1);
     } else {
         document.getElementById('currentsen').value = 0;
@@ -386,7 +386,7 @@ function nextSenSent() {
 
     RESULTS[CURRENT_SENTENCE] = document.getElementById('indata').value;
     CURRENT_SENTENCE++;
-    if(CURRENT_SENTENCE >= AVAILABLE_SENTENCES) {
+    if (CURRENT_SENTENCE >= AVAILABLE_SENTENCES) {
       CURRENT_SENTENCE = AVAILABLE_SENTENCES;
     }
     if (CURRENT_SENTENCE >= (AVAILABLE_SENTENCES - 1)) {
@@ -487,7 +487,7 @@ function drawTree() {
     // If there are >1 CoNLL-U format sentences is in the input, treat them as such
     // conlluMultiInput(newContent); // TODO: move this one also inside of this func, and make a separate func for calling them all at the same time
 
-    if(newContent != content) {
+    if (newContent != content) {
         content = newContent;
         $('#indata').val(content);
     }
@@ -535,7 +535,7 @@ function detectFormat(content) {
 
     content = content.trim();
 
-    if(content == '') {
+    if (content == '') {
         // console.log('[0] detectFormat() WARNING EMPTY CONTENT');
         return  'Unknown';
     }
@@ -553,22 +553,22 @@ function detectFormat(content) {
             firstWord = content.split('\n')[following];
             // pull out labels and put them in HTML, TODO: this probably
             // wants to go somewhere else.
-            if(firstWord.search('# labels') >= 0) {
+            if (firstWord.search('# labels') >= 0) {
                 var labels = firstWord.split('=')[1].split(' ');
                 for(var i = 0; i < labels.length; i++) {
                     var seen = false;
                     for(var j = 0; j < LABELS.length; j++) {
-                        if(labels[i] == LABELS[j]) {
+                        if (labels[i] == LABELS[j]) {
                             seen = true;
                         }
                     }
-                    if(!seen) {
+                    if (!seen) {
                         LABELS.push(labels[i]);
                     }
                 }
                 var htmlLabels = $('#treeLabels');
                 for(var k = 0; k < LABELS.length; k++) {
-                    if(LABELS[k].trim() == '') {
+                    if (LABELS[k].trim() == '') {
                         continue;
                     }
                     htmlLabels.append($('<span></span>')

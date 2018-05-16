@@ -395,7 +395,7 @@ function createToken(graph, token, superTokenId) {
     graph.push({ data:nodeWF, classes:`wf${token.head === 0 ? ' root' : ''}`});
     graph = makePOS(token, nodeId, graph);
 
-    if(!IS_ENHANCED)
+    if (!IS_ENHANCED)
         graph = makeDependencies(token, nodeId, graph);
 
     return graph;
@@ -453,13 +453,13 @@ function makeDependencies(token, nodeId, graph) {
   	// Append ⊲ or ⊳ to indicate direction of the arc (helpful if
   	// there are many arcs.
   	let deprelLabel;
-  	if(parseInt(head) < parseInt(nodeId) && IS_LTR) {
+  	if (parseInt(head) < parseInt(nodeId) && IS_LTR) {
       	deprelLabel = `${deprel}⊳`;
-  	} else if(parseInt(head) > parseInt(nodeId) && IS_LTR) {
+  	} else if (parseInt(head) > parseInt(nodeId) && IS_LTR) {
     		deprelLabel = `⊲${deprel}`;
-  	} else if(parseInt(head) < parseInt(nodeId) && !IS_LTR) {
+  	} else if (parseInt(head) < parseInt(nodeId) && !IS_LTR) {
     		deprelLabel = `⊲${deprel}`;
-  	} else if(parseInt(head) > parseInt(nodeId) && !IS_LTR) {
+  	} else if (parseInt(head) > parseInt(nodeId) && !IS_LTR) {
     		deprelLabel = `${deprel}⊳`;
   	}
 

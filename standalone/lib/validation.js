@@ -114,12 +114,12 @@ function is_projective(tree) {
     var nodes = [];
     var heads = {};
     for(let node in tree) {
-        if(!tree[node] || tree[node] == undefined) {
+        if (!tree[node] || tree[node] == undefined) {
             continue;
         }
         var head = tree[node].head;
         var id = tree[node].id;
-        if(!head || !id) {
+        if (!head || !id) {
             continue;
         }
         head = parseInt(head);
@@ -138,29 +138,29 @@ function is_projective(tree) {
         for(let j in nodes) {
             var n_j =  nodes[j];
             //console.log('i:',nodes[i],'j:',nodes[j],'h(i):',heads[n_i],'h(j):',heads[n_j]);
-            if((nodes[j] > nodes[i]) && (nodes[j] < heads[n_i])) {
-                if((heads[n_j] > heads[n_i]) || (heads[n_j] < nodes[i])) {
+            if ((nodes[j] > nodes[i]) && (nodes[j] < heads[n_i])) {
+                if ((heads[n_j] > heads[n_i]) || (heads[n_j] < nodes[i])) {
                     res = false;
                     console.log('[0] is_projective()',res);
                     return res;
                 }
             }
-            if((nodes[j] > heads[n_i]) && (nodes[j] < nodes[i])) {
-                if((heads[n_j] > nodes[i]) || (heads[n_j] < heads[n_i])) {
+            if ((nodes[j] > heads[n_i]) && (nodes[j] < nodes[i])) {
+                if ((heads[n_j] > nodes[i]) || (heads[n_j] < heads[n_i])) {
                     res = false;
                     console.log('[1] is_projective()',res);
                     return res;
                 }
             }
-            if(heads[n_j] > nodes[i] && heads[n_j] < heads[n_i]) {
-                if(nodes[j] < nodes[i] || nodes[j] > heads[n_i]) {
+            if (heads[n_j] > nodes[i] && heads[n_j] < heads[n_i]) {
+                if (nodes[j] < nodes[i] || nodes[j] > heads[n_i]) {
                     res = false;
                     console.log('[2] is_projective()',res);
                     return res;
                 }
             }
-            if(heads[n_j] > heads[n_i] && heads[n_j] < nodes[i]) {
-                if(nodes[j] > nodes[i] || nodes[j] < heads[n_i]) {
+            if (heads[n_j] > heads[n_i] && heads[n_j] < nodes[i]) {
+                if (nodes[j] > nodes[i] || nodes[j] < heads[n_i]) {
                     res = false;
                     console.log('[3] is_projective()',res);
                     return res;
