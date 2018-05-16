@@ -25,7 +25,7 @@ match_func() {
 
 build() {
 
-  echo "sh: building func names" >&2
+  echo "graph.sh: building func names" >&2
 
   for file in $files; do
     echo " - reading $file" >&2
@@ -41,7 +41,7 @@ build() {
 
 connect() {
 
-  echo "sh: connecting funcs" >&2
+  echo "graph.sh: connecting funcs" >&2
 
   for file in $files; do
     echo " - reading $file" >&2

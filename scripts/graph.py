@@ -5,7 +5,7 @@ import os
 import sys
 
 def plot_graph(G):
-    sys.stderr.write('python: plotting graph')
+    sys.stderr.write('graph.py: plotting graph\n')
     sys.stderr.flush()
 
     options = {
@@ -18,7 +18,7 @@ def plot_graph(G):
     plt.show()
 
 def build_graph():
-    sys.stderr.write('python: building NetworkX directed graph')
+    sys.stderr.write('graph.py: building NetworkX directed graph\n')
     sys.stderr.flush()
 
     graph_text_file = '/tmp/graph.txt'
