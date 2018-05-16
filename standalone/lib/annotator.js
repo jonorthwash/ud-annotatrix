@@ -464,6 +464,8 @@ function drawTree() {
         case ('plain text'):
         case ('Unknown'):
             return; // if here, the format wasn't yet converted to a format with a graph repr
+        case ('CoNLL-U'):
+            break; 
         default:
             log.warn(`drawTree(): Unrecognized format: ${format}`);
             break;

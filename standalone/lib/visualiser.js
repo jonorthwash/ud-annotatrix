@@ -484,6 +484,8 @@ function makeDependencies(token, nodeId, graph) {
                 ctrl: new Array(4).fill(edgeHeight) // ARC HEIGHT STUFFS
             };
 
+        log.debug(`makeDependencies(): edgeDep: ${JSON.stringify(edgeDep)}`);
+
         /*
         if (token.upostag === 'PUNCT' && !is_projective(TREE, [parseInt(nodeId)])) {
             isValid = false;
