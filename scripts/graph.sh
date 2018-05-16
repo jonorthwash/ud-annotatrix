@@ -1,5 +1,10 @@
 #!/bin/sh
 
+usage() {
+  echo "usage: graph.sh [build|connect|show] [\"FILES\" (default=\"standalone/lib/*.js\")]" >&2
+  exit 1
+}
+
 get_func() {
   echo "$line" |\
   perl -lane 'if (/function (.*)\(/g) { print "$1" }'
@@ -7,9 +12,7 @@ get_func() {
 
 get_inner_func() {
   echo "$line" |\
-  perl -lane 'if (! /\/\//) { print "$_" }' |\
-  perl -lane 'if (! /\W*\*/) { print "$_" }' |\
-  perl -lane 'if (/\W([^ |^\(]*)\(.*\)/) { print "$1" }'
+  perl -lane 'if (! /\/\// && ! /^\W*\*[^\/]/ && /\W([^ |^\(]*)\(.*\)/) { print "$1" }'
 }
 
 match_func() {
@@ -22,7 +25,7 @@ match_func() {
 
 build() {
 
-  echo "building func names"
+  echo "sh: building func names" >&2
 
   for file in $files; do
     echo " - reading $file" >&2
@@ -38,7 +41,7 @@ build() {
 
 connect() {
 
-  echo "connecting funcs"
+  echo "sh: connecting funcs" >&2
 
   for file in $files; do
     echo " - reading $file" >&2
@@ -55,13 +58,24 @@ connect() {
 
 }
 
-files=standalone/lib/*.js
+if [ -z "$2" ]; then
+  files=standalone/lib/*.js
+else
+  files=$2
+fi
+
 funcs=/tmp/funcs.txt
 graph=/tmp/graph.txt
 
 if [ "$1" = build ]; then
   build
   connect
+  python scripts/graph.py
+elif [ "$1" = connect ]; then
+  connect
+  python scripts/graph.py
+elif [ "$1" = show ]; then
+  python scripts/graph.py
+else
+  usage
 fi
-
-python scripts/graph.py

@@ -2,20 +2,25 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 import os
-import re
+import sys
 
 def plot_graph(G):
-    print('Plotting graph')
+    sys.stderr.write('python: plotting graph')
+    sys.stderr.flush()
+
     options = {
-        'node_color': 'black',
+        'node_color': 'red',
         'node_size': 100,
-        'width': 3
+        'width': 1,
+        'with_labels': True,
     }
     nx.draw(G, **options)
     plt.show()
 
 def build_graph():
-    print('Building NetworkX directed graph')
+    sys.stderr.write('python: building NetworkX directed graph')
+    sys.stderr.flush()
+
     graph_text_file = '/tmp/graph.txt'
 
     nodes = []
@@ -39,5 +44,4 @@ def build_graph():
 
 if __name__ == '__main__':
     G = build_graph()
-    print(G.nodes)
     plot_graph(G)
