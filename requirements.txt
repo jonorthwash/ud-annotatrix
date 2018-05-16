@@ -1,6 +1,16 @@
 click==6.7
+cycler==0.10.0
+decorator==4.3.0
 Flask==1.0.1
 itsdangerous==0.24
 Jinja2==2.10
+kiwisolver==1.0.1
 MarkupSafe==1.0
+matplotlib==2.2.2
+networkx==2.1
+numpy==1.14.3
+pyparsing==2.2.0
+python-dateutil==2.7.3
+pytz==2018.4
+six==1.11.0
 Werkzeug==0.14.1
