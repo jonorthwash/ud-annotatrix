@@ -23,7 +23,7 @@
  *   is console.error
  */
 class Logger extends Object {
-  constructor(levelName, writer=console.log) {
+  constructor(levelName, writer=console.trace) {
 
     super();
 
