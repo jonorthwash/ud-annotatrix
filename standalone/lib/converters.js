@@ -4,10 +4,10 @@
  * @param {String} text Input text
  * @return {String}     Sentence in plain text format
  */
-function convert2PlainText(string) {
-    log.debug(`called convert2PlainText(${string})`);
+function convert2PlainText(text) {
+    log.debug(`called convert2PlainText(${text})`);
 
-    const format = detectFormat(string);
+    const format = detectFormat(text);
 
     log.debug(`convert2PlainText(): got format: ${format}`);
     switch (format) {
@@ -16,15 +16,15 @@ function convert2PlainText(string) {
             return null;
         case ('plain text'):
             log.warn(`convert2PlainText(): received plain text`);
-            return string;
+            return text;
         case ('Brackets'):
-            return conllu2PlainText(brackets2Conllu(string));
+            return conllu2PlainText(brackets2Conllu(text));
         case ('SD'):
-            return conllu2PlainText(sd2Conllu2(string));
+            return conllu2PlainText(sd2Conllu2(text));
         case ('CoNLL-U'):
-            return conllu2PlainText(string);
+            return conllu2PlainText(text);
         case ('CG3'):
-            return conllu2PlainText(cg32Conllu(string));
+            return conllu2PlainText(cg32Conllu(text));
     }
 
     log.warn(`convert2PlainText(): unrecognized format: ${format}`);
@@ -37,10 +37,10 @@ function convert2PlainText(string) {
  * @param {String} text Input text
  * @return {String}     Sentence in CoNLL-U format
  */
-function convert2Conllu(string) {
-    log.debug(`called convert2conllu(${string})`);
+function convert2Conllu(text) {
+    log.debug(`called convert2conllu(${text})`);
 
-    const format = detectFormat(string);
+    const format = detectFormat(text);
 
     log.debug(`convert2conllu(): got format: ${format}`);
     switch (format) {
@@ -48,16 +48,16 @@ function convert2Conllu(string) {
             log.warn(`convert2conllu(): failed to convert Unknown to plain text`);
             return null;
         case ('plain text'):
-            return plainText2Conllu(string);
+            return plainText2Conllu(text);
         case ('Brackets'):
-            return brackets2Conllu(string);
+            return brackets2Conllu(text);
         case ('SD'):
-            return sd2Conllu2(string);
+            return sd2Conllu2(text);
         case ('CoNLL-U'):
             log.warn(`convert2conllu(): received CoNLL-U`);
-            return string;
+            return text;
         case ('CG3'):
-            return cg32Conllu(string);
+            return cg32Conllu(text);
     }
 
     log.warn(`convert2conllu(): unrecognized format: ${format}`);
@@ -70,10 +70,10 @@ function convert2Conllu(string) {
  * @param {String} text Input text
  * @return {String}     Sentence in CG3 format
  */
-function convert2cg3(string) {
-    log.debug(`called convert2cg3(${string})`);
+function convert2cg3(text) {
+    log.debug(`called convert2cg3(${text})`);
 
-    const format = detectFormat(string);
+    const format = detectFormat(text);
 
     log.debug(`convert2cg3(): got format: ${format}`);
     switch (format) {
@@ -81,16 +81,16 @@ function convert2cg3(string) {
             log.warn(`convert2cg3(): failed to convert Unknown to plain text`);
             return null;
         case ('plain text'):
-            log.warn(`convert2cg3(): received plain text`);
-            return string;
+            return conllu2cg3(plainText2Conllu(text));
         case ('Brackets'):
-            return conllu2PlainText(brackets2Conllu(string));
+            return conllu2cg3(brackets2Conllu(text));
         case ('SD'):
-            return conllu2PlainText(sd2Conllu2(string));
+            return conllu2cg3(sd2Conllu2(text));
         case ('CoNLL-U'):
-            return conllu2PlainText(string);
+            return conllu2cg3(text);
         case ('CG3'):
-            return conllu2PlainText(cg32Conllu(string));
+            log.warn(`convert2cg3(): received CG3`);
+            return text;
     }
 
     log.warn(`convert2cg3(): unrecognized format: ${format}`);
@@ -207,8 +207,7 @@ function conllu2PlainText(text) {
     log.debug(`called conllu2PlainText(${text})`);
 
     let sent = new conllu.Sentence();
-    sent.serial = text;
-    console.log(sent.tokens);
+    sent.serial = cleanConllu(text); // spaces => tabs
     console.log(sent.serial);
 
     return sent.tokens.map((token) => {
@@ -256,4 +255,8 @@ function cleanConllu(content) {
         $('#indata').val(newContent);
 
     return newContent;
+}
+
+function conllu2cg3(text) {
+    throw new NotImplementedError();
 }

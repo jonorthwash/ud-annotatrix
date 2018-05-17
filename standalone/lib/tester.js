@@ -162,14 +162,14 @@ with_tabs: `#sent_id = chapID01:paragID1:sentID1
 4	карвот	карво	N	N	Sem/Ani|N|Pl|Nom|Indef	2	nsubj	_	карвот
 5	.	.	CLB	CLB	CLB	2	punct	_	.`,
 
-/*without_tabs: `#sent_id = chapID01:paragID1:sentID1
+without_tabs: `#sent_id = chapID01:paragID1:sentID1
 # text = Кечаень сыргозтизь налкставтыця карвот .
 # text[eng] = Kechai was awoken by annoying flies.
 1 Кечаень Кечай N N Sem/Ant_Mal|Prop|SP|Gen|Indef 2 obj _ Кечаень
 2 сыргозтизь сыргозтемс V V TV|Ind|Prt1|ScPl3|OcSg3 0 root _ сыргозтизь
 3 налкставтыця налкставтомс PRC Prc V|TV|PrcPrsL|Sg|Nom|Indef 4 amod налкставтыця
 4 карвот карво N N Sem/Ani|N|Pl|Nom|Indef 2 nsubj _ карвот
-5 . . CLB CLB CLB 2 punct _ .`,*/
+5 . . CLB CLB CLB 2 punct _ .`,
 
 from_cg3_with_semicolumn: `1	Siedzieliśmy	siedzieć	vblex	_	impf|past|p1|m|pl	_	_	_	_
 2	w	w	pr	_	_	_	_	_	_
