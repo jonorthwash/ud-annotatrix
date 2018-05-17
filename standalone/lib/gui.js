@@ -803,7 +803,7 @@ function buildSent() {
 				currentFormat = detectFormat(currentSent);
 
     if (currentFormat === 'CG3') {
-        currentSent = CG2conllu(currentSent);
+        currentSent = cg32Conllu(currentSent);
         if (currentSent === undefined) {
             drawTree();
             return;
@@ -860,16 +860,16 @@ function viewAsPlain() { // TODO: DRY?
 
     if (currentFormat === 'CoNLL-U') {
 
-        text = conllu2plainSent(text);
+        text = conllu2PlainText(text);
 
     } else if (currentFormat === 'CG3') {
 
-        text = CG2conllu(text);
+        text = cg32Conllu(text);
         if (text === undefined) {
             cantConvertCG(); // show the error message
             return;
         } else {
-            text = conllu2plainSent(text);
+            text = conllu2PlainText(text);
         }
 
     }
@@ -886,7 +886,7 @@ function viewAsConllu() {
 
     if (currentFormat === 'CG3') {
 
-        curSent = CG2conllu(curSent);
+        curSent = cg32Conllu(curSent);
         if (curSent === undefined) {
             cantConvertCG();
             return;
@@ -904,8 +904,8 @@ function viewAsConllu() {
             localStorage.setItem('corpus', contents);
             loadDataInIndex();
         } else if (currentFormat === 'SD') {
-            // newContents = SD2Conllu(contents);
-            SD2Conllu(contents); // TODO: make it like for txt
+            // newContents = sd2Conllu(contents);
+            sd2Conllu(contents); // TODO: make it like for txt
         }
         localStorage.setItem('format', 'CoNLL-U');
 

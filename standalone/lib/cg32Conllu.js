@@ -1,7 +1,7 @@
 'use strict'
 
-function CG2conllu(CGtext) {
-    log.debug(`called CG2conllu(${CGtext})`);
+function cg32Conllu(CGtext) {
+    log.debug(`called cg32Conllu(${CGtext})`);
 
     /* Takes a string in CG, returns a string in conllu. */
 

@@ -66,7 +66,14 @@ ambiguous_cg3_with_semicolumn: `"<Dlaczego>"
 		},
 		SD: {
 
-0: `ROOT And Robert the fourth place .
+0: `And Robert the fourth place .
+cc(Robert, And)
+orphan(Robert, place)
+punct(Robert, .)
+amod(place, fourth)
+det(place, the)`,
+
+1: `ROOT And Robert the fourth place .
 root(ROOT, Robert)
 cc(Robert, And)
 orphan(Robert, place)
@@ -74,7 +81,7 @@ punct(Robert, .)
 amod(place, fourth)
 det(place, the)`,
 
-1: `ROOT I love French fries .
+2: `ROOT I love French fries .
 root(ROOT, love)`,
 
 // https://github.com/UniversalDependencies/docs/blob/pages-source/_u-dep/ccomp.md
@@ -155,14 +162,14 @@ with_tabs: `#sent_id = chapID01:paragID1:sentID1
 4	карвот	карво	N	N	Sem/Ani|N|Pl|Nom|Indef	2	nsubj	_	карвот
 5	.	.	CLB	CLB	CLB	2	punct	_	.`,
 
-without_tabs: `#sent_id = chapID01:paragID1:sentID1
+/*without_tabs: `#sent_id = chapID01:paragID1:sentID1
 # text = Кечаень сыргозтизь налкставтыця карвот .
 # text[eng] = Kechai was awoken by annoying flies.
 1 Кечаень Кечай N N Sem/Ant_Mal|Prop|SP|Gen|Indef 2 obj _ Кечаень
 2 сыргозтизь сыргозтемс V V TV|Ind|Prt1|ScPl3|OcSg3 0 root _ сыргозтизь
 3 налкставтыця налкставтомс PRC Prc V|TV|PrcPrsL|Sg|Nom|Indef 4 amod налкставтыця
 4 карвот карво N N Sem/Ani|N|Pl|Nom|Indef 2 nsubj _ карвот
-5 . . CLB CLB CLB 2 punct _ .`,
+5 . . CLB CLB CLB 2 punct _ .`,*/
 
 from_cg3_with_semicolumn: `1	Siedzieliśmy	siedzieć	vblex	_	impf|past|p1|m|pl	_	_	_	_
 2	w	w	pr	_	_	_	_	_	_
@@ -627,6 +634,9 @@ class Tester extends Object {
 		this.buttons();
 		this.rangeExclusive();
 		this.detectFormat();
+		this.converters();
+
+		log.out('\nTester.all(): all tests passed!\n');
 	}
 	tester() {
 		log.out('\nExecuting Tester.tester()');
@@ -753,6 +763,47 @@ class Tester extends Object {
 				const ret = detectFormat(text),
 						message = `expected (${format}:${identifier}) to be detected as "${format}", but got "${ret}".`;
 				this.assert(ret === format, message);
+			});
+		});
+	}
+	converters() {
+		log.out('\nExecuting Tester.converters()');
+
+		$.each(TEST_DATA.texts_by_format, (format, texts) => {
+			$.each(texts, (identifier, text) => {
+
+				// check plain text converter
+				log.out('\nTester.converters(): checking plain text converter');
+				const toPlainText = convert2PlainText(text);
+				if (format === 'Unknown') {
+					this.assert(toPlainText === null, `expected (${format}:${identifier}) to fail to convert.`);
+				} else {
+					const toPlainTextFormat = detectFormat(toPlainText);
+					this.assert(toPlainTextFormat === 'plain text', `expected (${format}:${identifier}) to be detected as "plain text", but got "${toPlainTextFormat}".`);
+				}
+
+
+				// check CoNLL-U converter
+				log.out('\nTester.converters(): checking CoNLL-U converter');
+				const toConllu = convert2Conllu(text);
+				if (format === 'Unknown') {
+					this.assert(toConllu === null, `expected (${format}:${identifier}) to fail to convert.`);
+				} else if (format !== 'Brackets') {
+					const toConlluFormat = detectFormat(toConllu);
+					this.assert(toConlluFormat === 'CoNLL-U', `expected (${format}:${identifier}) to be detected as "CoNLL-U", but got "${toConlluFormat}".`);
+				}
+
+
+				// check CG3 converter
+				log.out('\nTester.converters(): checking CG3 converter');
+				const toCG3 = convert2cg3(text);
+				if (format === 'Unknown') {
+					this.assert(toCG3 === null, `expected (${format}:${identifier}) to fail to convert.`);
+				} else {				
+					const toCG3Format = detectFormat(toCG3);
+					//this.assert(toCG3Format === 'CG3', `expected (${format}:${identifier}) to be detected as "CG3", but got "${toCG3Format}".`);
+				}
+
 			});
 		});
 	}

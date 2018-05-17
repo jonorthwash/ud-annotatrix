@@ -9,6 +9,37 @@ var FORMAT = '',
     RESULTS = [],
     LABELS = [];
 
+var _ = { // main object to hold our current stuff
+
+    // textarea-related
+    current: 0,
+    sentences: [null],
+    formats: [null],
+
+    // cy-related
+    graph: null,
+    graphOptions: {
+        container: null,
+        boxSelectionEnabled: false,
+        autounselectify: true,
+        autoungrabify: true,
+        zoomingEnabled: true,
+        userZoomingEnabled: false,
+        wheelSensitivity: 0.1,
+        style: null,
+        layout: null,
+        elements: []
+    },
+
+    // display-related
+    is_table_view: false,
+    is_textarea_visible: true,
+    is_vertical: false,
+    is_ltr: true,
+    is_enhanced: false
+
+};
+
 window.onload = () => {
 
     /* Loads all the js libraries and project modules, then calles onReady.
@@ -27,9 +58,9 @@ window.onload = () => {
         `${path}/ext/conllu/conllu.js`, // CoNLL-U parser from https://github.com/FrancessFractal/conllu
 
         // native project code
-        `${path}/CG2conllu.js`,
-        `${path}/SD2conllu.js`,
-        `${path}/Brackets2conllu.js`,
+        `${path}/cg32Conllu.js`,
+        `${path}/sd2Conllu.js`,
+        `${path}/brackets2Conllu.js`,
         `${path}/converters.js`,
         `${path}/server_support.js`,
         `${path}/gui.js`,
@@ -46,7 +77,6 @@ window.onload = () => {
     head.ready(onReady);
 }
 
-
 function onReady() {
     /*
     Called when all the naive code and libraries are loaded.
@@ -56,6 +86,8 @@ function onReady() {
     - checks if someone loads data in url
     - binds handlers to DOM emements
     */
+
+    console.log('loading');
 
     window.log = new Logger('DEBUG');
     window.test = new Tester();
@@ -447,7 +479,7 @@ function drawTree() {
 
     switch (format) {
         case ('CG3'):
-            content = CG2conllu(content);
+            content = cg32Conllu(content);
             if (content === undefined) { // ambiguous CG3
                 cantConvertCG(); // show warning
                 return; // leave
@@ -456,10 +488,10 @@ function drawTree() {
             }
             break;
         case ('SD'):
-            content = SD2conllu(content);
+            content = sd2Conllu(content);
             break;
         case ('Brackets'):
-            content = Brackets2conllu(content);
+            content = brackets2Conllu(content);
             break;
         case ('plain text'):
         case ('Unknown'):
@@ -506,7 +538,7 @@ function formatTabsView() {
 
 
 function detectFormat(content) {
-    log.debug(`called detectFormat(<content>)`);
+    log.debug(`called detectFormat(${content})`);
 
     // TODO: too many 'hacks' and presuppositions. refactor.
     // returns one of [ 'Unknown', 'CG3', 'CoNLL-U', 'SD', 'Brackets', 'plain text' ]

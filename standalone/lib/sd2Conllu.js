@@ -1,7 +1,7 @@
 'use strict'
 
-function SD2conllu(text) {
-    log.debug(`called SD2conllu(${text})`);
+function sd2Conllu2(text) {
+    log.debug(`called sd2Conllu2(${text})`);
 
     /* Takes a string in CG, returns a string in conllu. */
     const inputLines = text.split('\n');
@@ -35,7 +35,9 @@ function SD2conllu(text) {
                 depToken = '',
                 reading = 'deprel';  // reading \elem [ 'deprel', 'head', 'dep' ]
 
-            $.each(line, (j, word) => {
+            for (let j=0, l=line.length; j<l; j++) {
+                const word = line[j];
+
                 switch (reading) {
                     case ('deprel'):
                         if (word === '(') {
@@ -56,7 +58,7 @@ function SD2conllu(text) {
                             depToken += word;
                         break;
                 }
-            });
+            }
 
             let depId, headId;
             if (depToken.search(/-[0-9]+/) > 0)
@@ -64,31 +66,32 @@ function SD2conllu(text) {
             if (headToken.search(/-[0-9]+/) > 0)
                 headId = parseInt(headToken.split('-')[1]);
 
-            log.debug(`SD2conllu(): ${depToken} → ${headToken} @${deprel} | ${tokenToId[depToken]} : tokenToId[headToken] // ${depId} → ${headId}`);
+            log.debug(`sd2Conllu(): ${depToken} → ${headToken} @${deprel} | ${tokenToId[depToken]} : tokenToId[headToken] // ${depId} → ${headId}`);
             heads[depId] = headId;
             deprels[depId] = deprel;
         }
     });
 
+    tokenId = 0;
     let sent = new conllu.Sentence();
     sent.comments = '';
     sent.tokens = inputLines[0].split(' ').map((token) => {
 
         let newToken = new conllu.Token();
-        tokenId += 1;
+        tokenId++;
 
         newToken.form = token;
 
         // TODO: automatic recognition of punctation's POS
         if (token.match(/\W/))
-            token.upostag = 'PUNCT';
+            newToken.upostag = 'PUNCT';
 
         newToken.id = tokenId;
         newToken.head = heads[tokenId];
         newToken.deprel = deprels[tokenId];
-        log.debug(`SD2conllu(): @@@${newToken.form} ${newToken.id} ${newToken.head} ${newToken.deprel}`);
+        log.debug(`sd2Conllu(): @@@${newToken.form} ${newToken.id} ${newToken.head} ${newToken.deprel}`);
 
-        return newToken
+        return newToken;
     });
 
     return sent.serial;

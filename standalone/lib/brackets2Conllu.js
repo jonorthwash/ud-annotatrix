@@ -83,9 +83,12 @@ function _count(needle, haystack) {
     // Return the number of times you see needle in the haystack
     // @needle = string to search for
     // @haystack = string to search in
-    return haystack.reduce((acc, item) => {
-        return acc + (item === needle);
-    }, 0);
+    let acc = 0;
+    for (let i=0, l=haystack.length; i<l; i++) {
+        if (needle === haystack[i])
+            acc++;
+    }
+    return acc;
 }
 
 function node(s, j) {
@@ -103,13 +106,14 @@ function node(s, j) {
         remainder = s.slice(first, s.length);
 
     // this is impossible to understand without meaningful variables names .....
-    let index = 0, children = [], word;
+    let i = 0, index = 0, children = [], word;
     while (i < remainder.length) {
 
         if (remainder[i] === '[') {
             // We're starting a new expression
+
             const m = match(remainder.slice(i+1, remainder.length), '[', ']'),
-                indices = [index] + children.map((child) => { return child.maxindex(); }),
+                indices = [index].concat(children.map((child) => { return child.maxindex(); })),
                 n = node(m, _max(indices));
 
             children.push(n);
@@ -162,8 +166,8 @@ function fillTokens(node, tokens) {
     return tokens;
 }
 
-function Brackets2conllu(text) {
-    log.debug(`called Brackets2conllu(${text})`);
+function brackets2Conllu(text) {
+    log.debug(`called brackets2Conllu(${text})`);
 
     /* Takes a string in bracket notation, returns a string in conllu. */
     const inputLines = text.split('\n'),
@@ -174,7 +178,7 @@ function Brackets2conllu(text) {
 
     root.paternity();
     tokens = fillTokens(root, tokens);
-    log.debug(`Brackets2conllu(): tokens: ${JSON.stringify(tokens)}`);
+    log.debug(`brackets2Conllu(): tokens: ${JSON.stringify(tokens)}`);
 
     let sent = new conllu.Sentence();
     sent.comments = comments;

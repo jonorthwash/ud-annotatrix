@@ -66,6 +66,12 @@ function conlluDraw(content) {
     }
 
     // new global cy object
+    _.graphOptions.container = $('#cy');
+    _.graphOptions.style = CY_STYLE;
+    _.graphOptions.layout = getCyLayout();
+    _.graphOptions.elements = conllu2cy(sent);
+    _.graph = resetCy(_.graphOptions);
+
     CY_OPTIONS.layout = getCyLayout();
     CY_OPTIONS.elements = conllu2cy(sent);
     resetCy(CY_OPTIONS);
@@ -125,6 +131,8 @@ function resetCy(options) {
             }
 
         });
+
+    return window.cy;
 }
 
 
