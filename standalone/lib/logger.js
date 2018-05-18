@@ -23,7 +23,7 @@
  *   is console.error
  */
 class Logger extends Object {
-  constructor(levelName, writer=console.error) {
+  constructor(levelName, writer=console.log) {
 
     super();
 
@@ -88,10 +88,16 @@ class Logger extends Object {
    *
    * @return <none>
    */
-  _handle(level, tag, message='') {
+  _handle(level, tag, message='', writer) {
     if (level <= this.level) {
       message = this._format(message, tag, true);
-      this._write(message);
+      writer = writer || this._write;
+      console.groupCollapsed(message);
+        writer(message, writer);
+        console.groupCollapsed('stack trace:');
+          console.trace();
+        console.groupEnd();
+      console.groupEnd();
     }
   }
 
@@ -105,19 +111,19 @@ class Logger extends Object {
    * @return <none>
    */
   critical(message) {
-    this._handle(0, 'critical', message);
+    this._handle(0, 'critical', message, console.error);
   }
   error(message) {
-    this._handle(1, 'error', message);
+    this._handle(1, 'error', message, console.error);
   }
   warn(message) {
-    this._handle(2, 'warn', message);
+    this._handle(2, 'warn', message, console.warn);
   }
   info(message) {
-    this._handle(3, 'info', message);
+    this._handle(3, 'info', message, console.info);
   }
   debug(message) {
-    this._handle(4, 'debug', message);
+    this._handle(4, 'debug', message, console.log);
   }
 
 
