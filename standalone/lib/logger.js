@@ -39,6 +39,14 @@ class Logger extends Object {
       this.level = 0;
     }
 
+    this.colors = {
+      'CRITICAL': 'red',
+      'ERROR': 'orange',
+      'WARN': 'yellow',
+      'INFO': 'green',
+      'DEBUG': 'blue'
+    };
+
   }
   /*
    * Override prototype toString() method
@@ -61,16 +69,22 @@ class Logger extends Object {
    */
   _format(message, tag=null, showTimestamp=true) {
 
-    let string = '';
+    let msg = '', raw = '';
     if (showTimestamp) {
       let date = new Date();
-      string += `[${date}] `;
+      msg += `[${date}] `;
+      raw += `[${date}] `;
     }
-    if (tag !== null)
-      string += `${tag.toUpperCase()}: `;
-    string += message;//JSON.stringify(message);
+    let css = [];
+    if (tag !== null) {
+      msg += `%c${tag}%c: `;
+      raw += `${tag}: `;
+      css = css.concat([`color:${this.colors[tag] || 'black'};`, 'color:black'])
+    }
+    msg += message;//JSON.stringify(message);
+    raw += message
 
-    return string;
+    return { msg:msg, raw:raw, css:css };
 
   }
 
@@ -90,10 +104,10 @@ class Logger extends Object {
    */
   _handle(level, tag, message='', writer) {
     if (level <= this.level) {
-      message = this._format(message, tag, true);
+      const formatted = this._format(message, tag, true);
       writer = writer || this._write;
-      console.groupCollapsed(message);
-        writer(message, writer);
+      console.groupCollapsed(formatted.msg, ...formatted.css);
+        writer(formatted.raw);
         console.groupCollapsed('stack trace:');
           console.trace();
         console.groupEnd();
@@ -111,19 +125,19 @@ class Logger extends Object {
    * @return <none>
    */
   critical(message) {
-    this._handle(0, 'critical', message, console.error);
+    this._handle(0, 'CRITICAL', message, console.error);
   }
   error(message) {
-    this._handle(1, 'error', message, console.error);
+    this._handle(1, 'ERROR', message, console.error);
   }
   warn(message) {
-    this._handle(2, 'warn', message, console.warn);
+    this._handle(2, 'WARN', message, console.warn);
   }
   info(message) {
-    this._handle(3, 'info', message, console.info);
+    this._handle(3, 'INFO', message, console.info);
   }
   debug(message) {
-    this._handle(4, 'debug', message, console.log);
+    this._handle(4, 'DEBUG', message, console.log);
   }
 
 
@@ -136,8 +150,8 @@ class Logger extends Object {
    * @return <none>
    */
   out(message) {
-    message = this._format(message, null, false);
-    this._write(message);
+    const formatted = this._format(message, null, false);
+    this._write(formatted.msg, formatted.css);
   }
 
 }
