@@ -56,6 +56,7 @@ window.onload = () => {
         `${path}/ext/l20n.js`,
         `${path}/ext/canvas2svg.js`,
         `${path}/ext/conllu/conllu.js`, // CoNLL-U parser from https://github.com/FrancessFractal/conllu
+        `${path}/ext/js-treex-view.js`, // Treex from https://github.com/ufal/js-treex-view
 
         // native project code
         `${path}/cg32Conllu.js`,
