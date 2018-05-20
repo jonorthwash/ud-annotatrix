@@ -60,7 +60,6 @@ window.onload = () => {
         // native project code
         `${path}/cg32Conllu.js`,
         `${path}/sd2Conllu.js`,
-        `${path}/brackets2Conllu.js`,
         `${path}/converters.js`,
         `${path}/server_support.js`,
         `${path}/gui.js`,

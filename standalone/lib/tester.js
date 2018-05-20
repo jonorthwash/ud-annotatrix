@@ -608,7 +608,7 @@ class Tester extends Object {
 	assert(expression, message='') {
 		if (!expression)
 			throw new AssertionError(message);
-		log.out(`OK: Tester.assert() got a truthy expression (message: "${message}")`);
+		log.out(`Tester.assert() got a truthy expression (message: "${message}")`, 'OK');
 	}
 
 	arraysEqual(arr1, arr2) {
@@ -774,18 +774,27 @@ class Tester extends Object {
 			'plain text': convert2PlainText,
 			'CoNLL-U': convert2Conllu,
 			'CG3': convert2cg3
-		}
+		};
+
+		let failures = [];
 
 		$.each(converters, (converterFormat, converter) => {
 			log.out(`\nTester.converters(): checking ${converterFormat} converter`);
 
 			$.each(TEST_DATA.texts_by_format, (format, texts) => {
 				$.each(texts, (textName, text) => {
+					log.out(`Tester.converters(): trying to convert text (${format}:${textName}) to ${converterFormat}`);
 
-					log.out(`Tester.converters(): checking ${format} format`);
 					const convertedText = converter(text);
 					if (format === 'Unknown') {
 						this.assert(convertedText === null, `expected (${format}:${textName}) to fail to convert.`);
+						failures.push(`${format}:${textName}=>${converterFormat} (expected)`);
+					} else if (convertedText === null) {
+						log.warn(`Tester.converters(): text (${format}:${textName}) failed to convert to ${converterFormat}`);
+						failures.push(`${format}:${textName}=>${converterFormat} (unexpected)`);
+					} else if (format === 'Brackets') {
+						log.warn('Tester.converters(): skipping all inputs in Brackets format');
+						failures.push(`${format}:${textName}=>${converterFormat} (unexpected)`);
 					} else {
 						const convertedFormat = detectFormat(convertedText);
 						this.assert(converterFormat === convertedFormat, `expected (${format}:${textName}) to be detected as "${converterFormat}", got "${convertedFormat}".`);
@@ -793,6 +802,11 @@ class Tester extends Object {
 
 				});
 			});
+		});
+
+		log.out(`Tester.converters(): failed to convert the following items:`)
+		$.each(failures, (i, failure) => {
+			log.out(` - ${failure}`);
 		});
 	}
 }

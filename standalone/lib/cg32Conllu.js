@@ -8,8 +8,10 @@ function cg32Conllu(CGtext) {
     // TODO: Check for '<s>' ... '</s>' and if you have matching things treat them
     // as comments with #
 
-    if (ambiguityPresent(CGtext)) // to abort conversion if there are ambiguous analyses
-        return;
+    if (ambiguityPresent(CGtext)) { // to abort conversion if there are ambiguous analyses
+        log.debug(`cg32Conllu(): detected ambiguity`);
+        return null;
+    }
 
     // remove extra spaces before newline before processing text
     CGtext = CGtext.replace(/ +\n/, '\n');
@@ -17,7 +19,7 @@ function cg32Conllu(CGtext) {
     sent.comments = findComments(CGtext);
     sent.tokens = formTokens(CGtext);
 
-    console.log('serial:', sent.serial);
+    log.debug(`cg32Conllu(): serial: ${sent.serial}`);
     return sent.serial;
 }
 
@@ -153,13 +155,12 @@ function conllu2cg3(conlluText, indent) {
     // CG3 spec. reference: https://visl.sdu.dk/cg3_howto.pdf
 
     let sent = new conllu.Sentence();
-    sent.serial = conlluText;
+    sent.serial = cleanConllu(conlluText);
     indent = indent || '\t';
 
     let CGtext = (sent.comments.length ? `#${sent.comments.join('\n#')}` : '');
 
     $.each(sent.tokens, (i, token) => {
-        //console.log(token);
         CGtext += (token.form ? `\n"<${token.form}>"\n` : '');
         if (token.tokens === undefined) {
             CGtext += `${indent}${newCGAnalysis(i, token)}`;
@@ -169,25 +170,13 @@ function conllu2cg3(conlluText, indent) {
             }).join('\n');
         }
     });
-    /*
-    # sent_id = _
-    # text = this is a test
-    "<this>"
-    "	"" _ @x #1->
-    "<is>"
-    "	"" _ @x #2->
-    "<a>"
-    "	"" _ @x #3->
-    "<test>"
-    "	"" _ @x #4-> */
-
-    //console.log(CGtext);
+    
     return CGtext.trim();
 }
 
 
 function newCGAnalysis(i, token) {
-    log.debug(`called newCGAnalysis(i: ${i}, token: ${token})`);
+    log.debug(`called newCGAnalysis(i: ${i}, token: ${JSON.stringify(token)})`);
 
     const lemma = (token.lemma ? `"${token.lemma}"` : `""`), // lemma should have "" if blank (#228)
         pos = token.upostag || token.xpostag || '_',
