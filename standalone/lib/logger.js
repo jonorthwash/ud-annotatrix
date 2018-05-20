@@ -44,7 +44,8 @@ class Logger extends Object {
       'ERROR': 'orange',
       'WARN': 'yellow',
       'INFO': 'green',
-      'DEBUG': 'blue'
+      'DEBUG': 'blue',
+      'OK': 'green'
     };
 
   }
@@ -69,22 +70,24 @@ class Logger extends Object {
    */
   _format(message, tag=null, showTimestamp=true) {
 
-    let msg = '', raw = '';
+    let title = '', raw = '';
     if (showTimestamp) {
       let date = new Date();
-      msg += `[${date}] `;
+      title += `[${date}] `;
       raw += `[${date}] `;
     }
     let css = [];
     if (tag !== null) {
-      msg += `%c${tag}%c: `;
+      title += `%c${tag}%c: `;
       raw += `${tag}: `;
       css = css.concat([`color:${this.colors[tag] || 'black'};`, 'color:black'])
     }
-    msg += message;//JSON.stringify(message);
+    title += (message.match(/\n/) === null  // title should only be 1 line
+      ? message
+      : `${message.split('\n')[0]} [...]`);
     raw += message
 
-    return { msg:msg, raw:raw, css:css };
+    return { title:title, raw:raw, css:css };
 
   }
 
@@ -106,7 +109,7 @@ class Logger extends Object {
     if (level <= this.level) {
       const formatted = this._format(message, tag, true);
       writer = writer || this._write;
-      console.groupCollapsed(formatted.msg, ...formatted.css);
+      console.groupCollapsed(formatted.title, ...formatted.css);
         writer(formatted.raw);
         console.groupCollapsed('stack trace:');
           console.trace();
@@ -149,12 +152,12 @@ class Logger extends Object {
    *
    * @return <none>
    */
-  out(message) {
-    const formatted = this._format(message, null, false);
+  out(message, tag) {
+    const formatted = this._format(message, tag, false);
     if (formatted.css.length) {
-      this._write(formatted.msg, formatted.css);
+      this._write(formatted.title, formatted.css);
     } else {
-      this._write(formatted.msg);
+      this._write(formatted.raw);
     }
   }
 
