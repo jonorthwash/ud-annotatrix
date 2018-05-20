@@ -227,7 +227,64 @@ from_cg3_with_spans: `# text = He boued e tebr Mona er gegin.
 7	_	an	det	_	def|sp	8	det	_	_
 8	gegin	kegin	n	_	f|sg	4	obl	_	_
 9	.	.	sent	_	_	4	punct	_	_
-`
+`,
+
+rueter_long: `# sent_id = BryzhinskijMixail_Kirdazht_manu:3859
+# text = Но зярс валгсь , зярс панжтнесь ды мекев парсте пекстнесь веле кенкшенть , кужо кенкшенть , куро кенкшенть ды эсест юртс совамо кенкшенть эрьва лисицянтень совицянтень те свал тейнема , кенкштне свал пекстазь улезт ; панжтнесызь келес ансяк валске марто ды чопоньбелев — ракшань ливтема совавтома шкане , куймесь таго стакалгадсь .
+# text_en = But by the time he got down the hill, opened and closed the village gate, the lane gate, the cluster gate and the one to their own home (something everyone coming or going had to do, so the gates would always be closed; they were only opened in the morning and at dusk for taking out and letting in the cattle), the wicker of clay had grown heavy again.
+# text_fi = Kun Ketšai tuli mäeltä alas, avasi ja sulki huolellisesti kyläveräjänsä, ??aukio/kenttäveräjän, kujaveräjän ja oman kotiveräjän, savikontti ehti taas alkaa painaa hänen selkäänsä. (Kaikkien kävijöiden tulee tehdä näin, jotta veräjät olisivat aina kiinni, veräjäthän pidetään selkosen selällään vain aamulla ja illansuussa, kun karjaa ajetaan laitumelle tai kotiin.)
+1 Но но CCONJ CC _ 3 cc _ _
+2 зярс зярс ADV Adv|Der/Ill|Adv|Sem/Time Derivation=Ill|AdvType=Tim 3 mark _ _
+3 валгсь валгомс VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 55 advcl _ SpaceAfter=No
+4 , , PUNCT CLB _ 6 punct _ _
+5 зярс зярс ADV Adv|Der/Ill|Adv|Sem/Time Derivation=Ill|AdvType=Tim 6 mark _ _
+6 панжтнесь панжтнемс VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 3 conj _ _
+7 ды ды CCONJ CC _ 10 cc _ _
+8 мекев мекев ADV Adv|Lat|Sg|Nom|Indef Case=Lat|Case=Nom|Definite=Ind|Number=Sing 10 advmod _ _
+9 парсте парсте ADV Adv|Manner AdvType=Man 10 advmod _ _
+10 пекстнесь пекстнемс VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 3 conj _ _
+11 веле веле NOUN N|Sem/Inanim_Cnt|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 10 obj _ _
+12 кенкшенть кенкш NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 11 goeswith _ SpaceAfter=No
+13 , , PUNCT CLB _ 15 punct _ _
+14 кужо кужо NOUN N|Sem/Inanim_Cnt|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 12 conj _ _
+15 кенкшенть кенкш NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 14 goeswith _ SpaceAfter=No
+16 , , PUNCT CLB _ 18 punct _ _
+17 куро куро NOUN N|Sem/Inanim_Cnt|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 12 conj _ _
+18 кенкшенть кенкш NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 17 goeswith _ _
+19 ды ды CCONJ CC _ 23 cc _ _
+20 эсест эсь PRON Pron|Refl|Pl3|Gen|Variant=Short Case=Gen|Number=Plur|Person=3|PronType=Refl|Variant=Short 22 nmod _ _
+21 юртс юрт NOUN N|Sem/Inanim_Cnt|SP|Ill|Indef Case=Ill|Definite=Ind|Number=Plur,Sing 20 case _ _
+22 совамо совамо NOUN N|IV|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing|Valency=1 23 compound _ _
+23 кенкшенть кенкш NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 12 conj _ _
+24 ( ( PUNCT PUNCT _ 29 punct _ SpaceAfter=No
+25 эрьва эрьва DET Det|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 26 det _ _
+26 лисицянтень-совицянтень лисицят-совицят NOUN N|V|NomAg|Sg|Dat|Def Case=Dat|Definite=Def|Derivation=NomAg|Number=Sing 29 obl _ _
+27 те те PRON Pron|Dem|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing|PronType=Dem 29 nsubj _ _
+28 свал свал ADV Adv|Tot|Sem/Time_dur PronType=Tot|PronType=Tot 29 advmod _ _
+29 тейнема тейнемc VERB V|TV|Oblig|Clitic=Cop|Prs|ScSg3 Valency=2|VerbForm=Oblig|Clitic=Cop|Number[subj]=Sing|Person[subj]=3|Tense=Pres 3 parataxis _ SpaceAfter=No
+30 , , PUNCT CLB _ 33 punct _ _
+31 кенкштне кенкш NOUN N|Sem/Inanim_Cnt|Pl|Nom|Def Case=Nom|Definite=Def|Number=Plur 34 nsubj _ _
+32 свал свал ADV Adv|Tot|Sem/Time_dur PronType=Tot|PronType=Tot 33 advmod _ _
+33 пекстазь пекстамс VERB V|Der/Озь|Ger Derivation=Ozj|VerbForm=Conv 29 ccomp _ _
+34 улезт улемс AUX V|IV|Opt|ScPl3 Mood=Opt|Number[subj]=Plur|Person[subj]=3|Valency=1 33 cop _ SpaceAfter=No
+35 ; ; PUNCT CLB _ 29 punct _ _
+36 панжтнесызь панжтнемс VERB V|Ind|Prs|ScPl3|Obj3 Mood=Ind|Number[subj]=Plur|Person[subj]=3|Tense=Pres|Obj3 29 conj _ _
+37 келес келес ADV Adv Adv 36 advmod _ _
+38 ансяк ансяк ADV Adv Adv 39 advmod _ _
+39 валске валске NOUN N|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 36 obl _ _
+40 марто марто ADP Adp|Po AdpType=Post 39 case _ _
+41 ды ды CCONJ CC _ 42 cc _ _
+42 чопоньбелев чопоньбелев ADV Adv|Lat Case=Lat 39 conj _ _
+43 — — PUNCT CLB _ 46 punct _ _
+44 ракшань ракша NOUN N|Sem/Anim_Cnt|SP|Gen|Indef Case=Gen|Definite=Ind|Number=Plur,Sing 45 nmod:gobj _ _
+45 ливтема-совавтома ливтема-совавтома NOUN N|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 36 nmod _ _
+46 шкане шка NOUN N|Sem/Time|SP|Temp|Indef Case=Temp|Definite=Ind|Number=Plur,Sing 39 conj _ SpaceAfter=No
+47 ) ) PUNCT PUNCT _ 29 punct _ SpaceAfter=No
+48 , , PUNCT CLB _ 29 punct _ _
+49 куймесь куйме NOUN N|Sem/Inanim_Cnt|Sg|Nom|Def Case=Nom|Definite=Def|Number=Sing 51 nsubj _ _
+50 таго таго ADV Adv|Sem/Time AdvType=Tim 51 advmod _ _
+51 стакалгадсь стакалгадомс VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 0 root _ SpaceAfter=No
+52 . . PUNCT CLB _ 51 punct _ _`
 
 		},
 		CG3: {
@@ -599,7 +656,188 @@ apertium_kaz_2: `# https://bpaste.net/show/be7c03e6213e
  * also implements an assert() function, which throws AssertionError exceptions
  */
 class Tester extends Object {
-	constructor() { super(); }
+	constructor() {
+		super();
+
+		this.tests = {
+
+			tester: () => {
+				log.out('\nExecuting Tester.tester()');
+
+				this.assert(1==1, `1==1`);
+				this.assert(1=='1', `1=='1'`);
+				this.assert(1!=='1', `1!=='1'`);
+				this.assert(undefined==null, `undefined==null`);
+				this.assert(undefined!==null, `undefined!==null`);
+				this.assert(0==false, `0==false`);
+				this.assert(0!==false, `0!==false`);
+				this.assert(1==true, `1==true`);
+				this.assert((()=>{})()==undefined, `(()=>{})()==undefined`);
+				this.assert((()=>{})()===undefined, `(()=>{})()===undefined`);
+				this.assert('foo'!='bar', `'foo'!=bar`);
+
+			},
+
+			logger: () => {
+				log.out('\nExecuting Tester.logger()');
+
+				const testMessage = 'This is the logger test message';
+				const loggers = [ log, // defined in annotator.js
+					new Logger('CRITICAL'),
+					new Logger('ERROR'),
+					new Logger('WARN'),
+					new Logger('INFO'),
+					new Logger('DEBUG'),
+					new Logger('INVALID') ];
+
+				$.each(loggers, (i, logger) => {
+
+					logger.out(`\nNow testing logger: ${logger}`);
+					logger.critical(testMessage);
+					logger.error(testMessage);
+					logger.warn(testMessage);
+					logger.info(testMessage);
+					logger.debug(testMessage);
+
+				});
+			},
+
+			errors: () => {
+				log.out('\nExecuting Tester.errors()');
+
+				const testMessage = 'Tester.errors(): This is the error test message';
+				const errors = [
+					new Error(testMessage),
+					new ReferenceError(testMessage),
+					new TypeError(testMessage),
+					new SyntaxError(testMessage),
+					new AnnotatrixError(testMessage),
+					new AssertionError(testMessage),
+					new GUIError(testMessage),
+					new ParseError(testMessage)
+				];
+
+				$.each(errors, (i, error) => {
+					try {
+						throw error;
+					} catch (e) {
+						log.debug(`Caught ${e.name} with message "${e.message}", (custom:${e instanceof AnnotatrixError ? 'yes' : 'no'})`);
+					}
+				});
+			},
+
+			buttons: () => {
+				log.out('\nExecuting Tester.buttons()');
+
+				const buttons = [
+					$('#prevSenBtn'),
+					$('#nextSenBtn'),
+					$('#remove'),
+					$('#add'),
+					$('#upload'),
+					$('#exportBtn'),
+					$('#clearBtn'),
+					$('#printBtn'),
+					$('#btnUndo'),
+					$('#btnRedo'),
+					$('#helpBtn'),
+					$('#settingsBtn'),
+					$('#viewOther'),
+					$('#viewConllu'),
+					$('#viewCG'),
+					$('#tableViewBtn'),
+					$('#codeVisibleBtn'),
+					$('#RTL'),
+					$('#vertical'),
+					$('#enhanced')
+				];
+
+				$.each(buttons, (i, button) => {
+					//button.click();
+				});
+			},
+
+			rangeExclusive: () => {
+				log.out('\nExecuting Tester.rangeExclusive()');
+
+				const inputs = [
+						{ params:[0,10,1], ret:[1,2,3,4,5,6,7,8,9] },
+						{ params:[0,10,2], ret:[1,3,5,7,9] },
+						{ params:[1,10,2], ret:[2,4,6,8] },
+						{ params:[0,10,3], ret:[1,4,7] },
+						{ params:[10,0,1], ret:[1,2,3,4,5,6,7,8,9] },
+						{ params:[10,0,2], ret:[1,3,5,7,9] },
+						{ params:[10,1,2], ret:[2,4,6,8] },
+						{ params:[10,0,3], ret:[1,4,7] },
+						{ params:[6], ret:[1,2,3,4,5] },
+						{ params:[3,6], ret:[4,5] },
+						{ params:[6,3], ret:[4,5] },
+						{ params:[], ret:[] }
+				];
+
+				$.each(inputs, (i, input) => {
+						const ret = rangeExclusive(...input.params),
+								message = `expected: [${input.ret.join(',')}], got: [${ret.join(',')}]`;
+						this.assert(this.arraysEqual(ret, input.ret), message);
+				});
+			},
+
+			detectFormat: () => {
+				log.out('\nExecuting Tester.detectFormat()');
+
+				$.each(TEST_DATA.texts_by_format, (format, texts) => {
+					$.each(texts, (identifier, text) => {
+						const ret = detectFormat(text),
+								message = `expected (${format}:${identifier}) to be detected as "${format}", but got "${ret}".`;
+						this.assert(ret === format, message);
+					});
+				});
+			},
+
+			converters: () => {
+				log.out('\nExecuting Tester.converters()');
+
+				const converters = {
+					'plain text': convert2PlainText,
+					'CoNLL-U': convert2Conllu,
+					'CG3': convert2cg3
+				};
+
+				let failures = [];
+
+				$.each(converters, (converterFormat, converter) => {
+					log.out(`\nTester.converters(): checking ${converterFormat} converter`);
+
+					$.each(TEST_DATA.texts_by_format, (format, texts) => {
+						$.each(texts, (textName, text) => {
+							log.out(`Tester.converters(): trying to convert text (${format}:${textName}) to ${converterFormat}`);
+
+							const convertedText = converter(text);
+							if (format === 'Unknown') {
+								this.assert(convertedText === null, `expected (${format}:${textName}) to fail to convert.`);
+								failures.push(`${format}:${textName}=>${converterFormat} (expected)`);
+							} else if (convertedText === null) {
+								log.warn(`Tester.converters(): text (${format}:${textName}) failed to convert to ${converterFormat}`);
+								failures.push(`${format}:${textName}=>${converterFormat} (unexpected)`);
+							} else if (format === 'Brackets') {
+								log.warn('Tester.converters(): skipping all inputs in Brackets format');
+								failures.push(`${format}:${textName}=>${converterFormat} (unexpected)`);
+							} else {
+								const convertedFormat = detectFormat(convertedText);
+								this.assert(converterFormat === convertedFormat, `expected (${format}:${textName}) to be detected as "${converterFormat}", got "${convertedFormat}".`);
+							}
+
+						});
+					});
+				});
+
+				log.out(`Tester.converters(): failed to convert the following items:`)
+				$.each(failures, (i, failure) => {
+					log.out(` - ${failure}`);
+				});
+			}
+		}
+	}
 
 
 	/*
@@ -627,186 +865,23 @@ class Tester extends Object {
 	/*
 	 * TEST functions
 	 */
+	run(test) {
+		if (this.tests.hasOwnProperty(test)) {
+			this.tests[test]();
+			log.out(`\nTester.run(): test "${test}" passed!\n`);
+		} else {
+			log.out(`Tester.run(): unable to run test "${test}"`);
+			log.out(`Tester.run(): available tests: ${Object.keys(this.tests).join(', ')}`);
+		}
+	}
+
 	all() {
 		log.out('\nExecuting Tester.all()');
 
-		this.tester();
-		this.logger();
-		this.errors();
-		this.buttons();
-		this.rangeExclusive();
-		this.detectFormat();
-		this.converters();
+		$.each(this.tests, (testName, test) => {
+			test();
+		});
 
 		log.out('\nTester.all(): all tests passed!\n');
-	}
-	tester() {
-		log.out('\nExecuting Tester.tester()');
-
-		this.assert(1==1, `1==1`);
-		this.assert(1=='1', `1=='1'`);
-		this.assert(1!=='1', `1!=='1'`);
-		this.assert(undefined==null, `undefined==null`);
-		this.assert(undefined!==null, `undefined!==null`);
-		this.assert(0==false, `0==false`);
-		this.assert(0!==false, `0!==false`);
-		this.assert(1==true, `1==true`);
-		this.assert((()=>{})()==undefined, `(()=>{})()==undefined`);
-		this.assert((()=>{})()===undefined, `(()=>{})()===undefined`);
-		this.assert('foo'!='bar', `'foo'!=bar`);
-
-	}
-	logger() {
-		log.out('\nExecuting Tester.logger()');
-
-		const testMessage = 'This is the logger test message';
-		const loggers = [ log, // defined in annotator.js
-			new Logger('CRITICAL'),
-			new Logger('ERROR'),
-			new Logger('WARN'),
-			new Logger('INFO'),
-			new Logger('DEBUG'),
-			new Logger('INVALID') ];
-
-		$.each(loggers, (i, logger) => {
-
-			logger.out(`\nNow testing logger: ${logger}`);
-			logger.critical(testMessage);
-			logger.error(testMessage);
-			logger.warn(testMessage);
-			logger.info(testMessage);
-			logger.debug(testMessage);
-
-		});
-	}
-	errors() {
-		log.out('\nExecuting Tester.errors()');
-
-		const testMessage = 'Tester.errors(): This is the error test message';
-		const errors = [
-			new Error(testMessage),
-			new ReferenceError(testMessage),
-			new TypeError(testMessage),
-			new SyntaxError(testMessage),
-			new AnnotatrixError(testMessage),
-			new AssertionError(testMessage),
-			new GUIError(testMessage),
-			new ParseError(testMessage)
-		];
-
-		$.each(errors, (i, error) => {
-			try {
-				throw error;
-			} catch (e) {
-				log.debug(`Caught ${e.name} with message "${e.message}", (custom:${e instanceof AnnotatrixError ? 'yes' : 'no'})`);
-			}
-		});
-	}
-	buttons() {
-		log.out('\nExecuting Tester.buttons()');
-
-		const buttons = [
-			$('#prevSenBtn'),
-			$('#nextSenBtn'),
-			$('#remove'),
-			$('#add'),
-			$('#upload'),
-			$('#exportBtn'),
-			$('#clearBtn'),
-			$('#printBtn'),
-			$('#btnUndo'),
-			$('#btnRedo'),
-			$('#helpBtn'),
-			$('#settingsBtn'),
-			$('#viewOther'),
-			$('#viewConllu'),
-			$('#viewCG'),
-			$('#tableViewBtn'),
-			$('#codeVisibleBtn'),
-			$('#RTL'),
-			$('#vertical'),
-			$('#enhanced')
-		];
-
-		$.each(buttons, (i, button) => {
-			//button.click();
-		});
-	}
-	rangeExclusive() {
-		log.out('\nExecuting Tester.rangeExclusive()');
-
-		const inputs = [
-				{ params:[0,10,1], ret:[1,2,3,4,5,6,7,8,9] },
-				{ params:[0,10,2], ret:[1,3,5,7,9] },
-				{ params:[1,10,2], ret:[2,4,6,8] },
-				{ params:[0,10,3], ret:[1,4,7] },
-				{ params:[10,0,1], ret:[1,2,3,4,5,6,7,8,9] },
-				{ params:[10,0,2], ret:[1,3,5,7,9] },
-				{ params:[10,1,2], ret:[2,4,6,8] },
-				{ params:[10,0,3], ret:[1,4,7] },
-				{ params:[6], ret:[1,2,3,4,5] },
-				{ params:[3,6], ret:[4,5] },
-				{ params:[6,3], ret:[4,5] },
-				{ params:[], ret:[] }
-		];
-
-		$.each(inputs, (i, input) => {
-				const ret = rangeExclusive(...input.params),
-						message = `expected: [${input.ret.join(',')}], got: [${ret.join(',')}]`;
-				this.assert(this.arraysEqual(ret, input.ret), message);
-		});
-	}
-	detectFormat() {
-		log.out('\nExecuting Tester.detectFormat()');
-
-		$.each(TEST_DATA.texts_by_format, (format, texts) => {
-			$.each(texts, (identifier, text) => {
-				const ret = detectFormat(text),
-						message = `expected (${format}:${identifier}) to be detected as "${format}", but got "${ret}".`;
-				this.assert(ret === format, message);
-			});
-		});
-	}
-	converters() {
-		log.out('\nExecuting Tester.converters()');
-
-		const converters = {
-			'plain text': convert2PlainText,
-			'CoNLL-U': convert2Conllu,
-			'CG3': convert2cg3
-		};
-
-		let failures = [];
-
-		$.each(converters, (converterFormat, converter) => {
-			log.out(`\nTester.converters(): checking ${converterFormat} converter`);
-
-			$.each(TEST_DATA.texts_by_format, (format, texts) => {
-				$.each(texts, (textName, text) => {
-					log.out(`Tester.converters(): trying to convert text (${format}:${textName}) to ${converterFormat}`);
-
-					const convertedText = converter(text);
-					if (format === 'Unknown') {
-						this.assert(convertedText === null, `expected (${format}:${textName}) to fail to convert.`);
-						failures.push(`${format}:${textName}=>${converterFormat} (expected)`);
-					} else if (convertedText === null) {
-						log.warn(`Tester.converters(): text (${format}:${textName}) failed to convert to ${converterFormat}`);
-						failures.push(`${format}:${textName}=>${converterFormat} (unexpected)`);
-					} else if (format === 'Brackets') {
-						log.warn('Tester.converters(): skipping all inputs in Brackets format');
-						failures.push(`${format}:${textName}=>${converterFormat} (unexpected)`);
-					} else {
-						const convertedFormat = detectFormat(convertedText);
-						this.assert(converterFormat === convertedFormat, `expected (${format}:${textName}) to be detected as "${converterFormat}", got "${convertedFormat}".`);
-					}
-
-				});
-			});
-		});
-
-		log.out(`Tester.converters(): failed to convert the following items:`)
-		$.each(failures, (i, failure) => {
-			log.out(` - ${failure}`);
-		});
 	}
 }

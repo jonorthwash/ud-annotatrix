@@ -65,12 +65,13 @@ function conlluDraw(content) {
         $('edge.incomplete').addClass('horizontal').removeClass('vertical');
     }
 
+    /*
     // new global cy object
     _.graphOptions.container = $('#cy');
     _.graphOptions.style = CY_STYLE;
     _.graphOptions.layout = getCyLayout();
     _.graphOptions.elements = conllu2cy(sent);
-    _.graph = resetCy(_.graphOptions);
+    _.graph = resetCy(_.graphOptions);*/
 
     CY_OPTIONS.layout = getCyLayout();
     CY_OPTIONS.elements = conllu2cy(sent);
@@ -382,7 +383,7 @@ function createToken(graph, token, superTokenId) {
     TREE[token.id] = token;
 
     // token  number
-    const nodeId = String(token.id).padStart(2, '0');
+    const nodeId = getNodeId(token.id);
     graph.push({
         data: {
             id: `num${nodeId}`,
@@ -409,6 +410,18 @@ function createToken(graph, token, superTokenId) {
     return graph;
 }
 
+function getNodeId(idString) {
+    log.debug(`called getNodeId(${JSON.stringify(idString)})`)
+    let id = parseInt(idString);
+
+    if (isNaN(id)) {
+        log.critical(JSON.stringify(idString));
+        throw new Error('some issue going on here');
+    }
+
+    return String(id).padStart(2, '0');
+}
+
 function makeEnhancedDependency(token, nodeId, head, deprel, graph) {
     log.debug(`called makeEnhancedDependency(token: ${JSON.stringify(token)}, nodeId: ${nodeId}, head: ${head}, deprel: ${deprel}, graph: <Graph>)`);
 
@@ -417,7 +430,7 @@ function makeEnhancedDependency(token, nodeId, head, deprel, graph) {
         if (Math.abs(coeff) !== 1)
             edgeHeight *= DEFAULT_COEFF;
 
-        const headId = String(head).padStart(2, '0'),
+        const headId = getNodeId(head),
             edgeDep = {
                 id: `ed${nodeId}:${headId}`,
                 source: `nf${headId}`,
@@ -482,7 +495,7 @@ function makeDependencies(token, nodeId, graph) {
         if (IS_VERTICAL)
             edgeHeight = 45;
 
-        const headId = String(head).padStart(2, '0'),
+        const headId = getNodeId(head),
             edgeDep = {
                 id: `ed${nodeId}`,
                 source: `nf${headId}`,
@@ -547,6 +560,7 @@ function makePOS(token, nodeId, graph) {
 
     /* Creates nodes for POS and edges between wf and POS nodes */
     const POS = token.upostag || token.xpostag || '';
+    nodeId = getNodeId(nodeId);
 
     graph.push({
         data: {

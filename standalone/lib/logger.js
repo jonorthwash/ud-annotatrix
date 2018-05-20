@@ -28,7 +28,22 @@ class Logger extends Object {
     super();
 
     this._write = writer;
+    this.colors = {
+      'CRITICAL': 'red',
+      'ERROR': 'orange',
+      'WARN': 'yellow',
+      'INFO': 'green',
+      'DEBUG': 'blue',
+      'OK': 'green'
+    };
+    this.setLevel(levelName);
 
+  }
+
+  /*
+   * change the logging level
+   */
+  setLevel(levelName) {
     this.levelName = levelName;
     this.level = ['CRITICAL', 'ERROR', 'WARN', 'INFO', 'DEBUG']
       .indexOf(levelName);
@@ -39,16 +54,9 @@ class Logger extends Object {
       this.level = 0;
     }
 
-    this.colors = {
-      'CRITICAL': 'red',
-      'ERROR': 'orange',
-      'WARN': 'yellow',
-      'INFO': 'green',
-      'DEBUG': 'blue',
-      'OK': 'green'
-    };
-
+    this.out(`logging level set to ${this.levelName}`, 'OK');
   }
+
   /*
    * Override prototype toString() method
    */

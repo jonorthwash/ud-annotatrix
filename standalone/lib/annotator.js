@@ -86,9 +86,9 @@ function onReady() {
     - binds handlers to DOM emements
     */
 
-    console.log('loading');
+    console.log('UD-Annotatrix is loading ...');
 
-    window.log = new Logger('DEBUG');
+    window.log = new Logger('WARN');
     window.test = new Tester();
 
     resetCy(CY_OPTIONS); // initialize w/ defaults to avoid cy.$ is not a function errors
