@@ -535,7 +535,7 @@ h4, h5, h6 {
 #indata {
 	display: block ;
 	font-family: "Liberation Mono", monospace ;
-
+  height: 20em;
 }
 
 .indataarea {
