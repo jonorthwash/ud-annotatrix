@@ -432,10 +432,12 @@ function onEnterInTextarea() {
 								break;
 
 						case ('CG3'):
+								log.error(`onEnterInTextarea(): Not implemented for CG3`)
 								break;
 
 						default:
-								log.debug(`onEnterInTextarea(): insert for format ${format}`);
+								text = text.slice(0,cursor) + '\n' + text.slice(cursor);
+								$('#indata').val(text);
 				}
 		}
 }
