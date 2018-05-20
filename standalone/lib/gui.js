@@ -827,7 +827,7 @@ function redrawTree(sent) {
 				currentFormat = detectFormat(currentSent);
 
     if (currentFormat === 'CG3')
-        changedSent = conllu2CG(changedSent);
+        changedSent = conllu2cg3(changedSent);
 
     $('#indata').val(changedSent);
     updateTable();
@@ -920,7 +920,7 @@ function viewAsCG() {
 				currentFormat = detectFormat(text);
 
     if (currentFormat === 'CoNLL-U') {
-        text = conllu2CG(text);
+        text = conllu2cg3(text);
         $('#viewConllu').removeClass('active');
     }
 

@@ -17,6 +17,7 @@ function cg32Conllu(CGtext) {
     sent.comments = findComments(CGtext);
     sent.tokens = formTokens(CGtext);
 
+    console.log('serial:', sent.serial);
     return sent.serial;
 }
 
@@ -48,8 +49,9 @@ function formTokens(CGtext) {
 
     // i use the presupposition that there are no ambiguous readings,
     // because i've aborted conversion of ambiguous sentences in ambiguityPresent
+    const lines = CGtext.split(/"<(.*)>"/).slice(1);
     let tokens = [], tokenId = 1;
-    $.each(CGtext.split(/"<(.*)>"/).slice(1), (i, line) => {
+    $.each(lines, (i, line) => {
         if (i % 2 === 1) {
             const form = lines[i - 1];
             line = line.replace(/^\n?;?( +|\t)/, '');
@@ -146,27 +148,40 @@ function formSupertoken(subtokens, form, tokenId) {
 }
 
 
-function conllu2CG(conlluText, indent) {
-    log.debug(`called conllu2CG(conllu: ${conlluText}, indent: ${indent})`);
+function conllu2cg3(conlluText, indent) {
+    log.debug(`called conllu2cg3(conllu: ${conlluText}, indent: ${indent})`);
+    // CG3 spec. reference: https://visl.sdu.dk/cg3_howto.pdf
 
     let sent = new conllu.Sentence();
     sent.serial = conlluText;
     indent = indent || '\t';
 
-    let CGtext = (sent.comments.length ? '#' + sent.comments.join('\n#') : '');
+    let CGtext = (sent.comments.length ? `#${sent.comments.join('\n#')}` : '');
 
     $.each(sent.tokens, (i, token) => {
-
-        CGtext += (token.form ? `\n"<${token.form}>"\n"` : '');
-        if (token.tokens == undefined) {
-            CGtext += indent + newCGAnalysis(i, token);
+        //console.log(token);
+        CGtext += (token.form ? `\n"<${token.form}>"\n` : '');
+        if (token.tokens === undefined) {
+            CGtext += `${indent}${newCGAnalysis(i, token)}`;
         } else {
             CGtext += token.tokens.map((subtoken, j) => {
-                return indent.repeat(j+1) + newCGAnalysis(j, subtoken);
+                return `${indent.repeat(j+1)}${newCGAnalysis(j, subtoken)}`;
             }).join('\n');
         }
-    })
+    });
+    /*
+    # sent_id = _
+    # text = this is a test
+    "<this>"
+    "	"" _ @x #1->
+    "<is>"
+    "	"" _ @x #2->
+    "<a>"
+    "	"" _ @x #3->
+    "<test>"
+    "	"" _ @x #4-> */
 
+    //console.log(CGtext);
     return CGtext.trim();
 }
 
@@ -176,9 +191,9 @@ function newCGAnalysis(i, token) {
 
     const lemma = (token.lemma ? `"${token.lemma}"` : `""`), // lemma should have "" if blank (#228)
         pos = token.upostag || token.xpostag || '_',
-        feats = (token.feats ? ` ${token.feats.replace(/\|/g, ' ')}` : '');
-        deprel = (token.deprel ? ` @${token.deprel}` : ' @x'); // is it really what we want by default?
-        head = token.head || '';
+        feats = (token.feats ? ` ${token.feats.replace(/\|/g, ' ')}` : ''),
+        deprel = (token.deprel ? ` @${token.deprel}` : ' @x'), // is it really what we want by default?
+        head = token.head || '',
         cgToken = `${lemma} ${pos}${feats}${deprel} #${token.id}->${head}`;
 
     log.debug(`got cgToken: ${cgToken}`);

@@ -151,7 +151,11 @@ class Logger extends Object {
    */
   out(message) {
     const formatted = this._format(message, null, false);
-    this._write(formatted.msg, formatted.css);
+    if (formatted.css.length) {
+      this._write(formatted.msg, formatted.css);
+    } else {
+      this._write(formatted.msg);
+    }
   }
 
 }

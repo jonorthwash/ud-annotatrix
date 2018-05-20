@@ -105,7 +105,7 @@ function convert2cg3(text) {
  */
 function plainText2Conllu(text) {
     log.debug(`called plainText2Conllu(${text})`);
-    log.debug('detected format:',detectFormat(text));
+    log.debug(`plainText2Conllu(): detected format: ${detectFormat(text)}`);
 
     // TODO: if there's punctuation in the middle of a sentence,
     // indices shift when drawing an arc
@@ -123,17 +123,12 @@ function plainText2Conllu(text) {
     let sent = new conllu.Sentence();
     const lines = [`# sent_id = _\n# text = ${text}`].concat(  // creating comment
         text.split(' ').map((token, i) => {
-            console.log('token', token);
             return `${i+1}\t${token}`; // enumerating tokens
         }) );
     sent.serial = lines.join('\n');
 
-    console.log('lines', lines);
-    console.log('serial', sent.serial);
-
     // TODO: automatical recognition of punctuation's POS ==> done?
     $.each(sent.tokens, (i, token) => {
-        console.log(token);
         if (token.form.match(/^[!.)(»«:;?¡,"\-><]+$/))
             token.upostag = 'PUNCT';
         if (token.form.match(/^[0-9]+([,.][0-9]+)*$/))
@@ -255,8 +250,4 @@ function cleanConllu(content) {
         $('#indata').val(newContent);
 
     return newContent;
-}
-
-function conllu2cg3(text) {
-    throw new NotImplementedError();
 }

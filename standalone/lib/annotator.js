@@ -497,7 +497,7 @@ function drawTree() {
         case ('Unknown'):
             return; // if here, the format wasn't yet converted to a format with a graph repr
         case ('CoNLL-U'):
-            break; 
+            break;
         default:
             log.warn(`drawTree(): Unrecognized format: ${format}`);
             break;
@@ -540,32 +540,63 @@ function formatTabsView() {
 function detectFormat(content) {
     log.debug(`called detectFormat(${content})`);
 
-    // TODO: too many 'hacks' and presuppositions. refactor.
     // returns one of [ 'Unknown', 'CG3', 'CoNLL-U', 'SD', 'Brackets', 'plain text' ]
-    clearLabels();
+    //resetLabels(); // do we need this?
 
+    let format = 'Unknown';
     content = content.trim();
 
-    if (content == '') {
-        log.warn('detectFormat(): received empty content');
-        return 'Unknown';
+    if (content === '') {
+        log.info('detectFormat(): received empty content');
+    } else {
+
+        // get `word` to point to the first non-comment word
+        const newlinesAndSpacesToList = content.split('\n');//.replace(/\n/g, ' ').split(' ');
+        let wordIndex = 0, word = newlinesAndSpacesToList[wordIndex];
+
+        while (word.startsWith('#')) {
+            log.debug(`detectFormat(): detected a comment: ${word}`);
+            wordIndex++;
+            if (wordIndex === newlinesAndSpacesToList.length)
+                break;
+            word = newlinesAndSpacesToList[wordIndex];
+        }
+
+        content = content.trim('\n');
+
+        if (word.match(/^\W*[\'|\"]</)) {
+            format = 'CG3';
+        } else if (word.match(/^\W*1/)) {
+            format = 'CoNLL-U'; // UNSAFE: the first token in the string should start with "1"
+        } else if (content.includes('(')
+            && content.includes('\n')  // SD needs to be at least two lines
+            && (content.includes(')\n') || content[content.length-1] === ')')) {
+
+            format = 'SD'; // UNSAFE
+
+        } else if (word.match(/\[/)) {
+            format = 'Brackets'; // UNSAFE: this will catch any plain text string starting with "[" :/
+        } else if (!content.includes('\t') && content[content.length-1] !== ')') {
+            format = 'plain text'; // UNSAFE
+        }
     }
 
-    var firstWord = content.replace(/\n/g, ' ').split(' ')[0];
+    FORMAT = format;
+    _.formats[_.current] = format;
+    return format;
+}
 
-    //console.log('[0] detectFormat() ' + content.length + ' | ' + FORMAT);
-    //console.log('[1] detectFormat() ' + content);
-
+function resetLabels() { // TODO: refactor
     // handling # comments at the beginning
-    if (firstWord[0] === '#'){
+    if (word[0] === '#'){
         var following = 1;
-        while (firstWord[0] === '#' && following < content.length){
+        while (word[0] === '#' && following < content.length){
             // TODO: apparently we need to log the thing or it won't register???
-            firstWord = content.split('\n')[following];
+            word = content.split('\n')[following];
             // pull out labels and put them in HTML, TODO: this probably
             // wants to go somewhere else.
-            if (firstWord.search('# labels') >= 0) {
-                var labels = firstWord.split('=')[1].split(' ');
+            if (word.search('# labels') >= 0) {
+                var labels = word.split('=')[1].split(' ');
                 for(var i = 0; i < labels.length; i++) {
                     var seen = false;
                     for(var j = 0; j < LABELS.length; j++) {
@@ -592,36 +623,7 @@ function detectFormat(content) {
             following ++;
         }
     }
-
-    var trimmedContent = content.trim('\n');
-    //console.log(trimmedContent + ' | ' + trimmedContent[trimmedContent.length-1]);
-    if (firstWord.match(/'<.*/)) {
-    // SAFE: The first token in the string should start with '<
-        FORMAT = 'CG3';
-    } else if (firstWord.match(/1/)) {
-    // UNSAFE: The first token in the string should be 1
-        FORMAT = 'CoNLL-U';
-    } else if (trimmedContent.includes('(') && trimmedContent.includes('\n') && (trimmedContent.includes(')\n') || trimmedContent[trimmedContent.length-1] == ')')) {
-    // SAFE: To be SDParse as opposed to plain text we need at least 2 lines.
-    // UNSAFE: SDParse should include at least one line ending in ) followed by a newline
-    // UNSAFE: The last character in the string should be a )
-        FORMAT = 'SD';
-    // UNSAFE: The first character is an open square bracket
-    } else if (firstWord.match(/\[/)) {
-                FORMAT = 'Brackets';
-    // TODO: better plaintext recognition
-    } else if (!trimmedContent.includes('\t') && trimmedContent[trimmedContent.length-1] != ')') {
-    // SAFE: Plain text and SDParse should not include tabs. CG3/CoNLL-U should include tabs
-    // UNSAFE: SDParse should end the line with a ), but plain text conceivably could too
-        FORMAT = 'plain text';
-    } else {
-        FORMAT = 'Unknown';
-    }
-    //console.log('[3] detectFormat() ' + FORMAT);
-
-    return FORMAT
 }
-
 
 function showHelp() {
     log.debug(`called showHelp()`);

@@ -11,6 +11,8 @@ const TEST_DATA = {
 			3: '\t',
 			4: ' \t\n',
 			5: '    ',
+
+/* how to handle these ones?
 ambiguous_cg3: `# text = He boued e tebr Mona er gegin.
 # text[eng] = Mona eats her food here in the kitchen.
 # labels = press_1986 ch_syntax p_197 to_check
@@ -47,7 +49,7 @@ ambiguous_cg3_with_semicolumn: `"<Dlaczego>"
 "<kolanie>"
 	"kolano" n nt sg loc
 "<?>"
-	"?" sent`
+	"?" sent` */
 
 		},
 		'plain text': {
@@ -228,7 +230,7 @@ from_cg3_with_spans: `# text = He boued e tebr Mona er gegin.
 `
 
 		},
-		CG3: {/* detectFormat() is having trouble with CG3 :(
+		CG3: {
 
 kdt_tagged_1: `# https://github.com/apertium/apertium-kaz/blob/master/texts/kdt.tagged.txt
 "<Өскеменнің>"
@@ -559,7 +561,7 @@ apertium_kaz_2: `# https://bpaste.net/show/be7c03e6213e
 "<.>"
 	"." sent`
 
-		*/}
+		}
 	}
 };
 
@@ -606,7 +608,7 @@ class Tester extends Object {
 	assert(expression, message='') {
 		if (!expression)
 			throw new AssertionError(message);
-		log.debug(`OK: Tester.assert() got a truthy expression (message: "${message}")`);
+		log.out(`OK: Tester.assert() got a truthy expression (message: "${message}")`);
 	}
 
 	arraysEqual(arr1, arr2) {
@@ -680,7 +682,7 @@ class Tester extends Object {
 	errors() {
 		log.out('\nExecuting Tester.errors()');
 
-		const testMessage = 'This is the error test message';
+		const testMessage = 'Tester.errors(): This is the error test message';
 		const errors = [
 			new Error(testMessage),
 			new ReferenceError(testMessage),
@@ -696,8 +698,7 @@ class Tester extends Object {
 			try {
 				throw error;
 			} catch (e) {
-				console.log(`Caught ${e.name} with message "${e.message
-					}", (custom:${e instanceof AnnotatrixError ? 'yes' : 'no'})`);
+				log.debug(`Caught ${e.name} with message "${e.message}", (custom:${e instanceof AnnotatrixError ? 'yes' : 'no'})`);
 			}
 		});
 	}
@@ -769,41 +770,28 @@ class Tester extends Object {
 	converters() {
 		log.out('\nExecuting Tester.converters()');
 
-		$.each(TEST_DATA.texts_by_format, (format, texts) => {
-			$.each(texts, (identifier, text) => {
+		const converters = {
+			'plain text': convert2PlainText,
+			'CoNLL-U': convert2Conllu,
+			'CG3': convert2cg3
+		}
 
-				// check plain text converter
-				log.out('\nTester.converters(): checking plain text converter');
-				const toPlainText = convert2PlainText(text);
-				if (format === 'Unknown') {
-					this.assert(toPlainText === null, `expected (${format}:${identifier}) to fail to convert.`);
-				} else {
-					const toPlainTextFormat = detectFormat(toPlainText);
-					this.assert(toPlainTextFormat === 'plain text', `expected (${format}:${identifier}) to be detected as "plain text", but got "${toPlainTextFormat}".`);
-				}
+		$.each(converters, (converterFormat, converter) => {
+			log.out(`\nTester.converters(): checking ${converterFormat} converter`);
 
+			$.each(TEST_DATA.texts_by_format, (format, texts) => {
+				$.each(texts, (textName, text) => {
 
-				// check CoNLL-U converter
-				log.out('\nTester.converters(): checking CoNLL-U converter');
-				const toConllu = convert2Conllu(text);
-				if (format === 'Unknown') {
-					this.assert(toConllu === null, `expected (${format}:${identifier}) to fail to convert.`);
-				} else if (format !== 'Brackets') {
-					const toConlluFormat = detectFormat(toConllu);
-					this.assert(toConlluFormat === 'CoNLL-U', `expected (${format}:${identifier}) to be detected as "CoNLL-U", but got "${toConlluFormat}".`);
-				}
+					log.out(`Tester.converters(): checking ${format} format`);
+					const convertedText = converter(text);
+					if (format === 'Unknown') {
+						this.assert(convertedText === null, `expected (${format}:${textName}) to fail to convert.`);
+					} else {
+						const convertedFormat = detectFormat(convertedText);
+						this.assert(converterFormat === convertedFormat, `expected (${format}:${textName}) to be detected as "${converterFormat}", got "${convertedFormat}".`);
+					}
 
-
-				// check CG3 converter
-				log.out('\nTester.converters(): checking CG3 converter');
-				const toCG3 = convert2cg3(text);
-				if (format === 'Unknown') {
-					this.assert(toCG3 === null, `expected (${format}:${identifier}) to fail to convert.`);
-				} else {				
-					const toCG3Format = detectFormat(toCG3);
-					//this.assert(toCG3Format === 'CG3', `expected (${format}:${identifier}) to be detected as "CG3", but got "${toCG3Format}".`);
-				}
-
+				});
 			});
 		});
 	}
