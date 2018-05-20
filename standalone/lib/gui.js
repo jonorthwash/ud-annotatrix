@@ -382,12 +382,16 @@ function keyDownClassifier(key) {
         } else if (key.which == KEYS.P && !posInp.length && !wfInp.length && !deprelInp.length) {
 						setPunct();
 				}
-    }
+    } else {
+				if (key.which === KEYS.ENTER) {
+						console.log('enter');
+				}
+		}
 }
 
 function setPunct() {
 		// courtesy of Daniel Swanson :)
-		
+
 		log.debug(`called setPunct(): PUNCTUATION TIME!`);
 
     // Commas and so forth should attach to dependent nodes in these relationships

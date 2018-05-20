@@ -425,7 +425,7 @@ function getNodeId(idString) {
 function makeEnhancedDependency(token, nodeId, head, deprel, graph) {
     log.debug(`called makeEnhancedDependency(token: ${JSON.stringify(token)}, nodeId: ${nodeId}, head: ${head}, deprel: ${deprel}, graph: <Graph>)`);
 
-    if (head !== 0) {
+    if (head != 0) {
         let edgeHeight = EDGE_HEIGHT * (head - parseInt(nodeId.slice(2)));
         if (Math.abs(coeff) !== 1)
             edgeHeight *= DEFAULT_COEFF;
@@ -485,7 +485,7 @@ function makeDependencies(token, nodeId, graph) {
   	}
 
 
-  	if (token.head !== 0) {
+  	if (token.head != 0) {
 
         let edgeHeight = EDGE_HEIGHT * (head - nodeId);
         if (!IS_LTR)
