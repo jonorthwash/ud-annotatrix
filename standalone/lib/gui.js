@@ -23,6 +23,7 @@ const KEYS = {
 		S: 83,
 		R: 82,
 		M: 77,
+		P: 80,
 		SIDES: {
 				39: 'right',
 				37: 'left'
@@ -378,7 +379,9 @@ function keyDownClassifier(key) {
             CURRENT_ZOOM = 1.0;
             cy.zoom(CURRENT_ZOOM);
             cy.center();
-        }
+        } else if (key.which == P && !posInp.length && !wfInp.length && !deprelInp.length) {
+						
+				}
     }
 }
 
