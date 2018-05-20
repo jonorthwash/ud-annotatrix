@@ -380,10 +380,228 @@ function keyDownClassifier(key) {
             cy.zoom(CURRENT_ZOOM);
             cy.center();
         } else if (key.which == P && !posInp.length && !wfInp.length && !deprelInp.length) {
-						
+						setPunct();
 				}
     }
 }
+
+function setPunct() {
+    // Commas and so forth should attach to dependent nodes in these relationships
+    var commaEaters = ["acl", "advcl", "amod", "appos", "ccomp", "obl"];
+    // Paired punctuation that has different left and right forms
+    var pairedPunctDiff = {"(":")", "[":"]", "{":"}",  "“":"”", "„":"“", "«":"»", "‹":"›", "《":"》", "「":"」", "『":"』", "¿":"?",  "¡":"!"};
+    // Paired punctuation where left and right are identical
+    var pairedPunctSame = ["'", '"'];
+
+    console.log('PUNCTUATION TIME!');
+
+    var sent = buildSent();
+    var puncts = [];
+    var bracketStack = [];
+    var matches = [];
+    var tok;
+    var headList = [];
+    var relList = [];
+    var pairedPDLeft = Object.keys(pairedPunctDiff);
+    var pairedPDRight = [];
+    for (var i = 0; i < pairedPDLeft.length; i++) {
+        pairedPDRight.push(pairedPunctDiff[pairedPDLeft[i]]);
+    }
+    var offsets = [];
+    var idToIndex = {undefined:undefined, "0":-1};
+    var subnodes = 0;
+    var connect = function(src, dest, rel) {
+        var sentAndPrev = changeConlluAttr(sent, [false, src, src], "deprel", rel);
+        sentAndPrev = changeConlluAttr(sent, [false, src, src], "head", (parseInt(dest)+1+offsets[dest]).toString());
+        headList[src] = dest;
+        relList[src] = rel;
+        sent = sentAndPrev[0];
+    };
+    var settok;
+    var found;
+    for (var i = 0; i < sent.tokens.length; i++) {
+        tok = sent.tokens[i];
+        offsets.push(subnodes);
+        if (tok.hasOwnProperty("tokens")) {
+            settok = 0;
+            found = false;
+            for (var j = 0; j < tok.tokens.length; j++) {
+                idToIndex[tok.tokens[j].id] = i;
+                if (!found && (tok.tokens[j].head < tok.tokens[0].id || tok.tokens[j].head > tok.tokens[tok.tokens.length-1].id)) {
+                    offsets[i] += j;
+                    settok = j;
+                    found = true;
+                }
+            }
+            subnodes += tok.tokens.length-1;
+            tok = tok.tokens[settok];
+        }
+        headList.push(tok.head);
+        idToIndex[tok.id] = i;
+        relList.push(tok.deprel);
+        if (tok.deprel == "punct" && tok.upostag == undefined) {
+            sentAndPrev = changeConlluAttr(sent, [false, i, i], "upostag", "PUNCT");
+            sent = sentAndPrev[0];
+            tok = sent.tokens[i];
+        }
+        if (tok.upostag == "PUNCT") {
+            if (pairedPDLeft.includes(tok.form)) {
+                bracketStack.push([i, pairedPunctDiff[tok.form]]);
+            } else if (pairedPDRight.includes(tok.form)) {
+                if (bracketStack.length > 0 && bracketStack[bracketStack.length-1][1] == tok.form) {
+                    matches.push([bracketStack.pop()[0], i]);
+                } else {
+                    puncts.push(i);
+                }
+            } else if (pairedPunctSame.includes(tok.form)) {
+                if (bracketStack.length > 0 && bracketStack[bracketStack.length-1][1] == tok.form) {
+                    matches.push([bracketStack.pop()[0], i]);
+                } else {
+                    bracketStack.push([i, tok.form]);
+                }
+            } else {
+                puncts.push(i);
+            }
+        }
+    }
+    for (var i = 0; i < bracketStack.length; i++) {
+        puncts.push(bracketStack[i][0]);
+    }
+    for (var i = 0; i < headList.length; i++) {
+        headList[i] = idToIndex[headList[i]];
+        if (headList[i] == undefined) {
+            headList[i] = i;
+            // pretend that unconnected nodes are pointing at themselves
+            // rather than at nothing so we don't have pesky type-conversion issues
+        }
+    }
+    var findBounds = function(idx) {
+        var l = 0;
+        var r = headList.length-1;
+        for (var x = 0; x < headList.length-1; x++) {
+            if ([undefined, "x", "root"].includes(relList[x])) {
+                continue;
+            } else if (x < idx && headList[x] > idx) {
+                l = Math.max(x, l);
+                r = Math.min(headList[x], r);
+            } else if (x > idx && headList[x] < idx) {
+                l = Math.max(headList[x], l);
+                r = Math.min(x, r);
+            }
+        }
+        return [l, r];
+    };
+    var findPossible = function(idx) {
+        var ret = [];
+        var bounds = findBounds(idx);
+        var edge;
+        for (var x = bounds[0]; x <= bounds[1]; x++) {
+            if (x != idx && relList[x] != "punct") {
+                edge = findBounds(x);
+                if (edge[0] <= idx && idx <= edge[1]) {
+                    ret.push(x);
+                }
+            }
+        }
+        return ret;
+    };
+    var l;
+    var r;
+    var lpos;
+    var rpos;
+    var lpos2;
+    var rpos2;
+    var possible;
+    var done;
+    for (var i = 0; i < matches.length; i++) {
+        l = matches[i][0];
+        r = matches[i][1];
+        lpos = findPossible(l);
+        rpos = findPossible(r);
+        possible = [];
+        lpos2 = [];
+        rpos2 = [];
+        for (var j = 0; j < lpos.length; j++) {
+            if (lpos[j] > l && lpos[j] < r) {
+                if (rpos.includes(lpos[j])) {
+                    possible.push(lpos[j]);
+                }
+                lpos2.push(lpos[j]);
+            }
+        }
+        for (var j = 0; j < rpos.length; j++) {
+            if (rpos[j] > l && rpos[j] < r) {
+                rpos2.push(rpos[j]);
+            }
+        }
+        if (possible.length > 0) {
+            done = false;
+            for (var j = 0; j < possible.length; j++) {
+                if (headList[possible[j]] < l || headList[possible[j]] > r) {
+                    connect(l, possible[j], "punct");
+                    connect(r, possible[j], "punct");
+                    done = true;
+                    break;
+                }
+            }
+            if (!done) {
+                connect(l, possible[0], "punct");
+                connect(r, possible[0], "punct");
+            }
+        } else {
+            connect(l, lpos2[0], "punct");
+            connect(r, rpos2[rpos2.length-1], "punct");
+        }
+    }
+    for (var i = 0; i < puncts.length; i++) {
+        possible = findPossible(puncts[i]);
+        if (puncts[i] == headList.length-1 && possible.includes(relList.indexOf("root"))) {
+            connect(puncts[i], relList.indexOf("root"), "punct");
+            continue;
+        }
+        if (relList[possible[possible.length-1]] == "conj" && headList[possible[possible.length-1]] <= possible[0]) {
+            connect(puncts[i], possible[possible.length-1], "punct");
+            continue;
+        }
+        possible.sort(function(a, b) {
+            var ai = Math.abs(a - puncts[i]);
+            var bi = Math.abs(b - puncts[i]);
+            if (ai < bi || (ai == bi && a < b)) {
+                return -1;
+            } else if (bi > ai || (ai == bi && a > b)) {
+                return 1;
+            } else {
+                return 0;
+            }
+        });
+        done = false;
+        for (var j = 0; j < possible.length; j++) {
+            if (commaEaters.includes(relList[possible[j]])) {
+                connect(puncts[i], possible[j], "punct");
+                done = true;
+                break;
+            }
+        }
+        if (!done) {
+            for (var j = 0; j < possible.length; j++) {
+                if (![undefined, "x", "root"].includes(relList[possible[j]])) {
+                    connect(puncts[i], possible[j], "punct");
+                    done = true;
+                    break;
+                }
+            }
+        }
+        if (!done && possible.length > 0) {
+            connect(puncts[i], possible[0], "punct");
+        }
+        if (!done) {
+            console.log("Couldn't find anything to attatch punctuation " + puncts[i] + " to.");
+        }
+    }
+
+    redrawTree(sent);
+}
+
 
 
 function moveArc() {
