@@ -12,7 +12,7 @@ function convert2PlainText(text) {
     log.debug(`convert2PlainText(): got format: ${format}`);
     switch (format) {
         case ('Unknown'):
-            log.warn(`convert2PlainText(): failed to convert Unknown to plain text`);
+            log.warn(`convert2PlainText(): failed to convert: Unknown input type`);
             return null;
         case ('plain text'):
             log.warn(`convert2PlainText(): received plain text`);
@@ -24,7 +24,13 @@ function convert2PlainText(text) {
         case ('CoNLL-U'):
             return conllu2PlainText(text);
         case ('CG3'):
-            return conllu2PlainText(cg32Conllu(text));
+            const conllu = cg32Conllu(text);
+            if (conllu === null) {
+                log.warn(`convert2PlainText(): failed to convert: received ambiguous CG3`);
+                return null;
+            } else {
+                return conllu2PlainText(conllu);
+            }
     }
 
     log.warn(`convert2PlainText(): unrecognized format: ${format}`);
@@ -203,7 +209,7 @@ function conllu2PlainText(text) {
 
     let sent = new conllu.Sentence();
     sent.serial = cleanConllu(text); // spaces => tabs
-    console.log(sent.serial);
+    log.debug(`conllu2PlainText(): serial: ${sent.serial}`);
 
     return sent.tokens.map((token) => {
         return token.form;
@@ -250,4 +256,199 @@ function cleanConllu(content) {
         $('#indata').val(newContent);
 
     return newContent;
+}
+
+/**
+ * Takes a string in Brackets, converts it to CoNLL-U.
+ * @param {String} text Input string
+ * @return {String}     CoNLL-U
+ */
+function brackets2Conllu(text) {
+    log.debug(`called brackets2Conllu(${text})`);
+
+    // This code is for parsing bracketted notation like:
+    // [root [nsubj I] have [obj [amod [advmod too] many] commitments] [advmod right now] [punct .]]
+    // Thanks to Nick Howell for help with a Python version.
+
+    /* Takes a string in bracket notation, returns a string in conllu. */
+
+    // helper functions
+    const _node = (s, j) => {
+        log.debug(`called brackets2Conllu._node(s: ${s}, j: ${j})`);
+
+        function _Node(name, s, index, children) {
+            log.debug(`called brackets2Conllu._node._Node constructor (name: ${name}, s: ${s}, index: ${index}, children: ${children})`);
+
+            this.name = name;
+            this.s = s;
+            this.index = index;
+            this.children = children;
+
+            this.maxindex = () => {
+                // Returns the maximum index for the node
+                // mx = max([c.index for c in self.children] + [self.index])
+                let localmax = 0;
+                if (parseInt(this.index) > localmax)
+                    localmax = parseInt(this.index);
+
+                $.each(this.children, (i, child) => {
+                    if (parseInt(child.index) > localmax)
+                        localmax = parseInt(child.index);
+                });
+
+                return localmax;
+            };
+
+            this.paternity = () => {
+                $.each(this.children, (i, child) => {
+                    child.parent = this;
+                    child.paternity();
+                });
+
+                return this;
+            };
+
+            this.parent_index = () => {
+                if (this.parent !== undefined) {
+                    if (this.parent.index !== undefined)
+                        return this.parent.index;
+                }
+                return 0;
+            };
+        }
+
+
+        const _match = (s, up, down) => {
+            log.debug(`called brackets2Conllu._node._match(s: ${s}, up: ${up}, down: ${down})`);
+
+            let depth = 0, i = 0;
+            while(i < s.length && depth >= 0) {
+
+                if (s[i] === up)
+                    depth += 1;
+
+                if (s[i] === down)
+                    depth -= 1;
+
+                i++;
+            }
+
+            return s.slice(0,i-1);
+        };
+
+        const _max = (list) => {
+            log.debug(`called brackets2Conllu._node._max(${JSON.stringify(list)})`);
+
+            // Return the largest number in a list otherwise return 0
+            // @l = the list to search in
+            let localmax = 0;
+            $.each(list, (i, item) => {
+                localmax = Math.max(item, localmax);
+            });
+
+            return localmax;
+        };
+
+        const _count = (needle, haystack) => {
+            log.debug(`called brackets2Conllu._node._count(needle: ${needle}, haystack: ${JSON.stringify(haystack)})`);
+
+            // Return the number of times you see needle in the haystack
+            // @needle = string to search for
+            // @haystack = string to search in
+            let acc = 0;
+            for (let i=0, l=haystack.length; i<l; i++) {
+                if (needle === haystack[i])
+                    acc++;
+            }
+            return acc;
+        };
+
+
+        // Parse a bracketted expression
+        // @s = the expression
+        // @j = the index we are at
+
+        if (s[0] === '[' && s[-1] === ']')
+            s = s.slice(1, -1);
+
+        const first = s.indexOf(' '), // the first space delimiter
+            name = s.slice(0, first), // dependency relation name
+            remainder = s.slice(first, s.length);
+
+        // this is impossible to understand without meaningful variables names .....
+        let i = 0, index = 0, children = [], word;
+        while (i < remainder.length) {
+
+            if (remainder[i] === '[') {
+                // We're starting a new expression
+
+                const m = _match(remainder.slice(i+1, remainder.length), '[', ']'),
+                    indices = [index].concat(children.map((child) => { return child.maxindex(); })),
+                    n = _node(m, _max(indices));
+
+                children.push(n);
+                i += m.length + 2;
+
+                if (!word)
+                    index = _max([index, n.maxindex()]);
+
+            } else if (remainder[i] !== ' ' && (remainder[i-1] === ' ' || i === 0)) {
+
+                const openBracketIndex = remainder.indexOf('[', i);
+
+                if (openBracketIndex < 0) {
+                    word = remainder.slice(i, remainder.length);
+                } else {
+                    word = remainder.slice(i, remainder.indexOf(' ', i));
+                }
+
+                i += word.length;
+                index += 1 + _count(' ', word.trim());
+
+            } else {
+              i++;
+            }
+        }
+
+        return new _Node(name, word, index, children);
+    };
+    const _fillTokens = (node, tokens) => {
+        log.debug(`called brackets2Conllu._fillTokens(node: ${node}, tokens: ${JSON.stringify(tokens)})`);
+
+        let newToken = new conllu.Token();
+        newToken.form = node.s;
+
+        // TODO: automatic recognition of punctuation's POS
+        if (newToken['form'].match(/^[!.)(»«:;?¡,"\-><]+$/))
+          newToken.upostag = 'PUNCT';
+
+        newToken.id = node.index;
+        newToken.head = node.parent_index();
+        newToken.deprel = node.name;
+        log.debug(`_fillTokens() newToken: (form: ${newToken.form}, id: ${newToken.id}, head: ${newToken.head}, deprel: ${newToken.deprel})`);
+
+        tokens.push(newToken);
+        $.each(node.children, (i, child) => {
+            tokens = _fillTokens(child, tokens);
+        });
+
+        return tokens;
+    };
+
+
+
+    const inputLines = text.split('\n'),
+        comments = '';
+
+    let tokens = [], // list of tokens
+        root = _node(inputLines[0], 0);
+
+    root.paternity();
+    tokens = _fillTokens(root, tokens);
+    log.debug(`brackets2Conllu(): tokens: ${JSON.stringify(tokens)}`);
+
+    let sent = new conllu.Sentence();
+    sent.comments = comments;
+    sent.tokens = tokens;
+    return sent.serial;
 }
