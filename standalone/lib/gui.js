@@ -384,7 +384,58 @@ function keyDownClassifier(key) {
 				}
     } else {
 				if (key.which === KEYS.ENTER) {
-						console.log('enter');
+						key.preventDefault();
+						onEnterInTextarea();
+				}
+		}
+}
+
+function onEnterInTextarea() {
+		log.debug(`called insertConlluRow()`);
+
+		if (IS_TABLE_VIEW) {
+				console.log('also do it for table view');
+		} else {
+				let cursor = $('#indata').prop('selectionStart'),
+						text = $('#indata').val(),
+						format = detectFormat(text);
+
+				switch (format) {
+						case ('CoNLL-U'):
+
+								while (text[cursor] !== '\n' && cursor < text.length)
+										cursor++;
+
+								const linesBefore = text.slice(0, cursor).split('\n'),
+										linesAfter = text.slice(cursor+1).split('\n');
+
+								let id = parseInt(linesBefore[linesBefore.length - 1].split('\t')[0]);
+								id = (isNaN(id) ? 1 : id + 1);
+
+								let updatedLines = [].concat(
+										linesBefore,
+										[`${id}\t_\t_\t_\t_\t_\t_\t_\t_\t_`],
+										linesAfter.map((line) => {
+												if (line.startsWith('#') || line === '')
+														return line;
+
+												let splitOnTabs = line.split('\t');
+												splitOnTabs[0] = parseInt(splitOnTabs[0]) + 1; // incr index by 1
+
+												return splitOnTabs.join('\t');
+										}));
+
+								$('#indata').val(updatedLines.join('\n'))
+										.prop('selectionStart', cursor)
+										.prop('selectionEnd', cursor);
+								viewAsConllu();
+								break;
+
+						case ('CG3'):
+								break;
+
+						default:
+								log.debug(`onEnterInTextarea(): insert for format ${format}`);
 				}
 		}
 }
