@@ -619,6 +619,75 @@ apertium_kaz_2: `# https://bpaste.net/show/be7c03e6213e
 	"." sent`
 
 		}
+	},
+
+	conversion_testing: {
+
+wanna_cg3: `
+"<I>"
+	"I" prn subj p1 mf sg
+"<wanna>"
+	"want# to" vbmod pres
+	"want" vblex pres
+		"to" pr
+	"want" vblex inf
+		"to" pr
+"<skate>"
+	"skate" vblex inf SELECT:102
+	"skate" vblex pres SELECT:102
+;	"skate" n sg SELECT:102
+;	"skate" vblex imp SELECT:102 REMOVE:169
+"<to>"
+	"to" pr
+"<the>"
+	"the" det def sp
+"<beach>"
+	"beach" n sg
+"<every day>"
+	"every day" adv
+	"every" det ind sg
+		"day" n sg
+"<.>"
+	"." sent`,
+
+wanna_conllu_1: `
+1	I	I	_	prn	subj|p1|mf|sg	_	_	_	_
+2	wanna	want# to	_	vbmod	pres	_	_	_	_
+3	skate	skate	_	vblex	inf	_	_	_	_
+4	to	to	_	pr	_	_	_	_	_
+5	the	the	_	det	def|sp	_	_	_	_
+6	beach	beach	_	n	sg	_	_	_	_
+7-8	every day	_	_	_	_	_	_	_	_
+7	every	every	_	det	ind|sg	_	_	_	_
+8	day	day	_	n	sg	_	_	_	_
+9	.	.	_	sent	_	_	_	_	_`,
+
+wanna_conllu_2: `
+1	I	I	_	prn	subj|p1|mf|sg	_	_	_	_
+2-3	wanna	_	_	_	_	_	_	_	_
+2	wanna	want	_	vblex	pres	_	_	_	_
+3	wanna	to	_	pr	_	_	_	_	_
+4	skate	skate	_	vblex	inf	_	_	_	_
+5	to	to	_	pr	_	_	_	_	_
+6	the	the	_	det	def|sp	_	_	_	_
+7	beach	beach	_	n	sg	_	_	_	_
+8-9	every day	_	_	_	_	_	_	_	_
+8	every	every	_	det	ind|sg	_	_	_	_
+9	day	day	_	n	sg	_	_	_	_
+10	.	.	_	sent	_	_	_	_	_`,
+
+wanna_conllu_3: `
+1	I	I	_	prn	subj|p1|mf|sg	_	_	_	_
+2-3	wanna	_	_	_	_	_	_	_	_
+2	wanna	want	_	vblex	pres	_	_	_	_
+3	wanna	to	_	pr	_	_	_	_	_
+4	skate	skate	_	vblex	inf	_	_	_	_
+5	to	to	_	pr	_	_	_	_	_
+6	the	the	_	det	def|sp	_	_	_	_
+7	beach	beach	_	n	sg	_	_	_	_
+8	every day	every day	_	adv	_	_	_	_	_
+9	.	.	_	sent	_	_	_	_	_`
+
 	}
 };
 
