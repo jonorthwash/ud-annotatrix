@@ -90,7 +90,7 @@ function onReady() {
 
     window.log = new Logger('DEBUG');
     window.test = new Tester();
-    window.test.all();
+
     resetCy(CY_OPTIONS); // initialize w/ defaults to avoid cy.$ is not a function errors
 
     checkServer(); // check if server is running

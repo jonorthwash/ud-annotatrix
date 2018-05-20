@@ -379,21 +379,23 @@ function keyDownClassifier(key) {
             CURRENT_ZOOM = 1.0;
             cy.zoom(CURRENT_ZOOM);
             cy.center();
-        } else if (key.which == P && !posInp.length && !wfInp.length && !deprelInp.length) {
+        } else if (key.which == KEYS.P && !posInp.length && !wfInp.length && !deprelInp.length) {
 						setPunct();
 				}
     }
 }
 
 function setPunct() {
-    // Commas and so forth should attach to dependent nodes in these relationships
-    var commaEaters = ["acl", "advcl", "amod", "appos", "ccomp", "obl"];
-    // Paired punctuation that has different left and right forms
-    var pairedPunctDiff = {"(":")", "[":"]", "{":"}",  "“":"”", "„":"“", "«":"»", "‹":"›", "《":"》", "「":"」", "『":"』", "¿":"?",  "¡":"!"};
-    // Paired punctuation where left and right are identical
-    var pairedPunctSame = ["'", '"'];
+		// courtesy of Daniel Swanson :)
+		
+		log.debug(`called setPunct(): PUNCTUATION TIME!`);
 
-    console.log('PUNCTUATION TIME!');
+    // Commas and so forth should attach to dependent nodes in these relationships
+    const commaEaters = ["acl", "advcl", "amod", "appos", "ccomp", "obl"];
+    // Paired punctuation that has different left and right forms
+    const pairedPunctDiff = {"(":")", "[":"]", "{":"}",  "“":"”", "„":"“", "«":"»", "‹":"›", "《":"》", "「":"」", "『":"』", "¿":"?",  "¡":"!"};
+    // Paired punctuation where left and right are identical
+    const pairedPunctSame = ["'", '"'];
 
     var sent = buildSent();
     var puncts = [];
