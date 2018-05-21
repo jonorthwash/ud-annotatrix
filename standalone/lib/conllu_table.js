@@ -13,9 +13,8 @@ function calculateRows() {
     const windowHeight = $(window).height(),
         graphDivHeight = $('.controls').outerHeight(),
         controlsDivHeight = $('.row').outerHeight(),
-        remainingSpace = windowHeight - graphDivHeight - controlsDivHeight - 65;
-
-    const fontSize = $('#indata').css('font-size'),
+        remainingSpace = windowHeight - graphDivHeight - controlsDivHeight - 65,
+        fontSize = $('#indata').css('font-size'),
         lineHeight = Math.floor(parseInt(fontSize.replace('px','')) * 1.5);
 
     DEFAULT_NUM_TABLE_ROWS = parseInt(remainingSpace/lineHeight);
@@ -41,20 +40,25 @@ function tableEditCell(loc) {
 
     loc = loc.trim();
     const table = $('#indataTable'),
-        cell = $(`${loc}`).html();
+        cell = $(`#${loc}`).html();
 
     log.debug(`tableEditCell() cell: ${cell}`);
 
     // Update the CoNLL-U and set the value in the textbox
     let conllu = '';
-    $.each(table.rows, (i, row) => {
-        $.each(row.cells, (j, cell) => {
-            let thisCell = cell.children()[0].html();
-            if (thisCell.trim() === '')
-                thisCell = '_';
-            thisCell = thisCell.replace(/<br>/g, ''); // Get rid of extra spaces
+    $.each(table.find('tr'), (i, tr) => {
+        $.each($(tr).find('td'), (j, td) => {
+            let content = $(td).text();
+            if (content.trim() === '')
+                content = '_';
 
-            conllu += (j > 0 ? '\t' : '') + thisCell;
+            content = content.replace(/<br>/g, ''); // Get rid of extra spaces
+            conllu += (j > 0 ? '\t' : '') + content;
+            $(td).text(content)
+                .attr('tabindex', '-1')
+                .prop('contenteditable', true)
+                .blur(updateTable)
+                .keyup(() => { tableEditCell(`table_${i}_${j}`)});
         });
         conllu += '\n';
     });
@@ -87,18 +91,25 @@ function updateTable() {
             return
 
         if (line[0] === '#') {
-            $('#indataTable tbody').append(`<tr style="display:none;" id="table_${i}"><td colspan="10"><span>${line}</span></td></tr>`);
+            $('#indataTable tbody').append(
+                `<tr style="display:none;" id="table_${i}">
+                    <td colspan="10"><span>${line}</span></td>
+                </tr>`);
         } else if (line.split('\t').length !== 10) {
             log.debug(`updateTable() weirdness!`);
-            $('#indataTable tbody').append(`<tr style="display:none;" id="table_${i}"><td colspan="10"><span>${line}</span></td></tr>`);
+            $('#indataTable tbody').append(
+                `<tr style="display:none;" id="table_${i}">
+                    <td colspan="10"><span>${line}</span></td>
+                </tr>`);
         } else {
 
-            let tr = $('<tr>'), // create a new <tr> node
+            // create a new <tr> node
+            let tr = $('<tr>').attr('id', `table_${i}`),
                 cells = line.split('\t');
 
             for (let j=0; j < 10; j++) {
                 let valid = [true, '', {}],
-                    loc = `table_${i}:${j}`;
+                    loc = `table_${i}_${j}`;
 
                 if (cells[j].trim() === '')
                     cells[j] = '_';
@@ -111,8 +122,10 @@ function updateTable() {
                 }
 
                 let td = $('<td>').append( $('<span>')
+                    .text(cells[j])
                     .attr('id', loc)
                     .attr('data-value', cells[j])
+                    .attr('tabindex', '-1')
                     .prop('contenteditable', true)
                     .blur(updateTable)
                     .keyup(() => { tableEditCell(loc); }) );

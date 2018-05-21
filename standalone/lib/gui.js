@@ -388,58 +388,77 @@ function keyDownClassifier(key) {
 						onEnterInTextarea();
 				}
 		}
+		if ($('#indataTable').has(':focus').length && key.which === KEYS.ENTER) {
+				key.preventDefault();
+				onEnterInTextarea();
+		}
 }
 
 function onEnterInTextarea() {
 		log.debug(`called insertConlluRow()`);
 
+		let cursor = 999,
+				text = $('#indata').val(),
+				format = detectFormat(text),
+				linesBefore, linesAfter;
+
 		if (IS_TABLE_VIEW) {
-				console.log('also do it for table view');
+
+				// get the row number (id is of the form "table_ROW_COL")
+				const row = parseInt($(':focus').prop('id').split('_')[1]) + 1;
+				if (isNaN(row)) // something went wrong
+						return;
+
+				linesBefore = text.split('\n').slice(0, row);
+				linesAfter = text.split('\n').slice(row);
+
 		} else {
-				let cursor = $('#indata').prop('selectionStart'),
-						text = $('#indata').val(),
-						format = detectFormat(text);
 
-				switch (format) {
-						case ('CoNLL-U'):
+				cursor = $('#indata').prop('selectionStart');
+				while (text[cursor] !== '\n' && cursor < text.length)
+						cursor++;
 
-								while (text[cursor] !== '\n' && cursor < text.length)
-										cursor++;
+				linesBefore = text.slice(0, cursor).split('\n');
+				linesAfter = text.slice(cursor+1).split('\n');
 
-								const linesBefore = text.slice(0, cursor).split('\n'),
-										linesAfter = text.slice(cursor+1).split('\n');
-
-								let id = parseInt(linesBefore[linesBefore.length - 1].split('\t')[0]);
-								id = (isNaN(id) ? 1 : id + 1);
-
-								let updatedLines = [].concat(
-										linesBefore,
-										[`${id}\t_\t_\t_\t_\t_\t_\t_\t_\t_`],
-										linesAfter.map((line) => {
-												if (line.startsWith('#') || line === '')
-														return line;
-
-												let splitOnTabs = line.split('\t');
-												splitOnTabs[0] = parseInt(splitOnTabs[0]) + 1; // incr index by 1
-
-												return splitOnTabs.join('\t');
-										}));
-
-								$('#indata').val(updatedLines.join('\n'))
-										.prop('selectionStart', cursor)
-										.prop('selectionEnd', cursor);
-								viewAsConllu();
-								break;
-
-						case ('CG3'):
-								log.error(`onEnterInTextarea(): Not implemented for CG3`)
-								break;
-
-						default:
-								text = text.slice(0,cursor) + '\n' + text.slice(cursor);
-								$('#indata').val(text);
-				}
 		}
+
+		let id = parseInt(linesBefore[linesBefore.length - 1].split('\t')[0]);
+		id = (isNaN(id) ? 1 : id + 1);
+
+		switch (format) {
+				case ('CoNLL-U'):
+
+
+						let updatedLines = [].concat(
+								linesBefore,
+								[`${id}\t_\t_\t_\t_\t_\t_\t_\t_\t_`],
+								linesAfter.map((line) => {
+										if (line.startsWith('#') || line === '')
+												return line;
+
+										let splitOnTabs = line.split('\t');
+										splitOnTabs[0] = parseInt(splitOnTabs[0]) + 1; // incr index by 1
+
+										return splitOnTabs.join('\t');
+								}));
+
+						$('#indata').val(updatedLines.join('\n'))
+								.prop('selectionStart', cursor)
+								.prop('selectionEnd', cursor);
+						viewAsConllu();
+						break;
+
+				case ('CG3'):
+						log.error(`onEnterInTextarea(): Not implemented for CG3`)
+						break;
+
+				default:
+						text = text.slice(0,cursor) + '\n' + text.slice(cursor);
+						$('#indata').val(text);
+		}
+
+		updateTable();
 }
 
 function setPunct() {
@@ -448,9 +467,9 @@ function setPunct() {
 		log.debug(`called setPunct(): PUNCTUATION TIME!`);
 
     // Commas and so forth should attach to dependent nodes in these relationships
-    const commaEaters = ["acl", "advcl", "amod", "appos", "ccomp", "obl"];
+    const commaEaters = ['acl', 'advcl', 'amod', 'appos', 'ccomp', 'obl'];
     // Paired punctuation that has different left and right forms
-    const pairedPunctDiff = {"(":")", "[":"]", "{":"}",  "“":"”", "„":"“", "«":"»", "‹":"›", "《":"》", "「":"」", "『":"』", "¿":"?",  "¡":"!"};
+    const pairedPunctDiff = {'(':')', '[':']', '{':'}',  '“':'”', '„':'“', '«':'»', '‹':'›', '《':'》', '「':'」', '『':'』', '¿':'?',  '¡':'!'};
     // Paired punctuation where left and right are identical
     const pairedPunctSame = ["'", '"'];
 
@@ -467,11 +486,11 @@ function setPunct() {
         pairedPDRight.push(pairedPunctDiff[pairedPDLeft[i]]);
     }
     var offsets = [];
-    var idToIndex = {undefined:undefined, "0":-1};
+    var idToIndex = {undefined:undefined, '0':-1};
     var subnodes = 0;
     var connect = function(src, dest, rel) {
-        var sentAndPrev = changeConlluAttr(sent, [false, src, src], "deprel", rel);
-        sentAndPrev = changeConlluAttr(sent, [false, src, src], "head", (parseInt(dest)+1+offsets[dest]).toString());
+        var sentAndPrev = changeConlluAttr(sent, [false, src, src], 'deprel', rel);
+        sentAndPrev = changeConlluAttr(sent, [false, src, src], 'head', (parseInt(dest)+1+offsets[dest]).toString());
         headList[src] = dest;
         relList[src] = rel;
         sent = sentAndPrev[0];
@@ -481,7 +500,7 @@ function setPunct() {
     for (var i = 0; i < sent.tokens.length; i++) {
         tok = sent.tokens[i];
         offsets.push(subnodes);
-        if (tok.hasOwnProperty("tokens")) {
+        if (tok.hasOwnProperty('tokens')) {
             settok = 0;
             found = false;
             for (var j = 0; j < tok.tokens.length; j++) {
@@ -498,12 +517,12 @@ function setPunct() {
         headList.push(tok.head);
         idToIndex[tok.id] = i;
         relList.push(tok.deprel);
-        if (tok.deprel == "punct" && tok.upostag == undefined) {
-            sentAndPrev = changeConlluAttr(sent, [false, i, i], "upostag", "PUNCT");
+        if (tok.deprel == 'punct' && tok.upostag == undefined) {
+            sentAndPrev = changeConlluAttr(sent, [false, i, i], 'upostag', 'PUNCT');
             sent = sentAndPrev[0];
             tok = sent.tokens[i];
         }
-        if (tok.upostag == "PUNCT") {
+        if (tok.upostag == 'PUNCT') {
             if (pairedPDLeft.includes(tok.form)) {
                 bracketStack.push([i, pairedPunctDiff[tok.form]]);
             } else if (pairedPDRight.includes(tok.form)) {
@@ -538,7 +557,7 @@ function setPunct() {
         var l = 0;
         var r = headList.length-1;
         for (var x = 0; x < headList.length-1; x++) {
-            if ([undefined, "x", "root"].includes(relList[x])) {
+            if ([undefined, 'x', 'root'].includes(relList[x])) {
                 continue;
             } else if (x < idx && headList[x] > idx) {
                 l = Math.max(x, l);
@@ -555,7 +574,7 @@ function setPunct() {
         var bounds = findBounds(idx);
         var edge;
         for (var x = bounds[0]; x <= bounds[1]; x++) {
-            if (x != idx && relList[x] != "punct") {
+            if (x != idx && relList[x] != 'punct') {
                 edge = findBounds(x);
                 if (edge[0] <= idx && idx <= edge[1]) {
                     ret.push(x);
@@ -597,29 +616,29 @@ function setPunct() {
             done = false;
             for (var j = 0; j < possible.length; j++) {
                 if (headList[possible[j]] < l || headList[possible[j]] > r) {
-                    connect(l, possible[j], "punct");
-                    connect(r, possible[j], "punct");
+                    connect(l, possible[j], 'punct');
+                    connect(r, possible[j], 'punct');
                     done = true;
                     break;
                 }
             }
             if (!done) {
-                connect(l, possible[0], "punct");
-                connect(r, possible[0], "punct");
+                connect(l, possible[0], 'punct');
+                connect(r, possible[0], 'punct');
             }
         } else {
-            connect(l, lpos2[0], "punct");
-            connect(r, rpos2[rpos2.length-1], "punct");
+            connect(l, lpos2[0], 'punct');
+            connect(r, rpos2[rpos2.length-1], 'punct');
         }
     }
     for (var i = 0; i < puncts.length; i++) {
         possible = findPossible(puncts[i]);
-        if (puncts[i] == headList.length-1 && possible.includes(relList.indexOf("root"))) {
-            connect(puncts[i], relList.indexOf("root"), "punct");
+        if (puncts[i] == headList.length-1 && possible.includes(relList.indexOf('root'))) {
+            connect(puncts[i], relList.indexOf('root'), 'punct');
             continue;
         }
-        if (relList[possible[possible.length-1]] == "conj" && headList[possible[possible.length-1]] <= possible[0]) {
-            connect(puncts[i], possible[possible.length-1], "punct");
+        if (relList[possible[possible.length-1]] == 'conj' && headList[possible[possible.length-1]] <= possible[0]) {
+            connect(puncts[i], possible[possible.length-1], 'punct');
             continue;
         }
         possible.sort(function(a, b) {
@@ -636,25 +655,25 @@ function setPunct() {
         done = false;
         for (var j = 0; j < possible.length; j++) {
             if (commaEaters.includes(relList[possible[j]])) {
-                connect(puncts[i], possible[j], "punct");
+                connect(puncts[i], possible[j], 'punct');
                 done = true;
                 break;
             }
         }
         if (!done) {
             for (var j = 0; j < possible.length; j++) {
-                if (![undefined, "x", "root"].includes(relList[possible[j]])) {
-                    connect(puncts[i], possible[j], "punct");
+                if (![undefined, 'x', 'root'].includes(relList[possible[j]])) {
+                    connect(puncts[i], possible[j], 'punct');
                     done = true;
                     break;
                 }
             }
         }
         if (!done && possible.length > 0) {
-            connect(puncts[i], possible[0], "punct");
+            connect(puncts[i], possible[0], 'punct');
         }
         if (!done) {
-            console.log("Couldn't find anything to attatch punctuation " + puncts[i] + " to.");
+						log.debug(`setPunct(): couldn't find anything to attatch punctuation ${puncts[i]} to.`);
         }
     }
 
@@ -1345,4 +1364,7 @@ $(document).ready(function(){
 				if (columnHeader)  // prevents non-collapsible cols from throwing errors
 						toggleTableColumn(columnHeader.title);
 		});
+
+		log.setLevel('DEBUG');
+		toggleTableView();
 });
