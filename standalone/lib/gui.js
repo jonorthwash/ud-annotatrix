@@ -395,12 +395,12 @@ function keyDownClassifier(key) {
 }
 
 function onEnterInTextarea() {
-		log.debug(`called insertConlluRow()`);
+		log.debug(`called onEnterInTextarea()`);
 
 		let cursor = 999,
 				text = $('#indata').val(),
 				format = detectFormat(text),
-				linesBefore, linesAfter;
+				linesBefore, linesAfter, updatedLines;
 
 		if (IS_TABLE_VIEW) {
 
@@ -423,14 +423,14 @@ function onEnterInTextarea() {
 
 		}
 
-		let id = parseInt(linesBefore[linesBefore.length - 1].split('\t')[0]);
-		id = (isNaN(id) ? 1 : id + 1);
-
+		var id;
 		switch (format) {
 				case ('CoNLL-U'):
 
+						id = parseInt(linesBefore[linesBefore.length - 1].split('\t')[0]);
+						id = (isNaN(id) ? 1 : id + 1);
 
-						let updatedLines = [].concat(
+						updatedLines = [].concat(
 								linesBefore,
 								[`${id}\t_\t_\t_\t_\t_\t_\t_\t_\t_`],
 								linesAfter.map((line) => {
@@ -450,7 +450,38 @@ function onEnterInTextarea() {
 						break;
 
 				case ('CG3'):
-						log.error(`onEnterInTextarea(): Not implemented for CG3`)
+
+						function incrementIndices(line) {
+								console.log('line',line);
+								if (line.startsWith('#') || line.startsWith('"<') || line === '')
+										return line;
+
+								const targets = line.match(/[#>][0-9]+/g);
+								$.each(targets, (i, target) => {
+										const targetId = parseInt(target.slice(1));
+										//console.log(line, target, targetId);
+										if (!isNaN(targetId) && targetId > id)
+												line = line.replace(target, `${target.slice(0,1)}${targetId + 1}`);
+										console.log('(replaced)', line);
+								});
+
+								return line;
+						}
+
+						id = linesBefore.reduce((acc,line) => {
+								return acc + line.startsWith('"<');
+						}, 0);
+
+						updatedLines = [].concat(
+								linesBefore.map(incrementIndices),
+								['"<_>"'],
+								[`\t${newCGAnalysis(id+1, {id:id+1})}`],
+								linesAfter.map(incrementIndices));
+
+						$('#indata').val(updatedLines.join('\n'))
+								.prop('selectionStart', cursor)
+								.prop('selectionEnd', cursor);
+						viewAsCG();
 						break;
 
 				default:
@@ -1364,7 +1395,4 @@ $(document).ready(function(){
 				if (columnHeader)  // prevents non-collapsible cols from throwing errors
 						toggleTableColumn(columnHeader.title);
 		});
-
-		log.setLevel('DEBUG');
-		toggleTableView();
 });

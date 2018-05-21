@@ -252,8 +252,8 @@ function cleanConllu(content) {
     // If there are >1 CoNLL-U format sentences is in the input, treat them as such
     // conlluMultiInput(newContent); // TODO: move this one also inside of this func, and make a separate func for calling them all at the same time
 
-    if (newContent !== content)
-        $('#indata').val(newContent);
+    //if (newContent !== content)
+        //$('#indata').val(newContent);
 
     return newContent;
 }
