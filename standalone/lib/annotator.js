@@ -581,6 +581,7 @@ function detectFormat(content) {
         }
     }
 
+    log.debug(`detectFormat(): detected ${format}`);
     FORMAT = format;
     _.formats[_.current] = format;
     return format;
