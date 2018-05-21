@@ -119,9 +119,7 @@ class Logger extends Object {
       writer = writer || this._write;
       console.groupCollapsed(formatted.title, ...formatted.css);
         writer(formatted.raw);
-        console.groupCollapsed('stack trace:');
-          console.trace();
-        console.groupEnd();
+        console.trace();
       console.groupEnd();
     }
   }

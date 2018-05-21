@@ -415,8 +415,8 @@ function getNodeId(idString) {
     let id = parseInt(idString);
 
     if (isNaN(id)) {
-        log.critical(JSON.stringify(idString));
-        throw new Error('some issue going on here');
+        log.warn(`getNodeId(): unable to parse id: ${JSON.stringify(idString)}`);
+        return null;
     }
 
     return String(id).padStart(2, '0');
@@ -495,8 +495,13 @@ function makeDependencies(token, nodeId, graph) {
         if (IS_VERTICAL)
             edgeHeight = 45;
 
-        const headId = getNodeId(head),
-            edgeDep = {
+        const headId = getNodeId(head);
+
+        if (headId === null)
+            return graph;
+
+
+        const edgeDep = {
                 id: `ed${nodeId}`,
                 source: `nf${headId}`,
                 target: `nf${nodeId}`,
