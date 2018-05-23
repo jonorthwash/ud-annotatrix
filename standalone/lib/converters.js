@@ -237,7 +237,7 @@ function cleanConllu(content) {
         return content;
 
     // If we don't find any tabs, then we want to replace multiple spaces with tabs
-    const spaceToTab = (content.search('\t') < 0);
+    const spaceToTab = true;//(content.search('\t') < 0);
     const newContent = content.trim().split('\n').map((line) => {
         line = line.trim();
 

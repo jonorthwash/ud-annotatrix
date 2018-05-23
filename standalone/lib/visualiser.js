@@ -50,7 +50,7 @@ function conlluDraw(content) {
     log.debug(`called conlluDraw(${content})`);
 
     let sent = new conllu.Sentence();
-    sent.serial = content;
+    sent.serial = cleanConllu(content);
 
     // change box size and edge style
     if (IS_VERTICAL) {
