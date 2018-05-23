@@ -71,26 +71,26 @@ function bindHandlers() {
     // TODO: causes errors if called before the cy is initialised
     $(document).keydown(keyDownClassifier);
 
-    $('#uploadFileButton').click(handleUploadButtonPressed);
-    $('#prevSenBtn').click(prevSenSent);
-    $('#nextSenBtn').click(nextSenSent);
-    $('#remove').click(removeCurSent);
-    $('#add').click(addSent);
-    $('#exportBtn').click(exportCorpora);
-    //$('#saveOnServerBtn').click(saveOnServer);
-    $('#clearBtn').click(clearCorpus);
-		$('#helpBtn').click(showHelp);
-    $('#viewConllu').click(viewAsConllu);
-    $('#viewCG').click(viewAsCG);
-    $('#tableViewBtn').click(toggleTableView);
-    $('#codeVisibleBtn').click(toggleCodeWindow);
-    $('#currentsen').blur(goToSenSent);
+    $('#btnUploadCorpusFileButton').click(handleUploadButtonPressed);
+    $('#btnPrevSentence').click(prevSenSent);
+    $('#btnNextSentence').click(nextSenSent);
+    $('#btnRemoveSentence').click(btnRemoveSentenceCurSent);
+    $('#btnAddSentence').click(btnAddSentenceSent);
+    $('#btnExportCorpus').click(exportCorpora);
+    //$('#btnSaveServer').click(saveOnServer);
+    $('#btnDiscardCorpus').click(clearCorpus);
+		$('#btnHelp').click(showHelp);
+    $('#tabConllu').click(viewAsConllu);
+    $('#tabCG3').click(viewAsCG);
+    $('#btnViewTable').click(toggleTableView);
+    $('#btnViewText').click(toggleCodeWindow);
+    $('#inputCurrSentence').blur(goToSenSent);
 
-    $('#exportPNGBtn').click(exportPNG);
-    $('#exportSVGBtn').click(exportSVG);
-    $('#exportLaTeXBtn').click(exportLaTeX);
+    $('#btnExportPNG').click(exportPNG);
+    $('#btnExportSVG').click(exportSVG);
+    $('#btnExportLaTeX').click(exportLaTeX);
 
-    $('#indata')
+    $('#dataText')
         .keyup(drawTree)
         .keyup(focusOut)
         .keyup(formatTabsView)
@@ -127,14 +127,14 @@ function clickWF(evt) {
     // if the user clicked an activated node
     if (this.hasClass('activated')) {
 
-        this.removeClass('activated');
+        this.btnRemoveSentenceClass('activated');
 
     } else {
 
         // look for other activated nodes
         let source = cy.$('.activated');
 
-        this.addClass('activated');
+        this.btnAddSentenceClass('activated');
 
         // if there is an activated node already
         if (source.length === 1)
@@ -175,7 +175,7 @@ function writeArc(source, target) {
         isValidDep = false
     }
 
-    window.undoManager.add({
+    window.undoManager.btnAddSentence({
         undo: () => {
             let sent = buildSent(),
                 sentAndPrev = changeConlluAttr(sent, indices, 'head', sentAndPrev.previous);
@@ -190,8 +190,8 @@ function writeArc(source, target) {
 }
 
 
-function removeArc(targets) {
-    log.debug('called removeArc()');
+function btnRemoveSentenceArc(targets) {
+    log.debug('called btnRemoveSentenceArc()');
 
     /* Removes all the selected edges. */
 
@@ -213,7 +213,7 @@ function removeArc(targets) {
 
     });
 
-    window.undoManager.add({
+    window.undoManager.btnAddSentence({
         undo: () => {
             let sent = buildSent();
             $.each(targetNodes, (i, target) => {
@@ -229,7 +229,7 @@ function removeArc(targets) {
             redrawTree(sent);
         },
         redo: () => {
-            removeArc(targets);
+            btnRemoveSentenceArc(targets);
         }
     });
 
@@ -251,13 +251,13 @@ function selectArc() {
         // if the user clicked an activated node
         if (this.hasClass('selected')) {
 
-            this.removeClass('selected');
-            cy.$(`#${targetIndex}`).removeClass('arc-selected'); // removing visual effects from targetNode
+            this.btnRemoveSentenceClass('selected');
+            cy.$(`#${targetIndex}`).btnRemoveSentenceClass('arc-selected'); // removing visual effects from targetNode
 
         } else {
 
-            this.addClass('selected');
-            cy.$(`#${targetIndex}`).addClass('arc-selected'); // css for targetNode
+            this.btnAddSentenceClass('selected');
+            cy.$(`#${targetIndex}`).btnAddSentenceClass('arc-selected'); // css for targetNode
 
         }
 
@@ -314,7 +314,7 @@ function keyDownClassifier(key) {
 
     if (selArcs.length) {
         if (key.which === KEYS.DELETE || key.which === KEYS.BACKSPACE) {
-            removeArc(targetNodes);
+            btnRemoveSentenceArc(targetNodes);
         } else if (key.which === KEYS.D) {
             moveArc();
         };
@@ -335,11 +335,11 @@ function keyDownClassifier(key) {
         };
     } else if (wf.length === 1) {
         if (key.which === KEYS.M) {
-            wf.addClass('merge');
-            wf.removeClass('activated');
+            wf.btnAddSentenceClass('merge');
+            wf.btnRemoveSentenceClass('activated');
         } else if (key.which === KEYS.S) {
-            wf.addClass('supertoken');
-            wf.removeClass('activated');
+            wf.btnAddSentenceClass('supertoken');
+            wf.btnRemoveSentenceClass('activated');
         } else if (key.which === KEYS.R) {
             setRoot(wf);
         };
@@ -353,11 +353,11 @@ function keyDownClassifier(key) {
         }
     } else if (st.length) {
         if (key.which === KEYS.DELETE || key.which === BACKSPACE) {
-            removeSup(st);
+            btnRemoveSentenceSup(st);
         }
     }
 
-    if (!$('#indata').is(':focus')) {
+    if (!$('#dataText').is(':focus')) {
         // console.log('ZOOM: ', CURRENT_ZOOM, inputAreaFocus);
         if ((key.which === KEYS.EQUALS || key.which === 61) ){
             CURRENT_ZOOM = cy.zoom();
@@ -388,7 +388,7 @@ function keyDownClassifier(key) {
 						onEnterInTextarea();
 				}
 		}
-		if ($('#indataTable').has(':focus').length && key.which === KEYS.ENTER) {
+		if ($('#dataTextTable').has(':focus').length && key.which === KEYS.ENTER) {
 				key.preventDefault();
 				onEnterInTextarea();
 		}
@@ -398,7 +398,7 @@ function onEnterInTextarea() {
 		log.debug(`called onEnterInTextarea()`);
 
 		let cursor = 999,
-				text = $('#indata').val(),
+				text = $('#dataText').val(),
 				format = detectFormat(text),
 				linesBefore, linesAfter, updatedLines;
 
@@ -414,7 +414,7 @@ function onEnterInTextarea() {
 
 		} else {
 
-				cursor = $('#indata').prop('selectionStart');
+				cursor = $('#dataText').prop('selectionStart');
 				while (text[cursor] !== '\n' && cursor < text.length)
 						cursor++;
 
@@ -443,7 +443,7 @@ function onEnterInTextarea() {
 										return splitOnTabs.join('\t');
 								}));
 
-						$('#indata').val(updatedLines.join('\n'))
+						$('#dataText').val(updatedLines.join('\n'))
 								.prop('selectionStart', cursor)
 								.prop('selectionEnd', cursor);
 						viewAsConllu();
@@ -477,7 +477,7 @@ function onEnterInTextarea() {
 								[`\t${newCGAnalysis(id+1, {id:id+1})}`],
 								linesAfter.map(incrementIndices));
 
-						$('#indata').val(updatedLines.join('\n'))
+						$('#dataText').val(updatedLines.join('\n'))
 								.prop('selectionStart', cursor)
 								.prop('selectionEnd', cursor);
 						viewAsCG();
@@ -485,7 +485,7 @@ function onEnterInTextarea() {
 
 				default:
 						text = text.slice(0,cursor) + '\n' + text.slice(cursor);
-						$('#indata').val(text);
+						$('#dataText').val(text);
 		}
 
 		updateTable();
@@ -724,15 +724,15 @@ function moveArc() {
 }
 
 
-function removeSup(st) {
-		log.debug(`called removeSup(${st.attr('id')})`);
+function btnRemoveSentenceSup(st) {
+		log.debug(`called btnRemoveSentenceSup(${st.attr('id')})`);
 
     /* Support for removing supertokens.
     The function takes the cy-element of superoken that was selected,
-    removes it and inserts its former subtokens. */
+    btnRemoveSentences it and inserts its former subtokens. */
 
 		let sent = buildSent(),
-				currentId = parseInt(st.attr('id').slice(2)), // the id of the supertoken to be removed
+				currentId = parseInt(st.attr('id').slice(2)), // the id of the supertoken to be btnRemoveSentenced
 				subTokens = sent.tokens[currentId].tokens;    // getting its children
 
 		sent.tokens.splice(currentId, 1);		// removing the multiword token
@@ -749,7 +749,7 @@ function changeNode() {
 
     IS_EDITING = true;
 
-		this.addClass('input');
+		this.btnAddSentenceClass('input');
 		const id = this.attr('id').slice(0, 2);
 		let param = this.renderedBoundingBox(), nodeType;
 		log.debug(`changeNode() (param: ${JSON.stringify(param)})`);
@@ -770,7 +770,7 @@ function changeNode() {
 		const res = this.data('label').replace(/[⊳⊲]/, '');
     this.data('label', res);
 
-		$('#mute').addClass('activated');
+		$('#mute').btnAddSentenceClass('activated');
 		$('.activated#mute').css('height', (IS_VERTICAL
 				? `${buildSent().tokens.length * 50}px`
 				:	$(window).width() - 10) );
@@ -801,8 +801,8 @@ function changeNode() {
         .css('width', param.w + 35)
         //.css('background-color', param.color)
         .attr('value', this.data('label'))
-        .addClass('activated')
-        .addClass(id);
+        .btnAddSentenceClass('activated')
+        .btnAddSentenceClass(id);
 
     if (nodeType === 'DEPREL') {
         $('#edit').focus().select();
@@ -868,7 +868,7 @@ function writeDeprel(deprelInp, indices) { // TODO: DRY
 
 		const sentAndPrev = changeConlluAttr(sent, indices, 'deprel', deprelInp);
 
-		window.undoManager.add({
+		window.undoManager.btnAddSentence({
 				undo: () => {
 						const sent = buildSent(),
 								sentAndPrev = changeConlluAttr(sent, indices, 'deprel', sentAndPrev.previous);
@@ -898,7 +898,7 @@ function writePOS(posInp, indices) {
 		let sent = buildSent(),
 				sentAndPrev = changeConlluAttr(sent, indices, 'upostag', posInp);
 
-		window.undoManager.add({
+		window.undoManager.btnAddSentence({
 				undo: () => {
 						const sent = buildSent(),
 								sentAndPrev = changeConlluAttr(sent, indices, 'upostag', sentAndPrev.previous);
@@ -1101,7 +1101,7 @@ function mergeNodes(toMerge, side, how) {
         if (how === 'subtoken') {
 
             sent.tokens[nodeId].form = newToken; // rewrite the token
-            sent.tokens.splice(otherId, 1); // remove the merged token
+            sent.tokens.splice(otherId, 1); // btnRemoveSentence the merged token
             sent = renumberNodes(nodeId, otherId, sent, side);
 
         } else if (how === 'supertoken') {
@@ -1128,7 +1128,7 @@ function buildSent() {
 
     /* Reads data from the textbox, returns a sent object. */
     let sent = new conllu.Sentence(),
-				currentSent = $('#indata').val(),
+				currentSent = $('#dataText').val(),
 				currentFormat = detectFormat(currentSent);
 
     if (currentFormat === 'CG3') {
@@ -1152,13 +1152,13 @@ function redrawTree(sent) {
     let changedSent = sent.serial;
 
     // detecting which format was used
-		const currentSent = $('#indata').val(),
+		const currentSent = $('#dataText').val(),
 				currentFormat = detectFormat(currentSent);
 
     if (currentFormat === 'CG3')
         changedSent = conllu2cg3(changedSent);
 
-    $('#indata').val(changedSent);
+    $('#dataText').val(changedSent);
     updateTable();
     drawTree();
     cy.zoom(CURRENT_ZOOM);
@@ -1171,12 +1171,12 @@ function writeSent(makeChanges) {
 
     // build sent
     let sent = new conllu.Sentence();
-    sent.serial = $('#indata').val();
+    sent.serial = $('#dataText').val();
 
     sent = makeChanges(sent, this);
 
     // redraw tree
-    $('#indata').val(sent.serial);
+    $('#dataText').val(sent.serial);
     drawTree();
 }
 
@@ -1184,7 +1184,7 @@ function writeSent(makeChanges) {
 function viewAsPlain() { // TODO: DRY?
 		log.debug(`called viewAsPlain()`);
 
-    let text = $('#indata').val(),
+    let text = $('#dataText').val(),
 				currentFormat = detectFormat(text);
 
     if (currentFormat === 'CoNLL-U') {
@@ -1203,14 +1203,14 @@ function viewAsPlain() { // TODO: DRY?
 
     }
 
-    $('#indata').val(text);
+    $('#dataText').val(text);
 }
 
 
 function viewAsConllu() {
 		log.debug(`called viewAsConllu()`);
 
-    let curSent = $('#indata').val(),
+    let curSent = $('#dataText').val(),
 				currentFormat = detectFormat(curSent);
 
     if (currentFormat === 'CG3') {
@@ -1221,9 +1221,9 @@ function viewAsConllu() {
             return;
         }
 
-        $('#viewCG').removeClass('active');
-        $('#viewConllu').addClass('active');
-        $('#indata').val(curSent);
+        $('#tabCG3').btnRemoveSentenceClass('active');
+        $('#tabConllu').btnAddSentenceClass('active');
+        $('#dataText').val(curSent);
 
     } else {
 
@@ -1245,21 +1245,21 @@ function viewAsConllu() {
 function viewAsCG() {
 		log.debug(`called viewAsCG()`);
 
-    let text = $('#indata').val(),
+    let text = $('#dataText').val(),
 				currentFormat = detectFormat(text);
 
     if (currentFormat === 'CoNLL-U') {
         text = conllu2cg3(text);
-        $('#viewConllu').removeClass('active');
+        $('#tabConllu').btnRemoveSentenceClass('active');
     }
 
-    $('#viewCG').addClass('active');
-    $('#indata').val(text);
+    $('#tabCG3').btnAddSentenceClass('active');
+    $('#dataText').val(text);
 
     if (IS_TABLE_VIEW) {
         $('#btnViewTable i').toggleClass('fa-code', 'fa-table');
-        $('#indataTable').toggle();
-        $('#indata').toggle();
+        $('#dataTextTable').toggle();
+        $('#dataText').toggle();
         IS_TABLE_VIEW = false ;
     }
 
@@ -1270,7 +1270,7 @@ function cantConvertCG() {
 		const message = 'Warning: CG containing ambiguous analyses can\'t be converted into CoNLL-U!';
 		log.warn(message);
 
-		$('#viewConllu').prop('disabled', true);
+		$('#tabConllu').prop('disabled', true);
     $('#warning').css('background-color', 'pink')
         .text(message);
 }
@@ -1279,7 +1279,7 @@ function cantConvertCG() {
 function clearWarning() {
 		log.debug('called clearWarning()');
 
-		$('#viewConllu').prop('disabled', false);
+		$('#tabConllu').prop('disabled', false);
     $('#warning').css('background-color', 'white')
         .text('');
 }
@@ -1326,7 +1326,7 @@ function switchEnhanced() {
 
 
 $(document).ready(function(){
-		$('#currentsen').keyup((e) => {
+		$('#inputCurrSentence').keyup((e) => {
 				if (e.keyCode === 13) {
 						goToSenSent();
 				} else if (e.keyCode === KEYS.UP || e.keyCode === KEYS.K) {
@@ -1334,9 +1334,9 @@ $(document).ready(function(){
 				} else if (e.keyCode === KEYS.DOWN || e.keyCode === KEYS.J) {
 						nextSenSent();
 				} else if (e.keyCode === KEYS.MINUS) {
-						removeCurSent();
+						btnRemoveSentenceCurSent();
 				} else if (e.keyCode === KEYS.EQUALS) {
-						addSent();
+						btnAddSentenceSent();
 				}
 		});
 

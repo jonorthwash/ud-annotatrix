@@ -719,7 +719,7 @@ wanna_conllu_3: `
 /*
  * Tester object
  *
- * put unit tests inside here as functions, and then add the function call to
+ * put unit tests inside here as functions, and then btnAddSentence the function call to
  * the all() function ... to invoke, use window.test.all() or test.all()
  *
  * also implements an assert() function, which throws AssertionError exceptions
@@ -799,23 +799,23 @@ class Tester extends Object {
 				log.out('\nExecuting Tester.buttons()');
 
 				const buttons = [
-					$('#prevSenBtn'),
-					$('#nextSenBtn'),
-					$('#remove'),
-					$('#add'),
-					$('#upload'),
-					$('#exportBtn'),
-					$('#clearBtn'),
-					$('#printBtn'),
+					$('#btnPrevSentence'),
+					$('#btnNextSentence'),
+					$('#btnRemoveSentence'),
+					$('#btnAddSentence'),
+					$('#btnUploadCorpus'),
+					$('#btnExportCorpus'),
+					$('#btnDiscardCorpus'),
+					$('#btnPrintCorpus'),
 					$('#btnUndo'),
 					$('#btnRedo'),
-					$('#helpBtn'),
-					$('#settingsBtn'),
-					$('#viewOther'),
-					$('#viewConllu'),
-					$('#viewCG'),
-					$('#tableViewBtn'),
-					$('#codeVisibleBtn'),
+					$('#btnHelp'),
+					$('#btnSettings'),
+					$('#tabOther'),
+					$('#tabConllu'),
+					$('#tabCG3'),
+					$('#btnViewTable'),
+					$('#btnViewText'),
 					$('#RTL'),
 					$('#vertical'),
 					$('#enhanced')

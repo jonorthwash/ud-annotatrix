@@ -100,7 +100,7 @@ span.tt {
   margin:auto;
   text-align:center;
   background-color: #ffcccc;
-  padding: 10px;
+  pbtnAddSentenceing: 10px;
   margin: 20px;
 }
 
@@ -174,13 +174,13 @@ div.center {
   margin-right: auto;
 }
 #hp-header {
-  padding-top: 5px;
+  pbtnAddSentenceing-top: 5px;
   margin-bottom: 5px;
-  padding-left: 2em;
+  pbtnAddSentenceing-left: 2em;
 }
 #menulogo {
-  padding-top: 0.5em;
-  padding-right: 1em;
+  pbtnAddSentenceing-top: 0.5em;
+  pbtnAddSentenceing-right: 1em;
   float: right;
 }
 #hp-header span a {
@@ -192,7 +192,7 @@ div.center {
 
 .bigbutton {
   font-size: 20px !important;
-  padding: 10px 15px !important;
+  pbtnAddSentenceing: 10px 15px !important;
 }
 
 #hp-header > .hp-logo {
@@ -205,8 +205,8 @@ div.center {
 #main {
   max-width:1000px;
   min-width: 600px;
-  padding-left: 2em;
-  padding-right: 2em;
+  pbtnAddSentenceing-left: 2em;
+  pbtnAddSentenceing-right: 2em;
 }
 #content {
   margin: 15px;
@@ -214,9 +214,9 @@ div.center {
 
 #manual-main {
   max-width:960px;
-  padding-left: 2em;
-  padding-right: 2em;
-  padding-bottom: 5em;
+  pbtnAddSentenceing-left: 2em;
+  pbtnAddSentenceing-right: 2em;
+  pbtnAddSentenceing-bottom: 5em;
 }
 
 #footer {
@@ -277,7 +277,7 @@ div.center {
 }
 
 .annotation_wrapper td {
-  padding: 1em;
+  pbtnAddSentenceing: 1em;
 }
 
 .annotation_table {
@@ -285,13 +285,13 @@ div.center {
 }
 
 .annotation_table th {
-  padding: 0em;
+  pbtnAddSentenceing: 0em;
   font-family: monospace;
   font-size: 13px;
 }
 
 .annotation_table td {
-  padding: 0;
+  pbtnAddSentenceing: 0;
   font-family: monospace;
   font-size: 13px;
 }
@@ -392,7 +392,7 @@ td.none {
 div.example {
   border: 1px solid gray;
   margin:1em;
-  padding:2em 2em 0.5em 2em;
+  pbtnAddSentenceing:2em 2em 0.5em 2em;
 }
 
 #indextable {
@@ -403,7 +403,7 @@ div.example {
 }
 
 #indextable td, #indextable th {
-  padding: 5px;
+  pbtnAddSentenceing: 5px;
 }
 
 #indextable td.right {
@@ -427,14 +427,14 @@ table.typeindex td {
 }
 
 table.typeindex thead th {
-  padding: 0.5em;
+  pbtnAddSentenceing: 0.5em;
   border-left: 1px solid lightgray;
   border-right: 1px solid lightgray;
 }
 
 table.typeindex tbody td {
-  padding-left: 0.5em;
-  padding-right: 0.5em;
+  pbtnAddSentenceing-left: 0.5em;
+  pbtnAddSentenceing-right: 0.5em;
 }
 
 table.category {
@@ -473,15 +473,15 @@ h4, h5, h6 {
 }
 
 
-/* Begin JNW additions for tabs */
-#filemanagement {
+/* Begin JNW btnAddSentenceitions for tabs */
+#fileManagement {
 	float: right ;
 }
 
 .viewoptions {
 	/* height: 4em ; */
-	padding-top: 1ex;
-	padding-left: 1ex;
+	pbtnAddSentenceing-top: 1ex;
+	pbtnAddSentenceing-left: 1ex;
 	margin-bottom: -1px;
 	float: right ;
 }
@@ -512,7 +512,7 @@ h4, h5, h6 {
 	border-radius: 3px 3px 0 0 ;
 	border-bottom: none ;
 	margin-right: 1ex ;
-	padding: 0.5ex ;
+	pbtnAddSentenceing: 0.5ex ;
 	display: inline-block ;
 }
 
@@ -526,21 +526,21 @@ h4, h5, h6 {
 .inarea .row {
 	margin-left: 0 !important;
 	margin-right: 0 !important;
-	padding: 1ex 1ex 0 1ex;
+	pbtnAddSentenceing: 1ex 1ex 0 1ex;
 
 }
 
-#indata {
+#dataText {
 	display: block ;
 	font-family: "Liberation Mono", monospace ;
   font-size: 85%;
   height: 20em;
 }
 
-#indataarea {
+#data {
   position: relative;
-	padding: 2ex ;
-	padding-top: 1ex ;
+	pbtnAddSentenceing: 2ex ;
+	pbtnAddSentenceing-top: 1ex ;
 	background-color: #fff ;
 	border: 1px solid #ddd ;
 	clear: both ;
@@ -559,7 +559,7 @@ h4, h5, h6 {
 	clear: both ;
 }
 
-#currentsen {
+#inputCurrSentence {
 	text-align: right;
 }
 
@@ -581,8 +581,8 @@ h4, h5, h6 {
        background-color: white;
        width: 150px;
        list-style-type: none;
-       padding-left: 3px;
-       padding-right: 3px;
+       pbtnAddSentenceing-left: 3px;
+       pbtnAddSentenceing-right: 3px;
 }
 
 .ui-menu-item a:hover {
@@ -603,14 +603,14 @@ h4, h5, h6 {
 
 
 
-/* End JNW additions for tabs */
+/* End JNW btnAddSentenceitions for tabs */
 
 .treebankLabel {
     margin: 3px;
-    padding-top: 2px;
-    padding-right: 4px;
-    padding-bottom: 2px;
-    padding-left: 4px;
+    pbtnAddSentenceing-top: 2px;
+    pbtnAddSentenceing-right: 4px;
+    pbtnAddSentenceing-bottom: 2px;
+    pbtnAddSentenceing-left: 4px;
 font-weight: 600;
 border-top-left-radius: 2px;
 border-top-right-radius: 2px;
@@ -631,7 +631,7 @@ cursor: default;
 overflow: auto;
 }
 .selfcomplete-suggestion {
-padding: 2px 5px;
+pbtnAddSentenceing: 2px 5px;
 white-space: nowrap;
 overflow: hidden;
 }
@@ -647,7 +647,7 @@ color: #3399FF;
 	position: absolute ;
 	right: 1px;
 	bottom: 1ex;
-	padding-left: 0.5ex;
+	pbtnAddSentenceing-left: 0.5ex;
 }
 
 .thead-default th {
@@ -700,7 +700,7 @@ color: #3399FF;
   margin: 0 1em;
 }
 
-#uploadFileSizeError {
+#btnUploadCorpusFileSizeError {
   color: #ff0000;
   display: none;
 }
@@ -714,20 +714,20 @@ color: #3399FF;
 }
 
 .input-group {
-  padding-right: 1em;
+  pbtnAddSentenceing-right: 1em;
 }
 
 .btn-group {
   float: left;
-  padding-right: 1em;
+  pbtnAddSentenceing-right: 1em;
 }
 
-#indataarea > div {
+#data > div {
   overflow: auto;
   resize: both;
 }
 
-#indataTable {
+#dataTextTable {
   width: 100%;
   display: none;
 }
@@ -737,18 +737,18 @@ color: #3399FF;
 }
 
 #tabBox {
-  padding-right: 1em;
+  pbtnAddSentenceing-right: 1em;
 }
 
-#exportLaTeXBtn, #exportPNGBtn, #exportSVGBtn {
+#btnExportLaTeX, #btnExportPNG, #btnExportSVG {
   width: 100px;
 }
 
-#exportedGraph, #latexExportError, #exportLaTeX-textarea {
+#exportedGraph, #errorExportLaTeX, #exportedLaTeX {
   display: none;
 }
 
-#svgResult {
+#exportedSVG {
   width: 100%;
   border: 1px solid gray;
   border-radius: 5px;

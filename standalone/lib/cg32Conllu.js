@@ -13,7 +13,7 @@ function cg32Conllu(CGtext) {
         return null;
     }
 
-    // remove extra spaces before newline before processing text
+    // btnRemoveSentence extra spaces before newline before processing text
     CGtext = CGtext.replace(/ +\n/, '\n');
     let sent = new conllu.Sentence();
     sent.comments = findComments(CGtext);

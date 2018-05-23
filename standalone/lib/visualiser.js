@@ -1,6 +1,6 @@
 'use strict'
 
-var TREE = {}, // This map allows us to address the Token object given an ID
+var TREE = {}, // This map allows us to btnAddSentenceress the Token object given an ID
     CURRENT_PAN = {},
 
     // used for calculating progress
@@ -56,13 +56,13 @@ function conlluDraw(content) {
     if (IS_VERTICAL) {
         $('#cy').css('width', `${$(window).width()-10}px`);
         $('#cy').css('height', `${sent.tokens.length * 50}px`);
-        $('edge.incomplete').addClass('vertical').removeClass('horizontal');
+        $('edge.incomplete').btnAddSentenceClass('vertical').btnRemoveSentenceClass('horizontal');
     } else {
         // scales width according to viewport
         $('#cy').css('width', '100%');
         // window height - height of top area - height of controls
         $('#cy').css('height', `${$(window).height()-$('.inarea').height()-80}px`);
-        $('edge.incomplete').addClass('horizontal').removeClass('vertical');
+        $('edge.incomplete').btnAddSentenceClass('horizontal').btnRemoveSentenceClass('vertical');
     }
 
     /*
@@ -146,7 +146,7 @@ function getCyLayout() {
 
     let layout = {
         name: 'tree',
-        padding: 0,
+        pbtnAddSentenceing: 0,
         nodeDimensionsIncludeLabels: false
     };
 
@@ -237,22 +237,22 @@ function exportSVG() {
     log.debug(`called exportSVG()`);
 
     $('#exportModal').find('#exportedGraph').css('display', 'none');
-    $('#exportModal').find('#latexExportError').css('display', 'none');
-    $('#exportModal').find('#exportLaTeX-textarea').css('display', 'none');
+    $('#exportModal').find('#errorExportLaTeX').css('display', 'none');
+    $('#exportModal').find('#exportedLaTeX').css('display', 'none');
 
     const ctx = new C2S(cy.width, cy.height);
     cy.renderer().renderTo(ctx);
 
-    $('#exportModal').find('#svgResult').attr('src', `data:image/svg+xml;charset=utf-8,${ctx.getSerializedSvg()}`);
-    $('#exportModal').find('#svgResult').css('display', 'inline');
+    $('#exportModal').find('#exportedSVG').attr('src', `data:image/svg+xml;charset=utf-8,${ctx.getSerializedSvg()}`);
+    $('#exportModal').find('#exportedSVG').css('display', 'inline');
 }
 
 function exportPNG() {
     log.debug(`called exportPNG()`);
 
-    $('#exportModal').find('#svgResult').css('display', 'none');
-    $('#exportModal').find('#latexExportError').css('display', 'none');
-    $('#exportModal').find('#exportLaTeX-textarea').css('display', 'none');
+    $('#exportModal').find('#exportedSVG').css('display', 'none');
+    $('#exportModal').find('#errorExportLaTeX').css('display', 'none');
+    $('#exportModal').find('#exportedLaTeX').css('display', 'none');
 
     const b64key = 'base64,',
         b64 = cy.png().substring(cy.png().indexOf(b64key) + b64key.length),
@@ -286,16 +286,16 @@ function b64toBlob(b64Data, contentType, sliceSize) {
 function exportLaTeX() {
     log.debug(`called exportLaTeX()`);
 
-    $('#exportModal').find('#exportLaTeX-textarea').val('').css('display', 'none');
-    $('#exportModal').find('#svgResult').css('display', 'none');
-    $('#exportModal').find('#latexExportError').css('display', 'none');
+    $('#exportModal').find('#exportedLaTeX').val('').css('display', 'none');
+    $('#exportModal').find('#exportedSVG').css('display', 'none');
+    $('#exportModal').find('#errorExportLaTeX').css('display', 'none');
     $('#exportModal').find('#exportedGraph').css('display', 'none');
 
     if (CODE_LATEX === 'error') {
-        $('#exportModal').find('#latexExportError').css('display', 'inline');
+        $('#exportModal').find('#errorExportLaTeX').css('display', 'inline');
     } else {
-        const textareaRows = $('#exportModal').find('#exportLaTeX-textarea').attr('rows');
-        $('#exportModal').find('#exportLaTeX-textarea')
+        const textareaRows = $('#exportModal').find('#exportedLaTeX').attr('rows');
+        $('#exportModal').find('#exportedLaTeX')
             .val(CODE_LATEX.join('\n'))
             .attr('rows', Math.max(textareaRows, CODE_LATEX.length + 2) )
             .css('display', 'inline');
