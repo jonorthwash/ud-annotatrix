@@ -35,7 +35,7 @@ var latex_exported = false;
 function conlluDraw(content) {
     console.log('conlluDraw.');
     var sent = new conllu.Sentence();
-    sent.serial = content;
+    sent.serial = cleanConllu(content);
     changeBoxSize(sent);
     changeEdgeStyle();
     var layout = formLayout(); // This is the thing that lays out nodes on the grid
@@ -292,7 +292,7 @@ function exportSVG() {
     var ctx = new C2S(cy.width, cy.height);
     cy.renderer().renderTo(ctx);
     var ctxSerializedSVG = ctx.getSerializedSvg();
-    
+
     $('#exportModal').find('#svgResult').attr('src', 'data:image/svg+xml;charset=utf-8,'+ctxSerializedSVG);
 
     $('#exportModal').find('#svgResult').css('display', 'inline');
@@ -475,7 +475,7 @@ function createToken(graph, token, spId) {
         nodeWF.length = nodeWF.label.length * 13;
     } else {
         nodeWF.length = nodeWF.label.length * 11;
-    }*/ 
+    }*/
     nodeWF.length = nodeWF.form.length + "em";
     if(nodeWF.form.length > 3) {
       nodeWF.length = nodeWF.form.length*0.7 + "em";

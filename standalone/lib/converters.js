@@ -29,7 +29,7 @@ function plainSent2Conllu(text) {
        if(sent.tokens[i]['form'].match(/^[$%€£¥Æ§©]+$/)) {
          sent.tokens[i]['upostag'] = 'SYM';
        }
-    }    
+    }
 
     return sent.serial;
 }
@@ -114,38 +114,36 @@ function conllu2plainSent(text) {
  * @return {String}     Cleaned up content
  */
 function cleanConllu(content) {
-    // if we don't find any tabs, then convert >1 space to tabs
-    // TODO: this should probably go somewhere else, and be more
-     // robust, think about vietnamese D:
-    var res = content.search("\n");
-    if(res < 0) {
-        return content;
-    }
-    // maybe someone is just trying to type conllu directly...
-    var res = (content.match(/_/g)||[]).length;
-    if(res <= 2) {
-        return content;
-    }
-    var res = content.search("\t");
-    var spaceToTab = false;
-    // If we don't find any tabs, then we want to replace multiple spaces with tabs
-    if(res < 0) {
-        spaceToTab = true;
-    }
-    // remove blank lines
-    var lines = content.trim().split("\n");
-    var newContent = "";
-    for(var i = 0; i < lines.length; i++) {
-        var newLine = lines[i].trim();
-//        if(newLine.length == 0) {
-//            continue;
-//        }
-        // If there are no spaces and the line isn't a comment, then replace more than one space with a tab
-        if(newLine[0] != "#" && spaceToTab) {
-            newLine = newLine.replace(/  */g, "\t");
-        }
-        // strip the extra tabs/spaces at the end of the line
-        newContent = newContent + newLine + "\n";
-    }
-    return newContent;
+  // if we don't find any tabs, then convert >1 space to tabs
+  // TODO: this should probably go somewhere else, and be more
+  // robust, think about vietnamese D:
+  let res = content.search('\n');
+  if (res < 0)
+      return content;
+
+  // maybe someone is just trying to type conllu directly...
+  res = (content.match(/_/g) || []).length;
+  if (res <= 2)
+      return content;
+
+  // If we don't find any tabs, then we want to replace multiple spaces with tabs
+  const spaceToTab = true;//(content.search('\t') < 0);
+  const newContent = content.trim().split('\n').map((line) => {
+      line = line.trim();
+
+      // If there are no spaces and the line isn't a comment,
+      // then replace more than one space with a tab
+      if (line[0] !== '#' && spaceToTab)
+          line = line.replace(/  */g, '\t');
+
+      return line
+  }).join('\n');
+
+  // If there are >1 CoNLL-U format sentences is in the input, treat them as such
+  // conlluMultiInput(newContent); // TODO: move this one also inside of this func, and make a separate func for calling them all at the same time
+
+  //if (newContent !== content)
+      //$('#indata').val(newContent);
+
+return newContent;
 }
