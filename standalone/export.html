@@ -10,20 +10,20 @@
 </head>
 <body -->
 
-<!-- h1>Export options<h1 -->
-<button type="button" class="btn btn-primary" id="exportPNGBtn" style="width: 100px;">PNG</button>
-<button type="button" class="btn btn-primary" id="exportSVGBtn" style="width: 100px;">SVG</button>
-<button type="button" class="btn btn-primary" id="exportLaTeXBtn" style="width: 100px;">LaTeX</button>
-</br>
-<div class="form-group">
-  <label for="comment"></label>
-  <div id="exportResult">
-  	<img id="exportedGraph" style="display: none;">
-  	<div id="latexExportError" style="display: none;">Sorry, the graph has to have all UPOS tags defined!</div>
-	<textarea class="form-control" rows="10" id="exportLaTeX-textarea" readonly style="display: none;"></textarea>
-	 <iframe id="svgResult" style="width: 100%; border: 1px solid gray; border-radius: 5px;"></iframe>
+  <!-- h1>Export options<h1 -->
+  <button type="button" class="btn btn-primary" id="exportPNGBtn">PNG</button>
+  <button type="button" class="btn btn-primary" id="exportSVGBtn">SVG</button>
+  <button type="button" class="btn btn-primary" id="exportLaTeXBtn">LaTeX</button>
+  <br />
+  <div class="form-group">
+    <label for="comment"></label>
+    <div id="exportResult">
+    	<img id="exportedGraph">
+    	<div id="latexExportError">Sorry, the graph has to have all UPOS tags defined!</div>
+    	<textarea class="form-control" rows="10" id="exportLaTeX-textarea" readonly></textarea>
+    	<iframe id="svgResult"></iframe>
+    </div>
   </div>
-</div>
 
 <!-- /body>
 </html -->

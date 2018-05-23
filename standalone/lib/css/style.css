@@ -739,3 +739,17 @@ color: #3399FF;
 #tabBox {
   padding-right: 1em;
 }
+
+#exportLaTeXBtn, #exportPNGBtn, #exportSVGBtn {
+  width: 100px;
+}
+
+#exportedGraph, #latexExportError, #exportLaTeX-textarea {
+  display: none;
+}
+
+#svgResult {
+  width: 100%;
+  border: 1px solid gray;
+  border-radius: 5px;
+}
