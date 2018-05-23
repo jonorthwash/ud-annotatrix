@@ -1257,7 +1257,7 @@ function viewAsCG() {
     $('#indata').val(text);
 
     if (IS_TABLE_VIEW) {
-        $('#tableViewButton').toggleClass('fa-code', 'fa-table');
+        $('#btnViewTable i').toggleClass('fa-code', 'fa-table');
         $('#indataTable').toggle();
         $('#indata').toggle();
         IS_TABLE_VIEW = false ;

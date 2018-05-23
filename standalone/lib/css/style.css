@@ -537,7 +537,7 @@ h4, h5, h6 {
   height: 20em;
 }
 
-.indataarea {
+#indataarea {
   position: relative;
 	padding: 2ex ;
 	padding-top: 1ex ;
@@ -722,7 +722,7 @@ color: #3399FF;
   padding-right: 1em;
 }
 
-.indataarea > div {
+#indataarea > div {
   overflow: auto;
   resize: both;
 }

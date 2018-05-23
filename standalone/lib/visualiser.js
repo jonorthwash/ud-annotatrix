@@ -500,7 +500,6 @@ function makeDependencies(token, nodeId, graph) {
         if (headId === null)
             return graph;
 
-
         const edgeDep = {
                 id: `ed${nodeId}`,
                 source: `nf${headId}`,

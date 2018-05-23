@@ -73,7 +73,7 @@ function toggleTableView() {
     log.debug('called toggleTableView()');
 
     // This function toggles the table view
-    $('#tableViewButton').toggleClass('fa-code', 'fa-table');
+    $('#btnViewTable i').toggleClass('fa-code', 'fa-table');
     $('#indata').toggle();
     $('#indataTable').toggle();
 
@@ -198,10 +198,10 @@ function toggleTableColumn(col) {
 function toggleCodeWindow() {
     log.debug(`called toggleCodeWindow()`);
 
-    $('#codeVisibleButton').toggleClass('fa-chevron-down', 'fa-chevron-up');
-    $('.indataarea').toggle();
+    $('#btnViewCode i').toggleClass('fa-chevron-down', 'fa-chevron-up');
+    $('#indataarea').toggle();
     $('#tabBox').toggle();
-    $('#viewButton').toggle();
+    $('#btnViewParent').closest('div').toggle();
     if (!IS_VERTICAL)
         $('#cy').css('height', $(window).height()-$('.inarea').height()-80);
 }
