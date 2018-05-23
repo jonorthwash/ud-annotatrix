@@ -492,9 +492,7 @@ h4, h5, h6 {
 
 .tabContainer {
 	display: flex;
-}
-
-.tabContainer div {
+  float: right;
 }
 
 .inarea {
@@ -535,10 +533,12 @@ h4, h5, h6 {
 #indata {
 	display: block ;
 	font-family: "Liberation Mono", monospace ;
+  font-size: 85%;
   height: 20em;
 }
 
 .indataarea {
+  position: relative;
 	padding: 2ex ;
 	padding-top: 1ex ;
 	background-color: #fff ;
@@ -698,4 +698,44 @@ color: #3399FF;
 
 #welcome-content #links > * {
   margin: 0 1em;
+}
+
+#uploadFileSizeError {
+  color: #ff0000;
+  display: none;
+}
+
+#supportedFormats {
+  float: left;
+}
+
+#treeLabels {
+  float: right;
+}
+
+.input-group {
+  padding-right: 1em;
+}
+
+.btn-group {
+  float: left;
+  padding-right: 1em;
+}
+
+.indataarea > div {
+  overflow: auto;
+  resize: both;
+}
+
+#indataTable {
+  width: 100%;
+  display: none;
+}
+
+.controls > div {
+  float: right;
+}
+
+#tabBox {
+  padding-right: 1em;
 }
