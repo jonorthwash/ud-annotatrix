@@ -11,3 +11,6 @@ corpora
 
 # log stuff
 logs
+
+# vim swap files
+*.swp

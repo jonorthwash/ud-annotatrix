@@ -64,10 +64,9 @@ span.tt {
 }*/
 
 #cy {
-  position: relative;
-  width: 1500px;
-  height: 400px;
-  display: block;
+  width: 100%;
+  height: 100%;
+  position: absolute;
 }
 
 #save {
@@ -732,7 +731,7 @@ color: #3399FF;
   display: none;
 }
 
-.controls > div {
+.controls > .graph-btn-group {
   float: right;
 }
 

@@ -79,8 +79,8 @@ function conlluDraw(content) {
 }
 
 function resetCy(options) {
-    log.debug(`called makeNewCyFromOptions(${JSON.stringify(Object.keys(options))})`);
-    window.cy = new cytoscape(options);
+    log.critical(`called resetCy(${JSON.stringify(Object.keys(options))})`);
+    window.cy = cytoscape(options);
 
     // zooming, fitting, centering
     cy.minZoom(0.1);
@@ -172,7 +172,7 @@ function showProgress() {
  * @return {Array}       Returns the graph.
  */
 function conllu2cy(sent) {
-    log.debug(`called conllu2cy(${sent})`);
+    log.debug(`called conllu2cy(${sent.serial})`);
 
     let graph = []; TREE = {};
     $.each(sent.tokens, (i, token) => {
