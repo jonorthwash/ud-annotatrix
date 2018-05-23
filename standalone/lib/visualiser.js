@@ -1,6 +1,6 @@
 'use strict'
 
-var TREE = {}, // This map allows us to btnAddSentenceress the Token object given an ID
+var TREE = {}, // This map allows us to address the Token object given an ID
     CURRENT_PAN = {},
 
     // used for calculating progress
@@ -56,13 +56,13 @@ function conlluDraw(content) {
     if (IS_VERTICAL) {
         $('#cy').css('width', `${$(window).width()-10}px`);
         $('#cy').css('height', `${sent.tokens.length * 50}px`);
-        $('edge.incomplete').btnAddSentenceClass('vertical').btnRemoveSentenceClass('horizontal');
+        $('edge.incomplete').addClass('vertical').removeClass('horizontal');
     } else {
         // scales width according to viewport
         $('#cy').css('width', '100%');
         // window height - height of top area - height of controls
         $('#cy').css('height', `${$(window).height()-$('.inarea').height()-80}px`);
-        $('edge.incomplete').btnAddSentenceClass('horizontal').btnRemoveSentenceClass('vertical');
+        $('edge.incomplete').addClass('horizontal').removeClass('vertical');
     }
 
     /*
@@ -146,7 +146,7 @@ function getCyLayout() {
 
     let layout = {
         name: 'tree',
-        pbtnAddSentenceing: 0,
+        padding: 0,
         nodeDimensionsIncludeLabels: false
     };
 

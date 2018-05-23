@@ -14,7 +14,7 @@ function calculateRows() {
         graphDivHeight = $('.controls').outerHeight(),
         controlsDivHeight = $('.row').outerHeight(),
         remainingSpace = windowHeight - graphDivHeight - controlsDivHeight - 65,
-        fontSize = $('#dataText').css('font-size'),
+        fontSize = $('#text-data').css('font-size'),
         lineHeight = Math.floor(parseInt(fontSize.replace('px','')) * 1.5);
 
     DEFAULT_NUM_TABLE_ROWS = parseInt(remainingSpace/lineHeight);
@@ -27,11 +27,11 @@ function fitTable() {
 
     /* If there're less lines in conllu than the default number of rows
     in the table, fit the number of rows to the number of lines. */
-    const currentRows = $('#dataText').val().split('\n').length;
+    const currentRows = $('#text-data').val().split('\n').length;
     const numRows = (currentRows < DEFAULT_NUM_TABLE_ROWS
         ? currentRows + 1 : DEFAULT_NUM_TABLE_ROWS);
 
-    $('#dataText').attr('rows', numRows);
+    $('#text-data').attr('rows', numRows);
 }
 
 
@@ -39,7 +39,7 @@ function tableEditCell(loc) {
     log.debug(`called tableEditCell(${loc})`);
 
     loc = loc.trim();
-    const table = $('#dataTextTable'),
+    const table = $('#table-data'),
         cell = $(`#${loc}`).html();
 
     log.debug(`tableEditCell() cell: ${cell}`);
@@ -65,7 +65,7 @@ function tableEditCell(loc) {
 
     log.debug(`tableEditCell() conllu: ${conllu}`);
 
-    $('#dataText').val(conllu);
+    $('#text-data').val(conllu);
     drawTree();
 }
 
@@ -74,8 +74,8 @@ function toggleTableView() {
 
     // This function toggles the table view
     $('#btnViewTable i').toggleClass('fa-code', 'fa-table');
-    $('#dataText').toggle();
-    $('#dataTextTable').toggle();
+    $('#text-data').toggle();
+    $('#table-data').toggle();
 
     IS_TABLE_VIEW = !IS_TABLE_VIEW;
 }
@@ -84,20 +84,20 @@ function updateTable() {
     log.debug('called updateTable()');
 
     // Update the data in the table from the data in the textarea
-    $('#dataTextTable tbody').empty();
-    $.each($('#dataText').val().split('\n'), (i, line) => {
+    $('#table-data tbody').empty();
+    $.each($('#text-data').val().split('\n'), (i, line) => {
         log.debug(`updateTable() line: ${line}`);
         if (line.trim() === '')
             return
 
         if (line[0] === '#') {
-            $('#dataTextTable tbody').append(
+            $('#table-data tbody').append(
                 `<tr style="display:none;" id="table_${i}">
                     <td colspan="10"><span>${line}</span></td>
                 </tr>`);
         } else if (line.split('\t').length !== 10) {
             log.debug(`updateTable() weirdness!`);
-            $('#dataTextTable tbody').append(
+            $('#table-data tbody').append(
                 `<tr style="display:none;" id="table_${i}">
                     <td colspan="10"><span>${line}</span></td>
                 </tr>`);
@@ -133,7 +133,7 @@ function updateTable() {
                 if (!valid[0]) {
                     document.l10n.formatValue(valid[1], valid[2]).then( (t) => {
                       td.append( $('<span>').append('<i>')
-                          .btnAddSentenceClass('fa fa-exclamation-triangle')
+                          .addClass('fa fa-exclamation-triangle')
                           .attr('aria-hidden', 'true')
                           .attr('title', t) );
                     });
@@ -145,13 +145,13 @@ function updateTable() {
                     $(`[id^=table_][id$=${j}]`).css('display', 'none');
             }
 
-            $('#dataTextTable tbody').append(tr);
+            $('#table-data tbody').append(tr);
         }
     });
 
     /* Sushain's original, more beautiful code:
-    $('#dataTextTable tbody').append(
-        $('#dataText').val().split('\n')
+    $('#table-data tbody').append(
+        $('#text-data').val().split('\n')
             .filter(line => line.length && !line.startsWith('#'))
             .map(rowText => $('<tr>').append(
                 rowText.split('\t').map(cellText => $('<td>').text(cellText))
@@ -191,17 +191,17 @@ function toggleTableColumn(col) {
         TABLE_COLUMNS_VISIBILITY[colId] = false; */
     }
 
-    // TODO: Maybe use greying out of the headers in btnAddSentenceition to/instead of
+    // TODO: Maybe use greying out of the headers in addition to/instead of
     // the filled/empty dots to indicate hidden or not
 }
 
 function toggleCodeWindow() {
     log.debug(`called toggleCodeWindow()`);
 
-    $('#btnViewCode i').toggleClass('fa-chevron-down', 'fa-chevron-up');
+    $('#btnViewText i').toggleClass('fa-chevron-down', 'fa-chevron-up');
     $('#data').toggle();
     $('#tabBox').toggle();
-    $('#btnViewParent').closest('div').toggle();
+    $('#btnViewTable').closest('div').toggle();
     if (!IS_VERTICAL)
         $('#cy').css('height', $(window).height()-$('.inarea').height()-80);
 }

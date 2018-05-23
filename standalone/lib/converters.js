@@ -191,7 +191,7 @@ function conlluMultiInput(text) { // TODO: this might break after rewriting arch
         if (text.match(/\n\n/)) // match doublenewline
             CONTENTS = text;
 
-        if (CONTENTS.trim() !== '') { // NOTE: btnRemoveSentenced some code that didn't do anything :)
+        if (CONTENTS.trim() !== '') { // NOTE: removed some code that didn't do anything :)
             FORMAT = 'CoNLL-U';
             loadDataInIndex();
         }
@@ -253,7 +253,7 @@ function cleanConllu(content) {
     // conlluMultiInput(newContent); // TODO: move this one also inside of this func, and make a separate func for calling them all at the same time
 
     //if (newContent !== content)
-        //$('#dataText').val(newContent);
+        //$('#text-data').val(newContent);
 
     return newContent;
 }

@@ -719,7 +719,7 @@ wanna_conllu_3: `
 /*
  * Tester object
  *
- * put unit tests inside here as functions, and then btnAddSentence the function call to
+ * put unit tests inside here as functions, and then add the function call to
  * the all() function ... to invoke, use window.test.all() or test.all()
  *
  * also implements an assert() function, which throws AssertionError exceptions

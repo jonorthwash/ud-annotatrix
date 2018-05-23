@@ -74,8 +74,8 @@ function bindHandlers() {
     $('#btnUploadCorpusFileButton').click(handleUploadButtonPressed);
     $('#btnPrevSentence').click(prevSenSent);
     $('#btnNextSentence').click(nextSenSent);
-    $('#btnRemoveSentence').click(btnRemoveSentenceCurSent);
-    $('#btnAddSentence').click(btnAddSentenceSent);
+    $('#btnRemoveSentence').click(removeCurSent);
+    $('#btnAddSentence').click(addSent);
     $('#btnExportCorpus').click(exportCorpora);
     //$('#btnSaveServer').click(saveOnServer);
     $('#btnDiscardCorpus').click(clearCorpus);
@@ -90,7 +90,7 @@ function bindHandlers() {
     $('#btnExportSVG').click(exportSVG);
     $('#btnExportLaTeX').click(exportLaTeX);
 
-    $('#dataText')
+    $('#text-data')
         .keyup(drawTree)
         .keyup(focusOut)
         .keyup(formatTabsView)
@@ -127,14 +127,14 @@ function clickWF(evt) {
     // if the user clicked an activated node
     if (this.hasClass('activated')) {
 
-        this.btnRemoveSentenceClass('activated');
+        this.removeClass('activated');
 
     } else {
 
         // look for other activated nodes
         let source = cy.$('.activated');
 
-        this.btnAddSentenceClass('activated');
+        this.addClass('activated');
 
         // if there is an activated node already
         if (source.length === 1)
@@ -175,7 +175,7 @@ function writeArc(source, target) {
         isValidDep = false
     }
 
-    window.undoManager.btnAddSentence({
+    window.undoManager.add({
         undo: () => {
             let sent = buildSent(),
                 sentAndPrev = changeConlluAttr(sent, indices, 'head', sentAndPrev.previous);
@@ -190,8 +190,8 @@ function writeArc(source, target) {
 }
 
 
-function btnRemoveSentenceArc(targets) {
-    log.debug('called btnRemoveSentenceArc()');
+function removeArc(targets) {
+    log.debug('called removeArc()');
 
     /* Removes all the selected edges. */
 
@@ -213,7 +213,7 @@ function btnRemoveSentenceArc(targets) {
 
     });
 
-    window.undoManager.btnAddSentence({
+    window.undoManager.add({
         undo: () => {
             let sent = buildSent();
             $.each(targetNodes, (i, target) => {
@@ -229,7 +229,7 @@ function btnRemoveSentenceArc(targets) {
             redrawTree(sent);
         },
         redo: () => {
-            btnRemoveSentenceArc(targets);
+            removeArc(targets);
         }
     });
 
@@ -251,13 +251,13 @@ function selectArc() {
         // if the user clicked an activated node
         if (this.hasClass('selected')) {
 
-            this.btnRemoveSentenceClass('selected');
-            cy.$(`#${targetIndex}`).btnRemoveSentenceClass('arc-selected'); // removing visual effects from targetNode
+            this.removeClass('selected');
+            cy.$(`#${targetIndex}`).removeClass('arc-selected'); // removing visual effects from targetNode
 
         } else {
 
-            this.btnAddSentenceClass('selected');
-            cy.$(`#${targetIndex}`).btnAddSentenceClass('arc-selected'); // css for targetNode
+            this.addClass('selected');
+            cy.$(`#${targetIndex}`).addClass('arc-selected'); // css for targetNode
 
         }
 
@@ -314,7 +314,7 @@ function keyDownClassifier(key) {
 
     if (selArcs.length) {
         if (key.which === KEYS.DELETE || key.which === KEYS.BACKSPACE) {
-            btnRemoveSentenceArc(targetNodes);
+            removeArc(targetNodes);
         } else if (key.which === KEYS.D) {
             moveArc();
         };
@@ -335,11 +335,11 @@ function keyDownClassifier(key) {
         };
     } else if (wf.length === 1) {
         if (key.which === KEYS.M) {
-            wf.btnAddSentenceClass('merge');
-            wf.btnRemoveSentenceClass('activated');
+            wf.addClass('merge');
+            wf.removeClass('activated');
         } else if (key.which === KEYS.S) {
-            wf.btnAddSentenceClass('supertoken');
-            wf.btnRemoveSentenceClass('activated');
+            wf.addClass('supertoken');
+            wf.removeClass('activated');
         } else if (key.which === KEYS.R) {
             setRoot(wf);
         };
@@ -353,11 +353,11 @@ function keyDownClassifier(key) {
         }
     } else if (st.length) {
         if (key.which === KEYS.DELETE || key.which === BACKSPACE) {
-            btnRemoveSentenceSup(st);
+            removeSup(st);
         }
     }
 
-    if (!$('#dataText').is(':focus')) {
+    if (!$('#text-data').is(':focus')) {
         // console.log('ZOOM: ', CURRENT_ZOOM, inputAreaFocus);
         if ((key.which === KEYS.EQUALS || key.which === 61) ){
             CURRENT_ZOOM = cy.zoom();
@@ -388,7 +388,7 @@ function keyDownClassifier(key) {
 						onEnterInTextarea();
 				}
 		}
-		if ($('#dataTextTable').has(':focus').length && key.which === KEYS.ENTER) {
+		if ($('#table-data').has(':focus').length && key.which === KEYS.ENTER) {
 				key.preventDefault();
 				onEnterInTextarea();
 		}
@@ -398,7 +398,7 @@ function onEnterInTextarea() {
 		log.debug(`called onEnterInTextarea()`);
 
 		let cursor = 999,
-				text = $('#dataText').val(),
+				text = $('#text-data').val(),
 				format = detectFormat(text),
 				linesBefore, linesAfter, updatedLines;
 
@@ -414,7 +414,7 @@ function onEnterInTextarea() {
 
 		} else {
 
-				cursor = $('#dataText').prop('selectionStart');
+				cursor = $('#text-data').prop('selectionStart');
 				while (text[cursor] !== '\n' && cursor < text.length)
 						cursor++;
 
@@ -443,7 +443,7 @@ function onEnterInTextarea() {
 										return splitOnTabs.join('\t');
 								}));
 
-						$('#dataText').val(updatedLines.join('\n'))
+						$('#text-data').val(updatedLines.join('\n'))
 								.prop('selectionStart', cursor)
 								.prop('selectionEnd', cursor);
 						viewAsConllu();
@@ -477,7 +477,7 @@ function onEnterInTextarea() {
 								[`\t${newCGAnalysis(id+1, {id:id+1})}`],
 								linesAfter.map(incrementIndices));
 
-						$('#dataText').val(updatedLines.join('\n'))
+						$('#text-data').val(updatedLines.join('\n'))
 								.prop('selectionStart', cursor)
 								.prop('selectionEnd', cursor);
 						viewAsCG();
@@ -485,7 +485,7 @@ function onEnterInTextarea() {
 
 				default:
 						text = text.slice(0,cursor) + '\n' + text.slice(cursor);
-						$('#dataText').val(text);
+						$('#text-data').val(text);
 		}
 
 		updateTable();
@@ -724,15 +724,15 @@ function moveArc() {
 }
 
 
-function btnRemoveSentenceSup(st) {
-		log.debug(`called btnRemoveSentenceSup(${st.attr('id')})`);
+function removeSup(st) {
+		log.debug(`called removeSup(${st.attr('id')})`);
 
     /* Support for removing supertokens.
     The function takes the cy-element of superoken that was selected,
-    btnRemoveSentences it and inserts its former subtokens. */
+    removes it and inserts its former subtokens. */
 
 		let sent = buildSent(),
-				currentId = parseInt(st.attr('id').slice(2)), // the id of the supertoken to be btnRemoveSentenced
+				currentId = parseInt(st.attr('id').slice(2)), // the id of the supertoken to be removed
 				subTokens = sent.tokens[currentId].tokens;    // getting its children
 
 		sent.tokens.splice(currentId, 1);		// removing the multiword token
@@ -749,7 +749,7 @@ function changeNode() {
 
     IS_EDITING = true;
 
-		this.btnAddSentenceClass('input');
+		this.addClass('input');
 		const id = this.attr('id').slice(0, 2);
 		let param = this.renderedBoundingBox(), nodeType;
 		log.debug(`changeNode() (param: ${JSON.stringify(param)})`);
@@ -770,7 +770,7 @@ function changeNode() {
 		const res = this.data('label').replace(/[⊳⊲]/, '');
     this.data('label', res);
 
-		$('#mute').btnAddSentenceClass('activated');
+		$('#mute').addClass('activated');
 		$('.activated#mute').css('height', (IS_VERTICAL
 				? `${buildSent().tokens.length * 50}px`
 				:	$(window).width() - 10) );
@@ -801,8 +801,8 @@ function changeNode() {
         .css('width', param.w + 35)
         //.css('background-color', param.color)
         .attr('value', this.data('label'))
-        .btnAddSentenceClass('activated')
-        .btnAddSentenceClass(id);
+        .addClass('activated')
+        .addClass(id);
 
     if (nodeType === 'DEPREL') {
         $('#edit').focus().select();
@@ -868,7 +868,7 @@ function writeDeprel(deprelInp, indices) { // TODO: DRY
 
 		const sentAndPrev = changeConlluAttr(sent, indices, 'deprel', deprelInp);
 
-		window.undoManager.btnAddSentence({
+		window.undoManager.add({
 				undo: () => {
 						const sent = buildSent(),
 								sentAndPrev = changeConlluAttr(sent, indices, 'deprel', sentAndPrev.previous);
@@ -898,7 +898,7 @@ function writePOS(posInp, indices) {
 		let sent = buildSent(),
 				sentAndPrev = changeConlluAttr(sent, indices, 'upostag', posInp);
 
-		window.undoManager.btnAddSentence({
+		window.undoManager.add({
 				undo: () => {
 						const sent = buildSent(),
 								sentAndPrev = changeConlluAttr(sent, indices, 'upostag', sentAndPrev.previous);
@@ -1101,7 +1101,7 @@ function mergeNodes(toMerge, side, how) {
         if (how === 'subtoken') {
 
             sent.tokens[nodeId].form = newToken; // rewrite the token
-            sent.tokens.splice(otherId, 1); // btnRemoveSentence the merged token
+            sent.tokens.splice(otherId, 1); // remove the merged token
             sent = renumberNodes(nodeId, otherId, sent, side);
 
         } else if (how === 'supertoken') {
@@ -1128,7 +1128,7 @@ function buildSent() {
 
     /* Reads data from the textbox, returns a sent object. */
     let sent = new conllu.Sentence(),
-				currentSent = $('#dataText').val(),
+				currentSent = $('#text-data').val(),
 				currentFormat = detectFormat(currentSent);
 
     if (currentFormat === 'CG3') {
@@ -1152,13 +1152,13 @@ function redrawTree(sent) {
     let changedSent = sent.serial;
 
     // detecting which format was used
-		const currentSent = $('#dataText').val(),
+		const currentSent = $('#text-data').val(),
 				currentFormat = detectFormat(currentSent);
 
     if (currentFormat === 'CG3')
         changedSent = conllu2cg3(changedSent);
 
-    $('#dataText').val(changedSent);
+    $('#text-data').val(changedSent);
     updateTable();
     drawTree();
     cy.zoom(CURRENT_ZOOM);
@@ -1171,12 +1171,12 @@ function writeSent(makeChanges) {
 
     // build sent
     let sent = new conllu.Sentence();
-    sent.serial = $('#dataText').val();
+    sent.serial = $('#text-data').val();
 
     sent = makeChanges(sent, this);
 
     // redraw tree
-    $('#dataText').val(sent.serial);
+    $('#text-data').val(sent.serial);
     drawTree();
 }
 
@@ -1184,7 +1184,7 @@ function writeSent(makeChanges) {
 function viewAsPlain() { // TODO: DRY?
 		log.debug(`called viewAsPlain()`);
 
-    let text = $('#dataText').val(),
+    let text = $('#text-data').val(),
 				currentFormat = detectFormat(text);
 
     if (currentFormat === 'CoNLL-U') {
@@ -1203,14 +1203,14 @@ function viewAsPlain() { // TODO: DRY?
 
     }
 
-    $('#dataText').val(text);
+    $('#text-data').val(text);
 }
 
 
 function viewAsConllu() {
 		log.debug(`called viewAsConllu()`);
 
-    let curSent = $('#dataText').val(),
+    let curSent = $('#text-data').val(),
 				currentFormat = detectFormat(curSent);
 
     if (currentFormat === 'CG3') {
@@ -1221,9 +1221,9 @@ function viewAsConllu() {
             return;
         }
 
-        $('#tabCG3').btnRemoveSentenceClass('active');
-        $('#tabConllu').btnAddSentenceClass('active');
-        $('#dataText').val(curSent);
+        $('#tabCG3').removeClass('active');
+        $('#tabConllu').addClass('active');
+        $('#text-data').val(curSent);
 
     } else {
 
@@ -1245,21 +1245,21 @@ function viewAsConllu() {
 function viewAsCG() {
 		log.debug(`called viewAsCG()`);
 
-    let text = $('#dataText').val(),
+    let text = $('#text-data').val(),
 				currentFormat = detectFormat(text);
 
     if (currentFormat === 'CoNLL-U') {
         text = conllu2cg3(text);
-        $('#tabConllu').btnRemoveSentenceClass('active');
+        $('#tabConllu').removeClass('active');
     }
 
-    $('#tabCG3').btnAddSentenceClass('active');
-    $('#dataText').val(text);
+    $('#tabCG3').addClass('active');
+    $('#text-data').val(text);
 
     if (IS_TABLE_VIEW) {
         $('#btnViewTable i').toggleClass('fa-code', 'fa-table');
-        $('#dataTextTable').toggle();
-        $('#dataText').toggle();
+        $('#table-data').toggle();
+        $('#text-data').toggle();
         IS_TABLE_VIEW = false ;
     }
 
@@ -1334,9 +1334,9 @@ $(document).ready(function(){
 				} else if (e.keyCode === KEYS.DOWN || e.keyCode === KEYS.J) {
 						nextSenSent();
 				} else if (e.keyCode === KEYS.MINUS) {
-						btnRemoveSentenceCurSent();
+						removeCurSent();
 				} else if (e.keyCode === KEYS.EQUALS) {
-						btnAddSentenceSent();
+						addSent();
 				}
 		});
 

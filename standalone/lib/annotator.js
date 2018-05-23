@@ -126,7 +126,7 @@ function getContents() {
 
         let splitted = localStorage.getItem('treebank'); // TODO: implement a more memory-friendly func?
         splitted = JSON.parse(splitted) || new Array(); // string to array
-        splitted[CURRENT_SENTENCE] = $('#dataText').val();
+        splitted[CURRENT_SENTENCE] = $('#text-data').val();
         localStorage.setItem('treebank', JSON.stringify(splitted)); // update the treebank
         return splitted.join('\n\n');
     /* } */
@@ -153,7 +153,7 @@ function loadFromLocalStorage() {
 
         log.warn('localStorage is not available :(');
 
-        // btnAddSentence a nice message so the user has some idea how to fix this.
+        // add a nice message so the user has some idea how to fix this.
         $('#warning').append(
             $('<p>Unable to save to localStorage, maybe third-party cookies are blocked?</p>') );
 
@@ -175,7 +175,7 @@ function loadFromUrl() {
             return arg.split('=')[1].replace(/\+/g, ' ');
         });
 
-        $('#dataText').val(variables);
+        $('#text-data').val(variables);
         drawTree();
     }
 }
@@ -246,7 +246,7 @@ function isQuotaExceeded(e) {
 function handleUploadButtonPressed() {
     log.debug(`called handleUploadButtonPressed()`);
 
-    throw new NotImplementedError('handle btnUploadCorpus button not implemented');
+    throw new NotImplementedError('handle upload button not implemented');
     /*
     // Replaces current content
     CONTENTS = TEMPCONTENTS;
@@ -254,28 +254,28 @@ function handleUploadButtonPressed() {
     getLocalStorageMaxSize()
     $('#localStorageAvailable').text(LOCALSTORAGE_AVAILABLE / 1024 + 'k');
     loadDataInIndex();
-    $('#btnUploadCorpusFileButton').attr('disabled', 'disabled');
-    $('#btnUploadCorpusFileSizeError').hide();
+    $('#uploadFileButton').attr('disabled', 'disabled');
+    $('#errorUploadFileSize').hide();
     $('#fileModal').modal('hide');*/
 }
 
 
-function btnAddSentenceSent() { // TODO: this is probably not what we want? what if we turn it into 'insert a new sentence _here_'?
-    log.debug(`called btnAddSentenceSent()`);
+function addSent() { // TODO: this is probably not what we want? what if we turn it into 'insert a new sentence _here_'?
+    log.debug(`called addSent()`);
     AVAILABLE_SENTENCES += 1;
     showDataIndiv();
 }
 
-function btnRemoveSentenceCurSent() {
-    log.debug(`called btnRemoveSentenceCurSent()`);
+function removeCurSent() {
+    log.debug(`called removeCurSent()`);
 
-    /* Called when the button 'btnRemoveSentence sentence' is pressed.
+    /* Called when the button 'remove sentence' is pressed.
     Calls confirm window. If affirmed, */
-    const conf = confirm('Do you want to btnRemoveSentence the sentence?');
+    const conf = confirm('Do you want to remove the sentence?');
     if (conf) {
         saveData();
         const realCurrentSentence = CURRENT_SENTENCE; // это нужно, т.к. в loadDataInIndex всё переназначается. это как-то мега костыльно, и надо исправить.
-        $('#dataText').val('');
+        $('#text-data').val('');
         localStorage.setItem('corpus', getContents());
         loadDataInIndex();
         CURRENT_SENTENCE = realCurrentSentence;
@@ -338,12 +338,12 @@ function showDataIndiv() {
     /* This function is called each time the current sentence is changed
     to update the CoNLL-U in the textarea and the indices. */
 
-    $('#dataText').val(RESULTS[CURRENT_SENTENCE] || '');
+    $('#text-data').val(RESULTS[CURRENT_SENTENCE] || '');
     $('#inputCurrSentence').val(AVAILABLE_SENTENCES === 0 ? 0 : CURRENT_SENTENCE + 1);
     $('#spanTotalSentences').val(AVAILABLE_SENTENCES);
 
     updateTable(); // Update the table view at the same time
-    formatTabsView($('#dataText')); // update the format taps
+    formatTabsView($('#text-data')); // update the format taps
     fitTable(); // make table's size optimal
     drawTree();
 }
@@ -354,7 +354,7 @@ function goToSenSent() {
 
     saveData();
 
-    RESULTS[CURRENT_SENTENCE] = $('#dataText').val();
+    RESULTS[CURRENT_SENTENCE] = $('#text-data').val();
     CURRENT_SENTENCE = parseInt($('#inputCurrSentence').val()) - 1;
 
     if (CURRENT_SENTENCE < 0)
@@ -364,7 +364,7 @@ function goToSenSent() {
         CURRENT_SENTENCE = AVAILABLE_SENTENCES - 1;
 
     $('#btnNextSentence').prop('disabled', !(CURRENT_SENTENCE < (AVAILABLE_SENTENCES - 1)));
-    $('#btnPrevSentence').prop('disbaled', !CURRENT_SENTENCE);
+    $('#btnPrevSentence').prop('disabled', !CURRENT_SENTENCE);
 
     clearLabels();
     showDataIndiv();
@@ -375,14 +375,14 @@ function prevSenSent() {
 
     saveData();
 
-    RESULTS[CURRENT_SENTENCE] = $('#dataText').val();
+    RESULTS[CURRENT_SENTENCE] = $('#text-data').val();
     CURRENT_SENTENCE--;
 
     if (CURRENT_SENTENCE < 0)
         CURRENT_SENTENCE = 0;
 
     $('#btnNextSentence').prop('disabled', !(CURRENT_SENTENCE < (AVAILABLE_SENTENCES - 1)));
-    $('#btnPrevSentence').prop('disbaled', !CURRENT_SENTENCE);
+    $('#btnPrevSentence').prop('disabled', !CURRENT_SENTENCE);
 
     clearLabels();
     showDataIndiv();
@@ -394,14 +394,14 @@ function nextSenSent() {
     /* When the user navigates to the next sentence. */
     saveData();
 
-    RESULTS[CURRENT_SENTENCE] = $('#dataText').val();
+    RESULTS[CURRENT_SENTENCE] = $('#text-data').val();
     CURRENT_SENTENCE++;
 
     if (CURRENT_SENTENCE >= AVAILABLE_SENTENCES)
         CURRENT_SENTENCE = AVAILABLE_SENTENCES;
 
     $('#btnNextSentence').prop('disabled', !(CURRENT_SENTENCE < (AVAILABLE_SENTENCES - 1)));
-    $('#btnPrevSentence').prop('disbaled', !CURRENT_SENTENCE);
+    $('#btnPrevSentence').prop('disabled', !CURRENT_SENTENCE);
 
     clearLabels();
     showDataIndiv();
@@ -443,7 +443,7 @@ function clearCorpus() {
     RESULTS = [];
     FORMAT = '';
     localStorage.setItem('corpus', '');
-    $('#dataText').val('');
+    $('#text-data').val('');
     showDataIndiv()
     window.location.reload();
     drawTree();
@@ -454,7 +454,7 @@ function drawTree() {
     log.debug(`called drawTree()`);
 
     /* This function is called whenever the input area changes.
-    1. btnRemoveSentences the previous tree, if there's one
+    1. removes the previous tree, if there's one
     2. takes the data from the textarea
     3. */
 
@@ -462,17 +462,17 @@ function drawTree() {
 
     // TODO: update the sentence
     try {
-        cy.destroy(); // btnRemoveSentence the previous tree if there is one
+        cy.destroy(); // remove the previous tree if there is one
     } catch (e) {
         log.warn(`drawTree(): Error while destroying cy: ${e.message}`);
     }
 
-    let content = $('#dataText').val(); // TODO: rename
+    let content = $('#text-data').val(); // TODO: rename
     const format = detectFormat(content);
 
     // -- to be moved out--
-    // content = content.replace(/ +\n/, '\n'); // btnRemoveSentence extra spaces at the end of lines. #89
-    // $('#dataText').val(content); // TODO: what is this line for?
+    // content = content.replace(/ +\n/, '\n'); // remove extra spaces at the end of lines. #89
+    // $('#text-data').val(content); // TODO: what is this line for?
 
     // $('#detected').html('Detected: ' + format + ' format');
     // to be moved out --
@@ -520,19 +520,19 @@ function formatTabsView() {
 
     /* The function handles the format tabs above the textarea.
     Takes a string with a format name, changes the classes on tabs. */
-    const format = detectFormat($('#dataText').val());
+    const format = detectFormat($('#text-data').val());
     if (format === 'CoNLL-U') {
-        $('#tabOther').hide().btnRemoveSentenceClass('active');
-        $('#tabCG3').btnRemoveSentenceClass('active');
-        $('#tabConllu').btnAddSentenceClass('active');
+        $('#tabOther').hide().removeClass('active');
+        $('#tabCG3').removeClass('active');
+        $('#tabConllu').addClass('active');
     } else if (format === 'CG3') {
-        $('#tabOther').hide().btnRemoveSentenceClass('active');
-        $('#tabCG3').btnAddSentenceClass('active');
-        $('#tabConllu').btnRemoveSentenceClass('active');
+        $('#tabOther').hide().removeClass('active');
+        $('#tabCG3').addClass('active');
+        $('#tabConllu').removeClass('active');
     } else {
-        $('#tabOther').show().btnAddSentenceClass('active').text(format);
-        $('#tabCG3').btnRemoveSentenceClass('active');
-        $('#tabConllu').btnRemoveSentenceClass('active');
+        $('#tabOther').show().addClass('active').text(format);
+        $('#tabCG3').removeClass('active');
+        $('#tabConllu').removeClass('active');
     }
 }
 
@@ -615,7 +615,7 @@ function resetLabels() { // TODO: refactor
                         continue;
                     }
                     htmlLabels.append($('<span></span>')
-                        .btnAddSentenceClass('treebankLabel')
+                        .addClass('treebankLabel')
                         .text(LABELS[k])
                     );
                 }
@@ -642,7 +642,7 @@ function storageAvailable(type) {
         const storage = window[type],
             x = '__storage_test__';
         storage.setItem(x, x);
-        storage.btnRemoveSentenceItem(x);
+        storage.removeItem(x);
         return true;
     } catch (e) {
         return e instanceof DOMException
@@ -687,7 +687,7 @@ function getLocalStorageMaxSize(error) {
         while (i > 1) {
             try {
                 localStorage.setItem(testKey, string.substr(0, i));
-                localStorage.btnRemoveSentenceItem(testKey);
+                localStorage.removeItem(testKey);
 
                 if (found < i - error) {
                     found = i;
@@ -697,7 +697,7 @@ function getLocalStorageMaxSize(error) {
                 }
 
             } catch (e) {
-                localStorage.btnRemoveSentenceItem(testKey);
+                localStorage.removeItem(testKey);
                 i = found + (i - found) / 2;
             }
         }

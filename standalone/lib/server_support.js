@@ -36,7 +36,7 @@ function checkServer() {
 function updateOnServer() {
     log.debug('called updateOnServer()');
 
-    const curSent = $('#dataText').val(),
+    const curSent = $('#text-data').val(),
         sentNum = $('#inputCurrSentence').val(),
         treebank_id = location.href.split('/')[4];
 
@@ -83,7 +83,7 @@ function loadSentence(data) {
     if (data['content']) {
         const sentence = data['content'],
             max = data['max'];
-        $('#dataText').val(sentence);
+        $('#text-data').val(sentence);
         $('#spanTotalSentences').html(max);
         AVAILABLE_SENTENCES = max;
     }

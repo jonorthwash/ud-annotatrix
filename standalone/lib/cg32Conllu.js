@@ -3,6 +3,15 @@
 function cg32Conllu(CGtext) {
     log.debug(`called cg32Conllu(${CGtext})`);
 
+    // HELPER functions
+    function findComments(CGtext) {
+        /* Takes a string in CG, returns 2 arrays with strings. */
+        return CGtext.split('\n')
+            .filter((line) => { return line[0] === '#' })  // take only strings beginning with "#"
+            .map((line) => { return line.replace(/^#+/, ''); }); // string off leading "#"s
+    }
+
+
     /* Takes a string in CG, returns a string in conllu. */
 
     // TODO: Check for '<s>' ... '</s>' and if you have matching things treat them
@@ -13,7 +22,7 @@ function cg32Conllu(CGtext) {
         return null;
     }
 
-    // btnRemoveSentence extra spaces before newline before processing text
+    // remove extra spaces before newline before processing text
     CGtext = CGtext.replace(/ +\n/, '\n');
     let sent = new conllu.Sentence();
     sent.comments = findComments(CGtext);
@@ -23,13 +32,6 @@ function cg32Conllu(CGtext) {
     return sent.serial;
 }
 
-
-function findComments(CGtext) {
-    /* Takes a string in CG, returns 2 arrays with strings. */
-    return CGtext.split('\n')
-        .filter((line) => { return line[0] === '#' })  // take only strings beginning with "#"
-        .map((line) => { return line.replace(/^#+/, ''); }); // string off leading "#"s
-}
 
 
 function ambiguityPresent(CGtext) {
@@ -170,7 +172,7 @@ function conllu2cg3(conlluText, indent) {
             }).join('\n');
         }
     });
-    
+
     return CGtext.trim();
 }
 

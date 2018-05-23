@@ -191,7 +191,7 @@ const CY_STYLE = [{
     'style': {
         'background-opacity': 0,
         'border-opacity': 0,
-        'pbtnAddSentenceing': 0,
+        'padding': 0,
         'text-background-color': POS_COLOR,
         'text-background-opacity': 0.9,
         'text-border-color': '#000',
