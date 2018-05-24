@@ -79,7 +79,7 @@ function conlluDraw(content) {
 }
 
 function resetCy(options) {
-    log.critical(`called resetCy(${JSON.stringify(Object.keys(options))})`);
+    log.debug(`called resetCy(${JSON.stringify(Object.keys(options))})`);
     window.cy = cytoscape(options);
 
     // zooming, fitting, centering

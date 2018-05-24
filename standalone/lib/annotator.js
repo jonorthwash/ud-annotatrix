@@ -46,6 +46,8 @@ window.onload = () => {
     If server is running, makes a button for saving data.*/
     const path = './lib';
     head.js(
+
+        // extensions
         `${path}/ext/jquery-3.2.1.min.js`,
         `${path}/ext/jquery-ui-1.12.1/jquery-ui.min.js`,
         `${path}/ext/cytoscape.min.js`,
@@ -58,60 +60,141 @@ window.onload = () => {
         `${path}/ext/conllu/conllu.js`, // CoNLL-U parser from https://github.com/FrancessFractal/conllu
         `${path}/ext/js-treex-view.js`, // Treex from https://github.com/ufal/js-treex-view
 
-        // native project code
-        `${path}/cg32Conllu.js`,
-        `${path}/sd2Conllu.js`,
-        `${path}/converters.js`,
-        `${path}/server_support.js`,
-        `${path}/gui.js`,
+        // functions, globals
         `${path}/conllu_table.js`,
+        `${path}/converters.js`,
         `${path}/cy-style.js`,
-        `${path}/visualiser.js`,
+        `${path}/gui.js`,
+        `${path}/sd2Conllu.js`,
+        `${path}/server_support.js`,
+        `${path}/storage.js`,
         `${path}/validation.js`,
+        `${path}/visualiser.js`,
 
-        // KM classes
+        // classes
+        `${path}/errors.js`,
         `${path}/logger.js`,
-        `${path}/tester.js`,
-        `${path}/errors.js`
+        `${path}/tester.js`
+
     );
-    head.ready(onReady);
+    head.ready(() => {
+
+        /*
+        Called when all the naive code and libraries are loaded.
+          - initializes some global objects
+          - checks if server is running
+          - sets undo manager
+          - loads data from localStorage, if available and server is not running
+          - checks if someone loads data in url
+          - binds handlers to DOM emements
+        */
+
+        console.log('UD-Annotatrix is loading ...');
+
+        window.log = new Logger('INFO');
+        window.test = new Tester();
+        //test.all(); // uncomment this line to run tests on ready
+        test.run('navSentences');
+
+        // initialize w/ defaults to avoid cy.$ is not a function errors
+        resetCy(CY_OPTIONS);
+        checkServer(); // check if server is running
+        setUndos();
+        loadFromUrl();
+        updateSentenceTrackers(); // should go in loadFromUrl and checkServer (5/23/18)
+        bindHandlers();
+
+    });
+};
+
+
+
+
+
+
+
+/**
+ * functions for navigating available sentences
+ */
+function updateSentenceTrackers() {
+    log.info(`called updateSentenceTrackers()`);
+
+    if (_.current < 0) // ensure we always have something
+        insertSentence();
+
+    $('#current-sentence').val(_.current + 1);
+    $('#total-sentences').text(_.sentences.length);
+    $('#text-data').val(_.sentences[_.current] || ''); // handle null
+
+    $('#btnPrevSentence').attr('disabled', (_.current === 0));
+    $('#btnNextSentence').attr('disabled', (_.current === _.sentences.length));
+
+    updateTable();
 }
+function insertSentence() {
+    log.info(`called insertSentence()`);
 
-function onReady() {
-    /*
-    Called when all the naive code and libraries are loaded.
-    - checks if server is running
-    - sets undo manager
-    - loads data from localStorage, if avaliable and server is not running
-    - checks if someone loads data in url
-    - binds handlers to DOM emements
-    */
+    // insert null at (incremented) current index
+    _.current++;
+    _.sentences = _.sentences.slice(0, _.current)
+        .concat(null, _.sentences.slice(_.current));
+    _.formats = _.formats.slice(0, _.current)
+        .concat(null, _.formats.slice(_.current));
 
-    console.log('UD-Annotatrix is loading ...');
-
-    window.log = new Logger('WARN');
-    window.test = new Tester();
-
-    resetCy(CY_OPTIONS); // initialize w/ defaults to avoid cy.$ is not a function errors
-
-    checkServer(); // check if server is running
-    window.undoManager = new UndoManager();  // undo support
-    setUndos(window.undoManager);
-    loadFromUrl();
-    bindHandlers();
-
+    updateSentenceTrackers();
 }
+function removeSentence() {
+    log.info(`called removeSentence()`);
 
+    _.sentences.splice(_.current, 1);
+    _.formats.splice(_.current, 1);
+    _.current--;
 
-function saveData() { // TODO: rename to updateData
-    log.debug(`called saveData()`);
+    updateSentenceTrackers();
+}
+function prevSentence() {
+    log.info(`called prevSentence()`);
 
-    if (IS_SERVER_RUNNING) {
-        updateOnServer()
-    } else {
-        localStorage.setItem('corpus', getContents()); // TODO: get rid of 'corpus', move the treebank updating here from getContents
+    if (_.current === 0) {
+        log.warn(`prevSentence(): already at the first sentence!`);
+        return;
     }
+
+    _.current--;
+
+    updateSentenceTrackers();
 }
+function goToSentence() {
+    log.info(`called goToSentence()`);
+
+    const goto = parseInt($('#current-sentence').val());
+
+    if (isNaN(goto) || goto < 1 || goto > _.sentences.length) {
+        log.warn(`goToSentence(): unable to go to input: ${$('#current-sentence').val()}`);
+    } else {
+        _.current = goto - 1;
+    }
+
+    updateSentenceTrackers();
+}
+function nextSentence() {
+  log.info(`called prevSentence()`);
+
+  if (_.current === _.sentences.length - 1) {
+      log.warn(`prevSentence(): already at the last sentence!`);
+      return;
+  }
+
+  _.current++;
+
+  updateSentenceTrackers();
+}
+
+
+
+
+
+
 
 
 function getContents() {
@@ -133,131 +216,7 @@ function getContents() {
 }
 
 
-function loadFromLocalStorage() {
-    log.debug(`called loadFromLocalStorage()`);
 
-    /* Checks if localStorage is avaliable. If yes, tries to load the corpus
-    from localStorage. If no, warn user that localStorage is not avaliable. */
-
-    if (storageAvailable('localStorage')) {
-
-        const localStorageMaxSize = getLocalStorageMaxSize();
-        $('#localStorageAvailable').text(`${localStorageMaxSize/1024}k`);
-        if (localStorage.getItem('corpus') !== null) {
-            CONTENTS = localStorage.getItem('corpus');
-            loadDataInIndex();
-        }
-
-    }
-    else {
-
-        log.warn('localStorage is not available :(');
-
-        // add a nice message so the user has some idea how to fix this.
-        $('#warning').append(
-            $('<p>Unable to save to localStorage, maybe third-party cookies are blocked?</p>') );
-
-    }
-}
-
-
-
-function loadFromUrl() {
-    log.debug(`called loadFromUrl`);
-
-    /* Check if the URL contains arguments. If it does, takes first
-    and writes it to the textbox. */
-
-    let parameters = window.location.search.slice(1);
-    if (parameters) {
-        parameters = parameters.split('&');
-        const variables = parameters.map( (arg) => {
-            return arg.split('=')[1].replace(/\+/g, ' ');
-        });
-
-        $('#text-data').val(variables);
-        drawTree();
-    }
-}
-
-
-function loadFromFile(e) {
-    log.debug(`called loadFromFile(${JSON.stringify(e)})`);
-
-    /*
-    Loads a corpus from a file from the user's computer,
-    puts the filename into localStorage.
-    If the server is running, ... TODO
-    Else, loads the corpus to localStorage.
-    */
-
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    localStorage.setItem('filename', file.name);
-
-    reader.onload = (e) => {
-        if (IS_SERVER_RUNNING) {
-            // TODO: do something
-        } else {
-            localStorage.setItem('corpus', e.target.result);
-            CONTENTS = localStorage.getItem('corpus');
-            loadDataInIndex();
-        }
-    }
-    reader.readAsText(file);
-}
-
-
-function formatUploadSize(fileSize) {
-    log.debug(`called formatUploadSize(${fileSize})`);
-
-    if (fileSize < 1024)
-        return `${fileSize} B`;
-    if (fileSize < 1048576)
-        return `${(fileSize/1024).toFixed(1)} kB`;
-
-    return `${(fileSize/1048576).toFixed(1)} mB`;
-}
-
-function isQuotaExceeded(e) {
-    log.debug(`called isQuotaExceeded(${JSON.stringify(e)})`);
-
-    let quotaExceeded = false;
-    if (e) {
-        if (e.code) {
-            switch (e.code) {
-                case 22:
-                    quotaExceeded = true;
-                    break;
-                case 1014: // Firefox
-                    quotaExceeded = (e.name === 'NS_ERROR_DOM_QUOTA_REACHED');
-                    break;
-            }
-        } else {
-            quotaExceeded = (e.number === -2147024882) // IE8
-        }
-    }
-
-    return quotaExceeded;
-}
-
-function handleUploadButtonPressed() {
-    log.debug(`called handleUploadButtonPressed()`);
-
-    throw new NotImplementedError('handle upload button not implemented');
-    /*
-    // Replaces current content
-    CONTENTS = TEMPCONTENTS;
-    localStorage.setItem('corpus', CONTENTS);
-    getLocalStorageMaxSize()
-    $('#localStorageAvailable').text(LOCALSTORAGE_AVAILABLE / 1024 + 'k');
-    loadDataInIndex();
-    $('#uploadFileButton').attr('disabled', 'disabled');
-    $('#errorUploadFileSize').hide();
-    $('#fileModal').modal('hide');*/
-}
 
 
 function addSent() { // TODO: this is probably not what we want? what if we turn it into 'insert a new sentence _here_'?
@@ -316,7 +275,7 @@ function splitIntoSentences(corpus) {
     // splitting
     let splitted;
     if (format === 'plain text') {
-        splitted = corpus.match(/[^ ].+?[.!?](?=( |$))/g);
+        splitted = corpus.match(/[^ ].+?[.!?](?=( |$))/g) || [corpus];
     } else {
         splitted = corpus.split('\n\n');
     }
@@ -339,11 +298,11 @@ function showDataIndiv() {
     to update the CoNLL-U in the textarea and the indices. */
 
     $('#text-data').val(RESULTS[CURRENT_SENTENCE] || '');
-    $('#inputCurrSentence').val(AVAILABLE_SENTENCES === 0 ? 0 : CURRENT_SENTENCE + 1);
-    $('#spanTotalSentences').val(AVAILABLE_SENTENCES);
+    $('#current-sentence').val(AVAILABLE_SENTENCES === 0 ? 0 : CURRENT_SENTENCE + 1);
+    $('#total-sentences').val(AVAILABLE_SENTENCES);
 
     updateTable(); // Update the table view at the same time
-    formatTabsView($('#text-data')); // update the format taps
+    formatTabsView(); // update the format taps
     fitTable(); // make table's size optimal
     drawTree();
 }
@@ -355,7 +314,7 @@ function goToSenSent() {
     saveData();
 
     RESULTS[CURRENT_SENTENCE] = $('#text-data').val();
-    CURRENT_SENTENCE = parseInt($('#inputCurrSentence').val()) - 1;
+    CURRENT_SENTENCE = parseInt($('#current-sentence').val()) - 1;
 
     if (CURRENT_SENTENCE < 0)
         CURRENT_SENTENCE = 0;
@@ -467,43 +426,8 @@ function drawTree() {
         log.warn(`drawTree(): Error while destroying cy: ${e.message}`);
     }
 
-    let content = $('#text-data').val(); // TODO: rename
-    const format = detectFormat(content);
-
-    // -- to be moved out--
-    // content = content.replace(/ +\n/, '\n'); // remove extra spaces at the end of lines. #89
-    // $('#text-data').val(content); // TODO: what is this line for?
-
-    // $('#detected').html('Detected: ' + format + ' format');
-    // to be moved out --
-
-    switch (format) {
-        case ('CG3'):
-            content = cg32Conllu(content);
-            if (content === undefined) { // ambiguous CG3
-                cantConvertCG(); // show warning
-                return; // leave
-            } else {
-                clearWarning();
-            }
-            break;
-        case ('SD'):
-            content = sd2Conllu(content);
-            break;
-        case ('Brackets'):
-            content = brackets2Conllu(content);
-            break;
-        case ('plain text'):
-        case ('Unknown'):
-            return; // if here, the format wasn't yet converted to a format with a graph repr
-        case ('CoNLL-U'):
-            break;
-        default:
-            log.warn(`drawTree(): Unrecognized format: ${format}`);
-            break;
-    }
-
-    content = cleanConllu(content);
+    let content = $('#text-data').val();
+    content = convert2Conllu(content) || content; // handle returning null
 
     conlluDraw(content);
     showProgress();
@@ -512,28 +436,6 @@ function drawTree() {
     bindCyHandlers(); // moved to gui.js
     saveData();
     return content;
-}
-
-
-function formatTabsView() {
-    log.debug(`called formatTabsView`);
-
-    /* The function handles the format tabs above the textarea.
-    Takes a string with a format name, changes the classes on tabs. */
-    const format = detectFormat($('#text-data').val());
-    if (format === 'CoNLL-U') {
-        $('#tabOther').hide().removeClass('active');
-        $('#tabCG3').removeClass('active');
-        $('#tabConllu').addClass('active');
-    } else if (format === 'CG3') {
-        $('#tabOther').hide().removeClass('active');
-        $('#tabCG3').addClass('active');
-        $('#tabConllu').removeClass('active');
-    } else {
-        $('#tabOther').show().addClass('active').text(format);
-        $('#tabCG3').removeClass('active');
-        $('#tabConllu').removeClass('active');
-    }
 }
 
 
@@ -583,7 +485,7 @@ function detectFormat(content) {
 
     log.debug(`detectFormat(): detected ${format}`);
     FORMAT = format;
-    _.formats[_.current] = format;
+    //_.formats[_.current] = format;
     return format;
 }
 
@@ -631,76 +533,4 @@ function showHelp() {
 
     /* Opens help in new tab. */
     window.open('help.html', '_blank').focus();
-}
-
-
-function storageAvailable(type) {
-    log.debug(`called storageAvailable(${type})`);
-
-    /* Taken from https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API */
-    try {
-        const storage = window[type],
-            x = '__storage_test__';
-        storage.setItem(x, x);
-        storage.removeItem(x);
-        return true;
-    } catch (e) {
-        return e instanceof DOMException
-            && ( e.code === 1014 // Firefox
-                || e.code === 22 // everything else
-                // test name field too, because code might not be present
-                || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' // Firefox
-                || e.name === 'QuotaExceededError' )       // everything else
-
-            // acknowledge QuotaExceededError only if there's something already stored
-            && storage.length !== 0;
-    }
-}
-
-
-
-function getLocalStorageMaxSize(error) {
-    log.debug(`called getLocalStorageMaxSize(${error})`);
-
-    /* Returns the remaining available space in localStorage */
-
-    const max = 10 * 1024 * 1024,
-        testKey = `size-test-${Math.random().toString()}`; // generate random key
-    let i = 64,
-        string1024 = '',
-        string = '',
-        found = 0;
-
-    if (localStorage) {
-
-        error = error || 25e4;
-
-        // fill a string with 1024 symbols/bytes
-        while (i--) string1024 += 1e16
-
-        // fill a string with "max" amount of symbols/bytes
-        i = max/1024;
-        while (i--) string += string1024;
-        i = max;
-
-        // binary search
-        while (i > 1) {
-            try {
-                localStorage.setItem(testKey, string.substr(0, i));
-                localStorage.removeItem(testKey);
-
-                if (found < i - error) {
-                    found = i;
-                    i *= 1.5;
-                } else {
-                  break;
-                }
-
-            } catch (e) {
-                localStorage.removeItem(testKey);
-                i = found + (i - found) / 2;
-            }
-        }
-    }
-    return found;
 }

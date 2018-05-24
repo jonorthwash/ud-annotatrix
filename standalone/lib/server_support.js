@@ -37,7 +37,7 @@ function updateOnServer() {
     log.debug('called updateOnServer()');
 
     const curSent = $('#text-data').val(),
-        sentNum = $('#inputCurrSentence').val(),
+        sentNum = $('#current-sentence').val(),
         treebank_id = location.href.split('/')[4];
 
     $.ajax({
@@ -72,7 +72,7 @@ function getSentence(sentNum) {
         success: loadSentence
     });
 
-    $('#inputCurrSentence').val(sentNum);
+    $('#current-sentence').val(sentNum);
     CURRENT_SENTENCE = sentNum;
 }
 
@@ -84,7 +84,7 @@ function loadSentence(data) {
         const sentence = data['content'],
             max = data['max'];
         $('#text-data').val(sentence);
-        $('#spanTotalSentences').html(max);
+        $('#total-sentences').html(max);
         AVAILABLE_SENTENCES = max;
     }
 

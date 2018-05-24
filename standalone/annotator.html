@@ -130,8 +130,11 @@
 							<i class="fa fa-arrow-left" title="Previous sentence"></i>
 						</a>
 					</div>
-					<input class="form-control col-xs-2" id="inputCurrSentence" value="0" size="2"/>
-					<span class="input-group-addon">/&nbsp;<span id="spanTotalSentences">00</span></span>
+					<input class="form-control col-xs-2" id="current-sentence" value="0" size="2"/>
+					<span class="input-group-addon">
+						/&nbsp;
+						<span id="total-sentences">0</span>
+					</span>
 					<div class="input-group-btn ml-auto">
 						<a class="btn btn-secondary" href="#" id="btnNextSentence">
 							<i class="fa fa-arrow-right" title="Next sentence"></i>
@@ -191,7 +194,7 @@
 						<a href="#" class="nav-link" id="tabOther"></a>
 					</li>
 					<li class="nav-item">
-						<a href="#" class="nav-link active" id="tabConllu">CoNLL-U</a>
+						<a href="#" class="nav-link" id="tabConllu">CoNLL-U</a>
 					</li>
 					<li class="nav-item">
 						<a href="#" class="nav-link" id="tabCG3">CG3</a>

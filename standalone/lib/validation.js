@@ -361,3 +361,45 @@ function is_relation_conflict(tree) {
 
     return conflicts;
 }
+
+/**
+ * Cleans up CoNNL-U content.
+ * @param {String} content Content of input area
+ * @return {String}     Cleaned up content
+ */
+function cleanConllu(content) {
+    log.debug(`called cleanConllu(${content})`);
+
+    // if we don't find any tabs, then convert >1 space to tabs
+    // TODO: this should probably go somewhere else, and be more
+    // robust, think about vietnamese D:
+    let res = content.search('\n');
+    if (res < 0)
+        return content;
+
+    // maybe someone is just trying to type conllu directly...
+    res = (content.match(/_/g) || []).length;
+    if (res <= 2)
+        return content;
+
+    // If we don't find any tabs, then we want to replace multiple spaces with tabs
+    const spaceToTab = true;//(content.search('\t') < 0);
+    const newContent = content.trim().split('\n').map((line) => {
+        line = line.trim();
+
+        // If there are no spaces and the line isn't a comment,
+        // then replace more than one space with a tab
+        if (line[0] !== '#' && spaceToTab)
+            line = line.replace(/  */g, '\t');
+
+        return line
+    }).join('\n');
+
+    // If there are >1 CoNLL-U format sentences is in the input, treat them as such
+    // conlluMultiInput(newContent); // TODO: move this one also inside of this func, and make a separate func for calling them all at the same time
+
+    //if (newContent !== content)
+        //$('#text-data').val(newContent);
+
+    return newContent;
+}

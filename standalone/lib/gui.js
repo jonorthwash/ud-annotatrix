@@ -40,8 +40,9 @@ var CURRENT_ZOOM = 1.0;
 var IS_EDITING = false;
 
 
-function setUndos(undoManager) {
+function setUndos() {
     log.debug('called setUndos()');
+		window.undoManager = new UndoManager();
 
     const updateUI = () => {
         log.debug('called updateUI()');
@@ -66,25 +67,31 @@ function setUndos(undoManager) {
 }
 
 function bindHandlers() {
+		log.debug(`called bindHandlers()`);
     /* Binds handlers to DOM elements. */
 
     // TODO: causes errors if called before the cy is initialised
     $(document).keydown(keyDownClassifier);
 
     $('#btnUploadCorpusFileButton').click(handleUploadButtonPressed);
-    $('#btnPrevSentence').click(prevSenSent);
-    $('#btnNextSentence').click(nextSenSent);
-    $('#btnRemoveSentence').click(removeCurSent);
-    $('#btnAddSentence').click(addSent);
+		
+    $('#btnPrevSentence').click(prevSentence);
+		$('#current-sentence').blur(goToSentence);
+    $('#btnNextSentence').click(nextSentence);
+    $('#btnRemoveSentence').click(removeSentence);
+    $('#btnAddSentence').click(insertSentence);
+
     $('#btnExportCorpus').click(exportCorpora);
     //$('#btnSaveServer').click(saveOnServer);
     $('#btnDiscardCorpus').click(clearCorpus);
+
 		$('#btnHelp').click(showHelp);
+
+		$('#tabCG3').click(viewAsCG);
     $('#tabConllu').click(viewAsConllu);
-    $('#tabCG3').click(viewAsCG);
-    $('#btnViewTable').click(toggleTableView);
+
+		$('#btnViewTable').click(toggleTableView);
     $('#btnViewText').click(toggleCodeWindow);
-    $('#inputCurrSentence').blur(goToSenSent);
 
     $('#btnExportPNG').click(exportPNG);
     $('#btnExportSVG').click(exportSVG);
@@ -1206,65 +1213,55 @@ function viewAsPlain() { // TODO: DRY?
     $('#text-data').val(text);
 }
 
+function viewAsCG() {
+		log.debug(`called viewAsCG()`);
+
+		let content = $('#text-data').val();
+		content = convert2cg3(content) || content; // handle returning null
+		localStorage.setItem('corpus', content);
+		$('#text-data').val(content);
+
+		formatTabsView();
+
+    if (IS_TABLE_VIEW) {
+        $('#btnViewTable i').toggleClass('fa-code', 'fa-table');
+        $('#table-data').hide();
+        $('#text-data').show();
+        IS_TABLE_VIEW = false ;
+    }
+}
 
 function viewAsConllu() {
 		log.debug(`called viewAsConllu()`);
 
-    let curSent = $('#text-data').val(),
-				currentFormat = detectFormat(curSent);
+		let content = $('#text-data').val();
+    content = convert2Conllu(content) || content; // handle returning null
+		localStorage.setItem('corpus', content); // probably put this somewhere else
+		$('#text-data').val(content);
+		//loadDataInIndex();
 
-    if (currentFormat === 'CG3') {
-
-        curSent = cg32Conllu(curSent);
-        if (curSent === undefined) {
-            cantConvertCG();
-            return;
-        }
-
-        $('#tabCG3').removeClass('active');
-        $('#tabConllu').addClass('active');
-        $('#text-data').val(curSent);
-
-    } else {
-
-        let contents = getContents();
-        if (currentFormat === 'plain text') {
-            contents = txtCorpus2Conllu(contents);
-            localStorage.setItem('corpus', contents);
-            loadDataInIndex();
-        } else if (currentFormat === 'SD') {
-            // newContents = sd2Conllu(contents);
-            sd2Conllu(contents); // TODO: make it like for txt
-        }
-        localStorage.setItem('format', 'CoNLL-U');
-
-    }
+		formatTabsView();
 }
 
+function formatTabsView() {
+    log.debug(`called formatTabsView`);
 
-function viewAsCG() {
-		log.debug(`called viewAsCG()`);
+    /* The function handles the format tabs above the textarea.
+    Takes a string with a format name, changes the classes on tabs. */
+    const format = detectFormat($('#text-data').val());
+		localStorage.setItem('format', format);
 
-    let text = $('#text-data').val(),
-				currentFormat = detectFormat(text);
-
-    if (currentFormat === 'CoNLL-U') {
-        text = conllu2cg3(text);
-        $('#tabConllu').removeClass('active');
-    }
-
-    $('#tabCG3').addClass('active');
-    $('#text-data').val(text);
-
-    if (IS_TABLE_VIEW) {
-        $('#btnViewTable i').toggleClass('fa-code', 'fa-table');
-        $('#table-data').toggle();
-        $('#text-data').toggle();
-        IS_TABLE_VIEW = false ;
-    }
-
+		$('.nav-link').removeClass('active');
+    if (format === 'CG3') {
+        $('#tabCG3').addClass('active');
+				$('#tabOther').hide();
+    } else if (format === 'CoNLL-U') {
+				$('#tabConllu').addClass('active');
+				$('#tabOther').hide();
+		} else {
+				$('#tabOther').addClass('active').show();
+		}
 }
-
 
 function cantConvertCG() {
 		const message = 'Warning: CG containing ambiguous analyses can\'t be converted into CoNLL-U!';
@@ -1326,7 +1323,7 @@ function switchEnhanced() {
 
 
 $(document).ready(function(){
-		$('#inputCurrSentence').keyup((e) => {
+		$('#current-sentence').keyup((e) => {
 				if (e.keyCode === 13) {
 						goToSenSent();
 				} else if (e.keyCode === KEYS.UP || e.keyCode === KEYS.K) {

@@ -1,4 +1,20 @@
 /**
+ *  convert2<FORMAT>() functions will try to detect the format of any input and
+ *    then convert it into <FORMAT> ... they will all fail (return null) if they
+ *    detect an Unknown input format
+ *
+ *    @param {String} text Arbitrary input text
+ *    @return {String||null} in <FORMAT>, where <FORMAT> one of
+ *      - plain text
+ *      - CoNLL-U
+ *      - CG3
+ *
+ *  these functions mostly rely on converting things into CoNLL-U and then reconverting
+ *  if necessary ... these are the 'public' functions for the application (called
+ *  when the user clicks on one of the converter tabs)
+ */
+
+/**
  * Takes a string representing some format, returns the string in
  * plain text or NULL if there was an error
  * @param {String} text Input text
@@ -20,13 +36,14 @@ function convert2PlainText(text) {
         case ('Brackets'):
             return conllu2PlainText(brackets2Conllu(text));
         case ('SD'):
-            return conllu2PlainText(sd2Conllu2(text));
+            return conllu2PlainText(sd2Conllu__raw(text));
         case ('CoNLL-U'):
             return conllu2PlainText(text);
         case ('CG3'):
             const conllu = cg32Conllu(text);
             if (conllu === null) {
                 log.warn(`convert2PlainText(): failed to convert: received ambiguous CG3`);
+                cantConvertCG();
                 return null;
             } else {
                 return conllu2PlainText(conllu);
@@ -47,6 +64,7 @@ function convert2Conllu(text) {
     log.debug(`called convert2conllu(${text})`);
 
     const format = detectFormat(text);
+    clearWarning();
 
     log.debug(`convert2conllu(): got format: ${format}`);
     switch (format) {
@@ -54,16 +72,23 @@ function convert2Conllu(text) {
             log.warn(`convert2conllu(): failed to convert Unknown to plain text`);
             return null;
         case ('plain text'):
-            return plainText2Conllu(text);
+            return cleanConllu(plainText2Conllu(text));
         case ('Brackets'):
-            return brackets2Conllu(text);
+            return cleanConllu(brackets2Conllu(text));
         case ('SD'):
-            return sd2Conllu2(text);
+            return cleanConllu(sd2Conllu__raw(text));
         case ('CoNLL-U'):
             log.warn(`convert2conllu(): received CoNLL-U`);
             return text;
         case ('CG3'):
-            return cg32Conllu(text);
+            const conllu = cg32Conllu(text);
+            if (conllu === null) {
+                log.warn(`convert2PlainText(): failed to convert: received ambiguous CG3`);
+                cantConvertCG();
+                return null;
+            } else {
+                return cleanConllu(conllu);
+            }
     }
 
     log.warn(`convert2conllu(): unrecognized format: ${format}`);
@@ -91,7 +116,7 @@ function convert2cg3(text) {
         case ('Brackets'):
             return conllu2cg3(brackets2Conllu(text));
         case ('SD'):
-            return conllu2cg3(sd2Conllu2(text));
+            return conllu2cg3(sd2Conllu__raw(text));
         case ('CoNLL-U'):
             return conllu2cg3(text);
         case ('CG3'):
@@ -103,6 +128,28 @@ function convert2cg3(text) {
     return null;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ *  Helper functions for the convert2<FORMAT> functions described above ... these
+ *  handle the implementation of the conversions between specific formats
+ */
 
 /**
  * Takes a plain text sentence, returns a sentence in CoNLL-U format.
@@ -153,51 +200,13 @@ function plainText2Conllu(text) {
 function sd2Conllu(text) {
     log.debug(`called sd2Conllu(${text})`);
 
-    CONTENTS = sd2Conllu2(text); // external function, see standalone/lib/sd2Conllu.js
+    CONTENTS = sd2Conllu__raw(text); // external function, see standalone/lib/sd2Conllu.js
     FORMAT = 'CoNLL-U';
     log.debug(`sd2Conllu changed CONTENTS to "${CONTENTS}"`);
 
     loadDataInIndex();
     showDataIndiv();
 }
-
-/**
- * Takes a plain text, converts it to CoNLL-U format.
- * @param {String} text Input text
- */
-function txtCorpus2Conllu(text) {
-    log.debug(`called txtCorpus2Conllu(${text})`);
-
-    // const splitted = text.match(/[^ ].+?[.!?](?=( |$|\n))/g) || [text];
-    const splitted = text.split('\n\n');
-    AVAILABLE_SENTENCES = splitted.length;
-
-    // corpus: convert to CoNLL-U by sentence
-    return splitted.map((sentence, i) => {
-        return plainText2Conllu(sentence.trim());
-    }).join('\n');
-}
-
-/**
- * Checks if the input box has > 1 sentence.
- * @param {String} text Input text
- */
-function conlluMultiInput(text) { // TODO: this might break after rewriting architecture. fix later.
-    log.debug(`called conlluMultiInput(${text})`);
-
-    if (text.match(/\n\n(#.*\n)?1\t/)) {
-
-        // if text consists of several sentences, process it as imported file
-        if (text.match(/\n\n/)) // match doublenewline
-            CONTENTS = text;
-
-        if (CONTENTS.trim() !== '') { // NOTE: removed some code that didn't do anything :)
-            FORMAT = 'CoNLL-U';
-            loadDataInIndex();
-        }
-    }
-}
-
 
 /**
  * Takes a string in CoNLL-U, converts it to plain text.
@@ -214,48 +223,6 @@ function conllu2PlainText(text) {
     return sent.tokens.map((token) => {
         return token.form;
     }).join(' ');
-}
-
-/**
- * Cleans up CoNNL-U content.
- * @param {String} content Content of input area
- * @return {String}     Cleaned up content
- */
-function cleanConllu(content) {
-    log.debug(`called cleanConllu(${content})`);
-
-    // if we don't find any tabs, then convert >1 space to tabs
-    // TODO: this should probably go somewhere else, and be more
-    // robust, think about vietnamese D:
-    let res = content.search('\n');
-    if (res < 0)
-        return content;
-
-    // maybe someone is just trying to type conllu directly...
-    res = (content.match(/_/g) || []).length;
-    if (res <= 2)
-        return content;
-
-    // If we don't find any tabs, then we want to replace multiple spaces with tabs
-    const spaceToTab = true;//(content.search('\t') < 0);
-    const newContent = content.trim().split('\n').map((line) => {
-        line = line.trim();
-
-        // If there are no spaces and the line isn't a comment,
-        // then replace more than one space with a tab
-        if (line[0] !== '#' && spaceToTab)
-            line = line.replace(/  */g, '\t');
-
-        return line
-    }).join('\n');
-
-    // If there are >1 CoNLL-U format sentences is in the input, treat them as such
-    // conlluMultiInput(newContent); // TODO: move this one also inside of this func, and make a separate func for calling them all at the same time
-
-    //if (newContent !== content)
-        //$('#text-data').val(newContent);
-
-    return newContent;
 }
 
 /**
@@ -435,8 +402,6 @@ function brackets2Conllu(text) {
         return tokens;
     };
 
-
-
     const inputLines = text.split('\n'),
         comments = '';
 
@@ -452,3 +417,231 @@ function brackets2Conllu(text) {
     sent.tokens = tokens;
     return sent.serial;
 }
+
+/**
+ * Takes a string in CG3, converts it to CoNLL-U.
+ * @param {String} CGtext CG3 string
+ * @return {String}     CoNLL-U
+ */
+function cg32Conllu(CGtext) {
+    log.debug(`called cg32Conllu(${CGtext})`);
+
+    /* Takes a string in CG3, returns a string in CoNLL-U. */
+
+    // TODO: Check for '<s>' ... '</s>' and if you have matching things treat them
+    // as comments with #
+
+    // to abort conversion if there are ambiguous analyses
+    if (((CGtext) => {
+
+        // suppose the indent is consistent troughout the sentence
+        const lines = CGtext.split(/"<(.*)>"/);
+        for (let i = 2, l = lines.length; i < l; i += 2) {
+            const indent = lines[i].replace('\n', '').split(/[^\s]/)[0],
+                analysis = lines[i].trim();
+            if (analysis.includes(indent) && !analysis.includes(indent + indent))
+                return true;
+        }
+        return false;
+
+    })(CGtext)) {
+        log.debug(`cg32Conllu(): detected ambiguity`);
+        return null;
+    }
+
+    // remove extra spaces before newline before processing text
+    CGtext = CGtext.replace(/ +\n/, '\n');
+    let sent = new conllu.Sentence();
+
+
+    // get the comments
+    sent.comments = ((CGtext) => {
+
+        /* Takes a string in CG, returns 2 arrays with strings. */
+        return CGtext.split('\n')
+            .filter((line) => { return line[0] === '#' })  // take only strings beginning with "#"
+            .map((line) => { return line.replace(/^#+/, ''); }); // string off leading "#"s
+
+    })(CGtext);
+
+
+    // get the tokens
+    sent.tokens = ((CGtext) => {
+        const _getAnalyses = (line, analyses) => {
+            log.debug(`called cg32Conllu:_getAnalyses(line: ${line}, analyses: ${JSON.stringify(analyses)})`);
+
+            // first replace space (0020) with · for lemmas and forms containing
+            // whitespace, so that the parser doesn't get confused.
+            const quoted = line.replace(/.*(".*?").*/, '$1'),
+                forSubst = quoted.replace(/ /g, '·'),
+                gram = line.replace(/".*"/, forSubst)
+                    .replace(/[\n\t]+/, '').trim().split(' '); // then split on space and iterate
+
+            $.each(gram, (i, analysis) => {
+                if (analysis.match(/"[^<>]*"/)) {
+                    analyses.lemma = analysis.replace(/"([^<>]*)"/, '$1');
+                } else if (analysis.match(/#[0-9]+->[0-9]+/)) {
+                    // in CG sometimes heads are the same as the token id, this breaks visualisation #264
+                    analyses.head = analysis.replace(/#([0-9]+)->([0-9]+)/, '$2').trim();
+                    if (analyses.id === analyses.head)
+                        analyses.head = '';
+                } else if (analysis.match(/#[0-9]+->/)) {
+                    // pass
+                } else if (analysis.match(/@[A-Za-z:]+/)) {
+                    analyses.deprel = analysis.replace(/@([A-Za-z:]+)/, '$1');
+                } else if (i < 2) {
+                    analyses.upostag = analysis; // TODO: what about xpostag?
+                } else { // saving other stuff
+                    analyses.feats = (analyses.feats ? '' : '|') + analysis;
+                }
+            });
+
+            return analyses;
+        };
+        const _getToken = (attrs) => {
+            log.debug(`called cg32Conllu:_getToken(${JSON.stringify(attrs)})`);
+
+            /* Takes a dictionary of attributes. Creates a new token, assigns
+            values to the attributes given. Returns the new token. */
+
+            let newToken = new conllu.Token();
+            $.each(attrs, (attr, val) => {
+                newToken[attr] = val;
+            });
+
+            return newToken;
+        };
+        const _getSupertoken = (subtokens, form, tokenId) => {
+            log.debug(`called cg32Conllu:_getSupertoken(subtokens: ${JSON.stringify(subtokens)}, form: ${form}, tokenId: ${tokenId})`);
+
+            let sup = new conllu.MultiwordToken();
+            sup.form = form;
+
+            $.each(subtokens, (i, token) => {
+                const newToken = _getAnalyses(token, { id:tokenId, form:'_' });
+                sup.tokens.push(_getToken(newToken));
+                tokenId++;
+            });
+
+            return sup;
+        };
+
+        // i use the presupposition that there are no ambiguous readings,
+        // because i've aborted conversion of ambiguous sentences above
+        const lines = CGtext.split(/"<(.*)>"/).slice(1);
+        let tokens = [], tokenId = 1;
+        $.each(lines, (i, line) => {
+            if (i % 2 === 1) {
+                const form = lines[i - 1];
+                line = line.replace(/^\n?;?( +|\t)/, '');
+                if (!line.match(/(  |\t)/)) {
+                    let token = _getAnalyses(line, { form:form, id:tokenId });
+                    tokens.push(_getToken(token));
+                    tokenId ++;
+                } else {
+                    const subtokens = line.trim().split('\n'),
+                        supertoken = _getSupertoken(subtokens, form, tokenId);
+                    tokens.push(supertoken);
+                    tokenId += subtokens.length;
+                }
+            }
+        });
+
+        return tokens;
+
+    })(CGtext);
+
+    log.debug(`cg32Conllu(): serial: ${sent.serial}`);
+    return sent.serial;
+}
+
+/**
+ * Takes a string in CoNLL-U, converts it to CG3.
+ * @param {String} conlluText CoNLL-U string
+ * @param {String} indent     indentation unit (default:'\t')
+ * @return {String}     CG3
+ */
+function conllu2cg3(conlluText, indent) {
+    log.debug(`called conllu2cg3(conllu: ${conlluText}, indent: ${indent})`);
+    // CG3 spec. reference: https://visl.sdu.dk/cg3_howto.pdf
+
+    const _getAnalysis = (i, token) => {
+        log.debug(`called conllu2cg3:_getAnalysis(i: ${i}, token: ${JSON.stringify(token)})`);
+
+        const lemma = (token.lemma ? `"${token.lemma}"` : `""`), // lemma should have "" if blank (#228)
+            pos = token.upostag || token.xpostag || '_',
+            feats = (token.feats ? ` ${token.feats.replace(/\|/g, ' ')}` : ''),
+            deprel = (token.deprel ? ` @${token.deprel}` : ' @x'), // is it really what we want by default?
+            head = token.head || '',
+            cgToken = `${lemma} ${pos}${feats}${deprel} #${token.id}->${head}`;
+
+        log.debug(`got cgToken: ${cgToken}`);
+        return cgToken;
+    };
+
+    let sent = new conllu.Sentence();
+    sent.serial = cleanConllu(conlluText);
+    indent = indent || '\t';
+
+    let CGtext = (sent.comments.length ? `#${sent.comments.join('\n#')}` : '');
+
+    $.each(sent.tokens, (i, token) => {
+        CGtext += (token.form ? `\n"<${token.form}>"\n` : '');
+        if (token.tokens === undefined) {
+            CGtext += `${indent}${_getAnalysis(i, token)}`;
+        } else {
+            CGtext += token.tokens.map((subtoken, j) => {
+                return `${indent.repeat(j+1)}${_getAnalysis(j, subtoken)}`;
+            }).join('\n');
+        }
+    });
+
+    return CGtext.trim();
+}
+
+
+
+
+
+
+/*
+  OBSOLETE, but probably worth keeping around for a bit (5/23/18)
+
+
+/**
+ * Checks if the input box has > 1 sentence.
+ * @param {String} text Input text
+ * /
+function conlluMultiInput(text) { // TODO: this might break after rewriting architecture. fix later.
+    log.debug(`called conlluMultiInput(${text})`);
+
+    if (text.match(/\n\n(#.*\n)?1\t/)) {
+
+        // if text consists of several sentences, process it as imported file
+        if (text.match(/\n\n/)) // match doublenewline
+            CONTENTS = text;
+
+        if (CONTENTS.trim() !== '') { // NOTE: removed some code that didn't do anything :)
+            FORMAT = 'CoNLL-U';
+            loadDataInIndex();
+        }
+    }
+}
+
+/**
+ * Takes a plain text, converts it to CoNLL-U format.
+ * @param {String} text Input text
+ * /
+function txtCorpus2Conllu(text) {
+    log.debug(`called txtCorpus2Conllu(${text})`);
+
+    // const splitted = text.match(/[^ ].+?[.!?](?=( |$|\n))/g) || [text];
+    const splitted = text.split('\n\n');
+    AVAILABLE_SENTENCES = splitted.length;
+
+    // corpus: convert to CoNLL-U by sentence
+    return splitted.map((sentence, i) => {
+        return plainText2Conllu(sentence.trim());
+    }).join('\n');
+}
+*/

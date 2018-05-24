@@ -1,7 +1,7 @@
 'use strict'
 
-function sd2Conllu2(text) {
-    log.debug(`called sd2Conllu2(${text})`);
+function sd2Conllu__raw(text) {
+    log.debug(`called sd2Conllu__raw(${text})`);
 
     /* Takes a string in CG, returns a string in conllu. */
     const inputLines = text.split('\n');
