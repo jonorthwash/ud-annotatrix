@@ -107,6 +107,71 @@ function bindHandlers() {
     $('#enhanced').click(switchEnhanced);
 
     $('#filename').change(loadFromFile);
+
+		$('#current-sentence').keyup((e) => {
+				if (e.keyCode === 13) {
+						goToSenSent();
+				} else if (e.keyCode === KEYS.UP || e.keyCode === KEYS.K) {
+						prevSenSent();
+				} else if (e.keyCode === KEYS.DOWN || e.keyCode === KEYS.J) {
+						nextSenSent();
+				} else if (e.keyCode === KEYS.MINUS) {
+						removeCurSent();
+				} else if (e.keyCode === KEYS.EQUALS) {
+						addSent();
+				}
+		});
+
+		// solution based on https://stackoverflow.com/a/12444641/5181692
+		let map = [];
+		onkeydown = onkeyup = (e) => {
+				e = e || event; // to deal with IE
+				map[e.key] = e.type === 'keydown';
+				/* insert conditional here */
+				if (map['Shift'] && map['PageDown']) {
+						nextSenSent();
+						map = [];
+						map['Shift'] = true; // leave Shift so that another event can be fired
+				} else if (map['Shift'] && map['PageUp']) {
+						prevSenSent();
+						map = [];
+						map['Shift'] = true; // leave Shift so that another event can be fired
+				} else if (map['Control'] && map['z']) {
+						undoManager.undo();
+						updateUI();
+				} else if (map['Control'] && map['y'] || map['Control'] && map['Shift'] && map['Z']) {
+						undoManager.redo();
+						updateUI();
+				}
+				//return false;  // only needed if want to override all the shortcuts
+		}
+
+		// collapse columns when header is clicked on
+		$('.thead-default th').click((e) => {
+				const columnHeader = $('.tableColHeader', this)[0];
+				if (columnHeader)  // prevents non-collapsible cols from throwing errors
+						toggleTableColumn(columnHeader.title);
+		});
+
+
+
+		// TODO: does these do anything ?? (5/23/18)
+		$('#helpModal').on('shown.bs.modal', (e) => {
+        // $('#treebankSize').text(CONTENTS.length); // TODO: Report the current loaded treebank size to user
+				$(e.target).find('.modal-body').load('help.html');
+		});
+
+    $('#exportModal').on('shown.bs.modal', (e) => {
+				// $('#treebankSize').text(CONTENTS.length); // TODO: Report the current loaded treebank size to user
+				$(e.target).find('.modal-body').load('export.html', exportPNG);
+		});
+
+    $('#exportModal').on('hidden.bs.modal', (e) => {
+        IS_PNG_EXPORTED = false;
+        IS_LATEX_EXPORTED = false;
+    });
+		//
+
 }
 
 function bindCyHandlers() {
@@ -123,6 +188,7 @@ function bindCyHandlers() {
     cy.on('click', 'edge.dependency', changeNode);
 		// cy.on('zoom', cy.center); // center the view port when the page zoom is changed
 }
+
 
 
 
@@ -302,7 +368,7 @@ function keyDownClassifier(key) {
         toSup = cy.$('.supertoken');
 
     // $(document).bind('keydown', function(e) {
-    //     if (key.which === KEYS.ESC) {
+    //     if (key.which === 21.ESC) {
     //         e.preventDefault();
     //         drawTree();
     //     }
@@ -1285,9 +1351,8 @@ function clearWarning() {
 function focusOut(key) {
 		log.debug(`called focusOut(${key.which})`);
 
-    if (key.which === KEYS.ESC) {
+    if (key.which === KEYS.ESC)
         this.blur();
-    }
 }
 
 
@@ -1320,75 +1385,3 @@ function switchEnhanced() {
 
 		drawTree();
 }
-
-
-$(document).ready(function(){
-		$('#current-sentence').keyup((e) => {
-				if (e.keyCode === 13) {
-						goToSenSent();
-				} else if (e.keyCode === KEYS.UP || e.keyCode === KEYS.K) {
-						prevSenSent();
-				} else if (e.keyCode === KEYS.DOWN || e.keyCode === KEYS.J) {
-						nextSenSent();
-				} else if (e.keyCode === KEYS.MINUS) {
-						removeCurSent();
-				} else if (e.keyCode === KEYS.EQUALS) {
-						addSent();
-				}
-		});
-
-		// solution based on https://stackoverflow.com/a/12444641/5181692
-		let map = [];
-		onkeydown = onkeyup = (e) => {
-				e = e || event; // to deal with IE
-				map[e.key] = e.type === 'keydown';
-				/* insert conditional here */
-				if (map['Shift'] && map['PageDown']) {
-						nextSenSent();
-						map = [];
-						map['Shift'] = true; // leave Shift so that another event can be fired
-				} else if (map['Shift'] && map['PageUp']) {
-						prevSenSent();
-						map = [];
-						map['Shift'] = true; // leave Shift so that another event can be fired
-				} else if (map['Control'] && map['z']) {
-						undoManager.undo();
-						updateUI();
-				} else if (map['Control'] && map['y'] || map['Control'] && map['Shift'] && map['Z']) {
-						undoManager.redo();
-						updateUI();
-				}
-				//return false;  // only needed if want to override all the shortcuts
-		}
-
-		$('#helpModal').on('shown.bs.modal', (e) => {
-        // $('#treebankSize').text(CONTENTS.length); // TODO: Report the current loaded treebank size to user
-				$(e.target).find('.modal-body').load('help.html');
-		});
-
-    $('#exportModal').on('shown.bs.modal', (e) => {
-				// $('#treebankSize').text(CONTENTS.length); // TODO: Report the current loaded treebank size to user
-				$(e.target).find('.modal-body').load('export.html', exportPNG);
-		});
-
-    $('#exportModal').on('hidden.bs.modal', (e) => {
-        IS_PNG_EXPORTED = false;
-        IS_LATEX_EXPORTED = false;
-    });
-
-		/*
-		$('.ui-autocomplete').keydown(function(e) {
-				if (e.keyCode === 9) // Tab
-						console.log('test');
-		});
-		*/
-
-		$('#viewText').hide();
-
-		// collapse columns when header is clicked on
-		$('.thead-default th').on('click', (e) => {
-				const columnHeader = $('.tableColHeader', this)[0];
-				if (columnHeader)  // prevents non-collapsible cols from throwing errors
-						toggleTableColumn(columnHeader.title);
-		});
-});

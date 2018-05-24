@@ -24,7 +24,7 @@ function checkServer() {
             },
             error: function(data){
                 log.info('Unable to complete AJAX request for checkServer()');
-                loadFromLocalStorage();
+                //loadFromLocalStorage();
             }
         })
     } catch (e) {

@@ -923,7 +923,7 @@ class Tester extends Object {
 				};
 
 				// need consistent initial environment
-				this.reset_();
+				_.reset();
 				this.assert(consistent() && current() === 0 && total() === 1);
 
 				// insert and remove
@@ -1028,9 +1028,8 @@ class Tester extends Object {
 				goToSentence();
 				this.assert(consistent() && current() === 1 && total() === 2);
 
-				// reset
-				removeSentence(null, true);
-				this.assert(consistent() && current() === 0 && total() === 1);
+				_.reset();
+
 			},
 
 			textDataParser: () => {
@@ -1045,7 +1044,7 @@ class Tester extends Object {
 
 				$.each(data, (i, datum) => {
 
-					this.reset_();
+					_.reset();
 					$('#text-data').val(datum.str);
 					const splitted = parseTextData(),
 							message = `expected '${datum.split.join('\', \'')}'; got '${splitted.join('\', \'')}'`;
@@ -1071,7 +1070,7 @@ class Tester extends Object {
 				};
 
 				// reset data structure
-				this.reset_();
+				_.reset();
 				this.assert(consistent() && current() === 0 && total() === 1);
 
 				set(data[0].str);
@@ -1086,20 +1085,11 @@ class Tester extends Object {
 				set(data[3].str);
 				this.assert(consistent() && current() === 0 && total() === 2);
 
+				_.reset();
+
 			}
 
 		}
-	}
-
-
-	/*
-	 * reset main data structure
-	 */
-	reset_() {
-		_.current = 0;
-		_.sentences = [null];
-		_.formats = [null];
-		updateSentenceTrackers();
 	}
 
 

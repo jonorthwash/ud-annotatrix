@@ -11,32 +11,37 @@ var FORMAT = '',
 
 var _ = { // main object to hold our current stuff
 
-    // textarea-related
-    current: 0,
-    sentences: [null],
-    formats: [null],
+    reset: () => {
 
-    // cy-related
-    graph: null,
-    graphOptions: {
-        container: null,
-        boxSelectionEnabled: false,
-        autounselectify: true,
-        autoungrabify: true,
-        zoomingEnabled: true,
-        userZoomingEnabled: false,
-        wheelSensitivity: 0.1,
-        style: null,
-        layout: null,
-        elements: []
-    },
+      // textarea-related
+      _.current = 0;
+      _.sentences = [null];
+      _.formats = [null];
 
-    // display-related
-    is_table_view: false,
-    is_textarea_visible: true,
-    is_vertical: false,
-    is_ltr: true,
-    is_enhanced: false
+      // cy-related
+      _.graph = null;
+      _.graphOptions = {
+          container: null,
+          boxSelectionEnabled: false,
+          autounselectify: true,
+          autoungrabify: true,
+          zoomingEnabled: true,
+          userZoomingEnabled: false,
+          wheelSensitivity: 0.1,
+          style: null,
+          layout: null,
+          elements: []
+      };
+
+      // display-related
+      _.is_table_view = false;
+      _.is_textarea_visible = true;
+      _.is_vertical = false;
+      _.is_ltr = true;
+      _.is_enhanced = false;
+
+      updateSentenceTrackers();
+    }
 
 };
 
@@ -93,14 +98,17 @@ window.onload = () => {
 
         window.log = new Logger('INFO');
         window.test = new Tester();
+
+        _.reset();
+
         //test.all(); // uncomment this line to run tests on ready
-        test.run('textDataParser');
+        //test.run('textDataParser');
 
         // initialize w/ defaults to avoid cy.$ is not a function errors
         resetCy(CY_OPTIONS);
         checkServer(); // check if server is running
         setUndos();
-        loadFromUrl();
+        //loadFromUrl();
         updateSentenceTrackers(); // should go in loadFromUrl and checkServer (5/23/18)
         bindHandlers();
 
@@ -190,10 +198,10 @@ function goToSentence() {
     updateSentenceTrackers();
 }
 function nextSentence() {
-    log.debug(`called prevSentence()`);
+    log.debug(`called nextSentence()`);
 
     if (_.current === _.sentences.length - 1) {
-        log.warn(`prevSentence(): already at the last sentence!`);
+        log.warn(`nextSentence(): already at the last sentence!`);
         return;
     }
 
@@ -250,7 +258,9 @@ function parseTextData() {
         if (splitted[i].trim() === '')
             splitted.splice(i, 1);
     }
+    splitted = splitted.length ? splitted : ['']; // need a default if empty
 
+    console.log(splitted);
     setSentence(_.current, splitted[0]);
 
     // iterate in reverse order over all elements except the first
@@ -264,7 +274,10 @@ function parseTextData() {
     return splitted;
 }
 
-
+function run() {
+  _.reset();
+  parseTextData();
+}
 
 
 
