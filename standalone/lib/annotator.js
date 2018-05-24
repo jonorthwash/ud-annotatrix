@@ -96,13 +96,13 @@ window.onload = () => {
 
         console.log('UD-Annotatrix is loading ...');
 
-        window.log = new Logger('INFO');
+        window.log = new Logger('WARN');
         window.test = new Tester();
 
         _.reset();
 
         //test.all(); // uncomment this line to run tests on ready
-        //test.run('textDataParser');
+        test.run('detectFormat', 'textDataParser');
 
         // initialize w/ defaults to avoid cy.$ is not a function errors
         resetCy(CY_OPTIONS);
@@ -210,7 +210,7 @@ function nextSentence() {
     updateSentenceTrackers();
 }
 function setSentence(id, text) {
-    log.info(`called setSentence(id:${id}, text:"${text}")`);
+    log.debug(`called setSentence(id:${id}, text:"${text}")`);
 
     if (id < 0 || id >= _.sentences.length) {
         log.warn(`setSentence(): unable to set sentence at id:${id}, out of range`);
@@ -224,7 +224,7 @@ function setSentence(id, text) {
 
 
 function updateFormat(id) {
-    log.info(`called updateFormat(id:${id})`);
+    log.debug(`called updateFormat(id:${id})`);
 
     const content = _.sentences[id],
         format = detectFormat(content);
@@ -248,19 +248,25 @@ function parseTextData() {
     // split into sentences
     let splitted;
     if (detectFormat(content) === 'plain text') {
-        splitted = content.match(/[^ ].+?[.!?](?=( |$))/g) || [content];
+        // ( old regex: /[^ ].+?[.!?](?=( |$))/g )
+        // match non-punctuation (optionally) followed by punctuation
+        splitted = content.match(/[^.!?]+[.!?]*/g) || [content];
+        log.debug(`parseTextData(): match group: ${content.match(/[^.!?]+[.!?]*/g)}`);
     } else {
         splitted = content.split('\n\n');
     }
 
     // removing extra whitespace
     for (let i = splitted.length - 1; i >= 0; i--) {
-        if (splitted[i].trim() === '')
+        if (splitted[i].trim() === '') {
             splitted.splice(i, 1);
+        } else {
+            splitted[i] = splitted[i].trim();
+        }
     }
     splitted = splitted.length ? splitted : ['']; // need a default if empty
 
-    console.log(splitted);
+    // set the first
     setSentence(_.current, splitted[0]);
 
     // iterate in reverse order over all elements except the first
@@ -564,7 +570,7 @@ function detectFormat(content) {
 
         } else if (word.match(/\[/)) {
             format = 'Brackets'; // UNSAFE: this will catch any plain text string starting with "[" :/
-        } else if (!content.includes('\t') && content[content.length-1] !== ')') {
+        } else if (content[content.length-1] !== ')') {
             format = 'plain text'; // UNSAFE
         }
     }

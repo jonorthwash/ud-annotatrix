@@ -1,8 +1,8 @@
 'use strict'
 
-/*
-This scripts contains makes support for graphical editing.
-*/
+/**
+ * This file contains support for graphical editing.
+ */
 
 const KEYS = {
 		DELETE: 46,
@@ -29,13 +29,6 @@ const KEYS = {
 				37: 'left'
 		}
 }
-const POS_TO_REL = {
-	'PUNCT': 'punct',
-	'DET': 'det',
-	'CCONJ': 'cc',
-	'SCONJ': 'mark'
-}
-
 var CURRENT_ZOOM = 1.0;
 var IS_EDITING = false;
 
@@ -99,7 +92,10 @@ function bindHandlers() {
 
     $('#text-data')
         .keyup(drawTree)
-        .keyup(focusOut)
+        .keyup((key) => {
+						if (key.which === KEYS.ESC)
+								this.blur();
+				})
         .keyup(updateTabs)
 
     $('#RTL').click(switchRtlMode);
@@ -223,6 +219,14 @@ function writeArc(source, target) {
     Called in clickWF. Makes changes to the text data and calls the function
     redrawing the tree. Currently supports only conllu.
     */
+
+		const POS_TO_REL = {
+				'PUNCT': 'punct',
+				'DET': 'det',
+				'CCONJ': 'cc',
+				'SCONJ': 'mark'
+		}
+
 
     // NOTE: can just define a new attr `index` or something on the DOM
     const sourceIndex = parseInt(source.attr('id').slice(2));
@@ -1347,13 +1351,6 @@ function clearWarning() {
         .text('');
 }
 
-
-function focusOut(key) {
-		log.debug(`called focusOut(${key.which})`);
-
-    if (key.which === KEYS.ESC)
-        this.blur();
-}
 
 
 function switchRtlMode() {

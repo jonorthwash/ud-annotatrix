@@ -58,10 +58,7 @@ ambiguous_cg3_with_semicolumn: `"<Dlaczego>"
 			2: 'this is a test...',
 			3: 'this is a test?',
 			4: '\tthis is a test',
-			5: 'This is my first sentence.  But I also have this sentence.',
-			6: 'I have this sentence.  Now I\'m writing a second sentence.  Should I include a third',
-			7: 'Yes!? No??',
-			8: 'More sentences = more data; ipso facto, yes.'
+			5: 'More sentences = more data; ipso facto, yes.'
 		},
 		Brackets: {
 			0: `[root [nsubj I] have [obj [amod [advmod too] many] commitments] [advmod right now] [punct .]]`
@@ -728,6 +725,66 @@ class Tester extends Object {
 	constructor() {
 		super();
 
+		// internal helper function
+		this.utils = {
+
+			check: (current, total) => {
+
+				(() => {
+					const sentences = _.sentences.length,
+							formats = _.formats.length;
+					this.assert(sentences === formats, `inconsistent: got ${sentences} sentences and ${formats} formats`);
+				})();
+
+				((expected) => {
+					const actual = _.current;
+					this.assert(expected === actual, `current: expected index at ${expected}, got ${actual}`);
+				})(current);
+
+				((expected) => {
+					const actual = _.sentences.length;
+					this.assert(expected === actual, `total: expected ${expected}, got ${actual}`);
+				})(total);
+
+			},
+
+			sample: (obj, times) => {
+
+				function randomInt(max) {
+					return Math.floor(Math.random() * max);
+				}
+
+				times = times || 1;
+
+				let ret = [];
+				for (let i=0; i < times; i++) {
+					const key = Array.isArray(obj)
+						? randomInt(obj.length)
+						: Object.keys(obj)[randomInt(Object.keys(obj).length)];
+					ret.push(obj[key]);
+				}
+
+				return ret;
+			},
+
+			randomize: (maxSize) => {
+
+				let ret = [];
+				for (let size=1; size < maxSize; size++) {
+					$.each(TEST_DATA.texts_by_format, (format, texts) => {
+						ret.push({ format:format, text:this.utils.sample(texts, size) });
+					});
+				}
+
+				return ret;
+			},
+
+			textDelimiters: [ '.', '!', '?' ],
+			formatDelimiters: [ '\n\n', '\n\n\n', '\n\n\n\n' ],
+			otherDelimiters: [ ';', ',', ':', '\n', '\t', '\t\t' ]
+
+		};
+
 		this.tests = {
 
 			tester: () => {
@@ -852,13 +909,26 @@ class Tester extends Object {
 			},
 
 			detectFormat: () => {
-				log.out('\nExecuting Tester.detectFormat()');
+				log.out('\nExecuting Tester.detectFormat(): Phase 1: basic detecting');
 
 				$.each(TEST_DATA.texts_by_format, (format, texts) => {
 					$.each(texts, (identifier, text) => {
-						const ret = detectFormat(text),
-								message = `expected (${format}:${identifier}) to be detected as "${format}", but got "${ret}".`;
-						this.assert(ret === format, message);
+						const detected = detectFormat(text),
+								message = `expected (${format}:${identifier}) to be detected as "${format}", but got "${detected}".`;
+						this.assert(detected === format, message);
+					});
+				});
+
+				log.out('\nExecuting Tester.detectFormat(): Phase 2: randomized detecting');
+
+				$.each(this.utils.textDelimiters, (i, delimiter) => {
+					$.each(this.utils.randomize(10), (j, randomized) => {
+						if (randomized.format !== 'Unknown') {
+							const content = randomized.text.join(delimiter),
+								detected = detectFormat(content),
+								message = `expected (${content}) to be detected as "${randomized.format}", but got "${detected}".`;
+							this.assert(detected === randomized.format, message);
+						}
 					});
 				});
 			},
@@ -909,187 +979,196 @@ class Tester extends Object {
 			navSentences: () => {
 				log.out(`\nExecuting Tester.navSentences()`);
 
-				const consistent = () => {
-					return _.sentences.length === _.formats.length;
-				}
-				const current = () => {
-					return _.current;
-				};
-				const total = () => {
-					return _.sentences.length;
-				};
-				const set = (str) => {
+				function set(str) {
 					$('#current-sentence').val(str);
+					goToSentence();
 				};
 
 				// need consistent initial environment
 				_.reset();
-				this.assert(consistent() && current() === 0 && total() === 1);
+				this.utils.check(0, 1);
 
 				// insert and remove
 				insertSentence();
-				this.assert(consistent() && current() === 1 && total() === 2);
-
+				this.utils.check(1, 2);
 				removeSentence(null, true);
-				this.assert(consistent() && current() === 0 && total() === 1);
-
+				this.utils.check(0, 1);
 				removeSentence(null, true);
-				this.assert(consistent() && current() === 0 && total() === 1);
-
+				this.utils.check(0, 1);
 				removeSentence(null, true);
-				this.assert(consistent() && current() === 0 && total() === 1);
+				this.utils.check(0, 1);
 
 				// pan with 1 sentence
 				prevSentence();
-				this.assert(consistent() && current() === 0 && total() === 1);
+				this.utils.check(0, 1);
 
 				nextSentence();
-				this.assert(consistent() && current() === 0 && total() === 1);
+				this.utils.check(0, 1);
 
 				// goto with 1 sentence
 				set(null);
-				goToSentence();
-				this.assert(consistent() && current() === 0 && total() === 1);
-
+				this.utils.check(0, 1);
 				set(undefined);
-				goToSentence();
-				this.assert(consistent() && current() === 0 && total() === 1);
-
+				this.utils.check(0, 1);
 				set('string');
-				goToSentence();
-				this.assert(consistent() && current() === 0 && total() === 1);
-
+				this.utils.check(0, 1);
 				set([]);
-				goToSentence();
-				this.assert(consistent() && current() === 0 && total() === 1);
-
+				this.utils.check(0, 1);
 				set({});
-				goToSentence();
-				this.assert(consistent() && current() === 0 && total() === 1);
-
+				this.utils.check(0, 1);
 				set(3.5);
-				goToSentence();
-				this.assert(consistent() && current() === 0 && total() === 1);
-
+				this.utils.check(0, 1);
 				set(2);
-				goToSentence();
-				this.assert(consistent() && current() === 0 && total() === 1);
-
+				this.utils.check(0, 1);
 				set(1);
-				goToSentence();
-				this.assert(consistent() && current() === 0 && total() === 1);
-
+				this.utils.check(0, 1);
 				set(0);
-				goToSentence();
-				this.assert(consistent() && current() === 0 && total() === 1);
-
+				this.utils.check(0, 1);
 				set(-1);
-				goToSentence();
-				this.assert(consistent() && current() === 0 && total() === 1);
+				this.utils.check(0, 1);
 
 				// pan with 2 sentences
 				insertSentence();
-				this.assert(consistent() && current() === 1 && total() === 2);
-
+				this.utils.check(1, 2);
 				prevSentence();
-				this.assert(consistent() && current() === 0 && total() === 2);
-
+				this.utils.check(0, 2);
 				prevSentence();
-				this.assert(consistent() && current() === 0 && total() === 2);
-
+				this.utils.check(0, 2);
 				nextSentence();
-				this.assert(consistent() && current() === 1 && total() === 2);
-
+				this.utils.check(1, 2);
 				prevSentence();
-				this.assert(consistent() && current() === 0 && total() === 2);
+				this.utils.check(0, 2);
 
 				// jump with 2 sentences
 				set(-1);
-				goToSentence();
-				this.assert(consistent() && current() === 0 && total() === 2);
-
+				this.utils.check(0, 2);
 				set(0);
-				goToSentence();
-				this.assert(consistent() && current() === 0 && total() === 2);
-
+				this.utils.check(0, 2);
 				set(1);
-				goToSentence();
-				this.assert(consistent() && current() === 0 && total() === 2);
-
+				this.utils.check(0, 2);
 				set(2);
-				goToSentence();
-				this.assert(consistent() && current() === 1 && total() === 2);
-
+				this.utils.check(1, 2);
 				set(3);
-				goToSentence();
-				this.assert(consistent() && current() === 1 && total() === 2);
-
+				this.utils.check(1, 2);
 				set(0);
-				goToSentence();
-				this.assert(consistent() && current() === 1 && total() === 2);
+				this.utils.check(1, 2);
 
 				_.reset();
 
 			},
 
 			textDataParser: () => {
-				log.out(`\nExecuting Tester.textDataParser(): Phase 1`);
 
+				function split(str) {
+					_.reset();
+					$('#text-data').val(str);
+					return parseTextData();
+				}
+				function set(num) {
+					split(data[num].str);
+				}
 				const data = [
 					{ str:'this is the first test', split:['this is the first test'] },
 					{ str:'this is, the second', split:['this is, the second'] },
 					{ str:'one sentence.', split:['one sentence.'] },
-					{ str:'one! two!', split:['one!', 'two!'] }
+					{ str:'one! two!', split:['one!', 'two!'] },
+					{ str:'one. two! three?', split:['one.', 'two!', 'three?'] },
 				];
+
+				log.out(`\nExecuting Tester.textDataParser(): Phase 1: basic text splitting`);
 
 				$.each(data, (i, datum) => {
 
-					_.reset();
-					$('#text-data').val(datum.str);
-					const splitted = parseTextData(),
-							message = `expected '${datum.split.join('\', \'')}'; got '${splitted.join('\', \'')}'`;
+					const splitted = split(datum.str),
+						message = `expected '${datum.split.join('\', \'')}'; got '${splitted.join('\', \'')}'`;
 
 					this.assert(this.arraysEqual(datum.split, splitted), message);
 
 				});
 
-				log.out(`\nExecuting Tester.textDataParser(): Phase 2`);
+				log.out(`\nExecuting Tester.textDataParser(): Phase 2: randomized text splitting`);
 
-				const consistent = () => {
-					return _.sentences.length === _.formats.length;
-				}
-				const current = () => {
-					return _.current;
-				};
-				const total = () => {
-					return _.sentences.length;
-				};
-				const set = (str) => {
-					$('#text-data').val(str);
-					parseTextData();
-				};
+				$.each(this.utils.textDelimiters, (i, delimiter) => {
+					$.each(this.utils.randomize(5), (j, randomized) => {
+						const sample = randomized.text,
+							format = randomized.format,
+							splitted = split(sample.join(delimiter));
+
+						let expected;
+						if (format === 'Unknown') {
+							expected = splitted; // pass
+						} else if (format === 'plain text') {
+							expected = sample.map((item, i) => {
+								return `${item}${i === sample.length - 1 ? '' : delimiter}`.trim();
+							});
+						} else {
+							expected = [ sample.join(delimiter).trim() ];
+						}
+
+						/*console.log(`\nformat: ${format}, delimiter: <${delimiter}>`)
+						console.log('expected:', expected)
+						console.log('actual:', splitted)
+						console.log('sample:', sample)
+						console.log('joined:', sample.join(delimiter));*/
+						const message = `expected '${JSON.stringify(sample)}'; got '${JSON.stringify(splitted)}'`;
+						this.assert(this.arraysEqual(expected, splitted), message);
+
+					});
+				});
+				$.each(this.utils.formatDelimiters, (i, delimiter) => {
+					$.each(this.utils.randomize(5), (j, randomized) => {
+						const sample = randomized.text,
+							format = randomized.format,
+							splitted = split(sample.join(delimiter));
+
+						let expected;
+						if (format === 'Unknown') {
+							expected = splitted; // pass
+						} else if (format === 'plain text') {
+							expected = sample.join(delimiter).match(/[^.!?]+[.!?]*/g).map((match) => {
+								return match.trim();
+							}) || sample.join(delimiter).trim();
+						} else {
+							expected = sample.map((item, i) => {
+								return `${item}${i === sample.length - 1 ? '' : delimiter}`.trim();
+							});
+						}
+
+						console.log(`\nformat: ${format}, delimiter: <${delimiter}>`)
+						console.log('expected:', expected)
+						console.log('actual:', splitted)
+						console.log('sample:', sample)
+						console.log('joined:', sample.join(delimiter));
+						const message = `expected '${JSON.stringify(sample)}'; got '${JSON.stringify(splitted)}'`;
+						this.assert(this.arraysEqual(expected, splitted), message);
+
+					});
+				});
+
+				log.out(`\nExecuting Tester.textDataParser(): Phase 3: basic sentence management`);
 
 				// reset data structure
 				_.reset();
-				this.assert(consistent() && current() === 0 && total() === 1);
+				this.utils.check(0, 1);
 
-				set(data[0].str);
-				this.assert(consistent() && current() === 0 && total() === 1);
+				set(0);
+				this.utils.check(0, 1);
+				set(1);
+				this.utils.check(0, 1);
+				set(2);
+				this.utils.check(0, 1);
+				set(3);
+				this.utils.check(0, 2);
+				set(4);
+				this.utils.check(0, 3);
 
-				set(data[1].str);
-				this.assert(consistent() && current() === 0 && total() === 1);
 
-				set(data[2].str);
-				this.assert(consistent() && current() === 0 && total() === 1);
-
-				set(data[3].str);
-				this.assert(consistent() && current() === 0 && total() === 2);
 
 				_.reset();
 
 			}
 
-		}
+		};
 	}
 
 
@@ -1132,6 +1211,8 @@ class Tester extends Object {
 
 		if (tests.length > 1)
 			log.out('\nTester.run(): all tests passed!\n');
+
+		clearWarning();
 	}
 
 	all() {
@@ -1142,5 +1223,6 @@ class Tester extends Object {
 		});
 
 		log.out('\nTester.all(): all tests passed!\n');
+		clearWarning();
 	}
 }
