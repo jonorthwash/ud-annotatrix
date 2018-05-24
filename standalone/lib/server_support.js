@@ -89,7 +89,7 @@ function loadSentence(data) {
     }
 
     updateTable(); // Update the table view at the same time
-    formatTabsView(); // update the format taps
+    updateTabs(); // update the format taps
     fitTable(); // make table's size optimal
     drawTree();
 }

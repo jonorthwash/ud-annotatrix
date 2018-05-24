@@ -74,7 +74,7 @@ function bindHandlers() {
     $(document).keydown(keyDownClassifier);
 
     $('#btnUploadCorpusFileButton').click(handleUploadButtonPressed);
-		
+
     $('#btnPrevSentence').click(prevSentence);
 		$('#current-sentence').blur(goToSentence);
     $('#btnNextSentence').click(nextSentence);
@@ -100,7 +100,7 @@ function bindHandlers() {
     $('#text-data')
         .keyup(drawTree)
         .keyup(focusOut)
-        .keyup(formatTabsView)
+        .keyup(updateTabs)
 
     $('#RTL').click(switchRtlMode);
     $('#vertical').click(switchAlignment);
@@ -1221,7 +1221,7 @@ function viewAsCG() {
 		localStorage.setItem('corpus', content);
 		$('#text-data').val(content);
 
-		formatTabsView();
+		updateTabs();
 
     if (IS_TABLE_VIEW) {
         $('#btnViewTable i').toggleClass('fa-code', 'fa-table');
@@ -1240,15 +1240,15 @@ function viewAsConllu() {
 		$('#text-data').val(content);
 		//loadDataInIndex();
 
-		formatTabsView();
+		updateTabs();
 }
 
-function formatTabsView() {
-    log.debug(`called formatTabsView`);
+function updateTabs() {
+    log.debug(`called updateTabs`);
 
     /* The function handles the format tabs above the textarea.
     Takes a string with a format name, changes the classes on tabs. */
-    const format = detectFormat($('#text-data').val());
+    const format = _.formats[_.current];//detectFormat($('#text-data').val());
 		localStorage.setItem('format', format);
 
 		$('.nav-link').removeClass('active');

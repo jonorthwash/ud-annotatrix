@@ -923,19 +923,20 @@ class Tester extends Object {
 				};
 
 				// need consistent initial environment
+				this.reset_();
 				this.assert(consistent() && current() === 0 && total() === 1);
 
 				// insert and remove
 				insertSentence();
 				this.assert(consistent() && current() === 1 && total() === 2);
 
-				removeSentence();
+				removeSentence(null, true);
 				this.assert(consistent() && current() === 0 && total() === 1);
 
-				removeSentence();
+				removeSentence(null, true);
 				this.assert(consistent() && current() === 0 && total() === 1);
 
-				removeSentence();
+				removeSentence(null, true);
 				this.assert(consistent() && current() === 0 && total() === 1);
 
 				// pan with 1 sentence
@@ -1027,9 +1028,78 @@ class Tester extends Object {
 				goToSentence();
 				this.assert(consistent() && current() === 1 && total() === 2);
 
+				// reset
+				removeSentence(null, true);
+				this.assert(consistent() && current() === 0 && total() === 1);
+			},
+
+			textDataParser: () => {
+				log.out(`\nExecuting Tester.textDataParser(): Phase 1`);
+
+				const data = [
+					{ str:'this is the first test', split:['this is the first test'] },
+					{ str:'this is, the second', split:['this is, the second'] },
+					{ str:'one sentence.', split:['one sentence.'] },
+					{ str:'one! two!', split:['one!', 'two!'] }
+				];
+
+				$.each(data, (i, datum) => {
+
+					this.reset_();
+					$('#text-data').val(datum.str);
+					const splitted = parseTextData(),
+							message = `expected '${datum.split.join('\', \'')}'; got '${splitted.join('\', \'')}'`;
+
+					this.assert(this.arraysEqual(datum.split, splitted), message);
+
+				});
+
+				log.out(`\nExecuting Tester.textDataParser(): Phase 2`);
+
+				const consistent = () => {
+					return _.sentences.length === _.formats.length;
+				}
+				const current = () => {
+					return _.current;
+				};
+				const total = () => {
+					return _.sentences.length;
+				};
+				const set = (str) => {
+					$('#text-data').val(str);
+					parseTextData();
+				};
+
+				// reset data structure
+				this.reset_();
+				this.assert(consistent() && current() === 0 && total() === 1);
+
+				set(data[0].str);
+				this.assert(consistent() && current() === 0 && total() === 1);
+
+				set(data[1].str);
+				this.assert(consistent() && current() === 0 && total() === 1);
+
+				set(data[2].str);
+				this.assert(consistent() && current() === 0 && total() === 1);
+
+				set(data[3].str);
+				this.assert(consistent() && current() === 0 && total() === 2);
+
 			}
 
 		}
+	}
+
+
+	/*
+	 * reset main data structure
+	 */
+	reset_() {
+		_.current = 0;
+		_.sentences = [null];
+		_.formats = [null];
+		updateSentenceTrackers();
 	}
 
 
@@ -1059,14 +1129,19 @@ class Tester extends Object {
 	/*
 	 * TEST functions
 	 */
-	run(test) {
-		if (this.tests.hasOwnProperty(test)) {
-			this.tests[test]();
-			log.out(`\nTester.run(): test "${test}" passed!\n`);
-		} else {
-			log.out(`Tester.run(): unable to run test "${test}"`);
-			log.out(`Tester.run(): available tests: ${Object.keys(this.tests).join(', ')}`);
-		}
+	run(...tests) {
+		$.each(tests, (i, test) => {
+			if (this.tests.hasOwnProperty(test)) {
+				this.tests[test]();
+				log.out(`\nTester.run(): test "${test}" passed!\n`);
+			} else {
+				log.out(`Tester.run(): unable to run test "${test}"`);
+				log.out(`Tester.run(): available tests: ${Object.keys(this.tests).join(', ')}`);
+			}
+		});
+
+		if (tests.length > 1)
+			log.out('\nTester.run(): all tests passed!\n');
 	}
 
 	all() {

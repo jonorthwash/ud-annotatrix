@@ -94,7 +94,7 @@ window.onload = () => {
         window.log = new Logger('INFO');
         window.test = new Tester();
         //test.all(); // uncomment this line to run tests on ready
-        test.run('navSentences');
+        test.run('textDataParser');
 
         // initialize w/ defaults to avoid cy.$ is not a function errors
         resetCy(CY_OPTIONS);
@@ -119,7 +119,7 @@ window.onload = () => {
 function updateSentenceTrackers() {
     log.debug(`called updateSentenceTrackers()`);
 
-    while (_.current < 0) { // ensure we always have something
+    if (_.current < 0) { // ensure we always have something
         log.warn(`updateSentenceTrackers(): current is ${_.current}`);
         insertSentence();
     }
@@ -131,6 +131,7 @@ function updateSentenceTrackers() {
     $('#btnPrevSentence').attr('disabled', (_.current === 0));
     $('#btnNextSentence').attr('disabled', (_.current === _.sentences.length));
 
+    updateFormat(_.current);
     updateTable();
 }
 function insertSentence() {
@@ -145,8 +146,16 @@ function insertSentence() {
 
     updateSentenceTrackers();
 }
-function removeSentence() {
+function removeSentence(event, force=false) {
     log.debug(`called removeSentence()`);
+
+    if (!force) {
+        const conf = confirm('Do you want to remove the sentence?');
+        if (!conf) {
+              log.info('removeSentence(): not removing sentence');
+              return;
+        }
+    }
 
     _.sentences.splice(_.current, 1);
     _.formats.splice(_.current, 1);
@@ -181,18 +190,79 @@ function goToSentence() {
     updateSentenceTrackers();
 }
 function nextSentence() {
-  log.debug(`called prevSentence()`);
+    log.debug(`called prevSentence()`);
 
-  if (_.current === _.sentences.length - 1) {
-      log.warn(`prevSentence(): already at the last sentence!`);
-      return;
-  }
+    if (_.current === _.sentences.length - 1) {
+        log.warn(`prevSentence(): already at the last sentence!`);
+        return;
+    }
 
-  _.current++;
+    _.current++;
 
-  updateSentenceTrackers();
+    updateSentenceTrackers();
+}
+function setSentence(id, text) {
+    log.info(`called setSentence(id:${id}, text:"${text}")`);
+
+    if (id < 0 || id >= _.sentences.length) {
+        log.warn(`setSentence(): unable to set sentence at id:${id}, out of range`);
+        return;
+    }
+
+    _.sentences[id] = text;
+    updateFormat(id);
+
 }
 
+
+function updateFormat(id) {
+    log.info(`called updateFormat(id:${id})`);
+
+    const content = _.sentences[id],
+        format = detectFormat(content);
+
+    // detect changed format
+    if (format !== _.formats[id]) {
+        log.info(`updateFormat(): detected change in format: ${_.formats[id]} => ${format}`);
+
+        // TODO other stuff goes here (CG3/CoNLL-U conversion ugliness TBD)
+        _.formats[id] = format;
+        updateTabs();
+    }
+}
+
+function parseTextData() {
+    log.debug(`called parseTextData()`);
+
+    // read from the textarea
+    let content = $('#text-data').val();
+
+    // split into sentences
+    let splitted;
+    if (detectFormat(content) === 'plain text') {
+        splitted = content.match(/[^ ].+?[.!?](?=( |$))/g) || [content];
+    } else {
+        splitted = content.split('\n\n');
+    }
+
+    // removing extra whitespace
+    for (let i = splitted.length - 1; i >= 0; i--) {
+        if (splitted[i].trim() === '')
+            splitted.splice(i, 1);
+    }
+
+    setSentence(_.current, splitted[0]);
+
+    // iterate in reverse order over all elements except the first
+    for (let i = splitted.length - 1; i > 0; i--) {
+        insertSentence();
+        setSentence(_.current, splitted[i]);
+        prevSentence();
+    }
+
+    // return splitted for testing purposes
+    return splitted;
+}
 
 
 
@@ -305,7 +375,7 @@ function showDataIndiv() {
     $('#total-sentences').val(AVAILABLE_SENTENCES);
 
     updateTable(); // Update the table view at the same time
-    formatTabsView(); // update the format taps
+    updateTabs(); // update the format taps
     fitTable(); // make table's size optimal
     drawTree();
 }
@@ -449,7 +519,7 @@ function detectFormat(content) {
     //resetLabels(); // do we need this?
 
     let format = 'Unknown';
-    content = content.trim();
+    content = content === null ? '' : content.trim();
 
     if (content === '') {
         log.info('detectFormat(): received empty content');
