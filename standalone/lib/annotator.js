@@ -7,7 +7,9 @@ var FORMAT = '',
     AVAILABLE_SENTENCES = 0,
     CURRENT_SENTENCE = 0,
     RESULTS = [],
-    LABELS = [];
+    LABELS = [],
+
+    L20N_LOGGING = false;
 
 var _ = { // main object to hold our current stuff
 

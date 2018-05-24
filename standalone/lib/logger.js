@@ -52,6 +52,8 @@ class Logger extends Object {
       this.out(`Unrecognized Logger levelName "${levelName}", setting level to CRITICAL.`);
       this.levelName = 'CRITICAL';
       this.level = 0;
+    } else if (this.levelName === 'DEBUG') {
+      L20N_LOGGING = true; // stop suppressing L20N warnings
     }
 
     this.out(`logging level set to ${this.levelName}`, 'OK');

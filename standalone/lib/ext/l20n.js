@@ -923,7 +923,7 @@ var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbo
     }
   } else if (!Intl.PluralRules || typeof ClobberIntlPluralRules !== 'undefined' && ClobberIntlPluralRules) {
     Intl.PluralRules = PluralRules;
-  } else if (typeof console !== 'undefined') {
+  } else if (typeof console !== 'undefined' && L20N_LOGGING) {
     console.warn('Intl.PluralRules already exists, and has NOT been replaced by this polyfill');
     console.log('To force, set a global ClobberIntlPluralRules = true');
   }
@@ -2854,7 +2854,7 @@ var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbo
 
         if (typeof console !== 'undefined') {
           current.errors.forEach(function (errs) {
-            return errs ? errs.forEach(function (e) {
+            return errs && L20N_LOGGING ? errs.forEach(function (e) {
               return console.warn(e);
             }) : null;
           });
