@@ -117,10 +117,12 @@ window.onload = () => {
  * functions for navigating available sentences
  */
 function updateSentenceTrackers() {
-    log.info(`called updateSentenceTrackers()`);
+    log.debug(`called updateSentenceTrackers()`);
 
-    if (_.current < 0) // ensure we always have something
+    while (_.current < 0) { // ensure we always have something
+        log.warn(`updateSentenceTrackers(): current is ${_.current}`);
         insertSentence();
+    }
 
     $('#current-sentence').val(_.current + 1);
     $('#total-sentences').text(_.sentences.length);
@@ -132,7 +134,7 @@ function updateSentenceTrackers() {
     updateTable();
 }
 function insertSentence() {
-    log.info(`called insertSentence()`);
+    log.debug(`called insertSentence()`);
 
     // insert null at (incremented) current index
     _.current++;
@@ -144,7 +146,7 @@ function insertSentence() {
     updateSentenceTrackers();
 }
 function removeSentence() {
-    log.info(`called removeSentence()`);
+    log.debug(`called removeSentence()`);
 
     _.sentences.splice(_.current, 1);
     _.formats.splice(_.current, 1);
@@ -153,7 +155,7 @@ function removeSentence() {
     updateSentenceTrackers();
 }
 function prevSentence() {
-    log.info(`called prevSentence()`);
+    log.debug(`called prevSentence()`);
 
     if (_.current === 0) {
         log.warn(`prevSentence(): already at the first sentence!`);
@@ -165,20 +167,21 @@ function prevSentence() {
     updateSentenceTrackers();
 }
 function goToSentence() {
-    log.info(`called goToSentence()`);
+    log.debug(`called goToSentence()`);
 
-    const goto = parseInt($('#current-sentence').val());
+    let jump = parseInt($('#current-sentence').val());
 
-    if (isNaN(goto) || goto < 1 || goto > _.sentences.length) {
+    if (isNaN(jump) || jump < 1 || jump > _.sentences.length) {
         log.warn(`goToSentence(): unable to go to input: ${$('#current-sentence').val()}`);
     } else {
-        _.current = goto - 1;
+        jump = Math.floor(jump); // enforce integer
+        _.current = jump - 1;
     }
 
     updateSentenceTrackers();
 }
 function nextSentence() {
-  log.info(`called prevSentence()`);
+  log.debug(`called prevSentence()`);
 
   if (_.current === _.sentences.length - 1) {
       log.warn(`prevSentence(): already at the last sentence!`);

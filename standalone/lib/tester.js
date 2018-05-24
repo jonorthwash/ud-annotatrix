@@ -904,7 +904,131 @@ class Tester extends Object {
 				$.each(failures, (i, failure) => {
 					log.out(` - ${failure}`);
 				});
+			},
+
+			navSentences: () => {
+				log.out(`\nExecuting Tester.navSentences()`);
+
+				const consistent = () => {
+					return _.sentences.length === _.formats.length;
+				}
+				const current = () => {
+					return _.current;
+				};
+				const total = () => {
+					return _.sentences.length;
+				};
+				const set = (str) => {
+					$('#current-sentence').val(str);
+				};
+
+				// need consistent initial environment
+				this.assert(consistent() && current() === 0 && total() === 1);
+
+				// insert and remove
+				insertSentence();
+				this.assert(consistent() && current() === 1 && total() === 2);
+
+				removeSentence();
+				this.assert(consistent() && current() === 0 && total() === 1);
+
+				removeSentence();
+				this.assert(consistent() && current() === 0 && total() === 1);
+
+				removeSentence();
+				this.assert(consistent() && current() === 0 && total() === 1);
+
+				// pan with 1 sentence
+				prevSentence();
+				this.assert(consistent() && current() === 0 && total() === 1);
+
+				nextSentence();
+				this.assert(consistent() && current() === 0 && total() === 1);
+
+				// goto with 1 sentence
+				set(null);
+				goToSentence();
+				this.assert(consistent() && current() === 0 && total() === 1);
+
+				set(undefined);
+				goToSentence();
+				this.assert(consistent() && current() === 0 && total() === 1);
+
+				set('string');
+				goToSentence();
+				this.assert(consistent() && current() === 0 && total() === 1);
+
+				set([]);
+				goToSentence();
+				this.assert(consistent() && current() === 0 && total() === 1);
+
+				set({});
+				goToSentence();
+				this.assert(consistent() && current() === 0 && total() === 1);
+
+				set(3.5);
+				goToSentence();
+				this.assert(consistent() && current() === 0 && total() === 1);
+
+				set(2);
+				goToSentence();
+				this.assert(consistent() && current() === 0 && total() === 1);
+
+				set(1);
+				goToSentence();
+				this.assert(consistent() && current() === 0 && total() === 1);
+
+				set(0);
+				goToSentence();
+				this.assert(consistent() && current() === 0 && total() === 1);
+
+				set(-1);
+				goToSentence();
+				this.assert(consistent() && current() === 0 && total() === 1);
+
+				// pan with 2 sentences
+				insertSentence();
+				this.assert(consistent() && current() === 1 && total() === 2);
+
+				prevSentence();
+				this.assert(consistent() && current() === 0 && total() === 2);
+
+				prevSentence();
+				this.assert(consistent() && current() === 0 && total() === 2);
+
+				nextSentence();
+				this.assert(consistent() && current() === 1 && total() === 2);
+
+				prevSentence();
+				this.assert(consistent() && current() === 0 && total() === 2);
+
+				// jump with 2 sentences
+				set(-1);
+				goToSentence();
+				this.assert(consistent() && current() === 0 && total() === 2);
+
+				set(0);
+				goToSentence();
+				this.assert(consistent() && current() === 0 && total() === 2);
+
+				set(1);
+				goToSentence();
+				this.assert(consistent() && current() === 0 && total() === 2);
+
+				set(2);
+				goToSentence();
+				this.assert(consistent() && current() === 1 && total() === 2);
+
+				set(3);
+				goToSentence();
+				this.assert(consistent() && current() === 1 && total() === 2);
+
+				set(0);
+				goToSentence();
+				this.assert(consistent() && current() === 1 && total() === 2);
+
 			}
+
 		}
 	}
 
@@ -912,10 +1036,11 @@ class Tester extends Object {
 	/*
 	 * simple assert function
 	 */
-	assert(expression, message='') {
+	assert(expression, message) {
 		if (!expression)
 			throw new AssertionError(message);
-		log.out(`Tester.assert() got a truthy expression (message: "${message}")`, 'OK');
+		if (message)
+			log.out(`Tester.assert() got a truthy expression (message: "${message}")`, 'OK');
 	}
 
 	arraysEqual(arr1, arr2) {
