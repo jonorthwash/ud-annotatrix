@@ -3805,4 +3805,3 @@ var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbo
     return createLocalization(defaultLang, availableLangs, lang, el);
   });
 })();
-//# sourceMappingURL=l20n.js.map
