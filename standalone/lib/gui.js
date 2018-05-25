@@ -1348,17 +1348,27 @@ function updateTabs() {
     const format = _.formats[_.current];//detectFormat($('#text-data').val());
 		localStorage.setItem('format', format);
 
-		$('.nav-link').removeClass('active');
+		$('.nav-link').removeClass('active').show();
 		$('#tabText').show();
-    if (format === 'CG3') {
-        $('#tabCG3').addClass('active');
-				$('#tabOther').hide();
-    } else if (format === 'CoNLL-U') {
-				$('#tabConllu').addClass('active');
-				$('#tabOther').hide();
-		} else {
-				$('#tabOther').addClass('active').show().text(format);
-				$('#tabText').hide();
+
+		switch (format) {
+				case ('Unknown'):
+						$('.nav-link').hide();
+						$('#tabOther').addClass('active').show().text(format);
+						break;
+				case ('CoNLL-U'):
+						$('#tabConllu').addClass('active');
+						$('#tabOther').hide();
+						break;
+				case ('CG3'):
+						$('#tabCG3').addClass('active');
+						$('#tabOther').hide();
+						break;
+				case ('plain text'):
+						$('#tabText').hide();
+				default:
+						$('#tabOther').addClass('active').show().text(format);
+						break;
 		}
 }
 

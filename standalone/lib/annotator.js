@@ -105,7 +105,7 @@ window.onload = () => {
 
         //test.all(); // uncomment this line to run tests on ready
         //test.run('textDataParser');
-        test.utils.splitAndSet('This is a test. This is another one');
+        test.utils.splitAndSet(TEST_DATA.texts_by_format.Brackets[0]);
 
         // initialize w/ defaults to avoid cy.$ is not a function errors
         resetCy(CY_OPTIONS);
@@ -239,7 +239,7 @@ function updateFormat(id) {
         // TODO other stuff goes here (CG3/CoNLL-U conversion ugliness TBD)
         _.formats[id] = format;
     }
-    
+
     updateTabs();
 }
 
