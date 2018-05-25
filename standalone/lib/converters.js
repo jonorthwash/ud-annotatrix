@@ -101,30 +101,30 @@ function convert2Conllu(text) {
  * @param {String} text Input text
  * @return {String}     Sentence in CG3 format
  */
-function convert2cg3(text) {
-    log.debug(`called convert2cg3(${text})`);
+function convert2CG3(text) {
+    log.debug(`called convert2CG3(${text})`);
 
     const format = detectFormat(text);
 
-    log.debug(`convert2cg3(): got format: ${format}`);
+    log.debug(`convert2CG3(): got format: ${format}`);
     switch (format) {
         case ('Unknown'):
-            log.warn(`convert2cg3(): failed to convert Unknown to plain text`);
+            log.warn(`convert2CG3(): failed to convert Unknown to plain text`);
             return null;
         case ('plain text'):
-            return conllu2cg3(plainText2Conllu(text));
+            return conllu2CG3(plainText2Conllu(text));
         case ('Brackets'):
-            return conllu2cg3(brackets2Conllu(text));
+            return conllu2CG3(brackets2Conllu(text));
         case ('SD'):
-            return conllu2cg3(sd2Conllu__raw(text));
+            return conllu2CG3(sd2Conllu__raw(text));
         case ('CoNLL-U'):
-            return conllu2cg3(text);
+            return conllu2CG3(text);
         case ('CG3'):
-            log.warn(`convert2cg3(): received CG3`);
+            log.warn(`convert2CG3(): received CG3`);
             return text;
     }
 
-    log.warn(`convert2cg3(): unrecognized format: ${format}`);
+    log.warn(`convert2CG3(): unrecognized format: ${format}`);
     return null;
 }
 
@@ -561,12 +561,12 @@ function cg32Conllu(CGtext) {
  * @param {String} indent     indentation unit (default:'\t')
  * @return {String}     CG3
  */
-function conllu2cg3(conlluText, indent) {
-    log.debug(`called conllu2cg3(conllu: ${conlluText}, indent: ${indent})`);
+function conllu2CG3(conlluText, indent) {
+    log.debug(`called conllu2CG3(conllu: ${conlluText}, indent: ${indent})`);
     // CG3 spec. reference: https://visl.sdu.dk/cg3_howto.pdf
 
     const _getAnalysis = (i, token) => {
-        log.debug(`called conllu2cg3:_getAnalysis(i: ${i}, token: ${JSON.stringify(token)})`);
+        log.debug(`called conllu2CG3:_getAnalysis(i: ${i}, token: ${JSON.stringify(token)})`);
 
         const lemma = (token.lemma ? `"${token.lemma}"` : `""`), // lemma should have "" if blank (#228)
             pos = token.upostag || token.xpostag || '_',

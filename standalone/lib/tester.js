@@ -966,7 +966,7 @@ class Tester extends Object {
 				const converters = {
 					'plain text': convert2PlainText,
 					'CoNLL-U': convert2Conllu,
-					'CG3': convert2cg3
+					'CG3': convert2CG3
 				};
 
 				let failures = [];

@@ -60,6 +60,8 @@ function setUndos() {
 }
 
 function bindHandlers() {
+		$('#text-data').keydown(parseTextData).keyup(parseTextData);
+
 		log.debug(`called bindHandlers()`);
     /* Binds handlers to DOM elements. */
 
@@ -80,8 +82,15 @@ function bindHandlers() {
 
 		$('#btnHelp').click(showHelp);
 
-		$('#tabCG3').click(viewAsCG);
-    $('#tabConllu').click(viewAsConllu);
+		$('#tabText').click((event) => {
+			convertText(convert2PlainText);
+		});
+		$('#tabConllu').click((event) => {
+			convertText(convert2Conllu);
+		});
+		$('#tabCG3').click((event) => {
+			convertText(convert2CG3);
+		});
 
 		$('#btnViewTable').click(toggleTableView);
     $('#btnViewText').click(toggleCodeWindow);
@@ -557,7 +566,7 @@ function onEnterInTextarea() {
 						$('#text-data').val(updatedLines.join('\n'))
 								.prop('selectionStart', cursor)
 								.prop('selectionEnd', cursor);
-						viewAsCG();
+						viewAsCG3();
 						break;
 
 				default:
@@ -1233,7 +1242,7 @@ function redrawTree(sent) {
 				currentFormat = detectFormat(currentSent);
 
     if (currentFormat === 'CG3')
-        changedSent = conllu2cg3(changedSent);
+        changedSent = conllu2CG3(changedSent);
 
     $('#text-data').val(changedSent);
     updateTable();
@@ -1283,24 +1292,23 @@ function viewAsPlain() { // TODO: DRY?
     $('#text-data').val(text);
 }
 
-function viewAsCG() {
-		log.debug(`called viewAsCG()`);
+function convertText(converter) {
+		log.debug(`called viewAsText()`);
 
-		let content = $('#text-data').val();
-		content = convert2cg3(content) || content; // handle returning null
-		localStorage.setItem('corpus', content);
-		$('#text-data').val(content);
+		let sentence = _.sentences[_.current];
+		sentence = converter(sentence) || sentence;
+		localStorage.setItem('corpus', sentence); // TODO: do we need this?? (5/24/18)
+		$('#text-data').val(sentence);
+		parseTextData();
 
-		updateTabs();
-
-    if (IS_TABLE_VIEW) {
-        $('#btnViewTable i').toggleClass('fa-code', 'fa-table');
-        $('#table-data').hide();
-        $('#text-data').show();
-        IS_TABLE_VIEW = false ;
-    }
+		// disable table view if not CoNLL-U
+		if (IS_TABLE_VIEW && _.formats[_.current] !== 'CoNLL-U') {
+			$('#btnViewTable i').toggleClass('fa-code', 'fa-table');
+			$('#table-data').hide();
+			$('#text-data').show();
+			IS_TABLE_VIEW = false ;
+		}
 }
-
 function viewAsConllu() {
 		log.debug(`called viewAsConllu()`);
 
@@ -1313,6 +1321,25 @@ function viewAsConllu() {
 		updateTabs();
 }
 
+function viewAsCG3() {
+		log.debug(`called viewAsCG3()`);
+
+		let sentence = _.sentences[_.current];
+		sentence = convert2CG3(sentence) || sentence;
+		localStorage.setItem('corpus', sentence); // TODO: do we need this?? (5/24/18)
+		$('#text-data').val(sentence);
+		parseTextData();
+
+		// disable table view
+    if (IS_TABLE_VIEW) {
+        $('#btnViewTable i').toggleClass('fa-code', 'fa-table');
+        $('#table-data').hide();
+        $('#text-data').show();
+        IS_TABLE_VIEW = false ;
+    }
+}
+
+
 function updateTabs() {
     log.debug(`called updateTabs`);
 
@@ -1322,6 +1349,7 @@ function updateTabs() {
 		localStorage.setItem('format', format);
 
 		$('.nav-link').removeClass('active');
+		$('#tabText').show();
     if (format === 'CG3') {
         $('#tabCG3').addClass('active');
 				$('#tabOther').hide();
@@ -1329,7 +1357,8 @@ function updateTabs() {
 				$('#tabConllu').addClass('active');
 				$('#tabOther').hide();
 		} else {
-				$('#tabOther').addClass('active').show();
+				$('#tabOther').addClass('active').show().text(format);
+				$('#tabText').hide();
 		}
 }
 

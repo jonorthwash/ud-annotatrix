@@ -104,7 +104,8 @@ window.onload = () => {
         _.reset();
 
         //test.all(); // uncomment this line to run tests on ready
-        test.run('textDataParser');
+        //test.run('textDataParser');
+        test.utils.splitAndSet('This is a test. This is another one');
 
         // initialize w/ defaults to avoid cy.$ is not a function errors
         resetCy(CY_OPTIONS);
@@ -237,8 +238,9 @@ function updateFormat(id) {
 
         // TODO other stuff goes here (CG3/CoNLL-U conversion ugliness TBD)
         _.formats[id] = format;
-        updateTabs();
     }
+    
+    updateTabs();
 }
 
 function parseTextData() {
@@ -285,13 +287,6 @@ function parseTextData() {
     // return splitted for testing purposes
     return splitted;
 }
-
-function run() {
-  _.reset();
-  parseTextData();
-}
-
-
 
 
 
