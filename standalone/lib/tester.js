@@ -728,7 +728,7 @@ class Tester extends Object {
 		// internal helper function
 		this.utils = {
 
-			check: (current, total) => {
+			checkCounts: (current, total) => {
 
 				(() => {
 					const sentences = _.sentences.length,
@@ -778,10 +778,35 @@ class Tester extends Object {
 
 				return ret;
 			},
+			splitAndSet: (str) => {
+				_.reset();
+				$('#text-data').val(str);
+				return parseTextData();
+			},
+			matchAndTrim: (str) => {
+				const matched = str.match(/[^.!?]+[.!?]*/g);
+				return matched === null
+					? [ str.trim() ]
+					: matched.map((chunk) => {
+						return chunk.trim();
+					});
+			},
+			splitAndTrim: (str) => {
+				return str.split(/\n{2,}/g).map((chunk) => {
+					return chunk.trim();
+				});
+			},
+
+			delimitSets: {
+				text: [ '.', '!', '?' ],
+				other: [ '\n\n', '\n\n\n', '\n\n\n\n' ],
+				invalid: [ ';', ',', ':', '\n', '\t', '\t\t' ],
+			},
+
 
 			textDelimiters: [ '.', '!', '?' ],
-			formatDelimiters: [ '\n\n', '\n\n\n', '\n\n\n\n' ],
-			otherDelimiters: [ ';', ',', ':', '\n', '\t', '\t\t' ]
+			conlluDelimiters: [ '\n\n', '\n\n\n', '\n\n\n\n' ],
+			nonDelimiters: [ ';', ',', ':', '\n', '\t', '\t\t' ]
 
 		};
 
@@ -921,14 +946,16 @@ class Tester extends Object {
 
 				log.out('\nExecuting Tester.detectFormat(): Phase 2: randomized detecting');
 
-				$.each(this.utils.textDelimiters, (i, delimiter) => {
-					$.each(this.utils.randomize(10), (j, randomized) => {
-						if (randomized.format !== 'Unknown') {
-							const content = randomized.text.join(delimiter),
-								detected = detectFormat(content),
-								message = `expected (${content}) to be detected as "${randomized.format}", but got "${detected}".`;
-							this.assert(detected === randomized.format, message);
-						}
+				$.each(this.utils.delimitSets, (name, delimiters) => {
+					$.each(delimiters, (i, delimiter) => {
+						$.each(this.utils.randomize(10), (j, randomized) => {
+							if (randomized.format !== 'Unknown') {
+								const content = randomized.text.join(delimiter),
+									detected = detectFormat(content),
+									message = `expected (${content}) to be detected as "${randomized.format}", but got "${detected}".`;
+								this.assert(detected === randomized.format, message);
+							}
+						});
 					});
 				});
 			},
@@ -986,72 +1013,72 @@ class Tester extends Object {
 
 				// need consistent initial environment
 				_.reset();
-				this.utils.check(0, 1);
+				this.utils.checkCounts(0, 1);
 
 				// insert and remove
 				insertSentence();
-				this.utils.check(1, 2);
+				this.utils.checkCounts(1, 2);
 				removeSentence(null, true);
-				this.utils.check(0, 1);
+				this.utils.checkCounts(0, 1);
 				removeSentence(null, true);
-				this.utils.check(0, 1);
+				this.utils.checkCounts(0, 1);
 				removeSentence(null, true);
-				this.utils.check(0, 1);
+				this.utils.checkCounts(0, 1);
 
 				// pan with 1 sentence
 				prevSentence();
-				this.utils.check(0, 1);
+				this.utils.checkCounts(0, 1);
 
 				nextSentence();
-				this.utils.check(0, 1);
+				this.utils.checkCounts(0, 1);
 
 				// goto with 1 sentence
 				set(null);
-				this.utils.check(0, 1);
+				this.utils.checkCounts(0, 1);
 				set(undefined);
-				this.utils.check(0, 1);
+				this.utils.checkCounts(0, 1);
 				set('string');
-				this.utils.check(0, 1);
+				this.utils.checkCounts(0, 1);
 				set([]);
-				this.utils.check(0, 1);
+				this.utils.checkCounts(0, 1);
 				set({});
-				this.utils.check(0, 1);
+				this.utils.checkCounts(0, 1);
 				set(3.5);
-				this.utils.check(0, 1);
+				this.utils.checkCounts(0, 1);
 				set(2);
-				this.utils.check(0, 1);
+				this.utils.checkCounts(0, 1);
 				set(1);
-				this.utils.check(0, 1);
+				this.utils.checkCounts(0, 1);
 				set(0);
-				this.utils.check(0, 1);
+				this.utils.checkCounts(0, 1);
 				set(-1);
-				this.utils.check(0, 1);
+				this.utils.checkCounts(0, 1);
 
 				// pan with 2 sentences
 				insertSentence();
-				this.utils.check(1, 2);
+				this.utils.checkCounts(1, 2);
 				prevSentence();
-				this.utils.check(0, 2);
+				this.utils.checkCounts(0, 2);
 				prevSentence();
-				this.utils.check(0, 2);
+				this.utils.checkCounts(0, 2);
 				nextSentence();
-				this.utils.check(1, 2);
+				this.utils.checkCounts(1, 2);
 				prevSentence();
-				this.utils.check(0, 2);
+				this.utils.checkCounts(0, 2);
 
 				// jump with 2 sentences
 				set(-1);
-				this.utils.check(0, 2);
+				this.utils.checkCounts(0, 2);
 				set(0);
-				this.utils.check(0, 2);
+				this.utils.checkCounts(0, 2);
 				set(1);
-				this.utils.check(0, 2);
+				this.utils.checkCounts(0, 2);
 				set(2);
-				this.utils.check(1, 2);
+				this.utils.checkCounts(1, 2);
 				set(3);
-				this.utils.check(1, 2);
+				this.utils.checkCounts(1, 2);
 				set(0);
-				this.utils.check(1, 2);
+				this.utils.checkCounts(1, 2);
 
 				_.reset();
 
@@ -1059,110 +1086,47 @@ class Tester extends Object {
 
 			textDataParser: () => {
 
-				function split(str) {
-					_.reset();
-					$('#text-data').val(str);
-					return parseTextData();
-				}
-				function set(num) {
-					split(data[num].str);
-				}
-				const data = [
+				log.out(`\nExecuting Tester.textDataParser(): Phase 1: basic text splitting`);
+				$.each([
 					{ str:'this is the first test', split:['this is the first test'] },
 					{ str:'this is, the second', split:['this is, the second'] },
 					{ str:'one sentence.', split:['one sentence.'] },
 					{ str:'one! two!', split:['one!', 'two!'] },
 					{ str:'one. two! three?', split:['one.', 'two!', 'three?'] },
-				];
+				], (i, datum) => {
 
-				log.out(`\nExecuting Tester.textDataParser(): Phase 1: basic text splitting`);
-
-				$.each(data, (i, datum) => {
-
-					const splitted = split(datum.str),
+					const splitted = this.utils.splitAndSet(datum.str),
 						message = `expected '${datum.split.join('\', \'')}'; got '${splitted.join('\', \'')}'`;
 
 					this.assert(this.arraysEqual(datum.split, splitted), message);
+					this.utils.checkCounts(0, splitted.length);
 
 				});
 
 				log.out(`\nExecuting Tester.textDataParser(): Phase 2: randomized text splitting`);
+				$.each(this.utils.delimitSets, (name, delimiters) => {
+					$.each(delimiters, (i, delimiter) => {
+						$.each(this.utils.randomize(5), (j, randomized) => {
+							const format = randomized.format,
+								actual = this.utils.splitAndSet(randomized.text.join(delimiter));
 
-				$.each(this.utils.textDelimiters, (i, delimiter) => {
-					$.each(this.utils.randomize(5), (j, randomized) => {
-						const sample = randomized.text,
-							format = randomized.format,
-							splitted = split(sample.join(delimiter));
+							let expected;
+							if (format === 'Unknown') {
+								expected = actual; // pass
+							} else if (format === 'plain text') {
+								expected = this.utils.matchAndTrim(randomized.text.join(delimiter));
+							} else {
+								expected = this.utils.splitAndTrim(randomized.text.join(delimiter));
+							}
 
-						let expected;
-						if (format === 'Unknown') {
-							expected = splitted; // pass
-						} else if (format === 'plain text') {
-							expected = sample.map((item, i) => {
-								return `${item}${i === sample.length - 1 ? '' : delimiter}`.trim();
-							});
-						} else {
-							expected = [ sample.join(delimiter).trim() ];
-						}
+							this.assert(this.arraysEqual(expected, actual),
+								`expected ${JSON.stringify(expected)}; got ${JSON.stringify(actual)}`);
 
-						/*console.log(`\nformat: ${format}, delimiter: <${delimiter}>`)
-						console.log('expected:', expected)
-						console.log('actual:', splitted)
-						console.log('sample:', sample)
-						console.log('joined:', sample.join(delimiter));*/
-						const message = `expected '${JSON.stringify(sample)}'; got '${JSON.stringify(splitted)}'`;
-						this.assert(this.arraysEqual(expected, splitted), message);
+							this.utils.checkCounts(0, actual.length);
 
+						});
 					});
 				});
-				$.each(this.utils.formatDelimiters, (i, delimiter) => {
-					$.each(this.utils.randomize(5), (j, randomized) => {
-						const sample = randomized.text,
-							format = randomized.format,
-							splitted = split(sample.join(delimiter));
-
-						let expected;
-						if (format === 'Unknown') {
-							expected = splitted; // pass
-						} else if (format === 'plain text') {
-							expected = sample.join(delimiter).match(/[^.!?]+[.!?]*/g).map((match) => {
-								return match.trim();
-							}) || sample.join(delimiter).trim();
-						} else {
-							expected = sample.map((item, i) => {
-								return `${item}${i === sample.length - 1 ? '' : delimiter}`.trim();
-							});
-						}
-
-						console.log(`\nformat: ${format}, delimiter: <${delimiter}>`)
-						console.log('expected:', expected)
-						console.log('actual:', splitted)
-						console.log('sample:', sample)
-						console.log('joined:', sample.join(delimiter));
-						const message = `expected '${JSON.stringify(sample)}'; got '${JSON.stringify(splitted)}'`;
-						this.assert(this.arraysEqual(expected, splitted), message);
-
-					});
-				});
-
-				log.out(`\nExecuting Tester.textDataParser(): Phase 3: basic sentence management`);
-
-				// reset data structure
-				_.reset();
-				this.utils.check(0, 1);
-
-				set(0);
-				this.utils.check(0, 1);
-				set(1);
-				this.utils.check(0, 1);
-				set(2);
-				this.utils.check(0, 1);
-				set(3);
-				this.utils.check(0, 2);
-				set(4);
-				this.utils.check(0, 3);
-
-
 
 				_.reset();
 
@@ -1220,6 +1184,7 @@ class Tester extends Object {
 
 		$.each(this.tests, (testName, test) => {
 			test();
+			log.out(`\nTester.all(): test "${testName}" passed!\n`);
 		});
 
 		log.out('\nTester.all(): all tests passed!\n');

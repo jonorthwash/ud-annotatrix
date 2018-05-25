@@ -104,7 +104,7 @@ window.onload = () => {
         _.reset();
 
         //test.all(); // uncomment this line to run tests on ready
-        test.run('detectFormat', 'textDataParser');
+        test.run('textDataParser');
 
         // initialize w/ defaults to avoid cy.$ is not a function errors
         resetCy(CY_OPTIONS);
@@ -252,19 +252,23 @@ function parseTextData() {
     if (detectFormat(content) === 'plain text') {
         // ( old regex: /[^ ].+?[.!?](?=( |$))/g )
         // match non-punctuation (optionally) followed by punctuation
-        splitted = content.match(/[^.!?]+[.!?]*/g) || [content];
-        log.debug(`parseTextData(): match group: ${content.match(/[^.!?]+[.!?]*/g)}`);
+        const matched = content.match(/[^.!?]+[.!?]*/g);
+        log.debug(`parseTextData(): match group: ${matched}`);
+				splitted = matched === null
+  					? [ content.trim() ]
+  					: matched.map((chunk) => {
+  						return chunk.trim();
+  					});
     } else {
-        splitted = content.split('\n\n');
+        splitted = content.split(/\n{2,}/g).map((chunk) => {
+            return chunk.trim();
+				});
     }
 
     // removing extra whitespace
     for (let i = splitted.length - 1; i >= 0; i--) {
-        if (splitted[i].trim() === '') {
+        if (splitted[i].trim() === '')
             splitted.splice(i, 1);
-        } else {
-            splitted[i] = splitted[i].trim();
-        }
     }
     splitted = splitted.length ? splitted : ['']; // need a default if empty
 
