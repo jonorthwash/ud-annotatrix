@@ -90,13 +90,11 @@ function buildTable() {
                 }
 
                 span.text(cell)
-                    .attr('id', `table_${i}_${j}`)
+                    .prop('contenteditable', true)
                     .attr('row-id', i)
                     .attr('col-id', j)
                     .attr('data-value', cell)
-                    .attr('display', _.column_visible[j] ? 'inline' : 'hidden')
-                    .attr('tabIndex', -1)
-                    .prop('contenteditable', true)
+                    .css('display', _.column_visible[j] ? 'inline' : 'none')
                     .keyup(onEditTable);
 
                 if (valid.err) {
@@ -122,7 +120,6 @@ function toggleTableColumn(event) {
     if (target.find('i').length === 0) {
         log.warn(`toggleTableColumn(): `)
     }
-        return;
 
     _.column_visible[col] = !_.column_visible[col];
     target.toggleClass('column-hidden')
@@ -150,7 +147,7 @@ function toggleTableColumn(event) {
 
 
 function calculateRows() {
-    log.debug('called calculateRows()');
+    log.critical('called calculateRows()');
 
     const windowHeight = $(window).height(),
         graphDivHeight = $('.controls').outerHeight(),
@@ -163,7 +160,7 @@ function calculateRows() {
 }
 
 function fitTable() {
-    log.debug('called fitTable()');
+    log.critical('called fitTable()');
 
     calculateRows();
 
