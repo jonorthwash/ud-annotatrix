@@ -20,8 +20,10 @@ function upos(s) {
     // returns a bool
     $.each(U_POS, (i, pos) => {
         if (pos === s)
-            return true;
+            return { err:null, data:{ 'tag':s } };
     });
+    return [false, "err_upos_invalid", {"tag": s}];
+
     return false;
 }
 
