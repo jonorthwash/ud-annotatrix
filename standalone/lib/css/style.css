@@ -642,7 +642,7 @@ font-weight: normal;
 color: #3399FF;
 }
 
-.tableColHeader {
+th i {
 	position: absolute ;
 	right: 1px;
 	bottom: 1ex;
