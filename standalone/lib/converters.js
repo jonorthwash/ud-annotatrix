@@ -565,20 +565,6 @@ function conllu2CG3(conlluText, indent) {
     log.debug(`called conllu2CG3(conllu: ${conlluText}, indent: ${indent})`);
     // CG3 spec. reference: https://visl.sdu.dk/cg3_howto.pdf
 
-    const _getAnalysis = (i, token) => {
-        log.debug(`called conllu2CG3:_getAnalysis(i: ${i}, token: ${JSON.stringify(token)})`);
-
-        const lemma = (token.lemma ? `"${token.lemma}"` : `""`), // lemma should have "" if blank (#228)
-            pos = token.upostag || token.xpostag || '_',
-            feats = (token.feats ? ` ${token.feats.replace(/\|/g, ' ')}` : ''),
-            deprel = (token.deprel ? ` @${token.deprel}` : ' @x'), // is it really what we want by default?
-            head = token.head || '',
-            cgToken = `${lemma} ${pos}${feats}${deprel} #${token.id}->${head}`;
-
-        log.debug(`got cgToken: ${cgToken}`);
-        return cgToken;
-    };
-
     let sent = new conllu.Sentence();
     sent.serial = cleanConllu(conlluText);
     indent = indent || '\t';
@@ -588,10 +574,10 @@ function conllu2CG3(conlluText, indent) {
     $.each(sent.tokens, (i, token) => {
         CGtext += (token.form ? `\n"<${token.form}>"\n` : '');
         if (token.tokens === undefined) {
-            CGtext += `${indent}${_getAnalysis(i, token)}`;
+            CGtext += `${indent}${getCG3Analysis(i, token)}`;
         } else {
             CGtext += token.tokens.map((subtoken, j) => {
-                return `${indent.repeat(j+1)}${_getAnalysis(j, subtoken)}`;
+                return `${indent.repeat(j+1)}${getCG3Analysis(j, subtoken)}`;
             }).join('\n');
         }
     });
@@ -599,6 +585,24 @@ function conllu2CG3(conlluText, indent) {
     return CGtext.trim();
 }
 
+/**
+ * return a CG3 analysis for a token
+ *  - helper function for conllu2CG3() and onEnter()
+ */
+function getCG3Analysis(i, token) {
+    log.debug(`called conllu2CG3:getCG3Analysis(i: ${i}, token: ${JSON.stringify(token)})`);
+
+    const lemma = (token.lemma ? `"${token.lemma}"` : `""`), // lemma should have "" if blank (#228)
+        pos = token.upostag || token.xpostag || '_',
+        feats = (token.feats ? ` ${token.feats.replace(/\|/g, ' ')}` : ''),
+        deprel = (token.deprel ? ` @${token.deprel}` : ' @x'), // is it really what we want by default?
+        head = token.head || '',
+        cgToken = `${lemma} ${pos}${feats}${deprel} #${token.id}->${head}`;
+
+    log.debug(`got cgToken: ${cgToken}`);
+    return cgToken;
+
+};
 
 
 

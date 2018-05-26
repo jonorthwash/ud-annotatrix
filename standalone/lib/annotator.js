@@ -103,10 +103,6 @@ window.onload = () => {
 
         _.reset();
 
-        //test.all(); // uncomment this line to run tests on ready
-        //test.run('textDataParser');
-        test.utils.splitAndSet(TEST_DATA.texts_by_format.Brackets[0]);
-
         // initialize w/ defaults to avoid cy.$ is not a function errors
         resetCy(CY_OPTIONS);
         checkServer(); // check if server is running
@@ -114,6 +110,12 @@ window.onload = () => {
         //loadFromUrl();
         updateSentenceTrackers(); // should go in loadFromUrl and checkServer (5/23/18)
         bindHandlers();
+
+        //test.all();
+        //test.utils.splitAndSet(TEST_DATA.texts_by_format['CG3']['simple_with_comments']);
+        test.run('onEnter');
+        //test.utils.splitAndSet('this is a test');
+        //$('#tabConllu').click()
 
     });
 };
@@ -284,9 +286,17 @@ function parseTextData() {
         prevSentence();
     }
 
+    updateTable();
+
     // return splitted for testing purposes
     return splitted;
 }
+
+
+
+
+
+
 
 
 
@@ -311,7 +321,7 @@ function getContents() {
 
 
 
-
+/*
 function addSent() { // TODO: this is probably not what we want? what if we turn it into 'insert a new sentence _here_'?
     log.debug(`called addSent()`);
     AVAILABLE_SENTENCES += 1;
@@ -323,7 +333,7 @@ function removeCurSent() {
 
     /* Called when the button 'remove sentence' is pressed.
     Calls confirm window. If affirmed, */
-    const conf = confirm('Do you want to remove the sentence?');
+    /*const conf = confirm('Do you want to remove the sentence?');
     if (conf) {
         saveData();
         const realCurrentSentence = CURRENT_SENTENCE; // это нужно, т.к. в loadDataInIndex всё переназначается. это как-то мега костыльно, и надо исправить.
@@ -362,7 +372,7 @@ function loadDataInIndex() {
 function splitIntoSentences(corpus) {
     log.debug(`called splitIntoSentences(<Corpus>)`);
 
-    /* Takes a string with the corpus and returns an array of sentences. */
+    // Takes a string with the corpus and returns an array of sentences.
     const format = detectFormat(corpus);
 
     // splitting
@@ -389,7 +399,7 @@ function showDataIndiv() {
 
     /* This function is called each time the current sentence is changed
     to update the CoNLL-U in the textarea and the indices. */
-
+    /*
     $('#text-data').val(RESULTS[CURRENT_SENTENCE] || '');
     $('#current-sentence').val(AVAILABLE_SENTENCES === 0 ? 0 : CURRENT_SENTENCE + 1);
     $('#total-sentences').val(AVAILABLE_SENTENCES);
@@ -444,7 +454,7 @@ function nextSenSent() {
     log.debug(`called nextSenSent()`);
 
     /* When the user navigates to the next sentence. */
-    saveData();
+    /*saveData();
 
     RESULTS[CURRENT_SENTENCE] = $('#text-data').val();
     CURRENT_SENTENCE++;
@@ -457,7 +467,7 @@ function nextSenSent() {
 
     clearLabels();
     showDataIndiv();
-}
+}*/
 
 function clearLabels() {
     log.debug(`called clearLabels()`);

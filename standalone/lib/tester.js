@@ -481,6 +481,35 @@ simple: `"<Патшамен>"
 "<.>"
 	"." sent @punct #13->12`,
 
+simple_with_comments: `# comment #1
+# comment #2
+"<Патшамен>"
+	"патша" n ins @nmod #1->3
+"<соғыс>"
+	"соғыс" n nom @obj #2->3
+"<ашқанда>"
+	"аш" v tv ger_past loc @advcl #3->12
+"<,>"
+	"," cm @punct #4->12
+"<ел-жұрт>"
+	"ел-жұрт" n nom @conj #5->7
+"<,>"
+	"," cm @punct #6->7
+"<отанымды>"
+	"отан" n px1sg acc @obj #7->8
+"<қорғауға>"
+	"қорға" v tv ger dat @advcl #8->12
+"<,>"
+	"," cm @punct #9->12
+"<біз>"
+	"біз" prn pers p1 pl nom @nsubj #10->12
+"<соғысқа>"
+	"соғыс" n dat @nmod #11->12
+"<бардық>"
+	"бар" v iv ifi p1 pl @root #12->0
+"<.>"
+	"." sent @punct #13->12`,
+
 with_spans: `# text = He boued e tebr Mona er gegin.
 # text[eng] = Mona eats her food here in the kitchen.
 # labels = press_1986 ch_syntax p_197 to_check
@@ -728,6 +757,10 @@ class Tester extends Object {
 		// internal helper function
 		this.utils = {
 
+			sleep: (ms) => {
+			  return new Promise(resolve => setTimeout(resolve, ms));
+			},
+
 			checkCounts: (current, total) => {
 
 				(() => {
@@ -803,10 +836,50 @@ class Tester extends Object {
 				invalid: [ ';', ',', ':', '\n', '\t', '\t\t' ],
 			},
 
+			simKeyup: (selector, char) => {
 
-			textDelimiters: [ '.', '!', '?' ],
-			conlluDelimiters: [ '\n\n', '\n\n\n', '\n\n\n\n' ],
-			nonDelimiters: [ ';', ',', ':', '\n', '\t', '\t\t' ]
+				char = char.slice(0, 1);
+
+				const	which = {
+						'\n': KEYS.ENTER,
+						'ESC': KEYS.ESC,
+						'\t': KEYS.TAB
+					}[char];
+
+				if (!(char === '\n'
+					&& (_.formats[_.current] === 'CoNLL-U'
+						|| _.formats[_.current] === 'CG3')))
+					this.utils.insertChar(selector, char);
+
+				if (selector === '#text-data') {
+					onEditTextData({ which: which });
+				} else if (selector === '#table-data') {
+					onEditTableData({ which: which });
+				}
+			},
+
+			insertChar: (selector, char) => {
+				const target = $(selector),
+					start = target.prop('selectionStart'),
+					end = target.prop('selectionEnd'),
+					current = target.val();
+
+				target
+					.val(`${current.slice(0,start)}${char}${current.slice(end)}`)
+					.prop('selectionStart', start + 1)
+					.prop('selectionEnd', end + 1);
+
+			},
+
+			setCursor: (selector, start, end) => {
+				start = start || 0;
+				end = end || start;
+
+				$(selector)
+					.prop('selectionStart', start)
+					.prop('selectionEnd', end);
+
+			}
 
 		};
 
@@ -1130,6 +1203,49 @@ class Tester extends Object {
 
 				_.reset();
 
+			},
+
+			onEnter: () => {
+				log.out(`\nExecuting Tester.onEnter()`);
+
+				test.utils.splitAndSet(TEST_DATA.texts_by_format['CG3']['simple']);
+
+				let EOLs = [], acc = 0;
+				$.each(_.sentences[_.current].split('\n'), (k, line) => {
+					EOLs.push(acc + line.length + k);
+					acc += line.length;
+				});
+
+				$.each(EOLs.reverse(), (l, eol) => {
+					this.utils.setCursor('#text-data', eol);
+					this.utils.simKeyup('#text-data', '\n');
+				});
+
+
+				return;
+
+				const data = [
+					'Hello world, I am testing'
+				];
+
+				$.each(data, (i, datum) => {
+					$.each(['#tabText', '#tabConllu', '#tabCG3'], (j, selector) => {
+						test.utils.splitAndSet(datum);
+						$(selector).click();
+
+						let EOLs = [], acc = 0;
+						$.each(_.sentences[_.current].split('\n'), (k, line) => {
+							EOLs.push(acc + line.length + k);
+							acc += line.length;
+						});
+
+						$.each(EOLs.reverse(), (l, eol) => {
+							this.utils.setCursor('#text-data', eol);
+							this.utils.simKeyup('#text-data', '\n');
+						});
+						confirm();
+					});
+				});
 			}
 
 		};

@@ -60,13 +60,15 @@ function setUndos() {
 }
 
 function bindHandlers() {
-		$('#text-data').keydown(parseTextData).keyup(parseTextData);
-
 		log.debug(`called bindHandlers()`);
     /* Binds handlers to DOM elements. */
 
     // TODO: causes errors if called before the cy is initialised
     $(document).keydown(keyDownClassifier);
+
+
+		$('#text-data').keyup(onEditTextData)//.keyup(onEditTextData);
+		$('#table-data').keyup(onEditTableData)//.keyup(onEditTableData);
 
     $('#btnUploadCorpusFileButton').click(handleUploadButtonPressed);
 
@@ -99,17 +101,9 @@ function bindHandlers() {
     $('#btnExportSVG').click(exportSVG);
     $('#btnExportLaTeX').click(exportLaTeX);
 
-    $('#text-data')
-        .keyup(drawTree)
-        .keyup((key) => {
-						if (key.which === KEYS.ESC)
-								this.blur();
-				})
-        .keyup(updateTabs)
-
-    $('#RTL').click(switchRtlMode);
-    $('#vertical').click(switchAlignment);
-    $('#enhanced').click(switchEnhanced);
+    $('#RTL').click(toggleRTL);
+    $('#vertical').click(toggleVertical);
+    $('#enhanced').click(toggleEnhanced);
 
     $('#filename').change(loadFromFile);
 
@@ -178,6 +172,153 @@ function bindHandlers() {
 		//
 
 }
+function onEditTextData(event) {
+		log.debug(`called onEditTextData(key: ${event.which})`);
+
+		switch (event.which) {
+				case (KEYS.ESC):
+						this.blur();
+						break;
+				case (KEYS.ENTER):
+						onEnter(event);
+						break;
+				default:
+						parseTextData();
+						//drawTree();
+		}
+}
+function onEditTableData(event) {
+		log.debug(`called onEditTableData(key: ${event.which})`);
+
+		throw new NotImplementedError('onEditTableData() not implemented');
+
+		switch (event.which) {
+				case (KEYS.ENTER):
+						onEnter(event);
+						break;
+				default:
+						//
+		}
+}
+function onEnter(event) {
+		log.debug(`called onEnter()`);
+
+		if (IS_TABLE_VIEW)
+				throw new NotImplementedError('table view enter not implemented');
+
+		let sentence = _.sentences[_.current],
+				format = _.formats[_.current],
+				cursor = $('#text-data').prop('selectionStart') - 1,
+				lines = sentence.split('\n'),
+				cursorLine = 0,
+				lineId = null, before, during, after;
+
+		// get current line number
+		let acc = 0;
+		$.each(lines, (i, line) => {
+				acc += line.length;
+				if (acc + i < cursor)
+						cursorLine = i + 1;
+		});
+		log.debug(`onEnter(): cursor on line[${cursorLine}]: "${lines[cursorLine]}"`);
+
+		// advance the cursor until we are at the end of a line that isn't followed by a comment
+		//   or at the very beginning of the textarea
+		if (cursor !== 0 || sentence[0] === '#') {
+				log.debug(`onEnter(): cursor not at textarea start OR textarea has comments`)
+				while (sentence[cursor + 1] === '#' || sentence[cursor] !== '\n') {
+						//console.log(`cursor[${cursor}]: "${sentence[cursor]}", line[${cursorLine}]: ${lines[cursorLine]}`);
+						if (cursor === sentence.length)
+								break;
+						if (sentence[cursor] === '\n')
+								cursorLine++;
+						cursor++;
+				}
+		} else {
+				log.debug(`onEnter(): cursor at textarea start`)
+				cursorLine = -1;
+		}
+
+		log.debug(`onEnter(): cursor[${cursor}]: "${sentence[cursor]}", line[${cursorLine}]: ${lines[cursorLine]}`);
+
+		switch (format) {
+				case ('CoNLL-U'):
+
+						if (event.preventDefault) // bc of testing, sometimes these are fake events
+								event.preventDefault();
+
+						lineId = lines[cursorLine] ? lines[cursorLine].match(/^[0-9]+/) : 0;
+						lineId = lineId ? parseInt(lineId) + 1 : 1;
+						log.debug(`onEnter(): inserting line with id: ${lineId}`);
+						log.debug(`onEnter(): resetting ids of lines: [${lines.slice(cursorLine + 1).join(',')}]`);
+
+						before = lines.slice(0, cursorLine + 1);
+						during = [`${lineId}\t_\t_\t_\t_\t_\t_\t_\t_\t_`];
+						after = lines.slice(cursorLine + 1).map((line) => {
+								const id = parseInt(line.match(/^[0-9]+/));
+								return line.replace(/^[0-9]+/, (id + 1));
+						});
+
+						log.debug(`onEnter(): preceding line(s) : [${before}]`);
+						log.debug(`onEnter(): interceding line  : [${during}]`);
+						log.debug(`onEnter(): proceeding line(s): [${after}]`);
+
+						$('#text-data').val(before.concat(during, after).join('\n'))
+								.prop('selectionStart', cursor)
+								.prop('selectionEnd', cursor);
+
+						break;
+
+				case ('CG3'):
+
+						if (event.preventDefault) // bc of testing, sometimes these are fake events
+								event.preventDefault();
+
+						// advance to the end of an analysis
+						log.critical(`onEnter(): line[${cursorLine}]: "${lines[cursorLine]}", cursor[${cursor}]: "${sentence[cursor]}"`);
+						while (cursorLine < lines.length - 1) {
+								if (lines[cursorLine + 1].startsWith('"<'))
+										break;
+								cursorLine++;
+								cursor += lines[cursorLine].length + 1;
+								log.critical(`onEnter(): incrementing line[${cursorLine}]: "${lines[cursorLine]}", cursor[${cursor}]: "${sentence[cursor]}"`);
+						}
+
+						lineId = lines.slice(0, cursorLine + 1).reduce((acc, line) => {
+								return acc + line.startsWith('"<');
+						}, 0) + 1;
+						log.critical(`onEnter(): inserting line with id: ${lineId}`);
+						log.critical(`onEnter(): resetting all content lines: [${lines}]`);
+
+						const incrementIndices = (lines, lineId) => {
+								return lines.map((line) => {
+										if (line.startsWith('#'))
+												return line;
+										(line.match(/[#>][0-9]+/g) || []).map((match) => {
+												let id = parseInt(match.slice(1));
+												id += (id >= lineId ? 1 : 0);
+												line = line.replace(match, `${match.slice(0,1)}${id}`)
+										});
+										return line;
+								});
+						}
+						before = incrementIndices(lines.slice(0, cursorLine + 1), lineId);
+						during = [`"<_>"`, `\t${getCG3Analysis(lineId, {id:lineId})}`];
+						after = incrementIndices(lines.slice(cursorLine + 1), lineId);
+
+						log.critical(`onEnter(): preceding line(s) : [${before}]`);
+						log.critical(`onEnter(): interceding lines : [${during}]`);
+						log.critical(`onEnter(): proceeding line(s): [${after}]`);
+
+						$('#text-data').val(before.concat(during, after).join('\n'))
+								.prop('selectionStart', cursor)
+								.prop('selectionEnd', cursor);
+
+						break;
+		}
+
+		parseTextData();
+}
 
 function bindCyHandlers() {
 		log.debug('called bindCyHandlers()');
@@ -193,6 +334,55 @@ function bindCyHandlers() {
     cy.on('click', 'edge.dependency', changeNode);
 		// cy.on('zoom', cy.center); // center the view port when the page zoom is changed
 }
+
+function convertText(converter) {
+		log.debug(`called viewAsText()`);
+
+		let sentence = _.sentences[_.current];
+		sentence = converter(sentence) || sentence;
+		localStorage.setItem('corpus', sentence); // TODO: do we need this?? (5/24/18)
+		$('#text-data').val(sentence);
+		parseTextData();
+
+		// disable table view if not CoNLL-U
+		if (IS_TABLE_VIEW && _.formats[_.current] !== 'CoNLL-U') {
+			$('#btnViewTable i').toggleClass('fa-code', 'fa-table');
+			$('#table-data').hide();
+			$('#text-data').show();
+			IS_TABLE_VIEW = false ;
+		}
+}
+function updateTabs() {
+    log.debug(`called updateTabs`);
+
+    /* The function handles the format tabs above the textarea.
+    Takes a string with a format name, changes the classes on tabs. */
+    const format = _.formats[_.current];
+		localStorage.setItem('format', format);
+
+		$('.nav-link').removeClass('active').show();
+		switch (format) {
+				case ('Unknown'):
+						$('.nav-link').hide();
+						$('#tabOther').addClass('active').show().text(format);
+						break;
+				case ('CoNLL-U'):
+						$('#tabConllu').addClass('active');
+						$('#tabOther').hide();
+						break;
+				case ('CG3'):
+						$('#tabCG3').addClass('active');
+						$('#tabOther').hide();
+						break;
+				case ('plain text'):
+						$('#tabText').hide(); // NOTE: no break here
+				default:
+						$('#tabOther').addClass('active').show().text(format);
+						break;
+		}
+}
+
+
 
 
 
@@ -442,8 +632,7 @@ function keyDownClassifier(key) {
             removeSup(st);
         }
     }
-
-    if (!$('#text-data').is(':focus')) {
+		if (!$('#text-data').is(':focus')) {
         // console.log('ZOOM: ', CURRENT_ZOOM, inputAreaFocus);
         if ((key.which === KEYS.EQUALS || key.which === 61) ){
             CURRENT_ZOOM = cy.zoom();
@@ -468,113 +657,7 @@ function keyDownClassifier(key) {
         } else if (key.which == KEYS.P && !posInp.length && !wfInp.length && !deprelInp.length) {
 						setPunct();
 				}
-    } else {
-				if (key.which === KEYS.ENTER) {
-						key.preventDefault();
-						onEnterInTextarea();
-				}
 		}
-		if ($('#table-data').has(':focus').length && key.which === KEYS.ENTER) {
-				key.preventDefault();
-				onEnterInTextarea();
-		}
-}
-
-function onEnterInTextarea() {
-		log.debug(`called onEnterInTextarea()`);
-
-		let cursor = 999,
-				text = $('#text-data').val(),
-				format = detectFormat(text),
-				linesBefore, linesAfter, updatedLines;
-
-		if (IS_TABLE_VIEW) {
-
-				// get the row number (id is of the form "table_ROW_COL")
-				const row = parseInt($(':focus').prop('id').split('_')[1]) + 1;
-				if (isNaN(row)) // something went wrong
-						return;
-
-				linesBefore = text.split('\n').slice(0, row);
-				linesAfter = text.split('\n').slice(row);
-
-		} else {
-
-				cursor = $('#text-data').prop('selectionStart');
-				while (text[cursor] !== '\n' && cursor < text.length)
-						cursor++;
-
-				linesBefore = text.slice(0, cursor).split('\n');
-				linesAfter = text.slice(cursor+1).split('\n');
-
-		}
-
-		var id;
-		switch (format) {
-				case ('CoNLL-U'):
-
-						id = parseInt(linesBefore[linesBefore.length - 1].split('\t')[0]);
-						id = (isNaN(id) ? 1 : id + 1);
-
-						updatedLines = [].concat(
-								linesBefore,
-								[`${id}\t_\t_\t_\t_\t_\t_\t_\t_\t_`],
-								linesAfter.map((line) => {
-										if (line.startsWith('#') || line === '')
-												return line;
-
-										let splitOnTabs = line.split('\t');
-										splitOnTabs[0] = parseInt(splitOnTabs[0]) + 1; // incr index by 1
-
-										return splitOnTabs.join('\t');
-								}));
-
-						$('#text-data').val(updatedLines.join('\n'))
-								.prop('selectionStart', cursor)
-								.prop('selectionEnd', cursor);
-						viewAsConllu();
-						break;
-
-				case ('CG3'):
-
-						function incrementIndices(line) {
-								log.debug(`onEnterInTextarea(): before: ${line}`);
-								if (line.startsWith('#') || line.startsWith('"<') || line === '')
-										return line;
-
-								const targets = line.match(/[#>][0-9]+/g);
-								$.each(targets, (i, target) => {
-										const targetId = parseInt(target.slice(1));
-										if (!isNaN(targetId) && targetId > id)
-												line = line.replace(target, `${target.slice(0,1)}${targetId + 1}`);
-								});
-
-								log.debug(`onEnterInTextarea(): after: ${line}`);
-								return line;
-						}
-
-						id = linesBefore.reduce((acc,line) => {
-								return acc + line.startsWith('"<');
-						}, 0);
-
-						updatedLines = [].concat(
-								linesBefore.map(incrementIndices),
-								['"<_>"'],
-								[`\t${newCGAnalysis(id+1, {id:id+1})}`],
-								linesAfter.map(incrementIndices));
-
-						$('#text-data').val(updatedLines.join('\n'))
-								.prop('selectionStart', cursor)
-								.prop('selectionEnd', cursor);
-						viewAsCG3();
-						break;
-
-				default:
-						text = text.slice(0,cursor) + '\n' + text.slice(cursor);
-						$('#text-data').val(text);
-		}
-
-		updateTable();
 }
 
 function setPunct() {
@@ -1251,126 +1334,7 @@ function redrawTree(sent) {
 }
 
 
-// refactoring the write functions. in project, is not used yet
-function writeSent(makeChanges) {
-		log.debug(`called writeSent(${makeChanges.name.length ? makeChanges.name : '<anonymous>'})`);
 
-    // build sent
-    let sent = new conllu.Sentence();
-    sent.serial = $('#text-data').val();
-
-    sent = makeChanges(sent, this);
-
-    // redraw tree
-    $('#text-data').val(sent.serial);
-    drawTree();
-}
-
-
-function viewAsPlain() { // TODO: DRY?
-		log.debug(`called viewAsPlain()`);
-
-    let text = $('#text-data').val(),
-				currentFormat = detectFormat(text);
-
-    if (currentFormat === 'CoNLL-U') {
-
-        text = conllu2PlainText(text);
-
-    } else if (currentFormat === 'CG3') {
-
-        text = cg32Conllu(text);
-        if (text === undefined) {
-            cantConvertCG(); // show the error message
-            return;
-        } else {
-            text = conllu2PlainText(text);
-        }
-
-    }
-
-    $('#text-data').val(text);
-}
-
-function convertText(converter) {
-		log.debug(`called viewAsText()`);
-
-		let sentence = _.sentences[_.current];
-		sentence = converter(sentence) || sentence;
-		localStorage.setItem('corpus', sentence); // TODO: do we need this?? (5/24/18)
-		$('#text-data').val(sentence);
-		parseTextData();
-
-		// disable table view if not CoNLL-U
-		if (IS_TABLE_VIEW && _.formats[_.current] !== 'CoNLL-U') {
-			$('#btnViewTable i').toggleClass('fa-code', 'fa-table');
-			$('#table-data').hide();
-			$('#text-data').show();
-			IS_TABLE_VIEW = false ;
-		}
-}
-function viewAsConllu() {
-		log.debug(`called viewAsConllu()`);
-
-		let content = $('#text-data').val();
-    content = convert2Conllu(content) || content; // handle returning null
-		localStorage.setItem('corpus', content); // probably put this somewhere else
-		$('#text-data').val(content);
-		//loadDataInIndex();
-
-		updateTabs();
-}
-
-function viewAsCG3() {
-		log.debug(`called viewAsCG3()`);
-
-		let sentence = _.sentences[_.current];
-		sentence = convert2CG3(sentence) || sentence;
-		localStorage.setItem('corpus', sentence); // TODO: do we need this?? (5/24/18)
-		$('#text-data').val(sentence);
-		parseTextData();
-
-		// disable table view
-    if (IS_TABLE_VIEW) {
-        $('#btnViewTable i').toggleClass('fa-code', 'fa-table');
-        $('#table-data').hide();
-        $('#text-data').show();
-        IS_TABLE_VIEW = false ;
-    }
-}
-
-
-function updateTabs() {
-    log.debug(`called updateTabs`);
-
-    /* The function handles the format tabs above the textarea.
-    Takes a string with a format name, changes the classes on tabs. */
-    const format = _.formats[_.current];//detectFormat($('#text-data').val());
-		localStorage.setItem('format', format);
-
-		$('.nav-link').removeClass('active').show();
-		$('#tabText').show();
-
-		switch (format) {
-				case ('Unknown'):
-						$('.nav-link').hide();
-						$('#tabOther').addClass('active').show().text(format);
-						break;
-				case ('CoNLL-U'):
-						$('#tabConllu').addClass('active');
-						$('#tabOther').hide();
-						break;
-				case ('CG3'):
-						$('#tabCG3').addClass('active');
-						$('#tabOther').hide();
-						break;
-				case ('plain text'):
-						$('#tabText').hide();
-				default:
-						$('#tabOther').addClass('active').show().text(format);
-						break;
-		}
-}
 
 function cantConvertCG() {
 		const message = 'Warning: CG containing ambiguous analyses can\'t be converted into CoNLL-U!';
@@ -1386,14 +1350,13 @@ function clearWarning() {
 		log.debug('called clearWarning()');
 
 		$('#tabConllu').prop('disabled', false);
-    $('#warning').css('background-color', 'white')
-        .text('');
+    $('#warning').css('background-color', 'white').text('');
 }
 
 
 
-function switchRtlMode() {
-		log.debug(`called switchRtlMode()`);
+function toggleRTL() {
+		log.debug(`called toggleRTL()`);
 
 		$('#RTL .fa').toggleClass('fa-align-right');
 		$('#RTL .fa').toggleClass('fa-align-left');
@@ -1401,19 +1364,16 @@ function switchRtlMode() {
 
 	  drawTree();
 }
-
-
-function switchAlignment() {
-		log.debug(`called switchAlignment()`);
+function toggleVertical() {
+		log.debug(`called toggleVertical()`);
 
 		$('#vertical .fa').toggleClass('fa-rotate-90');
 		IS_VERTICAL = !IS_VERTICAL;
 
 		drawTree();
 }
-
-function switchEnhanced() {
-		log.debug(`called switchEnhanced()`);
+function toggleEnhanced() {
+		log.debug(`called toggleEnhanced()`);
 
 	  $('#enhanced .fa').toggleClass('fa-tree');
 	  $('#enhanced .fa').toggleClass('fa-magic');
