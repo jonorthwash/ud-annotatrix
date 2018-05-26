@@ -69,15 +69,85 @@ function tableEditCell(loc) {
     drawTree();
 }
 
-function toggleTableView() {
+function toggleTableView(event, force) { // force param used for testing
     log.debug('called toggleTableView()');
 
-    // This function toggles the table view
-    $('#btnViewTable i').toggleClass('fa-code', 'fa-table');
-    $('#text-data').toggle();
-    $('#table-data').toggle();
+    if (_.formats[_.current] !== 'CoNLL-U') {
+        log.warn(`toggleTableView(): table view not supported for ${_.formats[_.current]}`);
+        _.is_table_view = false;
+    } else {
+        _.is_table_view = (force === undefined ? !_.is_table_view : force);
 
-    IS_TABLE_VIEW = !IS_TABLE_VIEW;
+        if (_.is_table_view) {
+            $('#table-data tbody').empty();
+            $.each($('#text-data').val().split('\n'), (i, line) => {
+                log.debug(`updateTable() line: ${line}`);
+                if (line.trim() === '')
+                    return
+
+                if (line[0] === '#') {
+                    $('#table-data tbody').append(
+                        `<tr style="display:none;" id="table_${i}">
+                            <td colspan="10"><span>${line}</span></td>
+                        </tr>`);
+                } else if (line.split('\t').length !== 10) {
+                    log.debug(`updateTable() weirdness!`);
+                    $('#table-data tbody').append(
+                        `<tr style="display:none;" id="table_${i}">
+                            <td colspan="10"><span>${line}</span></td>
+                        </tr>`);
+                } else {
+
+                    // create a new <tr> node
+                    let tr = $('<tr>').attr('id', `table_${i}`),
+                        cells = line.split('\t');
+
+                    for (let j=0; j < 10; j++) {
+                        let valid = [true, '', {}],
+                            loc = `table_${i}_${j}`;
+
+                        if (cells[j].trim() === '')
+                            cells[j] = '_';
+
+                        if (cells[j] !== '_') {
+                            if (j === 3)
+                                valid = is_upos(cells[j]);
+                            if (j === 7)
+                                valid = is_udeprel(cells[j]);
+                        }
+
+                        let td = $('<td>').append( $('<span>')
+                            .text(cells[j])
+                            .attr('id', loc)
+                            .attr('data-value', cells[j])
+                            .attr('tabindex', '-1')
+                            .prop('contenteditable', true)
+                            .blur(updateTable)
+                            .keyup(() => { tableEditCell(loc); }) );
+
+                        if (!valid[0]) {
+                            document.l10n.formatValue(valid[1], valid[2]).then( (t) => {
+                              td.append( $('<span>').append('<i>')
+                                  .addClass('fa fa-exclamation-triangle')
+                                  .attr('aria-hidden', 'true')
+                                  .attr('title', t) );
+                            });
+                        }
+                        tr.append(td);
+
+                        // Make sure hidden columns stay hidden
+                        if (!TABLE_COLUMNS_VISIBILITY[j])
+                            $(`[id^=table_][id$=${j}]`).css('visibility', 'hidden');
+                    }
+
+                    $('#table-data tbody').append(tr);
+
+                }
+            });
+        }
+    }
+
+    updateTabs();
 }
 
 function updateTable() {

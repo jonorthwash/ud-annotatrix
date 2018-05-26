@@ -94,8 +94,10 @@ function bindHandlers() {
 			convertText(convert2CG3);
 		});
 
-		$('#btnViewTable').click(toggleTableView);
-    $('#btnViewText').click(toggleCodeWindow);
+		$('#btnToggleTable').click(toggleTableView);
+
+		//$('#btnViewTable').click(toggleTableView);
+    //$('#btnViewText').click(toggleCodeWindow);
 
     $('#btnExportPNG').click(exportPNG);
     $('#btnExportSVG').click(exportSVG);
@@ -388,6 +390,21 @@ function updateTabs() {
 						$('#tabOther').addClass('active').show().text(format);
 						break;
 		}
+
+		if (format !== 'CoNLL-U')
+				_.is_table_view = false;
+
+		if (_.is_table_view) {
+				$('#btnToggleTable i').removeClass('fa-code');
+				$('#text-data').hide();
+				$('#table-data').show();
+				buildTable();
+		} else {
+				$('#btnToggleTable i').addClass('fa-code');
+				$('#text-data').show();
+				$('#table-data').hide();
+		}
+
 }
 
 

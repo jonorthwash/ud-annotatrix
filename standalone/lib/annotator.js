@@ -113,7 +113,7 @@ window.onload = () => {
 
         //test.all();
         //test.utils.splitAndSet(TEST_DATA.texts_by_format.SD.ccomp_5);
-        test.run('onEnter');
+        test.run('tableEditing');
         //test.utils.splitAndSet('this is a test');
         //$('#tabConllu').click()
 
@@ -286,7 +286,12 @@ function parseTextData() {
         prevSentence();
     }
 
-    updateTable();
+    // enforce that only CoNLL-U can be in table view
+    if (_.formats[_.current] !== 'CoNLL-U')
+        _.is_table_view = false;
+
+
+    //updateTable();
 
     // return splitted for testing purposes
     return splitted;

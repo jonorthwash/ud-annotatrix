@@ -12,7 +12,7 @@ const U_POS = ['ADJ', 'ADP', 'ADV', 'AUX', 'CCONJ', 'DET', 'INTJ', 'NOUN',
 // circumstances, e.g. and / or
 const U_POS_LEAF = ['AUX', 'CCONJ', 'PART', 'PUNCT', 'SCONJ']; // no ADP
 
-function is_upos(s) {
+function upos(s) {
     log.debug(`called is_pos(${s})`);
 
     // Checks if a relation is in the list of valid parts of speech

@@ -752,3 +752,7 @@ color: #3399FF;
   border: 1px solid gray;
   border-radius: 5px;
 }
+
+tr.comment, tr.wrong-shape {
+  display: none;
+}

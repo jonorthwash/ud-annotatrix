@@ -949,6 +949,7 @@ class Tester extends Object {
 
 				}
 			}
+
 		};
 
 		this.tests = {
@@ -1320,6 +1321,28 @@ class Tester extends Object {
 								`expected format to be ${format}, got ${_.formats[_.current]}`);
 							this.utils.isValid(format, text);
 						}
+					});
+				}
+			},
+
+			tableEditing: () => {
+
+				log.out('\nExecuting Tester.tableEditing()');
+				for (let i=0; i<10; i++) { // repeat tests 10 times
+					$.each(this.utils.randomize(), (j, randomized) => { // sample once per format
+						const format = randomized.format,
+							text = randomized.text;
+
+						this.utils.splitAndSet(text);
+						toggleTableView(null, true);
+
+						if (format !== 'CoNLL-U') {
+							this.assert(_.is_table_view === false, `expected ${format} not to have table view`);
+						} else {
+							this.assert(_.is_table_view === true, `expected CoNLL-U to have table view available`);
+							
+						}
+
 					});
 				}
 			}
