@@ -112,7 +112,7 @@ window.onload = () => {
         bindHandlers();
 
         //test.all();
-        //test.utils.splitAndSet(TEST_DATA.texts_by_format['CG3']['simple_with_comments']);
+        //test.utils.splitAndSet(TEST_DATA.texts_by_format.SD.ccomp_5);
         test.run('onEnter');
         //test.utils.splitAndSet('this is a test');
         //$('#tabConllu').click()

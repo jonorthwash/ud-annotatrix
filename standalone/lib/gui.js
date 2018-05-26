@@ -213,6 +213,9 @@ function onEnter(event) {
 				cursorLine = 0,
 				lineId = null, before, during, after;
 
+		if (format === 'Unknown' || format === 'plain text')
+				return;
+
 		// get current line number
 		let acc = 0;
 		$.each(lines, (i, line) => {
@@ -315,6 +318,11 @@ function onEnter(event) {
 								.prop('selectionEnd', cursor);
 
 						break;
+
+				default:
+						if (event.preventDefault)
+								event.preventDefault();
+						insertSentence();
 		}
 
 		parseTextData();

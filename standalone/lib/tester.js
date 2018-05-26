@@ -757,10 +757,15 @@ class Tester extends Object {
 		// internal helper function
 		this.utils = {
 
+			delimitSets: {
+				text: [ '.', '!', '?' ],
+				other: [ '\n\n', '\n\n\n', '\n\n\n\n' ],
+				invalid: [ ';', ',', ':', '\n', '\t', '\t\t' ],
+			},
+
 			sleep: (ms) => {
 			  return new Promise(resolve => setTimeout(resolve, ms));
 			},
-
 			checkCounts: (current, total) => {
 
 				(() => {
@@ -780,36 +785,43 @@ class Tester extends Object {
 				})(total);
 
 			},
-
-			sample: (obj, times) => {
-
-				function randomInt(max) {
-					return Math.floor(Math.random() * max);
+			randomInt: (min, max) => {
+				if (max === undefined) {
+					max = min;
+					min = 0;
 				}
+				return Math.floor(Math.random() * max) + min;
+			},
+			sample: (obj, times) => {
 
 				times = times || 1;
 
 				let ret = [];
 				for (let i=0; i < times; i++) {
 					const key = Array.isArray(obj)
-						? randomInt(obj.length)
-						: Object.keys(obj)[randomInt(Object.keys(obj).length)];
+						? this.utils.randomInt(obj.length)
+						: Object.keys(obj)[this.utils.randomInt(Object.keys(obj).length)];
 					ret.push(obj[key]);
 				}
 
 				return ret;
 			},
-
 			randomize: (maxSize) => {
 
+				maxSize = maxSize || 1;
+
 				let ret = [];
-				for (let size=1; size < maxSize; size++) {
+				for (let size=1; size <= maxSize; size++) {
 					$.each(TEST_DATA.texts_by_format, (format, texts) => {
 						ret.push({ format:format, text:this.utils.sample(texts, size) });
 					});
 				}
 
 				return ret;
+			},
+			jumpToSentence: (str) => {
+				$('#current-sentence').val(str);
+				goToSentence();
 			},
 			splitAndSet: (str) => {
 				_.reset();
@@ -829,14 +841,10 @@ class Tester extends Object {
 					return chunk.trim();
 				});
 			},
+			simKeyup: (selector, char, cursor) => {
 
-			delimitSets: {
-				text: [ '.', '!', '?' ],
-				other: [ '\n\n', '\n\n\n', '\n\n\n\n' ],
-				invalid: [ ';', ',', ':', '\n', '\t', '\t\t' ],
-			},
-
-			simKeyup: (selector, char) => {
+				if (cursor !== undefined)
+						this.utils.setCursor(selector, cursor);
 
 				char = char.slice(0, 1);
 
@@ -857,7 +865,6 @@ class Tester extends Object {
 					onEditTableData({ which: which });
 				}
 			},
-
 			insertChar: (selector, char) => {
 				const target = $(selector),
 					start = target.prop('selectionStart'),
@@ -868,9 +875,7 @@ class Tester extends Object {
 					.val(`${current.slice(0,start)}${char}${current.slice(end)}`)
 					.prop('selectionStart', start + 1)
 					.prop('selectionEnd', end + 1);
-
 			},
-
 			setCursor: (selector, start, end) => {
 				start = start || 0;
 				end = end || start;
@@ -878,9 +883,72 @@ class Tester extends Object {
 				$(selector)
 					.prop('selectionStart', start)
 					.prop('selectionEnd', end);
+			},
+			isValid: (format, text) => {
 
+				switch (format) {
+					case ('CoNLL-U'):
+						let tokenId = 0;
+						text.split('\n').map((line, i) => {
+
+		 					// ignore empty lines as artifacts from the splitting
+							if (line.length === 0)
+								return;
+
+							// comments should only occur at the beginning
+							if (line.startsWith('#')) {
+								this.assert(tokenId === 0, `invalid CoNLL-U: comment found after content start (line: "${line}")`);
+								return;
+							}
+
+							// get the number ranges at the start
+							let matches = line.match(/^[0-9-]+/);
+							matches = matches ? matches[0].split('-').map(
+								(match) => { return parseInt(match); }) : [0];
+
+							// enforce numbers are in order
+							matches.map((match, j) => {
+								if (j === 0) {
+									this.assert(match === tokenId + 1, `invalid CoNLL-U: expected index to be ${tokenId + 1} (line: "${line}")`);
+								} else {
+									this.assert(match > tokenId + 1, `invalid CoNLL-U: expected index to be greater than ${tokenId + 1} (line: "${line}")`);
+								}
+							});
+
+							// only advance our token id if we don't have a range (i.e. "6" and not "6-7")
+							if (matches.length === 1)
+								tokenId++;
+						});
+						break;
+
+					case ('CG3'):
+						let parsingToken = null;
+						text.split('\n').map((line, i) => {
+
+							// ignore empty lines as artifacts from the splitting
+							if (line.length === 0)
+								return;
+
+							// comments should only occur at the beginning
+							if (line.startsWith('#')) {
+								this.assert(parsingToken === null, `invalid CG3: comment found after content start (line: "${line}")`);
+								return;
+							}
+
+							// enforce that we never have consecutive tokens
+							if (line.startsWith('"<')) {
+								this.assert(parsingToken === false || parsingToken === null,
+									`invalid CG3: unable to parse consecutive tokens (line: "${line}")`);
+								parsingToken = true;
+							} else {
+								parsingToken = false;
+							}
+
+						});
+						break;
+
+				}
 			}
-
 		};
 
 		this.tests = {
@@ -1079,11 +1147,6 @@ class Tester extends Object {
 			navSentences: () => {
 				log.out(`\nExecuting Tester.navSentences()`);
 
-				function set(str) {
-					$('#current-sentence').val(str);
-					goToSentence();
-				};
-
 				// need consistent initial environment
 				_.reset();
 				this.utils.checkCounts(0, 1);
@@ -1106,25 +1169,27 @@ class Tester extends Object {
 				this.utils.checkCounts(0, 1);
 
 				// goto with 1 sentence
-				set(null);
+				this.utils.jumpToSentence(null);
 				this.utils.checkCounts(0, 1);
-				set(undefined);
+				this.utils.jumpToSentence(undefined);
 				this.utils.checkCounts(0, 1);
-				set('string');
+				this.utils.jumpToSentence('string');
 				this.utils.checkCounts(0, 1);
-				set([]);
+				this.utils.jumpToSentence([]);
 				this.utils.checkCounts(0, 1);
-				set({});
+				this.utils.jumpToSentence({});
 				this.utils.checkCounts(0, 1);
-				set(3.5);
+				this.utils.jumpToSentence('2');
 				this.utils.checkCounts(0, 1);
-				set(2);
+				this.utils.jumpToSentence(3.5);
 				this.utils.checkCounts(0, 1);
-				set(1);
+				this.utils.jumpToSentence(2);
 				this.utils.checkCounts(0, 1);
-				set(0);
+				this.utils.jumpToSentence(1);
 				this.utils.checkCounts(0, 1);
-				set(-1);
+				this.utils.jumpToSentence(0);
+				this.utils.checkCounts(0, 1);
+				this.utils.jumpToSentence(-1);
 				this.utils.checkCounts(0, 1);
 
 				// pan with 2 sentences
@@ -1140,17 +1205,21 @@ class Tester extends Object {
 				this.utils.checkCounts(0, 2);
 
 				// jump with 2 sentences
-				set(-1);
+				this.utils.jumpToSentence(-1);
 				this.utils.checkCounts(0, 2);
-				set(0);
+				this.utils.jumpToSentence(0);
 				this.utils.checkCounts(0, 2);
-				set(1);
+				this.utils.jumpToSentence(1);
 				this.utils.checkCounts(0, 2);
-				set(2);
+				this.utils.jumpToSentence(2);
 				this.utils.checkCounts(1, 2);
-				set(3);
+				this.utils.jumpToSentence('1');
+				this.utils.checkCounts(0, 2);
+				this.utils.jumpToSentence(2);
 				this.utils.checkCounts(1, 2);
-				set(0);
+				this.utils.jumpToSentence(3);
+				this.utils.checkCounts(1, 2);
+				this.utils.jumpToSentence(0);
 				this.utils.checkCounts(1, 2);
 
 				_.reset();
@@ -1206,23 +1275,7 @@ class Tester extends Object {
 			},
 
 			onEnter: () => {
-				log.out(`\nExecuting Tester.onEnter()`);
-
-				test.utils.splitAndSet(TEST_DATA.texts_by_format['CG3']['simple']);
-
-				let EOLs = [], acc = 0;
-				$.each(_.sentences[_.current].split('\n'), (k, line) => {
-					EOLs.push(acc + line.length + k);
-					acc += line.length;
-				});
-
-				$.each(EOLs.reverse(), (l, eol) => {
-					this.utils.setCursor('#text-data', eol);
-					this.utils.simKeyup('#text-data', '\n');
-				});
-
-
-				return;
+				log.out(`\nExecuting Tester.onEnter(): Phase 1: basic enter testing`);
 
 				const data = [
 					'Hello world, I am testing'
@@ -1240,14 +1293,36 @@ class Tester extends Object {
 						});
 
 						$.each(EOLs.reverse(), (l, eol) => {
-							this.utils.setCursor('#text-data', eol);
-							this.utils.simKeyup('#text-data', '\n');
+							this.utils.simKeyup('#text-data', '\n', eol);
 						});
-						confirm();
 					});
 				});
-			}
 
+				log.out(`\nExecuting Tester.ontEnter(): Phase 2: randomized enter testing`);
+
+				for (let i=0; i<10; i++) { // repeat tests 10 times
+					$.each(this.utils.randomize(), (j, randomized) => { // sample once per format
+						const format = randomized.format,
+								text = randomized.text.join('');
+
+						if (format === 'Unknown')
+							return;
+
+						this.utils.splitAndSet(text);
+						for (let k=0; k < 5; k++) { // trying hitting <Enter> multiple times
+
+							const cursor = this.utils.randomInt(_.sentences[_.current].length);
+							this.utils.simKeyup('#text-data', '\n', cursor);
+							parseTextData();
+							this.utils.jumpToSentence(1);
+
+							this.assert(format === _.formats[_.current],
+								`expected format to be ${format}, got ${_.formats[_.current]}`);
+							this.utils.isValid(format, text);
+						}
+					});
+				}
+			}
 		};
 	}
 
