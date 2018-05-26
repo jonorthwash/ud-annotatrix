@@ -861,8 +861,8 @@ class Tester extends Object {
 
 				if (selector === '#text-data') {
 					onEditTextData({ which: which });
-				} else if (selector === '#table-data') {
-					onEditTableData({ which: which });
+				} else if (selector.startsWith('#table-data')) {
+					onEditTable({ which: which });
 				}
 			},
 			insertChar: (selector, char) => {
@@ -1340,11 +1340,13 @@ class Tester extends Object {
 							this.assert(_.is_table_view === false, `expected ${format} not to have table view`);
 						} else {
 							this.assert(_.is_table_view === true, `expected CoNLL-U to have table view available`);
-							
+
 						}
 
 					});
 				}
+				this.utils.splitAndSet(TEST_DATA.texts_by_format['CoNLL-U'].from_cg3_with_spans);
+				toggleTableView(null, true);
 			}
 		};
 	}

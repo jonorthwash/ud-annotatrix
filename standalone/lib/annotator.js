@@ -37,6 +37,7 @@ var _ = { // main object to hold our current stuff
 
       // display-related
       _.is_table_view = false;
+      _.column_visible = new Array(10).fill(true);
       _.is_textarea_visible = true;
       _.is_vertical = false;
       _.is_ltr = true;

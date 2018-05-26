@@ -756,3 +756,7 @@ color: #3399FF;
 tr.comment, tr.wrong-shape {
   display: none;
 }
+
+th.column-hidden {
+  color: #888;
+}

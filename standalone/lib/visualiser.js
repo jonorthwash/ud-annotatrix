@@ -465,10 +465,10 @@ function makeDependencies(token, nodeId, graph) {
     let isValid = false;
 
     if (head in TREE) // if the pos tag of the head is in the list of leaf nodes, then mark it as an error
-        isValid = !is_leaf(TREE[head].upostag);
+        isValid = is_leaf(TREE[head].upostag).err !== null;
 
     if (deprel !== '') // if the deprel is not valid, mark it as an error, unless it's blank
-        isValid = is_udeprel(deprel)
+        isValid = is_udeprel(deprel).err === null;
 
 
   	// Append ⊲ or ⊳ to indicate direction of the arc (helpful if

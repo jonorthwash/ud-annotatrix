@@ -12,7 +12,7 @@ const U_POS = ['ADJ', 'ADP', 'ADV', 'AUX', 'CCONJ', 'DET', 'INTJ', 'NOUN',
 // circumstances, e.g. and / or
 const U_POS_LEAF = ['AUX', 'CCONJ', 'PART', 'PUNCT', 'SCONJ']; // no ADP
 
-function upos(s) {
+function is_upos(s) {
     log.debug(`called is_pos(${s})`);
 
     // Checks if a relation is in the list of valid parts of speech
@@ -20,11 +20,9 @@ function upos(s) {
     // returns a bool
     $.each(U_POS, (i, pos) => {
         if (pos === s)
-            return { err:null, data:{ 'tag':s } };
+            return { err:null, data:{} };
     });
-    return [false, "err_upos_invalid", {"tag": s}];
-
-    return false;
+    return { err:'err_upos_invalid', data:{tag:s} };
 }
 
 
@@ -40,9 +38,9 @@ function is_udeprel(s) {
 
     $.each(U_DEPRELS, (i, deprel) => {
         if (deprel === s)
-            return true;
+            return { err:null, data:{} };
     });
-    return false;
+    return { err:'err_udeprel_invalid', data:{label:s} };
 }
 
 function is_leaf(s) {
@@ -57,9 +55,9 @@ function is_leaf(s) {
 
     $.each(U_POS_LEAF, (i, leaf) => {
         if (leaf === s)
-            return true;
+            return { err:null, data:{} };
     });
-    return false;
+    return { err:'err_udep_leaf_node', data:{tag:s} };
 }
 
 

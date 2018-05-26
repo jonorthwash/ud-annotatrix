@@ -67,8 +67,7 @@ function bindHandlers() {
     $(document).keydown(keyDownClassifier);
 
 
-		$('#text-data').keyup(onEditTextData)//.keyup(onEditTextData);
-		$('#table-data').keyup(onEditTableData)//.keyup(onEditTableData);
+		$('#text-data').keyup(onEditTextData);
 
     $('#btnUploadCorpusFileButton').click(handleUploadButtonPressed);
 
@@ -148,11 +147,7 @@ function bindHandlers() {
 		}
 
 		// collapse columns when header is clicked on
-		$('.thead-default th').click((e) => {
-				const columnHeader = $('.tableColHeader', this)[0];
-				if (columnHeader)  // prevents non-collapsible cols from throwing errors
-						toggleTableColumn(columnHeader.title);
-		});
+		$('.thead-default th').click(toggleTableColumn);
 
 
 
@@ -187,19 +182,6 @@ function onEditTextData(event) {
 				default:
 						parseTextData();
 						//drawTree();
-		}
-}
-function onEditTableData(event) {
-		log.debug(`called onEditTableData(key: ${event.which})`);
-
-		throw new NotImplementedError('onEditTableData() not implemented');
-
-		switch (event.which) {
-				case (KEYS.ENTER):
-						onEnter(event);
-						break;
-				default:
-						//
 		}
 }
 function onEnter(event) {
