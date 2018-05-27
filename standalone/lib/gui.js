@@ -95,9 +95,6 @@ function bindHandlers() {
 
 		$('#btnToggleTable').click(toggleTableView);
 
-		//$('#btnViewTable').click(toggleTableView);
-    //$('#btnViewText').click(toggleCodeWindow);
-
     $('#btnExportPNG').click(exportPNG);
     $('#btnExportSVG').click(exportSVG);
     $('#btnExportLaTeX').click(exportLaTeX);
@@ -187,7 +184,7 @@ function onEditTextData(event) {
 function onEnter(event) {
 		log.debug(`called onEnter()`);
 
-		if (IS_TABLE_VIEW)
+		if (_.is_table_view())
 				throw new NotImplementedError('table view enter not implemented');
 
 		let sentence = _.sentence(),
@@ -338,7 +335,7 @@ function convertText(converter) {
 
 }
 function updateTabs() {
-    log.debug(`called updateTabs`);
+    log.debug(`called updateTabs()`);
 
     /* The function handles the format tabs above the textarea.
     Takes a string with a format name, changes the classes on tabs. */
@@ -1328,7 +1325,7 @@ function redrawTree(sent) {
         changedSent = conllu2CG3(changedSent);
 
     $('#text-data').val(changedSent);
-    updateTable();
+    //updateTable();
     drawTree();
     cy.zoom(CURRENT_ZOOM);
 }

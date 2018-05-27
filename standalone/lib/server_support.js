@@ -88,9 +88,9 @@ function loadSentence(data) {
         AVAILABLE_SENTENCES = max;
     }
 
-    updateTable(); // Update the table view at the same time
+    //updateTable(); // Update the table view at the same time
     updateTabs(); // update the format taps
-    fitTable(); // make table's size optimal
+    //fitTable(); // make table's size optimal
     drawTree();
 }
 
