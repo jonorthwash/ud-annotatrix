@@ -33,31 +33,6 @@ var CURRENT_ZOOM = 1.0;
 var IS_EDITING = false;
 
 
-function setUndos() {
-    log.debug('called setUndos()');
-		window.undoManager = new UndoManager();
-
-    const updateUI = () => {
-        log.debug('called setUndos:updateUI()');
-        btnUndo.prop('disabled', !undoManager.hasUndo());
-        btnRedo.prop('disabled', !undoManager.hasRedo());
-    }
-
-    const btnUndo = $('#btnUndo').click(() => {
-        log.debug('clicked undo');
-        undoManager.undo();
-        updateUI();
-    });
-    const btnRedo = $('#btnRedo').click(() => {
-        log.debug('clicked redo');
-        undoManager.redo();
-        updateUI()
-    });
-
-    undoManager.setCallback(updateUI);
-
-    updateUI();
-}
 
 function bindHandlers() {
 		log.debug(`called bindHandlers()`);
@@ -77,11 +52,14 @@ function bindHandlers() {
     $('#btnRemoveSentence').click(removeSentence);
     $('#btnAddSentence').click(insertSentence);
 
-    $('#btnExportCorpus').click(exportCorpora);
+		$('#btnUploadCorpus').click(uploadCorpus);
+    $('#btnExportCorpus').click(exportCorpus);
     //$('#btnSaveServer').click(saveOnServer);
     $('#btnDiscardCorpus').click(clearCorpus);
+		$('#btnPrintCorpus').click(printCorpus);
 
 		$('#btnHelp').click(showHelp);
+		$('#btnSettings').click(showSettings);
 
 		$('#tabText').click((event) => {
 			convertText(convert2PlainText);
@@ -177,7 +155,7 @@ function onEditTextData(event) {
 						onEnter(event);
 						break;
 				default:
-						parseTextData();
+						parseText();
 						//drawTree();
 		}
 }
@@ -310,7 +288,7 @@ function onEnter(event) {
 						insertSentence();
 		}
 
-		parseTextData();
+		parseText();
 }
 
 function bindCyHandlers() {
@@ -335,57 +313,48 @@ function convertText(converter) {
 		sentence = converter(sentence) || sentence;
 		localStorage.setItem('corpus', sentence); // TODO: do we need this?? (5/24/18)
 		$('#text-data').val(sentence);
-		parseTextData();
-
-}
-function updateTabs() {
-    log.debug(`called updateTabs()`);
-
-    /* The function handles the format tabs above the textarea.
-    Takes a string with a format name, changes the classes on tabs. */
-    const format = _.format();
-		localStorage.setItem('format', format);
-
-		$('.nav-link').removeClass('active').show();
-		switch (format) {
-				case ('Unknown'):
-						$('.nav-link').hide();
-						$('#tabOther').addClass('active').show().text(format);
-						break;
-				case ('CoNLL-U'):
-						$('#tabConllu').addClass('active');
-						$('#tabOther').hide();
-						break;
-				case ('CG3'):
-						$('#tabCG3').addClass('active');
-						$('#tabOther').hide();
-						break;
-				case ('plain text'):
-						$('#tabText').hide(); // NOTE: no break here
-				default:
-						$('#tabOther').addClass('active').show().text(format);
-						break;
-		}
-
-		if (format !== 'CoNLL-U')
-				_.is_table_view(false);
-
-		if (_.is_table_view()) {
-				$('#btnToggleTable i').removeClass('fa-code');
-				$('#text-data').hide();
-				$('#table-data').show();
-				buildTable();
-		} else {
-				$('#btnToggleTable i').addClass('fa-code');
-				$('#text-data').show();
-				$('#table-data').hide();
-		}
+		parseText();
 
 }
 
 
 
 
+function showSettings(event) {
+		log.debug(`called showSettings()`);
+		throw new NotImplementedError('showSettings() not implemented');
+}
+
+function printCorpus(event) {
+		log.debug(`called printCorpus()`);
+		throw new NotImplementedError('printCorpus() not implemented');
+}
+
+function setUndos() {
+    log.debug('called setUndos()');
+		window.undoManager = new UndoManager();
+
+    const updateUI = () => {
+        log.debug('called setUndos:updateUI()');
+        btnUndo.prop('disabled', !undoManager.hasUndo());
+        btnRedo.prop('disabled', !undoManager.hasRedo());
+    }
+
+    const btnUndo = $('#btnUndo').click(() => {
+        log.debug('clicked undo');
+        undoManager.undo();
+        updateUI();
+    });
+    const btnRedo = $('#btnRedo').click(() => {
+        log.debug('clicked redo');
+        undoManager.redo();
+        updateUI()
+    });
+
+    undoManager.setCallback(updateUI);
+
+    updateUI();
+}
 
 
 function clickWF(evt) {

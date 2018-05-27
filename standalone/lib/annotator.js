@@ -62,7 +62,7 @@ var _ = { // main object to hold our current stuff
         _.is_ltr = true;
         _.is_enhanced = false;
 
-        updateSentenceTrackers();
+        updateSentences();
         log.debug(`_.reset(): after reset: ${JSON.stringify(_)}`);
     }
 
@@ -129,12 +129,12 @@ window.onload = () => {
         checkServer(); // check if server is running
         setUndos();
         //loadFromUrl();
-        updateSentenceTrackers(); // should go in loadFromUrl and checkServer (5/23/18)
+        updateSentences(); // should go in loadFromUrl and checkServer (5/23/18)
         bindHandlers();
 
         //test.all();
         //test.utils.splitAndSet(TEST_DATA.texts_by_format.SD.ccomp_5);
-        test.run('tableEditing');
+        test.run('clearCorpus');
         //test.utils.splitAndSet('this is a test');
         //$('#tabConllu').click()
 
@@ -150,24 +150,6 @@ window.onload = () => {
 /**
  * functions for navigating available sentences
  */
-function updateSentenceTrackers() {
-    log.debug(`called updateSentenceTrackers()`);
-
-    if (_.current < 0) { // ensure we always have something
-        log.warn(`updateSentenceTrackers(): current is ${_.current}`);
-        insertSentence();
-    }
-
-    $('#current-sentence').val(_.current + 1);
-    $('#total-sentences').text(_.sentences.length);
-    $('#text-data').val(_.sentences[_.current] || ''); // handle null
-
-    $('#btnPrevSentence').attr('disabled', (_.current === 0));
-    $('#btnNextSentence').attr('disabled', (_.current === _.sentences.length));
-
-    updateFormat(_.current);
-    //updateTable();
-}
 function insertSentence() {
     log.debug(`called insertSentence()`);
 
@@ -182,9 +164,9 @@ function insertSentence() {
     _.column_visibilities = _.column_visibilities.slice(0, _.current)
         .concat([ new Array(10).fill(true) ], _.column_visibilities.slice(_.current));
 
-    updateSentenceTrackers();
+    updateSentences();
 }
-function removeSentence(event, force=false) {
+function removeSentence(event, force=false) { // force param for testing
     log.debug(`called removeSentence()`);
 
     if (!force) {
@@ -201,7 +183,7 @@ function removeSentence(event, force=false) {
     _.column_visibilities.splice(_.current, 1);
     _.current--;
 
-    updateSentenceTrackers();
+    updateSentences();
 }
 function prevSentence() {
     log.debug(`called prevSentence()`);
@@ -213,7 +195,7 @@ function prevSentence() {
 
     _.current--;
 
-    updateSentenceTrackers();
+    updateSentences();
 }
 function goToSentence() {
     log.debug(`called goToSentence()`);
@@ -227,7 +209,7 @@ function goToSentence() {
         _.current = jump - 1;
     }
 
-    updateSentenceTrackers();
+    updateSentences();
 }
 function nextSentence() {
     log.debug(`called nextSentence()`);
@@ -239,7 +221,7 @@ function nextSentence() {
 
     _.current++;
 
-    updateSentenceTrackers();
+    updateSentences();
 }
 function setSentence(id, text) {
     log.debug(`called setSentence(id:${id}, text:"${text}")`);
@@ -253,8 +235,23 @@ function setSentence(id, text) {
     updateFormat(id);
 
 }
+function updateSentences() {
+    log.debug(`called updateSentences()`);
 
+    if (_.current < 0) { // ensure we always have something
+        log.warn(`updateSentences(): current is ${_.current}`);
+        insertSentence();
+    }
 
+    $('#current-sentence').val(_.current + 1);
+    $('#total-sentences').text(_.sentences.length);
+    $('#text-data').val(_.sentences[_.current] || ''); // handle null
+
+    $('#btnPrevSentence').attr('disabled', (_.current === 0));
+    $('#btnNextSentence').attr('disabled', (_.current === _.sentences.length));
+
+    updateFormat(_.current);
+}
 function updateFormat(id) {
     log.debug(`called updateFormat(id:${id})`);
 
@@ -271,9 +268,52 @@ function updateFormat(id) {
 
     updateTabs();
 }
+function updateTabs() {
+    log.debug(`called updateTabs()`);
 
-function parseTextData() {
-    log.debug(`called parseTextData()`);
+    /* The function handles the format tabs above the textarea.
+    Takes a string with a format name, changes the classes on tabs. */
+    const format = _.format();
+		localStorage.setItem('format', format);
+
+		$('.nav-link').removeClass('active').show();
+		switch (format) {
+				case ('Unknown'):
+						$('.nav-link').hide();
+						$('#tabOther').addClass('active').show().text(format);
+						break;
+				case ('CoNLL-U'):
+						$('#tabConllu').addClass('active');
+						$('#tabOther').hide();
+						break;
+				case ('CG3'):
+						$('#tabCG3').addClass('active');
+						$('#tabOther').hide();
+						break;
+				case ('plain text'):
+						$('#tabText').hide(); // NOTE: no break here
+				default:
+						$('#tabOther').addClass('active').show().text(format);
+						break;
+		}
+
+		if (format !== 'CoNLL-U')
+				_.is_table_view(false);
+
+		if (_.is_table_view()) {
+				$('#btnToggleTable i').removeClass('fa-code');
+				$('#text-data').hide();
+				$('#table-data').show();
+				buildTable();
+		} else {
+				$('#btnToggleTable i').addClass('fa-code');
+				$('#text-data').show();
+				$('#table-data').hide();
+		}
+
+}
+function parseText() {
+    log.debug(`called parseText()`);
 
     // read from the textarea
     let content = $('#text-data').val();
@@ -284,7 +324,7 @@ function parseTextData() {
         // ( old regex: /[^ ].+?[.!?](?=( |$))/g )
         // match non-punctuation (optionally) followed by punctuation
         const matched = content.match(/[^.!?]+[.!?]*/g);
-        log.debug(`parseTextData(): match group: ${matched}`);
+        log.debug(`parseText(): match group: ${matched}`);
 				splitted = matched === null
   					? [ content.trim() ]
   					: matched.map((chunk) => {
@@ -316,13 +356,45 @@ function parseTextData() {
     if (_.formats[_.current] !== 'CoNLL-U')
         _.is_table_view(false);
 
-    //updateTable();
-    updateSentenceTrackers();
+    updateSentences();
 
     // return splitted for testing purposes
     return splitted;
 }
 
+function exportCorpus() {
+    log.debug(`called exportCorpus()`);
+
+    //Export Corpora to file
+    if (IS_SERVER_RUNNING) {
+        throw new NotImplementedError('exportCorpus() not implemented for server interaction');
+        //downloadCorpus();
+    } else {
+
+        const link = $('<a>')
+            .attr('download', localStorage.getItem('filename') || 'ud-annotatrix-corpus.conllu')
+            .attr('href', `data:text/plain; charset=utf-8,${encodeURIComponent(getContents())}`);
+        $('body').append(link);
+        link[0].click();
+
+    }
+}
+
+
+function clearCorpus(event, force=false) { // force param for testing
+    log.debug(`called clearCorpus()`);
+
+    if (!force) {
+        const conf = confirm('Do you want to clear the corpus (remove all sentences)?');
+        if (!conf) {
+              log.info('clearCorpus(): not removing sentence');
+              return;
+        }
+    }
+
+    _.reset();
+    return;
+}
 
 
 
@@ -505,41 +577,6 @@ function clearLabels() {
 
     LABELS = [];
     $('#treeLabels').children().detach();
-}
-
-function exportCorpora() {
-    log.debug(`called exportCorpora()`);
-
-    //Export Corpora to file
-    if (IS_SERVER_RUNNING) {
-        downloadCorpus();
-    } else {
-
-        const link = $('<a>')
-            .attr('download', localStorage.getItem('filename') || 'ud-annotatrix-corpus.conllu')
-            .attr('href', `data:text/plain; charset=utf-8,${encodeURIComponent(getContents())}`);
-        $('body').append(link);
-        link[0].click();
-
-    }
-}
-
-
-function clearCorpus() {
-    log.debug(`called clearCorpus()`);
-
-    /* Removes all the corpus data from CONTENTS and localStorage,
-    clears all the ralated global variables. */
-    CONTENTS = '';
-    AVAILABLE_SENTENCES = 0;
-    CURRENT_SENTENCE = 0;
-    RESULTS = [];
-    FORMAT = '';
-    localStorage.setItem('corpus', '');
-    $('#text-data').val('');
-    showDataIndiv()
-    window.location.reload();
-    drawTree();
 }
 
 

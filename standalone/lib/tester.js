@@ -831,7 +831,7 @@ class Tester extends Object {
 			splitAndSet: (str) => {
 				_.reset();
 				$('#text-data').val(str);
-				return parseTextData();
+				return parseText();
 			},
 			matchAndTrim: (str) => {
 				const matched = str.match(/[^.!?]+[.!?]*/g);
@@ -1304,7 +1304,7 @@ class Tester extends Object {
 					});
 				});
 
-				log.out(`\nExecuting Tester.ontEnter(): Phase 2: randomized enter testing`);
+				log.out(`\nExecuting Tester.onEnter(): Phase 2: randomized enter testing`);
 
 				for (let i=0; i<10; i++) { // repeat tests 10 times
 					$.each(this.utils.randomize(), (j, randomized) => { // sample once per format
@@ -1319,7 +1319,7 @@ class Tester extends Object {
 
 							const cursor = this.utils.randomInt(_.sentence().length);
 							this.utils.simKeyup('#text-data', '\n', cursor);
-							parseTextData();
+							parseText();
 							this.utils.jumpToSentence(1);
 
 							this.assert(format === _.format(),
@@ -1366,6 +1366,20 @@ class Tester extends Object {
 				}
 				this.utils.splitAndSet(TEST_DATA.texts_by_format['CoNLL-U'].from_cg3_with_spans);
 				toggleTableView(null, true);
+			},
+
+			clearCorpus: () => {
+				log.out(`\nExecuting Tester.clearCorpus()`);
+
+				for (let i=0; i<10; i++) {
+					$.each(this.utils.randomize(), (j, randomized) => {
+
+						this.utils.splitAndSet(randomized.text.join(''));
+						clearCorpus(null, true);
+						this.utils.checkCounts(0, 1);
+
+					});
+				}
 			}
 		};
 	}

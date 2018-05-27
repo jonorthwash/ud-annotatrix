@@ -101,3 +101,8 @@ function downloadCorpus() {
     const treebank_id = location.href.split('/')[4];
     window.open(`./download?treebank_id=${treebank_id}`, '_blank');
 }
+
+function uploadCorpus() {
+    log.debug(`called uploadCorpus()`);
+    throw new NotImplementedError('uploadCorpus() not implemented');
+}

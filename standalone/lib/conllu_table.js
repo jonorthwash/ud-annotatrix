@@ -6,7 +6,7 @@ function buildTable() {
     $('#table-data tbody').empty();
 
     $.each($('#text-data').val().split('\n'), (i, line) => {
-        log.debug(`updateTable() line: ${line}`);
+        log.debug(`buildTable() line: ${line}`);
         if (line.trim() === '')
             return
 
@@ -48,7 +48,6 @@ function buildTable() {
                     .blur(onEditTable)
                     .keyup((event) => {
                         if (event.which === KEYS.ESC) {
-                            console.log(event.target);
                             $(event.target).blur();
                         } else if (event.which === KEYS.ENTER) {
                             onEnter(event);
@@ -56,7 +55,6 @@ function buildTable() {
                     });
 
                 inputSpan.text(cell);
-                    //.prop('contenteditable', true)
 
                 if (valid.err) {
                     log.warn(`buildTable(): error parsing cell (err:"${valid.err}", cell:"${cell}")`);
@@ -96,7 +94,7 @@ function onEditTable(event) {
 
     // save it to the textarea and parse it
     $('#text-data').val(conllu);
-    parseTextData();
+    parseText();
 }
 
 function toggleTableView(event, force) { // force param used for testing
