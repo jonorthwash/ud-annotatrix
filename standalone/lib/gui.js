@@ -33,7 +33,60 @@ var CURRENT_ZOOM = 1.0;
 var IS_EDITING = false;
 
 
+function updateGui() {
+    log.debug(`called updateGui()`);
 
+    /* The function handles the format tabs above the textarea.
+    Takes a string with a format name, changes the classes on tabs. */
+    const format = _.format();
+		localStorage.setItem('format', format);
+
+		$('.nav-link').removeClass('active').show();
+		switch (format) {
+				case ('Unknown'):
+						$('.nav-link').hide();
+						$('#tabOther').addClass('active').show().text(format);
+						break;
+				case ('CoNLL-U'):
+						$('#tabConllu').addClass('active');
+						$('#tabOther').hide();
+						break;
+				case ('CG3'):
+						$('#tabCG3').addClass('active');
+						$('#tabOther').hide();
+						break;
+				case ('plain text'):
+						$('#tabText').hide(); // NOTE: no break here
+				default:
+						$('#tabOther').addClass('active').show().text(format);
+						break;
+		}
+
+		if (format !== 'CoNLL-U')
+				_.is_table_view(false);
+
+		if (_.is_table_view()) {
+				$('#btnToggleTable i').removeClass('fa-code');
+				$('#text-data').hide();
+				$('#table-data').show();
+				buildTable();
+		} else {
+				$('#btnToggleTable i').addClass('fa-code');
+				$('#text-data').show();
+				$('#table-data').hide();
+		}
+
+		if (_.is_textarea_visible) {
+				$('#data-container').show();
+				$('#top-buttons-container').removeClass('extra-space');
+				$('#btnToggleTable').show();
+		} else {
+				$('#data-container').hide();
+				$('#top-buttons-container').addClass('extra-space');
+				$('.nav-link').not('.active').hide();
+				$('#btnToggleTable').hide();
+		}
+}
 function bindHandlers() {
 		log.debug(`called bindHandlers()`);
     /* Binds handlers to DOM elements. */
@@ -71,7 +124,8 @@ function bindHandlers() {
 			convertText(convert2CG3);
 		});
 
-		$('#btnToggleTable').click(toggleTableView);
+		$('#btnToggleTable').click(toggleTable);
+		$('#btnToggleTextarea').click(toggleTextarea);
 
     $('#btnExportPNG').click(exportPNG);
     $('#btnExportSVG').click(exportSVG);
@@ -320,15 +374,55 @@ function convertText(converter) {
 
 
 
+
+function showHelp() {
+    log.debug(`called showHelp()`);
+    // Opens help in new tab
+    window.open('help.html', '_blank').focus();
+}
 function showSettings(event) {
 		log.debug(`called showSettings()`);
 		throw new NotImplementedError('showSettings() not implemented');
 }
+function toggleTextarea() {
+		log.debug(`called toggleTextarea()`);
 
-function printCorpus(event) {
-		log.debug(`called printCorpus()`);
-		throw new NotImplementedError('printCorpus() not implemented');
+		_.is_textarea_visible = !_.is_textarea_visible;
+		$('#btnToggleTextarea i')
+				.toggleClass('fa-chevron-up')
+				.toggleClass('fa-chevron-down')
+
+		updateGui();
 }
+function toggleRTL() {
+		log.debug(`called toggleRTL()`);
+
+		$('#RTL .fa').toggleClass('fa-align-right');
+		$('#RTL .fa').toggleClass('fa-align-left');
+		IS_LTR = !IS_LTR;
+
+	  drawTree();
+}
+function toggleVertical() {
+		log.debug(`called toggleVertical()`);
+
+		$('#vertical .fa').toggleClass('fa-rotate-90');
+		IS_VERTICAL = !IS_VERTICAL;
+
+		drawTree();
+}
+function toggleEnhanced() {
+		log.debug(`called toggleEnhanced()`);
+
+	  $('#enhanced .fa').toggleClass('fa-tree');
+	  $('#enhanced .fa').toggleClass('fa-magic');
+		IS_ENHANCED = !IS_ENHANCED;
+
+		drawTree();
+}
+
+
+
 
 function setUndos() {
     log.debug('called setUndos()');
@@ -1322,33 +1416,4 @@ function clearWarning() {
 
 		$('#tabConllu').prop('disabled', false);
     $('#warning').css('background-color', 'white').text('');
-}
-
-
-
-function toggleRTL() {
-		log.debug(`called toggleRTL()`);
-
-		$('#RTL .fa').toggleClass('fa-align-right');
-		$('#RTL .fa').toggleClass('fa-align-left');
-		IS_LTR = !IS_LTR;
-
-	  drawTree();
-}
-function toggleVertical() {
-		log.debug(`called toggleVertical()`);
-
-		$('#vertical .fa').toggleClass('fa-rotate-90');
-		IS_VERTICAL = !IS_VERTICAL;
-
-		drawTree();
-}
-function toggleEnhanced() {
-		log.debug(`called toggleEnhanced()`);
-
-	  $('#enhanced .fa').toggleClass('fa-tree');
-	  $('#enhanced .fa').toggleClass('fa-magic');
-		IS_ENHANCED = !IS_ENHANCED;
-
-		drawTree();
 }

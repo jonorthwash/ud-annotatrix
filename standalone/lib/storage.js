@@ -84,11 +84,14 @@ function loadFromFile(event) {
 function saveData() { // TODO: rename to updateData
     log.debug(`called saveData()`);
 
+    throw new NotImplementedError('saveData() not implemented');
+
+    /*
     if (IS_SERVER_RUNNING) {
         updateOnServer()
     } else {
         localStorage.setItem('corpus', getContents()); // TODO: get rid of 'corpus', move the treebank updating here from getContents
-    }
+    }*/
 }
 function formatUploadSize(fileSize) {
     log.debug(`called formatUploadSize(${fileSize})`);

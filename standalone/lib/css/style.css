@@ -764,3 +764,7 @@ th.column-hidden {
 td .parse-error {
   color: #f00;
 }
+
+#top-buttons-container.extra-space {
+  margin-bottom: 1ex;
+}

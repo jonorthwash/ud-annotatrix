@@ -97,17 +97,17 @@ function onEditTable(event) {
     parseText();
 }
 
-function toggleTableView(event, force) { // force param used for testing
-    log.debug('called toggleTableView()');
+function toggleTable(event, force) { // force param used for testing
+    log.debug('called toggleTable()');
 
     if (_.format() !== 'CoNLL-U') {
-        log.warn(`toggleTableView(): table view not supported for ${_.format()}`);
+        log.warn(`toggleTable(): table view not supported for ${_.format()}`);
         _.is_table_view(false);
     } else {
         _.is_table_view(force === undefined ? !_.is_table_view() : force);
     }
 
-    updateTabs();
+    updateGui();
 }
 
 function toggleTableColumn(event) {

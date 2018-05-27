@@ -17,6 +17,12 @@ var _ = { // main object to hold our current stuff
         log.debug(`called _.reset()`)
 
         // getters & setters
+        _.file = (filename) => {
+          if (filename !== undefined)
+              _.filename = filename;
+          const extension = (_.format() === 'Unknown' || !_.format()) ? 'udac' : _.format();
+          return `${_.filename}.${extension}`;
+        }
         _.sentence = (sentence) => {
             if (sentence !== undefined)
                 _.sentences[_.current] = sentence;
@@ -35,6 +41,7 @@ var _ = { // main object to hold our current stuff
             return _.column_visibilities[_.current][col]; }
 
         // textarea-related
+        _.filename = 'ud-annotatrix-corpus';
         _.current = 0;
         _.sentences = [ null ];
         _.formats = [ null ];
@@ -64,6 +71,17 @@ var _ = { // main object to hold our current stuff
 
         updateSentences();
         log.debug(`_.reset(): after reset: ${JSON.stringify(_)}`);
+    },
+
+    export: () => {
+        return _.sentences.map((sentence, i) => {
+            return `[UD-Annotatrix: id="${i+1}" format="${_.formats[i]}"]
+            ${sentence || ''}`;
+        }).join('\n\n');
+    },
+
+    encode: () => {
+        return encodeURIComponent(_.export());
     }
 
 };
@@ -266,51 +284,7 @@ function updateFormat(id) {
         _.formats[id] = format;
     }
 
-    updateTabs();
-}
-function updateTabs() {
-    log.debug(`called updateTabs()`);
-
-    /* The function handles the format tabs above the textarea.
-    Takes a string with a format name, changes the classes on tabs. */
-    const format = _.format();
-		localStorage.setItem('format', format);
-
-		$('.nav-link').removeClass('active').show();
-		switch (format) {
-				case ('Unknown'):
-						$('.nav-link').hide();
-						$('#tabOther').addClass('active').show().text(format);
-						break;
-				case ('CoNLL-U'):
-						$('#tabConllu').addClass('active');
-						$('#tabOther').hide();
-						break;
-				case ('CG3'):
-						$('#tabCG3').addClass('active');
-						$('#tabOther').hide();
-						break;
-				case ('plain text'):
-						$('#tabText').hide(); // NOTE: no break here
-				default:
-						$('#tabOther').addClass('active').show().text(format);
-						break;
-		}
-
-		if (format !== 'CoNLL-U')
-				_.is_table_view(false);
-
-		if (_.is_table_view()) {
-				$('#btnToggleTable i').removeClass('fa-code');
-				$('#text-data').hide();
-				$('#table-data').show();
-				buildTable();
-		} else {
-				$('#btnToggleTable i').addClass('fa-code');
-				$('#text-data').show();
-				$('#table-data').hide();
-		}
-
+    updateGui();
 }
 function parseText() {
     log.debug(`called parseText()`);
@@ -362,6 +336,8 @@ function parseText() {
     return splitted;
 }
 
+
+// NOTE: uploadCorpus() is in /standalone/lib/server_support.js
 function exportCorpus() {
     log.debug(`called exportCorpus()`);
 
@@ -372,15 +348,13 @@ function exportCorpus() {
     } else {
 
         const link = $('<a>')
-            .attr('download', localStorage.getItem('filename') || 'ud-annotatrix-corpus.conllu')
-            .attr('href', `data:text/plain; charset=utf-8,${encodeURIComponent(getContents())}`);
+            .attr('download', _.file())
+            .attr('href', `data:text/plain; charset=utf-8,${_.encode()}`);
         $('body').append(link);
         link[0].click();
 
     }
 }
-
-
 function clearCorpus(event, force=false) { // force param for testing
     log.debug(`called clearCorpus()`);
 
@@ -395,31 +369,14 @@ function clearCorpus(event, force=false) { // force param for testing
     _.reset();
     return;
 }
-
-
-
-
-
-
-
-
-function getContents() {
-    log.debug(`called getContents()`);
-
-    /* Gets the corpus data saving the changes in current sentence,
-    dependlessly of whether it's on server or in localStorage. */
-
-    /* if (IS_SERVER_RUNNING) {
-        // TODO: implement different functionality here
-    } else { */
-
-        let splitted = localStorage.getItem('treebank'); // TODO: implement a more memory-friendly func?
-        splitted = JSON.parse(splitted) || new Array(); // string to array
-        splitted[CURRENT_SENTENCE] = $('#text-data').val();
-        localStorage.setItem('treebank', JSON.stringify(splitted)); // update the treebank
-        return splitted.join('\n\n');
-    /* } */
+function printCorpus(event) {
+		log.debug(`called printCorpus()`);
+		throw new NotImplementedError('printCorpus() not implemented');
 }
+
+
+
+
 
 
 
@@ -508,7 +465,7 @@ function showDataIndiv() {
     $('#total-sentences').val(AVAILABLE_SENTENCES);
 
     updateTable(); // Update the table view at the same time
-    updateTabs(); // update the format taps
+    updateGui(); // update the format taps
     fitTable(); // make table's size optimal
     drawTree();
 }
@@ -697,11 +654,4 @@ function resetLabels() { // TODO: refactor
             following ++;
         }
     }
-}
-
-function showHelp() {
-    log.debug(`called showHelp()`);
-
-    /* Opens help in new tab. */
-    window.open('help.html', '_blank').focus();
 }

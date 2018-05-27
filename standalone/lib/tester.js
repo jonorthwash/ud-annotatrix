@@ -1339,7 +1339,7 @@ class Tester extends Object {
 							text = randomized.text;
 
 						this.utils.splitAndSet(text);
-						toggleTableView(null, true);
+						toggleTable(null, true);
 
 						if (format !== 'CoNLL-U') {
 							this.assert(_.is_table_view() === false, `expected ${format} not to have table view`);
@@ -1365,7 +1365,7 @@ class Tester extends Object {
 					});
 				}
 				this.utils.splitAndSet(TEST_DATA.texts_by_format['CoNLL-U'].from_cg3_with_spans);
-				toggleTableView(null, true);
+				toggleTable(null, true);
 			},
 
 			clearCorpus: () => {
