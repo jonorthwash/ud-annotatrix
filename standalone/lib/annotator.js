@@ -13,44 +13,9 @@ var FORMAT = '',
 
 var _ = { // main object to hold our current stuff
 
+    // init & reset
     reset: () => {
         log.debug(`called _.reset()`)
-
-        // getters & setters
-        _.filename = (filename) => {
-            if (filename !== undefined)
-                _.filename_ = filename;
-            const extension = (_.format() === 'Unknown' || !_.format()) ? 'udac' : _.format();
-            return `${_.filename_}.${extension}`;
-        }
-        _.sentence = (sentence) => {
-            if (sentence !== undefined)
-                _.sentences[_.current] = sentence;
-            return _.sentences[_.current]; };
-        _.format = (format) => {
-            if (format !== undefined)
-                _.formats[_.current] = format;
-            return _.formats[_.current]; };
-        _.is_table_view = (bool) => {
-            if (bool !== undefined)
-                _.is_table_views[_.current] = bool;
-            return _.is_table_views[_.current]; };
-        _.column_visible = (col, bool) => {
-            if (bool !== undefined)
-                _.column_visibilities[_.current][col] = bool;
-            return _.column_visibilities[_.current][col]; }
-        _.graph = (graph) => {
-            if (graph !== undefined)
-                _.graphs[_.current] = graph;
-            return _.graphs[_.current]; };
-        _.conllu = (conllu) => {
-            if (conllu !== undefined)
-                _.conllus[_.current] = conllu;
-            return _.conllus[_.current]; };
-        _.cg3 = (cg3) => {
-            if (cg3 !== undefined)
-                _.cg3s[_.current] = cg3;
-            return _.cg3s[_.current]; };
 
         // per-sentence data
         _.sentences = [ null ];
@@ -68,6 +33,7 @@ var _ = { // main object to hold our current stuff
         _.is_vertical = false;
         _.is_ltr = true;
         _.is_enhanced = false;
+        _.graph_data = null;
         _.graph_options = {
             container: $('#cy'),
             boxSelectionEnabled: false,
@@ -84,13 +50,58 @@ var _ = { // main object to hold our current stuff
         updateSentences();
     },
 
+    // getters & setters
+    filename: (filename) => {
+        if (filename !== undefined)
+            _.filename_ = filename;
+        return `${_.filename_}.udac`;
+    },
+    sentence: (sentence) => {
+        if (sentence !== undefined)
+            _.sentences[_.current] = sentence;
+        return _.sentences[_.current];
+    },
+    format: (format) => {
+        if (format !== undefined)
+            _.formats[_.current] = format;
+        return _.formats[_.current];
+    },
+    is_table_view: (bool) => {
+        if (bool !== undefined)
+            _.is_table_views[_.current] = bool;
+        return _.is_table_views[_.current];
+    },
+    column_visible: (col, bool) => {
+        if (bool !== undefined)
+            _.column_visibilities[_.current][col] = bool;
+        return _.column_visibilities[_.current][col];
+    },
+    graph: (graph) => {
+        if (graph !== undefined)
+            _.graphs[_.current] = graph;
+        return _.graphs[_.current];
+    },
+    conllu: (conllu) => {
+        if (conllu !== undefined)
+            _.conllus[_.current] = conllu;
+        return _.conllus[_.current];
+    },
+    tokens: () => {
+        return _.conllu() ? _.conllu().tokens : [];
+    },
+    cg3: (cg3) => {
+        if (cg3 !== undefined)
+            _.cg3s[_.current] = cg3;
+        return _.cg3s[_.current];
+    },
+
+    // external things
     export: () => {
         return _.sentences.map((sentence, i) => {
             return `[UD-Annotatrix: id="${i+1}" format="${_.formats[i]}"]
             ${sentence || ''}`;
         }).join('\n\n');
     },
-
     encode: () => {
         return encodeURIComponent(_.export());
     }
@@ -162,10 +173,11 @@ window.onload = () => {
         //loadFromUrl();
 
         //test.all();
-        //test.utils.splitAndSet(TEST_DATA.texts_by_format.SD.ccomp_5);
+        test.utils.splitAndSet('this is a test');
+        //test.utils.splitAndSet(TEST_DATA.texts_by_format['CoNLL-U'][0]);
+        $('#tabConllu').click()
         //test.run('clearCorpus');
         //test.utils.splitAndSet('this is a test');
-        //$('#tabConllu').click()
 
     });
 };
@@ -270,8 +282,8 @@ function setSentence(id, text) {
     }
 
     _.sentences[id] = text;
-    updateFormat(id);
 
+    updateFormat(id);
 }
 function updateSentences() {
     log.debug(`called updateSentences()`);
@@ -289,6 +301,7 @@ function updateSentences() {
     $('#btnNextSentence').attr('disabled', (_.current === _.sentences.length));
 
     updateFormat(_.current);
+    updateGui();
 }
 function updateFormat(id) {
     log.debug(`called updateFormat(id:${id})`);
@@ -303,8 +316,6 @@ function updateFormat(id) {
         // TODO other stuff goes here (CG3/CoNLL-U conversion ugliness TBD)
         _.formats[id] = format;
     }
-
-    updateGui();
 }
 function parseText() {
     log.debug(`called parseText()`);
@@ -567,8 +578,9 @@ function clearLabels() {
 
 
 function drawTree() {
-    log.debug(`called drawTree()`);
+    log.critical(`called drawTree()`);
 
+    return;
     /* This function is called whenever the input area changes.
     1. removes the previous tree, if there's one
     2. takes the data from the textarea

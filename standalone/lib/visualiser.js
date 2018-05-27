@@ -15,43 +15,37 @@ var TREE = {}, // This map allows us to address the Token object given an ID
     // export trackers
     CODE_LATEX = '',
     IS_PNG_EXPORTED = false,
-    IS_LATEX_EXPORTED = false,
+    IS_LATEX_EXPORTED = false;
 
-    // Cytoscape defaults
-    CY_OPTIONS = {
-        container: $('#cy'),
-        boxSelectionEnabled: false,
-        autounselectify: true,
-        autoungrabify: true,
-        zoomingEnabled: true,
-        userZoomingEnabled: false,
-        wheelSensitivity: 0.1,
-        style: CY_STYLE,
-        layout: getCyLayout(),
-        elements: []
-    };
 
 const SCROLL_ZOOM_INCREMENT = 0.05,
 
     // graph parameters
     EDGE_HEIGHT = 40,
     DEFAULT_COEFF = 1, // 0.7
-    STAGGER_SIZE = 15,
-
-    // require lib for CoNLL-U parsing
-    conllu = require('conllu');
-
-
+    STAGGER_SIZE = 15;
 
 /**
  * Creates a graph out of the conllu.Sentence().
  * @param  {Object} sent A conllu.Sentence().
  * @return {Array}       Returns the graph.
  */
-function getGraphElements(sent) {
-    log.critical(`called conllu2cy(${sent.serial})`);
+function getGraphElements() {
+    log.critical(`called getGraphElements()`);
 
-    let graph = []; TREE = {};
+    let graph = [];
+    $.each(_.tokens(), (i, token) => {
+        if (token instanceof conllu.MultiwordToken) {
+            throw new NotImplementedError('getGraphElements(): mutliword tokens not implemented yet');
+        } else {
+            _createToken(graph, token);
+        }
+        console.log('graph', graph);
+    });
+
+    return graph;
+
+    //let graph = []; TREE = {};
     $.each(sent.tokens, (i, token) => {
         if (token instanceof conllu.MultiwordToken){
 
@@ -76,7 +70,7 @@ function getGraphElements(sent) {
 
     if (IS_ENHANCED) {
         $.each(sent.tokens, (i, token) => {
-            log.debug(`conllu2cy(): processing enhanced dependency for token: ${token}`);
+            log.debug(`getGraphElements(): processing enhanced dependency for token: ${token}`);
             $.each(token.deps.split('|'), (j, dep) => {
 
                 const enhancedRow = dep.split(':'),
@@ -109,6 +103,108 @@ function getGraphElements(sent) {
 
     return graph;
 }
+
+function _createToken(graph, token, superToken) {
+    log.critical(`called _createToken(token: ${JSON.stringify(token)}, superToken: ${JSON.stringify(superToken)})`);
+
+    token.form = "TEXT!!!"//token.form || ' ';
+    token.pos = token.upostag || token.xpostag || '';
+
+    // number node
+    graph.push({
+        data: {
+            id: `num-${token.id}`,
+            label: token.id,
+            pos: token.upostag,
+            parent: superToken ? superToken.id : undefined
+        },
+        classes: 'number'
+    });
+
+    // form node
+    graph.push({
+        data: {
+            id: `form-${token.id}`,
+            label: token.form,
+            length: `${token.form.length > 3
+                ? token.form.length * 0.7 : token.form.length}em`,
+            state: 'normal',
+            parent: `num-${token.id}`
+        },
+        classes: `form${token.head === 0 ? ' root' : ''}`
+    });
+
+    // pos node
+    graph.push({
+        data: {
+            id: `pos-node-${token.id}`,
+            label: token.pos,
+            length: `${token.pos.length + 1}em`
+        },
+        classes: 'pos'
+    });
+
+    // pos edge
+    graph.push({
+        data: {
+            id: `pos-edge-${token.id}`,
+            source: `form-${token.id}`,
+            target: `pos-node-${token.id}`
+        },
+        classes: 'pos'
+    });
+
+}
+/**
+ * Creates the wf node, the POS node and dependencies.
+ * @param  {Array}  graph  A graph containing all the nodes and dependencies.
+ * @param  {Object} token  Token object.
+ * @param  {String} spId   Id of supertoken.
+ * @return {Array}         Returns the graph.
+ */
+function createToken(graph, token, superTokenId) {
+    log.debug(`called createToken(graph: <Graph>, token: ${JSON.stringify(token)}, superTokenId: ${superTokenId})`);
+
+    /* Takes the tree graph, a token object and the id of the supertoken.
+    Creates the wf node, the POS node and dependencies. Returns the graph. */
+
+    // handling empty form
+    if (token.form === undefined)
+        token.form = ' ';
+
+    // TODO: We shouldn't need to hold information in multiple places
+    // at least not like this.
+    TREE[token.id] = token;
+
+    // token  number
+    const nodeId = getNodeId(token.id);
+    graph.push({
+        data: {
+            id: `num${nodeId}`,
+            label: token.id,
+            pos: token.upostag, // +token.upostag
+            parent: superTokenId
+        },
+        classes: 'tokenNumber'
+    });
+
+    let nodeWF = token;
+    nodeWF.id = `nf${nodeId}`;
+    nodeWF.label = nodeWF.form;
+    nodeWF.length = `${nodeWF.form.length > 3 ? nodeWF.form.length*0.7 : nodeWF.form.length}em`;
+    nodeWF.state = 'normal';
+    nodeWF.parent = `num${nodeId}`;
+
+    graph.push({ data:nodeWF, classes:`wf${token.head === 0 ? ' root' : ''}`});
+    graph = makePOS(token, nodeId, graph);
+
+    if (!IS_ENHANCED)
+        graph = makeDependencies(token, nodeId, graph);
+
+    return graph;
+}
+
+
 
 function exportSVG() {
     log.debug(`called exportSVG()`);
@@ -239,54 +335,6 @@ function toSubscript(str) {
     });
 }
 
-/**
- * Creates the wf node, the POS node and dependencies.
- * @param  {Array}  graph  A graph containing all the nodes and dependencies.
- * @param  {Object} token  Token object.
- * @param  {String} spId   Id of supertoken.
- * @return {Array}         Returns the graph.
- */
-function createToken(graph, token, superTokenId) {
-    log.debug(`called createToken(graph: <Graph>, token: ${JSON.stringify(token)}, superTokenId: ${superTokenId})`);
-
-    /* Takes the tree graph, a token object and the id of the supertoken.
-    Creates the wf node, the POS node and dependencies. Returns the graph. */
-
-    // handling empty form
-    if (token.form === undefined)
-        token.form = ' ';
-
-    // TODO: We shouldn't need to hold information in multiple places
-    // at least not like this.
-    TREE[token.id] = token;
-
-    // token  number
-    const nodeId = getNodeId(token.id);
-    graph.push({
-        data: {
-            id: `num${nodeId}`,
-            label: token.id,
-            pos: token.upostag, // +token.upostag
-            parent: superTokenId
-        },
-        classes: 'tokenNumber'
-    });
-
-    let nodeWF = token;
-    nodeWF.id = `nf${nodeId}`;
-    nodeWF.label = nodeWF.form;
-    nodeWF.length = `${nodeWF.form.length > 3 ? nodeWF.form.length*0.7 : nodeWF.form.length}em`;
-    nodeWF.state = 'normal';
-    nodeWF.parent = `num${nodeId}`;
-
-    graph.push({ data:nodeWF, classes:`wf${token.head === 0 ? ' root' : ''}`});
-    graph = makePOS(token, nodeId, graph);
-
-    if (!IS_ENHANCED)
-        graph = makeDependencies(token, nodeId, graph);
-
-    return graph;
-}
 
 function getNodeId(idString) {
     log.debug(`called getNodeId(${JSON.stringify(idString)})`)
@@ -691,12 +739,9 @@ function conlluDraw(content) {
     _.graphOptions.container = $('#cy');
     _.graphOptions.style = CY_STYLE;
     _.graphOptions.layout = getCyLayout();
-    _.graphOptions.elements = conllu2cy(sent);
+    _.graphOptions.elements = getGraphElements(sent);
     _.graph = updateGraph(_.graphOptions);*/
 
-    CY_OPTIONS.layout = getCyLayout();
-    CY_OPTIONS.elements = conllu2cy(sent);
-    updateGraph(CY_OPTIONS);
 }
 
 

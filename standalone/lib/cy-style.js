@@ -19,7 +19,7 @@ const CY_STYLE = [{
         'border-width': 1
     }
 }, {
-    'selector': 'node.wf',
+    'selector': 'node.form',
     'style': {
         'width': 'data(length)',
         'label': 'data(label)'
@@ -43,36 +43,36 @@ const CY_STYLE = [{
         'background-color': ACTIVE_COLOR
     }
 }, {
-    'selector': 'node.wf.arc-selected',
+    'selector': 'node.form.arc-selected',
     'style': {
         'border-color': FANCY_COLOR
     }
 }, {
-    'selector': 'node.wf.root',
+    'selector': 'node.form.root',
     'style': {
         'font-weight': 'bold',
         //'text-border-width': '2em',
         'border-width': '2px'
     }
 }, {
-    'selector': 'node.wf.activated',
+    'selector': 'node.form.activated',
     'style': {
         'background-color': ACTIVE_COLOR
     }
 }, {
-    'selector': 'node.wf.activated.retokenize',
+    'selector': 'node.form.activated.retokenize',
     'style': {
         'background-color': POS_COLOR,
         'border-color': FANCY_COLOR
     }
 }, {
-    'selector': 'node.wf.merge',
+    'selector': 'node.form.merge',
     'style': {
         'background-color': POS_COLOR,
         'border-color': FANCY_COLOR
     }
 }, {
-    'selector': 'node.wf.supertoken',
+    'selector': 'node.form.supertoken',
     'style': {
         'background-color': POS_COLOR,
         'border-color': FANCY_COLOR
@@ -187,7 +187,7 @@ const CY_STYLE = [{
     'curve-style': 'haystack'
   }
 }, {
-    'selector': 'node.tokenNumber',
+    'selector': 'node.number',
     'style': {
         'background-opacity': 0,
         'border-opacity': 0,
