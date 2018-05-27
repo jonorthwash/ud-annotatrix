@@ -212,9 +212,9 @@ function onEnter(event) {
 				// advance the cursor until we are at the end of a line that isn't followed by a comment
 				//   or at the very beginning of the textarea
 				if (cursor !== 0 || sentence[0] === '#') {
-						log.debug(`onEnter(): cursor not at textarea start OR textarea has comments`)
+						log.debug(`onEnter(): cursor[${cursor}]: "${sentence[cursor]}" (not at textarea start OR textarea has comments)`)
 						while (sentence[cursor + 1] === '#' || sentence[cursor] !== '\n') {
-								//console.log(`cursor[${cursor}]: "${sentence[cursor]}", line[${cursorLine}]: ${lines[cursorLine]}`);
+								log.debug(`onEnter(): cursor[${cursor}]: "${sentence[cursor]}", line[${cursorLine}]: ${lines[cursorLine]}`);
 								if (cursor === sentence.length)
 										break;
 								if (sentence[cursor] === '\n')
@@ -222,7 +222,7 @@ function onEnter(event) {
 								cursor++;
 						}
 				} else {
-						log.debug(`onEnter(): cursor at textarea start`)
+						log.debug(`onEnter(): cursor[${cursor}]: "${sentence[cursor]}" (at textarea start)`)
 						cursorLine = -1;
 				}
 		}

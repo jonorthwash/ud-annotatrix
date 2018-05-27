@@ -43,6 +43,7 @@ function buildTable() {
                 td.prop('contenteditable', true)
                     .attr('row-id', i)
                     .attr('col-id', j)
+                    .attr('name', j === 0 ? 'index' : 'content')
                     .css('visibility', _.column_visible(j) ? 'visible' : 'hidden')
                     .blur(onEditTable)
                     .keyup((event) => {

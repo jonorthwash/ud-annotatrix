@@ -760,3 +760,7 @@ tr.comment, tr.wrong-shape {
 th.column-hidden {
   color: #888;
 }
+
+td .parse-error {
+  color: #f00;
+}

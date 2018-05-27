@@ -1346,6 +1346,20 @@ class Tester extends Object {
 						} else {
 							this.assert(_.is_table_view() === true, `expected CoNLL-U to have table view available`);
 
+							// try editing
+							const testString = 'test';
+							$('td').not('[name=index]').find('[name=input]').text(testString);
+							$('td').first().blur();
+
+							$.each(_.sentence().split('\n'), (k, line) => {
+								const tabs = line.split('\t');
+								if (tabs.length !== 10 || tabs[0].startsWith('#'))
+									return;
+								$.each(tabs, (l, tab) => {
+									if (l > 0)
+										this.assert(tab === testString, `expected text to be "${testString}", got "${tab}" (line: "${line}")`);
+								})
+							})
 						}
 
 					});
