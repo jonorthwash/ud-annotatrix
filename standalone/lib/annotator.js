@@ -17,11 +17,11 @@ var _ = { // main object to hold our current stuff
         log.debug(`called _.reset()`)
 
         // getters & setters
-        _.file = (filename) => {
-          if (filename !== undefined)
-              _.filename = filename;
-          const extension = (_.format() === 'Unknown' || !_.format()) ? 'udac' : _.format();
-          return `${_.filename}.${extension}`;
+        _.filename = (filename) => {
+            if (filename !== undefined)
+                _.filename_ = filename;
+            const extension = (_.format() === 'Unknown' || !_.format()) ? 'udac' : _.format();
+            return `${_.filename_}.${extension}`;
         }
         _.sentence = (sentence) => {
             if (sentence !== undefined)
@@ -39,17 +39,35 @@ var _ = { // main object to hold our current stuff
             if (bool !== undefined)
                 _.column_visibilities[_.current][col] = bool;
             return _.column_visibilities[_.current][col]; }
+        _.graph = (graph) => {
+            if (graph !== undefined)
+                _.graphs[_.current] = graph;
+            return _.graphs[_.current]; };
+        _.conllu = (conllu) => {
+            if (conllu !== undefined)
+                _.conllus[_.current] = conllu;
+            return _.conllus[_.current]; };
+        _.cg3 = (cg3) => {
+            if (cg3 !== undefined)
+                _.cg3s[_.current] = cg3;
+            return _.cg3s[_.current]; };
 
-        // textarea-related
-        _.filename = 'ud-annotatrix-corpus';
-        _.current = 0;
+        // per-sentence data
         _.sentences = [ null ];
         _.formats = [ null ];
         _.is_table_views = [ false ];
         _.column_visibilities = [ new Array(10).fill(true) ];
+        _.graphs = [ null ];
+        _.conllus = [ null ];
+        _.cg3s = [ null ];
 
-        // cy-related
-        _.graph = null;
+        // global-ish data
+        _.current = 0;
+        _.filename_ = 'ud-annotatrix-corpus';
+        _.is_textarea_visible = true;
+        _.is_vertical = false;
+        _.is_ltr = true;
+        _.is_enhanced = false;
         _.graphOptions = {
             container: null,
             boxSelectionEnabled: false,
@@ -62,12 +80,6 @@ var _ = { // main object to hold our current stuff
             layout: null,
             elements: []
         };
-
-        // display-related
-        _.is_textarea_visible = true;
-        _.is_vertical = false;
-        _.is_ltr = true;
-        _.is_enhanced = false;
 
         updateSentences();
         log.debug(`_.reset(): after reset: ${JSON.stringify(_)}`);
@@ -152,7 +164,7 @@ window.onload = () => {
 
         //test.all();
         //test.utils.splitAndSet(TEST_DATA.texts_by_format.SD.ccomp_5);
-        test.run('clearCorpus');
+        //test.run('clearCorpus');
         //test.utils.splitAndSet('this is a test');
         //$('#tabConllu').click()
 
@@ -181,6 +193,12 @@ function insertSentence() {
         .concat(null, _.is_table_views.slice(_.current));
     _.column_visibilities = _.column_visibilities.slice(0, _.current)
         .concat([ new Array(10).fill(true) ], _.column_visibilities.slice(_.current));
+    _.graphs = _.graphs.slice(0, _.current)
+        .concat(null, _.graphs.slice(_.current));
+    _.conllus = _.conllus.slice(0, _.current)
+        .concat(null, _.conllus.slice(_.current));
+    _.cg3s = _.cg3s.slice(0, _.current)
+        .concat(null, _.cg3s.slice(_.current));
 
     updateSentences();
 }
@@ -199,6 +217,9 @@ function removeSentence(event, force=false) { // force param for testing
     _.formats.splice(_.current, 1);
     _.is_table_views.splice(_.current, 1);
     _.column_visibilities.splice(_.current, 1);
+    _.graphs.splice(_.current, 1);
+    _.conllus.splice(_.current, 1);
+    _.cg3s.splice(_.current, 1);
     _.current--;
 
     updateSentences();
@@ -348,7 +369,7 @@ function exportCorpus() {
     } else {
 
         const link = $('<a>')
-            .attr('download', _.file())
+            .attr('download', _.filename())
             .attr('href', `data:text/plain; charset=utf-8,${_.encode()}`);
         $('body').append(link);
         link[0].click();

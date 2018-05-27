@@ -772,11 +772,22 @@ class Tester extends Object {
 					const sentences = _.sentences.length,
 							formats = _.formats.length,
 							is_table_views = _.is_table_views.length,
-							column_visibilities = _.column_visibilities.length;
+							column_visibilities = _.column_visibilities.length,
+							graphs = _.graphs.length,
+							conllus = _.conllus.length,
+							cg3s = _.cg3s.length;
 					this.assert(sentences === formats
 						&& sentences === is_table_views
-						&& sentences === column_visibilities,
-						`inconsistent: got ${sentences} sentences, ${formats} formats ${is_table_views} table views, and ${column_visibilities} column_visibilities`);
+						&& sentences === column_visibilities
+						&& sentences === graphs
+						&& sentences === conllus
+						&& sentences === cg3s,
+						`inconsistent: got ${
+							sentences} sentences, ${
+							formats} formats ${
+							is_table_views} table views, ${
+							column_visibilities} column_visibilities, ${
+							graphs} graphs, ${conllus} conllus, and ${cg3s} cg3s`);
 				})();
 
 				((expected) => {
