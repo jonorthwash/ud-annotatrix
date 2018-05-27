@@ -68,21 +68,20 @@ var _ = { // main object to hold our current stuff
         _.is_vertical = false;
         _.is_ltr = true;
         _.is_enhanced = false;
-        _.graphOptions = {
-            container: null,
+        _.graph_options = {
+            container: $('#cy'),
             boxSelectionEnabled: false,
             autounselectify: true,
             autoungrabify: true,
             zoomingEnabled: true,
             userZoomingEnabled: false,
             wheelSensitivity: 0.1,
-            style: null,
+            style: CY_STYLE,
             layout: null,
             elements: []
         };
 
         updateSentences();
-        log.debug(`_.reset(): after reset: ${JSON.stringify(_)}`);
     },
 
     export: () => {
@@ -122,6 +121,7 @@ window.onload = () => {
         `${path}/conllu_table.js`,
         `${path}/converters.js`,
         `${path}/cy-style.js`,
+        `${path}/graph.js`,
         `${path}/gui.js`,
         `${path}/sd2Conllu.js`,
         `${path}/server_support.js`,
@@ -149,18 +149,17 @@ window.onload = () => {
 
         console.log('UD-Annotatrix is loading ...');
 
+        window.conllu = require('conllu');
         window.log = new Logger('WARN');
         window.test = new Tester();
 
+        checkServer(); // check if server is running
+
         _.reset();
 
-        // initialize w/ defaults to avoid cy.$ is not a function errors
-        resetCy(CY_OPTIONS);
-        checkServer(); // check if server is running
+        bindHandlers();
         setUndos();
         //loadFromUrl();
-        updateSentences(); // should go in loadFromUrl and checkServer (5/23/18)
-        bindHandlers();
 
         //test.all();
         //test.utils.splitAndSet(TEST_DATA.texts_by_format.SD.ccomp_5);
@@ -395,6 +394,15 @@ function printCorpus(event) {
 		throw new NotImplementedError('printCorpus() not implemented');
 }
 
+function convertText(converter) {
+		log.debug(`called viewAsText()`);
+
+		let sentence = _.sentence();
+		sentence = converter(sentence) || sentence;
+		$('#text-data').val(sentence);
+		parseText();
+
+}
 
 
 

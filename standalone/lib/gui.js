@@ -14,16 +14,24 @@ const KEYS = {
 		LEFT: 37,
 		UP: 38,
 		DOWN: 40,
-		MINUS: 189,
-		EQUALS: 187, // also PLUS
-		J: 74,
-		K: 75,
+		MINUS: 173, // not 189 ...
+		EQUALS: 61, // not 187 ...
+		SHIFT: 16,
+		OPT: 17,
+		CTRL: 18,
+		PAGE_UP: 33,
+		PAGE_DOWN: 34,
+		META: 224,
 		D: 68,
 		I: 73,
-		S: 83,
-		R: 82,
+		J: 74,
+		K: 75,
 		M: 77,
 		P: 80,
+		R: 82,
+		S: 83,
+		Y: 89,
+		Z: 90,
 		SIDES: {
 				39: 'right',
 				37: 'left'
@@ -39,7 +47,6 @@ function updateGui() {
     /* The function handles the format tabs above the textarea.
     Takes a string with a format name, changes the classes on tabs. */
     const format = _.format();
-		localStorage.setItem('format', format);
 
 		$('.nav-link').removeClass('active').show();
 		switch (format) {
@@ -86,18 +93,12 @@ function updateGui() {
 				$('.nav-link').not('.active').hide();
 				$('#btnToggleTable').hide();
 		}
+
+		updateGraph();
 }
 function bindHandlers() {
 		log.debug(`called bindHandlers()`);
     /* Binds handlers to DOM elements. */
-
-    // TODO: causes errors if called before the cy is initialised
-    $(document).keydown(keyDownClassifier);
-
-
-		$('#text-data').keyup(onEditTextData);
-
-    $('#btnUploadCorpusFileButton').click(handleUploadButtonPressed);
 
     $('#btnPrevSentence').click(prevSentence);
 		$('#current-sentence').blur(goToSentence);
@@ -114,73 +115,86 @@ function bindHandlers() {
 		$('#btnHelp').click(showHelp);
 		$('#btnSettings').click(showSettings);
 
-		$('#tabText').click((event) => {
-			convertText(convert2PlainText);
-		});
-		$('#tabConllu').click((event) => {
-			convertText(convert2Conllu);
-		});
-		$('#tabCG3').click((event) => {
-			convertText(convert2CG3);
-		});
+		$('#tabText').click((event) => { convertText(convert2PlainText); });
+		$('#tabConllu').click((event) => { convertText(convert2Conllu); });
+		$('#tabCG3').click((event) => { convertText(convert2CG3); });
 
 		$('#btnToggleTable').click(toggleTable);
 		$('#btnToggleTextarea').click(toggleTextarea);
 
-    $('#btnExportPNG').click(exportPNG);
-    $('#btnExportSVG').click(exportSVG);
-    $('#btnExportLaTeX').click(exportLaTeX);
+		$('#text-data').keyup(onEditTextData);
+		$('.thead-default th').click(toggleTableColumn);
 
     $('#RTL').click(toggleRTL);
     $('#vertical').click(toggleVertical);
     $('#enhanced').click(toggleEnhanced);
 
-    $('#filename').change(loadFromFile);
-
-		$('#current-sentence').keyup((e) => {
-				if (e.keyCode === 13) {
-						goToSenSent();
-				} else if (e.keyCode === KEYS.UP || e.keyCode === KEYS.K) {
-						prevSenSent();
-				} else if (e.keyCode === KEYS.DOWN || e.keyCode === KEYS.J) {
-						nextSenSent();
-				} else if (e.keyCode === KEYS.MINUS) {
-						removeCurSent();
-				} else if (e.keyCode === KEYS.EQUALS) {
-						addSent();
+		$('#current-sentence').keyup((event) => {
+				switch (event.which) {
+						case (KEYS.ENTER):
+								goToSentence();
+								break;
+						case (KEYS.LEFT):
+						case (KEYS.J):
+								prevSentence();
+								break;
+						case (KEYS.RIGHT):
+						case (KEYS.K):
+								nextSentence();
+								break;
+						case (KEYS.MINUS):
+								removeSentence();
+								break;
+						case (KEYS.EQUALS):
+								insertSentence();
+								break;
 				}
 		});
 
+		// handle Ctrl + <keypress>
 		// solution based on https://stackoverflow.com/a/12444641/5181692
-		let map = [];
-		onkeydown = onkeyup = (e) => {
-				e = e || event; // to deal with IE
-				map[e.key] = e.type === 'keydown';
-				/* insert conditional here */
-				if (map['Shift'] && map['PageDown']) {
-						nextSenSent();
-						map = [];
-						map['Shift'] = true; // leave Shift so that another event can be fired
-				} else if (map['Shift'] && map['PageUp']) {
-						prevSenSent();
-						map = [];
-						map['Shift'] = true; // leave Shift so that another event can be fired
-				} else if (map['Control'] && map['z']) {
-						undoManager.undo();
-						updateUI();
-				} else if (map['Control'] && map['y'] || map['Control'] && map['Shift'] && map['Z']) {
-						undoManager.redo();
-						updateUI();
+		let pressed = {};
+		onkeydown = onkeyup = (event) => {
+
+				pressed[event.which] = (event.type === 'keydown');
+				if (!pressed[KEYS.CTRL])
+						return;
+
+				if (pressed[KEYS.PAGE_DOWN]) {
+						if (pressed[KEYS.SHIFT]) {
+								$('#current-sentence').val(_.sentences.length);
+								goToSentence();
+						} else {
+								nextSentence();
+						}
+						pressed = {};
+						pressed[KEYS.CTRL] = true;
+
+				} else if (pressed[KEYS.PAGE_UP]) {
+						if (pressed[KEYS.SHIFT]) {
+								$('#current-sentence').val(1);
+								goToSentence();
+						} else {
+								prevSentence();
+						}
+						pressed = {};
+						pressed[KEYS.CTRL] = true;
+
+				} else if (pressed[KEYS.Z] && !pressed[KEYS.SHIFT]) {
+					undoManager.undo();
+				} else if (pressed[KEYS.Y] || pressed[KEYS.Z]) {
+					undoManager.redo();
 				}
-				//return false;  // only needed if want to override all the shortcuts
 		}
 
-		// collapse columns when header is clicked on
-		$('.thead-default th').click(toggleTableColumn);
+		/* what's up with this stuff ?? (updated 5/27/18)
 
+		$('#btnExportPNG').click(exportPNG);
+    $('#btnExportSVG').click(exportSVG);
+    $('#btnExportLaTeX').click(exportLaTeX);
 
+    $('#filename').change(loadFromFile);
 
-		// TODO: does these do anything ?? (5/23/18)
 		$('#helpModal').on('shown.bs.modal', (e) => {
         // $('#treebankSize').text(CONTENTS.length); // TODO: Report the current loaded treebank size to user
 				$(e.target).find('.modal-body').load('help.html');
@@ -194,9 +208,9 @@ function bindHandlers() {
     $('#exportModal').on('hidden.bs.modal', (e) => {
         IS_PNG_EXPORTED = false;
         IS_LATEX_EXPORTED = false;
-    });
-		//
+    });*/
 
+		//$(document).keydown(keyDownClassifier);
 }
 function onEditTextData(event) {
 		log.debug(`called onEditTextData(key: ${event.which})`);
@@ -344,37 +358,6 @@ function onEnter(event) {
 
 		parseText();
 }
-
-function bindCyHandlers() {
-		log.debug('called bindCyHandlers()');
-
-    /* Binds event handlers to cy elements.
-    NOTE: If you change the style of a node (e.g. its selector) then
-    you also need to update it here. */
-    cy.on('click', 'node.wf', clickWF);
-    cy.on('cxttapend', 'edge.dependency', selectArc);
-    cy.on('click', 'node.pos', changeNode);
-    cy.on('click', '$node > node', selectSup);
-    cy.on('cxttapend', 'node.wf', changeNode);
-    cy.on('click', 'edge.dependency', changeNode);
-		// cy.on('zoom', cy.center); // center the view port when the page zoom is changed
-}
-
-function convertText(converter) {
-		log.debug(`called viewAsText()`);
-
-		let sentence = _.sentence();
-		sentence = converter(sentence) || sentence;
-		localStorage.setItem('corpus', sentence); // TODO: do we need this?? (5/24/18)
-		$('#text-data').val(sentence);
-		parseText();
-
-}
-
-
-
-
-
 function showHelp() {
     log.debug(`called showHelp()`);
     // Opens help in new tab
@@ -397,58 +380,61 @@ function toggleTextarea() {
 function toggleRTL() {
 		log.debug(`called toggleRTL()`);
 
-		$('#RTL .fa').toggleClass('fa-align-right');
-		$('#RTL .fa').toggleClass('fa-align-left');
-		IS_LTR = !IS_LTR;
+		$('#RTL .fa')
+				.toggleClass('fa-align-right')
+				.toggleClass('fa-align-left');
+		_.is_ltr = !_.is_ltr;
 
-	  drawTree();
+		updateGui();
 }
 function toggleVertical() {
 		log.debug(`called toggleVertical()`);
 
 		$('#vertical .fa').toggleClass('fa-rotate-90');
-		IS_VERTICAL = !IS_VERTICAL;
+		_.is_vertical = !_.is_vertical;
 
-		drawTree();
+		updateGui();
 }
 function toggleEnhanced() {
 		log.debug(`called toggleEnhanced()`);
 
-	  $('#enhanced .fa').toggleClass('fa-tree');
-	  $('#enhanced .fa').toggleClass('fa-magic');
-		IS_ENHANCED = !IS_ENHANCED;
+	  $('#enhanced .fa')
+				.toggleClass('fa-tree')
+				.toggleClass('fa-magic');
+		_.is_enhanced = !_.is_enhanced;
 
-		drawTree();
+		updateGui();
 }
 
 
 
 
-function setUndos() {
-    log.debug('called setUndos()');
-		window.undoManager = new UndoManager();
 
-    const updateUI = () => {
-        log.debug('called setUndos:updateUI()');
-        btnUndo.prop('disabled', !undoManager.hasUndo());
-        btnRedo.prop('disabled', !undoManager.hasRedo());
-    }
 
-    const btnUndo = $('#btnUndo').click(() => {
-        log.debug('clicked undo');
-        undoManager.undo();
-        updateUI();
-    });
-    const btnRedo = $('#btnRedo').click(() => {
-        log.debug('clicked redo');
-        undoManager.redo();
-        updateUI()
-    });
 
-    undoManager.setCallback(updateUI);
 
-    updateUI();
+function bindCyHandlers() {
+		log.debug('called bindCyHandlers()');
+
+    /* Binds event handlers to cy elements.
+    NOTE: If you change the style of a node (e.g. its selector) then
+    you also need to update it here. */
+    cy.on('click', 'node.wf', clickWF);
+    cy.on('cxttapend', 'edge.dependency', selectArc);
+    cy.on('click', 'node.pos', changeNode);
+    cy.on('click', '$node > node', selectSup);
+    cy.on('cxttapend', 'node.wf', changeNode);
+    cy.on('click', 'edge.dependency', changeNode);
+		// cy.on('zoom', cy.center); // center the view port when the page zoom is changed
 }
+
+
+
+
+
+
+
+
 
 
 function clickWF(evt) {
@@ -634,24 +620,6 @@ function keyDownClassifier(key) {
         toMerge = cy.$('.merge'),
         // looking if some node waits to be merged to supertoken
         toSup = cy.$('.supertoken');
-
-    // $(document).bind('keydown', function(e) {
-    //     if (key.which === 21.ESC) {
-    //         e.preventDefault();
-    //         drawTree();
-    //     }
-    // });
-
-    if (key.which === KEYS.ESC) {
-        key.preventDefault();
-        drawTree();
-    }
-
-    if ($('#edit').is(':focus')) {
-        if (key.which === KEYS.TAB) {
-            key.preventDefault();
-        }
-    }
 
     if (selArcs.length) {
         if (key.which === KEYS.DELETE || key.which === KEYS.BACKSPACE) {
@@ -1416,4 +1384,29 @@ function clearWarning() {
 
 		$('#tabConllu').prop('disabled', false);
     $('#warning').css('background-color', 'white').text('');
+}
+
+function setUndos() {
+    log.debug('called setUndos()');
+		window.undoManager = new UndoManager();
+
+    const updateUI = () => {
+        log.debug('called setUndos:updateUI()');
+        btnUndo.prop('disabled', !undoManager.hasUndo());
+        btnRedo.prop('disabled', !undoManager.hasRedo());
+    }
+
+    const btnUndo = $('#btnUndo').click(() => {
+        log.debug('clicked undo');
+        undoManager.undo();
+        //updateUI();
+    });
+    const btnRedo = $('#btnRedo').click(() => {
+        log.debug('clicked redo');
+        undoManager.redo();
+        //updateUI()
+    });
+
+    undoManager.setCallback(updateUI);
+    updateUI();
 }

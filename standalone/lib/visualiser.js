@@ -42,137 +42,14 @@ const SCROLL_ZOOM_INCREMENT = 0.05,
     conllu = require('conllu');
 
 
-/**
- * Draws the tree.
- * @param {String} content Content of the input textbox.
- */
-function conlluDraw(content) {
-    log.debug(`called conlluDraw(${content})`);
-
-    let sent = new conllu.Sentence();
-    sent.serial = cleanConllu(content);
-
-    // change box size and edge style
-    if (IS_VERTICAL) {
-        $('#cy').css('width', `${$(window).width()-10}px`);
-        $('#cy').css('height', `${sent.tokens.length * 50}px`);
-        $('edge.incomplete').addClass('vertical').removeClass('horizontal');
-    } else {
-        // scales width according to viewport
-        $('#cy').css('width', '100%');
-        // window height - height of top area - height of controls
-        $('#cy').css('height', `${$(window).height()-$('.inarea').height()-80}px`);
-        $('edge.incomplete').addClass('horizontal').removeClass('vertical');
-    }
-
-    /*
-    // new global cy object
-    _.graphOptions.container = $('#cy');
-    _.graphOptions.style = CY_STYLE;
-    _.graphOptions.layout = getCyLayout();
-    _.graphOptions.elements = conllu2cy(sent);
-    _.graph = resetCy(_.graphOptions);*/
-
-    CY_OPTIONS.layout = getCyLayout();
-    CY_OPTIONS.elements = conllu2cy(sent);
-    resetCy(CY_OPTIONS);
-}
-
-function resetCy(options) {
-    log.debug(`called resetCy(${JSON.stringify(Object.keys(options))})`);
-    window.cy = cytoscape(options);
-
-    // zooming, fitting, centering
-    cy.minZoom(0.1);
-    cy.maxZoom(10.0);
-    cy.fit();
-    const zoom = cy.zoom();
-    CURRENT_ZOOM = (zoom >= 1.7 ? 1.7 : zoom <= 0.7 ? 0.7 : zoom); // pick a reasonable zoom level
-    cy.zoom(CURRENT_ZOOM);
-    cy.center();
-
-    // bind pan event
-    cy.on('pan', () => {
-
-        log.debug(`called cy->onPan(): (old) CURRENT_PAN: ${JSON.stringify(CURRENT_PAN)}`);
-        CURRENT_PAN = window.cy.pan();
-
-    });
-    cy.pan(CURRENT_PAN);
-
-    // bind some window-level events
-    $(window)
-        .resize(() => {
-
-            // change browser window size
-            log.debug(`called window->resize()`);
-
-            cy.fit();
-            cy.resize();
-            cy.reset();
-
-            CURRENT_ZOOM = cy.zoom(); // Get the current zoom factor
-
-            if (!IS_VERTICAL)
-                $('#cy').css('height', $(window).height()-$('.inarea').height()-80);
-
-            cy.pan(CURRENT_PAN);
-
-        }).bind('DOMMouseScroll wheel mousewheel', (e) => { // different browsers have different events
-
-            const delta = (-e.originalEvent.wheelDelta || e.originalEvent.detail || e.originalEvent.deltaY);
-            log.debug(`called window->wheel(delta: ${delta}, shift: ${e.shiftKey})`);
-
-            if (e.shiftKey) {
-                CURRENT_ZOOM += (delta < 0 ? 1 : -1) * SCROLL_ZOOM_INCREMENT;
-                cy.zoom(CURRENT_ZOOM);
-                cy.center();
-            } else {
-                cy.pan(CURRENT_PAN);
-            }
-
-        });
-
-    return window.cy;
-}
-
-
-
-/**
- * Layout nodes on a grid, condense means.
- * @return {Object} A tree containing formatting.
- */
-function getCyLayout() {
-
-    let layout = {
-        name: 'tree',
-        padding: 0,
-        nodeDimensionsIncludeLabels: false
-    };
-
-    if (IS_VERTICAL) {
-      layout.cols = 2;
-      layout.sort = vertAlSort;
-    } else {
-      layout.rows = 2;
-      layout.sort = (IS_LTR ? simpleIdSorting : rtlSorting);
-    }
-
-    return layout;
-}
-
-function showProgress() {
-    log.debug(`called showProgress()`);
-    $('#progressBar').animate({ width:`${DONE_WORK/(ALL_WORK-1) * 100}%` });
-}
 
 /**
  * Creates a graph out of the conllu.Sentence().
  * @param  {Object} sent A conllu.Sentence().
  * @return {Array}       Returns the graph.
  */
-function conllu2cy(sent) {
-    log.debug(`called conllu2cy(${sent.serial})`);
+function getGraphElements(sent) {
+    log.critical(`called conllu2cy(${sent.serial})`);
 
     let graph = []; TREE = {};
     $.each(sent.tokens, (i, token) => {
@@ -785,6 +662,50 @@ function vertAlSort(n1, n2) {
     }
 }
 
+
+/**
+ * Draws the tree.
+ * @param {String} content Content of the input textbox.
+ */
+function conlluDraw(content) {
+    log.debug(`called conlluDraw(${content})`);
+
+    let sent = new conllu.Sentence();
+    sent.serial = cleanConllu(content);
+
+    // change box size and edge style
+    if (IS_VERTICAL) {
+        $('#cy').css('width', `${$(window).width()-10}px`);
+        $('#cy').css('height', `${sent.tokens.length * 50}px`);
+        $('edge.incomplete').addClass('vertical').removeClass('horizontal');
+    } else {
+        // scales width according to viewport
+        $('#cy').css('width', '100%');
+        // window height - height of top area - height of controls
+        $('#cy').css('height', `${$(window).height()-$('.inarea').height()-80}px`);
+        $('edge.incomplete').addClass('horizontal').removeClass('vertical');
+    }
+
+    /*
+    // new global cy object
+    _.graphOptions.container = $('#cy');
+    _.graphOptions.style = CY_STYLE;
+    _.graphOptions.layout = getCyLayout();
+    _.graphOptions.elements = conllu2cy(sent);
+    _.graph = updateGraph(_.graphOptions);*/
+
+    CY_OPTIONS.layout = getCyLayout();
+    CY_OPTIONS.elements = conllu2cy(sent);
+    updateGraph(CY_OPTIONS);
+}
+
+
+
+
+function showProgress() {
+    log.debug(`called showProgress()`);
+    $('#progressBar').animate({ width:`${DONE_WORK/(ALL_WORK-1) * 100}%` });
+}
 
 
 /* TODO:
