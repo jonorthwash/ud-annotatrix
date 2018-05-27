@@ -38,7 +38,7 @@ function setUndos() {
 		window.undoManager = new UndoManager();
 
     const updateUI = () => {
-        log.debug('called updateUI()');
+        log.debug('called setUndos:updateUI()');
         btnUndo.prop('disabled', !undoManager.hasUndo());
         btnRedo.prop('disabled', !undoManager.hasRedo());
     }
@@ -190,8 +190,8 @@ function onEnter(event) {
 		if (IS_TABLE_VIEW)
 				throw new NotImplementedError('table view enter not implemented');
 
-		let sentence = _.sentences[_.current],
-				format = _.formats[_.current],
+		let sentence = _.sentence(),
+				format = _.format(),
 				cursor = $('#text-data').prop('selectionStart') - 1,
 				lines = sentence.split('\n'),
 				cursorLine = 0,
@@ -262,20 +262,20 @@ function onEnter(event) {
 								event.preventDefault();
 
 						// advance to the end of an analysis
-						log.critical(`onEnter(): line[${cursorLine}]: "${lines[cursorLine]}", cursor[${cursor}]: "${sentence[cursor]}"`);
+						log.debug(`onEnter(): line[${cursorLine}]: "${lines[cursorLine]}", cursor[${cursor}]: "${sentence[cursor]}"`);
 						while (cursorLine < lines.length - 1) {
 								if (lines[cursorLine + 1].startsWith('"<'))
 										break;
 								cursorLine++;
 								cursor += lines[cursorLine].length + 1;
-								log.critical(`onEnter(): incrementing line[${cursorLine}]: "${lines[cursorLine]}", cursor[${cursor}]: "${sentence[cursor]}"`);
+								log.debug(`onEnter(): incrementing line[${cursorLine}]: "${lines[cursorLine]}", cursor[${cursor}]: "${sentence[cursor]}"`);
 						}
 
 						lineId = lines.slice(0, cursorLine + 1).reduce((acc, line) => {
 								return acc + line.startsWith('"<');
 						}, 0) + 1;
-						log.critical(`onEnter(): inserting line with id: ${lineId}`);
-						log.critical(`onEnter(): resetting all content lines: [${lines}]`);
+						log.debug(`onEnter(): inserting line with id: ${lineId}`);
+						log.debug(`onEnter(): resetting all content lines: [${lines}]`);
 
 						const incrementIndices = (lines, lineId) => {
 								return lines.map((line) => {
@@ -293,9 +293,9 @@ function onEnter(event) {
 						during = [`"<_>"`, `\t${getCG3Analysis(lineId, {id:lineId})}`];
 						after = incrementIndices(lines.slice(cursorLine + 1), lineId);
 
-						log.critical(`onEnter(): preceding line(s) : [${before}]`);
-						log.critical(`onEnter(): interceding lines : [${during}]`);
-						log.critical(`onEnter(): proceeding line(s): [${after}]`);
+						log.debug(`onEnter(): preceding line(s) : [${before}]`);
+						log.debug(`onEnter(): interceding lines : [${during}]`);
+						log.debug(`onEnter(): proceeding line(s): [${after}]`);
 
 						$('#text-data').val(before.concat(during, after).join('\n'))
 								.prop('selectionStart', cursor)
@@ -330,26 +330,19 @@ function bindCyHandlers() {
 function convertText(converter) {
 		log.debug(`called viewAsText()`);
 
-		let sentence = _.sentences[_.current];
+		let sentence = _.sentence();
 		sentence = converter(sentence) || sentence;
 		localStorage.setItem('corpus', sentence); // TODO: do we need this?? (5/24/18)
 		$('#text-data').val(sentence);
 		parseTextData();
 
-		// disable table view if not CoNLL-U
-		if (IS_TABLE_VIEW && _.formats[_.current] !== 'CoNLL-U') {
-			$('#btnViewTable i').toggleClass('fa-code', 'fa-table');
-			$('#table-data').hide();
-			$('#text-data').show();
-			IS_TABLE_VIEW = false ;
-		}
 }
 function updateTabs() {
     log.debug(`called updateTabs`);
 
     /* The function handles the format tabs above the textarea.
     Takes a string with a format name, changes the classes on tabs. */
-    const format = _.formats[_.current];
+    const format = _.format();
 		localStorage.setItem('format', format);
 
 		$('.nav-link').removeClass('active').show();
@@ -374,9 +367,9 @@ function updateTabs() {
 		}
 
 		if (format !== 'CoNLL-U')
-				_.is_table_view = false;
+				_.is_table_view(false);
 
-		if (_.is_table_view) {
+		if (_.is_table_view()) {
 				$('#btnToggleTable i').removeClass('fa-code');
 				$('#text-data').hide();
 				$('#table-data').show();

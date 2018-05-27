@@ -11,11 +11,11 @@ var TABLE_COLUMNS_VISIBILITY = new Array(10).fill(true),
 function toggleTableView(event, force) { // force param used for testing
     log.debug('called toggleTableView()');
 
-    if (_.formats[_.current] !== 'CoNLL-U') {
-        log.warn(`toggleTableView(): table view not supported for ${_.formats[_.current]}`);
-        _.is_table_view = false;
+    if (_.format() !== 'CoNLL-U') {
+        log.warn(`toggleTableView(): table view not supported for ${_.format()}`);
+        _.is_table_view(false);
     } else {
-        _.is_table_view = (force === undefined ? !_.is_table_view : force);
+        _.is_table_view(force === undefined ? !_.is_table_view() : force);
     }
 
     updateTabs();
@@ -25,6 +25,9 @@ function onEditTable(event) {
     log.debug(`called onEditTable(key: ${event.which})`);
 
     switch (event.which) {
+        case (KEYS.ESC):
+            this.blur();
+            break;
         case (KEYS.ENTER):
             onEnter(event);
             break;
@@ -94,7 +97,7 @@ function buildTable() {
                     .attr('row-id', i)
                     .attr('col-id', j)
                     .attr('data-value', cell)
-                    .css('display', _.column_visible[j] ? 'inline' : 'none')
+                    .css('display', _.column_visible(j) ? 'inline' : 'none')
                     .keyup(onEditTable);
 
                 if (valid.err) {
@@ -121,7 +124,7 @@ function toggleTableColumn(event) {
         log.warn(`toggleTableColumn(): `)
     }
 
-    _.column_visible[col] = !_.column_visible[col];
+    _.column_visible(col, !_.column_visible(col));
     target.toggleClass('column-hidden')
         .find('i').toggleClass('fa-angle-double-right', 'fa-angle-double-left');
     $(`td [col-id=${col}]`).toggle();

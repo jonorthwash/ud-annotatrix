@@ -19,7 +19,7 @@ function is_upos(s) {
     // @s = the input relation
     // returns a bool
     $.each(U_POS, (i, pos) => {
-        if (pos === s)
+        if (pos === s.toUpperCase())
             return { err:null, data:{} };
     });
     return { err:'err_upos_invalid', data:{tag:s} };
@@ -37,7 +37,7 @@ function is_udeprel(s) {
     s = (s.search(':') >= 0 ? s.split(':')[0] : s);
 
     $.each(U_DEPRELS, (i, deprel) => {
-        if (deprel === s)
+        if (deprel === s.toLowerCase())
             return { err:null, data:{} };
     });
     return { err:'err_udeprel_invalid', data:{label:s} };

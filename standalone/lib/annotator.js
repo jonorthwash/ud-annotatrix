@@ -14,36 +14,56 @@ var FORMAT = '',
 var _ = { // main object to hold our current stuff
 
     reset: () => {
+        log.debug(`called _.reset()`)
 
-      // textarea-related
-      _.current = 0;
-      _.sentences = [null];
-      _.formats = [null];
+        // getters & setters
+        _.sentence = (sentence) => {
+            if (sentence !== undefined)
+                _.sentences[_.current] = sentence;
+            return _.sentences[_.current]; };
+        _.format = (format) => {
+            if (format !== undefined)
+                _.formats[_.current] = format;
+            return _.formats[_.current]; };
+        _.is_table_view = (bool) => {
+            if (bool !== undefined)
+                _.is_table_views[_.current] = bool;
+            return _.is_table_views[_.current]; };
+        _.column_visible = (col, bool) => {
+            if (bool !== undefined)
+                _.column_visibilities[_.current][col] = bool;
+            return _.column_visibilities[_.current][col]; }
 
-      // cy-related
-      _.graph = null;
-      _.graphOptions = {
-          container: null,
-          boxSelectionEnabled: false,
-          autounselectify: true,
-          autoungrabify: true,
-          zoomingEnabled: true,
-          userZoomingEnabled: false,
-          wheelSensitivity: 0.1,
-          style: null,
-          layout: null,
-          elements: []
-      };
+        // textarea-related
+        _.current = 0;
+        _.sentences = [ null ];
+        _.formats = [ null ];
+        _.is_table_views = [ false ];
+        _.column_visibilities = [ new Array(10).fill(true) ];
 
-      // display-related
-      _.is_table_view = false;
-      _.column_visible = new Array(10).fill(true);
-      _.is_textarea_visible = true;
-      _.is_vertical = false;
-      _.is_ltr = true;
-      _.is_enhanced = false;
+        // cy-related
+        _.graph = null;
+        _.graphOptions = {
+            container: null,
+            boxSelectionEnabled: false,
+            autounselectify: true,
+            autoungrabify: true,
+            zoomingEnabled: true,
+            userZoomingEnabled: false,
+            wheelSensitivity: 0.1,
+            style: null,
+            layout: null,
+            elements: []
+        };
 
-      updateSentenceTrackers();
+        // display-related
+        _.is_textarea_visible = true;
+        _.is_vertical = false;
+        _.is_ltr = true;
+        _.is_enhanced = false;
+
+        updateSentenceTrackers();
+        log.debug(`_.reset(): after reset: ${JSON.stringify(_)}`);
     }
 
 };
@@ -114,7 +134,7 @@ window.onload = () => {
 
         //test.all();
         //test.utils.splitAndSet(TEST_DATA.texts_by_format.SD.ccomp_5);
-        test.run('tableEditing');
+        //test.run('tableEditing');
         //test.utils.splitAndSet('this is a test');
         //$('#tabConllu').click()
 
@@ -146,7 +166,7 @@ function updateSentenceTrackers() {
     $('#btnNextSentence').attr('disabled', (_.current === _.sentences.length));
 
     updateFormat(_.current);
-    updateTable();
+    //updateTable();
 }
 function insertSentence() {
     log.debug(`called insertSentence()`);
@@ -157,6 +177,10 @@ function insertSentence() {
         .concat(null, _.sentences.slice(_.current));
     _.formats = _.formats.slice(0, _.current)
         .concat(null, _.formats.slice(_.current));
+    _.is_table_views = _.is_table_views.slice(0, _.current)
+        .concat(null, _.is_table_views.slice(_.current));
+    _.column_visibilities = _.column_visibilities.slice(0, _.current)
+        .concat([ new Array(10).fill(true) ], _.column_visibilities.slice(_.current));
 
     updateSentenceTrackers();
 }
@@ -173,6 +197,8 @@ function removeSentence(event, force=false) {
 
     _.sentences.splice(_.current, 1);
     _.formats.splice(_.current, 1);
+    _.is_table_views.splice(_.current, 1);
+    _.column_visibilities.splice(_.current, 1);
     _.current--;
 
     updateSentenceTrackers();
@@ -262,7 +288,7 @@ function parseTextData() {
 				splitted = matched === null
   					? [ content.trim() ]
   					: matched.map((chunk) => {
-  						return chunk.trim();
+  						return chunk;
   					});
     } else {
         splitted = content.split(/\n{2,}/g).map((chunk) => {
@@ -283,16 +309,15 @@ function parseTextData() {
     // iterate in reverse order over all elements except the first
     for (let i = splitted.length - 1; i > 0; i--) {
         insertSentence();
-        setSentence(_.current, splitted[i]);
-        prevSentence();
+        setSentence(i, splitted[i]);
     }
 
     // enforce that only CoNLL-U can be in table view
     if (_.formats[_.current] !== 'CoNLL-U')
-        _.is_table_view = false;
-
+        _.is_table_view(false);
 
     //updateTable();
+    updateSentenceTrackers();
 
     // return splitted for testing purposes
     return splitted;

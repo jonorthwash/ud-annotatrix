@@ -770,8 +770,13 @@ class Tester extends Object {
 
 				(() => {
 					const sentences = _.sentences.length,
-							formats = _.formats.length;
-					this.assert(sentences === formats, `inconsistent: got ${sentences} sentences and ${formats} formats`);
+							formats = _.formats.length,
+							is_table_views = _.is_table_views.length,
+							column_visibilities = _.column_visibilities.length;
+					this.assert(sentences === formats
+						&& sentences === is_table_views
+						&& sentences === column_visibilities,
+						`inconsistent: got ${sentences} sentences, ${formats} formats ${is_table_views} table views, and ${column_visibilities} column_visibilities`);
 				})();
 
 				((expected) => {
@@ -831,9 +836,9 @@ class Tester extends Object {
 			matchAndTrim: (str) => {
 				const matched = str.match(/[^.!?]+[.!?]*/g);
 				return matched === null
-					? [ str.trim() ]
+					? [ str ]
 					: matched.map((chunk) => {
-						return chunk.trim();
+						return chunk;//.trim();
 					});
 			},
 			splitAndTrim: (str) => {
@@ -855,8 +860,8 @@ class Tester extends Object {
 					}[char];
 
 				if (!(char === '\n'
-					&& (_.formats[_.current] === 'CoNLL-U'
-						|| _.formats[_.current] === 'CG3')))
+					&& (_.format() === 'CoNLL-U'
+						|| _.format() === 'CG3')))
 					this.utils.insertChar(selector, char);
 
 				if (selector === '#text-data') {
@@ -1234,15 +1239,15 @@ class Tester extends Object {
 					{ str:'this is the first test', split:['this is the first test'] },
 					{ str:'this is, the second', split:['this is, the second'] },
 					{ str:'one sentence.', split:['one sentence.'] },
-					{ str:'one! two!', split:['one!', 'two!'] },
-					{ str:'one. two! three?', split:['one.', 'two!', 'three?'] },
+					{ str:'one! two!', split:['one!', ' two!'] },
+					{ str:'one. two! three?', split:['one.', ' two!', ' three?'] },
 				], (i, datum) => {
 
 					const splitted = this.utils.splitAndSet(datum.str),
-						message = `expected '${datum.split.join('\', \'')}'; got '${splitted.join('\', \'')}'`;
+						message = `expected [${datum.split}]; got [${splitted}]`;
 
 					this.assert(this.arraysEqual(datum.split, splitted), message);
-					this.utils.checkCounts(0, splitted.length);
+					this.utils.checkCounts(splitted.length - 1, splitted.length);
 
 				});
 
@@ -1265,7 +1270,7 @@ class Tester extends Object {
 							this.assert(this.arraysEqual(expected, actual),
 								`expected ${JSON.stringify(expected)}; got ${JSON.stringify(actual)}`);
 
-							this.utils.checkCounts(0, actual.length);
+							this.utils.checkCounts(actual.length - 1, actual.length);
 
 						});
 					});
@@ -1288,7 +1293,7 @@ class Tester extends Object {
 						$(selector).click();
 
 						let EOLs = [], acc = 0;
-						$.each(_.sentences[_.current].split('\n'), (k, line) => {
+						$.each(_.sentence().split('\n'), (k, line) => {
 							EOLs.push(acc + line.length + k);
 							acc += line.length;
 						});
@@ -1312,13 +1317,13 @@ class Tester extends Object {
 						this.utils.splitAndSet(text);
 						for (let k=0; k < 5; k++) { // trying hitting <Enter> multiple times
 
-							const cursor = this.utils.randomInt(_.sentences[_.current].length);
+							const cursor = this.utils.randomInt(_.sentence().length);
 							this.utils.simKeyup('#text-data', '\n', cursor);
 							parseTextData();
 							this.utils.jumpToSentence(1);
 
-							this.assert(format === _.formats[_.current],
-								`expected format to be ${format}, got ${_.formats[_.current]}`);
+							this.assert(format === _.format(),
+								`expected format to be ${format}, got ${_.format()}`);
 							this.utils.isValid(format, text);
 						}
 					});
@@ -1337,9 +1342,9 @@ class Tester extends Object {
 						toggleTableView(null, true);
 
 						if (format !== 'CoNLL-U') {
-							this.assert(_.is_table_view === false, `expected ${format} not to have table view`);
+							this.assert(_.is_table_view() === false, `expected ${format} not to have table view`);
 						} else {
-							this.assert(_.is_table_view === true, `expected CoNLL-U to have table view available`);
+							this.assert(_.is_table_view() === true, `expected CoNLL-U to have table view available`);
 
 						}
 
