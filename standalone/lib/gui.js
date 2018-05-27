@@ -548,6 +548,7 @@ function selectSup() {
 
 function keyDownClassifier(key) {
     log.debug(`called keyDownClassifier(${key.which})`);
+		return;
 
     // looking if there are selected arcs
     const selArcs = cy.$('edge.dependency.selected'),  // + cy.$('edge.dependency.error');

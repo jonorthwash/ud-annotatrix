@@ -134,7 +134,7 @@ window.onload = () => {
 
         //test.all();
         //test.utils.splitAndSet(TEST_DATA.texts_by_format.SD.ccomp_5);
-        //test.run('tableEditing');
+        test.run('tableEditing');
         //test.utils.splitAndSet('this is a test');
         //$('#tabConllu').click()
 

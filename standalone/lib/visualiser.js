@@ -356,7 +356,8 @@ function toSubscript(str) {
     const subscripts = { 0:'₀', 1:'₁', 2:'₂', 3:'₃', 4:'₄', 5:'₅',
         6:'₆', 7:'₇', 8:'₈', 9:'₉', '-':'₋', '(':'₍', ')':'₎' };
 
-    return str.map((char) => {
+    console.log(str);
+    return str.split('').map((char) => {
         return (subscripts[char] || char);
     });
 }
