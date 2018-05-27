@@ -184,43 +184,47 @@ function onEditTextData(event) {
 function onEnter(event) {
 		log.debug(`called onEnter()`);
 
-		if (_.is_table_view())
-				throw new NotImplementedError('table view enter not implemented');
-
-		let sentence = _.sentence(),
-				format = _.format(),
+		let format = _.format(),
+				sentence = _.sentence(),
 				cursor = $('#text-data').prop('selectionStart') - 1,
 				lines = sentence.split('\n'),
-				cursorLine = 0,
-				lineId = null, before, during, after;
+				lineId = null, before, during, after,
+				cursorLine = 0;
 
-		if (format === 'Unknown' || format === 'plain text')
-				return;
+		if (_.is_table_view()) {
 
-		// get current line number
-		let acc = 0;
-		$.each(lines, (i, line) => {
-				acc += line.length;
-				if (acc + i < cursor)
-						cursorLine = i + 1;
-		});
-		log.debug(`onEnter(): cursor on line[${cursorLine}]: "${lines[cursorLine]}"`);
+				cursorLine = parseInt($(event.target).closest('td').attr('row-id'));
 
-		// advance the cursor until we are at the end of a line that isn't followed by a comment
-		//   or at the very beginning of the textarea
-		if (cursor !== 0 || sentence[0] === '#') {
-				log.debug(`onEnter(): cursor not at textarea start OR textarea has comments`)
-				while (sentence[cursor + 1] === '#' || sentence[cursor] !== '\n') {
-						//console.log(`cursor[${cursor}]: "${sentence[cursor]}", line[${cursorLine}]: ${lines[cursorLine]}`);
-						if (cursor === sentence.length)
-								break;
-						if (sentence[cursor] === '\n')
-								cursorLine++;
-						cursor++;
-				}
 		} else {
-				log.debug(`onEnter(): cursor at textarea start`)
-				cursorLine = -1;
+
+				if (format === 'Unknown' || format === 'plain text')
+						return;
+
+				// get current line number
+				let acc = 0;
+				$.each(lines, (i, line) => {
+						acc += line.length;
+						if (acc + i < cursor)
+								cursorLine = i + 1;
+				});
+				log.debug(`onEnter(): cursor on line[${cursorLine}]: "${lines[cursorLine]}"`);
+
+				// advance the cursor until we are at the end of a line that isn't followed by a comment
+				//   or at the very beginning of the textarea
+				if (cursor !== 0 || sentence[0] === '#') {
+						log.debug(`onEnter(): cursor not at textarea start OR textarea has comments`)
+						while (sentence[cursor + 1] === '#' || sentence[cursor] !== '\n') {
+								//console.log(`cursor[${cursor}]: "${sentence[cursor]}", line[${cursorLine}]: ${lines[cursorLine]}`);
+								if (cursor === sentence.length)
+										break;
+								if (sentence[cursor] === '\n')
+										cursorLine++;
+								cursor++;
+						}
+				} else {
+						log.debug(`onEnter(): cursor at textarea start`)
+						cursorLine = -1;
+				}
 		}
 
 		log.debug(`onEnter(): cursor[${cursor}]: "${sentence[cursor]}", line[${cursorLine}]: ${lines[cursorLine]}`);

@@ -5,7 +5,6 @@ function buildTable() {
 
     $('#table-data tbody').empty();
 
-    let tabindex = 0;
     $.each($('#text-data').val().split('\n'), (i, line) => {
         log.debug(`updateTable() line: ${line}`);
         if (line.trim() === '')
@@ -44,7 +43,6 @@ function buildTable() {
                 td.prop('contenteditable', true)
                     .attr('row-id', i)
                     .attr('col-id', j)
-                    .attr('tabindex', tabindex)
                     .css('visibility', _.column_visible(j) ? 'visible' : 'hidden')
                     .blur(onEditTable)
                     .keyup((event) => {
@@ -69,7 +67,6 @@ function buildTable() {
                     });
                 }
                 tr.append( td.append(inputSpan).append(errorSpan) );
-                tabindex++;
             });
         }
         $('#table-data tbody').append(tr);
