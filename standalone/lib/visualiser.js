@@ -31,7 +31,7 @@ const SCROLL_ZOOM_INCREMENT = 0.05,
  * @return {Array}       Returns the graph.
  */
 function getGraphElements() {
-    log.critical(`called getGraphElements()`);
+    log.debug(`called getGraphElements()`);
 
     let graph = [];
     $.each(_.tokens(), (i, token) => {
@@ -40,7 +40,7 @@ function getGraphElements() {
         } else {
             _createToken(graph, token);
         }
-        console.log('graph', graph);
+        //console.log('graph', graph);
     });
 
     return graph;
@@ -105,9 +105,9 @@ function getGraphElements() {
 }
 
 function _createToken(graph, token, superToken) {
-    log.critical(`called _createToken(token: ${JSON.stringify(token)}, superToken: ${JSON.stringify(superToken)})`);
+    log.debug(`called _createToken(token: ${JSON.stringify(token)}, superToken: ${JSON.stringify(superToken)})`);
 
-    token.form = "TEXT!!!"//token.form || ' ';
+    token.form = token.form || ' ';
     token.pos = token.upostag || token.xpostag || '';
 
     // number node
@@ -115,8 +115,8 @@ function _createToken(graph, token, superToken) {
         data: {
             id: `num-${token.id}`,
             label: token.id,
-            pos: token.upostag,
-            parent: superToken ? superToken.id : undefined
+            pos: token.upostag || null,
+            parent: superToken ? superToken.id : null
         },
         classes: 'number'
     });
@@ -125,6 +125,7 @@ function _createToken(graph, token, superToken) {
     graph.push({
         data: {
             id: `form-${token.id}`,
+            form: token.form,
             label: token.form,
             length: `${token.form.length > 3
                 ? token.form.length * 0.7 : token.form.length}em`,
@@ -662,12 +663,20 @@ function setEdgePosition(edge, height, coeff, diff) {
     }
 }
 
+function cyGetIndex(ele) {
+    const id = parseInt(ele.id().split('-').slice(-1));
+    return isNaN(id) ? -Infinity : id;
+}
+
 function simpleIdSorting(n1, n2) {
     log.debug(`called simpleIdSorting(${n1.id()}, ${n2.id()})`);
 
-    if (n1.id() < n2.id()) {
+    n1 = cyGetIndex(n1);
+    n2 = cyGetIndex(n2);
+
+    if (n1 < n2) {
         return -1;
-    } else if (n1.id() > n2.id()) {
+    } else if (n1 > n2) {
         return 1;
     } else {
         return 0;

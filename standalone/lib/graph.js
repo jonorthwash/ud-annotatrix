@@ -14,8 +14,10 @@ function updateGraph() {
         sort: (_.is_vertical ? vertAlSort
             : _.is_ltr ? simpleIdSorting : rtlSorting )
     };
+    _.graph_options.layout = { name: 'random' };
     _.graph_options.elements = _.graph( getGraphElements() );
 
+    console.log(_.graph_options);
     window.cy = cytoscape(_.graph_options);
 
     cy.minZoom(0.1)
