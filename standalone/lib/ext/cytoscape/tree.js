@@ -20,7 +20,7 @@ let defaults = {
   animateFilter: function ( node, i ){ return true; }, // a function that determines whether the node should be animated.  All nodes animated by default on animate enabled.  Non-animated nodes are positioned immediately when the layout starts
   ready: undefined, // callback on layoutready
   stop: undefined, // callback on layoutstop
-  transform: function (node, position ){ return position; } // transform a given node position. Useful for changing flow direction in discrete layouts 
+  transform: function (node, position ){ return position; } // transform a given node position. Useful for changing flow direction in discrete layouts
 };
 
 function TreeLayout( options ){
@@ -126,7 +126,7 @@ TreeLayout.prototype.run = function(){
         }
       }
     }
-    
+
     let cellWidth = bb.w / cols;
     let cellHeight = bb.h / rows;
 
@@ -140,13 +140,13 @@ TreeLayout.prototype.run = function(){
     for( let i = 0; i < nodes.length; i++ ){
       widthCoefs.push(1.0);
     }
-    
+
     var posWordMax = {};
     if( options.avoidOverlap ){
       // iterate through all the nodes and set the cellWidth and cellHeight
       // to the maximum width/height seen in the graph plus a padding value
       for( let i = 0; i < nodes.length; i++ ){
-        let clumpId = parseInt(nodes[i]._private.data.id.replace(/np0*|nf0*/,'')) - 1 ;
+        let clumpId = parseInt(nodes[i]._private.data.id.split('-').slice(-1)) - 1 ;
         posWordMax[clumpId] = 0;
       }
       for( let i = 0; i < nodes.length; i++ ){
@@ -164,12 +164,12 @@ TreeLayout.prototype.run = function(){
 
         let w = nbb.w + p;
         let h = nbb.h + p;
- 
+
         widths[i] = w;
 
         //console.log('tree.js: [' + i + '] ' + node._private.data.label);
         //console.log('tree.js: [' + i + '] ' + node._private.data.id);
-        let clumpId = parseInt(node._private.data.id.replace(/np0*|nf0*/,'')) - 1 ;
+        let clumpId = parseInt(node._private.data.id.split('-').slice(-1)) - 1 ;
         //console.log('tree.js: [' + i + '] ' + clumpId);
         posWordMax[clumpId] = Math.max(posWordMax[clumpId], nbb.w + p);
         //console.log('tree.js: [' + i + '] ' + posWordMax[clumpId]);
@@ -177,15 +177,15 @@ TreeLayout.prototype.run = function(){
         cellWidth = Math.max( cellWidth, w ) ;
         cellHeight = Math.max( cellHeight, h );
       }
-      //console.log('tree.js: ** ' + Object.entries(posWordMax));    
+      //console.log('tree.js: ** ' + Object.entries(posWordMax));
       for( let i = 0; i < nodes.length; i++ ){
         widthCoefs[i] = widths[i] / cellWidth;
-        //console.log('tree.js: posWordMax  ' + posWordMax[i]);    
+        //console.log('tree.js: posWordMax  ' + posWordMax[i]);
         if(widthCoefs[i] < 0.7) {
           widthCoefs[i] = 0.7;
         }
       }
-      //console.log('tree.js ' + widthCoefs);    
+      //console.log('tree.js ' + widthCoefs);
     }
 
     let cellUsed = {}; // e.g. 'c-0-2' => true
@@ -259,7 +259,7 @@ TreeLayout.prototype.run = function(){
         }
 
         var prevNodes = 0;
-        for(let ii = 0; ii < col; ii++) { 
+        for(let ii = 0; ii < col; ii++) {
           prevNodes += posWordMax[ii];
         }
         var pad = 2;
@@ -268,8 +268,8 @@ TreeLayout.prototype.run = function(){
         x = prevNodes + (pad * 2 * col) + (posWordMax[col] / 2);
         //x = col * cellWidth + cellWidth / 2 + bb.x1;
         y = row * cellHeight + cellHeight / 2 + bb.y1;
- 
-        console.log('tree.js [' + row + '][' + col + '] x,y = ' + x + ',' + y); 
+
+        console.log('tree.js [' + row + '][' + col + '] x,y = ' + x + ',' + y);
 
         use( row, col );
 
