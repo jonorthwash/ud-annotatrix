@@ -383,7 +383,7 @@ function generateLateX(graph) {
             var target = parseInt(graph[i].data.target.replace('nf', ''));
             var label = ''
             if(graph[i].data.label != undefined) {
-                label = graph[i].data.label.replace(/[⊳⊲]/, '');
+                label = graph[i].data.label.replace(/[⊳⊲∆∇]/, '');
             }
             deprelLines.push('\depedge{' + source + '}{' + target + '}' + '{' + label + '}');
         }
@@ -566,18 +566,22 @@ function makeDependencies(token, nodeId, graph) {
 		}
 	}
 
-	// Append ⊲ or ⊳ to indicate direction of the arc (helpful if
+	// Append ⊲, ⊳, ∆ or ∇ to indicate direction of the arc (helpful if
 	// there are many arcs.
 	var deprelLabel = deprel;
-	if(parseInt(head) < parseInt(nodeId) && LEFT_TO_RIGHT) {
+	if(parseInt(head) < parseInt(nodeId) && LEFT_TO_RIGHT && !VERT_ALIGNMENT) {
 		deprelLabel = deprelLabel + '⊳';
-	} else if(parseInt(head) > parseInt(nodeId) && LEFT_TO_RIGHT) {
+	} else if(parseInt(head) > parseInt(nodeId) && LEFT_TO_RIGHT && !VERT_ALIGNMENT) {
 		deprelLabel = '⊲' + deprelLabel;
-	} else if(parseInt(head) < parseInt(nodeId) && !LEFT_TO_RIGHT) {
+	} else if(parseInt(head) < parseInt(nodeId) && !LEFT_TO_RIGHT && !VERT_ALIGNMENT) {
 		deprelLabel = '⊲' + deprelLabel;
-	} else if(parseInt(head) > parseInt(nodeId) && !LEFT_TO_RIGHT) {
+	} else if(parseInt(head) > parseInt(nodeId) && !LEFT_TO_RIGHT && !VERT_ALIGNMENT) {
 		deprelLabel = deprelLabel + '⊳';
-	}
+	} else if(parseInt(head) > parseInt(nodeId) && VERT_ALIGNMENT) {
+    deprelLabel = deprelLabel + '∆'
+  } else if(parseInt(head) < parseInt(nodeId) && VERT_ALIGNMENT) {
+    deprelLabel = deprelLabel + '∇'
+  }
 
 	if (token.head && token.head != 0) {
 		var headId = strWithZero(head);
@@ -637,14 +641,14 @@ function makeDependencies(token, nodeId, graph) {
                         var graphSource = String(parseInt(graph[graphInd].data.source.substring(2)));
                         if(res3.has(graphSource)) {
                             var conflicts = res3.get(graphSource);
-                            if(conflicts.indexOf("obj") !== -1 && (graphLabel === "obj⊳" || graphLabel === "⊲obj")) {
+                            if(conflicts.indexOf("obj") !== -1 && graphLabel.replace(/[⊳⊲∆∇]/, '') === "obj") {
                                 graph[graphInd].classes = "dependency error";
                             }
-                            if(conflicts.indexOf("subj") !== -1 && (graphLabel === "csubj⊳" || graphLabel === "⊲csubj" || graphLabel === "⊲nsubj" || graphLabel === "nsubj⊳")) {
+                            if(conflicts.indexOf("subj") !== -1 && (graphLabel.replace(/[⊳⊲∆∇]/, '') === "csubj" || graphLabel.replace(/[⊳⊲∆∇]/, '') === "nsubj")) {
                                 graph[graphInd].classes = "dependency error";
                             }
                         }
-                        if(res3.has("objccomp") && (graphLabel === "obj⊳" || graphLabel === "⊲obj" || graphLabel === "ccomp⊳" || graphLabel === "⊲ccomp")) {
+                        if(res3.has("objccomp") && graphLabel.replace(/[⊳⊲∆∇]/, '') === "ccomp") {
                                 graph[graphInd].classes = "dependency error";
                         }
                     }
