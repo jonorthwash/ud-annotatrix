@@ -25,7 +25,7 @@ const CY_STYLE = [{
         'label': 'data(label)'
   }
 }, {
-    'selector': 'node.MultiwordToken',
+    'selector': 'node.multiword',
     'style': {
         'background-color': ST_COLOR,
         'text-background-color': NORMAL_COLOR,

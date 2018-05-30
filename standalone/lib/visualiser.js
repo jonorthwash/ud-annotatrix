@@ -66,7 +66,27 @@ function getGraphElements() {
     let graph = [];
     $.each(_.tokens(), (i, token) => {
         if (token instanceof conllu.MultiwordToken) {
-            throw new NotImplementedError('getGraphElements(): mutliword tokens not implemented yet');
+
+            // multiword node
+            const label = `${token.form}${toSubscript(` ${
+                token.tokens[0].id}-${
+                token.tokens[token.tokens.length - 1].id}`)}`;
+
+            console.log(label);
+            graph.push({
+                data: {
+                    id: `super-${token.id}`,
+                    num: token.id,
+                    name: 'super',
+                    label: label,
+                },
+                classes: 'multiword'
+            });
+
+            $.each(token.tokens, (j, subToken) => {
+                _createToken(graph, subToken, token);
+            });
+
         } else {
             _createToken(graph, token);
         }
@@ -369,7 +389,7 @@ function toSubscript(str) {
     console.log(str);
     return str.split('').map((char) => {
         return (subscripts[char] || char);
-    });
+    }).join('');
 }
 
 
