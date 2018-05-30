@@ -1,6 +1,8 @@
 
 # How to use this
 
+0. check out /scripts/rebuild-tree.sh
+
 1. Get cytoscape.js from github
 
 2. download all the npm stuff
@@ -9,6 +11,6 @@
 
 4. edit src/extensions/layout/index.js
 
-5. npm run build 
+5. npm run build
 
 6. copy dist/cytoscape.min.js to ud-annotatrix/standalone/lib/ext
