@@ -32,7 +32,7 @@ function convert2PlainText(text) {
             log.warn(`convert2PlainText(): failed to convert: Unknown input type`);
             return null;
         case ('plain text'):
-            log.warn(`convert2PlainText(): received plain text`);
+            log.info(`convert2PlainText(): received plain text`);
             return text;
         case ('Brackets'):
             return conllu2PlainText(brackets2Conllu(text));
@@ -85,7 +85,7 @@ function convert2Conllu(text) {
             data = cleanConllu(sd2Conllu__raw(text));
             break;
         case ('CoNLL-U'):
-            log.warn(`convert2conllu(): received CoNLL-U`);
+            log.info(`convert2conllu(): received CoNLL-U`);
             data = cleanConllu(text);
             break;
         case ('CG3'):
@@ -138,7 +138,7 @@ function convert2CG3(text) {
             cg3 = conllu2CG3(text);
             break;
         case ('CG3'):
-            log.warn(`convert2CG3(): received CG3`);
+            log.info(`convert2CG3(): received CG3`);
             cg3 = text;
             break;
     }

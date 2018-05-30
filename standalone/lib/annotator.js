@@ -46,6 +46,7 @@ var _ = { // main object to hold our current stuff
             layout: null,
             elements: []
         };
+        _.editing = null;
 
         updateSentences();
     },

@@ -25,6 +25,36 @@ const SCROLL_ZOOM_INCREMENT = 0.05,
     DEFAULT_COEFF = 1, // 0.7
     STAGGER_SIZE = 15;
 
+
+function updateGraph() {
+    log.critical(`called updateGraph()`);
+
+    convert2Conllu();
+
+    _.graph_options.layout = {
+        name: 'tree',
+        padding: 0,
+        nodeDimensionsIncludeLabels: false,
+        cols: (_.is_vertical ? 2 : undefined),
+        rows: (_.is_vertical ? undefined : 2),
+        sort: (_.is_vertical ? vertAlSort
+            : _.is_ltr ? simpleIdSorting : rtlSorting )
+    };
+    _.graph_options.elements = _.graph( getGraphElements() );
+
+    window.cy = cytoscape(_.graph_options);
+
+    cy.minZoom(0.1)
+        .maxZoom(10.0)
+        .fit()
+        .center()
+        .zoom();
+
+    bindCyHandlers();
+
+    return;
+}
+
 /**
  * Creates a graph out of the conllu.Sentence().
  * @param  {Object} sent A conllu.Sentence().
@@ -40,11 +70,11 @@ function getGraphElements() {
         } else {
             _createToken(graph, token);
         }
-        //console.log('graph', graph);
     });
 
     return graph;
 
+    /*
     //let graph = []; TREE = {};
     $.each(sent.tokens, (i, token) => {
         if (token instanceof conllu.MultiwordToken){
@@ -101,7 +131,7 @@ function getGraphElements() {
         }
     });
 
-    return graph;
+    return graph; */
 }
 
 function _createToken(graph, token, superToken) {
@@ -125,6 +155,8 @@ function _createToken(graph, token, superToken) {
     graph.push({
         data: {
             id: `form-${token.id}`,
+            num: token.id,
+            name: `form`,
             form: token.form,
             label: token.form,
             length: `${token.form.length > 3
@@ -139,6 +171,8 @@ function _createToken(graph, token, superToken) {
     graph.push({
         data: {
             id: `pos-node-${token.id}`,
+            num: token.id,
+            name: `pos-node`,
             label: token.pos,
             length: `${token.pos.length + 1}em`
         },
@@ -149,6 +183,8 @@ function _createToken(graph, token, superToken) {
     graph.push({
         data: {
             id: `pos-edge-${token.id}`,
+            num: token.id,
+            name: `pos-edge`,
             source: `form-${token.id}`,
             target: `pos-node-${token.id}`
         },
@@ -666,10 +702,10 @@ function setEdgePosition(edge, height, coeff, diff) {
 function cyGetIndex(ele) {
     // NB: sorting will break if sentence has more than this many tokens
     const LARGE_NUMBER = 10000,
-        id = parseInt(ele.id().split('-').slice(-1)),
-        type = ele.id().split('-')[0];
+        id = parseInt(ele.data('num')),
+        offset = ele.data('name') === 'pos-node' ? LARGE_NUMBER : 0;
 
-    return isNaN(id) ? -Infinity : id + (type === 'pos' ? LARGE_NUMBER : 0);
+    return isNaN(id) ? -Infinity : id + offset;
 }
 
 function simpleIdSorting(n1, n2) {

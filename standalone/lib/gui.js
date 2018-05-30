@@ -40,6 +40,7 @@ const KEYS = {
 var CURRENT_ZOOM = 1.0;
 var IS_EDITING = false;
 
+var pressed = {}; // used for onKeyupInDocument
 
 function updateGui() {
     log.debug(`called updateGui()`);
@@ -96,6 +97,8 @@ function updateGui() {
 
 		updateGraph();
 }
+
+// basic event handlers
 function bindHandlers() {
 		log.debug(`called bindHandlers()`);
     /* Binds handlers to DOM elements. */
@@ -129,63 +132,10 @@ function bindHandlers() {
     $('#vertical').click(toggleVertical);
     $('#enhanced').click(toggleEnhanced);
 
-		$('#current-sentence').keyup((event) => {
-				switch (event.which) {
-						case (KEYS.ENTER):
-								goToSentence();
-								break;
-						case (KEYS.LEFT):
-						case (KEYS.J):
-								prevSentence();
-								break;
-						case (KEYS.RIGHT):
-						case (KEYS.K):
-								nextSentence();
-								break;
-						case (KEYS.MINUS):
-								removeSentence();
-								break;
-						case (KEYS.EQUALS):
-								insertSentence();
-								break;
-				}
-		});
+		$('#current-sentence').keyup(onKeyupInTextarea);
 
-		// handle Ctrl + <keypress>
-		// solution based on https://stackoverflow.com/a/12444641/5181692
-		let pressed = {};
-		onkeydown = onkeyup = (event) => {
-
-				pressed[event.which] = (event.type === 'keydown');
-				if (!pressed[KEYS.CTRL])
-						return;
-
-				if (pressed[KEYS.PAGE_DOWN]) {
-						if (pressed[KEYS.SHIFT]) {
-								$('#current-sentence').val(_.sentences.length);
-								goToSentence();
-						} else {
-								nextSentence();
-						}
-						pressed = {};
-						pressed[KEYS.CTRL] = true;
-
-				} else if (pressed[KEYS.PAGE_UP]) {
-						if (pressed[KEYS.SHIFT]) {
-								$('#current-sentence').val(1);
-								goToSentence();
-						} else {
-								prevSentence();
-						}
-						pressed = {};
-						pressed[KEYS.CTRL] = true;
-
-				} else if (pressed[KEYS.Z] && !pressed[KEYS.SHIFT]) {
-					undoManager.undo();
-				} else if (pressed[KEYS.Y] || pressed[KEYS.Z]) {
-					undoManager.redo();
-				}
-		}
+		// onkeydown, onkeyup are global variables for JS runtime
+		onkeydown = onkeyup = onKeyupInDocument;
 
 		/* what's up with this stuff ?? (updated 5/27/18)
 
@@ -212,6 +162,65 @@ function bindHandlers() {
 
 		//$(document).keydown(keyDownClassifier);
 }
+function onKeyupInTextarea(event) {
+		log.debug(`called onKeyupInTextarea(${event.which})`);
+
+		switch (event.which) {
+				case (KEYS.ENTER):
+						goToSentence();
+						break;
+				case (KEYS.LEFT):
+				case (KEYS.J):
+						prevSentence();
+						break;
+				case (KEYS.RIGHT):
+				case (KEYS.K):
+						nextSentence();
+						break;
+				case (KEYS.MINUS):
+						removeSentence();
+						break;
+				case (KEYS.EQUALS):
+						insertSentence();
+						break;
+		}
+}
+function onKeyupInDocument(event) {
+		log.debug(`called onKeyupInDocument(which:${event.which}, pressed:${JSON.stringify(pressed)})`);
+
+		// handle Ctrl + <keypress>
+		// solution based on https://stackoverflow.com/a/12444641/5181692
+
+		pressed[event.which] = (event.type === 'keydown');
+		if (!pressed[KEYS.CTRL])
+				return;
+
+		if (pressed[KEYS.PAGE_DOWN]) {
+				if (pressed[KEYS.SHIFT]) {
+						$('#current-sentence').val(_.sentences.length);
+						goToSentence();
+				} else {
+						nextSentence();
+				}
+				pressed = {};
+				pressed[KEYS.CTRL] = true;
+
+		} else if (pressed[KEYS.PAGE_UP]) {
+				if (pressed[KEYS.SHIFT]) {
+						$('#current-sentence').val(1);
+						goToSentence();
+				} else {
+						prevSentence();
+				}
+				pressed = {};
+				pressed[KEYS.CTRL] = true;
+
+		} else if (pressed[KEYS.Z]) {
+			undoManager.undo();
+		} else if (pressed[KEYS.Y] || (pressed[KEYS.Z]  && pressed[KEYS.SHIFT])) {
+			undoManager.redo();
+		}
+}
 function onEditTextData(event) {
 		log.debug(`called onEditTextData(key: ${event.which})`);
 
@@ -224,7 +233,6 @@ function onEditTextData(event) {
 						break;
 				default:
 						parseText();
-						//drawTree();
 		}
 }
 function onEnter(event) {
@@ -358,6 +366,8 @@ function onEnter(event) {
 
 		parseText();
 }
+
+// show external things
 function showHelp() {
     log.debug(`called showHelp()`);
     // Opens help in new tab
@@ -367,6 +377,8 @@ function showSettings(event) {
 		log.debug(`called showSettings()`);
 		throw new NotImplementedError('showSettings() not implemented');
 }
+
+// togglers
 function toggleTextarea() {
 		log.debug(`called toggleTextarea()`);
 
@@ -406,68 +418,111 @@ function toggleEnhanced() {
 		updateGui();
 }
 
-
-
-
-
-
-
-
+// cy-related GUI stuff
 function bindCyHandlers() {
 		log.debug('called bindCyHandlers()');
 
-    /* Binds event handlers to cy elements.
-    NOTE: If you change the style of a node (e.g. its selector) then
-    you also need to update it here. */
-    cy.on('click', 'node.wf', clickWF);
-    cy.on('cxttapend', 'edge.dependency', selectArc);
-    cy.on('click', 'node.pos', changeNode);
-    cy.on('click', '$node > node', selectSup);
-    cy.on('cxttapend', 'node.wf', changeNode);
-    cy.on('click', 'edge.dependency', changeNode);
-		// cy.on('zoom', cy.center); // center the view port when the page zoom is changed
+    /**
+		 * Binds event handlers to cy elements.
+		 * NOTE: If you change the style of a node (e.g. its selector) then
+     * you also need to update it here.
+		 */
+
+		// just to make sure we see everything :)
+		cy.on('click', '*', (event) => {
+				log.info(`clicked ${event.target.attr('id')}`); });
+
+		cy.on('click', 'node.form', clickFormNode);
+    cy.on('click', 'node.pos', clickPosNode);
+    cy.on('click', '$node > node', clickChildNode);
+		cy.on('cxttapend', 'node.wf', cxttapendFormNode);
+
+    cy.on('click', 'edge.dependency', clickDependencyEdge);
+		cy.on('cxttapend', 'edge.dependency', cxttapendDependencyEdge);
+
+}
+
+
+function clickFormNode(event) {
+		const target = event.target;
+		log.warn(`called clickFormNode(${target.attr('id')})`);
+
+		if (target.hasClass('activated')) {
+				target.removeClass('activated');
+
+		} else {
+
+				const source = cy.$('.activated');
+				target.addClass('activated');
+
+				// if there was already an activated node
+				if (source.length === 1)
+						makeDependency(source, target);
+
+		}
+}
+function clickPosNode(event) {
+		const target = event.target;
+		log.warn(`called clickPosNode(${target.attr('id')})`);
+}
+function clickChildNode(event) {
+		// NB: event.target is the PARENT of a child we click
+		const target = event.target;
+		log.warn(`called clickChildNode(${target.attr('id')})`);
+		target.toggleClass('supAct');
+}
+function cxttapendFormNode(event) {
+		const target = event.target;
+		log.warn(`called cxttapendFormNode(${target.attr('id')})`);
+}
+
+function clickDependencyEdge(event) {
+		const target = event.target;
+		log.warn(`called clickDependencyEdge(${target.attr('id')})`);
+
+		/*
+		 * Activated when an arc is selected. Adds classes showing what is selected.
+		 */
+
+		return;
+		if (_.editing !== null) {
+
+		}
+		if (!IS_EDITING) {
+
+				const targetIndex = this.data('target');
+
+				// if the user clicked an activated node
+				if (this.hasClass('selected')) {
+
+						this.removeClass('selected');
+						cy.$(`#${targetIndex}`).removeClass('arc-selected'); // removing visual effects from targetNode
+
+				} else {
+
+						this.addClass('selected');
+						cy.$(`#${targetIndex}`).addClass('arc-selected'); // css for targetNode
+
+				}
+
+				// for identifying the node
+				cy.$(`#${targetIndex}`).data('state', 'arc-dest');
+		}
+
+}
+function cxttapendDependencyEdge(event) {
+		const target = event.target;
+		log.warn(`called cxttapendDependencyEdge(${target.attr('id')})`);
 }
 
 
 
-
-
-
-
-
-
-
-function clickWF(evt) {
-    log.debug(`called clickWF(id: ${this.attr('id')}) on an ${this.hasClass('activated') ? '' : 'in'}active node`);
-
-    /* Called when a node is clicked. */
-
-    // if the user clicked an activated node
-    if (this.hasClass('activated')) {
-
-        this.removeClass('activated');
-
-    } else {
-
-        // look for other activated nodes
-        let source = cy.$('.activated');
-
-        this.addClass('activated');
-
-        // if there is an activated node already
-        if (source.length === 1)
-            writeArc(source, this);
-    };
-}
-
-
-function writeArc(source, target) {
-    log.debug(`called writeArc(source id: ${source.attr('id')}, target id:${target.attr('id')}`);
-
-    /*
-    Called in clickWF. Makes changes to the text data and calls the function
-    redrawing the tree. Currently supports only conllu.
-    */
+function makeDependency(source, target) {
+		log.warn(`called makeDependency(${source.attr('id')}=>${target.attr('id')})`);
+		/**
+		 * Called by clicking a form-node while there is already an active form-node.
+		 * Changes the text data and redraws the graph. Currently supports only conllu.
+		 */
 
 		const POS_TO_REL = {
 				'PUNCT': 'punct',
@@ -476,44 +531,90 @@ function writeArc(source, target) {
 				'SCONJ': 'mark'
 		}
 
+		const beforeChanges = _.sentence();
+		return;
 
-    // NOTE: can just define a new attr `index` or something on the DOM
-    const sourceIndex = parseInt(source.attr('id').slice(2));
-    const targetIndex = parseInt(target.attr('id').slice(2));
+		// NOTE: can just define a new attr `index` or something on the DOM
+		const sourceIndex = parseInt(source.attr('id').slice(2));
+		const targetIndex = parseInt(target.attr('id').slice(2));
 
-    const indices = findConlluId(target);
+		const indices = findConlluId(target);
 
-    let sent = buildSent(),
-        thisToken = sent.tokens[indices.outer],
-        sentAndPrev = changeConlluAttr(sent, indices, 'head', sourceIndex);
+		let sent = buildSent(),
+				thisToken = sent.tokens[indices.outer],
+				sentAndPrev = changeConlluAttr(sent, indices, 'head', sourceIndex);
 
-    // If the target POS tag is PUNCT set the deprel to @punct [99%]
-    // IF the target POS tag is CCONJ set the deprel to @cc [88%]
-    // IF the target POS tag is SCONJ set the deprel to @mark [86%]
-    // IF the target POS tag is DET set the deprel to @det [83%]
-    // TODO: Put this somewhere better
-    if (thisToken.upostag in POS_TO_REL)
-        sentAndPrev = changeConlluAttr(sent, indices, 'deprel', POS_TO_REL[thisToken.upostag]);
+		// If the target POS tag is PUNCT set the deprel to @punct [99%]
+		// IF the target POS tag is CCONJ set the deprel to @cc [88%]
+		// IF the target POS tag is SCONJ set the deprel to @mark [86%]
+		// IF the target POS tag is DET set the deprel to @det [83%]
+		// TODO: Put this somewhere better
+		if (thisToken.upostag in POS_TO_REL)
+				sentAndPrev = changeConlluAttr(sent, indices, 'deprel', POS_TO_REL[thisToken.upostag]);
 
-    let isValidDep = true;
-    if (thisToken.upostag === 'PUNCT' && !is_projective_nodes(sent.tokens, [targetIndex])) {
-        log.warn('writeArc(): Non-projective punctuation');
-        isValidDep = false
+		let isValidDep = true;
+		if (thisToken.upostag === 'PUNCT' && !is_projective_nodes(sent.tokens, [targetIndex])) {
+				log.warn('writeArc(): Non-projective punctuation');
+				isValidDep = false
+		}
+
+		window.undoManager.add({
+				undo: () => {
+						let sent = buildSent(),
+								sentAndPrev = changeConlluAttr(sent, indices, 'head', sentAndPrev.previous);
+						redrawTree(sentAndPrev.sentence);
+				},
+				redo: () => {
+						writeArc(source, target);
+				}
+		});
+
+		redrawTree(sent);
+
+}
+
+function modifyConllu(index, subIndex, attr) {
+		log.debug(`called modifyConllu(index:${index}, subIndex:${subIndex}, attr:${attr})`);
+
+		const conllu = _.conllu();
+		if (subIndex !== null) {
+				_.conllu().tokens[index].tokens[subIndex].attrName = attr;
+		} else {
+				_.conllu().tokens[index].attrName = attr;
+		}
+
+		const text = convert2PlainText(conllu);
+		$('#text-data').val(text);
+		parseText();
+}
+function changeConlluAttr(sent, indices, attrName, newVal) {
+    log.debug('called changeConlluAttr()');
+
+    //if (attrName === 'deprel') {
+    //  newVal = newVal.replace(/[⊲⊳]/g, '');
+    //}
+    let previous;
+    if (indices.isSubtoken) {
+        previous = sent.tokens[indices.outer].tokens[indices.inner][attrName];
+        sent.tokens[indices.outer].tokens[indices.inner][attrName] = newVal;
+    } else {
+        previous = sent.tokens[indices.outer][attrName];
+        sent.tokens[indices.outer][attrName] = newVal;
     }
 
-    window.undoManager.add({
-        undo: () => {
-            let sent = buildSent(),
-                sentAndPrev = changeConlluAttr(sent, indices, 'head', sentAndPrev.previous);
-            redrawTree(sentAndPrev.sentence);
-        },
-        redo: () => {
-            writeArc(source, target);
-        }
-    });
-
-    redrawTree(sent);
+		return {
+				sentence: sent,
+				previous: previous
+		};
 }
+
+
+
+
+
+
+
+
 
 
 function removeArc(targets) {
@@ -563,40 +664,23 @@ function removeArc(targets) {
 }
 
 
-function selectArc() {
-    log.debug(`called selectArc(id: ${this.attr('id')}) on an ${this.hasClass('selected') ? '' : 'un'}selected arc`);
-
-    /*
-     * Activated when an arc is selected. Adds classes showing what is selected.
-     */
-
-    if (!IS_EDITING) {
-
-        const targetIndex = this.data('target');
-
-        // if the user clicked an activated node
-        if (this.hasClass('selected')) {
-
-            this.removeClass('selected');
-            cy.$(`#${targetIndex}`).removeClass('arc-selected'); // removing visual effects from targetNode
-
-        } else {
-
-            this.addClass('selected');
-            cy.$(`#${targetIndex}`).addClass('arc-selected'); // css for targetNode
-
-        }
-
-        // for identifying the node
-        cy.$(`#${targetIndex}`).data('state', 'arc-dest');
-    }
-}
 
 
-function selectSup() {
-    log.debug(`called selectSup(id: ${this.attr('id')}, hasClass('supAct'): ${this.hasClass('supAct')}) `);
-    this.toggleClass('supAct');
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 function keyDownClassifier(key) {
@@ -1116,26 +1200,6 @@ function writePOS(posInp, indices) {
 }
 
 
-function changeConlluAttr(sent, indices, attrName, newVal) {
-    log.debug('called changeConlluAttr()');
-
-    //if (attrName === 'deprel') {
-    //  newVal = newVal.replace(/[⊲⊳]/g, '');
-    //}
-    let previous;
-    if (indices.isSubtoken) {
-        previous = sent.tokens[indices.outer].tokens[indices.inner][attrName];
-        sent.tokens[indices.outer].tokens[indices.inner][attrName] = newVal;
-    } else {
-        previous = sent.tokens[indices.outer][attrName];
-        sent.tokens[indices.outer][attrName] = newVal;
-    }
-
-		return {
-				sentence: sent,
-				previous: previous
-		};
-}
 
 function writeWF(wfInp) {
 		log.debug(`called writeWF(${wfInp.val().trim()})`);
