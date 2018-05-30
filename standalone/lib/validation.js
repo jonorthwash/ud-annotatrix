@@ -377,10 +377,11 @@ function cleanConllu(content) {
     if (res < 0)
         return content;
 
+    /*
     // maybe someone is just trying to type conllu directly...
     res = (content.match(/_/g) || []).length;
     if (res <= 2)
-        return content;
+        return content; */
 
     // If we don't find any tabs, then we want to replace multiple spaces with tabs
     const spaceToTab = true;//(content.search('\t') < 0);
@@ -390,7 +391,7 @@ function cleanConllu(content) {
         // If there are no spaces and the line isn't a comment,
         // then replace more than one space with a tab
         if (line[0] !== '#' && spaceToTab)
-            line = line.replace(/  */g, '\t');
+            line = line.replace(/\W{2,}/g, '\t');
 
         return line
     }).join('\n');

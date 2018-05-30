@@ -174,10 +174,10 @@ window.onload = () => {
         //loadFromUrl();
 
         //test.all();
-        test.utils.splitAndSet('this is a test');
+        //test.utils.splitAndSet('this is a test');
         //test.utils.splitAndSet(TEST_DATA.texts_by_format['CoNLL-U'][0]);
-        $('#tabConllu').click()
-        //test.run('clearCorpus');
+        //$('#tabConllu').click()
+        test.run('modifyConllu');
         //test.utils.splitAndSet('this is a test');
 
     });

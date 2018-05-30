@@ -573,19 +573,28 @@ function makeDependency(source, target) {
 
 }
 
-function modifyConllu(index, subIndex, attr) {
-		log.debug(`called modifyConllu(index:${index}, subIndex:${subIndex}, attr:${attr})`);
+function modifyConllu(index, subIndex, attrKey, attrValue) {
+		log.critical(`called modifyConllu(index:${index}, subIndex:${subIndex}, attr:${attrKey}=>${attrValue})`);
 
 		const conllu = _.conllu();
+		log.debug(`modifyConllu(): before:  ${conllu.tokens[index][attrKey]}`);
+
+		let oldValue;
 		if (subIndex !== null) {
-				_.conllu().tokens[index].tokens[subIndex].attrName = attr;
+				oldValue = conllu.tokens[index].tokens[subIndex][attrKey];
+				conllu.tokens[index].tokens[subIndex][attrKey] = attrValue;
 		} else {
-				_.conllu().tokens[index].attrName = attr;
+				oldValue = conllu.tokens[index][attrKey];
+				conllu.tokens[index][attrKey] = attrValue;
 		}
 
-		const text = convert2PlainText(conllu);
+		log.debug(`modifyConllu(): during: ${conllu.tokens[index][attrKey]}`);
+		const text = conllu.serial;//convert2PlainText(conllu);
 		$('#text-data').val(text);
 		parseText();
+		log.debug(`modifyConllu(): after:  ${_.conllu().tokens[index][attrKey]}`);
+
+		return oldValue;
 }
 function changeConlluAttr(sent, indices, attrName, newVal) {
     log.debug('called changeConlluAttr()');

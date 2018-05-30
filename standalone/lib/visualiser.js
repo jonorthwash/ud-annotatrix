@@ -27,7 +27,7 @@ const SCROLL_ZOOM_INCREMENT = 0.05,
 
 
 function updateGraph() {
-    log.critical(`called updateGraph()`);
+    log.debug(`called updateGraph()`);
 
     convert2Conllu();
 

@@ -443,6 +443,27 @@ katya_aplonova_long: `# sent_id = html/meyer_gorog-contes_bambara_10amadu_tara.d
 127	bèè	bɛ́ɛ	DET	dtm	_	_	_	_	Gloss=tout
 128	.	.	PUNCT	_	_	_	_	_	Gloss=.`,
 
+ud_example_tabs: `1	They	they	PRON	PRP	Case=Nom|Number=Plur	2	nsubj	2:nsubj|4:nsubj
+2	buy	buy	VERB	VBP	Number=Plur|Person=3|Tense=Pres	0	root	0:root
+3	and	and	CONJ	CC	_	4	cc	4:cc
+4	sell	sell	VERB	VBP	Number=Plur|Person=3|Tense=Pres	2	conj	0:root|2:conj
+5	books	book	NOUN	NNS	Number=Plur	2	obj	2:obj|4:obj
+6	.	.	PUNCT	.	_	2	punct	2:punct`,
+
+ud_example_spaces: `1    They     they    PRON    PRP    Case=Nom|Number=Plur               2    nsubj    2:nsubj|4:nsubj
+2    buy      buy     VERB    VBP    Number=Plur|Person=3|Tense=Pres    0    root     0:root
+3    and      and     CONJ    CC     _                                  4    cc       4:cc
+4    sell     sell    VERB    VBP    Number=Plur|Person=3|Tense=Pres    2    conj     0:root|2:conj
+5    books    book    NOUN    NNS    Number=Plur                        2    obj      2:obj|4:obj
+6    .        .       PUNCT   .      _                                  2    punct    2:punct`,
+
+ud_example_modified: `1	They	they	PRON	PRP	Case=Nom|Number=Plur	2	nsubj	2:nsubj|4:nsubj
+2	buy	buy	VERB	VBP	Number=Plur|Person=3|Tense=Pres	0	root	0:root
+3	and	and	CONJ	CC	_	4	cc	4:cc
+4	sell	sell	VERB	VBP	Number=Plur|Person=3|Tense=Pres	2	conj	0:root|2:conj
+5	books	book	NOUN	NNS	Number=Plur	2	obj	2:obj|4:obj
+6	.	.	PUNCT	.	_	2	punct	2:punct`,
+
 		},
 		CG3: {
 
@@ -1551,7 +1572,26 @@ class Tester extends Object {
 
 					});
 				}
+			},
+
+			modifyConllu: () => {
+				log.out(`\nExecuting Tester.modifyConllu()`);
+
+				const modifiableKeys = ['deprel', 'deps', 'feats', 'form', 'head', 'lemma', 'misc', 'upostag', 'xpostag'];
+				const newValue = 'TEST!';
+
+				$.each(this.utils.sample(TEST_DATA.texts_by_format['CoNLL-U'], 25), (i, text) => {
+					this.utils.splitAndSet(text);
+
+					const oldConllu = _.conllu();
+					const randomToken = this.utils.randomInt(oldConllu.tokens.length);
+					const randomAttr  = this.utils.sample(modifiableKeys);
+
+					modifyConllu(randomToken, null, randomAttr, newValue);
+				});
+				//modifyConllu(1, null, 'upostag', 'TEST');
 			}
+
 		};
 	}
 
