@@ -68,16 +68,16 @@ function getGraphElements() {
         if (token instanceof conllu.MultiwordToken) {
 
             // create supertoken
-            _createToken(graph, num, token, null);
+            _createToken(graph, num, token, i, null);
             num++;
 
             $.each(token.tokens, (j, subToken) => {
-                _createToken(graph, num, subToken, token);
+                _createToken(graph, num, subToken, j, token, i);
                 num++;
             });
 
         } else {
-            _createToken(graph, num, token);
+            _createToken(graph, num, token, i);
             num++;
         }
     });
@@ -145,7 +145,7 @@ function getGraphElements() {
     return graph; */
 }
 
-function _createToken(graph, num, token, superToken) {
+function _createToken(graph, num, token, tokenId, superToken, superTokenId) {
     log.debug(`called _createToken(token: ${JSON.stringify(token)}, superToken: ${JSON.stringify(superToken)})`);
 
     // NOTE: if superToken === null, then we're currently creating a superToken
@@ -170,7 +170,7 @@ function _createToken(graph, num, token, superToken) {
     graph.push({
         data: {
             id: `form-${token.id}`,
-            tokenId: token.id,
+            tokenId: tokenId,
             num: num,
             name: `form`,
             form: token.form,
@@ -178,7 +178,7 @@ function _createToken(graph, num, token, superToken) {
             length: `${label.length > 3 ? label.length * 0.7 : label.length}em`,
             state: 'normal',
             parent: `num-${token.id}`,
-            superTokenId: superToken ? superToken.id : -1
+            superTokenId: superTokenId
         },
         classes: `form${token.head === 0 ? ' root' : ''}`
     });
@@ -187,12 +187,12 @@ function _createToken(graph, num, token, superToken) {
     graph.push({
         data: {
             id: `pos-node-${token.id}`,
-            tokenId: token.id,
+            tokenId: tokenId,
             num: num + 1000,
             name: `pos-node`,
             label: token.pos,
-            length: `${token.pos.length + 1}em`,
-            superTokenId: superToken ? superToken.id : -1
+            length: `${token.pos.length * 0.7 + 1}em`,
+            superTokenId: superTokenId
         },
         classes: 'pos'
     });

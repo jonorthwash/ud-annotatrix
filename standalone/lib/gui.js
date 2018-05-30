@@ -430,7 +430,10 @@ function bindCyHandlers() {
 
 		// just to make sure we see everything :)
 		cy.on('click', '*', (event) => {
-				log.warn(`clicked ${event.target.attr('id')}`); });
+				console.info(`clicked ${event.target.attr('id')}, data:`);
+				console.info(event.target.data());
+				console.info(getTokenFromNode(event.target));
+		});
 
 		cy.on('click', 'node.form', clickFormNode);
     cy.on('click', 'node.pos', clickPosNode);
@@ -442,7 +445,23 @@ function bindCyHandlers() {
 
 }
 
+function getTokenFromNode(node) {
+		log.debug(`called getToken(${node.attr('id')})`);
 
+		const data = node.data();
+		if (data.superTokenId === undefined) {
+				return {
+						token: _.conllu().tokens[data.tokenId],
+						tokenId: data.tokenId
+				};
+		} else {
+				return {
+						token: _.conllu().tokens[data.superTokenId].tokens[data.tokenId],
+						subTokenId: data.tokenId,
+						superTokenId: data.superTokenId
+				};
+		}
+}
 function clickFormNode(event) {
 		const target = event.target;
 		log.warn(`called clickFormNode(${target.attr('id')})`);
@@ -573,26 +592,26 @@ function makeDependency(source, target) {
 
 }
 
-function modifyConllu(index, subIndex, attrKey, attrValue) {
-		log.critical(`called modifyConllu(index:${index}, subIndex:${subIndex}, attr:${attrKey}=>${attrValue})`);
+function modifyConllu(superTokenId, subTokenId, attrKey, attrValue) {
+		log.debug(`called modifyConllu(superTokenId:${superTokenId}, subTokenId:${subTokenId}, attr:${attrKey}=>${attrValue})`);
 
 		const conllu = _.conllu();
-		log.debug(`modifyConllu(): before:  ${conllu.tokens[index][attrKey]}`);
+		log.debug(`modifyConllu(): before:  ${conllu.tokens[superTokenId][attrKey]}`);
 
 		let oldValue;
-		if (subIndex !== null) {
-				oldValue = conllu.tokens[index].tokens[subIndex][attrKey];
-				conllu.tokens[index].tokens[subIndex][attrKey] = attrValue;
+		if (subTokenId !== null) {
+				oldValue = conllu.tokens[superTokenId].tokens[subTokenId][attrKey] || '_';
+				conllu.tokens[superTokenId].tokens[subTokenId][attrKey] = attrValue;
 		} else {
-				oldValue = conllu.tokens[index][attrKey];
-				conllu.tokens[index][attrKey] = attrValue;
+				oldValue = conllu.tokens[superTokenId][attrKey] || '_';
+				conllu.tokens[superTokenId][attrKey] = attrValue;
 		}
 
-		log.debug(`modifyConllu(): during: ${conllu.tokens[index][attrKey]}`);
+		log.debug(`modifyConllu(): during: ${conllu.tokens[superTokenId][attrKey]}`);
 		const text = conllu.serial;//convert2PlainText(conllu);
 		$('#text-data').val(text);
 		parseText();
-		log.debug(`modifyConllu(): after:  ${_.conllu().tokens[index][attrKey]}`);
+		log.debug(`modifyConllu(): after:  ${_.conllu().tokens[superTokenId][attrKey]}`);
 
 		return oldValue;
 }
@@ -1235,6 +1254,7 @@ function writeWF(wfInp) {
         redrawTree(sent);
     }
 }
+
 
 
 function findConlluId(wf) { // TODO: refactor the architecture.

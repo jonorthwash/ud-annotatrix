@@ -1145,6 +1145,18 @@ class Tester extends Object {
 						break;
 
 				}
+			},
+			compareStrings: (str1, str2) => {
+				for (let i=0; i<Math.max(str1.length, str2.length); i++) {
+					if (str1[i] !== str2[i]) {
+						log.out(`Tester.compareStrings() found discrepancy at index [${i}]`);
+						log.out(`string1: [${str1[i]}], string2:[${str2[i]}]`);
+						log.out(`\nstring1 context: "${str1.slice(i-10,i+3)}"`);
+						log.out(`string2 context: "${str2.slice(i-10,i+3)}"`);
+						return false;
+					}
+				}
+				return true;
 			}
 
 		};
@@ -1578,16 +1590,55 @@ class Tester extends Object {
 				log.out(`\nExecuting Tester.modifyConllu()`);
 
 				const modifiableKeys = ['deprel', 'deps', 'feats', 'form', 'head', 'lemma', 'misc', 'upostag', 'xpostag'];
-				const newValue = 'TEST!';
+				const newAttrValue = 'TEST!';
 
+				// make sure the problematic one passes first
+				test.utils.splitAndSet(TEST_DATA.texts_by_format['CoNLL-U'].from_cg3_with_spans);
+				$.each(_.conllu().tokens, (i, token) => {
+					let oldConllu = _.conllu().serial;
+					if (token instanceof conllu.MultiwordToken) {
+						const randomAttr  = this.utils.sample(modifiableKeys)[0];
+						const oldAttrValue = modifyConllu(i, null, randomAttr, newAttrValue);
+						modifyConllu(i, null, randomAttr, oldAttrValue);
+
+						const invertible = this.utils.compareStrings(oldConllu, _.conllu().serial);
+						this.assert(invertible, `expected an invertible transformation for token[${i}] "${token.form}" on attr [${randomAttr}] "${oldAttrValue}"=>"${newAttrValue}"`);
+
+						$.each(token.tokens, (j, subToken) => {
+							const randomAttr  = this.utils.sample(modifiableKeys)[0];
+							const oldAttrValue = modifyConllu(i, j, randomAttr, newAttrValue);
+							console.log(token.lemma, randomAttr, oldAttrValue);
+						});
+
+					} else {
+						const randomAttr  = this.utils.sample(modifiableKeys)[0];
+						const oldAttrValue = modifyConllu(i, null, randomAttr, newAttrValue);
+						modifyConllu(i, null, randomAttr, oldAttrValue);
+
+						const invertible = this.utils.compareStrings(oldConllu, _.conllu().serial);
+						this.assert(invertible, `expected an invertible transformation for token[${i}] "${token.form}" on attr [${randomAttr}] "${oldAttrValue}"=>"${newAttrValue}"`);
+					}
+				});
+
+				throw new NotImplementedError('STOP HERE');
+				// then randomize
 				$.each(this.utils.sample(TEST_DATA.texts_by_format['CoNLL-U'], 25), (i, text) => {
 					this.utils.splitAndSet(text);
 
-					const oldConllu = _.conllu();
-					const randomToken = this.utils.randomInt(oldConllu.tokens.length);
+					const oldConllu = _.conllu().serial;
+					const randomToken = this.utils.randomInt(_.conllu().tokens.length);
 					const randomAttr  = this.utils.sample(modifiableKeys);
 
-					modifyConllu(randomToken, null, randomAttr, newValue);
+					const oldAttrValue = modifyConllu(randomToken, null, randomAttr, newAttrValue);
+
+					const newConllu = _.conllu();
+					this.assert(newConllu.tokens[randomToken][randomAttr] === newAttrValue, `expected to modify attr [${randomAttr}] "${oldAttrValue}"=>"${newAttrValue}"`);
+
+					modifyConllu(randomToken, null, randomAttr, oldAttrValue);
+
+					const invertible = this.utils.compareStrings(oldConllu, _.conllu().serial);
+					this.assert(invertible, `expected an invertible transformation on attr [${randomAttr}]`);
+
 				});
 				//modifyConllu(1, null, 'upostag', 'TEST');
 			}

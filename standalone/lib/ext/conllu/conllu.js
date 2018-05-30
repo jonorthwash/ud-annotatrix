@@ -8,7 +8,7 @@ if (typeof exports !== 'undefined' && this.exports !== exports) {
  * Conllu
  * A Conllu represents the contents of a Conllu file.
  * It is, in essence, a list of the sentences found in the file.
- * 
+ *
  * @constructor
  */
 var Conllu = function() {
@@ -92,7 +92,7 @@ Conllu.prototype = {
 
 
 /**
- * serial 
+ * serial
  * The serial property is the string representation of the file.
  * The contents of the Conllu object may be updated by modifying this string. However, for better
  * performance, it is recommended to modify the object itself.
@@ -265,14 +265,14 @@ if (typeof exports !== 'undefined' && this.exports !== exports) {
  * 4	a	a	DET	DT	Definite=Ind|PronType=Art	4	det	_	_
  * 5	clue	clue	NOUN	NN	Number=Sing	2	dobj	_	SpaceAfter=No
  * 6	.	.	PUNCT	.	_	2	punct	_	_
- * 
+ *
  * @property comments {Array}
  * The comments property maintains an ordered list of all comments
- * 
+ *
  * @property tokens {Array}
- * The tokens property maintains an ordered list of all Tokens and Multiword tokens. 
+ * The tokens property maintains an ordered list of all Tokens and Multiword tokens.
  * In the example given above, a single MultiwordToken would be responsible for lines starting with ids 1-2, 2, and 3
- * 
+ *
  * @constructor
  */
 var Sentence = function() {
@@ -282,7 +282,7 @@ var Sentence = function() {
      * @type {Array}
      */
     this.comments = [];
-    
+
     /**
      * tokens should be an ordered list of tokens and multiword tokens.
      * We will rely on the ordering of this list to display the tokens in the correct order - not the ids
@@ -389,7 +389,6 @@ Object.defineProperty(Sentence.prototype,'serial',
         get: function () {
 
             var serialArray = [];
-
             for (var i = 0; i < this.comments.length; i++) {
                 serialArray.push("#" + this.comments[i]);
 
@@ -494,55 +493,56 @@ Object.defineProperty(Token.prototype,'serial',
             // takes this token object and returns a string
             // no iteration through the properties of the object, because of non-conllu properties (ex: "serialize" property)
             var id_output = "_";
-            if (!(this.id === undefined) && !(this.id === "")){
+            if (!(this.id === undefined) && !/^[ \t]*$/.test(this.id)){
                 id_output = String(this.id);
             }
 
             var form_output = "_";
-            if (!(this.id === undefined) && !(this.id === "")){
+            if (!(this.id === undefined) && !/^[ \t]*$/.test(this.form)){
                 form_output = String(this.form);
             }
 
             var lemma_output = "_";
-            if (!(this.lemma === undefined) && !(this.lemma === "")){
+            if (!(this.lemma === undefined) && !/^[ \t]*$/.test(this.lemma)){
                 lemma_output = String(this.lemma);
             }
 
             var upostag_output = "_";
-            if (!(this.upostag === undefined) && !(this.upostag === "")){
+            if (!(this.upostag === undefined) && !/^[ \t]*$/.test(this.upostag)){
                 upostag_output = String(this.upostag);
             }
 
             var xpostag_output = "_";
-            if (!(this.xpostag === undefined) && !(this.xpostag === "")){
+            if (!(this.xpostag === undefined) && !/^[ \t]*$/.test(this.xpostag)){
                 xpostag_output = String(this.xpostag);
             }
 
             var feats_output = "_";
-            if (!(this.feats === undefined) && !(this.feats === "")){
+            if (!(this.feats === undefined) && !/^[ \t]*$/.test(this.feats)){
                 feats_output = String(this.feats);
             }
 
             var head_output = "_";
-            if (!(this.head === undefined) && !(this.head === "")){
+            if (!(this.head === undefined) && !/^[ \t]*$/.test(this.head)){
                 head_output = String(this.head);
             }
 
             var deprel_output = "_";
-            if (!(this.deprel === undefined) && !(this.deprel === "")){
+            if (!(this.deprel === undefined) && !/^[ \t]*$/.test(this.deprel)){
                 deprel_output = String(this.deprel);
             }
 
             var deps_output = "_";
-            if (!(this.deps === undefined) && !(this.deps === "")){
+            if (!(this.deps === undefined) && !/^[ \t]*$/.test(this.deps)){
                 deps_output = String(this.deps);
             }
 
             var misc_output = "_";
-            if (!(this.misc === undefined) && !(this.misc === "")){
+            if (!(this.misc === undefined) && !/^[ \t]*$/.test(this.misc)){
                 misc_output = String(this.misc);
             }
 
+            console.log(`form output: "${form_output}"`)
             return (id_output + "\t" + form_output + "\t" + lemma_output + "\t" + upostag_output + "\t" + xpostag_output + "\t" + feats_output + "\t" + head_output + "\t" + deprel_output + "\t" + deps_output + "\t" +  misc_output);
         },
 
@@ -612,18 +612,18 @@ if (typeof exports !== 'undefined' && this.exports !== exports) {
 /**
  * A TokenAggregate is responsible to managing a collection of Tokens.
  * Specifically, it provides utilities for splitting and merging Tokens in an ordered list.
- * 
+ *
  * This function is meant to be called on an existing object in order to give it TokenAggregate capabilities.
- * The name of the property containing the Token list is given in the constructor, enabling us to use this 
+ * The name of the property containing the Token list is given in the constructor, enabling us to use this
  * functionality on any object containing a Token list, regardless of the name of that list.
- * 
+ *
  * For example:
- * 
+ *
  * var obj = { tokens: [{id: 1, form: 'token1'}, {id: 2, form:'token2'}] };
  * TokenAggregate.call(obj,'tokens');
  * obj.split(1,3);
- * obj.merge(1);  
- * 
+ * obj.merge(1);
+ *
  * @param token_array
  * @constructor
  */
