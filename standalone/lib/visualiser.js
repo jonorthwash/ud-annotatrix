@@ -888,19 +888,17 @@ function setEdgePosition(thisEdge, thisHeight, coef, diff) {
 }
 
 function simpleIdSorting(n1, n2) {
-  
+
     const LARGE_NUMBER = 9999; // sorting will break if sentence has more than this many tokens
     const num = (node) => {
-        return parseInt(node.id().slice(2)) + (node.id().slice(0,2) === 'np'
-            ? LARGE_NUMBER : 0);
+        return parseInt(node.id().slice(2)) +
+            (node.id().slice(0,2) === 'np' ? LARGE_NUMBER : 0);
     }
 
     const num1 = num(n1);
     const num2 = num(n2);
 
-    return (num1 === num2
-      ? 0  : num1 < num2
-      ? -1 : 1);
+    return (num1 === num2 ? 0 : num1 < num2 ? -1 : 1);
 }
 
 
