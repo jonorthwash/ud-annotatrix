@@ -63,35 +63,26 @@ function updateGraph() {
 function getGraphElements() {
     log.debug(`called getGraphElements()`);
 
-    let graph = [];
+    let graph = [], num = 0;
     $.each(_.tokens(), (i, token) => {
         if (token instanceof conllu.MultiwordToken) {
 
-            // multiword node
-            const label = `${token.form}${toSubscript(` ${
-                token.tokens[0].id}-${
-                token.tokens[token.tokens.length - 1].id}`)}`;
-
-            console.log(label);
-            graph.push({
-                data: {
-                    id: `super-${token.id}`,
-                    num: token.id,
-                    name: 'super',
-                    label: label,
-                },
-                classes: 'multiword'
-            });
+            // create supertoken
+            _createToken(graph, num, token, null);
+            num++;
 
             $.each(token.tokens, (j, subToken) => {
-                _createToken(graph, subToken, token);
+                _createToken(graph, num, subToken, token);
+                num++;
             });
 
         } else {
-            _createToken(graph, token);
+            _createToken(graph, num, token);
+            num++;
         }
     });
 
+    _.graph_data = graph;
     return graph;
 
     /*
@@ -154,8 +145,10 @@ function getGraphElements() {
     return graph; */
 }
 
-function _createToken(graph, token, superToken) {
+function _createToken(graph, num, token, superToken) {
     log.debug(`called _createToken(token: ${JSON.stringify(token)}, superToken: ${JSON.stringify(superToken)})`);
+
+    // NOTE: if superToken === null, then we're currently creating a superToken
 
     token.form = token.form || ' ';
     token.pos = token.upostag || token.xpostag || '';
@@ -172,17 +165,20 @@ function _createToken(graph, token, superToken) {
     });
 
     // form node
+    const label = `${token.form}${ superToken !== null ? ''
+        : toSubscript(` ${token.tokens[0].id}-${token.tokens[token.tokens.length - 1].id}`)}`;
     graph.push({
         data: {
             id: `form-${token.id}`,
-            num: token.id,
+            tokenId: token.id,
+            num: num,
             name: `form`,
             form: token.form,
-            label: token.form,
-            length: `${token.form.length > 3
-                ? token.form.length * 0.7 : token.form.length}em`,
+            label: label,
+            length: `${label.length > 3 ? label.length * 0.7 : label.length}em`,
             state: 'normal',
-            parent: `num-${token.id}`
+            parent: `num-${token.id}`,
+            superTokenId: superToken ? superToken.id : -1
         },
         classes: `form${token.head === 0 ? ' root' : ''}`
     });
@@ -191,10 +187,12 @@ function _createToken(graph, token, superToken) {
     graph.push({
         data: {
             id: `pos-node-${token.id}`,
-            num: token.id,
+            tokenId: token.id,
+            num: num + 1000,
             name: `pos-node`,
             label: token.pos,
-            length: `${token.pos.length + 1}em`
+            length: `${token.pos.length + 1}em`,
+            superTokenId: superToken ? superToken.id : -1
         },
         classes: 'pos'
     });
@@ -203,7 +201,6 @@ function _createToken(graph, token, superToken) {
     graph.push({
         data: {
             id: `pos-edge-${token.id}`,
-            num: token.id,
             name: `pos-edge`,
             source: `form-${token.id}`,
             target: `pos-node-${token.id}`
@@ -386,7 +383,6 @@ function toSubscript(str) {
     const subscripts = { 0:'₀', 1:'₁', 2:'₂', 3:'₃', 4:'₄', 5:'₅',
         6:'₆', 7:'₇', 8:'₈', 9:'₉', '-':'₋', '(':'₍', ')':'₎' };
 
-    console.log(str);
     return str.split('').map((char) => {
         return (subscripts[char] || char);
     }).join('');
@@ -723,7 +719,7 @@ function cyGetIndex(ele) {
     // NB: sorting will break if sentence has more than this many tokens
     const LARGE_NUMBER = 10000,
         id = parseInt(ele.data('num')),
-        offset = ele.data('name') === 'pos-node' ? LARGE_NUMBER : 0;
+        offset = (ele.data('name') === 'pos-node' || ele.data('name') === 'super-dummy') ? LARGE_NUMBER : 0;
 
     return isNaN(id) ? -Infinity : id + offset;
 }

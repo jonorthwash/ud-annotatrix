@@ -430,7 +430,7 @@ function bindCyHandlers() {
 
 		// just to make sure we see everything :)
 		cy.on('click', '*', (event) => {
-				log.info(`clicked ${event.target.attr('id')}`); });
+				log.warn(`clicked ${event.target.attr('id')}`); });
 
 		cy.on('click', 'node.form', clickFormNode);
     cy.on('click', 'node.pos', clickPosNode);

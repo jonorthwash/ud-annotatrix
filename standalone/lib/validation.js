@@ -391,7 +391,7 @@ function cleanConllu(content) {
         // If there are no spaces and the line isn't a comment,
         // then replace more than one space with a tab
         if (line[0] !== '#' && spaceToTab)
-            line = line.replace(/\W{2,}/g, '\t');
+            line = line.replace(/[ \t]{2,}/g, '\t');
 
         return line
     }).join('\n');
