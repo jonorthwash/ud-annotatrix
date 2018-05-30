@@ -664,23 +664,22 @@ function setEdgePosition(edge, height, coeff, diff) {
 }
 
 function cyGetIndex(ele) {
-    const id = parseInt(ele.id().split('-').slice(-1));
-    return isNaN(id) ? -Infinity : id;
+    // NB: sorting will break if sentence has more than this many tokens
+    const LARGE_NUMBER = 10000,
+        id = parseInt(ele.id().split('-').slice(-1)),
+        type = ele.id().split('-')[0];
+
+    return isNaN(id) ? -Infinity : id + (type === 'pos' ? LARGE_NUMBER : 0);
 }
 
 function simpleIdSorting(n1, n2) {
     log.debug(`called simpleIdSorting(${n1.id()}, ${n2.id()})`);
 
-    n1 = cyGetIndex(n1);
-    n2 = cyGetIndex(n2);
+    const num1 = cyGetIndex(n1);
+    const num2 = cyGetIndex(n2);
 
-    if (n1 < n2) {
-        return -1;
-    } else if (n1 > n2) {
-        return 1;
-    } else {
-        return 0;
-    }
+    log.debug(`simpleIdSorting(): comparing: ${num1} and ${num2}`);
+    return (num1 === num2 ? 0 : num1 < num2 ? -1 : 1);
 }
 
 
