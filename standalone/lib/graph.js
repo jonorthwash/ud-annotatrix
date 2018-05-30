@@ -9,12 +9,19 @@ function updateGraph() {
         name: 'tree',
         padding: 0,
         nodeDimensionsIncludeLabels: false,
-        cols: (_.is_vertical ? 2 : undefined),
-        rows: (_.is_vertical ? undefined : 2),
+        //cols: (_.is_vertical ? 2 : undefined),
+        //rows: (_.is_vertical ? undefined : 2),
         sort: (_.is_vertical ? vertAlSort
             : _.is_ltr ? simpleIdSorting : rtlSorting )
     };
-    _.graph_options.layout = { name: 'random' };
+    if (_.is_vertical) {
+      _.graph_options.layout.cols = 2;
+    } else {
+      _.graph_options.layout.rows = 2;
+    }
+    /*_.graph_options.layout = {
+        name: 'dagre'
+    }*/
     _.graph_options.elements = _.graph( getGraphElements() );
 
     console.log(_.graph_options);
