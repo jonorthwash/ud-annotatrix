@@ -454,13 +454,13 @@ function bindCyHandlers() {
 				console.info(`clicked ${event.target.attr('id')}, data:`, event.target.data());
 		});
 
-		cy.on('click', 'node.form', clickFormNode);
-    cy.on('click', 'node.pos', clickPosNode);
-    cy.on('click', '$node > node', clickChildNode);
-		cy.on('cxttapend', 'node.wf', cxttapendFormNode);
+		cy.on('click', 'node.form', clickFormNode);       // drawArcs
+    cy.on('click', 'node.pos', clickPosNode);         // changeNode
+    cy.on('click', '$node > node', clickChildNode);   // selectSup
+		cy.on('cxttapend', 'node.form', cxttapendFormNode); // changeNode
 
-    cy.on('click', 'edge.dependency', clickDependencyEdge);
-		cy.on('cxttapend', 'edge.dependency', cxttapendDependencyEdge);
+    cy.on('click', 'edge.dependency', clickDependencyEdge);  // changeNode
+		cy.on('cxttapend', 'edge.dependency', cxttapendDependencyEdge); // selectArc
 
 }
 
@@ -494,6 +494,15 @@ function clickFormNode(event) {
 function clickPosNode(event) {
 		const target = event.target;
 		log.warn(`called clickPosNode(${target.attr('id')})`);
+
+		saveGraphEdits();
+		_.editing = target;
+
+		cy.$('.activated').removeClass('activated');
+		cy.$('.arc-selected').removeClass('arc-selected');
+		cy.$('.selected').removeClass('selected');
+
+		editGraphLabel(target);
 }
 function clickChildNode(event) {
 		// NB: event.target is the PARENT of a child we click
@@ -539,15 +548,97 @@ function cxttapendDependencyEdge(event) {
 }
 
 
+function editGraphLabel(target) {
+		log.debug(`called editGraphLabel(${target.attr('id')})`);
+
+		target.addClass('input');
+
+		// get rid of direction arrows
+		target.data('label', target.data('label').replace(/[⊳⊲]/, ''));
+
+		// get bounding box
+		let bbox = target.renderedBoundingBox();
+		bbox.color = target.style('background-color');
+		if (target.data('name') === 'dependency') {
+				bbox.w = 100;
+				bbox.h = cy.nodes()[0].renderedHeight();
+				bbox.color = 'white';
+
+				if (_.is_vertical) {
+						bbox.y1 += (bbox.y2 - bbox.y1)/2 - 15;
+						bbox.x1  = bbox.x2 - 70;
+				} else {
+						bbox.x1 += (bbox.x2 - bbox.x1)/2 - 50;
+				}
+		}
+
+		// TODO: rank the labels + make the style better
+		const autocompletes = target.data('name') === 'pos-node'
+				? U_POS
+				: target.data('name') === 'dependency'
+				? U_DEPRELS
+				: [];
+
+		$('#edit').selfcomplete({
+				lookup: autocompletes,
+				tabDisabled: false,
+				autoSelectFirst: true,
+				lookupLimit: 5 })
+				.css('top', bbox.y1)
+				.css('left', bbox.x1)
+				.css('height', bbox.h)
+				.css('width', bbox.w + 5)
+				.attr('value', target.data('label'))
+				.addClass('activated')
+				.addClass(target.data('name'))
+				.focus();
+
+		if (target.data('name') === 'dependency')
+				$('#edit').select();
+
+		/* TODO: what is this ?? (5/31/18)
+		$('#mute').addClass('activated')
+				.css('height', _.is_vertical
+						? `${_.tokens().length * 50}px`
+						: $(window).width() - 10); */
+
+		console.log(bbox);
+		return;
+
+		const id = this.attr('id').slice(0, 2);
+		if (id === 'ed') {
+				nodeType = 'DEPREL';
+		} else if (id === 'np') {
+				nodeType = 'UPOS';
+		}
+    $('#edit')
+				.css('top', param.y1)
+        .css('left', param.x1)
+        .css('height', param.h)
+        .css('width', param.w + 35)
+        //.css('background-color', param.color)
+        .attr('value', this.data('label'))
+        .addClass('activated')
+        .addClass(id);
+
+    if (nodeType === 'DEPREL') {
+        $('#edit').focus().select();
+    } else {
+        $('#edit').focus();
+    }
+
+}
+
 function saveGraphEdits() {
 		log.debug(`called saveGraphEdits()`);
+
+		cy.$('.input').removeClass('input');
 
 		if (_.editing === null)
 				return; // nothing to do
 
-
 }
-function clickInCanvas() {
+function clickInCanvas(event) {
 		log.error(`called clickInCanvas(intercepted: ${_.intercepted})`);
 
 		// intercepted by clicking a canvas subobject && mousemove (i.e. drag)
@@ -555,6 +646,7 @@ function clickInCanvas() {
 				return;
 
 		saveGraphEdits();
+		_.editing = null;
 
 		cy.$('.activated').removeClass('activated');
 		cy.$('.arc-selected').removeClass('arc-selected');
@@ -1181,22 +1273,6 @@ function changeNode() {
 }
 
 
-function changeEdgeParam(param) {
-		log.debug(`called changeEdgeParam(${JSON.stringify(param)})`);
-
-    param.w = 100;
-    param.h = cy.nodes()[0].renderedHeight();
-
-    if (IS_VERTICAL) {
-        param.y1 = param.y1 + (param.y2 - param.y1)/2 - 15;
-        param.x1 = param.x2 - 70;
-    } else {
-        param.x1 = param.x1 + (param.x2 - param.x1)/2 - 50;
-    }
-
-    param.color = 'white';
-    return param;
-}
 
 
 function setRoot(wf) {

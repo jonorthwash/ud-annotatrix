@@ -181,6 +181,7 @@ function createToken(graph, num, superToken, superTokenId, subToken, subTokenId)
     graph.push({
         data: {
             id: `num-${token.id}`,
+            name: 'number',
             label: token.id,
             pos: token.upostag || null,
             parent: token.id
@@ -212,7 +213,7 @@ function createToken(graph, num, superToken, superTokenId, subToken, subTokenId)
             id: `pos-node-${token.id}`,
             num: num,
             name: `pos-node`,
-            label: token.pos,
+            label: token.pos || '',
             length: `${token.pos.length * 0.7 + 1}em`,
             conllu: token
         },
@@ -292,6 +293,7 @@ function createDependency(graph, token) {
     graph.push({
         data: {
           id: `dep-${token.id}`,
+          name: 'dependency',
           source: `form-${token.id}`,
           sourceConllu: token,
           target: `form-${head.id}`,
