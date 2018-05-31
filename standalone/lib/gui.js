@@ -430,9 +430,7 @@ function bindCyHandlers() {
 
 		// just to make sure we see everything :)
 		cy.on('click', '*', (event) => {
-				console.info(`clicked ${event.target.attr('id')}, data:`);
-				console.info(event.target.data());
-				console.info(getTokenFromNode(event.target));
+				console.info(`clicked ${event.target.attr('id')}, data:`, event.target.data());
 		});
 
 		cy.on('click', 'node.form', clickFormNode);
@@ -445,38 +443,14 @@ function bindCyHandlers() {
 
 }
 
-function getTokenFromNode(node) {
-		log.debug(`called getToken(${node.attr('id')})`);
-
-		const data = node.data();
-		return {
-				superTokenId: data.superTokenId,
-				subTokenId: data.subTokenId,
-				token: null//(data.subTokenId === null
-					//	? _.conllu().tokens[data.superTokenId]
-						//: _.conllu().tokens[data.superTokenId].tokens[data.subTokenId]);
-		};
-
-		//const data = node.data();
-		if (data.superTokenId === undefined) {
-				return {
-						token: _.conllu().tokens[data.tokenId],
-						tokenId: data.tokenId
-				};
-		} else {
-				return {
-						token: _.conllu().tokens[data.superTokenId].tokens[data.tokenId],
-						subTokenId: data.tokenId,
-						superTokenId: data.superTokenId
-				};
-		}
-}
 function clickFormNode(event) {
 		const target = event.target;
-		log.warn(`called clickFormNode(${target.attr('id')})`);
+		log.debug(`called clickFormNode(${target.attr('id')})`);
+		_.editing = target;
 
 		if (target.hasClass('activated')) {
 				target.removeClass('activated');
+				_.editing = null;
 
 		} else {
 
@@ -484,8 +458,13 @@ function clickFormNode(event) {
 				target.addClass('activated');
 
 				// if there was already an activated node
-				if (source.length === 1)
+				if (source.length === 1) {
+						savePosition();
 						makeDependency(source, target);
+						source.removeClass('activated');
+						target.removeClass('activated');
+						_.editing = null;
+				}
 
 		}
 }
@@ -543,26 +522,38 @@ function cxttapendDependencyEdge(event) {
 		log.warn(`called cxttapendDependencyEdge(${target.attr('id')})`);
 }
 
+function savePosition() {
+		log.debug(`called savePosition()`);
 
+		_.pan  = cy.pan();
+		_.zoom = cy.zoom();
+
+		log.debug(`pan: (${_.pan.x}, ${_.pan.y}), zoom: ${_.zoom}`);
+}
 
 function makeDependency(source, target) {
-		log.warn(`called makeDependency(${source.attr('id')}=>${target.attr('id')})`);
+		log.debug(`called makeDependency(${source.attr('id')}=>${target.attr('id')})`);
 		/**
 		 * Called by clicking a form-node while there is already an active form-node.
 		 * Changes the text data and redraws the graph. Currently supports only conllu.
 		 */
 
-		source = getTokenFromNode(source);
-		target = getTokenFromNode(target);
+		source = source.data().conllu;
+		target = target.data().conllu;
 
-		const oldHead = modifyConllu(target.superTokenId, target.subTokenId, 'head', source.superTokenId);
+		if (source.superTokenId === target.superTokenId) {
+				log.warn(`makeDependency(): unable to create dependency within superToken ${source.superTokenId}`);
+				return;
+		}
+
+		const oldHead = modifyConllu(source.superTokenId, source.subTokenId, 'head', target.id);
 
 		window.undoManager.add({
 				undo: () => {
-						modifyConllu(target.superTokenId, target.subTokenId, 'head', oldHead);
+						modifyConllu(source.superTokenId, source.subTokenId, 'head', oldHead);
 				},
 				redo: () => {
-						modifyConllu(target.superTokenId, target.subTokenId, 'head', source.superTokenId);
+						modifyConllu(source.superTokenId, source.subTokenId, 'head', target.id);
 				}
 		})
 
@@ -619,7 +610,7 @@ function makeDependency(source, target) {
 }
 
 function modifyConllu(superTokenId, subTokenId, attrKey, attrValue) {
-		log.debug(`called modifyConllu(superTokenId:${superTokenId}, subTokenId:${subTokenId}, attr:${attrKey}=>${attrValue})`);
+		log.error(`called modifyConllu(superTokenId:${superTokenId}, subTokenId:${subTokenId}, attr:${attrKey}=>${attrValue})`);
 
 		const conllu = _.conllu();
 		log.debug(`modifyConllu(): before:  ${conllu.tokens[superTokenId][attrKey]}`);

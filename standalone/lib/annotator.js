@@ -46,6 +46,8 @@ var _ = { // main object to hold our current stuff
             layout: null,
             elements: []
         };
+        _.pan = null,
+        _.zoom = null,
         _.editing = null;
         _.graph_disabled = false;
 

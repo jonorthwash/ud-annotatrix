@@ -45,13 +45,13 @@ function updateGraph() {
     };
     _.graph_options.elements = getGraphElements();
 
-    window.cy = cytoscape(_.graph_options);
-
-    cy.minZoom(0.1)
+    window.cy = cytoscape(_.graph_options)
+        .minZoom(0.1)
         .maxZoom(10.0)
         .fit()
+        .zoom(_.zoom)
         .center()
-        .zoom();
+        .pan(_.pan);
 
     bindCyHandlers();
 
@@ -161,7 +161,7 @@ function _createToken(graph, num, superToken, superTokenId, subToken, subTokenId
     // save the data for the createDependencies() functions
     token.num = num;
     token.superTokenId = superTokenId;
-    token.subTokenId = subTokenId;
+    token.subTokenId = subTokenId || null;
 
     // number node
     graph.push({
@@ -187,9 +187,7 @@ function _createToken(graph, num, superToken, superTokenId, subToken, subTokenId
             length: `${label.length > 3 ? label.length * 0.7 : label.length}em`,
             state: 'normal',
             parent: `num-${token.id}`,
-            conlluId: token.id,
-            superTokenId: superTokenId,
-            subTokenId: subTokenId
+            conllu: token
         },
         classes: `form${token.head === 0 ? ' root' : ''}`
     });
@@ -202,9 +200,7 @@ function _createToken(graph, num, superToken, superTokenId, subToken, subTokenId
             name: `pos-node`,
             label: token.pos,
             length: `${token.pos.length * 0.7 + 1}em`,
-            conlluId: token.id,
-            superTokenId: superTokenId,
-            subTokenId: subTokenId
+            conllu: token
         },
         classes: 'pos'
     });
@@ -281,7 +277,9 @@ function createDependencies(graph, token) {
         data: {
           id: `dep-${token.id}`,
           source: `form-${token.id}`,
+          sourceConllu: token,
           target: `form-${head.id}`,
+          targetConllu: head,
           length: `${deprel.length / 3}em`,
           label: deprelLabel,
           ctrl: new Array(4).fill(edgeHeight)
@@ -310,6 +308,11 @@ function getConlluById(id) {
     log.debug(`called getConlluById(${id})`);
     for (let i = 0, t = _.conllu().tokens.length; i < t; i++) {
         const token = _.conllu().tokens[i];
+        for (let j = 0, u = (token.tokens || []).length; j < u; j++) {
+            const subToken = token.tokens[j];
+            if (subToken.id == id)
+                return token; // subtokens return their supertoken
+        }
         if (token.id == id)
             return token;
     }
