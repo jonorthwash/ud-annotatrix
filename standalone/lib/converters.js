@@ -70,11 +70,11 @@ function convert2Conllu(text) {
 
     let data = null;
 
-    log.debug(`convert2conllu(): got format: ${format}`);
+    log.debug(`convert2conllu(): got format: ${format}, text: ${text}`);
     switch (format) {
         case ('Unknown'):
             log.warn(`convert2conllu(): failed to convert Unknown to plain text`);
-            break;
+            return null;
         case ('plain text'):
             data = cleanConllu(plainText2Conllu(text));
             break;
@@ -124,7 +124,7 @@ function convert2CG3(text) {
     switch (format) {
         case ('Unknown'):
             log.warn(`convert2CG3(): failed to convert Unknown to plain text`);
-            break;
+            return null;
         case ('plain text'):
             cg3 = conllu2CG3(plainText2Conllu(text));
             break;
@@ -201,6 +201,8 @@ function plainText2Conllu(text) {
 
     // TODO: automatical recognition of punctuation's POS ==> done?
     $.each(sent.tokens, (i, token) => {
+        if (!token.form)
+            return;
         if (token.form.match(/^[!.)(»«:;?¡,"\-><]+$/))
             token.upostag = 'PUNCT';
         if (token.form.match(/^[0-9]+([,.][0-9]+)*$/))
@@ -219,6 +221,9 @@ function plainText2Conllu(text) {
 function sd2Conllu(text) {
     log.debug(`called sd2Conllu(${text})`);
 
+    if (!text)
+        return null;
+
     CONTENTS = sd2Conllu__raw(text); // external function, see standalone/lib/sd2Conllu.js
     FORMAT = 'CoNLL-U';
     log.debug(`sd2Conllu changed CONTENTS to "${CONTENTS}"`);
@@ -234,6 +239,9 @@ function sd2Conllu(text) {
  */
 function conllu2PlainText(text) {
     log.debug(`called conllu2PlainText(${text})`);
+
+    if (!text)
+        return null;
 
     let sent = new conllu.Sentence();
     sent.serial = cleanConllu(text); // spaces => tabs
@@ -251,6 +259,8 @@ function conllu2PlainText(text) {
  */
 function brackets2Conllu(text) {
     log.debug(`called brackets2Conllu(${text})`);
+
+    return null; // until we fix this guy
 
     // This code is for parsing bracketted notation like:
     // [root [nsubj I] have [obj [amod [advmod too] many] commitments] [advmod right now] [punct .]]
@@ -445,6 +455,9 @@ function brackets2Conllu(text) {
 function cg32Conllu(CGtext) {
     log.debug(`called cg32Conllu(${CGtext})`);
 
+    if (!CGtext)
+        return null;
+
     /* Takes a string in CG3, returns a string in CoNLL-U. */
 
     // TODO: Check for '<s>' ... '</s>' and if you have matching things treat them
@@ -583,6 +596,9 @@ function cg32Conllu(CGtext) {
 function conllu2CG3(conlluText, indent) {
     log.debug(`called conllu2CG3(conllu: ${conlluText}, indent: ${indent})`);
     // CG3 spec. reference: https://visl.sdu.dk/cg3_howto.pdf
+
+    if (!conlluText)
+        return null;
 
     let sent = new conllu.Sentence();
     sent.serial = cleanConllu(conlluText);

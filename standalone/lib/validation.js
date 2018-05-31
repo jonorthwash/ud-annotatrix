@@ -18,10 +18,10 @@ function is_upos(s) {
     // Checks if a relation is in the list of valid parts of speech
     // @s = the input relation
     // returns a bool
-    $.each(U_POS, (i, pos) => {
-        if (pos === s.toUpperCase())
+    for (let i = 0, n = U_POS.length; i < n; i++) {
+        if (U_POS[i] === (s || '').toUpperCase())
             return { err:null, data:{} };
-    });
+    }
     return { err:'err_upos_invalid', data:{tag:s} };
 }
 
@@ -34,12 +34,12 @@ function is_udeprel(s) {
     // returns a bool
 
     // Language-specific relations are `${universal_relation}:${some_string}`
-    s = (s.search(':') >= 0 ? s.split(':')[0] : s);
+    s = (s || '').split(':')[0];
 
-    $.each(U_DEPRELS, (i, deprel) => {
-        if (deprel === s.toLowerCase())
+    for (let i = 0, n = U_DEPRELS.length; i < n; i++) {
+        if (U_DEPRELS[i] === s.toLowerCase())
             return { err:null, data:{} };
-    });
+    }
     return { err:'err_udeprel_invalid', data:{label:s} };
 }
 
@@ -53,10 +53,10 @@ function is_leaf(s) {
     // http://universaldependencies.org/u/dep/punct.html
     // Tokens with the relation punct always attach to content words (except in cases of ellipsis) and can never have dependents.
 
-    $.each(U_POS_LEAF, (i, leaf) => {
-        if (leaf === s)
+    for (let i = 0, n = U_POS_LEAF.length; i < n; i++) {
+        if (U_POS_LEAF[i] === (s || '').toUpperCase())
             return { err:null, data:{} };
-    });
+    }
     return { err:'err_udep_leaf_node', data:{tag:s} };
 }
 
@@ -369,6 +369,9 @@ function is_relation_conflict(tree) {
  */
 function cleanConllu(content) {
     log.debug(`called cleanConllu(${content})`);
+
+    if (!content)
+        return null;
 
     // if we don't find any tabs, then convert >1 space to tabs
     // TODO: this should probably go somewhere else, and be more

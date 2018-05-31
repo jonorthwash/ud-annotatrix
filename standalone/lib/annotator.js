@@ -47,6 +47,7 @@ var _ = { // main object to hold our current stuff
             elements: []
         };
         _.editing = null;
+        _.graph_disabled = false;
 
         updateSentences();
     },
@@ -176,8 +177,8 @@ window.onload = () => {
         //test.all();
         //test.utils.splitAndSet('this is a test');
         //$('#tabConllu').click()
-        //test.utils.splitAndSet(TEST_DATA.texts_by_format['CoNLL-U'].from_cg3_with_spans);
-        test.run('modifyConllu');
+        test.utils.splitAndSet(TEST_DATA.texts_by_format['CoNLL-U'].from_cg3_with_spans);
+        //test.run('modifyConllu');
         //test.utils.splitAndSet('this is a test');
 
     });

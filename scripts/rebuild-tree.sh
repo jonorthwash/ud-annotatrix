@@ -1,12 +1,21 @@
 #!/bin/bash -e
 
 #
+# Kevin Murphy
+# 5/30/18
+#
+# This script makes editing the "tree" layout extension for cytoscape
+# much simpler and easier.  Simply edit the version of "tree.js" in the
+# current repository, and run this script before viewing your changes
+# in the browser.  (It takes care of copying and building stuff.)
+#
 # NB: this should be run in the top-level project directory with
 #      cytoscape.js in a neighbor directory, e.g.:
 #
-# -- cytoscape.js
-#    \-- files .....
-# -- ud-annotatrix [CWD]
+# projects
+# \-- cytoscape.js
+# |   \-- files .....
+# \-- ud-annotatrix [CWD]
 #    \-- files
 #
 

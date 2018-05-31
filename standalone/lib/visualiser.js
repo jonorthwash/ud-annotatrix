@@ -27,9 +27,12 @@ const SCROLL_ZOOM_INCREMENT = 0.05,
 
 
 function updateGraph() {
-    log.debug(`called updateGraph()`);
+    log.warn(`called updateGraph()`);
 
+    // can't do anything without CoNLL-U
     convert2Conllu();
+    if (_.graph_disabled || _.conllu() === null)
+        return;
 
     _.graph_options.layout = {
         name: 'tree',
@@ -40,7 +43,7 @@ function updateGraph() {
         sort: (_.is_vertical ? vertAlSort
             : _.is_ltr ? simpleIdSorting : rtlSorting )
     };
-    _.graph_options.elements = _.graph( getGraphElements() );
+    _.graph_options.elements = getGraphElements();
 
     window.cy = cytoscape(_.graph_options);
 
@@ -52,78 +55,7 @@ function updateGraph() {
 
     bindCyHandlers();
 
-    return;
-}
-
-/**
- * Creates a graph out of the conllu.Sentence().
- * @param  {Object} sent A conllu.Sentence().
- * @return {Array}       Returns the graph.
- */
-function getGraphElements() {
-    log.debug(`called getGraphElements()`);
-
-    let graph = [], num = 0;
-    $.each(_.tokens(), (i, token) => {
-        if (token instanceof conllu.MultiwordToken) {
-
-            // create supertoken
-            _createToken(graph, num, token, i, null);
-            num++;
-
-            $.each(token.tokens, (j, subToken) => {
-                _createToken(graph, num, subToken, j, token, i);
-                num++;
-            });
-
-        } else {
-            _createToken(graph, num, token, i);
-            num++;
-        }
-    });
-
-    _.graph_data = graph;
-    return graph;
-
     /*
-    //let graph = []; TREE = {};
-    $.each(sent.tokens, (i, token) => {
-        if (token instanceof conllu.MultiwordToken){
-
-            // NOTE: ns = supertoken
-            const superId = `ns${String(i).padStart(2, '0')}`,
-                subtokens = token.tokens,
-                id = toSubscript(` (${subtokens[0].id}-${subtokens[subtokens.length - 1].id})`);
-                MultiwordToken = {
-                    data: { id:superId, label:`${token.form}${id}` },
-                    classes: 'MultiwordToken'
-                };
-
-            graph.push(MultiwordToken);
-            $.each(token.tokens, (j, subToken) => {
-                graph = createToken(graph, subToken, superToken);
-            });
-
-        } else {
-            graph = createToken(graph, token);
-        }
-    });
-
-    if (IS_ENHANCED) {
-        $.each(sent.tokens, (i, token) => {
-            log.debug(`getGraphElements(): processing enhanced dependency for token: ${token}`);
-            $.each(token.deps.split('|'), (j, dep) => {
-
-                const enhancedRow = dep.split(':'),
-                    enhancedHead  = parseInt(enhancedRow[0]),
-                    enhancedDeprel= enhancedRow.slice(1).join(),
-                    nodeId = token.id;
-
-                graph = makeEnhancedDependency(token, nodeId, enhancedHead, enhancedDeprel, graph);
-            });
-        });
-    }
-
     CODE_LATEX = generateLaTeX(graph);
 
     ALL_WORK = 0;
@@ -140,18 +72,96 @@ function getGraphElements() {
             if (node.classes !== 'dependency incomplete')
                 DONE_WORK += 1;
         }
+    });*/
+
+    return;
+}
+
+/**
+ * Creates a graph out of the _.conllu().Sentence().
+ * @return {Array}    cytoscape elements array
+ */
+function getGraphElements() {
+    log.debug(`called getGraphElements()`);
+
+    // first make the nodes
+    let graph = [], num = 0;
+    $.each(_.tokens(), (i, token) => {
+        if (token instanceof conllu.MultiwordToken) {
+
+            // create supertoken
+            _createToken(graph, num, token, i, null, null);
+            num++;
+
+            $.each(token.tokens, (j, subToken) => {
+                _createToken(graph, num, token, i, subToken, j);
+                num++;
+            });
+
+        } else {
+            _createToken(graph, num, token, i);
+            num++;
+        }
     });
+
+    // then make the edges
+    $.each(_.tokens(), (i, token) => {
+        createDependencies(graph, token);
+        $.each(token.tokens, (i, subToken) => {
+            createDependencies(graph, subToken);
+        })
+    });
+
+    // save the graph elements to the data structure
+    _.graph(graph);
+    return graph;
+
+    /*
+
+    if (IS_ENHANCED) {
+        $.each(sent.tokens, (i, token) => {
+            log.debug(`getGraphElements(): processing enhanced dependency for token: ${token}`);
+            $.each(token.deps.split('|'), (j, dep) => {
+
+                const enhancedRow = dep.split(':'),
+                    enhancedHead  = parseInt(enhancedRow[0]),
+                    enhancedDeprel= enhancedRow.slice(1).join(),
+                    nodeId = token.id;
+
+                graph = makeEnhancedDependency(token, nodeId, enhancedHead, enhancedDeprel, graph);
+            });
+        });
+    }
 
     return graph; */
 }
 
-function _createToken(graph, num, token, tokenId, superToken, superTokenId) {
-    log.debug(`called _createToken(token: ${JSON.stringify(token)}, superToken: ${JSON.stringify(superToken)})`);
+function _createToken(graph, num, superToken, superTokenId, subToken, subTokenId) {
+    log.debug(`called _createToken(num: ${num}, superTokenId: ${superTokenId}, subTokenId: ${subTokenId})`);
 
-    // NOTE: if superToken === null, then we're currently creating a superToken
+    /*
+     * NOTE on args:
+     * - $num refers to the index in our graph data structure ... if there are no
+     *     MultiwordTokens, then this should be 1 less than the internal 'id'
+     *     field on the CoNLL-U token
+     * - if $subToken is undefined, then we're creating a normal token
+     * - if $subToken is null, then we're creating a superToken
+     * - if $subToken is an Object, then we're creating a subToken
+     *
+     * although it's more complicated here, i think streamlining the indexing
+     * scheme is important for maintaining compatibility b/w the text-based
+     * data structure and the graph-based one
+     */
+
+    const token = (subToken || superToken);
 
     token.form = token.form || ' ';
     token.pos = token.upostag || token.xpostag || '';
+
+    // save the data for the createDependencies() functions
+    token.num = num;
+    token.superTokenId = superTokenId;
+    token.subTokenId = subTokenId;
 
     // number node
     graph.push({
@@ -159,18 +169,17 @@ function _createToken(graph, num, token, tokenId, superToken, superTokenId) {
             id: `num-${token.id}`,
             label: token.id,
             pos: token.upostag || null,
-            parent: superToken ? superToken.id : null
+            parent: token.id
         },
         classes: 'number'
     });
 
     // form node
-    const label = `${token.form}${ superToken !== null ? ''
+    const label = `${token.form}${ subToken !== null ? '' // only do the subscript thing for superTokens
         : toSubscript(` ${token.tokens[0].id}-${token.tokens[token.tokens.length - 1].id}`)}`;
     graph.push({
         data: {
             id: `form-${token.id}`,
-            tokenId: tokenId,
             num: num,
             name: `form`,
             form: token.form,
@@ -178,7 +187,9 @@ function _createToken(graph, num, token, tokenId, superToken, superTokenId) {
             length: `${label.length > 3 ? label.length * 0.7 : label.length}em`,
             state: 'normal',
             parent: `num-${token.id}`,
-            superTokenId: superTokenId
+            conlluId: token.id,
+            superTokenId: superTokenId,
+            subTokenId: subTokenId
         },
         classes: `form${token.head === 0 ? ' root' : ''}`
     });
@@ -187,12 +198,13 @@ function _createToken(graph, num, token, tokenId, superToken, superTokenId) {
     graph.push({
         data: {
             id: `pos-node-${token.id}`,
-            tokenId: tokenId,
-            num: num + 1000,
+            num: num,
             name: `pos-node`,
             label: token.pos,
             length: `${token.pos.length * 0.7 + 1}em`,
-            superTokenId: superTokenId
+            conlluId: token.id,
+            superTokenId: superTokenId,
+            subTokenId: subTokenId
         },
         classes: 'pos'
     });
@@ -209,6 +221,108 @@ function _createToken(graph, num, token, tokenId, superToken, superTokenId) {
     });
 
 }
+
+/**
+ * Creates edges for dependency if head exists.
+ * @param  {Array}  graph  A graph containing all the nodes and dependencies.
+ * @param  {Object} token  Token object.
+ */
+function createDependencies(graph, token) {
+    log.debug(`called createDependencies(token: ${JSON.stringify(token)}`);
+
+    let deprel = token.deprel || '',
+        head = getConlluById(token.head);
+
+    // if no head, no dependency
+    if (!head) return;
+
+    // Append ⊲ or ⊳ to indicate direction of the arc (helpful if there are many arcs)
+    let deprelLabel;
+    if (_.is_ltr) {
+        deprelLabel = head.num < token.num ? `${deprel}⊳` : `⊲${deprel}`;
+    } else {
+        deprelLabel = head.num < token.num ? `⊲${deprel}` : `${deprel}⊳`;
+    }
+
+    const edgeHeight = getEdgeHeight(token.num, head.num);
+
+    // if the pos tag of the head is in the list of leaf nodes, then mark it as an error
+    let isValid = is_leaf(head.upostag).err && is_udeprel(deprel || 'acl').err === null;
+
+    // give it classes (see cy-style.js)
+    let classes;
+    if (!isValid) {
+        classes = 'dependency error';
+    } else if (!deprel || !deprel.length) {
+        classes = 'dependency incomplete';
+    } else {
+        classes = 'dependency';
+    }
+
+    /*
+    // If dependency cycle exists, mark the cycle as red.
+    const cycles = is_depend_cycles(TREE);
+    if (cycles !== null) {
+        $.each(cycles, (i, cycle) => {
+            $.each(cycle, (j, curr) => {
+                const next = cycle[j+1 >= cycle.length ? 0 : j+1];
+                $.each(graph, (k, node) => {
+                    if (node.data.source !== undefined
+                        && node.data.target !== undefined
+                        && parseInt(node.data.target.substr(2)) === curr
+                        && parseInt(node.data.source.substr(2)) === next )
+                        classes = 'dependency error';
+                });
+            });
+        });
+    }*/
+
+    graph.push({
+        data: {
+          id: `dep-${token.id}`,
+          source: `form-${token.id}`,
+          target: `form-${head.id}`,
+          length: `${deprel.length / 3}em`,
+          label: deprelLabel,
+          ctrl: new Array(4).fill(edgeHeight)
+        },
+        classes: classes
+    });
+}
+
+function getEdgeHeight(tokenNumber, headNumber) {
+    log.debug(`called getEdgeHeight(depender: ${tokenNumber}, depends on: ${headNumber})`);
+
+    let edgeHeight = EDGE_HEIGHT * (headNumber - tokenNumber);
+    if (_.is_ltr)
+        edgeHeight *= -1;
+    if (Math.abs(edgeHeight) !== 1)
+        edgeHeight *= DEFAULT_COEFF;
+    if (_.is_vertical)
+        edgeHeight = 45;
+
+    log.debug(`getEdgeHeight(): ${edgeHeight}`);
+
+    return edgeHeight;
+}
+
+function getConlluById(id) {
+    log.debug(`called getConlluById(${id})`);
+    for (let i = 0, t = _.conllu().tokens.length; i < t; i++) {
+        const token = _.conllu().tokens[i];
+        if (token.id == id)
+            return token;
+    }
+    return null;
+}
+
+
+
+
+
+
+
+
 /**
  * Creates the wf node, the POS node and dependencies.
  * @param  {Array}  graph  A graph containing all the nodes and dependencies.
@@ -429,107 +543,6 @@ function makeEnhancedDependency(token, nodeId, head, deprel, graph) {
     return graph;
 }
 
-/**
- * Creates edges for dependency if head exists.
- * @param  {Object} token  Token object.
- * @param  {String} nodeId Id of node.
- * @param  {Array}  graph  A graph containing all the nodes and dependencies.
- * @return {Array}         Returns the graph.
- */
-function makeDependencies(token, nodeId, graph) {
-    log.debug(`called makeDependencies(token: ${JSON.stringify(token)}, nodeId: ${nodeId}, graph: <Graph>)`);
-
-    const deprel = token.deprel || '',
-        head = token.head;
-    let isValid = false;
-
-    if (head in TREE) // if the pos tag of the head is in the list of leaf nodes, then mark it as an error
-        isValid = is_leaf(TREE[head].upostag).err !== null;
-
-    if (deprel !== '') // if the deprel is not valid, mark it as an error, unless it's blank
-        isValid = is_udeprel(deprel).err === null;
-
-
-  	// Append ⊲ or ⊳ to indicate direction of the arc (helpful if
-  	// there are many arcs.
-  	let deprelLabel;
-  	if (parseInt(head) < parseInt(nodeId) && IS_LTR) {
-      	deprelLabel = `${deprel}⊳`;
-  	} else if (parseInt(head) > parseInt(nodeId) && IS_LTR) {
-    		deprelLabel = `⊲${deprel}`;
-  	} else if (parseInt(head) < parseInt(nodeId) && !IS_LTR) {
-    		deprelLabel = `⊲${deprel}`;
-  	} else if (parseInt(head) > parseInt(nodeId) && !IS_LTR) {
-    		deprelLabel = `${deprel}⊳`;
-  	}
-
-
-  	if (token.head != 0 && token.head !== undefined) {
-
-        let edgeHeight = EDGE_HEIGHT * (head - nodeId);
-        if (!IS_LTR)
-            edgeHeight *= -1;
-        if (Math.abs(edgeHeight) !== 1)
-            edgeHeight *= DEFAULT_COEFF;
-        if (IS_VERTICAL)
-            edgeHeight = 45;
-
-        const headId = getNodeId(head);
-
-        if (headId === null)
-            return graph;
-
-        const edgeDep = {
-                id: `ed${nodeId}`,
-                source: `nf${headId}`,
-                target: `nf${nodeId}`,
-                length: `${deprel.length / 3}em`,
-                label: deprelLabel,
-                ctrl: new Array(4).fill(edgeHeight) // ARC HEIGHT STUFFS
-            };
-
-        log.debug(`makeDependencies(): edgeDep: ${JSON.stringify(edgeDep)}`);
-
-        /*
-        if (token.upostag === 'PUNCT' && !is_projective(TREE, [parseInt(nodeId)])) {
-            isValid = false;
-            log.warn(`makeDependencies(): Non-projective punctuation`);
-        }
-        */
-
-    		// if it's not valid, mark it as an error (see cy-style.js)
-        if (deprel === '' || deprel === undefined) {
-            log.debug(`makeDependencies(): incomplete @${deprel}`);
-      			graph.push({'data': edgeDep, 'classes': 'dependency incomplete'});
-        } else if (!isValid) {
-            log.debug(`makeDependencies(): error @${deprel}`);
-      			graph.push({'data': edgeDep, 'classes': 'dependency error'});
-        } else {
-            log.debug(`makeDependencies(): valid @${deprel}`);
-      			graph.push({'data': edgeDep, 'classes': 'dependency'});
-  		  }
-
-
-        // If dependency cycle exists, mark the cycle as red.
-        const cycles = is_depend_cycles(TREE);
-        if (cycles !== null) {
-            $.each(cycles, (i, cycle) => {
-                $.each(cycle, (j, curr) => {
-                    const next = cycle[j+1 >= cycle.length ? 0 : j+1];
-                    $.each(graph, (k, node) => {
-                        if (node.data.source !== undefined
-                            && node.data.target !== undefined
-                            && parseInt(node.data.target.substr(2)) === curr
-                            && parseInt(node.data.source.substr(2)) === next )
-                            node.classes = 'dependency error';
-                    });
-                });
-            });
-        }
-  	}
-
-  	return graph;
-}
 
 /**
  * Creates nodes for POS and edges between wf and POS nodes.

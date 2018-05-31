@@ -449,6 +449,15 @@ function getTokenFromNode(node) {
 		log.debug(`called getToken(${node.attr('id')})`);
 
 		const data = node.data();
+		return {
+				superTokenId: data.superTokenId,
+				subTokenId: data.subTokenId,
+				token: null//(data.subTokenId === null
+					//	? _.conllu().tokens[data.superTokenId]
+						//: _.conllu().tokens[data.superTokenId].tokens[data.subTokenId]);
+		};
+
+		//const data = node.data();
 		if (data.superTokenId === undefined) {
 				return {
 						token: _.conllu().tokens[data.tokenId],
@@ -543,15 +552,29 @@ function makeDependency(source, target) {
 		 * Changes the text data and redraws the graph. Currently supports only conllu.
 		 */
 
-		const POS_TO_REL = {
-				'PUNCT': 'punct',
-				'DET': 'det',
-				'CCONJ': 'cc',
-				'SCONJ': 'mark'
-		}
+		source = getTokenFromNode(source);
+		target = getTokenFromNode(target);
 
-		const beforeChanges = _.sentence();
+		const oldHead = modifyConllu(target.superTokenId, target.subTokenId, 'head', source.superTokenId);
+
+		window.undoManager.add({
+				undo: () => {
+						modifyConllu(target.superTokenId, target.subTokenId, 'head', oldHead);
+				},
+				redo: () => {
+						modifyConllu(target.superTokenId, target.subTokenId, 'head', source.superTokenId);
+				}
+		})
+
 		return;
+		/*
+
+
+		// TODO:
+		// If the target POS tag is PUNCT set the deprel to @punct [99%]
+		// IF the target POS tag is CCONJ set the deprel to @cc [88%]
+		// IF the target POS tag is SCONJ set the deprel to @mark [86%]
+		// IF the target POS tag is DET set the deprel to @det [83%]
 
 		// NOTE: can just define a new attr `index` or something on the DOM
 		const sourceIndex = parseInt(source.attr('id').slice(2));
@@ -563,10 +586,14 @@ function makeDependency(source, target) {
 				thisToken = sent.tokens[indices.outer],
 				sentAndPrev = changeConlluAttr(sent, indices, 'head', sourceIndex);
 
-		// If the target POS tag is PUNCT set the deprel to @punct [99%]
-		// IF the target POS tag is CCONJ set the deprel to @cc [88%]
-		// IF the target POS tag is SCONJ set the deprel to @mark [86%]
-		// IF the target POS tag is DET set the deprel to @det [83%]
+		const POS_TO_REL = {
+				'PUNCT': 'punct',
+				'DET': 'det',
+				'CCONJ': 'cc',
+				'SCONJ': 'mark'
+		}
+
+
 		// TODO: Put this somewhere better
 		if (thisToken.upostag in POS_TO_REL)
 				sentAndPrev = changeConlluAttr(sent, indices, 'deprel', POS_TO_REL[thisToken.upostag]);
@@ -588,8 +615,7 @@ function makeDependency(source, target) {
 				}
 		});
 
-		redrawTree(sent);
-
+		redrawTree(sent);*/
 }
 
 function modifyConllu(superTokenId, subTokenId, attrKey, attrValue) {
@@ -608,13 +634,16 @@ function modifyConllu(superTokenId, subTokenId, attrKey, attrValue) {
 		}
 
 		log.debug(`modifyConllu(): during: ${conllu.tokens[superTokenId][attrKey]}`);
-		const text = conllu.serial;//convert2PlainText(conllu);
+		const text = conllu.serial;
 		$('#text-data').val(text);
 		parseText();
 		log.debug(`modifyConllu(): after:  ${_.conllu().tokens[superTokenId][attrKey]}`);
 
+		// return oldValue for undo/redo purposes
 		return oldValue;
 }
+
+
 function changeConlluAttr(sent, indices, attrName, newVal) {
     log.debug('called changeConlluAttr()');
 

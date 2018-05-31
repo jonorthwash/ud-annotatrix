@@ -404,54 +404,52 @@ Object.defineProperty(Sentence.prototype,'serial',
             this.comments = [];
             this.tokens = [];
             var lines = arg.split("\n");
+            var mwtSubIds = [];
             for (var i = 0; i < lines.length; i++) { //identify comments in string & add to comments array
                 if (lines[i].startsWith("\#")) {
-                    this.comments.push(lines[i]);
-                    this.comments[i] = this.comments[i].substring(1);
-                }
-            }
+                    this.comments.push(lines[i].match(/^#+[ \t]*(.*)$/)[1]);
+                } else {
 
-            var mwtSubIds = [];
-            for (var i = 0; i < lines.length; i++){
-                var fields = [];
-                fields = lines[i].split("\t"); //split into subfields to identify mwt ids
-                var currentLineId = fields[0];
-                if (!(lines[i].startsWith("\#")) && !(lines[i] === '')) { //find non-comments/non-empty lines
-                    var mwtId = null;
-                    if (fields[0].includes("-")){
-                        mwtString = lines[i] + "\n";
-                        mwtId = fields[0];
-                        dashIndex = fields[0].indexOf("-");
-                        var first = Number(mwtId.slice(0, dashIndex)); //everything before/after slash
-                        var last = Number(mwtId.slice(dashIndex+1));
-                        var span = [];
-                        while(first <= last) {
-                            span.push(Number(first++)); //get span of mwt ids to match all mwt subtoken ids
-                        }
-                        mwtSubIds = span.map(function(id){
-                            return id
-                        });
-                        span = span.map(String);
-                        for (var j = 0; j < lines.length; j++) { //add all subtokens to mwt string
-                            var innerFields = [];
-                            innerFields = lines[j].split("\t");
-                            for (var x = 0; x < span.length; x++){
-                                if (span[x] === innerFields[0]){
-                                    mwtString = mwtString + (lines[j] + "\n");
+                    var fields = [];
+                    fields = lines[i].split("\t"); //split into subfields to identify mwt ids
+                    var currentLineId = fields[0];
+                    if (!(lines[i].startsWith("\#")) && !(lines[i] === '')) { //find non-comments/non-empty lines
+                        var mwtId = null;
+                        if (fields[0].includes("-")){
+                            mwtString = lines[i] + "\n";
+                            mwtId = fields[0];
+                            dashIndex = fields[0].indexOf("-");
+                            var first = Number(mwtId.slice(0, dashIndex)); //everything before/after slash
+                            var last = Number(mwtId.slice(dashIndex+1));
+                            var span = [];
+                            while(first <= last) {
+                                span.push(Number(first++)); //get span of mwt ids to match all mwt subtoken ids
+                            }
+                            mwtSubIds = span.map(function(id){
+                                return id
+                            });
+                            span = span.map(String);
+                            for (var j = 0; j < lines.length; j++) { //add all subtokens to mwt string
+                                var innerFields = [];
+                                innerFields = lines[j].split("\t");
+                                for (var x = 0; x < span.length; x++){
+                                    if (span[x] === innerFields[0]){
+                                        mwtString = mwtString + (lines[j] + "\n");
+                                    }
                                 }
                             }
+                            mwtString = mwtString.substring(0, mwtString.length - 1);
+                            var setMwt = new MultiwordToken();
+                            setMwt.serial = mwtString;//serialize mwt string
+                            this.tokens.push(setMwt);
+
+                        } else if (mwtSubIds.indexOf(Number(currentLineId)) === -1) {
+
+                                var setToken = new Token();
+                                setToken.serial = lines[i];
+                                this.tokens.push(setToken);
                         }
-                        mwtString = mwtString.substring(0, mwtString.length - 1);
-                        var setMwt = new MultiwordToken();
-                        setMwt.serial = mwtString;//serialize mwt string
-                        this.tokens.push(setMwt);
-
-                    } else if (mwtSubIds.indexOf(Number(currentLineId)) === -1) {
-
-                            var setToken = new Token();
-                            setToken.serial = lines[i];
-                            this.tokens.push(setToken);
-                    }
+                  }
             }
 
             }
@@ -498,7 +496,7 @@ Object.defineProperty(Token.prototype,'serial',
             }
 
             var form_output = "_";
-            if (!(this.id === undefined) && !/^[ \t]*$/.test(this.form)){
+            if (!(this.id === undefined) && !(this.form === undefined) && !/^[ \t]*$/.test(this.form)){
                 form_output = String(this.form);
             }
 
@@ -542,7 +540,7 @@ Object.defineProperty(Token.prototype,'serial',
                 misc_output = String(this.misc);
             }
 
-            console.log(`form output: "${form_output}"`)
+
             return (id_output + "\t" + form_output + "\t" + lemma_output + "\t" + upostag_output + "\t" + xpostag_output + "\t" + feats_output + "\t" + head_output + "\t" + deprel_output + "\t" + deps_output + "\t" +  misc_output);
         },
 
