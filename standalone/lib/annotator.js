@@ -46,8 +46,9 @@ var _ = { // main object to hold our current stuff
             layout: null,
             elements: []
         };
-        _.pan = _.pan || null,
-        _.zoom = _.zoom || null,
+        _.pan = _.pan || null;
+        _.zoom = _.zoom || null;
+        _.intercepted = false;
         _.editing = null;
         _.graph_disabled = false;
 

@@ -189,9 +189,7 @@ function createToken(graph, num, superToken, superTokenId, subToken, subTokenId)
     });
 
     // form node
-    if (subToken === null)
-      console.log(token, token.tokens);
-    const label = `${token.form}${ subToken !== null ? '' // only do the subscript thing for superTokens
+    const label = `${token.form}${ !token.tokens ? '' // only do the subscript thing for superTokens
         : toSubscript(` ${token.tokens[0].id}-${token.tokens[token.tokens.length - 1].id}`)}`;
     graph.push({
         data: {

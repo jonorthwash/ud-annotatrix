@@ -224,6 +224,8 @@ function onKeyupInDocument(event) {
 function onEditTextData(event) {
 		log.debug(`called onEditTextData(key: ${event.which})`);
 
+		saveGraphEdits();
+
 		switch (event.which) {
 				case (KEYS.ESC):
 						this.blur();
@@ -435,8 +437,20 @@ function bindCyHandlers() {
      * you also need to update it here.
 		 */
 
-		// just to make sure we see everything :)
+		 // set a countdown to triggering a "background" click unless a node/edge intercepts it
+		 $('#cy canvas').mouseup((event) => {
+	 			setTimeout(() => {
+						clickInCanvas(event);
+						_.intercepted = false;
+				}, 100);
+ 		});
+		$('#cy canvas').mousemove((event) => {
+				_.intercepted = true;
+		});
+
+		// for debugging and intercepting background clicks
 		cy.on('click', '*', (event) => {
+				_.intercepted = true;
 				console.info(`clicked ${event.target.attr('id')}, data:`, event.target.data());
 		});
 
@@ -454,12 +468,14 @@ function clickFormNode(event) {
 		const target = event.target;
 		log.debug(`called clickFormNode(${target.attr('id')})`);
 
-		//if ()
-		_.editing = target;
+		saveGraphEdits();
+		_.editing = null;
+
+		cy.$('.selected').removeClass('selected');
+		cy.$('.arc-selected').removeClass('arc-selected');
 
 		if (target.hasClass('activated')) {
 				target.removeClass('activated');
-				_.editing = null;
 
 		} else {
 
@@ -471,7 +487,6 @@ function clickFormNode(event) {
 						makeDependency(source, target);
 						source.removeClass('activated');
 						target.removeClass('activated');
-						_.editing = null;
 				}
 
 		}
@@ -494,43 +509,61 @@ function cxttapendFormNode(event) {
 function clickDependencyEdge(event) {
 		const target = event.target;
 		log.warn(`called clickDependencyEdge(${target.attr('id')})`);
-		_.editing = target;
 
-		cy.$('.activated').removeClass('activated');
-		/*
+		/**
 		 * Activated when an arc is selected. Adds classes showing what is selected.
 		 */
 
-		return;
-		if (_.editing !== null) {
+		saveGraphEdits();
+		_.editing = target;
+
+		cy.$('.activated').removeClass('activated');
+
+		if (target.hasClass('selected')) {
+
+				cy.$(`#${target.data('target')}`).removeClass('arc-selected');  // visual effects on targeted node
+				target.removeClass('selected');
+
+		} else {
+
+				cy.$('.arc-selected').removeClass('arc-selected');
+				cy.$(`#${target.data('target')}`).addClass('arc-selected');
+				cy.$('.selected').removeClass('selected');
+				target.addClass('selected');
 
 		}
-		if (!IS_EDITING) {
-
-				const targetIndex = this.data('target');
-
-				// if the user clicked an activated node
-				if (this.hasClass('selected')) {
-
-						this.removeClass('selected');
-						cy.$(`#${targetIndex}`).removeClass('arc-selected'); // removing visual effects from targetNode
-
-				} else {
-
-						this.addClass('selected');
-						cy.$(`#${targetIndex}`).addClass('arc-selected'); // css for targetNode
-
-				}
-
-				// for identifying the node
-				cy.$(`#${targetIndex}`).data('state', 'arc-dest');
-		}
-
 }
 function cxttapendDependencyEdge(event) {
 		const target = event.target;
 		log.warn(`called cxttapendDependencyEdge(${target.attr('id')})`);
 }
+
+
+function saveGraphEdits() {
+		log.debug(`called saveGraphEdits()`);
+
+		if (_.editing === null)
+				return; // nothing to do
+
+
+}
+function clickInCanvas() {
+		log.error(`called clickInCanvas(intercepted: ${_.intercepted})`);
+
+		// intercepted by clicking a canvas subobject && mousemove (i.e. drag)
+		if (_.intercepted)
+				return;
+
+		saveGraphEdits();
+
+		cy.$('.activated').removeClass('activated');
+		cy.$('.arc-selected').removeClass('arc-selected');
+		cy.$('.selected').removeClass('selected');
+}
+
+
+
+
 
 function makeDependency(source, target) {
 		log.debug(`called makeDependency(${source.attr('id')}=>${target.attr('id')})`);
@@ -539,8 +572,8 @@ function makeDependency(source, target) {
 		 * Changes the text data and redraws the graph. Currently supports only conllu.
 		 */
 
-		source = source.data().conllu;
-		target = target.data().conllu;
+		source = source.data('conllu');
+		target = target.data('conllu');
 
 		if (source.superTokenId === target.superTokenId) {
 				log.warn(`makeDependency(): unable to create dependency within superToken ${source.superTokenId}`);
