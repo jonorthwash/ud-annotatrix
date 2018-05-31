@@ -77,8 +77,10 @@ function updateGraph() {
     return;
 }
 
+
+
 /**
- * Creates a graph out of the _.conllu().Sentence().
+ * Creates a graph (nodes=tokens, etc.; edges=dependencies, etc.) out of the _.tokens()
  * @return {Array}    cytoscape elements array
  */
 function getGraphElements() {
@@ -90,25 +92,25 @@ function getGraphElements() {
         if (token instanceof conllu.MultiwordToken) {
 
             // create supertoken
-            _createToken(graph, num, token, i, null, null);
+            createToken(graph, num, token, i, null, null);
             num++;
 
             $.each(token.tokens, (j, subToken) => {
-                _createToken(graph, num, token, i, subToken, j);
+                createToken(graph, num, token, i, subToken, j);
                 num++;
             });
 
         } else {
-            _createToken(graph, num, token, i);
+            createToken(graph, num, token, i);
             num++;
         }
     });
 
     // then make the edges
     $.each(_.tokens(), (i, token) => {
-        createDependencies(graph, token);
+        createDependency(graph, token);
         $.each(token.tokens, (i, subToken) => {
-            createDependencies(graph, subToken);
+            createDependency(graph, subToken);
         })
     });
 
@@ -136,8 +138,19 @@ function getGraphElements() {
     return graph; */
 }
 
-function _createToken(graph, num, superToken, superTokenId, subToken, subTokenId) {
-    log.debug(`called _createToken(num: ${num}, superTokenId: ${superTokenId}, subTokenId: ${subTokenId})`);
+
+
+/**
+ * Creates the wf node, the POS node and dependencies.
+ * @param  {Array}  graph  A graph containing all the nodes and dependencies.
+ * @param  {Number} num  Index of this token in the cy elements array (see note below).
+ * @param  {Object} superToken  Token object (that may or may not have subTokens).
+ * @param  {Number} superTokenId  Integer representing superToken's index in the conllu.
+ * @param  {Object} subToken  Token object (see note below) || undefined || null.
+ * @param  {Number} subTokenId  Integer representing subToken's index in the conllu || undefined || null.
+ */
+function createToken(graph, num, superToken, superTokenId, subToken, subTokenId) {
+    log.debug(`called createToken(num: ${num}, superTokenId: ${superTokenId}, subTokenId: ${subTokenId})`);
 
     /*
      * NOTE on args:
@@ -158,7 +171,7 @@ function _createToken(graph, num, superToken, superTokenId, subToken, subTokenId
     token.form = token.form || ' ';
     token.pos = token.upostag || token.xpostag || '';
 
-    // save the data for the createDependencies() functions
+    // save the data for the createDependency() functions
     token.num = num;
     token.superTokenId = superTokenId;
     token.subTokenId = subTokenId || null;
@@ -216,15 +229,36 @@ function _createToken(graph, num, superToken, superTokenId, subToken, subTokenId
         classes: 'pos'
     });
 
+    //if (!IS_ENHANCED)
+        //graph = makeDependencies(token, nodeId, graph);
+
 }
+/**
+ * ~~ helper function for createToken()
+ * Converts a string to subscripts.
+ * @param  {String} str A string.
+ * @return {String}     Returns the subscript conversion of the string.
+ */
+function toSubscript(str) {
+    log.debug(`called toSubscript(${str})`);
+
+    const subscripts = { 0:'₀', 1:'₁', 2:'₂', 3:'₃', 4:'₄', 5:'₅',
+        6:'₆', 7:'₇', 8:'₈', 9:'₉', '-':'₋', '(':'₍', ')':'₎' };
+
+    return str.split('').map((char) => {
+        return (subscripts[char] || char);
+    }).join('');
+}
+
+
 
 /**
  * Creates edges for dependency if head exists.
  * @param  {Array}  graph  A graph containing all the nodes and dependencies.
  * @param  {Object} token  Token object.
  */
-function createDependencies(graph, token) {
-    log.debug(`called createDependencies(token: ${JSON.stringify(token)}`);
+function createDependency(graph, token) {
+    log.debug(`called createDependency(token: ${JSON.stringify(token)}`);
 
     let deprel = token.deprel || '',
         head = getConlluById(token.head);
@@ -287,240 +321,14 @@ function createDependencies(graph, token) {
         classes: classes
     });
 }
-
-function getEdgeHeight(tokenNumber, headNumber) {
-    log.debug(`called getEdgeHeight(depender: ${tokenNumber}, depends on: ${headNumber})`);
-
-    let edgeHeight = EDGE_HEIGHT * (headNumber - tokenNumber);
-    if (_.is_ltr)
-        edgeHeight *= -1;
-    if (Math.abs(edgeHeight) !== 1)
-        edgeHeight *= DEFAULT_COEFF;
-    if (_.is_vertical)
-        edgeHeight = 45;
-
-    log.debug(`getEdgeHeight(): ${edgeHeight}`);
-
-    return edgeHeight;
-}
-
-function getConlluById(id) {
-    log.debug(`called getConlluById(${id})`);
-    for (let i = 0, t = _.conllu().tokens.length; i < t; i++) {
-        const token = _.conllu().tokens[i];
-        for (let j = 0, u = (token.tokens || []).length; j < u; j++) {
-            const subToken = token.tokens[j];
-            if (subToken.id == id)
-                return token; // subtokens return their supertoken
-        }
-        if (token.id == id)
-            return token;
-    }
-    return null;
-}
-
-
-
-
-
-
-
-
 /**
- * Creates the wf node, the POS node and dependencies.
- * @param  {Array}  graph  A graph containing all the nodes and dependencies.
- * @param  {Object} token  Token object.
- * @param  {String} spId   Id of supertoken.
- * @return {Array}         Returns the graph.
+ *  NOT IMPLEMENTED, not sure when this would be used??
  */
-function createToken(graph, token, superTokenId) {
-    log.debug(`called createToken(graph: <Graph>, token: ${JSON.stringify(token)}, superTokenId: ${superTokenId})`);
+function createEnhancedDependency(graph, token) {
+    log.debug(`called makeEnhancedDependency(token: ${JSON.stringify(token)})`);
 
-    /* Takes the tree graph, a token object and the id of the supertoken.
-    Creates the wf node, the POS node and dependencies. Returns the graph. */
-
-    // handling empty form
-    if (token.form === undefined)
-        token.form = ' ';
-
-    // TODO: We shouldn't need to hold information in multiple places
-    // at least not like this.
-    TREE[token.id] = token;
-
-    // token  number
-    const nodeId = getNodeId(token.id);
-    graph.push({
-        data: {
-            id: `num${nodeId}`,
-            label: token.id,
-            pos: token.upostag, // +token.upostag
-            parent: superTokenId
-        },
-        classes: 'tokenNumber'
-    });
-
-    let nodeWF = token;
-    nodeWF.id = `nf${nodeId}`;
-    nodeWF.label = nodeWF.form;
-    nodeWF.length = `${nodeWF.form.length > 3 ? nodeWF.form.length*0.7 : nodeWF.form.length}em`;
-    nodeWF.state = 'normal';
-    nodeWF.parent = `num${nodeId}`;
-
-    graph.push({ data:nodeWF, classes:`wf${token.head === 0 ? ' root' : ''}`});
-    graph = makePOS(token, nodeId, graph);
-
-    if (!IS_ENHANCED)
-        graph = makeDependencies(token, nodeId, graph);
-
-    return graph;
-}
-
-
-
-function exportSVG() {
-    log.debug(`called exportSVG()`);
-
-    $('#exportModal').find('#exportedGraph').css('display', 'none');
-    $('#exportModal').find('#errorExportLaTeX').css('display', 'none');
-    $('#exportModal').find('#exportedLaTeX').css('display', 'none');
-
-    const ctx = new C2S(cy.width, cy.height);
-    cy.renderer().renderTo(ctx);
-
-    $('#exportModal').find('#exportedSVG').attr('src', `data:image/svg+xml;charset=utf-8,${ctx.getSerializedSvg()}`);
-    $('#exportModal').find('#exportedSVG').css('display', 'inline');
-}
-
-function exportPNG() {
-    log.debug(`called exportPNG()`);
-
-    $('#exportModal').find('#exportedSVG').css('display', 'none');
-    $('#exportModal').find('#errorExportLaTeX').css('display', 'none');
-    $('#exportModal').find('#exportedLaTeX').css('display', 'none');
-
-    const b64key = 'base64,',
-        b64 = cy.png().substring(cy.png().indexOf(b64key) + b64key.length),
-        imgBlob = b64toBlob(b64, 'image/png');
-
-    $('#exportModal').find('#exportedGraph').attr('src', URL.createObjectURL(imgBlob));
-    $('#exportModal').find('#exportedGraph').css('width', '100%').css('display', 'inline');
-
-    return URL.createObjectURL(imgBlob);
-}
-
-function b64toBlob(b64Data, contentType, sliceSize) {
-    log.debug(`called b64toBloc(b64Data:${b64Data.slice(0,25)}..., contentType: ${contentType}, sliceSize: ${sliceSize})`);
-
-    // defaults
-    contentType = contentType || '';
-    sliceSize = sliceSize || 512;
-
-    const byteCharacters = atob(b64Data);
-    let byteArrays = [];
-    for (let offset = 0, bytesChars = byteCharacters.length; offset < bytesChars; offset += sliceSize) {
-        byteArrays.push( new Uint8Array(byteCharacters.slice(offset, offset + sliceSize).replace('/./g', (char, i) => {
-          return slice.charCodeAt(i);
-        })) );
-    }
-
-    return new Blob(byteArrays, { type:contentType });
-}
-
-
-function exportLaTeX() {
-    log.debug(`called exportLaTeX()`);
-
-    $('#exportModal').find('#exportedLaTeX').val('').css('display', 'none');
-    $('#exportModal').find('#exportedSVG').css('display', 'none');
-    $('#exportModal').find('#errorExportLaTeX').css('display', 'none');
-    $('#exportModal').find('#exportedGraph').css('display', 'none');
-
-    if (CODE_LATEX === 'error') {
-        $('#exportModal').find('#errorExportLaTeX').css('display', 'inline');
-    } else {
-        const textareaRows = $('#exportModal').find('#exportedLaTeX').attr('rows');
-        $('#exportModal').find('#exportedLaTeX')
-            .val(CODE_LATEX.join('\n'))
-            .attr('rows', Math.max(textareaRows, CODE_LATEX.length + 2) )
-            .css('display', 'inline');
-    }
-}
-
-function generateLaTeX(graph) {
-    log.debug(`called generateLaTeX(${JSON.stringify(graph)})`);
-
-    let tokensLine = '',
-        posLine = '',
-        deprelLines = [];
-
-    $.each(graph, (i, node) => {
-        if (node.classes.indexOf('wf') > -1) {
-            if (node.data.upostag === undefined)
-                return 'error';
-
-            tokensLine += ` \\& ${node.data.label}`;
-            posLine += `\\&{\\tt ${node.data.upostag}}`;
-        }
-
-        if (node.classes === 'dependency' || node.classes === 'dependency error') {
-            if (node.data.label === undefined)
-                return 'error';
-
-            const source = parseInt(node.data.source.replace('nf', '')),
-                target = parseInt(node.data.target.replace('nf', '')),
-                label = (node.data.label === undefined ? '' : node.data.label.replace(/[⊳⊲]/, ''));
-
-            deprelLines.push(`\depedge{${source}}{${target}}{${label}}`);
-        }
-    });
-
-    tokensLine = `${tokensLine.replace('\\&', '')} \\\\`;
-    posLine = `${posLine.replace('\\&', '')} \\\\`;
-
-    // now make the LaTeX from it
-    const LaTeX = [
-        '\\begin{dependency}',
-        '  \\begin{deptext}[column sep=0.4cm]',
-        `    ${tokensLine}`,
-        `    ${posLine}`,
-        `  \\end{deptext}` ].concat(deprelLines.map((line) => {
-            return `  \\${line}`;
-        }), '\\end{dependency} \\\\');
-
-    log.debug(`generateLaTeX() generated: ${LaTeX}`);
-    return LaTeX;
-}
-
-/**
- * Converts a string to subscripts.
- * @param  {String} str A string.
- * @return {String}     Returns the subscript conversion of the string.
- */
-function toSubscript(str) {
-    const subscripts = { 0:'₀', 1:'₁', 2:'₂', 3:'₃', 4:'₄', 5:'₅',
-        6:'₆', 7:'₇', 8:'₈', 9:'₉', '-':'₋', '(':'₍', ')':'₎' };
-
-    return str.split('').map((char) => {
-        return (subscripts[char] || char);
-    }).join('');
-}
-
-
-function getNodeId(idString) {
-    log.debug(`called getNodeId(${JSON.stringify(idString)})`)
-    let id = parseInt(idString);
-
-    if (isNaN(id)) {
-        log.warn(`getNodeId(): unable to parse id: ${JSON.stringify(idString)}`);
-        return null;
-    }
-
-    return String(id).padStart(2, '0');
-}
-
-function makeEnhancedDependency(token, nodeId, head, deprel, graph) {
-    log.debug(`called makeEnhancedDependency(token: ${JSON.stringify(token)}, nodeId: ${nodeId}, head: ${head}, deprel: ${deprel}, graph: <Graph>)`);
-
+    throw new NotImplementedError('createEnhancedDependency() not implemented');
+    /*
     if (head != 0 && head !== undefined) {
         let edgeHeight = EDGE_HEIGHT * (head - parseInt(nodeId.slice(2)));
         if (Math.abs(coeff) !== 1)
@@ -543,44 +351,86 @@ function makeEnhancedDependency(token, nodeId, head, deprel, graph) {
         });
     }
 
-    return graph;
+    return graph;*/
 }
-
-
 /**
- * Creates nodes for POS and edges between wf and POS nodes.
- * @param  {Object} token  Token object.
- * @param  {String} nodeId Id of node.
- * @param  {Array}  graph  A graph containing all the nodes and dependencies.
- * @return {Array}         Returns the graph.
+ *  ~~ helper function for createDependency() and createEnhancedDependency()
+ *  Returns the edge height between two nodes (their positions are given as indices
+ *  into the cy elements array).
+ *  @param  {Number}  tokenNumber  index of the depending token
+ *  @param  {Number}  headNumber   index of the depended-on token
+ *  @return {Number}
  */
-function makePOS(token, nodeId, graph) {
-    log.debug(`called makePOS(token: ${JSON.stringify(token)}, nodeId: ${nodeId}, graph: <Graph>)`);
+function getEdgeHeight(tokenNumber, headNumber) {
+    log.debug(`called getEdgeHeight(depender: ${tokenNumber}, depends on: ${headNumber})`);
 
-    /* Creates nodes for POS and edges between wf and POS nodes */
-    const POS = token.upostag || token.xpostag || '';
-    nodeId = getNodeId(nodeId);
+    const defaultEdgeHeight = 40,
+        defaultEdgeCoeff = 1; // 0.7
 
-    graph.push({
-        data: {
-            id: `np${nodeId}`,
-            label: POS,
-            length: `${POS.length + 1}em`
-        },
-        classes: 'pos'
-    });
+    let edgeHeight = defaultEdgeHeight * (headNumber - tokenNumber);
+    if (_.is_ltr)
+        edgeHeight *= -1;
+    if (Math.abs(edgeHeight) !== 1)
+        edgeHeight *= defaultEdgeCoeff;
+    if (_.is_vertical)
+        edgeHeight = 45;
 
-    graph.push({
-        data: {
-            id: `ep${nodeId}`,
-            source: `nf${nodeId}`,
-            target: `np${nodeId}`
-        },
-        classes: 'pos'
-    });
+    log.debug(`getEdgeHeight(): ${edgeHeight}`);
 
-    return graph;
+    return edgeHeight;
 }
+/**
+ *  ~~ helper function for createDependency and createEnhancedDependency()
+ *  Returns the token pointed to by a given CoNLL-U index-string
+ *  @param  id  string giving the index for a CoNLL-U token
+ *  @return {Token || null}
+ */
+function getConlluById(id) {
+    log.debug(`called getConlluById(${id})`);
+    for (let i = 0, t = _.conllu().tokens.length; i < t; i++) {
+        const token = _.conllu().tokens[i];
+        for (let j = 0, u = (token.tokens || []).length; j < u; j++) {
+            const subToken = token.tokens[j];
+            if (subToken.id == id)
+                return token; // subtokens return their supertoken
+        }
+        if (token.id == id)
+            return token;
+    }
+    return null;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// UNUSED / OLD functions, maybe to be resurrected :)
+
+
+
+function getNodeId(idString) {
+    log.debug(`called getNodeId(${JSON.stringify(idString)})`)
+    let id = parseInt(idString);
+
+    if (isNaN(id)) {
+        log.warn(`getNodeId(): unable to parse id: ${JSON.stringify(idString)}`);
+        return null;
+    }
+
+    return String(id).padStart(2, '0');
+}
+
+
+
 
 
 /**
