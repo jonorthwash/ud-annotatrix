@@ -1,7 +1,6 @@
 'use strict';
 
 
-
 function exportSVG() {
     log.debug(`called exportSVG()`);
 

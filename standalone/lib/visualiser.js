@@ -1,7 +1,6 @@
 'use strict'
 
-var TREE = {}, // This map allows us to address the Token object given an ID
-    CURRENT_PAN = {},
+var CURRENT_PAN = {},
 
     // used for calculating progress
     ALL_WORK = 0,
@@ -28,6 +27,11 @@ const SCROLL_ZOOM_INCREMENT = 0.05,
 
 function updateGraph() {
     log.warn(`called updateGraph()`);
+
+    if (cy && cy.pan && cy.zoom) {
+        _.pan  = cy.pan();
+        _.zoom = cy.zoom();
+    }
 
     // can't do anything without CoNLL-U
     convert2Conllu();
@@ -137,9 +141,6 @@ function getGraphElements() {
 
     return graph; */
 }
-
-
-
 /**
  * Creates the wf node, the POS node and dependencies.
  * @param  {Array}  graph  A graph containing all the nodes and dependencies.
@@ -188,6 +189,8 @@ function createToken(graph, num, superToken, superTokenId, subToken, subTokenId)
     });
 
     // form node
+    if (subToken === null)
+      console.log(token, token.tokens);
     const label = `${token.form}${ subToken !== null ? '' // only do the subscript thing for superTokens
         : toSubscript(` ${token.tokens[0].id}-${token.tokens[token.tokens.length - 1].id}`)}`;
     graph.push({
@@ -233,25 +236,6 @@ function createToken(graph, num, superToken, superTokenId, subToken, subTokenId)
         //graph = makeDependencies(token, nodeId, graph);
 
 }
-/**
- * ~~ helper function for createToken()
- * Converts a string to subscripts.
- * @param  {String} str A string.
- * @return {String}     Returns the subscript conversion of the string.
- */
-function toSubscript(str) {
-    log.debug(`called toSubscript(${str})`);
-
-    const subscripts = { 0:'₀', 1:'₁', 2:'₂', 3:'₃', 4:'₄', 5:'₅',
-        6:'₆', 7:'₇', 8:'₈', 9:'₉', '-':'₋', '(':'₍', ')':'₎' };
-
-    return str.split('').map((char) => {
-        return (subscripts[char] || char);
-    }).join('');
-}
-
-
-
 /**
  * Creates edges for dependency if head exists.
  * @param  {Array}  graph  A graph containing all the nodes and dependencies.
@@ -352,6 +336,22 @@ function createEnhancedDependency(graph, token) {
     }
 
     return graph;*/
+}
+/**
+ * ~~ helper function for createToken()
+ * Converts a string to subscripts.
+ * @param  {String} str A string.
+ * @return {String}     Returns the subscript conversion of the string.
+ */
+function toSubscript(str) {
+    log.debug(`called toSubscript(${str})`);
+
+    const subscripts = { 0:'₀', 1:'₁', 2:'₂', 3:'₃', 4:'₄', 5:'₅',
+        6:'₆', 7:'₇', 8:'₈', 9:'₉', '-':'₋', '(':'₍', ')':'₎' };
+
+    return str.split('').map((char) => {
+        return (subscripts[char] || char);
+    }).join('');
 }
 /**
  *  ~~ helper function for createDependency() and createEnhancedDependency()

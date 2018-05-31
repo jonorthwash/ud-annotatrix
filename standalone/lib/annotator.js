@@ -46,8 +46,8 @@ var _ = { // main object to hold our current stuff
             layout: null,
             elements: []
         };
-        _.pan = null,
-        _.zoom = null,
+        _.pan = _.pan || null,
+        _.zoom = _.zoom || null,
         _.editing = null;
         _.graph_disabled = false;
 
@@ -136,7 +136,7 @@ window.onload = () => {
         `${path}/conllu_table.js`,
         `${path}/converters.js`,
         `${path}/cy-style.js`,
-        `${path}/graph.js`,
+        `${path}/exporters.js`,
         `${path}/gui.js`,
         `${path}/sd2Conllu.js`,
         `${path}/server_support.js`,

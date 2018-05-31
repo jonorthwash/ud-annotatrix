@@ -468,7 +468,6 @@ function clickFormNode(event) {
 
 				// if there was already an activated node
 				if (source.length === 1) {
-						savePosition();
 						makeDependency(source, target);
 						source.removeClass('activated');
 						target.removeClass('activated');
@@ -531,15 +530,6 @@ function clickDependencyEdge(event) {
 function cxttapendDependencyEdge(event) {
 		const target = event.target;
 		log.warn(`called cxttapendDependencyEdge(${target.attr('id')})`);
-}
-
-function savePosition() {
-		log.debug(`called savePosition()`);
-
-		_.pan  = cy.pan();
-		_.zoom = cy.zoom();
-
-		log.debug(`pan: (${_.pan.x}, ${_.pan.y}), zoom: ${_.zoom}`);
 }
 
 function makeDependency(source, target) {
