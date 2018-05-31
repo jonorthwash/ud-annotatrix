@@ -297,8 +297,15 @@ function onEnter(event) {
 						before = lines.slice(0, cursorLine + 1);
 						during = [`${lineId}\t_\t_\t_\t_\t_\t_\t_\t_\t_`];
 						after = lines.slice(cursorLine + 1).map((line) => {
-								const id = parseInt(line.match(/^[0-9]+/));
-								return line.replace(/^[0-9]+/, (id + 1));
+							 	// NOTE: on regex:
+								// e.g. "6	form	lemma" => ['6', '6']
+								// e.g. "6-7 form	lemma" => ['6-7', '6', '7']
+								const matches = line.match(/^([0-9]+)(?:-([0-9]+))?/);
+								log.debug(`onEnter(): matches: [${matches.join(',')}]`);
+								line = line.replace(matches[1], parseInt(matches[1]) + 1);
+								if (matches[2] !== undefined)
+										line = line.replace(`-${matches[2]}`, `-${parseInt(matches[2]) + 1}`);
+								return line;
 						});
 
 						log.debug(`onEnter(): preceding line(s) : [${before}]`);
@@ -446,6 +453,8 @@ function bindCyHandlers() {
 function clickFormNode(event) {
 		const target = event.target;
 		log.debug(`called clickFormNode(${target.attr('id')})`);
+
+		//if ()
 		_.editing = target;
 
 		if (target.hasClass('activated')) {
@@ -486,7 +495,9 @@ function cxttapendFormNode(event) {
 function clickDependencyEdge(event) {
 		const target = event.target;
 		log.warn(`called clickDependencyEdge(${target.attr('id')})`);
+		_.editing = target;
 
+		cy.$('.activated').removeClass('activated');
 		/*
 		 * Activated when an arc is selected. Adds classes showing what is selected.
 		 */
