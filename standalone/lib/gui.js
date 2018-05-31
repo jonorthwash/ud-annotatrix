@@ -137,6 +137,14 @@ function bindHandlers() {
 		// onkeydown, onkeyup are global variables for JS runtime
 		onkeydown = onkeyup = onKeyupInDocument;
 
+		// direct graph-editing stuff
+		$('#edit').keyup(onKeyupInEditLabel);
+
+		// prevent accidentally leaving the page
+		window.onbeforeunload = () => {
+		  return 'Are you sure you want to leave?';
+		};
+
 		/* what's up with this stuff ?? (updated 5/27/18)
 
 		$('#btnExportPNG').click(exportPNG);
@@ -191,6 +199,10 @@ function onKeyupInDocument(event) {
 		// handle Ctrl + <keypress>
 		// solution based on https://stackoverflow.com/a/12444641/5181692
 
+		if (event.which === KEYS.BACKSPACE) {
+
+		}
+
 		pressed[event.which] = (event.type === 'keydown');
 		if (!pressed[KEYS.CTRL])
 				return;
@@ -219,6 +231,22 @@ function onKeyupInDocument(event) {
 			undoManager.undo();
 		} else if (pressed[KEYS.Y] || (pressed[KEYS.Z]  && pressed[KEYS.SHIFT])) {
 			undoManager.redo();
+		}
+}
+function onKeyupInEditLabel(event) {
+		log.debug(`called onKeyupInEditLabel(${event.which})`);
+
+		switch (event.which) {
+				case (KEYS.ENTER):
+						clickInCanvas(event);
+						break;
+				case (KEYS.TAB):
+						console.log('what should happen here???');
+						break;
+				case (KEYS.ESC):
+						_.editing = null;
+						clickInCanvas(event);
+						break;
 		}
 }
 function onEditTextData(event) {
@@ -438,13 +466,18 @@ function bindCyHandlers() {
 		 */
 
 		 // set a countdown to triggering a "background" click unless a node/edge intercepts it
-		 $('#cy canvas').mouseup((event) => {
+		 $('#cy canvas, #mute').mouseup((event) => {
 	 			setTimeout(() => {
 						clickInCanvas(event);
-						_.intercepted = false;
+						setTimeout(() => { // wait another full second before unsetting
+								_.intercepted = false;
+						});
 				}, 100);
  		});
 		$('#cy canvas').mousemove((event) => {
+				_.intercepted = true;
+		});
+		$('#edit').mouseup((event) => {
 				_.intercepted = true;
 		});
 
@@ -496,7 +529,7 @@ function clickPosNode(event) {
 		log.warn(`called clickPosNode(${target.attr('id')})`);
 
 		saveGraphEdits();
-		_.editing = target;
+		_.editing = { target:target, text:target.data('label') };
 
 		cy.$('.activated').removeClass('activated');
 		cy.$('.arc-selected').removeClass('arc-selected');
@@ -524,7 +557,7 @@ function clickDependencyEdge(event) {
 		 */
 
 		saveGraphEdits();
-		_.editing = target;
+		_.editing = null;
 
 		cy.$('.activated').removeClass('activated');
 
@@ -554,7 +587,8 @@ function editGraphLabel(target) {
 		target.addClass('input');
 
 		// get rid of direction arrows
-		target.data('label', target.data('label').replace(/[⊳⊲]/, ''));
+		const label = target.data('label').replace(/[⊳⊲]/, '');
+		target.data('label', label);
 
 		// get bounding box
 		let bbox = target.renderedBoundingBox();
@@ -579,6 +613,7 @@ function editGraphLabel(target) {
 				? U_DEPRELS
 				: [];
 
+		// add the edit input
 		$('#edit').selfcomplete({
 				lookup: autocompletes,
 				tabDisabled: false,
@@ -588,54 +623,45 @@ function editGraphLabel(target) {
 				.css('left', bbox.x1)
 				.css('height', bbox.h)
 				.css('width', bbox.w + 5)
-				.attr('value', target.data('label'))
+				.attr('value', label)
+				.attr('target', target.attr('id'))
 				.addClass('activated')
 				.addClass(target.data('name'))
-				.focus();
+				.focus()[0]
+				.setSelectionRange(label.length, label.length);
 
-		if (target.data('name') === 'dependency')
-				$('#edit').select();
-
-		/* TODO: what is this ?? (5/31/18)
+		// add the background-mute div
 		$('#mute').addClass('activated')
 				.css('height', _.is_vertical
 						? `${_.tokens().length * 50}px`
-						: $(window).width() - 10); */
+						: $(window).width() - 10);
 
-		console.log(bbox);
-		return;
-
-		const id = this.attr('id').slice(0, 2);
-		if (id === 'ed') {
-				nodeType = 'DEPREL';
-		} else if (id === 'np') {
-				nodeType = 'UPOS';
-		}
-    $('#edit')
-				.css('top', param.y1)
-        .css('left', param.x1)
-        .css('height', param.h)
-        .css('width', param.w + 35)
-        //.css('background-color', param.color)
-        .attr('value', this.data('label'))
-        .addClass('activated')
-        .addClass(id);
-
-    if (nodeType === 'DEPREL') {
-        $('#edit').focus().select();
-    } else {
-        $('#edit').focus();
-    }
-
+		if (target.data('name') === 'dependency')
+				$('#edit').select();
 }
 
 function saveGraphEdits() {
-		log.debug(`called saveGraphEdits()`);
+		log.error(`called saveGraphEdits(target:${_.editing ? _.editing.target.attr('id') : 'null'}, text:${_.editing ? _.editing.text : ''})`);
 
 		cy.$('.input').removeClass('input');
 
 		if (_.editing === null)
 				return; // nothing to do
+
+		const data = _.editing.target.data();
+		const newAttrValue = $('#edit').val();
+		console.log(data, newAttrValue);
+		const oldAttrValue = modifyConllu(data.conllu.superTokenId, data.conllu.subTokenId, data.attr, newAttrValue);
+
+		window.undoManager.add({
+				undo: () => {
+						modifyConllu(data.conllu.superTokenId, data.conllu.subTokenId, data.attr, oldAttrValue);
+				},
+				redo: () => {
+						modifyConllu(data.conllu.superTokenId, data.conllu.subTokenId, data.attr, newAttrValue);
+				}
+		});
+
 
 }
 function clickInCanvas(event) {
@@ -651,6 +677,9 @@ function clickInCanvas(event) {
 		cy.$('.activated').removeClass('activated');
 		cy.$('.arc-selected').removeClass('arc-selected');
 		cy.$('.selected').removeClass('selected');
+
+		$('#mute').removeClass('activated');
+		$('#edit').removeClass('activated');
 }
 
 
@@ -681,7 +710,7 @@ function makeDependency(source, target) {
 				redo: () => {
 						modifyConllu(source.superTokenId, source.subTokenId, 'head', target.id);
 				}
-		})
+		});
 
 		return;
 		/*

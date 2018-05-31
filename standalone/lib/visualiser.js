@@ -59,6 +59,12 @@ function updateGraph() {
 
     bindCyHandlers();
 
+    /*$('#cy').prepend(
+        $(`<div id="mute">
+              <input type="type" id="edit" class="hidden-input" />
+          </div>`));*/
+
+
     /*
     CODE_LATEX = generateLaTeX(graph);
 
@@ -197,6 +203,7 @@ function createToken(graph, num, superToken, superTokenId, subToken, subTokenId)
             id: `form-${token.id}`,
             num: num,
             name: `form`,
+            attr: 'form',
             form: token.form,
             label: label,
             length: `${label.length > 3 ? label.length * 0.7 : label.length}em`,
@@ -204,7 +211,7 @@ function createToken(graph, num, superToken, superTokenId, subToken, subTokenId)
             parent: `num-${token.id}`,
             conllu: token
         },
-        classes: `form${token.head === 0 ? ' root' : ''}`
+        classes: `form${token.head == 0 ? ' root' : ''}`
     });
 
     // pos node
@@ -213,6 +220,7 @@ function createToken(graph, num, superToken, superTokenId, subToken, subTokenId)
             id: `pos-node-${token.id}`,
             num: num,
             name: `pos-node`,
+            attr: 'upostag',
             label: token.pos || '',
             length: `${token.pos.length * 0.7 + 1}em`,
             conllu: token
@@ -294,6 +302,7 @@ function createDependency(graph, token) {
         data: {
           id: `dep-${token.id}`,
           name: 'dependency',
+          attr: 'deprel',
           source: `form-${token.id}`,
           sourceConllu: token,
           target: `form-${head.id}`,

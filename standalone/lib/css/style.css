@@ -85,7 +85,11 @@ span.tt {
   color: black;
 }
 
-.activated#mute {
+#mute {
+  display: none;
+}
+
+#mute.activated {
   position: absolute;
   width: 1500px;
   height: 400px;
