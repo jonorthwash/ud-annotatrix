@@ -487,8 +487,8 @@ function bindCyHandlers() {
 				console.info(`clicked ${event.target.attr('id')}, data:`, event.target.data());
 		});
 
-		cy.on('click', 'node.form', clickFormNode);       // drawArcs
-    cy.on('click', 'node.pos', clickPosNode);         // changeNode
+		cy.on('click', 'node.form', clickFormNode);
+    cy.on('click', 'node.pos', clickPosNode);
     cy.on('click', '$node > node', clickChildNode);   // selectSup
 		cy.on('cxttapend', 'node.form', cxttapendFormNode); // changeNode
 
@@ -502,7 +502,6 @@ function clickFormNode(event) {
 		log.debug(`called clickFormNode(${target.attr('id')})`);
 
 		saveGraphEdits();
-		_.editing = null;
 
 		cy.$('.selected').removeClass('selected');
 		cy.$('.arc-selected').removeClass('arc-selected');
@@ -529,7 +528,7 @@ function clickPosNode(event) {
 		log.warn(`called clickPosNode(${target.attr('id')})`);
 
 		saveGraphEdits();
-		_.editing = { target:target, text:target.data('label') };
+		_.editing = target;
 
 		cy.$('.activated').removeClass('activated');
 		cy.$('.arc-selected').removeClass('arc-selected');
@@ -546,6 +545,15 @@ function clickChildNode(event) {
 function cxttapendFormNode(event) {
 		const target = event.target;
 		log.warn(`called cxttapendFormNode(${target.attr('id')})`);
+
+		saveGraphEdits();
+		_.editing = target;
+
+		cy.$('.activated').removeClass('activated');
+		cy.$('.arc-selected').removeClass('arc-selected');
+		cy.$('.selected').removeClass('selected');
+
+		editGraphLabel(target);
 }
 
 function clickDependencyEdge(event) {
@@ -557,7 +565,6 @@ function clickDependencyEdge(event) {
 		 */
 
 		saveGraphEdits();
-		_.editing = null;
 
 		cy.$('.activated').removeClass('activated');
 
@@ -619,11 +626,11 @@ function editGraphLabel(target) {
 				tabDisabled: false,
 				autoSelectFirst: true,
 				lookupLimit: 5 })
+				.val(label)
 				.css('top', bbox.y1)
 				.css('left', bbox.x1)
 				.css('height', bbox.h)
 				.css('width', bbox.w + 5)
-				.attr('value', label)
 				.attr('target', target.attr('id'))
 				.addClass('activated')
 				.addClass(target.data('name'))
@@ -641,16 +648,22 @@ function editGraphLabel(target) {
 }
 
 function saveGraphEdits() {
-		log.error(`called saveGraphEdits(target:${_.editing ? _.editing.target.attr('id') : 'null'}, text:${_.editing ? _.editing.text : ''})`);
+		log.error(`called saveGraphEdits(target:${_.editing ? _.editing.attr('id') : 'null'}, text:${_.editing ? $('#edit').val() : ''})`);
 
 		cy.$('.input').removeClass('input');
 
 		if (_.editing === null)
 				return; // nothing to do
 
-		const data = _.editing.target.data();
+		const data = _.editing.data();
 		const newAttrValue = $('#edit').val();
-		console.log(data, newAttrValue);
+		if (/[ \t\n]*/g.test(newAttrValue)) {
+				const message = 'ERROR: Unable to add changes with whitespace!  Try creating a new node first.';
+				log.error(message);
+				alert(message); // TODO: probably should streamline errors
+				return;
+		}
+
 		const oldAttrValue = modifyConllu(data.conllu.superTokenId, data.conllu.subTokenId, data.attr, newAttrValue);
 
 		window.undoManager.add({
@@ -662,7 +675,8 @@ function saveGraphEdits() {
 				}
 		});
 
-
+		_.editing = null;
+		$('#edit').val();
 }
 function clickInCanvas(event) {
 		log.error(`called clickInCanvas(intercepted: ${_.intercepted})`);
@@ -672,7 +686,6 @@ function clickInCanvas(event) {
 				return;
 
 		saveGraphEdits();
-		_.editing = null;
 
 		cy.$('.activated').removeClass('activated');
 		cy.$('.arc-selected').removeClass('arc-selected');

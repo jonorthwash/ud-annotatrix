@@ -181,7 +181,7 @@ function createToken(graph, num, superToken, superTokenId, subToken, subTokenId)
     // save the data for the createDependency() functions
     token.num = num;
     token.superTokenId = superTokenId;
-    token.subTokenId = subTokenId || null;
+    token.subTokenId = subTokenId === undefined ? null : subTokenId;
 
     // number node
     graph.push({
@@ -196,8 +196,9 @@ function createToken(graph, num, superToken, superTokenId, subToken, subTokenId)
     });
 
     // form node
-    const label = `${token.form}${ !token.tokens ? '' // only do the subscript thing for superTokens
-        : toSubscript(` ${token.tokens[0].id}-${token.tokens[token.tokens.length - 1].id}`)}`;
+    let label = token.form;
+    if (token.tokens)
+        label += toSubscript(`${token.tokens[0].id}-${token.tokens[token.tokens.length - 1].id}`);
     graph.push({
         data: {
             id: `form-${token.id}`,
