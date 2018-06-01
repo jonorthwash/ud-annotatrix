@@ -460,37 +460,15 @@ function editGraphLabel(target) {
     				autoSelectFirst: true,
     				lookupLimit: 5 });
 
-    /*
-    const selection = window.getSelection();
-    const range = document.createRange();
-    range.setStartBefore($('#edit').first()[0]);
-    range.setEndAfter($('#edit').last()[0]);
-    selection.removeAllRanges();
-    selection.addRange(range);
-
-    /*
-    var $newSelection = $('.someElements');
-    var selection = window.getSelection();
-    var range = document.createRange();
-    range.setStartBefore($newSelection.first()[0]);
-    range.setEndAfter($newSelection.last()[0]);
-    selection.removeAllRanges();
-    selection.addRange(range);
-    const range = new Range(),
-        input = $('#edit')[0]; // DOM node
-    range.setStart(input, 0);//label.length);
-    range.setEnd(input, 0);//label.length);
-    input.setSelectionRange(range);*/
-
-    console.log(document.getSelection())
 		// add the background-mute div
 		$('#mute').addClass('activated')
 				.css('height', _.is_vertical
 						? `${_.tokens().length * 50}px`
 						: $(window).width() - 10);
 
+    $('#edit').focus(); // move cursor to the end
 		if (target.data('name') === 'dependency')
-				$('#edit').select();
+				$('#edit').select(); // highlight the current contents
 }
 function saveGraphEdits() {
 		log.debug(`called saveGraphEdits(target:${_.editing ? _.editing.attr('id') : 'null'}, text:${_.editing ? $('#edit').val() : ''})`);
@@ -552,8 +530,6 @@ function makeDependency(source, target) {
 						modifyConllu(source.superTokenId, source.subTokenId, 'head', target.id);
 				}
 		});
-
-		return;
 		/*
 		// TODO:
 		// If the target POS tag is PUNCT set the deprel to @punct [99%]
@@ -577,6 +553,37 @@ function makeDependency(source, target) {
 				log.warn('writeArc(): Non-projective punctuation');
 				isValidDep = false
 		}*/
+}
+function removeDependency(dependency) {
+    log.debug(`called removeDependency(${dependency.attr('id')})`);
+
+    const source  = dependency.data('sourceConllu'),
+        oldHead   = modifyConllu(source.superTokenId, source.subTokenId, 'head', undefined),
+        oldDeprel = modifyConllu(source.superTokenId, source.subTokenId, 'deprel', undefined);
+
+    window.undoManager.add({
+        undo: () => {
+            modifyConllu(source.superTokenId, source.subTokenId, 'head', oldHead);
+            modifyConllu(source.superTokenId, source.subTokenId, 'deprel', oldDeprel);
+        },
+        redo: () => {
+            modifyConllu(source.superTokenId, source.subTokenId, 'head', undefined);
+            modifyConllu(source.superTokenId, source.subTokenId, 'deprel', undefined);
+        }
+    });
+}
+function activateMoveDependency(dependency) {
+		log.error(`called moveDependency(${dependency.attr('id')})`);
+
+    _.moving_dependency = true;
+    return;
+
+    /* Activated after the key responsible for 'move dependent' key. */
+
+		$('rect[data-span-id]').each( (i, node) => {
+			node.unbind('click', clickWF);
+			node.click(getArc);
+		});
 }
 
 function modifyConllu(superTokenId, subTokenId, attrKey, attrValue) {

@@ -8,6 +8,14 @@ const ACTIVE_COLOR = '#2653c9',
     ST_COLOR = '#bcd2ff';
 
 const CY_STYLE = [{
+  'selector': '*.disabled',
+  'style': {
+      'opacity': 0.4/*
+      'background-color': '#f00',
+      'color': '#0ff'*/
+  }
+},
+  {
     'selector': 'node',
     'style': {
         'height': 20,
@@ -43,7 +51,7 @@ const CY_STYLE = [{
         'background-color': ACTIVE_COLOR
     }
 }, {
-    'selector': 'node.form.arc-selected',
+    'selector': 'node.form.arc-source, node.form.arc-target',
     'style': {
         'border-color': FANCY_COLOR
     }

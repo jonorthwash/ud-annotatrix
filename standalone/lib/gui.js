@@ -32,6 +32,7 @@ const KEYS = {
 		P: 80,
 		R: 82,
 		S: 83,
+		X: 88,
 		Y: 89,
 		Z: 90,
 		0: 48
@@ -133,8 +134,8 @@ function bindHandlers() {
 
 		$('#current-sentence').keyup(onKeyupInTextarea);
 
-		// onkeydown, onkeyup are global variables for JS runtime
-		onkeydown = onkeyup = onCtrlKeyup;
+		// onkeyup is a global variable for JS runtime
+		onkeyup = onKeyupInDocument;
 
 		// direct graph-editing stuff
 		$('#edit').keyup(onKeyupInEditLabel);
@@ -142,7 +143,7 @@ function bindHandlers() {
 		// prevent accidentally leaving the page
 		window.onbeforeunload = () => {
 				// DEBUG: uncomment this line for production
-			  // return 'Are you sure you want to leave?';
+				// return 'Are you sure you want to leave?';
 		};
 
 		/*
@@ -187,16 +188,115 @@ function bindHandlers() {
         IS_LATEX_EXPORTED = false;
     });*/
 }
+function onKeyupInDocument(event) {
+		log.error(`called onKeyupInDocument(${event.which})`);
+
+		// returns true if it caught something
+		if (onCtrlKeyup(event))
+				return;
+
+		// editing an input
+		if ($('#text-data').is(':focus') || $('#edit').is(':focus'))
+				return;
+
+		// if we get here, we're handling a keypress without an input-focus or ctrl-press
+		// (which means it wasn't already handled)
+		log.error(`onKeyupInDocument(): handling event.which:${event.which}`);
+
+		switch (event.which) {
+				case (KEYS.DELETE):
+				case (KEYS.BACKSPACE):
+				case (KEYS.X):
+						if (cy.$('.selected').length) {
+								removeDependency(cy.$('.selected'));
+						} else if (true/* cy.$('.supAct').length */) {
+								// removeSup(st);
+						}
+						break;
+
+				case (KEYS.D):
+						if (cy.$('.selected').length)
+								activateMoveDependency(cy.$('.selected'));
+						break;
+
+				case (KEYS.M):
+						if (true/* $('#edit.form.activated') */) {
+		            // wf.addClass('merge');
+		            // wf.removeClass('activated');
+						}
+
+				case (KEYS.P):
+						// if (true/* text not focused */)
+								// setPunct()
+						break;
+
+				case (KEYS.R):
+						// setRoot(wf);
+						break;
+
+				case (KEYS.S):
+						// wf.addClass('supertoken');
+            // wf.removeClass('activated');
+						break;
+
+				case (KEYS.LEFT):
+				case (KEYS.RIGHT):
+						if (true/* cy.$('.merge') */) {
+								// mergeNodes(toMerge, KEYS.SIDES[key.which], 'subtoken');
+						// else if (true/* cy.$('.supertoken') */) {
+								// mergeNodes(toMerge, KEYS.SIDES[key.which], 'subtoken');
+								// mergeNodes(toSup, KEYS.SIDES[key.which], 'supertoken');
+						}
+						break;
+
+				case (KEYS.EQUALS):
+				case (KEYS.EQUALS_):
+						if (true/* text not focused */) {
+								// if (key.shiftKey)
+										true;
+										// CURRENT_ZOOM += 0.1
+								// else
+										// cy.fit();
+								// cy.zoom(CURRENT_ZOOM)
+								// cy.center();
+						}
+						break;
+
+				case (KEYS.MINUS):
+				case (KEYS.MINUS_):
+						if (true/* text not focused */) {
+								// CURRENT_ZOOM = cy.zoom();
+								// if (key.shiftKey)
+										true;
+										//  CURRENT_ZOOM -= 0.1;
+
+								// cy.zoom(CURRENT_ZOOM);
+		        		// cy.center();
+						}
+						break;
+
+				default:
+						// if (47 < key.which && key.which < 58) // key in 0-9
+								if (true/* text not focused */) {
+										// const num = event.which - 48;
+										// CURRENT_ZOOM = 1.0;
+										// cy.zoom(CURRENT_ZOOM);
+										// cy.center();
+								}
+
+		}
+
+}
 function onCtrlKeyup(event) {
 		log.debug(`called onCtrlKeyup(which:${event.which}, pressed:${JSON.stringify(pressed)})`);
 
 		// handle Ctrl + <keypress>
 		// solution based on https://stackoverflow.com/a/12444641/5181692
-		pressed[event.which] = (event.type === 'keydown');
-		log.debug(`ctrl: ${pressed[KEYS.CTRL]}, shift: ${pressed[KEYS.CTRL]}, y: ${pressed[KEYS.Y]}, z: ${pressed[KEYS.Z]}, this: ${event.which}`);
+		pressed[event.which] = (event.type == 'keyup');
+		log.error(`ctrl: ${pressed[KEYS.CTRL]}, shift: ${pressed[KEYS.CTRL]}, y: ${pressed[KEYS.Y]}, z: ${pressed[KEYS.Z]}, this: ${event.which}`);
 
 		if (!pressed[KEYS.CTRL])
-				return;
+				return false;
 
 		if (pressed[KEYS.PAGE_DOWN]) {
 				if (pressed[KEYS.SHIFT]) {
@@ -207,6 +307,7 @@ function onCtrlKeyup(event) {
 				}
 				pressed = {};
 				pressed[KEYS.CTRL] = true;
+				return true;
 
 		} else if (pressed[KEYS.PAGE_UP]) {
 				if (pressed[KEYS.SHIFT]) {
@@ -217,16 +318,22 @@ function onCtrlKeyup(event) {
 				}
 				pressed = {};
 				pressed[KEYS.CTRL] = true;
+				return true;
 
 		} else if (pressed[KEYS.Z] && !pressed[KEYS.SHIFT]) {
 			undoManager.undo();
+			return true;
+
 		} else if (pressed[KEYS.Y] || pressed[KEYS.Z]) {
 			undoManager.redo();
+			setTimeout(() => { pressed[KEYS.SHIFT] = false; }, 500);
+			return true;
+
 		} else {
-			log.debug(`onCtrlKeyup(): uncaught key combination`)
+			log.debug(`onCtrlKeyup(): uncaught key combination`);
 		}
 
-		event.preventDefault();
+		return false;
 }
 function onKeyupInTextarea(event) {
 		log.debug(`called onKeyupInTextarea(${event.which})`);
@@ -489,18 +596,18 @@ function bindCyHandlers() {
 	 			setTimeout(() => {
 						onClickCanvas();
 						setTimeout(() => { // wait another full second before unsetting
-								_.interceptedClick = false;
+								_.intercepted = false;
 						});
 				}, 100);
  		});
 		$('#cy canvas').mousemove((event) => {
-				_.interceptedClick = true;
+				_.intercepted = true;
 		});
 		$('#edit').mouseup((event) => {
-				_.interceptedClick = true;
+				_.intercepted = true;
 		});
 		cy.on('click', '*', (event) => {
-				_.interceptedClick = true;
+				_.intercepted = true;
 
 				// DEBUG: this line should be taken out in production
 				console.info(`clicked ${event.target.attr('id')}, data:`, event.target.data());
@@ -516,16 +623,17 @@ function bindCyHandlers() {
 
 }
 function onClickCanvas() {
-		log.debug(`called onClickCanvas(intercepted: ${_.interceptedClick})`);
+		log.debug(`called onClickCanvas(intercepted: ${_.intercepted})`);
 
 		// intercepted by clicking a canvas subobject || mousemove (i.e. drag) || #edit
-		if (_.interceptedClick)
+		if (_.intercepted)
 				return;
 
 		saveGraphEdits();
 
 		cy.$('.activated').removeClass('activated');
-		cy.$('.arc-selected').removeClass('arc-selected');
+		cy.$('.arc-source').removeClass('arc-source');
+		cy.$('.arc-target').removeClass('arc-target');
 		cy.$('.selected').removeClass('selected');
 
 		$('#mute').removeClass('activated');
@@ -535,26 +643,31 @@ function onClickFormNode(event) {
 		const target = event.target;
 		log.debug(`called onClickFormNode(${target.attr('id')})`);
 
-		saveGraphEdits();
+		if (_.moving_dependency) {
 
-		cy.$('.selected').removeClass('selected');
-		cy.$('.arc-selected').removeClass('arc-selected');
+		} else {}
 
-		if (target.hasClass('activated')) {
-				target.removeClass('activated');
+				saveGraphEdits();
 
-		} else {
+				cy.$('.arc-source').removeClass('arc-source');
+				cy.$('.arc-target').removeClass('arc-target');
+				cy.$('.selected').removeClass('selected');
 
-				const source = cy.$('.activated');
-				target.addClass('activated');
-
-				// if there was already an activated node
-				if (source.length === 1) {
-						makeDependency(source, target);
-						source.removeClass('activated');
+				if (target.hasClass('activated')) {
 						target.removeClass('activated');
-				}
 
+				} else {
+
+						const source = cy.$('.activated');
+						target.addClass('activated');
+
+						// if there was already an activated node
+						if (source.length === 1) {
+								makeDependency(source, target);
+								source.removeClass('activated');
+								target.removeClass('activated');
+						}
+				}
 		}
 }
 function onClickPosNode(event) {
@@ -565,7 +678,8 @@ function onClickPosNode(event) {
 		_.editing = target;
 
 		cy.$('.activated').removeClass('activated');
-		cy.$('.arc-selected').removeClass('arc-selected');
+		cy.$('.arc-source').removeClass('arc-source');
+		cy.$('.arc-target').removeClass('arc-target');
 		cy.$('.selected').removeClass('selected');
 
 		editGraphLabel(target);
@@ -586,7 +700,8 @@ function onCxttapendFormNode(event) {
 		_.editing = target;
 
 		cy.$('.activated').removeClass('activated');
-		cy.$('.arc-selected').removeClass('arc-selected');
+		cy.$('.arc-source').removeClass('arc-source');
+		cy.$('.arc-target').removeClass('arc-target');
 		cy.$('.selected').removeClass('selected');
 
 		editGraphLabel(target);
@@ -599,7 +714,8 @@ function onClickDependencyEdge(event) {
 		_.editing = target;
 
 		cy.$('.activated').removeClass('activated');
-		cy.$('.arc-selected').removeClass('arc-selected');
+		cy.$('.arc-source').removeClass('arc-source');
+		cy.$('.arc-target').removeClass('arc-target');
 		cy.$('.selected').removeClass('selected');
 
 		editGraphLabel(target);
@@ -618,108 +734,24 @@ function onCxttapendDependencyEdge(event) {
 
 		if (target.hasClass('selected')) {
 
-				cy.$(`#${target.data('target')}`).removeClass('arc-selected');  // visual effects on targeted node
+				cy.$(`#${target.data('source')}`).removeClass('arc-source');
+				cy.$(`#${target.data('target')}`).removeClass('arc-target');  // visual effects on targeted node
 				target.removeClass('selected');
 
 		} else {
 
-				cy.$('.arc-selected').removeClass('arc-selected');
-				cy.$(`#${target.data('target')}`).addClass('arc-selected');
+				cy.$('.arc-source').removeClass('arc-source');
+				cy.$(`#${target.data('source')}`).addClass('arc-source');
+
+				cy.$('.arc-target').removeClass('arc-target');
+				cy.$(`#${target.data('target')}`).addClass('arc-target');
+
 				cy.$('.selected').removeClass('selected');
 				target.addClass('selected');
 
 		}
 }
 
-function handleUnhandledKeyup(event) {
-		log.debug(`called handleUnhandledKeyup(${event.which})`);
-
-		// if (('#text-data').)
-		if (!_.interceptedKeyup)
-				return; // nothing to do
-
-		switch (key.which) {
-				case (KEYS.DELETE):
-				case (KEYS.BACKSPACE):
-						if (true/* cy.$('.arc-selected') */)
-								// removeArc(targetNodes);
-						// else if (true/* cy.$('.supAct').length */)
-								// removeSup(st);
-						break;
-
-				case (KEYS.D):
-						if (true/* cy.$('.arc-selected') */)
-								// moveArc()
-						break;
-
-				case (KEYS.M):
-						if (true/* $('#edit.form.activated') */) {
-		            // wf.addClass('merge');
-		            // wf.removeClass('activated');
-						}
-
-				case (KEYS.P):
-						// if (true/* text not focused */)
-								// setPunct()
-						break;
-
-				case (KEYS.R):
-						// setRoot(wf);
-						break;
-
-				case (KEYS.S):
-						// wf.addClass('supertoken');
-            // wf.removeClass('activated');
-						break;
-
-				case (KEYS.LEFT):
-				case (KEYS.RIGHT):
-						if (true/* cy.$('.merge') */) {
-								// mergeNodes(toMerge, KEYS.SIDES[key.which], 'subtoken');
-						// else if (true/* cy.$('.supertoken') */) {
-								// mergeNodes(toMerge, KEYS.SIDES[key.which], 'subtoken');
-								// mergeNodes(toSup, KEYS.SIDES[key.which], 'supertoken');
-						}
-						break;
-
-				case (KEYS.EQUALS):
-				case (KEYS.EQUALS_):
-						if (true/* text not focused */) {
-								// if (key.shiftKey)
-										true;
-										// CURRENT_ZOOM += 0.1
-								// else
-										// cy.fit();
-								// cy.zoom(CURRENT_ZOOM)
-								// cy.center();
-						}
-						break;
-
-				case (KEYS.MINUS):
-				case (KEYS.MINUS_):
-						if (true/* text not focused */) {
-								// CURRENT_ZOOM = cy.zoom();
-								// if (key.shiftKey)
-										true;
-										//  CURRENT_ZOOM -= 0.1;
-
-								// cy.zoom(CURRENT_ZOOM);
-		        		// cy.center();
-						}
-						break;
-
-				default:
-						// if (47 < key.which && key.which < 58) // key in 0-9
-								if (true/* text not focused */) {
-										// const num = event.which - 48;
-										// CURRENT_ZOOM = 1.0;
-										// cy.zoom(CURRENT_ZOOM);
-										// cy.center();
-								}
-
-		}
-
-}
 
 
 
@@ -768,51 +800,6 @@ function changeConlluAttr(sent, indices, attrName, newVal) {
 
 
 
-function removeArc(targets) {
-    log.debug('called removeArc()');
-
-    /* Removes all the selected edges. */
-
-    let sent = buildSent(),
-        prevRelations = {};
-
-    // support for multiple arcs
-    $.each(targetNodes, (i, target) => {
-        const targetIndex = target.attr('id').slice(2),
-            indices = findConlluId(target);
-
-        let sentAndPrev = changeConlluAttr(sent, indices, 'head', undefined);
-
-        sent = sentAndPrev.sentence;
-        prevRelations.head = sentAndPrev.previous;
-        sentAndPrev = changeConlluAttr(sent, indices, 'deprel', undefined);
-        sent = sentAndPrev.sentence;
-        prevRelations.deprel = sentAndPrev.previous;
-
-    });
-
-    window.undoManager.add({
-        undo: () => {
-            let sent = buildSent();
-            $.each(targetNodes, (i, target) => {
-                const targetIndex = target.attr('id').slice(2),
-                    indices = findConlluId(target);
-
-                let sentAndPrev = changeConlluAttr(sent, indices, 'head', prevRelations.head);
-                sent = sentAndPrev.sentence;
-                sentAndPrev = changeConlluAttr(sent, indices, 'deprel', prevRelations.deprel);
-                sent = sentAndPrev.sentence;
-            });
-
-            redrawTree(sent);
-        },
-        redo: () => {
-            removeArc(targets);
-        }
-    });
-
-    redrawTree(sent);
-}
 
 
 
@@ -1053,18 +1040,6 @@ function setPunct() {
     redrawTree(sent);
 }
 
-
-
-function moveArc() {
-		log.debug('called moveArc()');
-
-    /* Activated after the key responsible for 'move dependent' key. */
-
-		$('rect[data-span-id]').each( (i, node) => {
-			node.unbind('click', clickWF);
-			node.click(getArc);
-		});
-}
 
 
 function removeSup(st) {

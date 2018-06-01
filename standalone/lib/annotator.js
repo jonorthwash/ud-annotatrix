@@ -48,8 +48,8 @@ var _ = { // main object to hold our current stuff
         };
         _.pan = _.pan || null;
         _.zoom = _.zoom || null;
-        _.interceptedClick = false;
-        _.interceptedKeyup = false;
+        _.intercepted = false;
+        _.moving_dependency = false;
         _.editing = null;
         _.graph_disabled = false;
 
