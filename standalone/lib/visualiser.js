@@ -274,6 +274,7 @@ function createDependency(graph, token) {
     // give it classes (see cy-style.js)
     let classes;
     if (!isValid) {
+        log.error(`createDependency(): invalid dependency for conllu token: ${token.id}`);
         classes = 'dependency error';
     } else if (!deprel || !deprel.length) {
         classes = 'dependency incomplete';
@@ -410,6 +411,177 @@ function getConlluById(id) {
     return null;
 }
 
+
+
+function editGraphLabel(target) {
+		log.debug(`called editGraphLabel(${target.attr('id')})`);
+
+		target.addClass('input');
+
+		// get rid of direction arrows
+		const label = target.data('label').replace(/[⊳⊲]/, '');
+		target.data('label', label);
+
+		// get bounding box
+		let bbox = target.renderedBoundingBox();
+		bbox.color = target.style('background-color');
+		if (target.data('name') === 'dependency') {
+				bbox.w = 100;
+				bbox.h = cy.nodes()[0].renderedHeight();
+				bbox.color = 'white';
+
+				if (_.is_vertical) {
+						bbox.y1 += (bbox.y2 - bbox.y1)/2 - 15;
+						bbox.x1  = bbox.x2 - 70;
+				} else {
+						bbox.x1 += (bbox.x2 - bbox.x1)/2 - 50;
+				}
+		}
+
+		// TODO: rank the labels + make the style better
+		const autocompletes = target.data('name') === 'pos-node'
+				? U_POS
+				: target.data('name') === 'dependency'
+				? U_DEPRELS
+				: [];
+
+		// add the edit input
+		$('#edit').selfcomplete({
+				lookup: autocompletes,
+				tabDisabled: false,
+				autoSelectFirst: true,
+				lookupLimit: 5 })
+				.val(label)
+				.css('top', bbox.y1)
+				.css('left', bbox.x1)
+				.css('height', bbox.h)
+				.css('width', bbox.w + 5)
+				.attr('target', target.attr('id'))
+				.addClass('activated')
+				.addClass(target.data('name'))
+				.focus()[0]
+				.setSelectionRange(label.length, label.length);
+
+		// add the background-mute div
+		$('#mute').addClass('activated')
+				.css('height', _.is_vertical
+						? `${_.tokens().length * 50}px`
+						: $(window).width() - 10);
+
+		if (target.data('name') === 'dependency')
+				$('#edit').select();
+}
+function saveGraphEdits() {
+		log.debug(`called saveGraphEdits(target:${_.editing ? _.editing.attr('id') : 'null'}, text:${_.editing ? $('#edit').val() : ''})`);
+
+		cy.$('.input').removeClass('input');
+
+		if (_.editing === null)
+				return; // nothing to do
+
+    const conllu = _.editing.data().conllu || _.editing.data().sourceConllu;
+    const newAttrKey = _.editing.data().attr;
+		const newAttrValue = $('#edit').val();
+    log.debug(`saveGraphEdits(): ${newAttrKey} set =>"${newAttrValue}", whitespace:${/[ \t\n]+/g.test(newAttrValue)}`);
+
+		// check we don't have any whitespace
+		if (/[ \t\n]+/g.test(newAttrValue)) {
+				const message = 'ERROR: Unable to add changes with whitespace!  Try creating a new node first.';
+				log.error(message);
+				alert(message); // TODO: probably should streamline errors
+				_.editing = null;
+				return;
+		}
+
+		const oldAttrValue = modifyConllu(conllu.superTokenId, conllu.subTokenId, newAttrKey, newAttrValue);
+		window.undoManager.add({
+				undo: () => {
+						modifyConllu(conllu.superTokenId, conllu.subTokenId, newAttrKey, oldAttrValue);
+				},
+				redo: () => {
+						modifyConllu(conllu.superTokenId, conllu.subTokenId, newAttrKey, newAttrValue);
+				}
+		});
+
+		_.editing = null;
+}
+
+function makeDependency(source, target) {
+		log.debug(`called makeDependency(${source.attr('id')}=>${target.attr('id')})`);
+		/**
+		 * Called by clicking a form-node while there is already an active form-node.
+		 * Changes the text data and redraws the graph. Currently supports only conllu.
+		 */
+
+		source = source.data('conllu');
+		target = target.data('conllu');
+
+		if (source.superTokenId === target.superTokenId) {
+				log.warn(`makeDependency(): unable to create dependency within superToken ${source.superTokenId}`);
+				return;
+		}
+
+		const oldHead = modifyConllu(source.superTokenId, source.subTokenId, 'head', target.id);
+
+		window.undoManager.add({
+				undo: () => {
+						modifyConllu(source.superTokenId, source.subTokenId, 'head', oldHead);
+				},
+				redo: () => {
+						modifyConllu(source.superTokenId, source.subTokenId, 'head', target.id);
+				}
+		});
+
+		return;
+		/*
+		// TODO:
+		// If the target POS tag is PUNCT set the deprel to @punct [99%]
+		// IF the target POS tag is CCONJ set the deprel to @cc [88%]
+		// IF the target POS tag is SCONJ set the deprel to @mark [86%]
+		// IF the target POS tag is DET set the deprel to @det [83%]
+
+		const POS_TO_REL = {
+				'PUNCT': 'punct',
+				'DET': 'det',
+				'CCONJ': 'cc',
+				'SCONJ': 'mark'
+		}
+
+		// TODO: Put this somewhere better
+		if (thisToken.upostag in POS_TO_REL)
+				sentAndPrev = changeConlluAttr(sent, indices, 'deprel', POS_TO_REL[thisToken.upostag]);
+
+		let isValidDep = true;
+		if (thisToken.upostag === 'PUNCT' && !is_projective_nodes(sent.tokens, [targetIndex])) {
+				log.warn('writeArc(): Non-projective punctuation');
+				isValidDep = false
+		}*/
+}
+
+function modifyConllu(superTokenId, subTokenId, attrKey, attrValue) {
+		log.error(`called modifyConllu(superTokenId:${superTokenId}, subTokenId:${subTokenId}, attr:${attrKey}=>${attrValue})`);
+
+		const conllu = _.conllu();
+		log.debug(`modifyConllu(): before:  ${conllu.tokens[superTokenId][attrKey]}`);
+
+		let oldValue;
+		if (subTokenId !== null) {
+				oldValue = conllu.tokens[superTokenId].tokens[subTokenId][attrKey] || '_';
+				conllu.tokens[superTokenId].tokens[subTokenId][attrKey] = attrValue;
+		} else {
+				oldValue = conllu.tokens[superTokenId][attrKey] || '_';
+				conllu.tokens[superTokenId][attrKey] = attrValue;
+		}
+
+		log.debug(`modifyConllu(): during: ${conllu.tokens[superTokenId][attrKey]}`);
+		const text = conllu.serial;
+		$('#text-data').val(text);
+		parseText();
+		log.debug(`modifyConllu(): after:  ${_.conllu().tokens[superTokenId][attrKey]}`);
+
+		// return oldValue for undo/redo purposes
+		return oldValue;
+}
 
 
 

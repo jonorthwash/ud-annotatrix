@@ -17,8 +17,8 @@ const KEYS = {
 		MINUS: 173, // not 189 ...
 		EQUALS: 61, // not 187 ...
 		SHIFT: 16,
-		OPT: 17,
-		CTRL: 18,
+		CTRL: 17,
+		OPT: 18,
 		PAGE_UP: 33,
 		PAGE_DOWN: 34,
 		META: 224,
@@ -198,12 +198,9 @@ function onKeyupInDocument(event) {
 
 		// handle Ctrl + <keypress>
 		// solution based on https://stackoverflow.com/a/12444641/5181692
-
-		if (event.which === KEYS.BACKSPACE) {
-
-		}
-
 		pressed[event.which] = (event.type === 'keydown');
+		log.debug(`ctrl: ${pressed[KEYS.CTRL]}, shift: ${pressed[KEYS.CTRL]}, y: ${pressed[KEYS.Y]}, z: ${pressed[KEYS.Z]}, this: ${event.which}`);
+
 		if (!pressed[KEYS.CTRL])
 				return;
 
@@ -227,10 +224,12 @@ function onKeyupInDocument(event) {
 				pressed = {};
 				pressed[KEYS.CTRL] = true;
 
-		} else if (pressed[KEYS.Z]) {
+		} else if (pressed[KEYS.Z] && !pressed[KEYS.SHIFT]) {
 			undoManager.undo();
-		} else if (pressed[KEYS.Y] || (pressed[KEYS.Z]  && pressed[KEYS.SHIFT])) {
+		} else if (pressed[KEYS.Y] || pressed[KEYS.Z]) {
 			undoManager.redo();
+		} else {
+			log.debug(`onKeyupInDocument(): uncaught key combination`)
 		}
 }
 function onKeyupInEditLabel(event) {
@@ -238,14 +237,14 @@ function onKeyupInEditLabel(event) {
 
 		switch (event.which) {
 				case (KEYS.ENTER):
-						clickInCanvas(event);
+						onClickCanvas();
 						break;
 				case (KEYS.TAB):
 						console.log('what should happen here???');
 						break;
 				case (KEYS.ESC):
 						_.editing = null;
-						clickInCanvas(event);
+						onClickCanvas();
 						break;
 		}
 }
@@ -456,6 +455,7 @@ function toggleEnhanced() {
 }
 
 // cy-related GUI stuff
+// NB: most of the actual functionality lives in /standalone/lib/visualiser.js
 function bindCyHandlers() {
 		log.debug('called bindCyHandlers()');
 
@@ -468,7 +468,7 @@ function bindCyHandlers() {
 		 // set a countdown to triggering a "background" click unless a node/edge intercepts it
 		 $('#cy canvas, #mute').mouseup((event) => {
 	 			setTimeout(() => {
-						clickInCanvas(event);
+						onClickCanvas();
 						setTimeout(() => { // wait another full second before unsetting
 								_.intercepted = false;
 						});
@@ -480,26 +480,41 @@ function bindCyHandlers() {
 		$('#edit').mouseup((event) => {
 				_.intercepted = true;
 		});
-
-		// for debugging and intercepting background clicks
 		cy.on('click', '*', (event) => {
 				_.intercepted = true;
+
+				// DEBUG: this line should be taken out in production
 				console.info(`clicked ${event.target.attr('id')}, data:`, event.target.data());
 		});
 
-		cy.on('click', 'node.form', clickFormNode);
-    cy.on('click', 'node.pos', clickPosNode);
-    cy.on('click', '$node > node', clickChildNode);   // selectSup
-		cy.on('cxttapend', 'node.form', cxttapendFormNode); // changeNode
+		cy.on('click', 'node.form', onClickFormNode);
+    cy.on('click', 'node.pos', onClickPosNode);
+    cy.on('click', '$node > node', onClickChildNode);
+		cy.on('cxttapend', 'node.form', onCxttapendFormNode);
 
-    cy.on('click', 'edge.dependency', clickDependencyEdge);  // changeNode
-		cy.on('cxttapend', 'edge.dependency', cxttapendDependencyEdge); // selectArc
+    cy.on('click', 'edge.dependency', onClickDependencyEdge);
+		cy.on('cxttapend', 'edge.dependency', onCxttapendDependencyEdge);
 
 }
+function onClickCanvas() {
+		log.debug(`called onClickCanvas(intercepted: ${_.intercepted})`);
 
-function clickFormNode(event) {
+		// intercepted by clicking a canvas subobject || mousemove (i.e. drag) || #edit
+		if (_.intercepted)
+				return;
+
+		saveGraphEdits();
+
+		cy.$('.activated').removeClass('activated');
+		cy.$('.arc-selected').removeClass('arc-selected');
+		cy.$('.selected').removeClass('selected');
+
+		$('#mute').removeClass('activated');
+		$('#edit').removeClass('activated');
+}
+function onClickFormNode(event) {
 		const target = event.target;
-		log.debug(`called clickFormNode(${target.attr('id')})`);
+		log.debug(`called onClickFormNode(${target.attr('id')})`);
 
 		saveGraphEdits();
 
@@ -523,9 +538,9 @@ function clickFormNode(event) {
 
 		}
 }
-function clickPosNode(event) {
+function onClickPosNode(event) {
 		const target = event.target;
-		log.warn(`called clickPosNode(${target.attr('id')})`);
+		log.debug(`called onClickPosNode(${target.attr('id')})`);
 
 		saveGraphEdits();
 		_.editing = target;
@@ -536,15 +551,17 @@ function clickPosNode(event) {
 
 		editGraphLabel(target);
 }
-function clickChildNode(event) {
+function onClickChildNode(event) {
 		// NB: event.target is the PARENT of a child we click
 		const target = event.target;
-		log.warn(`called clickChildNode(${target.attr('id')})`);
+		log.debug(`called onClickChildNode(${target.attr('id')})`);
 		target.toggleClass('supAct');
+		console.info('onClickChildNode()', event);
+		alert('onClickChildNode()');
 }
-function cxttapendFormNode(event) {
+function onCxttapendFormNode(event) {
 		const target = event.target;
-		log.warn(`called cxttapendFormNode(${target.attr('id')})`);
+		log.debug(`called onCxttapendFormNode(${target.attr('id')})`);
 
 		saveGraphEdits();
 		_.editing = target;
@@ -555,10 +572,22 @@ function cxttapendFormNode(event) {
 
 		editGraphLabel(target);
 }
-
-function clickDependencyEdge(event) {
+function onClickDependencyEdge(event) {
 		const target = event.target;
-		log.warn(`called clickDependencyEdge(${target.attr('id')})`);
+		log.debug(`called onClickDependencyEdge(${target.attr('id')})`);
+
+		saveGraphEdits();
+		_.editing = target;
+
+		cy.$('.activated').removeClass('activated');
+		cy.$('.arc-selected').removeClass('arc-selected');
+		cy.$('.selected').removeClass('selected');
+
+		editGraphLabel(target);
+}
+function onCxttapendDependencyEdge(event) {
+		const target = event.target;
+		log.debug(`called onCxttapendDependencyEdge(${target.attr('id')})`);
 
 		/**
 		 * Activated when an arc is selected. Adds classes showing what is selected.
@@ -582,226 +611,24 @@ function clickDependencyEdge(event) {
 
 		}
 }
-function cxttapendDependencyEdge(event) {
-		const target = event.target;
-		log.warn(`called cxttapendDependencyEdge(${target.attr('id')})`);
-}
-
-
-function editGraphLabel(target) {
-		log.debug(`called editGraphLabel(${target.attr('id')})`);
-
-		target.addClass('input');
-
-		// get rid of direction arrows
-		const label = target.data('label').replace(/[⊳⊲]/, '');
-		target.data('label', label);
-
-		// get bounding box
-		let bbox = target.renderedBoundingBox();
-		bbox.color = target.style('background-color');
-		if (target.data('name') === 'dependency') {
-				bbox.w = 100;
-				bbox.h = cy.nodes()[0].renderedHeight();
-				bbox.color = 'white';
-
-				if (_.is_vertical) {
-						bbox.y1 += (bbox.y2 - bbox.y1)/2 - 15;
-						bbox.x1  = bbox.x2 - 70;
-				} else {
-						bbox.x1 += (bbox.x2 - bbox.x1)/2 - 50;
-				}
-		}
-
-		// TODO: rank the labels + make the style better
-		const autocompletes = target.data('name') === 'pos-node'
-				? U_POS
-				: target.data('name') === 'dependency'
-				? U_DEPRELS
-				: [];
-
-		// add the edit input
-		$('#edit').selfcomplete({
-				lookup: autocompletes,
-				tabDisabled: false,
-				autoSelectFirst: true,
-				lookupLimit: 5 })
-				.val(label)
-				.css('top', bbox.y1)
-				.css('left', bbox.x1)
-				.css('height', bbox.h)
-				.css('width', bbox.w + 5)
-				.attr('target', target.attr('id'))
-				.addClass('activated')
-				.addClass(target.data('name'))
-				.focus()[0]
-				.setSelectionRange(label.length, label.length);
-
-		// add the background-mute div
-		$('#mute').addClass('activated')
-				.css('height', _.is_vertical
-						? `${_.tokens().length * 50}px`
-						: $(window).width() - 10);
-
-		if (target.data('name') === 'dependency')
-				$('#edit').select();
-}
-
-function saveGraphEdits() {
-		log.error(`called saveGraphEdits(target:${_.editing ? _.editing.attr('id') : 'null'}, text:${_.editing ? $('#edit').val() : ''})`);
-
-		cy.$('.input').removeClass('input');
-
-		if (_.editing === null)
-				return; // nothing to do
-
-		const data = _.editing.data();
-		const newAttrValue = $('#edit').val();
-		if (/[ \t\n]*/g.test(newAttrValue)) {
-				const message = 'ERROR: Unable to add changes with whitespace!  Try creating a new node first.';
-				log.error(message);
-				alert(message); // TODO: probably should streamline errors
-				return;
-		}
-
-		const oldAttrValue = modifyConllu(data.conllu.superTokenId, data.conllu.subTokenId, data.attr, newAttrValue);
-
-		window.undoManager.add({
-				undo: () => {
-						modifyConllu(data.conllu.superTokenId, data.conllu.subTokenId, data.attr, oldAttrValue);
-				},
-				redo: () => {
-						modifyConllu(data.conllu.superTokenId, data.conllu.subTokenId, data.attr, newAttrValue);
-				}
-		});
-
-		_.editing = null;
-		$('#edit').val();
-}
-function clickInCanvas(event) {
-		log.error(`called clickInCanvas(intercepted: ${_.intercepted})`);
-
-		// intercepted by clicking a canvas subobject && mousemove (i.e. drag)
-		if (_.intercepted)
-				return;
-
-		saveGraphEdits();
-
-		cy.$('.activated').removeClass('activated');
-		cy.$('.arc-selected').removeClass('arc-selected');
-		cy.$('.selected').removeClass('selected');
-
-		$('#mute').removeClass('activated');
-		$('#edit').removeClass('activated');
-}
 
 
 
 
 
-function makeDependency(source, target) {
-		log.debug(`called makeDependency(${source.attr('id')}=>${target.attr('id')})`);
-		/**
-		 * Called by clicking a form-node while there is already an active form-node.
-		 * Changes the text data and redraws the graph. Currently supports only conllu.
-		 */
-
-		source = source.data('conllu');
-		target = target.data('conllu');
-
-		if (source.superTokenId === target.superTokenId) {
-				log.warn(`makeDependency(): unable to create dependency within superToken ${source.superTokenId}`);
-				return;
-		}
-
-		const oldHead = modifyConllu(source.superTokenId, source.subTokenId, 'head', target.id);
-
-		window.undoManager.add({
-				undo: () => {
-						modifyConllu(source.superTokenId, source.subTokenId, 'head', oldHead);
-				},
-				redo: () => {
-						modifyConllu(source.superTokenId, source.subTokenId, 'head', target.id);
-				}
-		});
-
-		return;
-		/*
 
 
-		// TODO:
-		// If the target POS tag is PUNCT set the deprel to @punct [99%]
-		// IF the target POS tag is CCONJ set the deprel to @cc [88%]
-		// IF the target POS tag is SCONJ set the deprel to @mark [86%]
-		// IF the target POS tag is DET set the deprel to @det [83%]
-
-		// NOTE: can just define a new attr `index` or something on the DOM
-		const sourceIndex = parseInt(source.attr('id').slice(2));
-		const targetIndex = parseInt(target.attr('id').slice(2));
-
-		const indices = findConlluId(target);
-
-		let sent = buildSent(),
-				thisToken = sent.tokens[indices.outer],
-				sentAndPrev = changeConlluAttr(sent, indices, 'head', sourceIndex);
-
-		const POS_TO_REL = {
-				'PUNCT': 'punct',
-				'DET': 'det',
-				'CCONJ': 'cc',
-				'SCONJ': 'mark'
-		}
 
 
-		// TODO: Put this somewhere better
-		if (thisToken.upostag in POS_TO_REL)
-				sentAndPrev = changeConlluAttr(sent, indices, 'deprel', POS_TO_REL[thisToken.upostag]);
 
-		let isValidDep = true;
-		if (thisToken.upostag === 'PUNCT' && !is_projective_nodes(sent.tokens, [targetIndex])) {
-				log.warn('writeArc(): Non-projective punctuation');
-				isValidDep = false
-		}
 
-		window.undoManager.add({
-				undo: () => {
-						let sent = buildSent(),
-								sentAndPrev = changeConlluAttr(sent, indices, 'head', sentAndPrev.previous);
-						redrawTree(sentAndPrev.sentence);
-				},
-				redo: () => {
-						writeArc(source, target);
-				}
-		});
 
-		redrawTree(sent);*/
-}
 
-function modifyConllu(superTokenId, subTokenId, attrKey, attrValue) {
-		log.error(`called modifyConllu(superTokenId:${superTokenId}, subTokenId:${subTokenId}, attr:${attrKey}=>${attrValue})`);
 
-		const conllu = _.conllu();
-		log.debug(`modifyConllu(): before:  ${conllu.tokens[superTokenId][attrKey]}`);
 
-		let oldValue;
-		if (subTokenId !== null) {
-				oldValue = conllu.tokens[superTokenId].tokens[subTokenId][attrKey] || '_';
-				conllu.tokens[superTokenId].tokens[subTokenId][attrKey] = attrValue;
-		} else {
-				oldValue = conllu.tokens[superTokenId][attrKey] || '_';
-				conllu.tokens[superTokenId][attrKey] = attrValue;
-		}
 
-		log.debug(`modifyConllu(): during: ${conllu.tokens[superTokenId][attrKey]}`);
-		const text = conllu.serial;
-		$('#text-data').val(text);
-		parseText();
-		log.debug(`modifyConllu(): after:  ${_.conllu().tokens[superTokenId][attrKey]}`);
 
-		// return oldValue for undo/redo purposes
-		return oldValue;
-}
-
+// OLD / UNUSED
 
 function changeConlluAttr(sent, indices, attrName, newVal) {
     log.debug('called changeConlluAttr()');
@@ -1243,75 +1070,6 @@ function removeSup(st) {
 		});
 
     redrawTree(sent);
-}
-
-
-function changeNode() {
-		log.debug(`called changeNode() (entries: ${Object.entries(this)}, id: ${this.attr('id')})`);
-
-    IS_EDITING = true;
-
-		this.addClass('input');
-		const id = this.attr('id').slice(0, 2);
-		let param = this.renderedBoundingBox(), nodeType;
-		log.debug(`changeNode() (param: ${JSON.stringify(param)})`);
-
-		param.color = this.style('background-color');
-		if (id === 'ed') {
-				param = changeEdgeParam(param);
-				nodeType = 'DEPREL';
-		} else if (id === 'np') {
-				nodeType = 'UPOS';
-		}
-
-		// for some reason, there are problems with label in deprels without this
-		if (this.data('label') === undefined)
-				this.data('label', '');
-
-		// to get rid of the magic direction arrows
-		const res = this.data('label').replace(/[⊳⊲]/, '');
-    this.data('label', res);
-
-		$('#mute').addClass('activated');
-		$('.activated#mute').css('height', (IS_VERTICAL
-				? `${buildSent().tokens.length * 50}px`
-				:	$(window).width() - 10) );
-
-    // TODO: rank the labels + make the style better
-    let availableLabels = [];
-    if (nodeType === 'UPOS') {
-        availableLabels = U_POS;
-    } else if (nodeType === 'DEPREL') {
-        availableLabels = U_DEPRELS;
-    }
-		log.debug(`changeNode() (availableLabels: ${availableLabels})`);
-
-
-    // autocomplete
-
-		$('#edit').selfcomplete({
-				lookup: availableLabels,
-				tabDisabled: false,
-				autoSelectFirst: true,
-				lookupLimit: 5
-		});
-
-    $('#edit')
-				.css('top', param.y1)
-        .css('left', param.x1)
-        .css('height', param.h)
-        .css('width', param.w + 35)
-        //.css('background-color', param.color)
-        .attr('value', this.data('label'))
-        .addClass('activated')
-        .addClass(id);
-
-    if (nodeType === 'DEPREL') {
-        $('#edit').focus().select();
-    } else {
-        $('#edit').focus();
-    }
-
 }
 
 
