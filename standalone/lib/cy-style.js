@@ -5,7 +5,8 @@ const ACTIVE_COLOR = '#2653c9',
     NORMAL_COLOR = '#7fa2ff',
     FANCY_COLOR = '#cc22fc',
     POS_COLOR = '#afa2ff',
-    ST_COLOR = '#bcd2ff';
+    ST_COLOR = '#bcd2ff',
+    MOVING_COLOR = '#00f';
 
 const CY_STYLE = [{
   'selector': '*.disabled',
@@ -210,4 +211,10 @@ const CY_STYLE = [{
         'label': 'data(label)',
         'events': 'no'
   }
+}, {
+    'selector': 'edge.moving',
+    'style': {
+        'line-color': MOVING_COLOR,
+        'target-arrow-color': MOVING_COLOR
+    }
 }];

@@ -215,8 +215,10 @@ function onKeyupInDocument(event) {
 						break;
 
 				case (KEYS.D):
-						if (cy.$('.selected').length)
-								activateMoveDependency(cy.$('.selected'));
+						if (cy.$('.selected').length) {
+								cy.$('.selected').toggleClass('moving');
+								_.moving_dependency = !_.moving_dependency;
+						}
 						break;
 
 				case (KEYS.M):
@@ -635,6 +637,8 @@ function onClickCanvas() {
 		cy.$('.arc-source').removeClass('arc-source');
 		cy.$('.arc-target').removeClass('arc-target');
 		cy.$('.selected').removeClass('selected');
+		cy.$('.moving').removeClass('moving');
+		_.moving_dependency = false;
 
 		$('#mute').removeClass('activated');
 		$('#edit').removeClass('activated');
@@ -645,7 +649,16 @@ function onClickFormNode(event) {
 
 		if (_.moving_dependency) {
 
-		} else {}
+			const source = cy.$('.arc-source');
+
+			makeDependency(source, target);
+			cy.$('.moving').removeClass('moving');
+			_.moving_dependency = false;
+
+			// right-click the new edge
+			cy.$(`#${source.attr('id')} -> #${target.attr('id')}`).trigger('cxttapend');
+
+		} else {
 
 				saveGraphEdits();
 

@@ -572,19 +572,6 @@ function removeDependency(dependency) {
         }
     });
 }
-function activateMoveDependency(dependency) {
-		log.error(`called moveDependency(${dependency.attr('id')})`);
-
-    _.moving_dependency = true;
-    return;
-
-    /* Activated after the key responsible for 'move dependent' key. */
-
-		$('rect[data-span-id]').each( (i, node) => {
-			node.unbind('click', clickWF);
-			node.click(getArc);
-		});
-}
 
 function modifyConllu(superTokenId, subTokenId, attrKey, attrValue) {
 		log.error(`called modifyConllu(superTokenId:${superTokenId}, subTokenId:${subTokenId}, attr:${attrKey}=>${attrValue})`);
