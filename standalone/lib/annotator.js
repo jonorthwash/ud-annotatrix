@@ -48,7 +48,8 @@ var _ = { // main object to hold our current stuff
         };
         _.pan = _.pan || null;
         _.zoom = _.zoom || null;
-        _.intercepted = false;
+        _.interceptedClick = false;
+        _.interceptedKeyup = false;
         _.editing = null;
         _.graph_disabled = false;
 
@@ -131,7 +132,7 @@ window.onload = () => {
         `${path}/ext/l20n.js`,
         `${path}/ext/canvas2svg.js`,
         `${path}/ext/conllu/conllu.js`, // CoNLL-U parser from https://github.com/FrancessFractal/conllu
-        `${path}/ext/js-treex-view.js`, // Treex from https://github.com/ufal/js-treex-view
+        //`${path}/ext/js-treex-view.js`, // Treex from https://github.com/ufal/js-treex-view
 
         // functions, globals
         `${path}/conllu_table.js`,

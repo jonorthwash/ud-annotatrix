@@ -411,8 +411,6 @@ function getConlluById(id) {
     return null;
 }
 
-
-
 function editGraphLabel(target) {
 		log.debug(`called editGraphLabel(${target.attr('id')})`);
 
@@ -446,11 +444,9 @@ function editGraphLabel(target) {
 				: [];
 
 		// add the edit input
-		$('#edit').selfcomplete({
-				lookup: autocompletes,
-				tabDisabled: false,
-				autoSelectFirst: true,
-				lookupLimit: 5 })
+		$('#edit')
+        .val('')
+        .focus()
 				.val(label)
 				.css('top', bbox.y1)
 				.css('left', bbox.x1)
@@ -458,10 +454,35 @@ function editGraphLabel(target) {
 				.css('width', bbox.w + 5)
 				.attr('target', target.attr('id'))
 				.addClass('activated')
-				.addClass(target.data('name'))
-				.focus()[0]
-				.setSelectionRange(label.length, label.length);
+        .selfcomplete({
+    				lookup: autocompletes,
+    				tabDisabled: false,
+    				autoSelectFirst: true,
+    				lookupLimit: 5 });
 
+    /*
+    const selection = window.getSelection();
+    const range = document.createRange();
+    range.setStartBefore($('#edit').first()[0]);
+    range.setEndAfter($('#edit').last()[0]);
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    /*
+    var $newSelection = $('.someElements');
+    var selection = window.getSelection();
+    var range = document.createRange();
+    range.setStartBefore($newSelection.first()[0]);
+    range.setEndAfter($newSelection.last()[0]);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    const range = new Range(),
+        input = $('#edit')[0]; // DOM node
+    range.setStart(input, 0);//label.length);
+    range.setEnd(input, 0);//label.length);
+    input.setSelectionRange(range);*/
+
+    console.log(document.getSelection())
 		// add the background-mute div
 		$('#mute').addClass('activated')
 				.css('height', _.is_vertical
