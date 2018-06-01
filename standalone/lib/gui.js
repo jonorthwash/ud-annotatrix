@@ -233,7 +233,8 @@ function onKeyupInDocument(event) {
 						break;
 
 				case (KEYS.R):
-						// setRoot(wf);
+						if (cy.$('node.form.activated'))
+								setAsRoot(cy.$('node.form.activated'));
 						break;
 
 				case (KEYS.S):
@@ -253,38 +254,33 @@ function onKeyupInDocument(event) {
 
 				case (KEYS.EQUALS):
 				case (KEYS.EQUALS_):
-						if (true/* text not focused */) {
-								// if (key.shiftKey)
-										true;
-										// CURRENT_ZOOM += 0.1
-								// else
-										// cy.fit();
-								// cy.zoom(CURRENT_ZOOM)
-								// cy.center();
-						}
+						// if (key.shiftKey)
+								true;
+								// CURRENT_ZOOM += 0.1
+						// else
+								// cy.fit();
+						// cy.zoom(CURRENT_ZOOM)
+						// cy.center();
 						break;
 
 				case (KEYS.MINUS):
 				case (KEYS.MINUS_):
-						if (true/* text not focused */) {
-								// CURRENT_ZOOM = cy.zoom();
-								// if (key.shiftKey)
-										true;
-										//  CURRENT_ZOOM -= 0.1;
+						// CURRENT_ZOOM = cy.zoom();
+						// if (key.shiftKey)
+								true;
+								//  CURRENT_ZOOM -= 0.1;
 
-								// cy.zoom(CURRENT_ZOOM);
-		        		// cy.center();
-						}
+						// cy.zoom(CURRENT_ZOOM);
+	      		// cy.center();
 						break;
 
 				default:
-						// if (47 < key.which && key.which < 58) // key in 0-9
-								if (true/* text not focused */) {
-										// const num = event.which - 48;
-										// CURRENT_ZOOM = 1.0;
-										// cy.zoom(CURRENT_ZOOM);
-										// cy.center();
-								}
+						if (47 < key.which && key.which < 58) {// key in 0-9
+								// const num = event.which - 48;
+								// CURRENT_ZOOM = 1.0;
+								// cy.zoom(CURRENT_ZOOM);
+								// cy.center();
+						}
 
 		}
 
@@ -1075,23 +1071,6 @@ function removeSup(st) {
 }
 
 
-
-
-function setRoot(wf) {
-		log.debug(`called setRoot(id: ${wf.attr('id')})`);
-
-		let sent = buildSent();
-		const indices = findConlluId(wf),
-				cur = parseInt(sent.tokens[indices.outer].id),
-				head = 0;
-
-		log.debug(`setRoot() (outerIndex: ${indices.outer}, cur: ${cur}, head: ${head})`);
-
-		changeConlluAttr(sent, indices, 'deprel', 'root');
-		changeConlluAttr(sent, indices, 'head', head);
-
-		redrawTree(sent);
-}
 
 
 

@@ -572,6 +572,54 @@ function removeDependency(dependency) {
         }
     });
 }
+function setAsRoot(source) {
+    log.debug(`called setAsRoot(${source.attr('id')})`);
+
+    // check if there is already a root
+    let oldRoot = undefined;
+    $.each(_.tokens(), (i, token) => {
+        $.each(token.tokens, (j, subToken) => {
+              log.debug(`setAsRoot(): search for root: ${subToken.deprel}, ${subToken.head}, ${(subToken.deprel || '').toLowerCase() === 'root' && subToken.head == 0}`);
+            if ((subToken.deprel || '').toLowerCase() === 'root' && subToken.head == 0)
+                oldRoot = subToken;
+        });
+        log.debug(`setAsRoot(): search for root: ${token.deprel}, ${token.head}, ${(token.deprel || '').toLowerCase() === 'root' && token.head == 0}`);
+        if ((token.deprel || '').toLowerCase() === 'root' && token.head == 0)
+            oldRoot = token;
+    });
+    log.error(`setAsRoot(): oldRoot: ${oldRoot.superTokenId}:${oldRoot.subTokenId || '_'}`);
+
+    if (oldRoot) {
+        // unset as root
+        modifyConllu(oldRoot.superTokenId, oldRoot.subTokenId, 'head', undefined);
+        modifyConllu(oldRoot.superTokenId, oldRoot.subTokenId, 'deprel', undefined);
+    }
+
+    // set new root
+    source = source.data('conllu');
+    const sourceOldHead = modifyConllu(source.superTokenId, source.subTokenId, 'head', 0),
+        sourceOldDeprel = modifyConllu(source.superTokenId, source.subTokenId, 'deprel', 'root');
+
+    window.undoManager.add({
+        undo: () => {
+            if (oldRoot) {
+                modifyConllu(oldRoot.superTokenId, oldRoot.subTokenId, 'head', 0);
+                modifyConllu(oldRoot.superTokenId, oldRoot.subTokenId, 'deprel', 'root');
+            }
+            modifyConllu(source.superTokenId, source.subTokenId, 'head', sourceOldHead);
+            modifyConllu(source.superTokenId, source.subTokenId, 'deprel', sourceOldDeprel);
+        },
+        redo: () => {
+            if (oldRoot) {
+                modifyConllu(oldRoot.superTokenId, oldRoot.subTokenId, 'head', undefined);
+                modifyConllu(oldRoot.superTokenId, oldRoot.subTokenId, 'deprel', undefined);
+            }
+            modifyConllu(source.superTokenId, source.subTokenId, 'head', 0);
+            modifyConllu(source.superTokenId, source.subTokenId, 'deprel', 'root');
+        }
+    });
+}
+
 
 function modifyConllu(superTokenId, subTokenId, attrKey, attrValue) {
 		log.error(`called modifyConllu(superTokenId:${superTokenId}, subTokenId:${subTokenId}, attr:${attrKey}=>${attrValue})`);
