@@ -40,7 +40,7 @@ const KEYS = {
 var CURRENT_ZOOM = 1.0;
 var IS_EDITING = false;
 
-var pressed = {}; // used for onKeyupInDocument
+var pressed = {}; // used for onCtrlKeyup
 
 function updateGui() {
     log.debug(`called updateGui()`);
@@ -135,7 +135,7 @@ function bindHandlers() {
 		$('#current-sentence').keyup(onKeyupInTextarea);
 
 		// onkeydown, onkeyup are global variables for JS runtime
-		onkeydown = onkeyup = onKeyupInDocument;
+		onkeydown = onkeyup = onCtrlKeyup;
 
 		// direct graph-editing stuff
 		$('#edit').keyup(onKeyupInEditLabel);
@@ -144,6 +144,126 @@ function bindHandlers() {
 		window.onbeforeunload = () => {
 		  return 'Are you sure you want to leave?';
 		};
+
+
+		// looking if there are selected arcs
+    const selArcs = cy.$('edge.dependency.selected'),  // + cy.$('edge.dependency.error');
+        targetNodes = cy.$('node[state="arc-dest"]'),
+        // looking if there is a POS label to be modified
+        posInp = $('.activated.np'),
+        // looking if there is a wf label to be modified
+        wfInp = $('.activated.nf'),
+        // looking if there is a deprel label to be modified
+        deprelInp = $('.activated.ed'),
+        // looking if some wf node is selected
+        wf = cy.$('node.wf.activated'),
+        // looking if a supertoken node is selected
+        st = cy.$('.supAct'),
+        // looking if some node waits to be merged
+        toMerge = cy.$('.merge'),
+        // looking if some node waits to be merged to supertoken
+        toSup = cy.$('.supertoken');
+
+
+		if (cy.$('.arc-selected'))
+				switch (key.which) {
+						case (KEYS.DELETE):
+						case (KEYS.BACKSPACE):
+								// removeArc(targetNodes);
+								break;
+
+						case (KEY.D):
+								// moveArc()
+								break;
+				};
+
+		if (/* posInp.val() */)
+				if (key.which === KEYS.ENTER)
+						// writePOS(posInp.val());
+
+		else if (/* wfInp.val() */)
+				if (key.which === KEYS.ENTER)
+						// writeWF(wfiInp);
+
+		else if (/* posInp.length */)
+				if (key.which === KEYS.ENTER) {
+						/*
+						var res = deprelInp.val();
+            // to get rid of the magic direction arrows
+            res = res.replace(/[⊳⊲]/, '');
+            writeDeprel(res);
+						*/
+				}
+
+		else if (/* wf.length === 1 */)
+				switch (key.which) {
+						case (KEYS.M):
+		            // wf.addClass('merge');
+		            // wf.removeClass('activated');
+								break;
+
+						case (KEYS.S):
+								// wf.addClass('supertoken');
+		            // wf.removeClass('activated');
+								break;
+
+						case (KEYS.R):
+								// setRoot(wf);
+								break;
+        };
+
+		else if (/* toMerge.length */)
+        if (/* key.which in KEYS.SIDES */)
+            // mergeNodes(toMerge, KEYS.SIDES[key.which], 'subtoken');
+        }
+
+
+    else if (/* toSup.length */) {
+        if (/* key.which in KEYS.SIDES */)
+            // mergeNodes(toSup, KEYS.SIDES[key.which], 'supertoken');
+
+    else if (/* st.length */) {
+				switch (key.which) {
+						case (KEYS.DELETE):
+						case (KEYS.BACKSPACE):
+								// removeSup(st);
+
+		// break
+		if (!$('#text-data').is(':focus'))
+				switch (key.which) {
+						case (KEYS.EQUALS):
+						case (/* 61 */):
+								if (key.shiftKey)
+										// CURRENT_ZOOM += 0.1
+								else
+										// cy.fit();
+								// cy.zoom(CURRENT_ZOOM)
+								// cy.center();
+								break;
+
+						case (KEYS.MINUS):
+						case (/* 173 */):
+								// CURRENT_ZOOM = cy.zoom();
+								if (key.shiftKey)
+										//  CURRENT_ZOOM -= 0.1;
+
+								// cy.zoom(CURRENT_ZOOM);
+            		// cy.center();
+								break;
+
+						case (/* 48 */):
+								// CURRENT_ZOOM = 1.0;
+		            // cy.zoom(CURRENT_ZOOM);
+		            // cy.center();
+								break;
+
+						case (KEYS.P):
+								if (   !posInp.length
+										&& !wfInp.length
+										&& !deprelInp.length)
+										// setPunct();
+				}
+		}
 
 		/* what's up with this stuff ?? (updated 5/27/18)
 
@@ -167,34 +287,9 @@ function bindHandlers() {
         IS_PNG_EXPORTED = false;
         IS_LATEX_EXPORTED = false;
     });*/
-
-		//$(document).keydown(keyDownClassifier);
 }
-function onKeyupInTextarea(event) {
-		log.debug(`called onKeyupInTextarea(${event.which})`);
-
-		switch (event.which) {
-				case (KEYS.ENTER):
-						goToSentence();
-						break;
-				case (KEYS.LEFT):
-				case (KEYS.J):
-						prevSentence();
-						break;
-				case (KEYS.RIGHT):
-				case (KEYS.K):
-						nextSentence();
-						break;
-				case (KEYS.MINUS):
-						removeSentence();
-						break;
-				case (KEYS.EQUALS):
-						insertSentence();
-						break;
-		}
-}
-function onKeyupInDocument(event) {
-		log.debug(`called onKeyupInDocument(which:${event.which}, pressed:${JSON.stringify(pressed)})`);
+function onCtrlKeyup(event) {
+		log.debug(`called onCtrlKeyup(which:${event.which}, pressed:${JSON.stringify(pressed)})`);
 
 		// handle Ctrl + <keypress>
 		// solution based on https://stackoverflow.com/a/12444641/5181692
@@ -229,7 +324,32 @@ function onKeyupInDocument(event) {
 		} else if (pressed[KEYS.Y] || pressed[KEYS.Z]) {
 			undoManager.redo();
 		} else {
-			log.debug(`onKeyupInDocument(): uncaught key combination`)
+			log.debug(`onCtrlKeyup(): uncaught key combination`)
+		}
+
+		event.preventDefault();
+}
+function onKeyupInTextarea(event) {
+		log.debug(`called onKeyupInTextarea(${event.which})`);
+
+		switch (event.which) {
+				case (KEYS.ENTER):
+						goToSentence();
+						break;
+				case (KEYS.LEFT):
+				case (KEYS.J):
+						prevSentence();
+						break;
+				case (KEYS.RIGHT):
+				case (KEYS.K):
+						nextSentence();
+						break;
+				case (KEYS.MINUS):
+						removeSentence();
+						break;
+				case (KEYS.EQUALS):
+						insertSentence();
+						break;
 		}
 }
 function onKeyupInEditLabel(event) {
@@ -725,100 +845,6 @@ function removeArc(targets) {
 
 
 
-
-function keyDownClassifier(key) {
-    log.debug(`called keyDownClassifier(${key.which})`);
-		return;
-
-    // looking if there are selected arcs
-    const selArcs = cy.$('edge.dependency.selected'),  // + cy.$('edge.dependency.error');
-        targetNodes = cy.$('node[state="arc-dest"]'),
-        // looking if there is a POS label to be modified
-        posInp = $('.activated.np'),
-        // looking if there is a wf label to be modified
-        wfInp = $('.activated.nf'),
-        // looking if there is a deprel label to be modified
-        deprelInp = $('.activated.ed'),
-        // looking if some wf node is selected
-        wf = cy.$('node.wf.activated'),
-        // looking if a supertoken node is selected
-        st = cy.$('.supAct'),
-        // looking if some node waits to be merged
-        toMerge = cy.$('.merge'),
-        // looking if some node waits to be merged to supertoken
-        toSup = cy.$('.supertoken');
-
-    if (selArcs.length) {
-        if (key.which === KEYS.DELETE || key.which === KEYS.BACKSPACE) {
-            removeArc(targetNodes);
-        } else if (key.which === KEYS.D) {
-            moveArc();
-        };
-    } else if (posInp.length) {
-        if (key.which === KEYS.ENTER) {
-            writePOS(posInp.val());
-        };
-    } else if (wfInp.length) {
-        if (key.which === KEYS.ENTER) {
-            writeWF(wfInp);
-        };
-    } else if (deprelInp.length) {
-        if (key.which === KEYS.ENTER) {
-            var res = deprelInp.val();
-            // to get rid of the magic direction arrows
-            res = res.replace(/[⊳⊲]/, '');
-            writeDeprel(res);
-        };
-    } else if (wf.length === 1) {
-        if (key.which === KEYS.M) {
-            wf.addClass('merge');
-            wf.removeClass('activated');
-        } else if (key.which === KEYS.S) {
-            wf.addClass('supertoken');
-            wf.removeClass('activated');
-        } else if (key.which === KEYS.R) {
-            setRoot(wf);
-        };
-    } else if (toMerge.length) {
-        if (key.which in KEYS.SIDES) {
-            mergeNodes(toMerge, KEYS.SIDES[key.which], 'subtoken');
-        }
-    } else if (toSup.length) {
-        if (key.which in KEYS.SIDES) {
-            mergeNodes(toSup, KEYS.SIDES[key.which], 'supertoken');
-        }
-    } else if (st.length) {
-        if (key.which === KEYS.DELETE || key.which === BACKSPACE) {
-            removeSup(st);
-        }
-    }
-		if (!$('#text-data').is(':focus')) {
-        // console.log('ZOOM: ', CURRENT_ZOOM, inputAreaFocus);
-        if ((key.which === KEYS.EQUALS || key.which === 61) ){
-            CURRENT_ZOOM = cy.zoom();
-            if (key.shiftKey) { // zoom in
-                CURRENT_ZOOM += 0.1;
-            }  else {  // fit to screen
-                CURRENT_ZOOM = cy.fit();
-            }
-            cy.zoom(CURRENT_ZOOM);
-            cy.center();
-        } else if ((key.which === KEYS.MINUS || key.which === 173) ) { // zoom out
-            CURRENT_ZOOM = cy.zoom();
-            //if (key.shiftKey) {
-                CURRENT_ZOOM -= 0.1;
-            //}
-            cy.zoom(CURRENT_ZOOM);
-            cy.center();
-        } else if (key.which === 48 ) { // 0 = zoom 1.0
-            CURRENT_ZOOM = 1.0;
-            cy.zoom(CURRENT_ZOOM);
-            cy.center();
-        } else if (key.which == KEYS.P && !posInp.length && !wfInp.length && !deprelInp.length) {
-						setPunct();
-				}
-		}
-}
 
 function setPunct() {
 		// courtesy of Daniel Swanson :)
