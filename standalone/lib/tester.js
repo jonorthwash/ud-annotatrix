@@ -1136,6 +1136,18 @@ class Tester extends Object {
 					}
 				}
 				return true;
+			},
+			randomToken: (conllu) => {
+				conllu = conllu || a.conllu;
+
+				const stopAt = this.utils.randomInt(conllu.total);
+				let choice = null;
+				conllu.iterTokens((num, token) => {
+					if (num == stopAt)
+						choice = token;
+				});
+
+				return choice;
 			}
 
 		};
@@ -1685,12 +1697,6 @@ class Tester extends Object {
 					}
 
 				});
-				/*
-				a.parse(TEST_DATA.texts_by_format['CoNLL-U'].from_cg3_with_spans);
-				console.log(a);
-				console.log(a.conllu);
-				console.log(a.conllu.serial);*/
-
 			},
 
 			conlluRemove: () => {
@@ -1721,12 +1727,43 @@ class Tester extends Object {
 			},
 
 			conlluMerge: () => {
+				const strategies = {
+					swallow: { min:  1, max:  1 },
+					inner:   { min:  1, max:  2 },
+					combine: { min: -1, max: -1 },
+					squish:  { min:  1, max:  1 }
+				};
+
 				log.out(`\nExecuting Tester.conlluMerge()`);
+				$.each(TEST_DATA.texts_by_format['CoNLL-U'], (identifier, text) => {
+					this.utils.splitAndSet(text);
+
+					for (let i=0; i<10; i++) { // repeat 10x
+						$.each(strategies, (strategy, data) => {
+							const tok1 = this.utils.randomToken(),
+										tok2 = this.utils.randomToken(),
+										toks = a.conllu.total;
+
+							if (a.conllu.merge(tok1, tok2, strategy)) {
+
+								const diff = toks - a.conllu.total;
+								this.assert(data.min <= diff && diff <= data.max, `expected a change between ${data.min} and ${data.max}, got ${diff} (strategy:${strategy})`);
+
+								// insert a new random token just to keep it interesting
+								let sup = this.utils.randomInt(a.conllu.length),
+										sub = this.utils.randomInt(-1, 5);
+								sub = sub < 0 ? null : sub;
+								a.conllu.insert(sup, sub, { misc:'inserted' });
+							}
+
+						});
+					}
+				});
 
 			},
 
-			conlluTest: () => {
-				log.out(`\nExecuting Tester.conlluTest()`);
+			conlluSplit: () => {
+				log.out(`\nExecuting Tester.conlluSplit()`);
 
 			},
 

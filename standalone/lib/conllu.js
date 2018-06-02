@@ -557,7 +557,7 @@ class CoNLLU extends Object {
           return false;
         }
         if (!major.isSubToken || !minor.isSubToken) {
-          log.error(`Annotatrix: merge CoNLL-U: inner: can't fuse these tokens, try "normal" strategy`);
+          log.error(`Annotatrix: merge CoNLL-U: inner: can't fuse these tokens, try "squish" strategy`);
           return false;
         }
         if (major.superTokenId !== minor.superTokenId) {
@@ -572,34 +572,16 @@ class CoNLLU extends Object {
         this.remove(minor.superTokenId, minor.subTokenId);
         break;
 
-      case ('normal'):
-        if (major.num === minor.num) {
-          log.error(`Annotatrix: merge CoNLL-U: normal: can't fuse token with itself`);
-          return false;
-        }
-        if (major.isSubToken || minor.isSubToken) {
-          log.error(`Annotatrix: merge CoNLL-U: normal: can't fuse subtokens, try "inner" strategy`);
-          return false;
-        }
-
-        // merge two tokens/superTokens into a single token/superToken
-        newToken.tokens = (major.tokens || []).concat(minor.tokens || []);
-        this.updateHead(minor, newToken);
-        this.updateHead(major, newToken);
-        this.tokens[major.superTokenId] = newToken;
-        this.remove(minor.superTokenId);
-        break;
-
       case ('combine'):
         if (major.num === minor.num) {
           log.error(`Annotatrix: merge CoNLL-U: combine: can't fuse token with itself`);
           return false;
         }
         if (major.isSuperToken || minor.isSuperToken) {
-          log.error(`Annotatrix: merge CoNLL-U: combine: can't fuse supertokens, try "normal" strategy`);
+          log.error(`Annotatrix: merge CoNLL-U: combine: can't fuse supertokens, try "squish" strategy`);
           return false;
         }
-        if (major.isSubToken || minor.isSubtoken) {
+        if (major.isSubToken || minor.isSubToken) {
           log.error(`Annotatrix: merge CoNLL-U: combine: can't fuse subtokens, try "inner" strategy`);
           return false;
         }
@@ -612,8 +594,26 @@ class CoNLLU extends Object {
         this.remove(minor.superTokenId);
         break;
 
+      case ('squish'):
+        if (major.num === minor.num) {
+          log.error(`Annotatrix: merge CoNLL-U: squish: can't fuse token with itself`);
+          return false;
+        }
+        if (major.isSubToken || minor.isSubToken) {
+          log.error(`Annotatrix: merge CoNLL-U: squish: can't fuse subtokens, try "inner" strategy`);
+          return false;
+        }
+
+        // merge two tokens/superTokens into a single token/superToken
+        newToken.tokens = (major.tokens || []).concat(minor.tokens || []);
+        this.updateHead(minor, newToken);
+        this.updateHead(major, newToken);
+        this.tokens[major.superTokenId] = newToken;
+        this.remove(minor.superTokenId);
+        break;
+
       case ('all'): // not given a strategy, try one until it works
-        $.each(['swallow', 'inner', 'combine', 'normal'], (i, strategy) => {
+        $.each(['swallow', 'inner', 'combine', 'squish'], (i, strategy) => {
           if (this.merge(major, minor, strategy))
             return true;
         });

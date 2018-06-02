@@ -58,7 +58,7 @@ window.onload = () => {
         console.log('UD-Annotatrix is loading ...');
 
         window.conllu = require('conllu');
-        window.log = new Logger('ERROR');
+        window.log = new Logger('CRITICAL');
         window.test = new Tester();
 
         checkServer(); // check if server is running
@@ -77,7 +77,7 @@ window.onload = () => {
         //test.run('conlluInsert');
         //test.run('conlluRemove');
         test.run('conlluMerge');
-        test.run('conlluTest');
+        test.run('conlluSplit');
         //a.conllu.insert(1,1);
         //a.conllu.insert(1,0);
         //console.log(a.conllu.serial);
