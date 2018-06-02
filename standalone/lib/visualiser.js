@@ -586,70 +586,28 @@ function mergeNodes(dir, strategy) { // 'left' or 'right'
     // const indices = findConlluId(toMerge);
 
     const oldSentence = a.sentence;
-    const merging = cy.$('.merge').data('conllu');
 
-    if (merging.tokens) {
-        const message = 'Sorry, merging subtokens is not supported!';
-        log.error(message);
-        alert(message);
-        return;
-    }
-
+    // prefer traits on this one
+    const major = cy.$('.merge').data('conllu');
     // either one to the left or to the right (w/o wrapping)
-    const mergingWith = a.tokens[ merging.superTokenId + (dir === 'left' ? -1 : 1) ];
-    if (!mergingWith) {
+    const minor = a.tokens[ major.superTokenId + (dir === 'left' ? -1 : 1) ];
+
+    // make sure we have stuff
+    if (!major || !minor) {
         log.error('mergeNodes(): cannot merge these tokens');
         return;
     }
 
-    modifyConllu(merging.superTokenId, merging.subTokenId, 'form', dir === 'left'
-        ? `${mergingWith.form || ''}${merging.form || ''}`
-        : `${merging.form || ''}${mergingWith.form || ''}`);
+    a.conllu.merge(major, minor, strategy);
 
-    modifyConllu(merging.superTokenId, merging.subTokenId, 'lemma', dir === 'left'
-        ? `${mergingWith.lemma || ''}${merging.lemma || ''}`
-        : `${merging.lemma || ''}${mergingWith.lemma || ''}`);
-
-    if (strategy === 'subtoken') {
-
-        modifyConllu(merging.superTokenId, merging.subTokenId, 'deprel',  merging.deprel  || mergingWith.deprel);
-        modifyConllu(merging.superTokenId, merging.subTokenId, 'deps',    merging.deps || mergingWith.deps);
-        modifyConllu(merging.superTokenId, merging.subTokenId, 'feats',   merging.feats || mergingWith.feats);
-        modifyConllu(merging.superTokenId, merging.subTokenId, 'pos',     merging.pos || mergingWith.pos);
-        modifyConllu(merging.superTokenId, merging.subTokenId, 'upostag', merging.upostag || mergingWith.upostag);
-        modifyConllu(merging.superTokenId, merging.subTokenId, 'xpostag', merging.xpostag || mergingWith.xpostag);
-
-        const smallerIndex = Math.min(merging.superTokenId, mergingWith.superTokenId);
-        a.iterTokens((num, token) => {
-            if (token.head == mergingWith.id)
-                modifyConllu(token.superTokenId, token.subTokenId, 'head', merging.id);
-            if (token.superTokenId >= smallerIndex)
-                modifyConllu(token.superTokenId, token.subTokenId, 'id', parseInt(token.id) - 1);
-        })
-
-        let newSentence = a.lines;
-        newSentence.splice(mergingWith.num + a.conllu.comments.length, 1);
-        newSentence = newSentence.join('\n');
-        a.parse(newSentence);
-        cy.$('.merge').removeClass('merge');
-
-        undoManager.add({
-            undo: () => {
-                a.parse(oldSentence);
-            },
-            redo: () => {
-                a.parse(newSentence);
-            }
-        })
-
-
-    } else {
-
-        throw new NotImplementedError('supertoken merging not supported');
-
-    }
-
-    return;
+    undoManager.add({
+        undo: () => {
+            a.parse(oldSentence);
+        },
+        redo: () => {
+            a.parse(a.conllu.serial);
+        }
+    });
 }
 
 

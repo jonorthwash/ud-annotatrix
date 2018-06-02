@@ -1,17 +1,8 @@
 'use strict'
 
-var FORMAT = '',
-    FILENAME = 'ud-annotatrix-corpus.conllu', // default name
-    CONTENTS = '',
-    // var TEMPCONTENTS = '';
-    AVAILABLE_SENTENCES = 0,
-    CURRENT_SENTENCE = 0,
-    RESULTS = [],
-    LABELS = [],
 
-    L20N_LOGGING = false;
-
-var a;
+var a, // hold our data here
+    L20N_LOGGING = false; // disable annoying L20N logs (TEMP)
 
 window.onload = () => {
 
@@ -81,8 +72,13 @@ window.onload = () => {
         //test.all();
         //test.utils.splitAndSet('this is a test');
         //$('#tabConllu').click()
-        a.parse(TEST_DATA.texts_by_format['CoNLL-U'].from_cg3_with_spans);
         a.pan = { x: -33.90909090909093, y: 128.51704545454552 };
+        a.parse(TEST_DATA.texts_by_format['CoNLL-U'].from_cg3_with_spans);
+        console.log(a.conllu);
+        console.log(a.conllu.serial);
+        a.conllu.insert(1,1);
+        //a.conllu.insert(1,0);
+        console.log(a.conllu.serial);
         //_.pan = { x: -33.90909090909093, y: 128.51704545454552 };
         //test.utils.splitAndSet(TEST_DATA.texts_by_format['CoNLL-U'].from_cg3_with_spans);
         //insert

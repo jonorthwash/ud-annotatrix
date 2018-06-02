@@ -374,7 +374,7 @@ class Sentence extends Object {
     return this._conllu;
   }
   set conllu(serial) {
-    this._conllu.set(serial);
+    this._conllu.serial = serial;
     return this._conllu;
   }
 
@@ -384,9 +384,6 @@ class Sentence extends Object {
 
 }
 
-class Token extends Object {
-
-}
 // wrapper around conllu.Sentence
 class CoNLLU extends Object {
   constructor() {
@@ -394,16 +391,8 @@ class CoNLLU extends Object {
     this.sentence = new conllu.Sentence();
     this.processed = false;
   }
-
-  set(serial) {
-    this.processed = true;
-
-    if (detectFormat(serial) !== 'CoNLL-U')
-      return;
-
-    this.sentence.serial = serial;
-    this.comments = this.sentence.comments;
-    this.tokens = this.sentence.tokens;
+  get length() {
+    return this.tokens.length;
   }
 
   /**
@@ -431,7 +420,6 @@ class CoNLLU extends Object {
     }
     return this.tokens; // chaining?
   }
-
   iterComments(callback) {
     for (let i=0; i<(this.comments || []).length; i++) {
       callback(i, this.comments[i]);
@@ -446,6 +434,12 @@ class CoNLLU extends Object {
    *  @return {Token || null}
    */
   getById(id) {
+    if (id === null || id === undefined)
+      return null;
+
+    if (id == 0)
+      return 'ROOT';
+
     let match = null;
     this.iterTokens((num, token) => {
       if (token.id == id)
@@ -455,13 +449,340 @@ class CoNLLU extends Object {
   }
 
   get serial() {
-    return this.sentence.serial;
-  }
 
+    // custom serializer
+    let lines = this.comments.map((comment, i) => {
+      return `# ${comment}`;
+    });
+    this.iterTokens((num, token) => {
+      lines.push(token.serial)
+    });
+
+    return lines.join('\n');
+
+  }
   set serial(serial) {
-    this.set(serial);
+    this.processed = true;
+
+    if (detectFormat(serial) !== 'CoNLL-U')
+      return;
+
+    this.sentence.serial = serial;
+    this.comments = this.sentence.comments;
+    this.tokens = [];
+
+    for (let i=0; i<(this.sentence.tokens || []).length; i++) {
+      let token = new Token(this.sentence.tokens[i]), subTokens = [];
+      for (let j=0; j<(this.sentence.tokens[i].tokens || []).length; j++) {
+        const subToken = new Token(this.sentence.tokens[i].tokens[j]);
+        subTokens.push(subToken);
+      }
+      token.tokens = subTokens;
+      this.tokens.push(token);
+    }
+
+    this.renumber();
+    this.setHeads();
+    console.log(this.tokens);
     return this.serial;
   }
 
+  merge(major, minor, strategy) {
+
+    if (major.tokens || minor.tokens) {
+        const message = 'Sorry, major subtokens is not supported!';
+        log.error(message);
+        alert(message);
+        return;
+    }
+
+    major.form = major.superTokenId < minor.superTokenId
+      ? `${major.form || ''}${minor.form || ''}`
+      : `${minor.form || ''}${major.form || ''}`;
+    major.lemma = major.superTokenId < minor.superTokenId
+      ? `${major.lemma || ''}${minor.lemma || ''}`
+      : `${minor.lemma || ''}${major.lemma || ''}`;
+
+    major.deprel  = major.deprel || minor.deprel;
+    major.deps    = major.deps || minor.deps;
+    major.feats   = major.feats || minor.feats;
+    major.pos     = major.pos || minor.pos;
+    major.upostag = major.upostag || minor.upostag;
+    major.xpostag = major.xpostag || minor.xpostag;
+    console.log(major, minor);
+    return;
+
+    modifyConllu(major.superTokenId, major.subTokenId, 'form', dir === 'left'
+        ? `${minor.form || ''}${major.form || ''}`
+        : `${major.form || ''}${minor.form || ''}`);
+
+    modifyConllu(major.superTokenId, major.subTokenId, 'lemma', dir === 'left'
+        ? `${minor.lemma || ''}${major.lemma || ''}`
+        : `${major.lemma || ''}${minor.lemma || ''}`);
+
+    if (strategy === 'subtoken') {
+
+        modifyConllu(major.superTokenId, major.subTokenId, 'deprel',  major.deprel  || minor.deprel);
+        modifyConllu(major.superTokenId, major.subTokenId, 'deps',    major.deps || minor.deps);
+        modifyConllu(major.superTokenId, major.subTokenId, 'feats',   major.feats || minor.feats);
+        modifyConllu(major.superTokenId, major.subTokenId, 'pos',     major.pos || minor.pos);
+        modifyConllu(major.superTokenId, major.subTokenId, 'upostag', major.upostag || minor.upostag);
+        modifyConllu(major.superTokenId, major.subTokenId, 'xpostag', major.xpostag || minor.xpostag);
+
+        const smallerIndex = Math.min(major.superTokenId, minor.superTokenId);
+        a.iterTokens((num, token) => {
+            if (token.head == minor.id)
+                modifyConllu(token.superTokenId, token.subTokenId, 'head', major.id);
+            if (token.superTokenId >= smallerIndex)
+                modifyConllu(token.superTokenId, token.subTokenId, 'id', parseInt(token.id) - 1);
+        })
+
+        let newSentence = a.lines;
+        newSentence.splice(minor.num + a.conllu.comments.length, 1);
+        newSentence = newSentence.join('\n');
+        a.parse(newSentence);
+        cy.$('.merge').removeClass('merge');
+
+
+
+    } else {
+
+        throw new NotImplementedError('supertoken major not supported');
+
+    }
+
+  }
+  insert(superTokenId, subTokenId=null) { // insert BEFORE this index
+    log.error(`${superTokenId}, ${subTokenId}`);
+
+    if (superTokenId < 0)
+      superTokenId = 0;
+
+    if (superTokenId > this.length)
+      superTokenId = this.length;
+
+
+    // inserting a superToken
+    if (!this.tokens[superTokenId] || !this.tokens[superTokenId].tokens)
+      subTokenId = null;
+
+    if (subTokenId === null) {
+
+      this.tokens = this.tokens.slice(0, superTokenId)
+        .concat(new Token({}, -1, -1, -1)
+        , this.tokens.slice(superTokenId));
+
+      this.renumber();
+
+    } else {
+
+
+      /*
+      this.tokens[superTokenId].tokens = this.tokens[superTokenId]
+      console.log(this.tokens[superTokenId].id)
+      let maxSubTokenId = parseInt(
+        this.tokens[superTokenId].id.match(/^[0-9]+-([0-9]+)/)[1] );
+      const x = `${this.tokens[superTokenId].id}`.replace(
+        `-${maxSubTokenId}`, `-${maxSubTokenId + 1}`);
+      console.log(x);
+      this.tokens[superTokenId].id = `${this.tokens[superTokenId].id}`.replace(
+        `-${maxSubTokenId}`, `-${maxSubTokenId + 1}`);
+      this.tokens[superTokenId].id = x;
+      console.log(this.tokens[superTokenId].id)
+      const newToken = {*/
+
+      //}
+    }
+
+    this.serial = this.serial; // make sure changes are saved, just in case
+  }
+  remove(superTokenId, subTokenId) {
+    if (superTokenId < 0 || superTokenId > this.tokens.length - 1) {
+      log.error(`Annotatrix: remove index out of range: ${index}`);
+      return;
+    }
+
+
+  }
+  renumber() {
+    let num = 0, id = 1;
+    for (let i=0; i<this.tokens.length; i++) {
+      const token = this.tokens[i];
+      if (token.tokens) {
+
+        // multiword token
+        token.indices = {
+          num: num,
+          id: null,
+          super: i,
+          sub: null
+        };
+        num++;
+        for (let j=0; j<token.tokens.length; j++) {
+
+          // sub token
+          console.log(token.tokens)
+          const subToken = token.tokens[j];
+          subToken.indices = {
+            num: num,
+            id: id,
+            super: i,
+            sub: j
+          };
+          num++;
+          id++;
+        }
+      } else {
+
+        // regular token
+        token.indices = {
+          num: num,
+          id: id,
+          super: i,
+          sub: null
+        };
+        num++;
+        id++;
+      }
+    }
+  }
+  setHeads() {
+    for (let i=0; i<this.tokens.length; i++) {
+      const head = this.getById(this.sentence.tokens[i].head)
+      this.tokens[i].head = head;
+      for (let j=0; j<(this.tokens[i].tokens || []).length; j++) {
+        const head = this.getById(this.sentence.tokens[i].tokens[j].head)
+        this.tokens[i].tokens[j].head = head;
+      }
+    }
+  }
+}
+class Token extends Object {
+  constructor(obj) {
+    super();
+
+    this.tokens = null; // init subtokens to null
+    this.form = obj.form;
+    this.lemma = obj.lemma;
+    this._head = null;
+
+    this.fields = {
+      upostag : obj.upostag,
+      xpostag : obj.xpostag,
+      feats   : obj.feats,
+      head    : obj.head,
+      deprel  : obj.deprel,
+      deps    : obj.deps,
+      misc    : obj.misc
+    };
+  }
+
+  get tokens() {
+    return this._tokens;
+  }
+  set tokens(tokens) {
+    if (tokens && tokens.length) {
+      this._tokens = tokens;
+    } else {
+      this._tokens = null;
+    }
+  }
+
+  get serial() {
+    let fields = [ this.id, this.form, this.lemma ];
+    $.each(this.fields, key => {
+      fields.push(this[key]);
+    });
+    return fields.join('\t');
+  }
+  /*set serial(serial) {
+    serial = serial.split('\t');
+    this.form    = serial[1];
+    this.lemma   = serial[2];
+    this.upostag = serial[3];
+    this.xpostag = serial[4];
+    this.feats   = serial[5];
+    this.head    = serial[6];
+    this.deprel  = serial[7];
+    this.deps    = serial[8];
+    this.misc    = serial[9];
+  }*/
+
+  get id() {
+    if (this._id === null) {
+      return `${this.tokens[0].id}-${this.tokens[this.tokens.length-1].id}`;
+    } else {
+      return this._id;
+    }
+  }
+  set indices(indices) {
+    this.num = indices.num;
+    this._id = indices.id;
+    this.superTokenId = indices.super;
+    this.subTokenId = indices.sub;
+  }
+
+  get form() {
+    return this._form || '_';
+  }
+  set form(form) {
+    this._form = form;
+    if (this.lemma === '_' && form)
+      this.lemma = form;
+  }
+
+  get lemma() {
+    return this._lemma || '_';
+  }
+  set lemma(lemma) {
+    this._lemma = lemma;
+    if (this.form === '_' && lemma)
+      this.form = lemma;
+  }
+
+  get head() {
+    return this._head ? this._head == 'ROOT' ? 0 : this._head.id : '_';
+  }
+  set head(head) {
+    this._head = head;
+  }
+
+  get upostag() {
+  	return this.fields.upostag || '_';
+  }
+  get xpostag() {
+  	return this.fields.xpostag || '_';
+  }
+  get feats() {
+  	return this.fields.feats || '_';
+  }
+  get deprel() {
+  	return this.fields.deprel || '_';
+  }
+  get deps() {
+  	return this.fields.deps || '_';
+  }
+  get misc() {
+  	return this.fields.misc || '_';
+  }
+
+  set upostag(value) {
+  	this.fields.upostag = value;
+  }
+  set xpostag(value) {
+  	this.fields.xpostag = value;
+  }
+  set feats(value) {
+  	this.fields.feats = value;
+  }
+  set deprel(value) {
+  	this.fields.deprel = value;
+  }
+  set deps(value) {
+  	this.fields.deps = value;
+  }
+  set misc(value) {
+  	this.fields.misc = value;
+  }
 
 }
