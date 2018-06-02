@@ -238,7 +238,7 @@ function createDependency(graph, token) {
         head = a.conllu.getById(token.head);
 
     // if no head, no dependency
-    if (!head) return;
+    if (!head || head == 'ROOT') return;
 
     // Append ⊲ or ⊳ to indicate direction of the arc (helpful if there are many arcs)
     let deprelLabel;

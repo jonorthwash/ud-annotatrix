@@ -561,22 +561,34 @@ class CoNLLU extends Object {
     if (superTokenId > this.length)
       superTokenId = this.length;
 
-
     // inserting a superToken
     if (!this.tokens[superTokenId] || !this.tokens[superTokenId].tokens)
       subTokenId = null;
-
     if (subTokenId === null) {
 
       this.tokens = this.tokens.slice(0, superTokenId)
-        .concat(new Token({}, -1, -1, -1)
+        .concat(new Token({})
         , this.tokens.slice(superTokenId));
 
       this.renumber();
 
+    // inserting a subToken
     } else {
 
+      let subTokens = this.tokens[superTokenId].tokens;
 
+      if (subTokenId < 0)
+        subTokenId = 0;
+
+      if (subTokenId > subTokens.length)
+        subTokenId = subTokens.length;
+
+      subTokens = subTokens.slice(0, subTokenId)
+        .concat(new Token({})
+        , subTokens.slice(subTokenId));
+      this.tokens[superTokenId].tokens = subTokens;
+
+      this.renumber();
       /*
       this.tokens[superTokenId].tokens = this.tokens[superTokenId]
       console.log(this.tokens[superTokenId].id)
@@ -741,7 +753,10 @@ class Token extends Object {
   }
 
   get head() {
-    return this._head ? this._head == 'ROOT' ? 0 : this._head.id : '_';
+    return this._head
+      ? this._head == 'ROOT'
+        ? 0 : this._head.id
+      : '_';
   }
   set head(head) {
     this._head = head;

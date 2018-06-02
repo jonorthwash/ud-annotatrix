@@ -76,9 +76,9 @@ window.onload = () => {
         a.parse(TEST_DATA.texts_by_format['CoNLL-U'].from_cg3_with_spans);
         console.log(a.conllu);
         console.log(a.conllu.serial);
-        a.conllu.insert(1,1);
+        //a.conllu.insert(1,1);
         //a.conllu.insert(1,0);
-        console.log(a.conllu.serial);
+        //console.log(a.conllu.serial);
         //_.pan = { x: -33.90909090909093, y: 128.51704545454552 };
         //test.utils.splitAndSet(TEST_DATA.texts_by_format['CoNLL-U'].from_cg3_with_spans);
         //insert
