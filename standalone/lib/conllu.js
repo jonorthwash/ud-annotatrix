@@ -650,7 +650,7 @@ class CoNLLU extends Object {
 
   }
   insert(superTokenId, subTokenId=null, fields={}) { // insert BEFORE this index
-    log.warn(`Annotatrix: CoNLL-U insert token: ${superTokenId}, ${subTokenId}`);
+    log.debug(`Annotatrix: CoNLL-U insert token: ${superTokenId}, ${subTokenId}`);
 
     if (superTokenId < 0)
       superTokenId = 0;
@@ -689,7 +689,12 @@ class CoNLLU extends Object {
     return true;
   }
   remove(superTokenId, subTokenId=null) {
-    log.warn(`Annotatrix: CoNLL-U remove token: ${superTokenId}, ${subTokenId}`);
+    log.debug(`Annotatrix: CoNLL-U remove token: ${superTokenId}, ${subTokenId}`);
+
+    if (!this.tokens.length) {
+      log.warn(`Annotatrix: CoNLL-U remove token: no tokens to remove`);
+      return false;
+    }
 
     let spliced;
 
@@ -706,6 +711,10 @@ class CoNLLU extends Object {
 
       spliced = this.tokens.splice(superTokenId, 1);
 
+      // update stuff (in this order!)
+      this.updateHead(spliced[0], undefined);
+      this.reindex();
+
     // removing a subToken
     } else {
 
@@ -720,15 +729,14 @@ class CoNLLU extends Object {
       spliced = subTokens.splice(subTokenId, 1);
       this.tokens[superTokenId].tokens = subTokens;
 
+      // update stuff (in this order!)
+      this.updateHead(spliced[0], undefined);
+      this.reindex();
+
+      // enforce that superTokens must contain at least 2 tokens
+      if ((this.tokens[superTokenId].tokens || []).length === 1)
+        this.merge(this.tokens[superTokenId], this.tokens[superTokenId].tokens[0], 'swallow');
     }
-
-    // update stuff (in this order!)
-    this.updateHead(spliced[0], undefined);
-    this.reindex();
-
-    // enforce that superTokens must contain at least 2 tokens
-    if ((this.tokens[superTokenId].tokens || []).length === 1)
-      this.merge(this.tokens[superTokenId], this.tokens[superTokenId].tokens[0], 'swallow');
 
     this.serial = this.serial; // make sure changes are saved, just in case
     return true;

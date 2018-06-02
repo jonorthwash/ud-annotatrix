@@ -1683,13 +1683,7 @@ class Tester extends Object {
 							}
 						}
 					}
-					return;
 
-					a.iterTokens((num, token) => {
-						a.conllu.insert(token.superTokenId, token.subTokenId, { form:'inserted' });
-					});
-					a.conllu.insert(a.conllu.length, null, { form:'inserted' });
-					//console.log(a.conllu.serial);
 				});
 				/*
 				a.parse(TEST_DATA.texts_by_format['CoNLL-U'].from_cg3_with_spans);
@@ -1702,6 +1696,28 @@ class Tester extends Object {
 			conlluRemove: () => {
 				log.out(`\nExecuting Tester.conlluRemove()`);
 
+				$.each(TEST_DATA.texts_by_format['CoNLL-U'], (identifier, text) => {
+
+					this.utils.splitAndSet(text);
+					while (a.conllu.remove(Infinity, null)) { }
+					this.assert(a.conllu.total === 0, `expected to remove all elements`);
+
+					this.utils.splitAndSet(text);
+					const serial = a.conllu.serial;
+
+					for (let i=0; i<10; i++) { // repeat 10x
+						const sup = this.utils.randomInt(a.conllu.length);
+						const sub = a.tokens[sup].tokens
+							? this.utils.randomInt(a.tokens[sup].tokens.length) : null;
+
+						// NOTE: this won't necessarily work in the other order because
+						//   of "swallow merges"
+						a.conllu.insert(sup, sub);
+						a.conllu.remove(sup, sub);
+
+						this.assert(this.utils.compareStrings(serial, a.conllu.serial), `expected to be able to insert and remove invertibly`);
+					}
+				});
 			},
 
 			conlluMerge: () => {

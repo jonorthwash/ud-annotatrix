@@ -74,8 +74,8 @@ window.onload = () => {
         //$('#tabConllu').click()
         a.pan = { x: -33.90909090909093, y: 128.51704545454552 };
         //test.run('conlluCustomSerializer');
-        test.run('conlluInsert');
-        test.run('conlluRemove');
+        //test.run('conlluInsert');
+        //test.run('conlluRemove');
         test.run('conlluMerge');
         test.run('conlluTest');
         //a.conllu.insert(1,1);
