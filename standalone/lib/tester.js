@@ -104,6 +104,15 @@ nsubj(is, problem)`
 		},
 		'CoNLL-U': {
 
+t: `# testing :)
+1-3	He	he	det	_	pos|f|sp	_	det	_	_
+1	boued	boued	n	_	m|sg	4	obj	_	_
+2	e	e	vpart	_	obj	4	aux	_	_
+3	tebr	debriñ	vblex	_	pri|p3|sg	0	root	_	_
+4 doob	doobie	np	_	_	3	_	_
+5	Mona	Mona	np	_	ant|f|sg	4	nsubj	_	_`,
+
+
 0: `# sent_id = _
 # text = this is a test
 1	this	_	_	_	_	_	_	_	_
@@ -1580,7 +1589,7 @@ class Tester extends Object {
 			modifyConllu: () => {
 				log.out(`\nExecuting Tester.modifyConllu()`);
 
-				const modifiableKeys = ['deprel', 'deps', 'feats', 'form', 'head', 'lemma', 'upostag', 'xpostag'];
+				const modifiableKeys = ['deprel', 'deps', 'feats', 'form', 'lemma', 'upostag', 'xpostag'];
 				const newAttrValue = 'TEST!';
 
 				// make sure the problematic one passes first
@@ -1726,7 +1735,7 @@ class Tester extends Object {
 				});
 			},
 
-			conlluMerge: () => {
+			conlluMergeAndSplit: () => {
 				const strategies = {
 					swallow: { min:  1, max:  1 },
 					inner:   { min:  1, max:  2 },
@@ -1734,20 +1743,20 @@ class Tester extends Object {
 					squish:  { min:  1, max:  1 }
 				};
 
-				log.out(`\nExecuting Tester.conlluMerge()`);
+				log.out(`\nExecuting Tester.conlluMergeAndSplit()`);
 				$.each(TEST_DATA.texts_by_format['CoNLL-U'], (identifier, text) => {
 					this.utils.splitAndSet(text);
 
 					for (let i=0; i<10; i++) { // repeat 10x
 						$.each(strategies, (strategy, data) => {
-							const tok1 = this.utils.randomToken(),
-										tok2 = this.utils.randomToken(),
-										toks = a.conllu.total;
+							const tok1  = this.utils.randomToken(),
+										tok2  = this.utils.randomToken(),
+										total = a.conllu.total;
 
 							if (a.conllu.merge(tok1, tok2, strategy)) {
 
-								const diff = toks - a.conllu.total;
-								this.assert(data.min <= diff && diff <= data.max, `expected a change between ${data.min} and ${data.max}, got ${diff} (strategy:${strategy})`);
+								const diff = total - a.conllu.total;
+								this.assert(data.min <= diff && diff <= data.max, `after merge, expected a change between ${data.min} and ${data.max}, got ${diff} (strategy:${strategy})`);
 
 								// insert a new random token just to keep it interesting
 								let sup = this.utils.randomInt(a.conllu.length),
@@ -1757,13 +1766,17 @@ class Tester extends Object {
 							}
 
 						});
+
+						const token = this.utils.randomToken(),
+									total = a.conllu.total;
+						if (a.conllu.split(token)) {
+
+							const diff = total - a.conllu.total;
+							this.assert(diff === 0 || diff === 1, `after split, expected a change of -1 or 0, got ${diff}`);
+
+						}
 					}
 				});
-
-			},
-
-			conlluSplit: () => {
-				log.out(`\nExecuting Tester.conlluSplit()`);
 
 			},
 

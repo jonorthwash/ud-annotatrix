@@ -231,7 +231,7 @@ function createToken(graph, num, superToken, superTokenId, subToken, subTokenId)
  * @param  {Object} token  Token object.
  */
 function createDependency(graph, token) {
-    log.debug(`called createDependency(token: ${JSON.stringify(token)}`);
+    log.debug(`called createDependency(token: ${token.id}`);
 
     let deprel = token.deprel || '',
         head = a.conllu.getById(token.head);
@@ -301,7 +301,7 @@ function createDependency(graph, token) {
  *  NOT IMPLEMENTED, not sure when this would be used??
  */
 function createEnhancedDependency(graph, token) {
-    log.debug(`called makeEnhancedDependency(token: ${JSON.stringify(token)})`);
+    log.debug(`called makeEnhancedDependency(token: ${token.id})`);
 
     throw new NotImplementedError('createEnhancedDependency() not implemented');
     /*
@@ -612,17 +612,20 @@ function mergeNodes(dir, strategy) { // 'left' or 'right'
 
 
 function modifyConllu(superTokenId, subTokenId, attrKey, attrValue) {
-		log.error(`called modifyConllu(superTokenId:${superTokenId}, subTokenId:${subTokenId}, attr:${attrKey}=>${attrValue})`);
+		log.info(`called modifyConllu(superTokenId:${superTokenId}, subTokenId:${subTokenId}, attr:${attrKey}=>${attrValue})`);
 
 		const conllu = a.conllu;
 		log.debug(`modifyConllu(): before:  ${conllu.tokens[superTokenId][attrKey]}`);
 
+    if (attrKey === 'head') // need this here b/c [set head] sets a pointer to a token
+        attrValue = conllu.getById(attrValue);
+
 		let oldValue;
 		if (subTokenId !== null && subTokenId !== undefined) {
-				oldValue = conllu.tokens[superTokenId].tokens[subTokenId][attrKey] || '_';
+				oldValue = conllu.tokens[superTokenId].tokens[subTokenId][attrKey];
 				conllu.tokens[superTokenId].tokens[subTokenId][attrKey] = attrValue;
 		} else {
-				oldValue = conllu.tokens[superTokenId][attrKey] || '_';
+				oldValue = conllu.tokens[superTokenId][attrKey];
 				conllu.tokens[superTokenId][attrKey] = attrValue;
 		}
 

@@ -453,6 +453,9 @@ class CoNLLU extends Object {
     if (id == 0)
       return 'ROOT';
 
+    if (`${id}`.startsWith('tmp'))
+      return { id:id };
+
     let match = null;
     this.iterTokens((num, token) => {
       if (token.id == id)
@@ -484,6 +487,7 @@ class CoNLLU extends Object {
   set serial(serial) {
     this.processed = true;
 
+    //console.log(serial);
     if (detectFormat(serial) !== 'CoNLL-U')
       return;
 
@@ -503,6 +507,7 @@ class CoNLLU extends Object {
 
     this.reindex();
     this.setHeads();
+    //console.log(serial);
     return this.serial;
   }
 
@@ -646,7 +651,56 @@ class CoNLLU extends Object {
     }*/
 
   }
-  split() {
+  split(splitToken) {
+    if (! splitToken instanceof Token) {
+      log.error(`Annotatrix: split CoNLL-U: invalid token`);
+      return false;
+    }
+
+    if (splitToken.isSubToken) {
+
+      this.updateHead(splitToken, { id: 'tmp' });
+      this.remove(splitToken.superTokenId, splitToken.subTokenId);
+      this.insert(splitToken.superTokenId + 1, null);
+      this.tokens[splitToken.superTokenId + 1] = new Token(splitToken.params);
+
+      let newToken = this.tokens[splitToken.superTokenId + 1];
+      this.updateHead({ id: 'tmp' }, newToken);
+      this.iterTokens((num, token) => {
+        if (Token.equals(token, splitToken._head))
+          newToken.head = token;
+        if ('ROOT' === splitToken._head)
+          newToken.head = 'ROOT';
+      });
+
+    } else if (splitToken.isSuperToken) {
+
+      $.each(splitToken.tokens, (i, subToken) => {
+
+        this.updateHead(subToken, { id: 'tmp' });
+        this.insert(subToken.superTokenId + i + 1, null);
+        this.tokens[subToken.superTokenId + i + 1] = new Token(subToken.params);
+
+        let newToken = this.tokens[subToken.superTokenId + i + 1];
+        this.updateHead({ id: 'tmp' }, newToken);
+        this.iterTokens((num, token) => {
+          if (Token.equals(token, subToken._head))
+            newToken.head = token;
+          if ('ROOT' === subToken._head)
+            newToken.head = 'ROOT';
+        });
+      });
+
+      this.remove(splitToken.superTokenId, null);
+
+    } else {
+      log.error(`Annotatrix: split CoNLL-U: can only split subTokens and superTokens`);
+      return false;
+    }
+
+    this.reindex();
+    this.serial = this.serial;
+    return true;
 
   }
   insert(superTokenId, subTokenId=null, fields={}) { // insert BEFORE this index
@@ -784,8 +838,9 @@ class CoNLLU extends Object {
   }
   updateHead(oldHead, newHead) {
     this.iterTokens((num, token) => {
-      if (token.head == oldHead.id)
+      if (token.head == oldHead.id) {
         token.head = newHead;
+      }
     });
   }
   setHeads() {
@@ -803,24 +858,12 @@ class Token extends Object {
   constructor(params) {
     super();
 
+    this.reset(params);
     this._tokens = null; // init subtokens to null
     this.form = params.form;
     this.lemma = params.lemma;
     this._head = null;
 
-    this.fields = {
-      upostag : null,
-      xpostag : null,
-      feats   : null,
-      head    : null,
-      deprel  : null,
-      deps    : null,
-      misc    : null
-    };
-
-    $.each(this.fields, field => {
-      this[field] = params[field];
-    });
   }
   static equals(tok1, tok2) { // check if two tokens equal, ignores computed fields like id
     return (tok1 instanceof Token
@@ -848,6 +891,30 @@ class Token extends Object {
     }
   }
 
+  reset(params={}) {
+
+    this._form = undefined;
+    this._lemma = undefined;
+    this._head = null;
+
+    this.fields = {
+      upostag : null,
+      xpostag : null,
+      feats   : null,
+      head    : null,
+      deprel  : null,
+      deps    : null,
+      misc    : null
+    };
+
+    $.each(this.fields, field => {
+      this[field] = params[field];
+    });
+
+  }
+  get params() {
+    return Object.assign({ form:this.form, lemma:this.lemma }, this.fields);
+  }
   get serial() {
     let fields = [ this.id, this.form, this.lemma ];
     $.each(this.fields, key => {
@@ -938,28 +1005,22 @@ class Token extends Object {
   }
 
   set upostag(value) {
-    if (value !== '_')
-      this.fields.upostag = value;
+    this.fields.upostag = value;
   }
   set xpostag(value) {
-    if (value !== '_')
-      this.fields.xpostag = value;
+    this.fields.xpostag = value;
   }
   set feats(value) {
-    if (value !== '_')
-    	this.fields.feats = value;
+  	this.fields.feats = value;
   }
   set deprel(value) {
-    if (value !== '_')
-    	this.fields.deprel = value;
+  	this.fields.deprel = value;
   }
   set deps(value) {
-    if (value !== '_')
-    	this.fields.deps = value;
+  	this.fields.deps = value;
   }
   set misc(value) {
-    if (value !== '_')
-    	this.fields.misc = value;
+  	this.fields.misc = value;
   }
 
   get isSuperToken() {
