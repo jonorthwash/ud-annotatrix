@@ -232,7 +232,7 @@ rueter_long: `# sent_id = BryzhinskijMixail_Kirdazht_manu:3859
 # text_fi = Kun Ketšai tuli mäeltä alas, avasi ja sulki huolellisesti kyläveräjänsä, ??aukio/kenttäveräjän, kujaveräjän ja oman kotiveräjän, savikontti ehti taas alkaa painaa hänen selkäänsä. (Kaikkien kävijöiden tulee tehdä näin, jotta veräjät olisivat aina kiinni, veräjäthän pidetään selkosen selällään vain aamulla ja illansuussa, kun karjaa ajetaan laitumelle tai kotiin.)
 1 Но но CCONJ CC _ 3 cc _ _
 2 зярс зярс ADV Adv|Der/Ill|Adv|Sem/Time Derivation=Ill|AdvType=Tim 3 mark _ _
-3 валгсь валгомс VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 55 advcl _ SpaceAfter=No
+3 валгсь валгомс VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 51 advcl _ SpaceAfter=No
 4 , , PUNCT CLB _ 6 punct _ _
 5 зярс зярс ADV Adv|Der/Ill|Adv|Sem/Time Derivation=Ill|AdvType=Tim 6 mark _ _
 6 панжтнесь панжтнемс VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 3 conj _ _
@@ -1605,8 +1605,53 @@ class Tester extends Object {
 				//modifyConllu(1, null, 'upostag', 'TEST');
 			},
 
+			conlluCustomSerializer: () => {
+				log.out(`\nExecuting Tester.conlluCustomSerializer()`);
+
+				$.each(this.utils.sample(TEST_DATA.texts_by_format['CoNLL-U'], 25), (i, text) => {
+					this.utils.splitAndSet(text);
+
+					const clean = (str) => {
+						return str.trim().split('\n').map(line => { // clean whitespace on ends
+							line = line.replace(/^\#[ \t]*/, '#'); // clean whitespace after comments
+							if (line.startsWith('#')) // comment
+								return line;
+
+							// allow for fixed form/lemma stuff
+							const tabs = line.split('\t');
+							tabs[1] = '<OMIT>';
+							tabs[2] = '<OMIT>';
+
+							return tabs.join('\t');
+						}).join('\n');
+					};
+
+					this.assert(this.utils.compareStrings(
+						clean(a.conllu.serial), // the computed one
+						clean(a.conllu.sentence.serial) // the module-provided one
+					), `expected serials to be identical after reinterpretation`);
+				});
+			},
+
 			conlluInsert: () => {
 				log.out(`\nExecuting Tester.conlluInsert()`);
+
+				$.each(this.utils.sample(TEST_DATA.texts_by_format['CoNLL-U'], 10), (i, text) => {
+					this.utils.splitAndSet(text);
+
+					const orig = Object.assign({}, a.conllu);
+					return;
+					a.iterTokens((num, token) => {
+						a.conllu.insert(token.superTokenId, token.subTokenId, { form:'inserted' });
+					});
+					a.conllu.insert(a.conllu.length, null, { form:'inserted' });
+					//console.log(a.conllu.serial);
+				});
+				/*
+				a.parse(TEST_DATA.texts_by_format['CoNLL-U'].from_cg3_with_spans);
+				console.log(a);
+				console.log(a.conllu);
+				console.log(a.conllu.serial);*/
 
 			},
 
@@ -1619,7 +1664,7 @@ class Tester extends Object {
 				log.out(`\nExecuting Tester.conlluMerge()`);
 
 			},
-			
+
 			conlluTest: () => {
 				log.out(`\nExecuting Tester.conlluTest()`);
 

@@ -390,6 +390,8 @@ class CoNLLU extends Object {
     super();
     this.sentence = new conllu.Sentence();
     this.processed = false;
+    this.comments = [];
+    this.tokens = [];
   }
   get length() {
     return this.tokens.length;
@@ -780,7 +782,6 @@ class CoNLLU extends Object {
 }
 class Token extends Object {
   constructor(params) {
-    console.log('params', params);
     super();
 
     this._tokens = null; // init subtokens to null

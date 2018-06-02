@@ -102,7 +102,7 @@ function getGraphElements() {
     });
 
     // then make the edges
-    a.iterTokens((num, token, superTokenId, superToken, subTokenId, subToken) => {
+    a.iterTokens((num, token) => {
         createDependency(graph, token);
     });
 
@@ -256,7 +256,7 @@ function createDependency(graph, token) {
     // give it classes (see cy-style.js)
     let classes;
     if (!isValid) {
-        log.error(`createDependency(): invalid dependency for conllu token: ${token.id}`);
+        log.warn(`createDependency(): invalid dependency for conllu token: ${token.id}`);
         classes = 'dependency error';
     } else if (!deprel || !deprel.length) {
         classes = 'dependency incomplete';
