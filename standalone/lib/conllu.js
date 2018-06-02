@@ -481,62 +481,136 @@ class CoNLLU extends Object {
       this.tokens.push(token);
     }
 
-    this.renumber();
+    this.reindex();
     this.setHeads();
-    console.log(this.tokens);
     return this.serial;
   }
 
   merge(major, minor, strategy) {
+    console.log('major', major);
+    console.log('minor', minor);
+    console.log(strategy);
 
-    if (major.tokens || minor.tokens) {
-        const message = 'Sorry, major subtokens is not supported!';
-        log.error(message);
-        alert(message);
-        return;
+    if (!major || !minor) {
+      log.error(`Annotatrix: merge CoNLL-U: invalid tokens`);
+      return false;
     }
 
-    major.form = major.superTokenId < minor.superTokenId
-      ? `${major.form || ''}${minor.form || ''}`
-      : `${minor.form || ''}${major.form || ''}`;
-    major.lemma = major.superTokenId < minor.superTokenId
-      ? `${major.lemma || ''}${minor.lemma || ''}`
-      : `${minor.lemma || ''}${major.lemma || ''}`;
+    let newToken = new Token({
+      form: major.num < minor.num
+        ? `${major._form || ''}${minor._form || ''}`
+        : `${minor._form || ''}${major._form || ''}`,
+      lemma: major.num < minor.num
+        ? `${major._lemma || ''}${minor._lemma || ''}`
+        : `${minor._lemma || ''}${major._lemma || ''}`,
+      deprel  : major.fields.deprel  || minor.fields.deprel,
+      deps    : major.fields.deps    || minor.fields.deps,
+      feats   : major.fields.feats   || minor.fields.feats,
+      pos     : major.fields.pos     || minor.fields.pos,
+      upostag : major.fields.upostag || minor.fields.upostag,
+      xpostag : major.fields.xpostag || minor.fields.xpostag
+    });
+    console.log('new', newToken);
 
-    major.deprel  = major.deprel || minor.deprel;
-    major.deps    = major.deps || minor.deps;
-    major.feats   = major.feats || minor.feats;
-    major.pos     = major.pos || minor.pos;
-    major.upostag = major.upostag || minor.upostag;
-    major.xpostag = major.xpostag || minor.xpostag;
-    console.log(major, minor);
-    return;
+    switch (strategy) {
+      case ('swallow'):
+        if (!major.isSuperToken) {
+          log.error(`Annotatrix: merge CoNLL-U: swallow: major token must have subTokens`);
+          return false;
+        }
+        if (major.tokens.length !== 1) {
+          log.error(`Annotatrix: merge CoNLL-U: swallow: major token has too many subTokens (${major.tokens.length})`);
+          return false;
+        }
+        if (major.tokens[0].id !== minor.id) {
+          log.error(`Annotatrix: merge CoNLL-U: swallow: can only swallow tokens that are direct children`);
+          return false;
+        }
 
-    modifyConllu(major.superTokenId, major.subTokenId, 'form', dir === 'left'
-        ? `${minor.form || ''}${major.form || ''}`
-        : `${major.form || ''}${minor.form || ''}`);
+        // merge superToken with its only subToken
+        this.updateHead(minor, newToken);
+        this.updateHead(major, newToken);
+        this.remove(minor.superTokenId, 0);
+        this.tokens[major.superTokenId] = newToken;
+        break;
 
-    modifyConllu(major.superTokenId, major.subTokenId, 'lemma', dir === 'left'
-        ? `${minor.lemma || ''}${major.lemma || ''}`
-        : `${major.lemma || ''}${minor.lemma || ''}`);
+      case ('inner'):
+        if (major.num === minor.num) {
+          log.error(`Annotatrix: merge CoNLL-U: inner: can't fuse token with itself`);
+          return false;
+        }
+        if (!major.isSubToken || !minor.isSubToken) {
+          log.error(`Annotatrix: merge CoNLL-U: inner: can't fuse these tokens, try "normal" strategy`);
+          return false;
+        }
+        if (major.superTokenId !== minor.superTokenId) {
+          log.error(`Annotatrix: merge CoNLL-U: inner: can't fuse across supertoken boundary`);
+          return false;
+        }
 
-    if (strategy === 'subtoken') {
+        // merge subTokens within same superToken
+        this.updateHead(minor, newToken);
+        this.updateHead(major, newToken);
+        this.tokens[major.superTokenId].tokens[major.subTokenId] = newToken;
+        this.remove(minor.superTokenId, minor.subTokenId);
+        break;
 
-        modifyConllu(major.superTokenId, major.subTokenId, 'deprel',  major.deprel  || minor.deprel);
-        modifyConllu(major.superTokenId, major.subTokenId, 'deps',    major.deps || minor.deps);
-        modifyConllu(major.superTokenId, major.subTokenId, 'feats',   major.feats || minor.feats);
-        modifyConllu(major.superTokenId, major.subTokenId, 'pos',     major.pos || minor.pos);
-        modifyConllu(major.superTokenId, major.subTokenId, 'upostag', major.upostag || minor.upostag);
-        modifyConllu(major.superTokenId, major.subTokenId, 'xpostag', major.xpostag || minor.xpostag);
+      case ('normal'):
+        if (major.num === minor.num) {
+          log.error(`Annotatrix: merge CoNLL-U: normal: can't fuse token with itself`);
+          return false;
+        }
+        if (major.isSubToken || minor.isSubToken) {
+          log.error(`Annotatrix: merge CoNLL-U: normal: can't fuse subtokens, try "inner" strategy`);
+          return false;
+        }
 
-        const smallerIndex = Math.min(major.superTokenId, minor.superTokenId);
-        a.iterTokens((num, token) => {
-            if (token.head == minor.id)
-                modifyConllu(token.superTokenId, token.subTokenId, 'head', major.id);
-            if (token.superTokenId >= smallerIndex)
-                modifyConllu(token.superTokenId, token.subTokenId, 'id', parseInt(token.id) - 1);
-        })
+        // merge two tokens/superTokens into a single token/superToken
+        newToken.tokens = (major.tokens || []).concat(minor.tokens || []);
+        this.updateHead(minor, newToken);
+        this.updateHead(major, newToken);
+        this.tokens[major.superTokenId] = newToken;
+        this.remove(minor.superTokenId);
+        break;
 
+      case ('combine'):
+        if (major.num === minor.num) {
+          log.error(`Annotatrix: merge CoNLL-U: combine: can't fuse token with itself`);
+          return false;
+        }
+        if (major.isSuperToken || minor.isSuperToken) {
+          log.error(`Annotatrix: merge CoNLL-U: combine: can't fuse supertokens, try "normal" strategy`);
+          return false;
+        }
+        if (major.isSubToken || minor.isSubtoken) {
+          log.error(`Annotatrix: merge CoNLL-U: combine: can't fuse subtokens, try "inner" strategy`);
+          return false;
+        }
+
+        // merge two non-superTokens into a single superToken
+        newToken.tokens = major.num < minor.num ? [ major, minor ] : [ minor, major ];
+        this.updateHead(minor, newToken);
+        this.updateHead(major, newToken);
+        this.tokens[major.superTokenId] = newToken;
+        this.remove(minor.superTokenId);
+        break;
+
+      default: // not given a strategy, try one until it works
+        $.each(['swallow', 'inner', 'combine', 'normal'], (i, strategy) => {
+          if (this.merge(major, minor, strategy))
+            return true;
+        });
+        log.error(`Annotatrix: merge CoNLL-U: unable to merge tokens`);
+        return false;
+
+    }
+
+    this.reindex();
+    this.serial = this.serial; // make sure changes are saved, just in case
+    return true;
+
+
+    /*
         let newSentence = a.lines;
         newSentence.splice(minor.num + a.conllu.comments.length, 1);
         newSentence = newSentence.join('\n');
@@ -549,11 +623,14 @@ class CoNLLU extends Object {
 
         throw new NotImplementedError('supertoken major not supported');
 
-    }
+    }*/
 
   }
-  insert(superTokenId, subTokenId=null) { // insert BEFORE this index
-    log.error(`${superTokenId}, ${subTokenId}`);
+  split() {
+
+  }
+  insert(superTokenId, subTokenId=null, fields={}) { // insert BEFORE this index
+    log.warn(`Annotatrix: CoNLL-U insert token: ${superTokenId}, ${subTokenId}`);
 
     if (superTokenId < 0)
       superTokenId = 0;
@@ -567,10 +644,8 @@ class CoNLLU extends Object {
     if (subTokenId === null) {
 
       this.tokens = this.tokens.slice(0, superTokenId)
-        .concat(new Token({})
+        .concat(new Token(fields)
         , this.tokens.slice(superTokenId));
-
-      this.renumber();
 
     // inserting a subToken
     } else {
@@ -584,39 +659,61 @@ class CoNLLU extends Object {
         subTokenId = subTokens.length;
 
       subTokens = subTokens.slice(0, subTokenId)
-        .concat(new Token({})
+        .concat(new Token(fields)
         , subTokens.slice(subTokenId));
       this.tokens[superTokenId].tokens = subTokens;
-
-      this.renumber();
-      /*
-      this.tokens[superTokenId].tokens = this.tokens[superTokenId]
-      console.log(this.tokens[superTokenId].id)
-      let maxSubTokenId = parseInt(
-        this.tokens[superTokenId].id.match(/^[0-9]+-([0-9]+)/)[1] );
-      const x = `${this.tokens[superTokenId].id}`.replace(
-        `-${maxSubTokenId}`, `-${maxSubTokenId + 1}`);
-      console.log(x);
-      this.tokens[superTokenId].id = `${this.tokens[superTokenId].id}`.replace(
-        `-${maxSubTokenId}`, `-${maxSubTokenId + 1}`);
-      this.tokens[superTokenId].id = x;
-      console.log(this.tokens[superTokenId].id)
-      const newToken = {*/
-
-      //}
     }
+
+    this.reindex();
+    this.serial = this.serial; // make sure changes are saved, just in case
+    return true;
+  }
+  remove(superTokenId, subTokenId=null) {
+    log.warn(`Annotatrix: CoNLL-U remove token: ${superTokenId}, ${subTokenId}`);
+
+    let spliced;
+
+    if (superTokenId < 0)
+      superTokenId = 0;
+
+    if (superTokenId > this.length - 1)
+      superTokenId = this.length - 1;
+
+    // removing a superToken
+    if (!this.tokens[superTokenId] || !this.tokens[superTokenId].tokens)
+      subTokenId = null;
+    if (subTokenId === null) {
+
+      spliced = this.tokens.splice(superTokenId, 1);
+
+    // removing a subToken
+    } else {
+
+      let subTokens = this.tokens[superTokenId].tokens;
+
+      if (subTokenId < 0)
+        subTokenId = 0;
+
+      if (subTokenId > subTokens.length - 1)
+        subTokenId = subTokens.length - 1;
+
+      spliced = subTokens.splice(subTokenId, 1);
+      this.tokens[superTokenId].tokens = subTokens;
+
+    }
+
+    // update stuff (in this order!)
+    this.updateHead(spliced[0], undefined);
+    this.reindex();
+
+    // enforce that superTokens must contain at least 2 tokens
+    if ((this.tokens[superTokenId].tokens || []).length === 1)
+      this.merge(this.tokens[superTokenId], this.tokens[superTokenId].tokens[0], 'swallow');
 
     this.serial = this.serial; // make sure changes are saved, just in case
+    return true;
   }
-  remove(superTokenId, subTokenId) {
-    if (superTokenId < 0 || superTokenId > this.tokens.length - 1) {
-      log.error(`Annotatrix: remove index out of range: ${index}`);
-      return;
-    }
-
-
-  }
-  renumber() {
+  reindex() {
     let num = 0, id = 1;
     for (let i=0; i<this.tokens.length; i++) {
       const token = this.tokens[i];
@@ -633,7 +730,6 @@ class CoNLLU extends Object {
         for (let j=0; j<token.tokens.length; j++) {
 
           // sub token
-          console.log(token.tokens)
           const subToken = token.tokens[j];
           subToken.indices = {
             num: num,
@@ -658,6 +754,12 @@ class CoNLLU extends Object {
       }
     }
   }
+  updateHead(oldHead, newHead) {
+    this.iterTokens((num, token) => {
+      if (token.head == oldHead.id)
+        token.head = newHead;
+    });
+  }
   setHeads() {
     for (let i=0; i<this.tokens.length; i++) {
       const head = this.getById(this.sentence.tokens[i].head)
@@ -670,23 +772,28 @@ class CoNLLU extends Object {
   }
 }
 class Token extends Object {
-  constructor(obj) {
+  constructor(params) {
+    console.log('params', params);
     super();
 
-    this.tokens = null; // init subtokens to null
-    this.form = obj.form;
-    this.lemma = obj.lemma;
+    this._tokens = null; // init subtokens to null
+    this.form = params.form;
+    this.lemma = params.lemma;
     this._head = null;
 
     this.fields = {
-      upostag : obj.upostag,
-      xpostag : obj.xpostag,
-      feats   : obj.feats,
-      head    : obj.head,
-      deprel  : obj.deprel,
-      deps    : obj.deps,
-      misc    : obj.misc
+      upostag : null,
+      xpostag : null,
+      feats   : null,
+      head    : null,
+      deprel  : null,
+      deps    : null,
+      misc    : null
     };
+
+    $.each(this.fields, field => {
+      this[field] = params[field];
+    });
   }
 
   get tokens() {
@@ -738,6 +845,8 @@ class Token extends Object {
     return this._form || '_';
   }
   set form(form) {
+    if (form === '_')
+      return;
     this._form = form;
     if (this.lemma === '_' && form)
       this.lemma = form;
@@ -747,6 +856,8 @@ class Token extends Object {
     return this._lemma || '_';
   }
   set lemma(lemma) {
+    if (lemma === '_')
+      return;
     this._lemma = lemma;
     if (this.form === '_' && lemma)
       this.form = lemma;
@@ -782,22 +893,34 @@ class Token extends Object {
   }
 
   set upostag(value) {
-  	this.fields.upostag = value;
+    if (value !== '_')
+      this.fields.upostag = value;
   }
   set xpostag(value) {
-  	this.fields.xpostag = value;
+    if (value !== '_')
+      this.fields.xpostag = value;
   }
   set feats(value) {
-  	this.fields.feats = value;
+    if (value !== '_')
+    	this.fields.feats = value;
   }
   set deprel(value) {
-  	this.fields.deprel = value;
+    if (value !== '_')
+    	this.fields.deprel = value;
   }
   set deps(value) {
-  	this.fields.deps = value;
+    if (value !== '_')
+    	this.fields.deps = value;
   }
   set misc(value) {
-  	this.fields.misc = value;
+    if (value !== '_')
+    	this.fields.misc = value;
   }
 
+  get isSuperToken() {
+    return !!(this.tokens || []).length;
+  }
+  get isSubToken() {
+    return !isNaN(parseInt(this.subTokenId));
+  }
 }
