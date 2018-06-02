@@ -448,6 +448,13 @@ class CoNLLU extends Object {
     return match;
   }
 
+  get text() { // sugar
+    return this.serial
+  }
+  set text(serial) { // sugar
+    this.serial = serial;
+  }
+
   get serial() {
 
     // custom serializer
@@ -486,10 +493,8 @@ class CoNLLU extends Object {
     return this.serial;
   }
 
-  merge(major, minor, strategy) {
-    console.log('major', major);
-    console.log('minor', minor);
-    console.log(strategy);
+  merge(major, minor, strategy='all') {
+    log.debug(`Annotatrix: merging tokens "${minor.id}" => "${major.id}" with strategy "${strategy}"`);
 
     if (!major || !minor) {
       log.error(`Annotatrix: merge CoNLL-U: invalid tokens`);
@@ -510,7 +515,6 @@ class CoNLLU extends Object {
       upostag : major.fields.upostag || minor.fields.upostag,
       xpostag : major.fields.xpostag || minor.fields.xpostag
     });
-    console.log('new', newToken);
 
     switch (strategy) {
       case ('swallow'):
@@ -595,7 +599,7 @@ class CoNLLU extends Object {
         this.remove(minor.superTokenId);
         break;
 
-      default: // not given a strategy, try one until it works
+      case ('all'): // not given a strategy, try one until it works
         $.each(['swallow', 'inner', 'combine', 'normal'], (i, strategy) => {
           if (this.merge(major, minor, strategy))
             return true;
@@ -603,6 +607,9 @@ class CoNLLU extends Object {
         log.error(`Annotatrix: merge CoNLL-U: unable to merge tokens`);
         return false;
 
+      default: // given an unrecognized strategy
+        log.error(`Annotatrix: merge CoNLL-U: unrecognized strategy: "${strategy}"`);
+        return false;
     }
 
     this.reindex();

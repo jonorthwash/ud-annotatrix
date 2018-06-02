@@ -1603,7 +1603,28 @@ class Tester extends Object {
 
 				});
 				//modifyConllu(1, null, 'upostag', 'TEST');
-			}
+			},
+
+			conlluInsert: () => {
+				log.out(`\nExecuting Tester.conlluInsert()`);
+
+			},
+
+			conlluRemove: () => {
+				log.out(`\nExecuting Tester.conlluRemove()`);
+
+			},
+
+			conlluMerge: () => {
+				log.out(`\nExecuting Tester.conlluMerge()`);
+
+			},
+			
+			conlluTest: () => {
+				log.out(`\nExecuting Tester.conlluTest()`);
+
+			},
+
 
 		};
 	}

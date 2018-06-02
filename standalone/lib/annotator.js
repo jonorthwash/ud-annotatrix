@@ -73,9 +73,10 @@ window.onload = () => {
         //test.utils.splitAndSet('this is a test');
         //$('#tabConllu').click()
         a.pan = { x: -33.90909090909093, y: 128.51704545454552 };
-        a.parse(TEST_DATA.texts_by_format['CoNLL-U'].from_cg3_with_spans);
-        console.log(a.conllu);
-        console.log(a.conllu.serial);
+        test.run('conlluInsert');
+        test.run('conlluRemove');
+        test.run('conlluMerge');
+        test.run('conlluTest');
         //a.conllu.insert(1,1);
         //a.conllu.insert(1,0);
         //console.log(a.conllu.serial);
