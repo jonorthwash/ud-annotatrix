@@ -158,7 +158,6 @@ function createToken(graph, num, superToken, superTokenId, subToken, subTokenId)
     const token = (subToken || superToken);
 
     token.form = token.form || ' ';
-    token.pos = token.upostag || token.xpostag || '';
 
     // save the data for the createDependency() functions
     token.num = num;
@@ -205,7 +204,7 @@ function createToken(graph, num, superToken, superTokenId, subToken, subTokenId)
             name: `pos-node`,
             attr: 'upostag',
             label: token.pos || '',
-            length: `${token.pos.length * 0.7 + 1}em`,
+            length: `${(token.pos || []).length * 0.7 + 1}em`,
             conllu: token
         },
         classes: 'pos'

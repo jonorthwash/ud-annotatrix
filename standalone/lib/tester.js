@@ -1608,7 +1608,7 @@ class Tester extends Object {
 			conlluCustomSerializer: () => {
 				log.out(`\nExecuting Tester.conlluCustomSerializer()`);
 
-				$.each(this.utils.sample(TEST_DATA.texts_by_format['CoNLL-U'], 25), (i, text) => {
+				$.each(TEST_DATA.texts_by_format['CoNLL-U'], (identifier, text) => {
 					this.utils.splitAndSet(text);
 
 					const clean = (str) => {
@@ -1636,11 +1636,55 @@ class Tester extends Object {
 			conlluInsert: () => {
 				log.out(`\nExecuting Tester.conlluInsert()`);
 
-				$.each(this.utils.sample(TEST_DATA.texts_by_format['CoNLL-U'], 10), (i, text) => {
+				$.each(TEST_DATA.texts_by_format['CoNLL-U'], (identifier, text) => {
 					this.utils.splitAndSet(text);
 
-					const orig = Object.assign({}, a.conllu);
+					// setup
+					const serial = a.conllu.serial;
+					const orig = Object.assign(a.tokens);
+
+					for (let i=a.conllu.length - 1; i >= 0; i--) { // go backwards
+						const token = a.tokens[i];
+						if (token.tokens) {
+							for (let j=token.tokens.length - 1; j >= 0; j--) {
+								a.conllu.insert(i, j, { misc:'subtoken' });
+							}
+							a.conllu.insert(i, Infinity, { misc:'final-subtoken' });
+						}
+						a.conllu.insert(i, null, { misc:'token' });
+					}
+					a.conllu.insert(Infinity, null, { misc:'final-token' });
+
+					// internal consistency, doesn't really show anything
+					this.assert(a.conllu.total + a.conllu.comments.length === a.conllu.serial.split('\n').length);
+
+					// actual tests
+					for (let i=0; i<a.conllu.length; i++) {
+						const token = a.tokens[i];
+						const origToken = orig[Math.floor(i/2)];
+						if (i%2) {
+							this.assert(Token.equals(token, origToken), `expect these subtokens to be identical (real: ${token.id}, orig: ${origToken.id})`);
+						} else if (i<a.conllu.length - 1) {
+							this.assert(token.misc === 'token', `expect this subtoken to have "token" in misc`);
+						} else {
+							this.assert(token.misc === 'final-token', `expect this subtoken to have "final-token" in misc`);
+						}
+						if (token.tokens) {
+							for (let j=0; j<token.tokens.length; j++) {
+								const subToken = token.tokens[j];
+								const origST = origToken.tokens[Math.floor(j/2)];
+								if (j%2) {
+									this.assert(Token.equals(subToken, origST), `expect these subtokens to be identical (real: ${subToken.id}, orig: ${origST.id})`);
+								} else if (j<token.tokens.length - 1) {
+									this.assert(subToken.misc === 'subtoken', `expect this subtoken to have "subtoken" in misc`);
+								} else {
+									this.assert(subToken.misc === 'final-subtoken', `expect this subtoken to have "final-subtoken" in misc`);
+								}
+							}
+						}
+					}
 					return;
+
 					a.iterTokens((num, token) => {
 						a.conllu.insert(token.superTokenId, token.subTokenId, { form:'inserted' });
 					});

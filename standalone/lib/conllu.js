@@ -396,6 +396,17 @@ class CoNLLU extends Object {
   get length() {
     return this.tokens.length;
   }
+  get total() {
+    if (!this.tokens.length)
+      return 0;
+
+    const lastToken = this.tokens[this.length - 1];
+    if (!lastToken.isSuperToken)
+      return lastToken.num + 1;
+
+    const subTokens = this.tokens[this.length - 1].tokens;
+    return subTokens[subTokens.length - 1].num + 1;
+  }
 
   /**
    *  iterate over a list of CoNLL-U tokens to a callback function with params:
@@ -803,6 +814,20 @@ class Token extends Object {
       this[field] = params[field];
     });
   }
+  static equals(tok1, tok2) { // check if two tokens equal, ignores computed fields like id
+    return (tok1 instanceof Token
+      && tok2 instanceof Token
+      && tok1.form === tok2.form
+      && tok1.lemma === tok2.lemma
+      && tok1.upostag === tok2.upostag
+      && tok1.xpostag === tok2.xpostag
+      && tok1.feats === tok2.feats
+      && tok1.deprel === tok2.deprel
+      && tok1.deps === tok2.deps
+      && tok1.misc === tok2.misc
+      && tok1.isSuperToken === tok2.isSuperToken
+      && tok1.isSubToken === tok2.isSubToken);
+  }
 
   get tokens() {
     return this._tokens;
@@ -879,6 +904,10 @@ class Token extends Object {
   }
   set head(head) {
     this._head = head;
+  }
+
+  get pos() {
+    return this.fields.upostag || this.fields.xpostag;
   }
 
   get upostag() {
