@@ -45,15 +45,11 @@ var pressed = {}; // used for onCtrlKeyup
 function updateGui() {
     log.debug(`called updateGui()`);
 
-    /* The function handles the format tabs above the textarea.
-    Takes a string with a format name, changes the classes on tabs. */
-    const format = _.format();
-
 		$('.nav-link').removeClass('active').show();
-		switch (format) {
+		switch (a.format) {
 				case ('Unknown'):
 						$('.nav-link').hide();
-						$('#tabOther').addClass('active').show().text(format);
+						$('#tabOther').addClass('active').show().text(a.format);
 						break;
 				case ('CoNLL-U'):
 						$('#tabConllu').addClass('active');
@@ -66,14 +62,14 @@ function updateGui() {
 				case ('plain text'):
 						$('#tabText').hide(); // NOTE: no break here
 				default:
-						$('#tabOther').addClass('active').show().text(format);
+						$('#tabOther').addClass('active').show().text(a.format);
 						break;
 		}
 
-		if (format !== 'CoNLL-U')
-				_.is_table_view(false);
+		if (a.format !== 'CoNLL-U')
+				a.is_table_view = false;
 
-		if (_.is_table_view()) {
+		if (a.is_table_view) {
 				$('#btnToggleTable i').removeClass('fa-code');
 				$('#text-data').hide();
 				$('#table-data').show();
@@ -84,7 +80,7 @@ function updateGui() {
 				$('#table-data').hide();
 		}
 
-		if (_.is_textarea_visible) {
+		if (a.is_textarea_visible) {
 				$('#data-container').show();
 				$('#top-buttons-container').removeClass('extra-space');
 				$('#btnToggleTable').show();
@@ -217,15 +213,20 @@ function onKeyupInDocument(event) {
 				case (KEYS.D):
 						if (cy.$('.selected').length) {
 								cy.$('.selected').toggleClass('moving');
-								_.moving_dependency = !_.moving_dependency;
+								a.moving_dependency = !a.moving_dependency;
 						}
 						break;
 
 				case (KEYS.M):
-						if (true/* $('#edit.form.activated') */) {
-		            // wf.addClass('merge');
-		            // wf.removeClass('activated');
-						}
+						if (cy.$('node.form.activated').length) {
+								cy.$('node.form.activated')
+										.removeClass('activated')
+										.addClass('merge');
+
+						} else if (cy.$('node.form.merge').length)
+								cy.$('node.form.merge')
+										.addClass('activated')
+										.removeClass('merge');
 
 				case (KEYS.P):
 						// if (true/* text not focused */)
@@ -244,9 +245,9 @@ function onKeyupInDocument(event) {
 
 				case (KEYS.LEFT):
 				case (KEYS.RIGHT):
-						if (true/* cy.$('.merge') */) {
-								// mergeNodes(toMerge, KEYS.SIDES[key.which], 'subtoken');
-						// else if (true/* cy.$('.supertoken') */) {
+						if (cy.$('node.form.merge').length) {
+								mergeNodes(event.which === KEYS.LEFT ? 'left' : 'right', 'subtoken');
+						} else if (true/* cy.$('.supertoken') */) {
 								// mergeNodes(toMerge, KEYS.SIDES[key.which], 'subtoken');
 								// mergeNodes(toSup, KEYS.SIDES[key.which], 'supertoken');
 						}
@@ -275,7 +276,7 @@ function onKeyupInDocument(event) {
 						break;
 
 				default:
-						if (47 < key.which && key.which < 58) {// key in 0-9
+						if (47 < event.which && event.which < 58) {// key in 0-9
 								// const num = event.which - 48;
 								// CURRENT_ZOOM = 1.0;
 								// cy.zoom(CURRENT_ZOOM);
@@ -298,10 +299,9 @@ function onCtrlKeyup(event) {
 
 		if (pressed[KEYS.PAGE_DOWN]) {
 				if (pressed[KEYS.SHIFT]) {
-						$('#current-sentence').val(_.sentences.length);
-						goToSentence();
+						a.last();
 				} else {
-						nextSentence();
+						a.next();
 				}
 				pressed = {};
 				pressed[KEYS.CTRL] = true;
@@ -309,10 +309,9 @@ function onCtrlKeyup(event) {
 
 		} else if (pressed[KEYS.PAGE_UP]) {
 				if (pressed[KEYS.SHIFT]) {
-						$('#current-sentence').val(1);
-						goToSentence();
+						a.first()
 				} else {
-						prevSentence();
+						a.prev()
 				}
 				pressed = {};
 				pressed[KEYS.CTRL] = true;
@@ -324,7 +323,9 @@ function onCtrlKeyup(event) {
 
 		} else if (pressed[KEYS.Y] || pressed[KEYS.Z]) {
 			undoManager.redo();
-			setTimeout(() => { pressed[KEYS.SHIFT] = false; }, 500);
+			setTimeout(() => { // catch only events w/in next 500 msecs
+					pressed[KEYS.SHIFT] = false;
+			}, 500);
 			return true;
 
 		} else {
@@ -367,7 +368,7 @@ function onKeyupInEditLabel(event) {
 						console.log('what should happen here???');
 						break;
 				case (KEYS.ESC):
-						_.editing = null;
+						a.editing = null;
 						onClickCanvas();
 						break;
 		}
@@ -375,7 +376,7 @@ function onKeyupInEditLabel(event) {
 function onEditTextData(event) {
 		log.debug(`called onEditTextData(key: ${event.which})`);
 
-		saveGraphEdits();
+		//saveGraphEdits();
 
 		switch (event.which) {
 				case (KEYS.ESC):
@@ -385,26 +386,25 @@ function onEditTextData(event) {
 						onEnter(event);
 						break;
 				default:
-						parseText();
+						a.parse();
 		}
 }
 function onEnter(event) {
 		log.debug(`called onEnter()`);
 
-		let format = _.format(),
-				sentence = _.sentence(),
+		let sentence = a.sentence,
 				cursor = $('#text-data').prop('selectionStart') - 1,
-				lines = sentence.split('\n'),
+				lines = a.lines,
 				lineId = null, before, during, after,
 				cursorLine = 0;
 
-		if (_.is_table_view()) {
+		if (a.is_table_view) {
 
 				cursorLine = parseInt($(event.target).closest('td').attr('row-id'));
 
 		} else {
 
-				if (format === 'Unknown' || format === 'plain text')
+				if (a.format === 'Unknown' || a.format === 'plain text')
 						return;
 
 				// get current line number
@@ -418,7 +418,7 @@ function onEnter(event) {
 
 				// advance the cursor until we are at the end of a line that isn't followed by a comment
 				//   or at the very beginning of the textarea
-				if (cursor !== 0 || sentence[0] === '#') {
+				if (cursor !== 0 || sentence.startsWith('#')) {
 						log.debug(`onEnter(): cursor[${cursor}]: "${sentence[cursor]}" (not at textarea start OR textarea has comments)`)
 						while (sentence[cursor + 1] === '#' || sentence[cursor] !== '\n') {
 								log.debug(`onEnter(): cursor[${cursor}]: "${sentence[cursor]}", line[${cursorLine}]: ${lines[cursorLine]}`);
@@ -436,7 +436,7 @@ function onEnter(event) {
 
 		log.debug(`onEnter(): cursor[${cursor}]: "${sentence[cursor]}", line[${cursorLine}]: ${lines[cursorLine]}`);
 
-		switch (format) {
+		switch (a.format) {
 				case ('CoNLL-U'):
 
 						if (event.preventDefault) // bc of testing, sometimes these are fake events
@@ -524,7 +524,7 @@ function onEnter(event) {
 						insertSentence();
 		}
 
-		parseText();
+		a.parse();
 }
 
 // show external things
@@ -542,7 +542,7 @@ function showSettings(event) {
 function toggleTextarea() {
 		log.debug(`called toggleTextarea()`);
 
-		_.is_textarea_visible = !_.is_textarea_visible;
+		a.is_textarea_visible = !a.is_textarea_visible;
 		$('#btnToggleTextarea i')
 				.toggleClass('fa-chevron-up')
 				.toggleClass('fa-chevron-down')
@@ -555,7 +555,7 @@ function toggleRTL() {
 		$('#RTL .fa')
 				.toggleClass('fa-align-right')
 				.toggleClass('fa-align-left');
-		_.is_ltr = !_.is_ltr;
+		a.is_ltr = !a.is_ltr;
 
 		updateGui();
 }
@@ -563,7 +563,7 @@ function toggleVertical() {
 		log.debug(`called toggleVertical()`);
 
 		$('#vertical .fa').toggleClass('fa-rotate-90');
-		_.is_vertical = !_.is_vertical;
+		a.is_vertical = !a.is_vertical;
 
 		updateGui();
 }
@@ -573,7 +573,7 @@ function toggleEnhanced() {
 	  $('#enhanced .fa')
 				.toggleClass('fa-tree')
 				.toggleClass('fa-magic');
-		_.is_enhanced = !_.is_enhanced;
+		a.is_enhanced = !a.is_enhanced;
 
 		updateGui();
 }
@@ -594,18 +594,18 @@ function bindCyHandlers() {
 	 			setTimeout(() => {
 						onClickCanvas();
 						setTimeout(() => { // wait another full second before unsetting
-								_.intercepted = false;
+								a.intercepted = false;
 						});
 				}, 100);
  		});
 		$('#cy canvas').mousemove((event) => {
-				_.intercepted = true;
+				a.intercepted = true;
 		});
 		$('#edit').mouseup((event) => {
-				_.intercepted = true;
+				a.intercepted = true;
 		});
 		cy.on('click', '*', (event) => {
-				_.intercepted = true;
+				a.intercepted = true;
 
 				// DEBUG: this line should be taken out in production
 				console.info(`clicked ${event.target.attr('id')}, data:`, event.target.data());
@@ -621,10 +621,10 @@ function bindCyHandlers() {
 
 }
 function onClickCanvas() {
-		log.debug(`called onClickCanvas(intercepted: ${_.intercepted})`);
+		log.debug(`called onClickCanvas(intercepted: ${a.intercepted})`);
 
 		// intercepted by clicking a canvas subobject || mousemove (i.e. drag) || #edit
-		if (_.intercepted)
+		if (a.intercepted)
 				return;
 
 		saveGraphEdits();
@@ -634,7 +634,8 @@ function onClickCanvas() {
 		cy.$('.arc-target').removeClass('arc-target');
 		cy.$('.selected').removeClass('selected');
 		cy.$('.moving').removeClass('moving');
-		_.moving_dependency = false;
+		cy.$('.merge').removeClass('merge');
+		a.moving_dependency = false;
 
 		$('#mute').removeClass('activated');
 		$('#edit').removeClass('activated');
@@ -643,13 +644,13 @@ function onClickFormNode(event) {
 		const target = event.target;
 		log.debug(`called onClickFormNode(${target.attr('id')})`);
 
-		if (_.moving_dependency) {
+		if (a.moving_dependency) {
 
 			const source = cy.$('.arc-source');
 
 			makeDependency(source, target);
 			cy.$('.moving').removeClass('moving');
-			_.moving_dependency = false;
+			a.moving_dependency = false;
 
 			// right-click the new edge
 			cy.$(`#${source.attr('id')} -> #${target.attr('id')}`).trigger('cxttapend');
@@ -684,7 +685,7 @@ function onClickPosNode(event) {
 		log.debug(`called onClickPosNode(${target.attr('id')})`);
 
 		saveGraphEdits();
-		_.editing = target;
+		a.editing = target;
 
 		cy.$('.activated').removeClass('activated');
 		cy.$('.arc-source').removeClass('arc-source');
@@ -706,7 +707,7 @@ function onCxttapendFormNode(event) {
 		log.debug(`called onCxttapendFormNode(${target.attr('id')})`);
 
 		saveGraphEdits();
-		_.editing = target;
+		a.editing = target;
 
 		cy.$('.activated').removeClass('activated');
 		cy.$('.arc-source').removeClass('arc-source');
@@ -720,7 +721,7 @@ function onClickDependencyEdge(event) {
 		log.debug(`called onClickDependencyEdge(${target.attr('id')})`);
 
 		saveGraphEdits();
-		_.editing = target;
+		a.editing = target;
 
 		cy.$('.activated').removeClass('activated');
 		cy.$('.arc-source').removeClass('arc-source');
@@ -1276,57 +1277,6 @@ function renumberNodes(nodeId, otherId, sent, side) {
 }
 
 
-function mergeNodes(toMerge, side, how) {
-		log.debug(`called mergeNodes(toMergeId: ${toMerge.attr('id')}, side: ${side}, how: ${how})`);
-
-    /* Support for merging tokens into either a new token or a supertoken.
-    Recieves the node to merge, side (right or left) and a string denoting
-    how to merge the nodes. In case of success, redraws the tree. */
-
-		const indices = findConlluId(toMerge);
-
-		if (indices.isSubtoken) {
-				const message = 'Sorry, merging subtokens is not supported!';
-				log.warn(message);
-				alert(message);
-				drawTree();
-				return;
-		}
-
-		const nodeId = indices.outer,
-				otherId  = nodeId + (side === 'right' ? 1 : -1);
-
-		let sent = buildSent();
-
-		if (otherId >= 0 && sent.tokens[otherId]) {
-
-				const main = toMerge.data('form'),
-						other = sent.tokens[otherId].form,
-						newToken = (side === 'right' ? main + other : other + main);
-
-        if (how === 'subtoken') {
-
-            sent.tokens[nodeId].form = newToken; // rewrite the token
-            sent.tokens.splice(otherId, 1); // remove the merged token
-            sent = renumberNodes(nodeId, otherId, sent, side);
-
-        } else if (how === 'supertoken') {
-
-            const min = Math.min(nodeId, otherId);
-						let supertoken = new conllu.MultiwordToken();
-
-            supertoken.tokens = sent.tokens.splice(min, 2);
-            supertoken.form = newToken;
-            sent.tokens.splice(min, 0, supertoken);
-
-        };
-
-        redrawTree(sent);
-
-    } else {
-				log.warn('mergeNodes() unable to merge: Probably wrong direction?');
-    }
-}
 
 
 function buildSent() {

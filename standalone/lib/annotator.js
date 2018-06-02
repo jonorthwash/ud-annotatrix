@@ -11,108 +11,7 @@ var FORMAT = '',
 
     L20N_LOGGING = false;
 
-var _ = { // main object to hold our current stuff
-
-    // init & reset
-    reset: () => {
-        log.debug(`called _.reset()`)
-
-        // per-sentence data
-        _.sentences = [ null ];
-        _.formats = [ null ];
-        _.is_table_views = [ false ];
-        _.column_visibilities = [ new Array(10).fill(true) ];
-        _.graphs = [ null ];
-        _.conllus = [ null ];
-        _.cg3s = [ null ];
-
-        // global-ish data
-        _.current = 0;
-        _.filename_ = 'ud-annotatrix-corpus';
-        _.is_textarea_visible = true;
-        _.is_vertical = false;
-        _.is_ltr = true;
-        _.is_enhanced = false;
-        _.graph_data = null;
-        _.graph_options = {
-            container: $('#cy'),
-            boxSelectionEnabled: false,
-            autounselectify: true,
-            autoungrabify: true,
-            zoomingEnabled: true,
-            userZoomingEnabled: false,
-            wheelSensitivity: 0.1,
-            style: CY_STYLE,
-            layout: null,
-            elements: []
-        };
-        _.pan = _.pan || null;
-        _.zoom = _.zoom || null;
-        _.intercepted = false;
-        _.moving_dependency = false;
-        _.editing = null;
-        _.graph_disabled = false;
-
-        updateSentences();
-    },
-
-    // getters & setters
-    filename: (filename) => {
-        if (filename !== undefined)
-            _.filename_ = filename;
-        return `${_.filename_}.udac`;
-    },
-    sentence: (sentence) => {
-        if (sentence !== undefined)
-            _.sentences[_.current] = sentence;
-        return _.sentences[_.current];
-    },
-    format: (format) => {
-        if (format !== undefined)
-            _.formats[_.current] = format;
-        return _.formats[_.current];
-    },
-    is_table_view: (bool) => {
-        if (bool !== undefined)
-            _.is_table_views[_.current] = bool;
-        return _.is_table_views[_.current];
-    },
-    column_visible: (col, bool) => {
-        if (bool !== undefined)
-            _.column_visibilities[_.current][col] = bool;
-        return _.column_visibilities[_.current][col];
-    },
-    graph: (graph) => {
-        if (graph !== undefined)
-            _.graphs[_.current] = graph;
-        return _.graphs[_.current];
-    },
-    conllu: (conllu) => {
-        if (conllu !== undefined)
-            _.conllus[_.current] = conllu;
-        return _.conllus[_.current];
-    },
-    tokens: () => {
-        return _.conllu() ? _.conllu().tokens : [];
-    },
-    cg3: (cg3) => {
-        if (cg3 !== undefined)
-            _.cg3s[_.current] = cg3;
-        return _.cg3s[_.current];
-    },
-
-    // external things
-    export: () => {
-        return _.sentences.map((sentence, i) => {
-            return `[UD-Annotatrix: id="${i+1}" format="${_.formats[i]}"]
-            ${sentence || ''}`;
-        }).join('\n\n');
-    },
-    encode: () => {
-        return encodeURIComponent(_.export());
-    }
-
-};
+var a;
 
 window.onload = () => {
 
@@ -135,6 +34,7 @@ window.onload = () => {
         //`${path}/ext/js-treex-view.js`, // Treex from https://github.com/ufal/js-treex-view
 
         // functions, globals
+        `${path}/conllu.js`,
         `${path}/conllu_table.js`,
         `${path}/converters.js`,
         `${path}/cy-style.js`,
@@ -171,18 +71,21 @@ window.onload = () => {
         window.test = new Tester();
 
         checkServer(); // check if server is running
-
-        _.reset();
+        a = new Annotatrix();
 
         bindHandlers();
         setUndos();
+
         //loadFromUrl();
 
         //test.all();
         //test.utils.splitAndSet('this is a test');
         //$('#tabConllu').click()
-        _.pan = { x: -33.90909090909093, y: 128.51704545454552 };
-        test.utils.splitAndSet(TEST_DATA.texts_by_format['CoNLL-U'].from_cg3_with_spans);
+        a.parse(TEST_DATA.texts_by_format['CoNLL-U'].from_cg3_with_spans);
+        a.pan = { x: -33.90909090909093, y: 128.51704545454552 };
+        //_.pan = { x: -33.90909090909093, y: 128.51704545454552 };
+        //test.utils.splitAndSet(TEST_DATA.texts_by_format['CoNLL-U'].from_cg3_with_spans);
+        //insert
         //test.run('modifyConllu');
         //test.utils.splitAndSet('this is a test');
 
@@ -200,25 +103,7 @@ window.onload = () => {
  */
 function insertSentence() {
     log.debug(`called insertSentence()`);
-
-    // insert null at (incremented) current index
-    _.current++;
-    _.sentences = _.sentences.slice(0, _.current)
-        .concat(null, _.sentences.slice(_.current));
-    _.formats = _.formats.slice(0, _.current)
-        .concat(null, _.formats.slice(_.current));
-    _.is_table_views = _.is_table_views.slice(0, _.current)
-        .concat(null, _.is_table_views.slice(_.current));
-    _.column_visibilities = _.column_visibilities.slice(0, _.current)
-        .concat([ new Array(10).fill(true) ], _.column_visibilities.slice(_.current));
-    _.graphs = _.graphs.slice(0, _.current)
-        .concat(null, _.graphs.slice(_.current));
-    _.conllus = _.conllus.slice(0, _.current)
-        .concat(null, _.conllus.slice(_.current));
-    _.cg3s = _.cg3s.slice(0, _.current)
-        .concat(null, _.cg3s.slice(_.current));
-
-    updateSentences();
+    a.insertSentence();
 }
 function removeSentence(event, force=false) { // force param for testing
     log.debug(`called removeSentence()`);
@@ -231,149 +116,32 @@ function removeSentence(event, force=false) { // force param for testing
         }
     }
 
-    _.sentences.splice(_.current, 1);
-    _.formats.splice(_.current, 1);
-    _.is_table_views.splice(_.current, 1);
-    _.column_visibilities.splice(_.current, 1);
-    _.graphs.splice(_.current, 1);
-    _.conllus.splice(_.current, 1);
-    _.cg3s.splice(_.current, 1);
-    _.current--;
-
-    updateSentences();
+    a.removeSentence();
 }
 function prevSentence() {
     log.debug(`called prevSentence()`);
-
-    if (_.current === 0) {
-        log.warn(`prevSentence(): already at the first sentence!`);
-        return;
-    }
-
-    _.current--;
-
-    updateSentences();
+    a.prev();
 }
 function goToSentence() {
     log.debug(`called goToSentence()`);
-
-    let jump = parseInt($('#current-sentence').val());
-
-    if (isNaN(jump) || jump < 1 || jump > _.sentences.length) {
-        log.warn(`goToSentence(): unable to go to input: ${$('#current-sentence').val()}`);
-    } else {
-        jump = Math.floor(jump); // enforce integer
-        _.current = jump - 1;
-    }
-
-    updateSentences();
+    a.index = parseInt($('#current-sentence').val()) - 1;
 }
 function nextSentence() {
     log.debug(`called nextSentence()`);
-
-    if (_.current === _.sentences.length - 1) {
-        log.warn(`nextSentence(): already at the last sentence!`);
-        return;
-    }
-
-    _.current++;
-
-    updateSentences();
-}
-function setSentence(id, text) {
-    log.debug(`called setSentence(id:${id}, text:"${text}")`);
-
-    if (id < 0 || id >= _.sentences.length) {
-        log.warn(`setSentence(): unable to set sentence at id:${id}, out of range`);
-        return;
-    }
-
-    _.sentences[id] = text;
-
-    updateFormat(id);
-}
-function updateSentences() {
-    log.debug(`called updateSentences()`);
-
-    if (_.current < 0) { // ensure we always have something
-        log.warn(`updateSentences(): current is ${_.current}`);
-        insertSentence();
-    }
-
-    $('#current-sentence').val(_.current + 1);
-    $('#total-sentences').text(_.sentences.length);
-    $('#text-data').val(_.sentences[_.current] || ''); // handle null
-
-    $('#btnPrevSentence').attr('disabled', (_.current === 0));
-    $('#btnNextSentence').attr('disabled', (_.current === _.sentences.length));
-
-    updateFormat(_.current);
-    updateGui();
-}
-function updateFormat(id) {
-    log.debug(`called updateFormat(id:${id})`);
-
-    const content = _.sentences[id],
-        format = detectFormat(content);
-
-    // detect changed format
-    if (format !== _.formats[id]) {
-        log.info(`updateFormat(): detected change in format: ${_.formats[id]} => ${format}`);
-
-        // TODO other stuff goes here (CG3/CoNLL-U conversion ugliness TBD)
-        _.formats[id] = format;
-    }
-}
-function parseText() {
-    log.debug(`called parseText()`);
-
-    // read from the textarea
-    let content = $('#text-data').val();
-
-    // split into sentences
-    let splitted;
-    if (detectFormat(content) === 'plain text') {
-        // ( old regex: /[^ ].+?[.!?](?=( |$))/g )
-        // match non-punctuation (optionally) followed by punctuation
-        const matched = content.match(/[^.!?]+[.!?]*/g);
-        log.debug(`parseText(): match group: ${matched}`);
-				splitted = matched === null
-  					? [ content.trim() ]
-  					: matched.map((chunk) => {
-  						return chunk;
-  					});
-    } else {
-        splitted = content.split(/\n{2,}/g).map((chunk) => {
-            return chunk.trim();
-				});
-    }
-
-    // removing extra whitespace
-    for (let i = splitted.length - 1; i >= 0; i--) {
-        if (splitted[i].trim() === '')
-            splitted.splice(i, 1);
-    }
-    splitted = splitted.length ? splitted : ['']; // need a default if empty
-
-    // set the first
-    setSentence(_.current, splitted[0]);
-
-    // iterate in reverse order over all elements except the first
-    for (let i = splitted.length - 1; i > 0; i--) {
-        insertSentence();
-        setSentence(i, splitted[i]);
-    }
-
-    // enforce that only CoNLL-U can be in table view
-    if (_.formats[_.current] !== 'CoNLL-U')
-        _.is_table_view(false);
-
-    updateSentences();
-
-    // return splitted for testing purposes
-    return splitted;
+    a.next();
 }
 
+
+
+
+// probably don't need this soon
+function convertText(converter) {
+    log.debug(`called convertText()`);
+
+    let sentence = a.sentence;
+    sentence = converter(sentence) || sentence;
+    a.parse(sentence);
+}
 
 // NOTE: uploadCorpus() is in /standalone/lib/server_support.js
 function exportCorpus() {
@@ -386,8 +154,8 @@ function exportCorpus() {
     } else {
 
         const link = $('<a>')
-            .attr('download', _.filename())
-            .attr('href', `data:text/plain; charset=utf-8,${_.encode()}`);
+            .attr('download', a.filename)
+            .attr('href', `data:text/plain; charset=utf-8,${a.encode()}`);
         $('body').append(link);
         link[0].click();
 
@@ -399,12 +167,12 @@ function clearCorpus(event, force=false) { // force param for testing
     if (!force) {
         const conf = confirm('Do you want to clear the corpus (remove all sentences)?');
         if (!conf) {
-              log.info('clearCorpus(): not removing sentence');
+              log.info('clearCorpus(): not clearing corpus');
               return;
         }
     }
 
-    _.reset();
+    a.reset();
     return;
 }
 function printCorpus(event) {
@@ -412,15 +180,6 @@ function printCorpus(event) {
 		throw new NotImplementedError('printCorpus() not implemented');
 }
 
-function convertText(converter) {
-		log.debug(`called viewAsText()`);
-
-		let sentence = _.sentence();
-		sentence = converter(sentence) || sentence;
-		$('#text-data').val(sentence);
-		parseText();
-
-}
 
 
 
@@ -622,7 +381,7 @@ function detectFormat(content) {
     //resetLabels(); // do we need this?
 
     let format = 'Unknown';
-    content = content === null ? '' : content.trim();
+    content = content ? content.trim() : '';
 
     if (content === '') {
         log.info('detectFormat(): received empty content');
@@ -660,7 +419,6 @@ function detectFormat(content) {
     }
 
     log.debug(`detectFormat(): detected ${format}`);
-    FORMAT = format;
     //_.formats[_.current] = format;
     return format;
 }

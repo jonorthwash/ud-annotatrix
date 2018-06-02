@@ -949,35 +949,13 @@ class Tester extends Object {
 			},
 			checkCounts: (current, total) => {
 
-				(() => {
-					const sentences = _.sentences.length,
-							formats = _.formats.length,
-							is_table_views = _.is_table_views.length,
-							column_visibilities = _.column_visibilities.length,
-							graphs = _.graphs.length,
-							conllus = _.conllus.length,
-							cg3s = _.cg3s.length;
-					this.assert(sentences === formats
-						&& sentences === is_table_views
-						&& sentences === column_visibilities
-						&& sentences === graphs
-						&& sentences === conllus
-						&& sentences === cg3s,
-						`inconsistent: got ${
-							sentences} sentences, ${
-							formats} formats ${
-							is_table_views} table views, ${
-							column_visibilities} column_visibilities, ${
-							graphs} graphs, ${conllus} conllus, and ${cg3s} cg3s`);
-				})();
-
 				((expected) => {
-					const actual = _.current;
+					const actual = a.index;
 					this.assert(expected === actual, `current: expected index at ${expected}, got ${actual}`);
 				})(current);
 
 				((expected) => {
-					const actual = _.sentences.length;
+					const actual = a.length;
 					this.assert(expected === actual, `total: expected ${expected}, got ${actual}`);
 				})(total);
 
@@ -1021,9 +999,9 @@ class Tester extends Object {
 				goToSentence();
 			},
 			splitAndSet: (str) => {
-				_.reset();
-				$('#text-data').val(str);
-				return parseText();
+				a.reset();
+				a.parse(str);
+				return a.split(str);
 			},
 			matchAndTrim: (str) => {
 				const matched = str.match(/[^.!?]+[.!?]*/g);
@@ -1052,8 +1030,7 @@ class Tester extends Object {
 					}[char];
 
 				if (!(char === '\n'
-					&& (_.format() === 'CoNLL-U'
-						|| _.format() === 'CG3')))
+					&& (a.format === 'CoNLL-U' || a.format === 'CG3')))
 					this.utils.insertChar(selector, char);
 
 				if (selector === '#text-data') {
@@ -1360,7 +1337,7 @@ class Tester extends Object {
 				log.out(`\nExecuting Tester.navSentences()`);
 
 				// need consistent initial environment
-				_.reset();
+				a.reset();
 				this.utils.checkCounts(0, 1);
 
 				// insert and remove
@@ -1432,9 +1409,9 @@ class Tester extends Object {
 				this.utils.jumpToSentence(3);
 				this.utils.checkCounts(1, 2);
 				this.utils.jumpToSentence(0);
-				this.utils.checkCounts(1, 2);
+				this.utils.checkCounts(0, 2);
 
-				_.reset();
+				a.reset();
 
 			},
 
@@ -1482,7 +1459,7 @@ class Tester extends Object {
 					});
 				});
 
-				_.reset();
+				a.reset();
 
 			},
 
@@ -1499,7 +1476,7 @@ class Tester extends Object {
 						$(selector).click();
 
 						let EOLs = [], acc = 0;
-						$.each(_.sentence().split('\n'), (k, line) => {
+						$.each(a.lines, (k, line) => {
 							EOLs.push(acc + line.length + k);
 							acc += line.length;
 						});
@@ -1523,13 +1500,13 @@ class Tester extends Object {
 						this.utils.splitAndSet(text);
 						for (let k=0; k < 5; k++) { // trying hitting <Enter> multiple times
 
-							const cursor = this.utils.randomInt(_.sentence().length);
+							const cursor = this.utils.randomInt(a.length);
 							this.utils.simKeyup('#text-data', '\n', cursor);
-							parseText();
+							a.parse();
 							this.utils.jumpToSentence(1);
 
-							this.assert(format === _.format(),
-								`expected format to be ${format}, got ${_.format()}`);
+							this.assert(format === a.format,
+								`expected format to be ${format}, got ${a.format}`);
 							this.utils.isValid(format, text);
 						}
 					});
@@ -1542,22 +1519,22 @@ class Tester extends Object {
 				for (let i=0; i<10; i++) { // repeat tests 10 times
 					$.each(this.utils.randomize(), (j, randomized) => { // sample once per format
 						const format = randomized.format,
-							text = randomized.text;
+							text = randomized.text.join('');
 
 						this.utils.splitAndSet(text);
 						toggleTable(null, true);
 
 						if (format !== 'CoNLL-U') {
-							this.assert(_.is_table_view() === false, `expected ${format} not to have table view`);
+							this.assert(a.is_table_view === false, `expected ${format} not to have table view`);
 						} else {
-							this.assert(_.is_table_view() === true, `expected CoNLL-U to have table view available`);
+							this.assert(a.is_table_view === true, `expected CoNLL-U to have table view available`);
 
 							// try editing
 							const testString = 'test';
 							$('td').not('[name=index]').find('[name=input]').text(testString);
 							$('td').first().blur();
 
-							$.each(_.sentence().split('\n'), (k, line) => {
+							$.each(a.lines, (k, line) => {
 								const tabs = line.split('\t');
 								if (tabs.length !== 10 || tabs[0].startsWith('#'))
 									return;
@@ -1596,51 +1573,32 @@ class Tester extends Object {
 
 				// make sure the problematic one passes first
 				test.utils.splitAndSet(TEST_DATA.texts_by_format['CoNLL-U'].from_cg3_with_spans);
-				$.each(_.conllu().tokens, (i, token) => {
-					let oldConllu = _.conllu().serial;
-					if (token instanceof conllu.MultiwordToken) {
-						const randomAttr  = this.utils.sample(modifiableKeys)[0];
-						const oldAttrValue = modifyConllu(i, null, randomAttr, newAttrValue);
-						modifyConllu(i, null, randomAttr, oldAttrValue);
+				a.iterTokens((num, token, i, superToken, j, subToken) => {
+					let oldConllu = a.conllu.serial;
+					const randomAttr = this.utils.sample(modifiableKeys)[0];
+					const oldAttrValue = modifyConllu(i, j, randomAttr, newAttrValue);
+					modifyConllu(i, j, randomAttr, oldAttrValue);
 
-						const invertible = this.utils.compareStrings(oldConllu, _.conllu().serial);
-						this.assert(invertible, `expected an invertible transformation for token[${i}] "${token.form}" on attr [${randomAttr}] "${oldAttrValue}"=>"${newAttrValue}"`);
-
-						$.each(token.tokens, (j, subToken) => {
-							const randomAttr  = this.utils.sample(modifiableKeys)[0];
-							const oldAttrValue = modifyConllu(i, j, randomAttr, newAttrValue);
-							modifyConllu(i, j, randomAttr, oldAttrValue);
-
-							const invertible = this.utils.compareStrings(oldConllu, _.conllu().serial);
-							this.assert(invertible, `expected an invertible transformation for token[${i}] "${token.form}" on attr [${randomAttr}] "${oldAttrValue}"=>"${newAttrValue}"`);
-						});
-
-					} else {
-						const randomAttr  = this.utils.sample(modifiableKeys)[0];
-						const oldAttrValue = modifyConllu(i, null, randomAttr, newAttrValue);
-						modifyConllu(i, null, randomAttr, oldAttrValue);
-
-						const invertible = this.utils.compareStrings(oldConllu, _.conllu().serial);
-						this.assert(invertible, `expected an invertible transformation for token[${i}] "${token.form}" on attr [${randomAttr}] "${oldAttrValue}"=>"${newAttrValue}"`);
-					}
+					const invertible = this.utils.compareStrings(oldConllu, a.conllu.serial);
+					this.assert(invertible, `expected an invertible transformation for token[${i}] "${token.form}" on attr [${randomAttr}] "${oldAttrValue}"=>"${newAttrValue}"`);
 				});
 
 				// then randomize
 				$.each(this.utils.sample(TEST_DATA.texts_by_format['CoNLL-U'], 25), (i, text) => {
 					this.utils.splitAndSet(text);
 
-					const oldConllu = _.conllu().serial;
-					const randomToken = this.utils.randomInt(_.conllu().tokens.length);
+					const oldConllu = a.conllu.serial;
+					const randomToken = this.utils.randomInt(a.tokens.length);
 					const randomAttr  = this.utils.sample(modifiableKeys);
 
 					const oldAttrValue = modifyConllu(randomToken, null, randomAttr, newAttrValue);
 
-					const newConllu = _.conllu();
+					const newConllu = a.conllu;
 					this.assert(newConllu.tokens[randomToken][randomAttr] === newAttrValue, `expected to modify attr [${randomAttr}] "${oldAttrValue}"=>"${newAttrValue}"`);
 
 					modifyConllu(randomToken, null, randomAttr, oldAttrValue);
 
-					const invertible = this.utils.compareStrings(oldConllu, _.conllu().serial);
+					const invertible = this.utils.compareStrings(oldConllu, a.conllu.serial);
 					this.assert(invertible, `expected an invertible transformation on attr [${randomAttr}]`);
 
 				});
@@ -1678,7 +1636,7 @@ class Tester extends Object {
 	 * TEST functions
 	 */
 	run(...tests) {
-		_.graph_disabled = true;
+		a.graph_disabled = true;
 		$.each(tests, (i, test) => {
 			if (this.tests.hasOwnProperty(test)) {
 				this.tests[test]();
@@ -1693,12 +1651,12 @@ class Tester extends Object {
 			log.out('\nTester.run(): all tests passed!\n');
 
 		clearWarning();
-		_.graph_disabled = false;
+		a.graph_disabled = false;
 	}
 
 	all() {
 		log.out('\nExecuting Tester.all()');
-		_.graph_disabled = true;
+		a.graph_disabled = true;
 
 		$.each(this.tests, (testName, test) => {
 			test();
@@ -1707,6 +1665,6 @@ class Tester extends Object {
 
 		log.out('\nTester.all(): all tests passed!\n');
 		clearWarning();
-		_.graph_disabled = false;
+		a.graph_disabled = false;
 	}
 }

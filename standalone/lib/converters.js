@@ -23,7 +23,7 @@
 function convert2PlainText(text) {
     log.debug(`called convert2PlainText(${text})`);
 
-    text = text || _.sentence();
+    text = text || a.sentence;
     const format = detectFormat(text);
 
     log.debug(`convert2PlainText(): got format: ${format}`);
@@ -50,9 +50,6 @@ function convert2PlainText(text) {
                 return conllu2PlainText(conllu);
             }
     }
-
-    log.warn(`convert2PlainText(): unrecognized format: ${format}`);
-    return null;
 }
 
 /**
@@ -64,11 +61,9 @@ function convert2PlainText(text) {
 function convert2Conllu(text) {
     log.debug(`called convert2conllu(${text})`);
 
-    text = text || _.sentence();
+    text = text || a.sentence;
     const format = detectFormat(text);
     clearWarning();
-
-    let data = null;
 
     log.debug(`convert2conllu(): got format: ${format}, text: ${text}`);
     switch (format) {
@@ -76,35 +71,24 @@ function convert2Conllu(text) {
             log.warn(`convert2conllu(): failed to convert Unknown to plain text`);
             return null;
         case ('plain text'):
-            data = cleanConllu(plainText2Conllu(text));
-            break;
+            return cleanConllu(plainText2Conllu(text));
         case ('Brackets'):
-            data = cleanConllu(brackets2Conllu(text));
-            break;
+            return cleanConllu(brackets2Conllu(text));
         case ('SD'):
-            data = cleanConllu(sd2Conllu__raw(text));
-            break;
+            return cleanConllu(sd2Conllu__raw(text));
         case ('CoNLL-U'):
             log.info(`convert2conllu(): received CoNLL-U`);
-            data = cleanConllu(text);
-            break;
+            return cleanConllu(text);
         case ('CG3'):
             data = cg32Conllu(text);
             if (data === null) {
                 log.warn(`convert2PlainText(): failed to convert: received ambiguous CG3`);
                 cantConvertCG();
+                return null;
             } else {
-                data = cleanConllu(data);
+                return cleanConllu(data);
             }
     }
-
-    if (data !== null) {
-        let sentence = new conllu.Sentence();
-        sentence.serial = data;
-        _.conllu(sentence);
-    }
-
-    return data;
 }
 
 /**
@@ -116,9 +100,8 @@ function convert2Conllu(text) {
 function convert2CG3(text) {
     log.debug(`called convert2CG3(${text})`);
 
-    text = text || _.sentence();
+    text = text || a.sentence;
     const format = detectFormat(text);
-    let cg3 = null;
 
     log.debug(`convert2CG3(): got format: ${format}`);
     switch (format) {
@@ -126,25 +109,17 @@ function convert2CG3(text) {
             log.warn(`convert2CG3(): failed to convert Unknown to plain text`);
             return null;
         case ('plain text'):
-            cg3 = conllu2CG3(plainText2Conllu(text));
-            break;
+            return conllu2CG3(plainText2Conllu(text));
         case ('Brackets'):
-            cg3 = conllu2CG3(brackets2Conllu(text));
-            break;
+            return conllu2CG3(brackets2Conllu(text));
         case ('SD'):
-            cg3 = conllu2CG3(sd2Conllu__raw(text));
-            break;
+            return conllu2CG3(sd2Conllu__raw(text));
         case ('CoNLL-U'):
-            cg3 = conllu2CG3(text);
-            break;
+            return conllu2CG3(text);
         case ('CG3'):
             log.info(`convert2CG3(): received CG3`);
-            cg3 = text;
-            break;
+            return text;
     }
-
-    _.cg3(cg3);
-    return cg3;
 }
 
 

@@ -44,7 +44,7 @@ function buildTable() {
                     .attr('row-id', i)
                     .attr('col-id', j)
                     .attr('name', j === 0 ? 'index' : 'content')
-                    .css('visibility', _.column_visible(j) ? 'visible' : 'hidden')
+                    .css('visibility', a.column_visible(j) ? 'visible' : 'hidden')
                     .blur(onEditTable)
                     .keyup((event) => {
                         if (event.which === KEYS.ESC) {
@@ -93,18 +93,17 @@ function onEditTable(event) {
     })).join('\n');
 
     // save it to the textarea and parse it
-    $('#text-data').val(conllu);
-    parseText();
+    a.parse(conllu);
 }
 
 function toggleTable(event, force) { // force param used for testing
     log.debug('called toggleTable()');
 
-    if (_.format() !== 'CoNLL-U') {
-        log.warn(`toggleTable(): table view not supported for ${_.format()}`);
-        _.is_table_view(false);
+    if (a.format !== 'CoNLL-U') {
+        log.warn(`toggleTable(): table view not supported for ${a.format}`);
+        a.is_table_view = false;
     } else {
-        _.is_table_view(force === undefined ? !_.is_table_view() : force);
+        a.is_table_view = (force === undefined ? !a.is_table_view : force);
     }
 
     updateGui();
@@ -118,10 +117,10 @@ function toggleTableColumn(event) {
         log.warn(`toggleTableColumn(): `)
     }
 
-    _.column_visible(col, !_.column_visible(col));
+    a.column_visible(col, !a.column_visible(col));
     target.toggleClass('column-hidden')
         .find('i')
             .toggleClass('fa-angle-double-right')
               .toggleClass('fa-angle-double-left');
-    $(`td[col-id=${col}]`).css('visibility', _.column_visible(col) ? 'visible' : 'hidden');
+    $(`td[col-id=${col}]`).css('visibility', a.column_visible(col) ? 'visible' : 'hidden');
 }

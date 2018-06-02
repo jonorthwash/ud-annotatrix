@@ -29,33 +29,32 @@ function updateGraph() {
     log.warn(`called updateGraph()`);
 
     if (cy && cy.pan && cy.zoom) {
-        _.pan  = cy.pan();
-        _.zoom = cy.zoom();
+        a.pan  = cy.pan();
+        a.zoom = cy.zoom();
     }
 
     // can't do anything without CoNLL-U
-    convert2Conllu();
-    if (_.graph_disabled || _.conllu() === null)
+    if (a.graph_disabled || !a.conllu)
         return;
 
-    _.graph_options.layout = {
+    a.graph_options.layout = {
         name: 'tree',
         padding: 0,
         nodeDimensionsIncludeLabels: false,
-        cols: (_.is_vertical ? 2 : undefined),
-        rows: (_.is_vertical ? undefined : 2),
-        sort: (_.is_vertical ? vertAlSort
-            : _.is_ltr ? simpleIdSorting : rtlSorting )
+        cols: (a.is_vertical ? 2 : undefined),
+        rows: (a.is_vertical ? undefined : 2),
+        sort: (a.is_vertical ? vertAlSort
+            : a.is_ltr ? simpleIdSorting : rtlSorting )
     };
-    _.graph_options.elements = getGraphElements();
+    a.graph_options.elements = getGraphElements();
 
-    window.cy = cytoscape(_.graph_options)
+    window.cy = cytoscape(a.graph_options)
         .minZoom(0.1)
         .maxZoom(10.0)
         .fit()
-        .zoom(_.zoom)
+        .zoom(a.zoom)
         .center()
-        .pan(_.pan);
+        .pan(a.pan);
 
     bindCyHandlers();
 
@@ -97,35 +96,18 @@ function getGraphElements() {
     log.debug(`called getGraphElements()`);
 
     // first make the nodes
-    let graph = [], num = 0;
-    $.each(_.tokens(), (i, token) => {
-        if (token instanceof conllu.MultiwordToken) {
-
-            // create supertoken
-            createToken(graph, num, token, i, null, null);
-            num++;
-
-            $.each(token.tokens, (j, subToken) => {
-                createToken(graph, num, token, i, subToken, j);
-                num++;
-            });
-
-        } else {
-            createToken(graph, num, token, i);
-            num++;
-        }
+    let graph = [];
+    a.iterTokens((num, token, superTokenId, superToken, subTokenId, subToken) => {
+        createToken(graph, num, superToken, superTokenId, subToken, subTokenId);
     });
 
     // then make the edges
-    $.each(_.tokens(), (i, token) => {
+    a.iterTokens((num, token, superTokenId, superToken, subTokenId, subToken) => {
         createDependency(graph, token);
-        $.each(token.tokens, (i, subToken) => {
-            createDependency(graph, subToken);
-        })
     });
 
     // save the graph elements to the data structure
-    _.graph(graph);
+    a.eles = graph;
     return graph;
 
     /*
@@ -253,14 +235,14 @@ function createDependency(graph, token) {
     log.debug(`called createDependency(token: ${JSON.stringify(token)}`);
 
     let deprel = token.deprel || '',
-        head = getConlluById(token.head);
+        head = a.conllu.getById(token.head);
 
     // if no head, no dependency
     if (!head) return;
 
     // Append ⊲ or ⊳ to indicate direction of the arc (helpful if there are many arcs)
     let deprelLabel;
-    if (_.is_ltr) {
+    if (a.is_ltr) {
         deprelLabel = head.num < token.num ? `${deprel}⊳` : `⊲${deprel}`;
     } else {
         deprelLabel = head.num < token.num ? `⊲${deprel}` : `${deprel}⊳`;
@@ -379,36 +361,16 @@ function getEdgeHeight(tokenNumber, headNumber) {
         defaultEdgeCoeff = 1; // 0.7
 
     let edgeHeight = defaultEdgeHeight * (headNumber - tokenNumber);
-    if (_.is_ltr)
+    if (a.is_ltr)
         edgeHeight *= -1;
     if (Math.abs(edgeHeight) !== 1)
         edgeHeight *= defaultEdgeCoeff;
-    if (_.is_vertical)
+    if (a.is_vertical)
         edgeHeight = 45;
 
     log.debug(`getEdgeHeight(): ${edgeHeight}`);
 
     return edgeHeight;
-}
-/**
- *  ~~ helper function for createDependency and createEnhancedDependency()
- *  Returns the token pointed to by a given CoNLL-U index-string
- *  @param  id  string giving the index for a CoNLL-U token
- *  @return {Token || null}
- */
-function getConlluById(id) {
-    log.debug(`called getConlluById(${id})`);
-    for (let i = 0, t = _.conllu().tokens.length; i < t; i++) {
-        const token = _.conllu().tokens[i];
-        for (let j = 0, u = (token.tokens || []).length; j < u; j++) {
-            const subToken = token.tokens[j];
-            if (subToken.id == id)
-                return token; // subtokens return their supertoken
-        }
-        if (token.id == id)
-            return token;
-    }
-    return null;
 }
 
 function editGraphLabel(target) {
@@ -428,7 +390,7 @@ function editGraphLabel(target) {
 				bbox.h = cy.nodes()[0].renderedHeight();
 				bbox.color = 'white';
 
-				if (_.is_vertical) {
+				if (a.is_vertical) {
 						bbox.y1 += (bbox.y2 - bbox.y1)/2 - 15;
 						bbox.x1  = bbox.x2 - 70;
 				} else {
@@ -462,8 +424,8 @@ function editGraphLabel(target) {
 
 		// add the background-mute div
 		$('#mute').addClass('activated')
-				.css('height', _.is_vertical
-						? `${_.tokens().length * 50}px`
+				.css('height', a.is_vertical
+						? `${a.tokens.length * 50}px`
 						: $(window).width() - 10);
 
     $('#edit').focus(); // move cursor to the end
@@ -471,15 +433,15 @@ function editGraphLabel(target) {
 				$('#edit').select(); // highlight the current contents
 }
 function saveGraphEdits() {
-		log.debug(`called saveGraphEdits(target:${_.editing ? _.editing.attr('id') : 'null'}, text:${_.editing ? $('#edit').val() : ''})`);
+		log.debug(`called saveGraphEdits(target:${a.editing ? a.editing.attr('id') : 'null'}, text:${a.editing ? $('#edit').val() : ''})`);
 
 		cy.$('.input').removeClass('input');
 
-		if (_.editing === null)
+		if (a.editing === null)
 				return; // nothing to do
 
-    const conllu = _.editing.data().conllu || _.editing.data().sourceConllu;
-    const newAttrKey = _.editing.data().attr;
+    const conllu = a.editing.data().conllu || a.editing.data().sourceConllu;
+    const newAttrKey = a.editing.data().attr;
 		const newAttrValue = $('#edit').val();
     log.debug(`saveGraphEdits(): ${newAttrKey} set =>"${newAttrValue}", whitespace:${/[ \t\n]+/g.test(newAttrValue)}`);
 
@@ -488,7 +450,7 @@ function saveGraphEdits() {
 				const message = 'ERROR: Unable to add changes with whitespace!  Try creating a new node first.';
 				log.error(message);
 				alert(message); // TODO: probably should streamline errors
-				_.editing = null;
+				a.editing = null;
 				return;
 		}
 
@@ -502,7 +464,7 @@ function saveGraphEdits() {
 				}
 		});
 
-		_.editing = null;
+		a.editing = null;
 }
 
 function makeDependency(source, target) {
@@ -577,14 +539,8 @@ function setAsRoot(source) {
 
     // check if there is already a root
     let oldRoot = undefined;
-    $.each(_.tokens(), (i, token) => {
-        $.each(token.tokens, (j, subToken) => {
-              log.debug(`setAsRoot(): search for root: ${subToken.deprel}, ${subToken.head}, ${(subToken.deprel || '').toLowerCase() === 'root' && subToken.head == 0}`);
-            if ((subToken.deprel || '').toLowerCase() === 'root' && subToken.head == 0)
-                oldRoot = subToken;
-        });
-        log.debug(`setAsRoot(): search for root: ${token.deprel}, ${token.head}, ${(token.deprel || '').toLowerCase() === 'root' && token.head == 0}`);
-        if ((token.deprel || '').toLowerCase() === 'root' && token.head == 0)
+    a.iterTokens((num, token) => {
+        if ((token.deprel).toLowerCase() === 'root' && token.head == 0)
             oldRoot = token;
     });
     log.error(`setAsRoot(): oldRoot: ${oldRoot.superTokenId}:${oldRoot.subTokenId || '_'}`);
@@ -619,16 +575,93 @@ function setAsRoot(source) {
         }
     });
 }
+function mergeNodes(dir, strategy) { // 'left' or 'right'
+    log.error(`called mergeNodes(${dir})`);
+
+    // old: (toMerge, side, how)
+
+    /* Support for merging tokens into either a new token or a supertoken.
+    Recieves the node to merge, side (right or left) and a string denoting
+    how to merge the nodes. In case of success, redraws the tree. */
+    // const indices = findConlluId(toMerge);
+
+    const oldSentence = a.sentence;
+    const merging = cy.$('.merge').data('conllu');
+
+    if (merging.tokens) {
+        const message = 'Sorry, merging subtokens is not supported!';
+        log.error(message);
+        alert(message);
+        return;
+    }
+
+    // either one to the left or to the right (w/o wrapping)
+    const mergingWith = a.tokens[ merging.superTokenId + (dir === 'left' ? -1 : 1) ];
+    if (!mergingWith) {
+        log.error('mergeNodes(): cannot merge these tokens');
+        return;
+    }
+
+    modifyConllu(merging.superTokenId, merging.subTokenId, 'form', dir === 'left'
+        ? `${mergingWith.form || ''}${merging.form || ''}`
+        : `${merging.form || ''}${mergingWith.form || ''}`);
+
+    modifyConllu(merging.superTokenId, merging.subTokenId, 'lemma', dir === 'left'
+        ? `${mergingWith.lemma || ''}${merging.lemma || ''}`
+        : `${merging.lemma || ''}${mergingWith.lemma || ''}`);
+
+    if (strategy === 'subtoken') {
+
+        modifyConllu(merging.superTokenId, merging.subTokenId, 'deprel',  merging.deprel  || mergingWith.deprel);
+        modifyConllu(merging.superTokenId, merging.subTokenId, 'deps',    merging.deps || mergingWith.deps);
+        modifyConllu(merging.superTokenId, merging.subTokenId, 'feats',   merging.feats || mergingWith.feats);
+        modifyConllu(merging.superTokenId, merging.subTokenId, 'pos',     merging.pos || mergingWith.pos);
+        modifyConllu(merging.superTokenId, merging.subTokenId, 'upostag', merging.upostag || mergingWith.upostag);
+        modifyConllu(merging.superTokenId, merging.subTokenId, 'xpostag', merging.xpostag || mergingWith.xpostag);
+
+        const smallerIndex = Math.min(merging.superTokenId, mergingWith.superTokenId);
+        a.iterTokens((num, token) => {
+            if (token.head == mergingWith.id)
+                modifyConllu(token.superTokenId, token.subTokenId, 'head', merging.id);
+            if (token.superTokenId >= smallerIndex)
+                modifyConllu(token.superTokenId, token.subTokenId, 'id', parseInt(token.id) - 1);
+        })
+
+        let newSentence = a.lines;
+        newSentence.splice(mergingWith.num + a.conllu.comments.length, 1);
+        newSentence = newSentence.join('\n');
+        a.parse(newSentence);
+        cy.$('.merge').removeClass('merge');
+
+        undoManager.add({
+            undo: () => {
+                a.parse(oldSentence);
+            },
+            redo: () => {
+                a.parse(newSentence);
+            }
+        })
+
+
+    } else {
+
+        throw new NotImplementedError('supertoken merging not supported');
+
+    }
+
+    return;
+}
+
 
 
 function modifyConllu(superTokenId, subTokenId, attrKey, attrValue) {
 		log.error(`called modifyConllu(superTokenId:${superTokenId}, subTokenId:${subTokenId}, attr:${attrKey}=>${attrValue})`);
 
-		const conllu = _.conllu();
+		const conllu = a.conllu;
 		log.debug(`modifyConllu(): before:  ${conllu.tokens[superTokenId][attrKey]}`);
 
 		let oldValue;
-		if (subTokenId !== null) {
+		if (subTokenId !== null && subTokenId !== undefined) {
 				oldValue = conllu.tokens[superTokenId].tokens[subTokenId][attrKey] || '_';
 				conllu.tokens[superTokenId].tokens[subTokenId][attrKey] = attrValue;
 		} else {
@@ -637,10 +670,8 @@ function modifyConllu(superTokenId, subTokenId, attrKey, attrValue) {
 		}
 
 		log.debug(`modifyConllu(): during: ${conllu.tokens[superTokenId][attrKey]}`);
-		const text = conllu.serial;
-		$('#text-data').val(text);
-		parseText();
-		log.debug(`modifyConllu(): after:  ${_.conllu().tokens[superTokenId][attrKey]}`);
+    a.parse(conllu.serial);
+		log.debug(`modifyConllu(): after:  ${a.tokens[superTokenId][attrKey]}`);
 
 		// return oldValue for undo/redo purposes
 		return oldValue;
