@@ -14,3 +14,7 @@ logs
 
 # vim swap files
 *.swp
+
+# node stuff
+node_modules
+build
