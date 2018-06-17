@@ -36,8 +36,8 @@
     "vinyl-source-stream": "^2.0.0"
   },
   "scripts": {
-    "test": "mocha tests/index.js",
-    "coverage": "nyc mocha tests/index.js",
+    "test": "mocha src/test/index.js",
+    "coverage": "nyc mocha src/test/index.js",
     "build": "gulp"
   },
   "repository": {
