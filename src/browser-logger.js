@@ -34,33 +34,41 @@ class Log {
       'DEBUG': 'blue',
       'OK': 'green'
     };
-    this.setLevel(levelName);
-    L20N_LOGGING = levelName === 'DEBUG';
+
+    this.level = levelName;
+
+    // try to override the l20n logging
+    try {
+      L20N_LOGGING = levelName === 'DEBUG';
+    } catch (e) {
+      if (!(e instanceof ReferenceError))
+        throw e;
+    }
 
   }
 
   /*
    * change the logging level
    */
-  setLevel(levelName) {
-    this.levelName = levelName;
-    this.level = ['CRITICAL', 'ERROR', 'WARN', 'INFO', 'DEBUG']
+  set level(levelName) {
+    this._levelName = levelName;
+    this._level = ['CRITICAL', 'ERROR', 'WARN', 'INFO', 'DEBUG']
       .indexOf(levelName);
 
-    if (this.level === -1) {
+    if (this._level === -1) {
       this.out(`Unrecognized Logger levelName "${levelName}", setting level to CRITICAL.`);
-      this.levelName = 'CRITICAL';
-      this.level = 0;
+      this._levelName = 'CRITICAL';
+      this._level = 0;
     }
 
-    this.out(`logging level set to ${this.levelName}`, 'OK');
+    this.out(`logging level set to ${this._levelName}`, 'OK');
   }
 
   /*
    * Override prototype toString() method
    */
   toString() {
-    return `Logger (level=${this.levelName})`;
+    return `Logger (level=${this._levelName})`;
   }
 
   /*
@@ -113,7 +121,7 @@ class Log {
    * @return <none>
    */
   _handle(level, tag, message='', writer) {
-    if (level <= this.level) {
+    if (level <= this._level) {
       const formatted = this._format(message, tag, true);
       writer = writer || this._write;
       console.groupCollapsed(formatted.title, ...formatted.css);
