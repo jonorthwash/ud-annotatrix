@@ -14,7 +14,7 @@ module.exports = {
       return;
 
     const Log = require('../node-logger');
-    global.log = new Log('WARN');
+    global.log = new Log('ERROR');
 
   },
 
@@ -23,11 +23,6 @@ module.exports = {
     callback = callback || noop;
 
     _.each(data, (texts, format) => {
-
-      // this one isn't a string so skip it
-      if (format === 'Params')
-        return;
-
       _.each(texts, (text, name) => {
         callback(text, format, name);
       });

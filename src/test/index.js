@@ -4,3 +4,4 @@
 require('./node-logger')();
 require('./browser-logger')();
 require('./detect.js')();
+require('./convert.js')();
