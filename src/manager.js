@@ -4,9 +4,14 @@ const $ = require('jquery');
 const _ = require('underscore');
 const nx = require('notatrix');
 
+const cfg = require('./config');
 const funcs = require('./funcs');
 const GUI = require('./gui');
 const Graph = require('./graph');
+const errors = require('./errors');
+const detectFormat = require('./detect');
+
+nx.Sentence.prototype.currentFormat = null;
 
 class Manager {
 
@@ -15,14 +20,15 @@ class Manager {
   }
 
   reset() {
-    this._current = -1;
-    this._filename = 'ud-annotatrix-corpus';
+    this.filename = cfg.defaultFilename;
+
     this._sentences = [];
+    this._index = -1;
 
     this.gui = new GUI(this);
     this.graph = new Graph(this);
 
-    this.insertSentence();
+    this.insertSentence(cfg.defaultTextareaMessage);
   }
   get length() {
     return this.sentences.length;
@@ -33,8 +39,12 @@ class Manager {
     });
   }
 
+
+
+
+
   get index() {
-    return this._current;
+    return this._index;
   }
   set index(index) {
 
@@ -43,7 +53,7 @@ class Manager {
       log.warn(`Annotatrix: index out of range: ${index}`);
       index = this.index;
 
-    } else if (index < 0) {
+    } else if (index < 0 && this.length) {
       log.warn(`Annotatrix: index out of range: ${index + 1}`);
       index = 0;
 
@@ -52,17 +62,20 @@ class Manager {
       index = this.length - 1;
     }
 
-    this._current = Math.floor(index); // enforce integer
+    this._index = Math.floor(index); // enforce integer
     this.gui.update();
 
     return this.index;
   }
   first() {
-    this.index = 0;
+    this.index = this.length ? 0 : -1;
   }
   prev() {
+    if (!this.length)
+      return null;
+
     if (this.index === 0) {
-      log.error(`Annotatrix: already at the first sentence!`);
+      log.warn(`Annotatrix: already at the first sentence!`);
       return null;
     }
 
@@ -71,7 +84,7 @@ class Manager {
   }
   next() {
     if (this.index === this.sentences.length - 1) {
-      log.error(`Annotatrix: already at the last sentence!`);
+      log.warn(`Annotatrix: already at the last sentence!`);
       return null;
     }
 
@@ -82,26 +95,18 @@ class Manager {
     this.index = this.length - 1;
   }
 
-  set filename(filename) {
-    this._filename = filename;
-    return this;
-  }
-  get filename() {
-    return this._filename;
-  }
+
+
+
 
   get current() {
     return this._sentences[this.index];
   }
-
   get sentence() {
     return this.current.text;
   }
   set sentence(text) {
-    this.current = new Sentence(text);
-    $('#text-data').val(this.sentence);
-
-    return this.current.text;
+    return this.setSentence(text);
   }
   get sentences() {
     return this.each((i, sent) => {
@@ -110,71 +115,117 @@ class Manager {
   }
   setSentence(index, text) {
 
-    // don't use this w/o an index param
-    // instead, use .parse()
+    if (text === null || text === undefined) { // if only passed 1 arg
+      text = index || '';
+      index = this.index;
+    }
 
-    this._sentences[index] = new Sentence(text);
-    $('#text-data').val(this.sentence);
+    if (0 > index || index > this.length - 1)
+      return null;
 
-    return this._sentences[index].text;
+    this.getSentence(index).text = text;
+    this.getSentence(index).currentFormat = detectFormat(text);
+    this.gui.update();
+
+    return this.getSentence(index);
   }
   getSentence(index) {
-    index = index || 0;
-    return this.sentences[index];
+
+    if (index === undefined)
+      index = this.index;
+
+    if (0 > index || index > this.length - 1)
+      return null;
+
+    return this._sentences[index];
   }
   insertSentence(index, text) {
 
     if (text === null || text === undefined) { // if only passed 1 arg
       text = index;
-      index = this.index;
+      index = this.index + 1;
     }
 
-    const sent = new Sentence(text)
-    this._sentences = this._sentences
-        .slice(0, index + 1).concat(sent, this._sentences.slice(index + 1));
-    this.index++;
+    index = parseFloat(index);
+    if (isNaN(index))
+      throw new errors.AnnotatrixError('cannot insert at NaN');
 
-    $('#text-data').val(this.sentence);
-    $('#total-sentences').text(this.length);
+    if (typeof text !== 'string')
+      text = '';
+
+    index = index < 0 ? 0
+      : index > this.length ? this.length
+      : parseInt(index);
+
+    const sent = nx.Sentence.fromText(text);
+    this._sentences = this._sentences.slice(0, index)
+      .concat(sent)
+      .concat(this._sentences.slice(index));
+
+    sent.currentFormat = detectFormat(text);
+    this.index = index;
+    this.gui.update();
 
     return sent.text;
   }
   removeSentence(index) {
-    index = index === undefined ? this.index : index // default
 
-    const removed = this._sentences.splice(index, 1);
+    if (!this.length)
+      return null;
+
+    if (index === undefined) // if not passed args
+      index = this.index;
+
+    index = parseFloat(index);
+    if (isNaN(index))
+      throw new errors.AnnotatrixError('cannot insert at NaN');
+
+    index = index < 0 ? 0
+      : index > this.length - 1 ? this.length - 1
+      : parseInt(index);
+
+    const removed = this._sentences.splice(index, 1)[0];
+    this.index--;
     if (!this.length)
       this.insertSentence();
 
-    this.index--;
-
-    $('#text-data').val(this.sentence);
-    $('#total-sentences').text(this.length);
+    this.gui.update();
 
     return removed;
   }
+  pushSentence(text) {
+    return this.insertSentence(Infinity, text);
+  }
+  popSentence(text) {
+    return this.removeSentence(Infinity);
+  }
+
+
+
+
 
   split(text) {
 
     // split into sentences
     let splitted;
     if (detectFormat(text) === 'plain text') {
-      // ( old regex: /[^ ].+?[.!?](?=( |$))/g )
+
       // match non-punctuation (optionally) followed by punctuation
       const matched = text.match(/[^.!?]+[.!?]*/g);
       log.debug(`parse(): match group: ${matched}`);
       splitted = matched === null
         ? [ text.trim() ]
-        : matched.map((chunk) => {
-          return chunk;
-        });
+        : matched;
+
     } else {
-      splitted = text.split(/\n{2,}/g).map((chunk) => {
+
+      // match between multiple newlines
+      splitted = text.split(/\n{2,}/g).map(chunk => {
         return chunk.trim();
       });
     }
 
-    // removing extra whitespace
+    // removing extra whitespace in reverseorder
     for (let i = splitted.length - 1; i >= 0; i--) {
         if (splitted[i].trim() === '')
             splitted.splice(i, 1);
@@ -185,71 +236,49 @@ class Manager {
   parse(text) {
 
     // if not passed explicitly, read from the textarea
-    text = text || $('#text-data').val();
+    text = text || this.gui.read('text-data');
     let splitted = this.split(text);
 
     // overwrite contents of #text-data
-    this.setSentence(this.index, splitted[0]);
+    this.sentence = splitted[0];
 
     // iterate over all elements except the first
-    $.each(splitted, (i, split) => {
+    _.each(splitted, (split, i) => {
       if (!i) return; // skip first
       this.insertSentence(split);
     });
 
-    updateGui();
+    this.gui.update();
   }
-  get lines() {
-    return this.sentence.split('\n');
-  }
+
+
+
+
 
   get format() {
-    return this.current.format;
+    if (this.current)
+      return this.current.currentFormat;
   }
-  get formats() {
-    return this.each((i, sent) => {
-      return sent.format;
-    });
-  }
-
-  get conllu() {
-    return this.current.conllu;
-  }
-  set conllu(serial) {
-    return this.current.conllu = convert2Conllu(serial);
+  get comments() {
+    if (this.current)
+      return this.current.comments;
   }
   get tokens() {
-    if (!this.conllu.processed)
-      this.conllu = this.sentence;
-    return this.conllu.tokens;
+    if (this.current)
+      return this.current.tokens;
   }
-  iterTokens(callback) { // sugar
-    if (!this.conllu.processed)
-      this.conllu = this.sentence;
-    return this.conllu.iterTokens(callback);
+  get conllu() {
+    if (this.current)
+      return this.current.conllu;
   }
-  iterComments(callback) { // sugar
-    if (!this.conllu.processed)
-      this.conllu = this.sentence;
-    return this.conllu.iterComments(callback);
+  get cg3() {
+    if (this.current)
+      return this.current.cg3;
   }
 
-  get is_table_view() {
-    return this.current._is_table_view;
-  }
-  set is_table_view(bool) {
-    if (typeof bool === 'boolean')
-      this.current._is_table_view = bool;
 
-    return this.current._is_table_view;
-  }
 
-  column_visible(col, bool) {
-    if (typeof bool === 'boolean')
-      this.current._column_visibilities[col] = bool;
 
-    return this.current._column_visibilities[col];
-  }
 
   export() {
     return this.each((i, sent) => {

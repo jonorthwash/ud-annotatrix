@@ -18,3 +18,4 @@ logs
 # node stuff
 node_modules
 build
+.nyc_output

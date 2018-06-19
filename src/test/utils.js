@@ -5,6 +5,10 @@ const data = require('./data/index');
 
 function noop() {}
 
+// regex
+const punct = /([.,?!])/,
+  puncts = /([.,?!]+)/g;
+
 module.exports = {
   noop,
 
@@ -27,5 +31,18 @@ module.exports = {
         callback(text, format, name);
       });
     });
-  }
+  },
+
+  reformatParsedText: (text) => {
+    return text.trim().replace(puncts, ' $1').replace(/(\s)+/g, ' ').trim();
+  },
+
+  randomInt: (min, max) => {
+    if (max === undefined) {
+      max = min;
+      min = 0;
+    }
+    return Math.floor(Math.random() * max) + min;
+  },
+  
 };

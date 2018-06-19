@@ -11,12 +11,6 @@
  *    "unforeseen" JavaScript errors, and we should prioritize fixing those
  *  - custom handling (e.g., log it to the console even if we catch it later on)
  *
- * CURRENT ERROR INHERITANCE HIERARCHY:
- *
- *  ---AnnotatrixError
- *   |---GUIError
- *   |---ParseError
- *
  */
 
 
@@ -33,7 +27,7 @@ class AnnotatrixError extends Error {
     super(...args);
 
     // maintains proper stack trace for where our error was thrown (i.e. doesn't
-    // include the constructor, but only available on V8)
+    //   include the constructor, but only available on V8)
     if (Error.captureStackTrace)
       Error.captureStackTrace(this, AnnotatrixError);
 
@@ -41,8 +35,8 @@ class AnnotatrixError extends Error {
     this.name = 'AnnotatrixError';
 
     // log all errors, even if we eventually catch them ... note that this does
-    // not show the full stack trace
-    window.log.error(this.message)
+    //   not show the full stack trace
+    log.error(this.message);
   }
 }
 
