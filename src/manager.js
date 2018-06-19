@@ -163,6 +163,9 @@ class Manager {
       .concat(this._sentences.slice(index));
 
     sent.currentFormat = detectFormat(text);
+    sent.is_table_view = false
+    sent.column_visibilities = new Array(10).fill(true);
+    
     this.index = index;
     this.gui.update();
 

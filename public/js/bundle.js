@@ -15710,6 +15710,8 @@ module.exports = {
 },{"underscore":7}],15:[function(require,module,exports){
 'use strict';
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var $ = require('jquery');
@@ -15718,23 +15720,32 @@ var _ = require('underscore');
 var funcs = require('./funcs');
 var CY_STYLE = require('./cy-style.js');
 
-var Graph = function Graph(mgr, options) {
-  _classCallCheck(this, Graph);
+var Graph = function () {
+  function Graph(mgr, options) {
+    _classCallCheck(this, Graph);
 
-  this.mgr = mgr;
-  this.options = _.defaults(options, {
-    container: funcs.inBrowser() ? $('#cy') : null,
-    boxSelectionEnabled: false,
-    autounselectify: true,
-    autoungrabify: true,
-    zoomingEnabled: true,
-    userZoomingEnabled: false,
-    wheelSensitivity: 0.1,
-    style: CY_STYLE,
-    layout: null,
-    elements: []
-  });
-};
+    this.mgr = mgr;
+    this.options = _.defaults(options, {
+      container: funcs.inBrowser() ? $('#cy') : null,
+      boxSelectionEnabled: false,
+      autounselectify: true,
+      autoungrabify: true,
+      zoomingEnabled: true,
+      userZoomingEnabled: false,
+      wheelSensitivity: 0.1,
+      style: CY_STYLE,
+      layout: null,
+      elements: []
+    });
+  }
+
+  _createClass(Graph, [{
+    key: 'update',
+    value: function update() {}
+  }]);
+
+  return Graph;
+}();
 
 module.exports = Graph;
 
@@ -15750,6 +15761,40 @@ var $ = require('jquery');
 var funcs = require('./funcs');
 var errors = require('./errors');
 
+var KEYS = {
+  DELETE: 46,
+  BACKSPACE: 8,
+  ENTER: 13,
+  ESC: 27,
+  TAB: 9,
+  RIGHT: 39,
+  LEFT: 37,
+  UP: 38,
+  DOWN: 40,
+  MINUS: 173,
+  MINUS_: 189,
+  EQUALS: 61,
+  EQUALS_: 187,
+  SHIFT: 16,
+  CTRL: 17,
+  OPT: 18,
+  PAGE_UP: 33,
+  PAGE_DOWN: 34,
+  META: 224,
+  D: 68,
+  I: 73,
+  J: 74,
+  K: 75,
+  M: 77,
+  P: 80,
+  R: 82,
+  S: 83,
+  X: 88,
+  Y: 89,
+  Z: 90,
+  0: 48
+};
+
 var GUI = function () {
   function GUI(mgr) {
     _classCallCheck(this, GUI);
@@ -15760,7 +15805,6 @@ var GUI = function () {
     this.is_vertical = false;
     this.is_ltr = true;
     this.is_enhanced = false;
-    this._is_table_view = false;
 
     this.pan = this.pan || null;
     this.zoom = this.zoom || null;
@@ -15785,6 +15829,53 @@ var GUI = function () {
       $('#current-sentence').val(this.mgr.index + 1);
       $('#btnPrevSentence').attr('disabled', !!this.mgr.index);
       $('#btnNextSentence').attr('disabled', this.mgr.index === this.mgr.length);
+
+      $('.nav-link').removeClass('active').show();
+      switch (this.mgr.format) {
+        case 'Unknown':
+          $('.nav-link').hide();
+          $('#tabOther').addClass('active').show().text(mgr.format);
+          break;
+        case 'CoNLL-U':
+          $('#tabConllu').addClass('active');
+          $('#tabOther').hide();
+          break;
+        case 'CG3':
+          $('#tabCG3').addClass('active');
+          $('#tabOther').hide();
+          break;
+        case 'plain text':
+          $('#tabText').hide(); // NOTE: no break here
+        default:
+          $('#tabOther').addClass('active').show().text(this.mgr.format);
+          break;
+      }
+
+      if (this.mgr.format !== 'CoNLL-U') this.is_table_view = false;
+
+      if (this.is_table_view) {
+        $('#btnToggleTable i').removeClass('fa-code');
+        $('#text-data').hide();
+        $('#table-data').show();
+        buildTable();
+      } else {
+        $('#btnToggleTable i').addClass('fa-code');
+        $('#text-data').show();
+        $('#table-data').hide();
+      }
+
+      if (this.is_textarea_visible) {
+        $('#data-container').show();
+        $('#top-buttons-container').removeClass('extra-space');
+        $('#btnToggleTable').show();
+      } else {
+        $('#data-container').hide();
+        $('#top-buttons-container').addClass('extra-space');
+        $('.nav-link').not('.active').hide();
+        $('#btnToggleTable').hide();
+      }
+
+      this.mgr.graph.update();
     }
   }, {
     key: 'read',
@@ -15801,13 +15892,63 @@ var GUI = function () {
     }
   }, {
     key: 'bind',
-    value: function bind() {}
+    value: function bind() {
+
+      $('#btnPrevSentence').click(prevSentence);
+      $('#current-sentence').blur(goToSentence);
+      $('#btnNextSentence').click(nextSentence);
+      $('#btnRemoveSentence').click(removeSentence);
+      $('#btnAddSentence').click(insertSentence);
+
+      $('#btnUploadCorpus').click(uploadCorpus);
+      $('#btnExportCorpus').click(exportCorpus);
+      //$('#btnSaveServer').click(saveOnServer);
+      $('#btnDiscardCorpus').click(clearCorpus);
+      $('#btnPrintCorpus').click(printCorpus);
+
+      $('#btnHelp').click(showHelp);
+      $('#btnSettings').click(showSettings);
+
+      $('#tabText').click(function (e) {
+        convertText(convert2PlainText);
+      });
+      $('#tabConllu').click(function (e) {
+        convertText(convert2Conllu);
+      });
+      $('#tabCG3').click(function (e) {
+        convertText(convert2CG3);
+      });
+
+      $('#btnToggleTable').click(toggleTable);
+      $('#btnToggleTextarea').click(toggleTextarea);
+
+      $('#text-data').keyup(onEditTextData);
+      $('.thead-default th').click(toggleTableColumn);
+
+      $('#RTL').click(toggleRTL);
+      $('#vertical').click(toggleVertical);
+      $('#enhanced').click(toggleEnhanced);
+
+      $('#current-sentence').keyup(onKeyupInTextarea);
+
+      // onkeyup is a global variable for JS runtime
+      onkeyup = onKeyupInDocument;
+
+      // direct graph-editing stuff
+      $('#edit').keyup(onKeyupInEditLabel);
+
+      // prevent accidentally leaving the page
+      window.onbeforeunload = function () {
+        // DEBUG: uncomment this line for production
+        // return 'Are you sure you want to leave?';
+      };
+    }
   }, {
     key: 'column_visible',
     value: function column_visible(col, bool) {
-      if (typeof bool === 'boolean') this.current._column_visibilities[col] = bool;
+      if (typeof bool === 'boolean') this.mgr.current.column_visibilities[col] = bool;
 
-      return this.current._column_visibilities[col];
+      return this.mgr.current.column_visibilities[col];
     }
   }, {
     key: 'zoomIn',
@@ -15822,12 +15963,12 @@ var GUI = function () {
   }, {
     key: 'is_table_view',
     get: function get() {
-      return this.current._is_table_view;
+      return this.mgr.current.is_table_view;
     },
     set: function set(bool) {
-      if (typeof bool === 'boolean' && this.mgr.format === 'CoNLL-U') this.current._is_table_view = bool;
+      if (typeof bool === 'boolean' && this.mgr.format === 'CoNLL-U') this.mgr.current.is_table_view = bool;
 
-      return this.current._is_table_view;
+      return this.mgr.current.is_table_view;
     }
   }]);
 
@@ -15998,6 +16139,9 @@ var Manager = function () {
       this._sentences = this._sentences.slice(0, index).concat(sent).concat(this._sentences.slice(index));
 
       sent.currentFormat = detectFormat(text);
+      sent.is_table_view = false;
+      sent.column_visibilities = new Array(10).fill(true);
+
       this.index = index;
       this.gui.update();
 

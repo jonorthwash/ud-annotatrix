@@ -24,6 +24,10 @@ class Graph {
 
 
   }
+
+  update() {
+    
+  }
 }
 
 module.exports = Graph;
