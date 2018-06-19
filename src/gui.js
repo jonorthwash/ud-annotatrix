@@ -75,7 +75,7 @@ class GUI {
     switch (this.mgr.format) {
       case ('Unknown'):
         $('.nav-link').hide();
-        $('#tabOther').addClass('active').show().text(mgr.format);
+        $('#tabOther').addClass('active').show().text(this.mgr.format);
         break;
       case ('CoNLL-U'):
         $('#tabConllu').addClass('active');
@@ -135,11 +135,24 @@ class GUI {
 
   bind() {
 
-    $('#btnPrevSentence').click(this.mgr.prev);
-    $('#btnNextSentence').click(this.mgr.next);
-    $('#current-sentence').blur(goToSentence);
-    $('#btnRemoveSentence').click(removeSentence);
-    $('#btnAddSentence').click(insertSentence);
+    $('#btnPrevSentence').click(e => {
+      this.mgr.prev();
+    });
+    $('#btnNextSentence').click(e => {
+      this.mgr.next();
+    });
+    $('#current-sentence').blur(e => {
+      const index = parseInt(this.read('current-sentence')) - 1;
+      this.mgr.index = index;
+    });
+    $('#btnRemoveSentence').click(e => {
+      this.mgr.removeSentence()
+    });
+    $('#btnAddSentence').click(e => {
+      this.mgr.insertSentence('');
+    });
+
+    return;
 
     $('#btnUploadCorpus').click(uploadCorpus);
     $('#btnExportCorpus').click(exportCorpus);
@@ -150,9 +163,12 @@ class GUI {
     $('#btnHelp').click(showHelp);
     $('#btnSettings').click(showSettings);
 
-    $('#tabText').click(e => { convertText(convert2PlainText); });
-    $('#tabConllu').click(e => { convertText(convert2Conllu); });
-    $('#tabCG3').click(e => { convertText(convert2CG3); });
+    $('#tabText').click(e => {
+      convertText(convert2PlainText); });
+    $('#tabConllu').click(e => {
+      convertText(convert2Conllu); });
+    $('#tabCG3').click(e => {
+      convertText(convert2CG3); });
 
     $('#btnToggleTable').click(toggleTable);
     $('#btnToggleTextarea').click(toggleTextarea);

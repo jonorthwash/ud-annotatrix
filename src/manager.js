@@ -31,7 +31,7 @@ class Manager {
     this.insertSentence(cfg.defaultTextareaMessage);
   }
   get length() {
-    return this.sentences.length;
+    return this._sentences.length;
   }
   each(callback) {
     return this._sentences.map((sentence, i) => {
@@ -83,7 +83,7 @@ class Manager {
     return this.sentence;
   }
   next() {
-    if (this.index === this.sentences.length - 1) {
+    if (this.index === this._sentences.length - 1) {
       log.warn(`Annotatrix: already at the last sentence!`);
       return null;
     }
@@ -103,6 +103,9 @@ class Manager {
     return this._sentences[this.index];
   }
   get sentence() {
+    if (!this.current)
+      return null;
+
     return this.current.text;
   }
   set sentence(text) {
@@ -140,7 +143,7 @@ class Manager {
     return this._sentences[index];
   }
   insertSentence(index, text) {
-
+    console.log('called')
     if (text === null || text === undefined) { // if only passed 1 arg
       text = index;
       index = this.index + 1;
@@ -188,9 +191,9 @@ class Manager {
       : parseInt(index);
 
     const removed = this._sentences.splice(index, 1)[0];
-    this.index--;
     if (!this.length)
       this.insertSentence();
+    this.index--;
 
     this.gui.update();
 

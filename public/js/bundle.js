@@ -15834,7 +15834,7 @@ var GUI = function () {
       switch (this.mgr.format) {
         case 'Unknown':
           $('.nav-link').hide();
-          $('#tabOther').addClass('active').show().text(mgr.format);
+          $('#tabOther').addClass('active').show().text(this.mgr.format);
           break;
         case 'CoNLL-U':
           $('#tabConllu').addClass('active');
@@ -15893,12 +15893,26 @@ var GUI = function () {
   }, {
     key: 'bind',
     value: function bind() {
+      var _this = this;
 
-      $('#btnPrevSentence').click(prevSentence);
-      $('#current-sentence').blur(goToSentence);
-      $('#btnNextSentence').click(nextSentence);
-      $('#btnRemoveSentence').click(removeSentence);
-      $('#btnAddSentence').click(insertSentence);
+      $('#btnPrevSentence').click(function (e) {
+        _this.mgr.prev();
+      });
+      $('#btnNextSentence').click(function (e) {
+        _this.mgr.next();
+      });
+      $('#current-sentence').blur(function (e) {
+        var index = parseInt(_this.read('current-sentence')) - 1;
+        _this.mgr.index = index;
+      });
+      $('#btnRemoveSentence').click(function (e) {
+        _this.mgr.removeSentence();
+      });
+      $('#btnAddSentence').click(function (e) {
+        _this.mgr.insertSentence('');
+      });
+
+      return;
 
       $('#btnUploadCorpus').click(uploadCorpus);
       $('#btnExportCorpus').click(exportCorpus);
@@ -16077,7 +16091,7 @@ var Manager = function () {
   }, {
     key: 'next',
     value: function next() {
-      if (this.index === this.sentences.length - 1) {
+      if (this.index === this._sentences.length - 1) {
         log.warn('Annotatrix: already at the last sentence!');
         return null;
       }
@@ -16121,7 +16135,7 @@ var Manager = function () {
   }, {
     key: 'insertSentence',
     value: function insertSentence(index, text) {
-
+      console.log('called');
       if (text === null || text === undefined) {
         // if only passed 1 arg
         text = index;
@@ -16162,8 +16176,8 @@ var Manager = function () {
       index = index < 0 ? 0 : index > this.length - 1 ? this.length - 1 : parseInt(index);
 
       var removed = this._sentences.splice(index, 1)[0];
-      this.index--;
       if (!this.length) this.insertSentence();
+      this.index--;
 
       this.gui.update();
 
@@ -16240,7 +16254,7 @@ var Manager = function () {
   }, {
     key: 'length',
     get: function get() {
-      return this.sentences.length;
+      return this._sentences.length;
     }
   }, {
     key: 'index',
@@ -16274,6 +16288,8 @@ var Manager = function () {
   }, {
     key: 'sentence',
     get: function get() {
+      if (!this.current) return null;
+
       return this.current.text;
     },
     set: function set(text) {
