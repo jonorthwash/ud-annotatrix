@@ -184,19 +184,17 @@ class GUI {
     $('#tabCG3').click(e => {
       manager.parse(convert.to.cg3(manager.sentence));
     });
+
+    $('#btnToggleTable').click(toggle.table);
+    $('#btnToggleTextarea').click(toggle.textarea);
+    $('.thead-default th').click(toggle.tableColumn);
+    $('#RTL').click(toggle.rtl);
+    $('#vertical').click(toggle.vertical);
+    $('#enhanced').click(toggle.enhanced);
     return;
 
-    $('#btnToggleTable').click(toggleTable);
-    $('#btnToggleTextarea').click(toggleTextarea);
-
-    $('#text-data').keyup(onEditTextData);
-    $('.thead-default th').click(toggleTableColumn);
-
-    $('#RTL').click(toggleRTL);
-    $('#vertical').click(toggleVertical);
-    $('#enhanced').click(toggleEnhanced);
-
     $('#current-sentence').keyup(onKeyupInTextarea);
+    $('#text-data').keyup(onEditTextData);
 
     // onkeyup is a global variable for JS runtime
     onkeyup = onKeyupInDocument;
@@ -216,6 +214,8 @@ class GUI {
     return manager.current.is_table_view;
   }
   set is_table_view(bool) {
+
+    manager.current.is_table_view = false;
     if (typeof bool === 'boolean' && manager.format === 'CoNLL-U')
       manager.current.is_table_view = bool;
 
@@ -238,6 +238,67 @@ class GUI {
 
 }
 
+const toggle = {
+  table: (event) => {
+    gui.is_table_view = !gui.is_table_view;
+    gui.update();
+  },
+
+  tableColumn: (event) => {
+
+    const target = $(event.target),
+      col = target.attr('col-id');
+
+    gui.column_visible(col, !gui.column_visible(col));
+    target.toggleClass('column-hidden')
+      .find('i')
+        .toggleClass('fa-angle-double-right')
+        .toggleClass('fa-angle-double-left');
+
+    $(`td[col-id=${col}]`)
+      .css('visibility', gui.column_visible(col) ? 'visible' : 'hidden');
+      
+    gui.update();
+  },
+
+  textarea: (event) => {
+
+    $('#btnToggleTextarea i')
+			.toggleClass('fa-chevron-up')
+			.toggleClass('fa-chevron-down')
+    gui.is_textarea_visible = !gui.is_textarea_visible;
+
+    gui.update();
+  },
+
+  rtl: (event) => {
+
+    $('#RTL .fa')
+			.toggleClass('fa-align-right')
+			.toggleClass('fa-align-left');
+		gui.is_ltr = !gui.is_ltr;
+
+    gui.update();
+  },
+
+  vertical: (event) => {
+
+    $('#vertical .fa').toggleClass('fa-rotate-90');
+    gui.is_vertical = !gui.is_vertical;
+
+    gui.update();
+  },
+
+  enhanced: (event) => {
+
+    $('#enhanced .fa')
+			.toggleClass('fa-tree')
+			.toggleClass('fa-magic');
+    gui.is_enhanced = !gui.is_enhanced;
+
+    gui.update();
+  }
+}
 
 
 module.exports = GUI;

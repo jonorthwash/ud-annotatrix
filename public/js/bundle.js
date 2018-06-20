@@ -16564,19 +16564,17 @@ var GUI = function () {
       $('#tabCG3').click(function (e) {
         manager.parse(convert.to.cg3(manager.sentence));
       });
+
+      $('#btnToggleTable').click(toggle.table);
+      $('#btnToggleTextarea').click(toggle.textarea);
+      $('.thead-default th').click(toggle.tableColumn);
+      $('#RTL').click(toggle.rtl);
+      $('#vertical').click(toggle.vertical);
+      $('#enhanced').click(toggle.enhanced);
       return;
 
-      $('#btnToggleTable').click(toggleTable);
-      $('#btnToggleTextarea').click(toggleTextarea);
-
-      $('#text-data').keyup(onEditTextData);
-      $('.thead-default th').click(toggleTableColumn);
-
-      $('#RTL').click(toggleRTL);
-      $('#vertical').click(toggleVertical);
-      $('#enhanced').click(toggleEnhanced);
-
       $('#current-sentence').keyup(onKeyupInTextarea);
+      $('#text-data').keyup(onEditTextData);
 
       // onkeyup is a global variable for JS runtime
       onkeyup = onKeyupInDocument;
@@ -16613,6 +16611,8 @@ var GUI = function () {
       return manager.current.is_table_view;
     },
     set: function set(bool) {
+
+      manager.current.is_table_view = false;
       if (typeof bool === 'boolean' && manager.format === 'CoNLL-U') manager.current.is_table_view = bool;
 
       return manager.current.is_table_view;
@@ -16621,6 +16621,58 @@ var GUI = function () {
 
   return GUI;
 }();
+
+var toggle = {
+  table: function table(event) {
+    gui.is_table_view = !gui.is_table_view;
+    gui.update();
+  },
+
+  tableColumn: function tableColumn(event) {
+
+    var target = $(event.target),
+        col = target.attr('col-id');
+
+    gui.column_visible(col, !gui.column_visible(col));
+    target.toggleClass('column-hidden').find('i').toggleClass('fa-angle-double-right').toggleClass('fa-angle-double-left');
+
+    $('td[col-id=' + col + ']').css('visibility', gui.column_visible(col) ? 'visible' : 'hidden');
+
+    gui.update();
+  },
+
+  textarea: function textarea(event) {
+
+    $('#btnToggleTextarea i').toggleClass('fa-chevron-up').toggleClass('fa-chevron-down');
+    gui.is_textarea_visible = !gui.is_textarea_visible;
+
+    gui.update();
+  },
+
+  rtl: function rtl(event) {
+
+    $('#RTL .fa').toggleClass('fa-align-right').toggleClass('fa-align-left');
+    gui.is_ltr = !gui.is_ltr;
+
+    gui.update();
+  },
+
+  vertical: function vertical(event) {
+
+    $('#vertical .fa').toggleClass('fa-rotate-90');
+    gui.is_vertical = !gui.is_vertical;
+
+    gui.update();
+  },
+
+  enhanced: function enhanced(event) {
+
+    $('#enhanced .fa').toggleClass('fa-tree').toggleClass('fa-magic');
+    gui.is_enhanced = !gui.is_enhanced;
+
+    gui.update();
+  }
+};
 
 module.exports = GUI;
 
