@@ -66,10 +66,15 @@ class GUI {
     $('#text-data').val(this.mgr.sentence);
 
     // navigation buttons
+    $('.btn').removeClass('disabled');
     $('#total-sentences').text(this.mgr.length);
     $('#current-sentence').val(this.mgr.index + 1);
-    $('#btnPrevSentence').attr('disabled', !!this.mgr.index);
-    $('#btnNextSentence').attr('disabled', (this.mgr.index === this.mgr.length));
+    if (!this.mgr.index)
+      $('#btnPrevSentence').addClass('disabled');
+    if (this.mgr.index === this.mgr.length - 1)
+      $('#btnNextSentence').addClass('disabled');
+    if (!server.is_running)
+      $('#btnUploadCorpus').addClass('disabled');
 
     $('.nav-link').removeClass('active').show();
     switch (this.mgr.format) {
@@ -152,9 +157,9 @@ class GUI {
       this.mgr.insertSentence('');
     });
 
-    return;
 
-    $('#btnUploadCorpus').click(uploadCorpus);
+    $('#btnUploadCorpus').click(server.upload);
+    return;
     $('#btnExportCorpus').click(exportCorpus);
     //$('#btnSaveServer').click(saveOnServer);
     $('#btnDiscardCorpus').click(clearCorpus);
@@ -164,11 +169,14 @@ class GUI {
     $('#btnSettings').click(showSettings);
 
     $('#tabText').click(e => {
-      convertText(convert2PlainText); });
+      convertText(convert2PlainText);
+    });
     $('#tabConllu').click(e => {
-      convertText(convert2Conllu); });
+      convertText(convert2Conllu);
+    });
     $('#tabCG3').click(e => {
-      convertText(convert2CG3); });
+      convertText(convert2CG3);
+    });
 
     $('#btnToggleTable').click(toggleTable);
     $('#btnToggleTextarea').click(toggleTextarea);

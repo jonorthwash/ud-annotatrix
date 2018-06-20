@@ -15825,10 +15825,12 @@ var GUI = function () {
       $('#text-data').val(this.mgr.sentence);
 
       // navigation buttons
+      $('.btn').removeClass('disabled');
       $('#total-sentences').text(this.mgr.length);
       $('#current-sentence').val(this.mgr.index + 1);
-      $('#btnPrevSentence').attr('disabled', !!this.mgr.index);
-      $('#btnNextSentence').attr('disabled', this.mgr.index === this.mgr.length);
+      if (!this.mgr.index) $('#btnPrevSentence').addClass('disabled');
+      if (this.mgr.index === this.mgr.length - 1) $('#btnNextSentence').addClass('disabled');
+      if (!server.is_running) $('#btnUploadCorpus').addClass('disabled');
 
       $('.nav-link').removeClass('active').show();
       switch (this.mgr.format) {
@@ -15912,9 +15914,8 @@ var GUI = function () {
         _this.mgr.insertSentence('');
       });
 
+      $('#btnUploadCorpus').click(server.upload);
       return;
-
-      $('#btnUploadCorpus').click(uploadCorpus);
       $('#btnExportCorpus').click(exportCorpus);
       //$('#btnSaveServer').click(saveOnServer);
       $('#btnDiscardCorpus').click(clearCorpus);
@@ -16000,20 +16001,20 @@ var nx = require('notatrix');
 
 var Log = require('./browser-logger');
 var Manager = require('./manager');
+var Server = require('./server');
 
 var cfg = require('./config');
 var errors = require('./errors');
-var server = require('./server');
 var setupUndos = require('./undo-manager');
 
 // on ready
 $(function () {
 
 	window.log = new Log(cfg.defaultLoggingLevel);
+	window.server = new Server();
 	window.manager = new Manager();
 
 	setupUndos();
-	server.check();
 	manager.gui.bind();
 });
 
@@ -16135,7 +16136,7 @@ var Manager = function () {
   }, {
     key: 'insertSentence',
     value: function insertSentence(index, text) {
-      console.log('called');
+
       if (text === null || text === undefined) {
         // if only passed 1 arg
         text = index;
@@ -16337,21 +16338,118 @@ module.exports = Manager;
 },{"./config":10,"./detect":12,"./errors":13,"./funcs":14,"./graph":15,"./gui":16,"jquery":1,"notatrix":4,"underscore":7}],19:[function(require,module,exports){
 'use strict';
 
-function check() {}
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-module.exports = {
-	check: check
-};
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-},{}],20:[function(require,module,exports){
+var $ = require('jquery');
+
+var Server = function () {
+	function Server() {
+		_classCallCheck(this, Server);
+
+		this.is_running = false;
+		try {
+			$.ajax({
+				type: 'POST',
+				url: '/annotatrix/running',
+				data: {
+					content: 'check'
+				},
+				dataType: 'json',
+				success: function success(data) {
+					log.info('checkServer AJAX response: ' + JSON.stringify(data));
+					IS_SERVER_RUNNING = true;
+					getSentence(1);
+				},
+				error: function error(data) {
+					log.info('Unable to complete AJAX request for checkServer()');
+					//loadFromLocalStorage();
+				}
+			});
+		} catch (e) {
+			log.error('AJAX error in checkServer: ' + e.message);
+		}
+	}
+
+	_createClass(Server, [{
+		key: 'push',
+		value: function push() {
+			if (!this.is_running) return null;
+
+			/*
+   const curSent = $('#text-data').val(),
+   	sentNum = $('#current-sentence').val(),
+   	treebank_id = location.href.split('/')[4];
+   	$.ajax({
+   	type: 'POST',
+   	url: '/save',
+   	data: {
+   		content: curSent,
+   		treebank_id: treebank_id,
+   		sentNum: sentNum
+   	},
+   	dataType: 'json',
+   	success: function(data){
+   		log.info('Update was performed');
+   	}
+   });*/
+		}
+	}, {
+		key: 'pull',
+		value: function pull(sentNum) {
+			if (!this.is_running) return null;
+
+			/*
+   const treebank_id = location.href.split('/')[4];
+   	$.ajax({
+   	type: 'POST',
+   	url: '/load',
+   	data: {
+   		treebank_id: treebank_id,
+   		sentNum: sentNum
+   	},
+   	dataType: 'json',
+   	success: (data) => {
+   		if (data['content']) {
+   			const sentence = data['content'],
+   					max = data['max'];
+   			$('#text-data').val(sentence);
+   			$('#total-sentences').html(max);
+   			AVAILABLE_SENTENCES = max;
+   		}
+   	}
+   });
+   	$('#current-sentence').val(sentNum);
+   CURRENT_SENTENCE = sentNum;*/
+		}
+	}, {
+		key: 'download',
+		value: function download() {
+			if (!this.is_running) return null;
+
+			var treebank_id = location.href.split('/')[4];
+			window.open('./download?treebank_id=' + treebank_id, '_blank');
+		}
+	}]);
+
+	return Server;
+}();
+
+module.exports = Server;
+
+},{"jquery":1}],20:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
 var UndoManager = require('undo-manager');
 
 function updateUndoButtons() {
-	undoManager.btnUndo.prop('disabled', !undoManager.hasUndo());
-	undoManager.btnRedo.prop('disabled', !undoManager.hasRedo());
+
+	$('#btnUndo, #btnRedo').addClass('disabled');
+
+	if (undoManager.hasUndo()) $('#btnUndo').removeClass('disabled');
+	if (undoManager.hasRedo()) $('#btnRedo').removeClass('disabled');
 }
 
 module.exports = function () {

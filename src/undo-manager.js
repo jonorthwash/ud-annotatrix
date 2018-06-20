@@ -4,13 +4,18 @@ const $ = require('jquery');
 const UndoManager = require('undo-manager');
 
 function updateUndoButtons() {
-	undoManager.btnUndo.prop('disabled', !undoManager.hasUndo());
-	undoManager.btnRedo.prop('disabled', !undoManager.hasRedo());
+
+	$('#btnUndo, #btnRedo').addClass('disabled');
+
+	if (undoManager.hasUndo())
+		$('#btnUndo').removeClass('disabled');
+	if (undoManager.hasRedo())
+		$('#btnRedo').removeClass('disabled');
 }
 
 module.exports = () => {
 	window.undoManager = new UndoManager();
-	
+
 	undoManager.btnUndo = $('#btnUndo').click(() => {
 		undoManager.undo();
 	});

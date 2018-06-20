@@ -143,7 +143,7 @@ class Manager {
     return this._sentences[index];
   }
   insertSentence(index, text) {
-    console.log('called')
+
     if (text === null || text === undefined) { // if only passed 1 arg
       text = index;
       index = this.index + 1;
@@ -166,9 +166,9 @@ class Manager {
       .concat(this._sentences.slice(index));
 
     sent.currentFormat = detectFormat(text);
-    sent.is_table_view = false
+    sent.is_table_view = false;
     sent.column_visibilities = new Array(10).fill(true);
-    
+
     this.index = index;
     this.gui.update();
 

@@ -6,20 +6,20 @@ const nx = require('notatrix');
 
 const Log = require('./browser-logger');
 const Manager = require('./manager');
+const Server = require('./server');
 
 const cfg = require('./config')
 const errors = require('./errors');
-const server = require('./server');
 const setupUndos = require('./undo-manager');
 
 // on ready
 $(() => {
 
 	window.log = new Log(cfg.defaultLoggingLevel);
+	window.server = new Server();
 	window.manager = new Manager();
 
 	setupUndos();
-	server.check();
 	manager.gui.bind();
 
 });
