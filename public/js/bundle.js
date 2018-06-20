@@ -15230,6 +15230,60 @@ module.exports = {
 },{}],11:[function(require,module,exports){
 'use strict';
 
+var $ = require('jquery');
+
+var server = require('./server');
+
+function upload(event) {
+  return server.upload();
+}
+
+function export_(event) {
+
+  if (!gui.inBrowser) return null;
+
+  //Export Corpora to file
+  if (server.is_running) {
+    throw new NotImplementedError('exportCorpus() not implemented for server interaction');
+    //downloadCorpus();
+  } else {
+
+    var link = $('<a>').attr('download', manager.filename).attr('href', 'data:text/plain; charset=utf-8,' + manager.encode());
+    $('body').append(link);
+    link[0].click();
+  }
+}
+
+function clear(event) {
+  var force = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+
+  if (!force) {
+    var conf = confirm('Do you want to clear the corpus (remove all sentences)?');
+    if (!conf) {
+      log.info('clearCorpus(): not clearing corpus');
+      return;
+    }
+  }
+
+  manager.reset();
+  return;
+}
+
+function print(event) {
+  throw new Error('corpus::print() not implemented');
+}
+
+module.exports = {
+  upload: upload,
+  export: export_,
+  clear: clear,
+  print: print
+};
+
+},{"./server":20,"jquery":1}],12:[function(require,module,exports){
+'use strict';
+
 // is defined in a js file, because fetch doesn't work offline in chrome
 
 var ACTIVE_COLOR = '#2653c9',
@@ -15449,7 +15503,7 @@ var CY_STYLE = [{
     }
 }];
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -15503,7 +15557,7 @@ function detectFormat(text) {
 
 module.exports = detectFormat;
 
-},{"underscore":7}],13:[function(require,module,exports){
+},{"underscore":7}],14:[function(require,module,exports){
 'use strict';
 
 /**
@@ -15686,29 +15740,7 @@ module.exports = {
   ParseError: ParseError
 };
 
-},{}],14:[function(require,module,exports){
-'use strict';
-
-var $ = require('jquery');
-var server = require('./server');
-
-module.exports = function () {
-
-    if (!gui.inBrowser) return null;
-
-    //Export Corpora to file
-    if (server.is_running) {
-        throw new NotImplementedError('exportCorpus() not implemented for server interaction');
-        //downloadCorpus();
-    } else {
-
-        var link = $('<a>').attr('download', manager.filename).attr('href', 'data:text/plain; charset=utf-8,' + manager.encode());
-        $('body').append(link);
-        link[0].click();
-    }
-};
-
-},{"./server":20,"jquery":1}],15:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -15792,7 +15824,7 @@ var Graph = function () {
 
 module.exports = Graph;
 
-},{"./cy-style.js":11,"./funcs":15,"jquery":1,"underscore":7}],17:[function(require,module,exports){
+},{"./cy-style.js":12,"./funcs":15,"jquery":1,"underscore":7}],17:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -15801,9 +15833,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var $ = require('jquery');
 
+var corpus = require('./corpus');
 var funcs = require('./funcs');
 var errors = require('./errors');
-var exporter = require('./export');
+var setupUndos = require('./undo-manager');
 
 var KEYS = {
   DELETE: 46,
@@ -15856,6 +15889,7 @@ var GUI = function () {
     this.editing = null;
 
     this.inBrowser = funcs.inBrowser();
+    setupUndos();
   }
 
   _createClass(GUI, [{
@@ -15957,12 +15991,12 @@ var GUI = function () {
         manager.insertSentence('');
       });
 
-      $('#btnUploadCorpus').click(server.upload);
-      $('#btnExportCorpus').click(exporter);
-      return;
+      $('#btnUploadCorpus').click(corpus.upload);
+      $('#btnExportCorpus').click(corpus.export);
       //$('#btnSaveServer').click(saveOnServer);
-      $('#btnDiscardCorpus').click(clearCorpus);
-      $('#btnPrintCorpus').click(printCorpus);
+      $('#btnDiscardCorpus').click(corpus.clear);
+      $('#btnPrintCorpus').click(corpus.print);
+      return;
 
       $('#btnHelp').click(showHelp);
       $('#btnSettings').click(showSettings);
@@ -16035,7 +16069,7 @@ var GUI = function () {
 
 module.exports = GUI;
 
-},{"./errors":13,"./export":14,"./funcs":15,"jquery":1}],18:[function(require,module,exports){
+},{"./corpus":11,"./errors":14,"./funcs":15,"./undo-manager":21,"jquery":1}],18:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -16051,7 +16085,6 @@ var Server = require('./server');
 var cfg = require('./config');
 var errors = require('./errors');
 var funcs = require('./funcs');
-var setupUndos = require('./undo-manager');
 
 // on ready
 $(function () {
@@ -16062,8 +16095,7 @@ $(function () {
 	funcs.global().gui = new GUI();
 	funcs.global().graph = new Graph();
 
-	setupUndos();
-	manager.insertSentence(cfg.defaultSentence);
+	manager.reset();
 	gui.bind();
 });
 
@@ -16073,7 +16105,7 @@ module.exports = {
 	Log: Log
 };
 
-},{"./browser-logger":9,"./config":10,"./errors":13,"./funcs":15,"./graph":16,"./gui":17,"./manager":19,"./server":20,"./undo-manager":21,"jquery":1,"notatrix":4,"underscore":7}],19:[function(require,module,exports){
+},{"./browser-logger":9,"./config":10,"./errors":14,"./funcs":15,"./graph":16,"./gui":17,"./manager":19,"./server":20,"jquery":1,"notatrix":4,"underscore":7}],19:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -16096,8 +16128,6 @@ nx.Sentence.prototype.currentFormat = null;
 var Manager = function () {
   function Manager() {
     _classCallCheck(this, Manager);
-
-    this.reset();
   }
 
   _createClass(Manager, [{
@@ -16107,6 +16137,8 @@ var Manager = function () {
 
       this._sentences = [];
       this._index = -1;
+
+      this.insertSentence(cfg.defaultSentence);
     }
   }, {
     key: 'each',
@@ -16381,7 +16413,7 @@ var Manager = function () {
 
 module.exports = Manager;
 
-},{"./config":10,"./detect":12,"./errors":13,"./funcs":15,"./graph":16,"./gui":17,"jquery":1,"notatrix":4,"underscore":7}],20:[function(require,module,exports){
+},{"./config":10,"./detect":13,"./errors":14,"./funcs":15,"./graph":16,"./gui":17,"jquery":1,"notatrix":4,"underscore":7}],20:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();

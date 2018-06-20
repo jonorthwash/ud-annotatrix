@@ -13,7 +13,6 @@ const Server = require('./server');
 const cfg = require('./config')
 const errors = require('./errors');
 const funcs = require('./funcs');
-const setupUndos = require('./undo-manager');
 
 // on ready
 $(() => {
@@ -24,8 +23,7 @@ $(() => {
 	funcs.global().gui = new GUI();
 	funcs.global().graph = new Graph();
 
-	setupUndos();
-	manager.insertSentence(cfg.defaultSentence);
+	manager.reset();
 	gui.bind();
 
 });

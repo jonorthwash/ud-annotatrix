@@ -15,15 +15,15 @@ nx.Sentence.prototype.currentFormat = null;
 
 class Manager {
 
-  constructor() {
-    this.reset();
-  }
+  constructor() { }
 
   reset() {
     this.filename = cfg.defaultFilename;
 
     this._sentences = [];
     this._index = -1;
+
+    this.insertSentence(cfg.defaultSentence);
   }
   get length() {
     return this._sentences.length;

@@ -2,9 +2,10 @@
 
 const $ = require('jquery');
 
+const corpus = require('./corpus');
 const funcs = require('./funcs');
 const errors = require('./errors');
-const exporter = require('./export');
+const setupUndos = require('./undo-manager');
 
 const KEYS = {
   DELETE: 46,
@@ -56,6 +57,8 @@ class GUI {
     this.editing = null;
 
     this.inBrowser = funcs.inBrowser();
+    setupUndos();
+
   }
 
   update() {
@@ -159,12 +162,12 @@ class GUI {
     });
 
 
-    $('#btnUploadCorpus').click(server.upload);
-    $('#btnExportCorpus').click(exporter);
-    return;
+    $('#btnUploadCorpus').click(corpus.upload);
+    $('#btnExportCorpus').click(corpus.export);
     //$('#btnSaveServer').click(saveOnServer);
-    $('#btnDiscardCorpus').click(clearCorpus);
-    $('#btnPrintCorpus').click(printCorpus);
+    $('#btnDiscardCorpus').click(corpus.clear);
+    $('#btnPrintCorpus').click(corpus.print);
+    return;
 
     $('#btnHelp').click(showHelp);
     $('#btnSettings').click(showSettings);

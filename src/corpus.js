@@ -1,0 +1,54 @@
+'use strict';
+
+const $ = require('jquery');
+
+const server = require('./server');
+
+function upload(event) {
+  return server.upload();
+}
+
+function export_(event) {
+
+  if (!gui.inBrowser)
+    return null;
+
+  //Export Corpora to file
+  if (server.is_running) {
+      throw new NotImplementedError('corpus::export() not implemented for server interaction');
+      //downloadCorpus();
+  } else {
+
+    const link = $('<a>')
+      .attr('download', manager.filename)
+      .attr('href', `data:text/plain; charset=utf-8,${manager.encode()}`);
+    $('body').append(link);
+    link[0].click();
+
+  }
+}
+
+function clear(event, force=false) {
+
+  if (!force) {
+    const conf = confirm('Do you want to clear the corpus (remove all sentences)?');
+    if (!conf) {
+      log.info('corpus::clear(): not clearing corpus');
+      return;
+    }
+  }
+
+  manager.reset();
+  return;
+}
+
+function print(event) {
+  throw new Error('corpus::print() not implemented');
+}
+
+module.exports = {
+  upload,
+  export: export_,
+  clear,
+  print,
+}
