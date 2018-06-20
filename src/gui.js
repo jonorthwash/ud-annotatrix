@@ -4,6 +4,7 @@ const $ = require('jquery');
 
 const funcs = require('./funcs');
 const errors = require('./errors');
+const exporter = require('./export');
 
 const KEYS = {
   DELETE: 46,
@@ -159,8 +160,8 @@ class GUI {
 
 
     $('#btnUploadCorpus').click(server.upload);
+    $('#btnExportCorpus').click(exporter);
     return;
-    $('#btnExportCorpus').click(exportCorpus);
     //$('#btnSaveServer').click(saveOnServer);
     $('#btnDiscardCorpus').click(clearCorpus);
     $('#btnPrintCorpus').click(printCorpus);
