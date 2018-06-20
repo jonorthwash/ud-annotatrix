@@ -24,11 +24,6 @@ class Manager {
 
     this._sentences = [];
     this._index = -1;
-
-    this.gui = new GUI(this);
-    this.graph = new Graph(this);
-
-    this.insertSentence(cfg.defaultTextareaMessage);
   }
   get length() {
     return this._sentences.length;
@@ -63,7 +58,7 @@ class Manager {
     }
 
     this._index = Math.floor(index); // enforce integer
-    this.gui.update();
+    gui.update();
 
     return this.index;
   }
@@ -128,7 +123,7 @@ class Manager {
 
     this.getSentence(index).text = text;
     this.getSentence(index).currentFormat = detectFormat(text);
-    this.gui.update();
+    gui.update();
 
     return this.getSentence(index);
   }
@@ -170,7 +165,7 @@ class Manager {
     sent.column_visibilities = new Array(10).fill(true);
 
     this.index = index;
-    this.gui.update();
+    gui.update();
 
     return sent.text;
   }
@@ -195,7 +190,7 @@ class Manager {
       this.insertSentence();
     this.index--;
 
-    this.gui.update();
+    gui.update();
 
     return removed;
   }
@@ -242,7 +237,7 @@ class Manager {
   parse(text) {
 
     // if not passed explicitly, read from the textarea
-    text = text || this.gui.read('text-data');
+    text = text || gui.read('text-data');
     let splitted = this.split(text);
 
     // overwrite contents of #text-data
@@ -254,7 +249,7 @@ class Manager {
       this.insertSentence(split);
     });
 
-    this.gui.update();
+    gui.update();
   }
 
 

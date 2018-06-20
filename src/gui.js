@@ -41,7 +41,6 @@ const KEYS = {
 
 class GUI {
   constructor(mgr) {
-    this.mgr = mgr;
 
     this.is_textarea_visible = true;
     this.is_vertical = false;
@@ -62,25 +61,26 @@ class GUI {
     if (!this.inBrowser)
       return;
 
+    //debugger;
     // textarea
-    $('#text-data').val(this.mgr.sentence);
+    $('#text-data').val(manager.sentence);
 
     // navigation buttons
     $('.btn').removeClass('disabled');
-    $('#total-sentences').text(this.mgr.length);
-    $('#current-sentence').val(this.mgr.index + 1);
-    if (!this.mgr.index)
+    $('#total-sentences').text(manager.length);
+    $('#current-sentence').val(manager.index + 1);
+    if (!manager.index)
       $('#btnPrevSentence').addClass('disabled');
-    if (this.mgr.index === this.mgr.length - 1)
+    if (manager.index === manager.length - 1)
       $('#btnNextSentence').addClass('disabled');
     if (!server.is_running)
       $('#btnUploadCorpus').addClass('disabled');
 
     $('.nav-link').removeClass('active').show();
-    switch (this.mgr.format) {
+    switch (manager.format) {
       case ('Unknown'):
         $('.nav-link').hide();
-        $('#tabOther').addClass('active').show().text(this.mgr.format);
+        $('#tabOther').addClass('active').show().text(manager.format);
         break;
       case ('CoNLL-U'):
         $('#tabConllu').addClass('active');
@@ -93,11 +93,11 @@ class GUI {
       case ('plain text'):
         $('#tabText').hide(); // NOTE: no break here
       default:
-        $('#tabOther').addClass('active').show().text(this.mgr.format);
+        $('#tabOther').addClass('active').show().text(manager.format);
         break;
     }
 
-    if (this.mgr.format !== 'CoNLL-U')
+    if (manager.format !== 'CoNLL-U')
         this.is_table_view = false;
 
     if (this.is_table_view) {
@@ -122,7 +122,7 @@ class GUI {
       $('#btnToggleTable').hide();
     }
 
-    this.mgr.graph.update();
+    graph.update();
   }
 
   read(id) {
@@ -141,20 +141,20 @@ class GUI {
   bind() {
 
     $('#btnPrevSentence').click(e => {
-      this.mgr.prev();
+      manager.prev();
     });
     $('#btnNextSentence').click(e => {
-      this.mgr.next();
+      manager.next();
     });
     $('#current-sentence').blur(e => {
       const index = parseInt(this.read('current-sentence')) - 1;
-      this.mgr.index = index;
+      manager.index = index;
     });
     $('#btnRemoveSentence').click(e => {
-      this.mgr.removeSentence()
+      manager.removeSentence()
     });
     $('#btnAddSentence').click(e => {
-      this.mgr.insertSentence('');
+      manager.insertSentence('');
     });
 
 
@@ -205,20 +205,20 @@ class GUI {
   }
 
   get is_table_view() {
-    return this.mgr.current.is_table_view;
+    return manager.current.is_table_view;
   }
   set is_table_view(bool) {
-    if (typeof bool === 'boolean' && this.mgr.format === 'CoNLL-U')
-      this.mgr.current.is_table_view = bool;
+    if (typeof bool === 'boolean' && manager.format === 'CoNLL-U')
+      manager.current.is_table_view = bool;
 
-    return this.mgr.current.is_table_view;
+    return manager.current.is_table_view;
   }
 
   column_visible(col, bool) {
     if (typeof bool === 'boolean')
-      this.mgr.current.column_visibilities[col] = bool;
+      manager.current.column_visibilities[col] = bool;
 
-    return this.mgr.current.column_visibilities[col];
+    return manager.current.column_visibilities[col];
   }
 
   zoomIn() {

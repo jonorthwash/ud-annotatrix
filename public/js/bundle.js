@@ -15223,7 +15223,7 @@ module.exports = Log;
 
 module.exports = {
 	defaultFilename: 'ud-annotatrix-corpus',
-	defaultTextareaMessage: 'Welcome to the UD-Annotatrix',
+	defaultSentence: 'Welcome to the UD-Annotatrix',
 	defaultLoggingLevel: 'ERROR'
 };
 
@@ -15687,6 +15687,7 @@ module.exports = {
 };
 
 },{}],14:[function(require,module,exports){
+(function (global){
 'use strict';
 
 /**
@@ -15703,10 +15704,31 @@ module.exports = {
     } catch (e) {
       return false;
     }
-  }
+  },
+
+  global: function (_global) {
+    function global() {
+      return _global.apply(this, arguments);
+    }
+
+    global.toString = function () {
+      return _global.toString();
+    };
+
+    return global;
+  }(function () {
+    try {
+      // browser
+      return window;
+    } catch (e) {
+      // node
+      return global;
+    }
+  })
 
 };
 
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"underscore":7}],15:[function(require,module,exports){
 'use strict';
 
@@ -15724,7 +15746,6 @@ var Graph = function () {
   function Graph(mgr, options) {
     _classCallCheck(this, Graph);
 
-    this.mgr = mgr;
     this.options = _.defaults(options, {
       container: funcs.inBrowser() ? $('#cy') : null,
       boxSelectionEnabled: false,
@@ -15799,8 +15820,6 @@ var GUI = function () {
   function GUI(mgr) {
     _classCallCheck(this, GUI);
 
-    this.mgr = mgr;
-
     this.is_textarea_visible = true;
     this.is_vertical = false;
     this.is_ltr = true;
@@ -15821,22 +15840,23 @@ var GUI = function () {
     value: function update() {
       if (!this.inBrowser) return;
 
+      //debugger;
       // textarea
-      $('#text-data').val(this.mgr.sentence);
+      $('#text-data').val(manager.sentence);
 
       // navigation buttons
       $('.btn').removeClass('disabled');
-      $('#total-sentences').text(this.mgr.length);
-      $('#current-sentence').val(this.mgr.index + 1);
-      if (!this.mgr.index) $('#btnPrevSentence').addClass('disabled');
-      if (this.mgr.index === this.mgr.length - 1) $('#btnNextSentence').addClass('disabled');
+      $('#total-sentences').text(manager.length);
+      $('#current-sentence').val(manager.index + 1);
+      if (!manager.index) $('#btnPrevSentence').addClass('disabled');
+      if (manager.index === manager.length - 1) $('#btnNextSentence').addClass('disabled');
       if (!server.is_running) $('#btnUploadCorpus').addClass('disabled');
 
       $('.nav-link').removeClass('active').show();
-      switch (this.mgr.format) {
+      switch (manager.format) {
         case 'Unknown':
           $('.nav-link').hide();
-          $('#tabOther').addClass('active').show().text(this.mgr.format);
+          $('#tabOther').addClass('active').show().text(manager.format);
           break;
         case 'CoNLL-U':
           $('#tabConllu').addClass('active');
@@ -15849,11 +15869,11 @@ var GUI = function () {
         case 'plain text':
           $('#tabText').hide(); // NOTE: no break here
         default:
-          $('#tabOther').addClass('active').show().text(this.mgr.format);
+          $('#tabOther').addClass('active').show().text(manager.format);
           break;
       }
 
-      if (this.mgr.format !== 'CoNLL-U') this.is_table_view = false;
+      if (manager.format !== 'CoNLL-U') this.is_table_view = false;
 
       if (this.is_table_view) {
         $('#btnToggleTable i').removeClass('fa-code');
@@ -15877,7 +15897,7 @@ var GUI = function () {
         $('#btnToggleTable').hide();
       }
 
-      this.mgr.graph.update();
+      graph.update();
     }
   }, {
     key: 'read',
@@ -15898,20 +15918,20 @@ var GUI = function () {
       var _this = this;
 
       $('#btnPrevSentence').click(function (e) {
-        _this.mgr.prev();
+        manager.prev();
       });
       $('#btnNextSentence').click(function (e) {
-        _this.mgr.next();
+        manager.next();
       });
       $('#current-sentence').blur(function (e) {
         var index = parseInt(_this.read('current-sentence')) - 1;
-        _this.mgr.index = index;
+        manager.index = index;
       });
       $('#btnRemoveSentence').click(function (e) {
-        _this.mgr.removeSentence();
+        manager.removeSentence();
       });
       $('#btnAddSentence').click(function (e) {
-        _this.mgr.insertSentence('');
+        manager.insertSentence('');
       });
 
       $('#btnUploadCorpus').click(server.upload);
@@ -15961,9 +15981,9 @@ var GUI = function () {
   }, {
     key: 'column_visible',
     value: function column_visible(col, bool) {
-      if (typeof bool === 'boolean') this.mgr.current.column_visibilities[col] = bool;
+      if (typeof bool === 'boolean') manager.current.column_visibilities[col] = bool;
 
-      return this.mgr.current.column_visibilities[col];
+      return manager.current.column_visibilities[col];
     }
   }, {
     key: 'zoomIn',
@@ -15978,12 +15998,12 @@ var GUI = function () {
   }, {
     key: 'is_table_view',
     get: function get() {
-      return this.mgr.current.is_table_view;
+      return manager.current.is_table_view;
     },
     set: function set(bool) {
-      if (typeof bool === 'boolean' && this.mgr.format === 'CoNLL-U') this.mgr.current.is_table_view = bool;
+      if (typeof bool === 'boolean' && manager.format === 'CoNLL-U') manager.current.is_table_view = bool;
 
-      return this.mgr.current.is_table_view;
+      return manager.current.is_table_view;
     }
   }]);
 
@@ -15999,23 +16019,29 @@ var $ = require('jquery');
 var _ = require('underscore');
 var nx = require('notatrix');
 
+var GUI = require('./gui');
+var Graph = require('./graph');
 var Log = require('./browser-logger');
 var Manager = require('./manager');
 var Server = require('./server');
 
 var cfg = require('./config');
 var errors = require('./errors');
+var funcs = require('./funcs');
 var setupUndos = require('./undo-manager');
 
 // on ready
 $(function () {
 
-	window.log = new Log(cfg.defaultLoggingLevel);
-	window.server = new Server();
-	window.manager = new Manager();
+	funcs.global().log = new Log(cfg.defaultLoggingLevel);
+	funcs.global().server = new Server();
+	funcs.global().manager = new Manager();
+	funcs.global().gui = new GUI();
+	funcs.global().graph = new Graph();
 
 	setupUndos();
-	manager.gui.bind();
+	manager.insertSentence(cfg.defaultSentence);
+	gui.bind();
 });
 
 module.exports = {
@@ -16024,7 +16050,7 @@ module.exports = {
 	Log: Log
 };
 
-},{"./browser-logger":9,"./config":10,"./errors":13,"./manager":18,"./server":19,"./undo-manager":20,"jquery":1,"notatrix":4,"underscore":7}],18:[function(require,module,exports){
+},{"./browser-logger":9,"./config":10,"./errors":13,"./funcs":14,"./graph":15,"./gui":16,"./manager":18,"./server":19,"./undo-manager":20,"jquery":1,"notatrix":4,"underscore":7}],18:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -16058,11 +16084,6 @@ var Manager = function () {
 
       this._sentences = [];
       this._index = -1;
-
-      this.gui = new GUI(this);
-      this.graph = new Graph(this);
-
-      this.insertSentence(cfg.defaultTextareaMessage);
     }
   }, {
     key: 'each',
@@ -16119,7 +16140,7 @@ var Manager = function () {
 
       this.getSentence(index).text = text;
       this.getSentence(index).currentFormat = detectFormat(text);
-      this.gui.update();
+      gui.update();
 
       return this.getSentence(index);
     }
@@ -16158,7 +16179,7 @@ var Manager = function () {
       sent.column_visibilities = new Array(10).fill(true);
 
       this.index = index;
-      this.gui.update();
+      gui.update();
 
       return sent.text;
     }
@@ -16180,7 +16201,7 @@ var Manager = function () {
       if (!this.length) this.insertSentence();
       this.index--;
 
-      this.gui.update();
+      gui.update();
 
       return removed;
     }
@@ -16226,7 +16247,7 @@ var Manager = function () {
       var _this = this;
 
       // if not passed explicitly, read from the textarea
-      text = text || this.gui.read('text-data');
+      text = text || gui.read('text-data');
       var splitted = this.split(text);
 
       // overwrite contents of #text-data
@@ -16238,7 +16259,7 @@ var Manager = function () {
         _this.insertSentence(split);
       });
 
-      this.gui.update();
+      gui.update();
     }
   }, {
     key: 'export',
@@ -16277,7 +16298,7 @@ var Manager = function () {
       }
 
       this._index = Math.floor(index); // enforce integer
-      this.gui.update();
+      gui.update();
 
       return this.index;
     }

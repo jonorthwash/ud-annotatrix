@@ -8,7 +8,7 @@ const CY_STYLE = require('./cy-style.js');
 
 class Graph {
   constructor(mgr, options) {
-    this.mgr = mgr;
+
     this.options = _.defaults(options, {
       container: funcs.inBrowser() ? $('#cy') : null,
       boxSelectionEnabled: false,
@@ -26,7 +26,7 @@ class Graph {
   }
 
   update() {
-    
+
   }
 }
 

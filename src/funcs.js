@@ -17,4 +17,14 @@ module.exports = {
     }
   },
 
+  global: () => {
+    try {
+      // browser
+      return window;
+    } catch (e) {
+      // node
+      return global;
+    }
+  }
+
 };
