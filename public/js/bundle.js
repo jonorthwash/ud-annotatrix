@@ -16388,6 +16388,7 @@ var corpus = require('./corpus');
 var funcs = require('./funcs');
 var errors = require('./errors');
 var setupUndos = require('./undo-manager');
+var table = require('./table');
 
 var KEYS = {
   DELETE: 46,
@@ -16487,7 +16488,7 @@ var GUI = function () {
         $('#btnToggleTable i').removeClass('fa-code');
         $('#text-data').hide();
         $('#table-data').show();
-        buildTable();
+        table.build();
       } else {
         $('#btnToggleTable i').addClass('fa-code');
         $('#text-data').show();
@@ -16676,7 +16677,7 @@ var toggle = {
 
 module.exports = GUI;
 
-},{"./convert":12,"./corpus":13,"./errors":16,"./funcs":17,"./undo-manager":23,"jquery":1}],20:[function(require,module,exports){
+},{"./convert":12,"./corpus":13,"./errors":16,"./funcs":17,"./table":23,"./undo-manager":24,"jquery":1}],20:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -17143,6 +17144,92 @@ var Server = function () {
 module.exports = Server;
 
 },{"jquery":1}],23:[function(require,module,exports){
+'use strict';
+
+var $ = require('jquery');
+
+function build() {
+  $('#table-data tbody').empty();
+
+  $.each($('#text-data').val().split('\n'), function (i, line) {
+    log.debug('buildTable() line: ' + line);
+    if (line.trim() === '') return;
+
+    var cells = line.split('\t');
+    var tr = $('<tr>').attr('id', 'table_' + i);
+
+    if (line.startsWith('#')) {
+
+      tr.addClass('comment').text(line);
+    } else if (cells.length !== 10) {
+
+      log.warn('buildTable(): CoNLL-U should have 10 columns');
+      tr.addClass('wrong-shape').text(line);
+    } else {
+
+      $.each(cells, function (j, cell) {
+        var valid = {},
+            td = $('<td>'),
+            inputSpan = $('<span>').attr('name', 'input'),
+            errorSpan = $('<span>').attr('name', 'error');
+
+        if (cell.trim() === '') cell = '_';
+
+        if (cell !== '_') {
+          if (j === 3) valid = is_upos(cell);
+          if (j === 7) valid = is_udeprel(cell);
+        }
+
+        td.prop('contenteditable', true).attr('row-id', i).attr('col-id', j).attr('name', j === 0 ? 'index' : 'content').css('visibility', a.column_visible(j) ? 'visible' : 'hidden').blur(onEditTable).keyup(function (event) {
+          if (event.which === KEYS.ESC) {
+            $(event.target).blur();
+          } else if (event.which === KEYS.ENTER) {
+            onEnter(event);
+          }
+        });
+
+        inputSpan.text(cell);
+
+        if (valid.err) {
+          log.warn('buildTable(): error parsing cell (err:"' + valid.err + '", cell:"' + cell + '")');
+          document.l10n.formatValue(valid.err, valid.data).then(function (title) {
+            errorSpan.addClass('fa fa-exclamation-triangle').addClass('parse-error').attr('aria-hidden', 'true').attr('title', title);
+          });
+        }
+        tr.append(td.append(inputSpan).append(errorSpan));
+      });
+    }
+
+    $('#table-data tbody').append(tr);
+  });
+}
+
+function edit(event) {
+
+  // join the rows on \n and the columns on \t
+  var conllu = Array.from($('#table-data tr').map(function (i, tr) {
+    if ($(tr).hasClass('comment') || $(tr).hasClass('wrong-shape')) {
+
+      return $(tr).text();
+    } else {
+
+      return Array.from($(tr).find('td').map(function (j, td) {
+        var content = $(td).find('[name=input]').text().replace(/<br>/g, '').trim();
+        return content.length ? content : '_';
+      })).join('\t');
+    }
+  })).join('\n');
+
+  // save it to the textarea and parse it
+  manager.parse(conllu);
+}
+
+module.exports = {
+  build: build,
+  edit: edit
+};
+
+},{"jquery":1}],24:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');

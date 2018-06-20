@@ -7,6 +7,7 @@ const corpus = require('./corpus');
 const funcs = require('./funcs');
 const errors = require('./errors');
 const setupUndos = require('./undo-manager');
+const table = require('./table');
 
 const KEYS = {
   DELETE: 46,
@@ -103,13 +104,13 @@ class GUI {
     }
 
     if (manager.format !== 'CoNLL-U')
-        this.is_table_view = false;
+      this.is_table_view = false;
 
     if (this.is_table_view) {
       $('#btnToggleTable i').removeClass('fa-code');
       $('#text-data').hide();
       $('#table-data').show();
-      buildTable();
+      table.build();
     } else {
       $('#btnToggleTable i').addClass('fa-code');
       $('#text-data').show();
@@ -257,7 +258,7 @@ const toggle = {
 
     $(`td[col-id=${col}]`)
       .css('visibility', gui.column_visible(col) ? 'visible' : 'hidden');
-      
+
     gui.update();
   },
 
