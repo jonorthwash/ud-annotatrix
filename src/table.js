@@ -1,73 +1,61 @@
 'use strict';
 
 const $ = require('jquery');
+const validate = require('./validate');
 
 function build() {
   $('#table-data tbody').empty();
 
-  $.each($('#text-data').val().split('\n'), (i, line) => {
-    log.debug(`buildTable() line: ${line}`);
-    if (line.trim() === '')
-      return;
-
-    const cells = line.split('\t');
+  manager.current.forEach((token, i) => {
     let tr = $('<tr>').attr('id', `table_${i}`);
 
-    if (line.startsWith('#')) {
+    $.each(
+      ['id', 'form', 'lemma', 'upostag', 'xpostag',
+        'feats', 'head', 'deprel', 'deps', 'misc'], (j, field) => {
 
-      tr.addClass('comment').text(line);
+      const value = token.analysis[field];
 
-    } else if (cells.length !== 10) {
+      let valid = {},
+        td = $('<td>'),
+        inputSpan = $('<span>').attr('name', 'input'),
+        errorSpan = $('<span>').attr('name', 'error');
 
-      log.warn(`buildTable(): CoNLL-U should have 10 columns`);
-      tr.addClass('wrong-shape').text(line);
+      if (value !== '_') {
+        if (j === 3)
+          valid = validate.is_upos(value);
+        if (j === 7)
+          valid = validate.is_udeprel(value);
+      }
 
-    } else {
+      td.prop('contenteditable', true)
+        .attr('row-id', i)
+        .attr('col-id', j)
+        .attr('tok-id', token.analysis.id)
+        .attr('field', field)
+        .attr('name', j === 0 ? 'index' : 'content')
+        .css('visibility', gui.column_visible(j) ? 'visible' : 'hidden')
+        .blur(edit)
+        .keyup((event) => {
+          if (event.which === gui.keys.ESC) {
+            $(event.target).blur();
+          } else if (event.which === gui.keys.ENTER) {
+            gui.onEnter(event);
+          }
+        });
 
-      $.each(cells, (j, cell) => {
-        let valid = {},
-          td = $('<td>'),
-          inputSpan = $('<span>').attr('name', 'input'),
-          errorSpan = $('<span>').attr('name', 'error');
+      inputSpan.text(value);
 
-        if (cell.trim() === '')
-          cell = '_';
-
-        if (cell !== '_') {
-          if (j === 3)
-            valid = is_upos(cell);
-          if (j === 7)
-            valid = is_udeprel(cell);
-        }
-
-        td.prop('contenteditable', true)
-          .attr('row-id', i)
-          .attr('col-id', j)
-          .attr('name', j === 0 ? 'index' : 'content')
-          .css('visibility', a.column_visible(j) ? 'visible' : 'hidden')
-          .blur(onEditTable)
-          .keyup((event) => {
-            if (event.which === KEYS.ESC) {
-              $(event.target).blur();
-            } else if (event.which === KEYS.ENTER) {
-              onEnter(event);
-            }
-          });
-
-        inputSpan.text(cell);
-
-        if (valid.err) {
-          log.warn(`buildTable(): error parsing cell (err:"${valid.err}", cell:"${cell}")`);
-          document.l10n.formatValue(valid.err, valid.data).then(title => {
-            errorSpan.addClass('fa fa-exclamation-triangle')
-              .addClass('parse-error')
-              .attr('aria-hidden', 'true')
-              .attr('title', title);
-          });
-        }
-        tr.append( td.append(inputSpan).append(errorSpan) );
-      });
-    }
+      if (valid.err) {
+        log.warn(`buildTable(): error parsing cell (err:"${valid.err}", value:"${value}")`);
+        /*document.l10n.formatValue(valid.err, valid.data).then(title => {
+          errorSpan.addClass('fa fa-exclamation-triangle')
+            .addClass('parse-error')
+            .attr('aria-hidden', 'true')
+            .attr('title', title);
+        });*/
+      }
+      tr.append( td.append(inputSpan).append(errorSpan) );
+    });
 
     $('#table-data tbody').append(tr);
   });
@@ -75,25 +63,14 @@ function build() {
 
 function edit(event) {
 
-  // join the rows on \n and the columns on \t
-  let conllu = Array.from($('#table-data tr').map((i, tr) => {
-    if ($(tr).hasClass('comment') || $(tr).hasClass('wrong-shape')) {
+  const target = $(event.target),
+    id = target.attr('tok-id'),
+    ana = manager.current.getById(id),
+    field = target.attr('field'),
+    value = target.text();
 
-      return $(tr).text();
-
-    } else {
-
-      return Array.from($(tr).find('td').map((j, td) => {
-        let content = $(td).find('[name=input]')
-          .text().replace(/<br>/g, '').trim();
-        return content.length ? content : '_';
-
-      })).join('\t');
-    }
-  })).join('\n');
-
-  // save it to the textarea and parse it
-  manager.parse(conllu);
+  ana[field] = value;
+  gui.update();
 }
 
 module.exports = {

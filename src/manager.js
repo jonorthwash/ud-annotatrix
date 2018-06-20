@@ -93,9 +93,23 @@ class Manager {
 
 
 
+  set(token, field, value) {
+    if (field === 'id')
+      return;
 
+    console.log(field, value);
+    this._sentences[this.index][field] = value;
+    console.log(this.current);
+    gui.update();
+
+  }
   get current() {
     return this._sentences[this.index];
+  }
+  set current(sent) {
+    if (sent instanceof nx.Sentence)
+      this._sentences[this.index] = sent;
+    console.log(sent);
   }
   get sentence() {
     if (!this.current)

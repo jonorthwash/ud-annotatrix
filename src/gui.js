@@ -42,9 +42,74 @@ const KEYS = {
   Z: 90,
   0: 48
 };
+const toggle = {
+  table: (event) => {
+    gui.is_table_view = !gui.is_table_view;
+    gui.update();
+  },
+
+  tableColumn: (event) => {
+
+    const target = $(event.target),
+      col = target.attr('col-id');
+
+    gui.column_visible(col, !gui.column_visible(col));
+    target.toggleClass('column-hidden')
+      .find('i')
+        .toggleClass('fa-angle-double-right')
+        .toggleClass('fa-angle-double-left');
+
+    $(`td[col-id=${col}]`)
+      .css('visibility', gui.column_visible(col) ? 'visible' : 'hidden');
+
+    gui.update();
+  },
+
+  textarea: (event) => {
+
+    $('#btnToggleTextarea i')
+			.toggleClass('fa-chevron-up')
+			.toggleClass('fa-chevron-down')
+    gui.is_textarea_visible = !gui.is_textarea_visible;
+
+    gui.update();
+  },
+
+  rtl: (event) => {
+
+    $('#RTL .fa')
+			.toggleClass('fa-align-right')
+			.toggleClass('fa-align-left');
+		gui.is_ltr = !gui.is_ltr;
+
+    gui.update();
+  },
+
+  vertical: (event) => {
+
+    $('#vertical .fa').toggleClass('fa-rotate-90');
+    gui.is_vertical = !gui.is_vertical;
+
+    gui.update();
+  },
+
+  enhanced: (event) => {
+
+    $('#enhanced .fa')
+			.toggleClass('fa-tree')
+			.toggleClass('fa-magic');
+    gui.is_enhanced = !gui.is_enhanced;
+
+    gui.update();
+  }
+}
+
 
 class GUI {
   constructor(mgr) {
+
+    this.keys = KEYS;
+    this.toggle = toggle;
 
     this.is_textarea_visible = true;
     this.is_vertical = false;
@@ -67,7 +132,6 @@ class GUI {
     if (!this.inBrowser)
       return;
 
-    //debugger;
     // textarea
     $('#text-data').val(manager.sentence);
 
@@ -186,12 +250,12 @@ class GUI {
       manager.parse(convert.to.cg3(manager.sentence));
     });
 
-    $('#btnToggleTable').click(toggle.table);
-    $('#btnToggleTextarea').click(toggle.textarea);
-    $('.thead-default th').click(toggle.tableColumn);
-    $('#RTL').click(toggle.rtl);
-    $('#vertical').click(toggle.vertical);
-    $('#enhanced').click(toggle.enhanced);
+    $('#btnToggleTable').click(this.toggle.table);
+    $('#btnToggleTextarea').click(this.toggle.textarea);
+    $('.thead-default th').click(this.toggle.tableColumn);
+    $('#RTL').click(this.toggle.rtl);
+    $('#vertical').click(this.toggle.vertical);
+    $('#enhanced').click(this.toggle.enhanced);
     return;
 
     $('#current-sentence').keyup(onKeyupInTextarea);
@@ -234,72 +298,14 @@ class GUI {
     throw new errors.NotImplementedError();
   }
   zoomOut() {
-    throw new errors.NotImplementedError
+    throw new errors.NotImplementedError();
   }
 
-}
-
-const toggle = {
-  table: (event) => {
-    gui.is_table_view = !gui.is_table_view;
-    gui.update();
-  },
-
-  tableColumn: (event) => {
-
-    const target = $(event.target),
-      col = target.attr('col-id');
-
-    gui.column_visible(col, !gui.column_visible(col));
-    target.toggleClass('column-hidden')
-      .find('i')
-        .toggleClass('fa-angle-double-right')
-        .toggleClass('fa-angle-double-left');
-
-    $(`td[col-id=${col}]`)
-      .css('visibility', gui.column_visible(col) ? 'visible' : 'hidden');
-
-    gui.update();
-  },
-
-  textarea: (event) => {
-
-    $('#btnToggleTextarea i')
-			.toggleClass('fa-chevron-up')
-			.toggleClass('fa-chevron-down')
-    gui.is_textarea_visible = !gui.is_textarea_visible;
-
-    gui.update();
-  },
-
-  rtl: (event) => {
-
-    $('#RTL .fa')
-			.toggleClass('fa-align-right')
-			.toggleClass('fa-align-left');
-		gui.is_ltr = !gui.is_ltr;
-
-    gui.update();
-  },
-
-  vertical: (event) => {
-
-    $('#vertical .fa').toggleClass('fa-rotate-90');
-    gui.is_vertical = !gui.is_vertical;
-
-    gui.update();
-  },
-
-  enhanced: (event) => {
-
-    $('#enhanced .fa')
-			.toggleClass('fa-tree')
-			.toggleClass('fa-magic');
-    gui.is_enhanced = !gui.is_enhanced;
-
-    gui.update();
+  onEnter(event) {
+    console.log('on enter')
   }
 }
+
 
 
 module.exports = GUI;
