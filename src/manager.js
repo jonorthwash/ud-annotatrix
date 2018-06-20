@@ -283,8 +283,8 @@ class Manager {
 
   export() {
     return this.each((i, sent) => {
-      return `[UD-Annotatrix: id="${i+1}" format="${sentence.format}"]
-      ${sentence.text}`;
+      return `[UD-Annotatrix: id="${i+1}" format="${manager.format}"]
+      ${ (manager.format === 'Unknown') ? '' : this.sentence }`;
     }).join('\n\n');
   }
   encode() {

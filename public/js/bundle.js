@@ -15687,6 +15687,28 @@ module.exports = {
 };
 
 },{}],14:[function(require,module,exports){
+'use strict';
+
+var $ = require('jquery');
+var server = require('./server');
+
+module.exports = function () {
+
+    if (!gui.inBrowser) return null;
+
+    //Export Corpora to file
+    if (server.is_running) {
+        throw new NotImplementedError('exportCorpus() not implemented for server interaction');
+        //downloadCorpus();
+    } else {
+
+        var link = $('<a>').attr('download', manager.filename).attr('href', 'data:text/plain; charset=utf-8,' + manager.encode());
+        $('body').append(link);
+        link[0].click();
+    }
+};
+
+},{"./server":20,"jquery":1}],15:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -15729,7 +15751,7 @@ module.exports = {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"underscore":7}],15:[function(require,module,exports){
+},{"underscore":7}],16:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -15770,7 +15792,7 @@ var Graph = function () {
 
 module.exports = Graph;
 
-},{"./cy-style.js":11,"./funcs":14,"jquery":1,"underscore":7}],16:[function(require,module,exports){
+},{"./cy-style.js":11,"./funcs":15,"jquery":1,"underscore":7}],17:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -15781,6 +15803,7 @@ var $ = require('jquery');
 
 var funcs = require('./funcs');
 var errors = require('./errors');
+var exporter = require('./export');
 
 var KEYS = {
   DELETE: 46,
@@ -15935,8 +15958,8 @@ var GUI = function () {
       });
 
       $('#btnUploadCorpus').click(server.upload);
+      $('#btnExportCorpus').click(exporter);
       return;
-      $('#btnExportCorpus').click(exportCorpus);
       //$('#btnSaveServer').click(saveOnServer);
       $('#btnDiscardCorpus').click(clearCorpus);
       $('#btnPrintCorpus').click(printCorpus);
@@ -16012,7 +16035,7 @@ var GUI = function () {
 
 module.exports = GUI;
 
-},{"./errors":13,"./funcs":14,"jquery":1}],17:[function(require,module,exports){
+},{"./errors":13,"./export":14,"./funcs":15,"jquery":1}],18:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -16050,7 +16073,7 @@ module.exports = {
 	Log: Log
 };
 
-},{"./browser-logger":9,"./config":10,"./errors":13,"./funcs":14,"./graph":15,"./gui":16,"./manager":18,"./server":19,"./undo-manager":20,"jquery":1,"notatrix":4,"underscore":7}],18:[function(require,module,exports){
+},{"./browser-logger":9,"./config":10,"./errors":13,"./funcs":15,"./graph":16,"./gui":17,"./manager":19,"./server":20,"./undo-manager":21,"jquery":1,"notatrix":4,"underscore":7}],19:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -16264,8 +16287,10 @@ var Manager = function () {
   }, {
     key: 'export',
     value: function _export() {
+      var _this2 = this;
+
       return this.each(function (i, sent) {
-        return '[UD-Annotatrix: id="' + (i + 1) + '" format="' + sentence.format + '"]\n      ' + sentence.text;
+        return '[UD-Annotatrix: id="' + (i + 1) + '" format="' + manager.format + '"]\n      ' + (manager.format === 'Unknown' ? '' : _this2.sentence);
       }).join('\n\n');
     }
   }, {
@@ -16356,7 +16381,7 @@ var Manager = function () {
 
 module.exports = Manager;
 
-},{"./config":10,"./detect":12,"./errors":13,"./funcs":14,"./graph":15,"./gui":16,"jquery":1,"notatrix":4,"underscore":7}],19:[function(require,module,exports){
+},{"./config":10,"./detect":12,"./errors":13,"./funcs":15,"./graph":16,"./gui":17,"jquery":1,"notatrix":4,"underscore":7}],20:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -16459,7 +16484,7 @@ var Server = function () {
 
 module.exports = Server;
 
-},{"jquery":1}],20:[function(require,module,exports){
+},{"jquery":1}],21:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -16487,5 +16512,5 @@ module.exports = function () {
 	updateUndoButtons();
 };
 
-},{"jquery":1,"undo-manager":8}]},{},[17])(17)
+},{"jquery":1,"undo-manager":8}]},{},[18])(18)
 });
