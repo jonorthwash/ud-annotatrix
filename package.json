@@ -10,7 +10,7 @@
     "jquery": "^3.2.1",
     "jquery-autocomplete": "^1.2.8",
     "l20n": "^5.0.0",
-    "notatrix": "^1.2.1",
+    "notatrix": "^1.2.3",
     "popper": "^1.0.1",
     "underscore": "^1.9.1",
     "undo-manager": "^1.0.5",

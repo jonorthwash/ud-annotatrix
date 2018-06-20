@@ -6,37 +6,37 @@ const funcs = require('./funcs');
 const errors = require('./errors');
 
 const KEYS = {
-    DELETE: 46,
-    BACKSPACE: 8,
-    ENTER: 13,
-    ESC: 27,
-    TAB: 9,
-    RIGHT: 39,
-    LEFT: 37,
-    UP: 38,
-    DOWN: 40,
-    MINUS: 173,
-    MINUS_: 189,
-    EQUALS: 61,
-    EQUALS_: 187,
-    SHIFT: 16,
-    CTRL: 17,
-    OPT: 18,
-    PAGE_UP: 33,
-    PAGE_DOWN: 34,
-    META: 224,
-    D: 68,
-    I: 73,
-    J: 74,
-    K: 75,
-    M: 77,
-    P: 80,
-    R: 82,
-    S: 83,
-    X: 88,
-    Y: 89,
-    Z: 90,
-    0: 48
+  DELETE: 46,
+  BACKSPACE: 8,
+  ENTER: 13,
+  ESC: 27,
+  TAB: 9,
+  RIGHT: 39,
+  LEFT: 37,
+  UP: 38,
+  DOWN: 40,
+  MINUS: 173,
+  MINUS_: 189,
+  EQUALS: 61,
+  EQUALS_: 187,
+  SHIFT: 16,
+  CTRL: 17,
+  OPT: 18,
+  PAGE_UP: 33,
+  PAGE_DOWN: 34,
+  META: 224,
+  D: 68,
+  I: 73,
+  J: 74,
+  K: 75,
+  M: 77,
+  P: 80,
+  R: 82,
+  S: 83,
+  X: 88,
+  Y: 89,
+  Z: 90,
+  0: 48
 };
 
 class GUI {
@@ -96,25 +96,25 @@ class GUI {
         this.is_table_view = false;
 
     if (this.is_table_view) {
-        $('#btnToggleTable i').removeClass('fa-code');
-        $('#text-data').hide();
-        $('#table-data').show();
-        buildTable();
+      $('#btnToggleTable i').removeClass('fa-code');
+      $('#text-data').hide();
+      $('#table-data').show();
+      buildTable();
     } else {
-        $('#btnToggleTable i').addClass('fa-code');
-        $('#text-data').show();
-        $('#table-data').hide();
+      $('#btnToggleTable i').addClass('fa-code');
+      $('#text-data').show();
+      $('#table-data').hide();
     }
 
     if (this.is_textarea_visible) {
-        $('#data-container').show();
-        $('#top-buttons-container').removeClass('extra-space');
-        $('#btnToggleTable').show();
+      $('#data-container').show();
+      $('#top-buttons-container').removeClass('extra-space');
+      $('#btnToggleTable').show();
     } else {
-        $('#data-container').hide();
-        $('#top-buttons-container').addClass('extra-space');
-        $('.nav-link').not('.active').hide();
-        $('#btnToggleTable').hide();
+      $('#data-container').hide();
+      $('#top-buttons-container').addClass('extra-space');
+      $('.nav-link').not('.active').hide();
+      $('#btnToggleTable').hide();
     }
 
     this.mgr.graph.update();
