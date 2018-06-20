@@ -101,7 +101,7 @@ class Manager {
     if (!this.current)
       return null;
 
-    return this.current.text;
+    return this.current.data;
   }
   set sentence(text) {
     return this.setSentence(text);
@@ -121,8 +121,7 @@ class Manager {
     if (0 > index || index > this.length - 1)
       return null;
 
-    this.getSentence(index).text = text;
-    this.getSentence(index).currentFormat = detectFormat(text);
+    this._sentences[index] = newSentence(text);
     gui.update();
 
     return this.getSentence(index);
@@ -140,7 +139,7 @@ class Manager {
   insertSentence(index, text) {
 
     if (text === null || text === undefined) { // if only passed 1 arg
-      text = index;
+      text = index || cfg.defaultInsertedSentence;
       index = this.index + 1;
     }
 
@@ -148,21 +147,14 @@ class Manager {
     if (isNaN(index))
       throw new errors.AnnotatrixError('cannot insert at NaN');
 
-    if (typeof text !== 'string')
-      text = '';
-
     index = index < 0 ? 0
       : index > this.length ? this.length
       : parseInt(index);
 
-    const sent = nx.Sentence.fromText(text);
+    const sent = newSentence(text);
     this._sentences = this._sentences.slice(0, index)
       .concat(sent)
       .concat(this._sentences.slice(index));
-
-    sent.currentFormat = detectFormat(text);
-    sent.is_table_view = false;
-    sent.column_visibilities = new Array(10).fill(true);
 
     this.index = index;
     gui.update();
@@ -291,6 +283,32 @@ class Manager {
     return encodeURIComponent(this.export());
   }
 
+}
+
+function newSentence(text) {
+
+  text = text || cfg.defaultInsertedSentence;
+
+  let sent,
+    format = detectFormat(text);
+
+  if (format === 'CoNLL-U') {
+    sent = nx.Sentence.fromConllu(text);
+    sent.data = sent.conllu;
+  } else if (format === 'CG3') {
+    sent = nx.Sentence.fromCG3(text);
+    sent.data = sent.cg3;
+  } else {
+    sent = nx.Sentence.fromText(text);
+    sent.data = text;
+  }
+
+  sent.currentFormat = format;
+  console.log(sent)
+    sent.is_table_view = false;
+  sent.column_visibilities = new Array(10).fill(true);
+
+  return sent;
 }
 
 module.exports = Manager;

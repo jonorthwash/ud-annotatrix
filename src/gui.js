@@ -2,6 +2,7 @@
 
 const $ = require('jquery');
 
+const convert = require('./convert');
 const corpus = require('./corpus');
 const funcs = require('./funcs');
 const errors = require('./errors');
@@ -161,26 +162,29 @@ class GUI {
       manager.insertSentence('');
     });
 
-
     $('#btnUploadCorpus').click(corpus.upload);
     $('#btnExportCorpus').click(corpus.export);
     //$('#btnSaveServer').click(saveOnServer);
     $('#btnDiscardCorpus').click(corpus.clear);
     $('#btnPrintCorpus').click(corpus.print);
-    return;
 
-    $('#btnHelp').click(showHelp);
-    $('#btnSettings').click(showSettings);
+    $('#btnHelp').click(e => {
+      window.open('help.html', '_blank').focus();
+    });
+    $('#btnSettings').click(e => {
+      throw new errors.NotImplementedError('show settings not implemented');
+    });
 
     $('#tabText').click(e => {
-      convertText(convert2PlainText);
+      manager.parse(convert.to.plainText(manager.sentence));
     });
     $('#tabConllu').click(e => {
-      convertText(convert2Conllu);
+      manager.parse(convert.to.conllu(manager.sentence));
     });
     $('#tabCG3').click(e => {
-      convertText(convert2CG3);
+      manager.parse(convert.to.cg3(manager.sentence));
     });
+    return;
 
     $('#btnToggleTable').click(toggleTable);
     $('#btnToggleTextarea').click(toggleTextarea);

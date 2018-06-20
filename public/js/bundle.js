@@ -14999,6 +14999,15 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
 },{}],9:[function(require,module,exports){
 'use strict';
 
+module.exports = {
+  unableToConvertToConllu: function unableToConvertToConllu() {},
+
+  unableToConvertToCG3: function unableToConvertToCG3() {}
+};
+
+},{}],10:[function(require,module,exports){
+'use strict';
+
 /*
  * Logger object
  *
@@ -15218,16 +15227,557 @@ var Log = function () {
 
 module.exports = Log;
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 
 module.exports = {
 	defaultFilename: 'ud-annotatrix-corpus',
 	defaultSentence: 'Welcome to the UD-Annotatrix',
+	defaultInsertedSentence: 'inserted',
 	defaultLoggingLevel: 'ERROR'
 };
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
+'use strict';
+
+var _ = require('underscore');
+var nx = require('notatrix');
+
+var detectFormat = require('./detect');
+var alerts = require('./alerts');
+
+/**
+ *  convert2<FORMAT>() functions will try to detect the format of any input and
+ *    then convert it into <FORMAT> ... they will all fail (return null) if they
+ *    detect an Unknown input format
+ *
+ *    @param {String} text Arbitrary input text
+ *    @return {String||null} in <FORMAT>, where <FORMAT> one of
+ *      - plain text
+ *      - CoNLL-U
+ *      - CG3
+ *
+ *  these functions mostly rely on converting things into CoNLL-U and then reconverting
+ *  if necessary ... these are the 'public' functions for the application (called
+ *  when the user clicks on one of the converter tabs)
+ */
+
+/**
+ * Takes a string representing some format, returns the string in
+ * plain text or NULL if there was an error
+ * @param {String} text Input text
+ * @return {String}     Sentence in plain text format
+ */
+function convert2PlainText(text) {
+	log.debug('called convert2PlainText(' + text + ')');
+
+	text = text; // || a.sentence;
+	var format = detectFormat(text);
+
+	log.debug('convert2PlainText(): got format: ' + format);
+	switch (format) {
+		case 'Unknown':
+			log.warn('convert2PlainText(): failed to convert: Unknown input type');
+			return null;
+		case 'plain text':
+			log.info('convert2PlainText(): received plain text');
+			return text;
+		case 'Brackets':
+			return conllu2PlainText(brackets2Conllu(text));
+		case 'SD':
+			return conllu2PlainText(sd2Conllu(text));
+		case 'CoNLL-U':
+			return conllu2PlainText(text);
+		case 'CG3':
+			return conllu2PlainText(cg32Conllu(text));
+	}
+}
+
+/**
+ * Takes a string representing some format, returns the string in
+ * CoNLL-U or NULL if there was an error
+ * @param {String} text Input text
+ * @return {String}     Sentence in CoNLL-U format
+ */
+function convert2Conllu(text) {
+	log.debug('called convert2conllu(' + text + ')');
+
+	text = text; // || a.sentence;
+	var format = detectFormat(text);
+
+	log.debug('convert2conllu(): got format: ' + format + ', text: ' + text);
+	switch (format) {
+		case 'Unknown':
+			log.warn('convert2conllu(): failed to convert Unknown to plain text');
+			return null;
+		case 'plain text':
+			return cleanConllu(plainText2Conllu(text));
+		case 'Brackets':
+			return cleanConllu(brackets2Conllu(text));
+		case 'SD':
+			return cleanConllu(sd2Conllu(text));
+		case 'CoNLL-U':
+			log.info('convert2conllu(): received CoNLL-U');
+			return cleanConllu(text);
+		case 'CG3':
+			return cg32Conllu(text);
+	}
+}
+
+/**
+ * Takes a string representing some format, returns the string in
+ * CG3 or NULL if there was an error
+ * @param {String} text Input text
+ * @return {String}     Sentence in CG3 format
+ */
+function convert2CG3(text) {
+	log.debug('called convert2CG3(' + text + ')');
+
+	text = text; // || a.sentence;
+	var format = detectFormat(text);
+
+	log.debug('convert2CG3(): got format: ' + format);
+	switch (format) {
+		case 'Unknown':
+			log.warn('convert2CG3(): failed to convert Unknown to plain text');
+			return null;
+		case 'plain text':
+			return conllu2CG3(plainText2Conllu(text));
+		case 'Brackets':
+			return conllu2CG3(brackets2Conllu(text));
+		case 'SD':
+			return conllu2CG3(sd2Conllu(text));
+		case 'CoNLL-U':
+			return conllu2CG3(text);
+		case 'CG3':
+			log.info('convert2CG3(): received CG3');
+			return text;
+	}
+}
+
+/**
+ *  Helper functions for the convert2<FORMAT> functions described above ... these
+ *  handle the implementation of the conversions between specific formats
+ */
+
+/**
+ * Takes a plain text sentence, returns a sentence in CoNLL-U format.
+ * @param {String} text Input text (sentence)
+ * @return {String}     Sentence in CoNLL-U format
+ */
+function plainText2Conllu(text) {
+	log.debug('called plainText2Conllu(' + text + ')');
+	log.debug('plainText2Conllu(): detected format: ' + detectFormat(text));
+
+	// TODO: if there's punctuation in the middle of a sentence,
+	// indices shift when drawing an arc
+	// punctuation
+	text = text.replace(/([^ ])([.?!;:,])/g, '$1 $2');
+
+	/* get it into this form:
+  *
+  * # sent_id = _
+  * # text = $text
+  * 1    $textLine0
+  * 2    $textLine1 [...]
+  *
+  */
+	var sent = new nx.Sentence();
+	sent.conllu = text.split(' ').map(function (token, i) {
+		return i + 1 + '\t' + token; // enumerating tokens
+	}).join('\n');
+
+	return sent.conllu;
+}
+
+/**
+ * Takes a string in CG, converts it to CoNLL-U format.
+ * @param {String} text Input string(CG format)
+ */
+function sd2Conllu(text) {
+	log.debug('called sd2Conllu(' + text + ')');
+
+	/* Takes a string in CG, returns a string in conllu. */
+	var inputLines = text.split('\n');
+	var tokenId = 1,
+	    tokenToId = {},
+	    // convert from a token to an index
+	heads = [],
+	    // e.g. heads[1] = 3
+	deprels = []; // e.g. deprels[1] = nsubj
+
+	// first enumerate the tokens
+	_.each(inputLines[0].split(' '), function (token, i) {
+		tokenToId[token] = tokenId;
+		tokenId += 1;
+	});
+
+	// When there are two surface forms that are the same, you have to specify the one you
+	// are referring to.
+	//
+	// e.g.
+	// the bear eats the crisps.
+	// det(bear, the-1)
+	// det(crisps, the-4)
+	// nsubj(eats, bear)
+	//
+	// In fact, these numbers are optional for all, so det(bear-2, the-1) would also be valid
+
+	// now process the dependency relations
+	_.each(inputLines, function (line, i) {
+		if (line.indexOf(',') > -1) {
+			// not root node
+			var deprel = '',
+			    headToken = '',
+			    depToken = '',
+			    reading = 'deprel'; // reading \elem [ 'deprel', 'head', 'dep' ]
+
+			for (var j = 0, l = line.length; j < l; j++) {
+				var word = line[j];
+
+				switch (reading) {
+					case 'deprel':
+						if (word === '(') {
+							reading = 'head';
+						} else {
+							deprel += word;
+						}
+						break;
+					case 'head':
+						if (word === ',') {
+							reading = 'dep';
+						} else {
+							headToken += word;
+						}
+						break;
+					case 'dep':
+						if (!(line[j - 1] === ',' && word === ' ' || word === ')')) depToken += word;
+						break;
+				}
+			}
+
+			var depId = void 0,
+			    headId = void 0;
+			if (depToken.search(/-[0-9]+/) > 0) depId = parseInt(depToken.split('-')[1]);
+			if (headToken.search(/-[0-9]+/) > 0) headId = parseInt(headToken.split('-')[1]);
+
+			log.debug('sd2Conllu(): ' + depToken + ' \u2192 ' + headToken + ' @' + deprel + ' | ' + tokenToId[depToken] + ' : tokenToId[headToken] // ' + depId + ' \u2192 ' + headId);
+			heads[depId] = headId;
+			deprels[depId] = deprel;
+		}
+	});
+
+	tokenId = 0;
+	var sent = new nx.Sentence();
+	sent.params = inputLines[0].split(' ').map(function (token) {
+		tokenId++;
+
+		return {
+			form: token,
+			head: heads[tokenId],
+			deprel: deprels[tokenId]
+		};
+	});
+
+	return sent.conllu;
+}
+
+/**
+ * Takes a string in CoNLL-U, converts it to plain text.
+ * @param {String} text Input string
+ * @return {String}     Plain text
+ */
+function conllu2PlainText(text) {
+	log.debug('called conllu2PlainText(' + text + ')');
+
+	if (!text) return null;
+
+	var sent = new nx.Sentence();
+	sent.conllu = text;
+	return sent.text;
+}
+
+/**
+ * Takes a string in Brackets, converts it to CoNLL-U.
+ * @param {String} text Input string
+ * @return {String}     CoNLL-U
+ */
+function brackets2Conllu(text) {
+	return null;
+
+	/*
+ log.debug(`called brackets2Conllu(${text})`);
+ 	return null; // until we fix this guy
+ 	// This code is for parsing bracketted notation like:
+ // [root [nsubj I] have [obj [amod [advmod too] many] commitments] [advmod right now] [punct .]]
+ // Thanks to Nick Howell for help with a Python version.
+ 	/* Takes a string in bracket notation, returns a string in conllu. */
+
+	/*// helper functions
+ const _node = (s, j) => {
+ 	log.debug(`called brackets2Conllu._node(s: ${s}, j: ${j})`);
+ 		function _Node(name, s, index, children) {
+ 		log.debug(`called brackets2Conllu._node._Node constructor (name: ${name}, s: ${s}, index: ${index}, children: ${children})`);
+ 			this.name = name;
+ 		this.s = s;
+ 		this.index = index;
+ 		this.children = children;
+ 			this.maxindex = () => {
+ 			// Returns the maximum index for the node
+ 			// mx = max([c.index for c in self.children] + [self.index])
+ 			let localmax = 0;
+ 			if (parseInt(this.index) > localmax)
+ 				localmax = parseInt(this.index);
+ 				$.each(this.children, (i, child) => {
+ 				if (parseInt(child.index) > localmax)
+ 					localmax = parseInt(child.index);
+ 			});
+ 				return localmax;
+ 		};
+ 			this.paternity = () => {
+ 			$.each(this.children, (i, child) => {
+ 				child.parent = this;
+ 				child.paternity();
+ 			});
+ 				return this;
+ 		};
+ 			this.parent_index = () => {
+ 			if (this.parent !== undefined) {
+ 				if (this.parent.index !== undefined)
+ 					return this.parent.index;
+ 			}
+ 			return 0;
+ 		};
+ 	}
+ 
+ 	const _match = (s, up, down) => {
+ 		log.debug(`called brackets2Conllu._node._match(s: ${s}, up: ${up}, down: ${down})`);
+ 			let depth = 0, i = 0;
+ 		while(i < s.length && depth >= 0) {
+ 				if (s[i] === up)
+ 				depth += 1;
+ 				if (s[i] === down)
+ 				depth -= 1;
+ 				i++;
+ 		}
+ 			return s.slice(0,i-1);
+ 	};
+ 		const _max = (list) => {
+ 		log.debug(`called brackets2Conllu._node._max(${JSON.stringify(list)})`);
+ 			// Return the largest number in a list otherwise return 0
+ 		// @l = the list to search in
+ 		let localmax = 0;
+ 		$.each(list, (i, item) => {
+ 			localmax = Math.max(item, localmax);
+ 		});
+ 			return localmax;
+ 	};
+ 		const _count = (needle, haystack) => {
+ 		log.debug(`called brackets2Conllu._node._count(needle: ${needle}, haystack: ${JSON.stringify(haystack)})`);
+ 			// Return the number of times you see needle in the haystack
+ 		// @needle = string to search for
+ 		// @haystack = string to search in
+ 		let acc = 0;
+ 		for (let i=0, l=haystack.length; i<l; i++) {
+ 			if (needle === haystack[i])
+ 				acc++;
+ 		}
+ 		return acc;
+ 	};
+ 
+ 	// Parse a bracketted expression
+ 	// @s = the expression
+ 	// @j = the index we are at
+ 		if (s[0] === '[' && s[-1] === ']')
+ 		s = s.slice(1, -1);
+ 		const first = s.indexOf(' '), // the first space delimiter
+ 		name = s.slice(0, first), // dependency relation name
+ 		remainder = s.slice(first, s.length);
+ 		// this is impossible to understand without meaningful variables names .....
+ 	let i = 0, index = 0, children = [], word;
+ 	while (i < remainder.length) {
+ 			if (remainder[i] === '[') {
+ 			// We're starting a new expression
+ 				const m = _match(remainder.slice(i+1, remainder.length), '[', ']'),
+ 				indices = [index].concat(children.map((child) => { return child.maxindex(); })),
+ 				n = _node(m, _max(indices));
+ 				children.push(n);
+ 			i += m.length + 2;
+ 				if (!word)
+ 				index = _max([index, n.maxindex()]);
+ 			} else if (remainder[i] !== ' ' && (remainder[i-1] === ' ' || i === 0)) {
+ 				const openBracketIndex = remainder.indexOf('[', i);
+ 				if (openBracketIndex < 0) {
+ 				word = remainder.slice(i, remainder.length);
+ 			} else {
+ 				word = remainder.slice(i, remainder.indexOf(' ', i));
+ 			}
+ 				i += word.length;
+ 			index += 1 + _count(' ', word.trim());
+ 			} else {
+ 			i++;
+ 		}
+ 	}
+ 		return new _Node(name, word, index, children);
+ };
+ const _fillTokens = (node, tokens) => {
+ 	log.debug(`called brackets2Conllu._fillTokens(node: ${node}, tokens: ${JSON.stringify(tokens)})`);
+ 		let newToken = new conllu.Token();
+ 	newToken.form = node.s;
+ 		// TODO: automatic recognition of punctuation's POS
+ 	if (newToken['form'].match(/^[!.)(»«:;?¡,"\-><]+$/))
+ 		newToken.upostag = 'PUNCT';
+ 		newToken.id = node.index;
+ 	newToken.head = node.parent_index();
+ 	newToken.deprel = node.name;
+ 	log.debug(`_fillTokens() newToken: (form: ${newToken.form}, id: ${newToken.id}, head: ${newToken.head}, deprel: ${newToken.deprel})`);
+ 		tokens.push(newToken);
+ 	$.each(node.children, (i, child) => {
+ 		tokens = _fillTokens(child, tokens);
+ 	});
+ 		return tokens;
+ };
+ 	const inputLines = text.split('\n'),
+ 	comments = '';
+ 	let tokens = [], // list of tokens
+ 	root = _node(inputLines[0], 0);
+ 	root.paternity();
+ tokens = _fillTokens(root, tokens);
+ log.debug(`brackets2Conllu(): tokens: ${JSON.stringify(tokens)}`);
+ 	let sent = new conllu.Sentence();
+ sent.comments = comments;
+ sent.tokens = tokens;
+ return sent.serial;*/
+}
+
+/**
+ * Takes a string in CG3, converts it to CoNLL-U.
+ * @param {String} CGtext CG3 string
+ * @return {String}     CoNLL-U
+ */
+function cg32Conllu(CGtext) {
+	log.debug('called cg32Conllu(' + CGtext + ')');
+
+	if (!CGtext) return null;
+
+	/* Takes a string in CG3, returns a string in CoNLL-U. */
+
+	// remove extra spaces before newline before processing text
+	var sent = new nx.Sentence({ catchInvalid: false });
+	sent.cg3 = CGtext.replace(/ +\n/, '\n');
+
+	try {
+		return sent.conllu;
+	} catch (e) {
+
+		if (e instanceof nx.Error.InvalidCoNLLUError) {
+			alerts.unableToConvertToConllu();
+			return null;
+		}
+
+		throw e;
+	}
+}
+
+/**
+ * Takes a string in CoNLL-U, converts it to CG3.
+ * @param {String} conlluText CoNLL-U string
+ * @param {String} indent     indentation unit (default:'\t')
+ * @return {String}     CG3
+ */
+function conllu2CG3(conlluText) {
+	log.debug('called conllu2CG3(' + conlluText);
+
+	if (!conlluText) return null;
+
+	var sent = new nx.Sentence({ catchInvalid: false });
+	sent.conllu = conlluText;
+
+	try {
+		return sent.cg3;
+	} catch (e) {
+
+		if (e instanceof nx.Error.InvalidCG3Error) {
+			alerts.unableToConvertToCG3();
+			return null;
+		}
+
+		throw e;
+	}
+}
+
+/**
+ * return a CG3 analysis for a token
+ *  - helper function for conllu2CG3() and onEnter()
+ */
+function getCG3Analysis(i, token) {
+	log.debug('called conllu2CG3:getCG3Analysis(i: ' + i + ', token: ' + JSON.stringify(token) + ')');
+
+	var lemma = token.lemma ? '"' + token.lemma + '"' : '""',
+	    // lemma should have "" if blank (#228)
+	pos = token.upostag || token.xpostag || '_',
+	    feats = token.feats ? ' ' + token.feats.replace(/\|/g, ' ') : '',
+	    deprel = token.deprel ? ' @' + token.deprel : ' @x',
+	    // is it really what we want by default?
+	head = token.head || '',
+	    cgToken = lemma + ' ' + pos + feats + deprel + ' #' + token.id + '->' + head;
+
+	log.debug('got cgToken: ' + cgToken);
+	return cgToken;
+};
+
+/**
+ * Cleans up CoNNL-U content.
+ * @param {String} content Content of input area
+ * @return {String}     Cleaned up content
+ */
+function cleanConllu(content) {
+	log.debug('called cleanConllu(' + content + ')');
+
+	if (!content) return null;
+
+	// if we don't find any tabs, then convert >1 space to tabs
+	// TODO: this should probably go somewhere else, and be more
+	// robust, think about vietnamese D:
+	var res = content.search('\n');
+	if (res < 0) return content;
+
+	/*
+ // maybe someone is just trying to type conllu directly...
+ res = (content.match(/_/g) || []).length;
+ if (res <= 2)
+     return content; */
+
+	// If we don't find any tabs, then we want to replace multiple spaces with tabs
+	var spaceToTab = true; //(content.search('\t') < 0);
+	var newContent = content.trim().split('\n').map(function (line) {
+		line = line.trim();
+
+		// If there are no spaces and the line isn't a comment,
+		// then replace more than one space with a tab
+		if (line[0] !== '#' && spaceToTab) line = line.replace(/[ \t]+/g, '\t');
+
+		return line;
+	}).join('\n');
+
+	// If there are >1 CoNLL-U format sentences is in the input, treat them as such
+	// conlluMultiInput(newContent); // TODO: move this one also inside of this func, and make a separate func for calling them all at the same time
+
+	//if (newContent !== content)
+	//$('#text-data').val(newContent);
+
+	return newContent;
+}
+
+module.exports = {
+	to: {
+		plainText: convert2PlainText,
+		conllu: convert2Conllu,
+		cg3: convert2CG3
+	}
+};
+
+},{"./alerts":9,"./detect":15,"notatrix":4,"underscore":7}],13:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -15244,7 +15794,7 @@ function export_(event) {
 
   //Export Corpora to file
   if (server.is_running) {
-    throw new NotImplementedError('exportCorpus() not implemented for server interaction');
+    throw new NotImplementedError('corpus::export() not implemented for server interaction');
     //downloadCorpus();
   } else {
 
@@ -15261,7 +15811,7 @@ function clear(event) {
   if (!force) {
     var conf = confirm('Do you want to clear the corpus (remove all sentences)?');
     if (!conf) {
-      log.info('clearCorpus(): not clearing corpus');
+      log.info('corpus::clear(): not clearing corpus');
       return;
     }
   }
@@ -15281,7 +15831,7 @@ module.exports = {
   print: print
 };
 
-},{"./server":20,"jquery":1}],12:[function(require,module,exports){
+},{"./server":22,"jquery":1}],14:[function(require,module,exports){
 'use strict';
 
 // is defined in a js file, because fetch doesn't work offline in chrome
@@ -15503,7 +16053,7 @@ var CY_STYLE = [{
     }
 }];
 
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -15557,7 +16107,7 @@ function detectFormat(text) {
 
 module.exports = detectFormat;
 
-},{"underscore":7}],14:[function(require,module,exports){
+},{"underscore":7}],16:[function(require,module,exports){
 'use strict';
 
 /**
@@ -15740,7 +16290,7 @@ module.exports = {
   ParseError: ParseError
 };
 
-},{}],15:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -15783,7 +16333,7 @@ module.exports = {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"underscore":7}],16:[function(require,module,exports){
+},{"underscore":7}],18:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -15824,7 +16374,7 @@ var Graph = function () {
 
 module.exports = Graph;
 
-},{"./cy-style.js":12,"./funcs":15,"jquery":1,"underscore":7}],17:[function(require,module,exports){
+},{"./cy-style.js":14,"./funcs":17,"jquery":1,"underscore":7}],19:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -15833,6 +16383,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var $ = require('jquery');
 
+var convert = require('./convert');
 var corpus = require('./corpus');
 var funcs = require('./funcs');
 var errors = require('./errors');
@@ -15996,20 +16547,24 @@ var GUI = function () {
       //$('#btnSaveServer').click(saveOnServer);
       $('#btnDiscardCorpus').click(corpus.clear);
       $('#btnPrintCorpus').click(corpus.print);
-      return;
 
-      $('#btnHelp').click(showHelp);
-      $('#btnSettings').click(showSettings);
+      $('#btnHelp').click(function (e) {
+        window.open('help.html', '_blank').focus();
+      });
+      $('#btnSettings').click(function (e) {
+        throw new errors.NotImplementedError('show settings not implemented');
+      });
 
       $('#tabText').click(function (e) {
-        convertText(convert2PlainText);
+        manager.parse(convert.to.plainText(manager.sentence));
       });
       $('#tabConllu').click(function (e) {
-        convertText(convert2Conllu);
+        manager.parse(convert.to.conllu(manager.sentence));
       });
       $('#tabCG3').click(function (e) {
-        convertText(convert2CG3);
+        manager.parse(convert.to.cg3(manager.sentence));
       });
+      return;
 
       $('#btnToggleTable').click(toggleTable);
       $('#btnToggleTextarea').click(toggleTextarea);
@@ -16069,7 +16624,7 @@ var GUI = function () {
 
 module.exports = GUI;
 
-},{"./corpus":11,"./errors":14,"./funcs":15,"./undo-manager":21,"jquery":1}],18:[function(require,module,exports){
+},{"./convert":12,"./corpus":13,"./errors":16,"./funcs":17,"./undo-manager":23,"jquery":1}],20:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -16105,7 +16660,7 @@ module.exports = {
 	Log: Log
 };
 
-},{"./browser-logger":9,"./config":10,"./errors":14,"./funcs":15,"./graph":16,"./gui":17,"./manager":19,"./server":20,"jquery":1,"notatrix":4,"underscore":7}],19:[function(require,module,exports){
+},{"./browser-logger":10,"./config":11,"./errors":16,"./funcs":17,"./graph":18,"./gui":19,"./manager":21,"./server":22,"jquery":1,"notatrix":4,"underscore":7}],21:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -16193,8 +16748,7 @@ var Manager = function () {
 
       if (0 > index || index > this.length - 1) return null;
 
-      this.getSentence(index).text = text;
-      this.getSentence(index).currentFormat = detectFormat(text);
+      this._sentences[index] = newSentence(text);
       gui.update();
 
       return this.getSentence(index);
@@ -16215,23 +16769,17 @@ var Manager = function () {
 
       if (text === null || text === undefined) {
         // if only passed 1 arg
-        text = index;
+        text = index || cfg.defaultInsertedSentence;
         index = this.index + 1;
       }
 
       index = parseFloat(index);
       if (isNaN(index)) throw new errors.AnnotatrixError('cannot insert at NaN');
 
-      if (typeof text !== 'string') text = '';
-
       index = index < 0 ? 0 : index > this.length ? this.length : parseInt(index);
 
-      var sent = nx.Sentence.fromText(text);
+      var sent = newSentence(text);
       this._sentences = this._sentences.slice(0, index).concat(sent).concat(this._sentences.slice(index));
-
-      sent.currentFormat = detectFormat(text);
-      sent.is_table_view = false;
-      sent.column_visibilities = new Array(10).fill(true);
 
       this.index = index;
       gui.update();
@@ -16369,7 +16917,7 @@ var Manager = function () {
     get: function get() {
       if (!this.current) return null;
 
-      return this.current.text;
+      return this.current.data;
     },
     set: function set(text) {
       return this.setSentence(text);
@@ -16411,9 +16959,35 @@ var Manager = function () {
   return Manager;
 }();
 
+function newSentence(text) {
+
+  text = text || cfg.defaultInsertedSentence;
+
+  var sent = void 0,
+      format = detectFormat(text);
+
+  if (format === 'CoNLL-U') {
+    sent = nx.Sentence.fromConllu(text);
+    sent.data = sent.conllu;
+  } else if (format === 'CG3') {
+    sent = nx.Sentence.fromCG3(text);
+    sent.data = sent.cg3;
+  } else {
+    sent = nx.Sentence.fromText(text);
+    sent.data = text;
+  }
+
+  sent.currentFormat = format;
+  console.log(sent);
+  sent.is_table_view = false;
+  sent.column_visibilities = new Array(10).fill(true);
+
+  return sent;
+}
+
 module.exports = Manager;
 
-},{"./config":10,"./detect":13,"./errors":14,"./funcs":15,"./graph":16,"./gui":17,"jquery":1,"notatrix":4,"underscore":7}],20:[function(require,module,exports){
+},{"./config":11,"./detect":15,"./errors":16,"./funcs":17,"./graph":18,"./gui":19,"jquery":1,"notatrix":4,"underscore":7}],22:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -16516,7 +17090,7 @@ var Server = function () {
 
 module.exports = Server;
 
-},{"jquery":1}],21:[function(require,module,exports){
+},{"jquery":1}],23:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -16544,5 +17118,5 @@ module.exports = function () {
 	updateUndoButtons();
 };
 
-},{"jquery":1,"undo-manager":8}]},{},[18])(18)
+},{"jquery":1,"undo-manager":8}]},{},[20])(20)
 });
