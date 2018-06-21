@@ -26,6 +26,9 @@ $(() => {
 	manager.reset();
 	gui.bind();
 
+	$('#tabConllu').click();
+	$('#btnToggleTable').click();
+
 });
 
 module.exports = {

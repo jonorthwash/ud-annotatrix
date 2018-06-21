@@ -93,23 +93,12 @@ class Manager {
 
 
 
-  set(token, field, value) {
-    if (field === 'id')
-      return;
-
-    console.log(field, value);
-    this._sentences[this.index][field] = value;
-    console.log(this.current);
-    gui.update();
-
-  }
   get current() {
     return this._sentences[this.index];
   }
   set current(sent) {
     if (sent instanceof nx.Sentence)
       this._sentences[this.index] = sent;
-    console.log(sent);
   }
   get sentence() {
     if (!this.current)
@@ -318,8 +307,7 @@ function newSentence(text) {
   }
 
   sent.currentFormat = format;
-  console.log(sent)
-    sent.is_table_view = false;
+  sent.is_table_view = false;
   sent.column_visibilities = new Array(10).fill(true);
 
   return sent;

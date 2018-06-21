@@ -11506,6 +11506,40 @@ const regex = {
   cg3TokenContent: /^;?\s+"(.|\\")*"/
 }
 
+function getIndices(tok) {
+
+  let superTokenId = -1,
+    subTokenId = -1,
+    found = false,
+    isSubToken = false;
+
+  tok.sentence.forEach(token => {
+
+    if (found)
+      return;
+
+    if (token.isSubToken) {
+      subTokenId++;
+      isSubToken = true;
+    } else {
+      superTokenId++;
+      subTokenId = -1;
+      isSubToken = false;
+    }
+
+    if (token === tok)
+      found = true;
+
+  });
+
+  return superTokenId === -1
+    ? null
+    : {
+        super: superTokenId,
+        sub: isSubToken ? subTokenId : null
+      };
+}
+
 /**
  * this class contains all the information associated with a sentence, including
  *   an comments array, a tokens array, and a list of options/settings that apply
@@ -11633,6 +11667,38 @@ class Sentence {
   }
 
   // manipulate token array
+
+  insertTokenBefore(atToken, newToken) {
+    if (!(atToken instanceof Token))
+      throw new NotatrixError('unable to insert token: not instance of Token');
+
+    if (!(newToken instanceof Token))
+      newToken = Token.fromParams(this, {});
+
+    const indices = getIndices(atToken);
+    if (indices === null)
+      return null;
+
+    return indices.sub === null
+      ? this.insertTokenAt(indices.super, newToken)
+      : this[indices.super].insertSubTokenAt(indices.sub, newToken);
+  }
+
+  insertTokenAfter(atToken, newToken) {
+    if (!(atToken instanceof Token))
+      throw new NotatrixError('unable to insert token: not instance of Token');
+
+    if (!(newToken instanceof Token))
+      newToken = Token.fromParams(this, {});
+
+    const indices = getIndices(atToken);
+    if (indices === null)
+      return null;
+
+    return indices.sub === null
+      ? this.insertTokenAt(indices.super + 1, newToken)
+      : this[indices.super].insertSubTokenAt(indices.sub + 1, newToken);
+  }
 
   /**
    * insert a token BEFORE the given index
@@ -16369,6 +16435,9 @@ var Graph = function () {
   _createClass(Graph, [{
     key: 'update',
     value: function update() {}
+  }, {
+    key: 'removeDependency',
+    value: function removeDependency(ele) {}
   }]);
 
   return Graph;
@@ -16477,6 +16546,8 @@ var toggle = {
   }
 };
 
+var pressed = {}; // used for onCtrlKeyup
+
 var GUI = function () {
   function GUI(mgr) {
     _classCallCheck(this, GUI);
@@ -16515,6 +16586,7 @@ var GUI = function () {
       if (!manager.index) $('#btnPrevSentence').addClass('disabled');
       if (manager.index === manager.length - 1) $('#btnNextSentence').addClass('disabled');
       if (!server.is_running) $('#btnUploadCorpus').addClass('disabled');
+      if (manager.format !== 'CoNLL-U') $('#btnToggleTable').addClass('disabled');
 
       $('.nav-link').removeClass('active').show();
       switch (manager.format) {
@@ -16537,6 +16609,7 @@ var GUI = function () {
           break;
       }
 
+      console.log(manager.format, this.is_table_view);
       if (manager.format !== 'CoNLL-U') this.is_table_view = false;
 
       if (this.is_table_view) {
@@ -16627,16 +16700,15 @@ var GUI = function () {
       $('#RTL').click(this.toggle.rtl);
       $('#vertical').click(this.toggle.vertical);
       $('#enhanced').click(this.toggle.enhanced);
-      return;
 
-      $('#current-sentence').keyup(onKeyupInTextarea);
-      $('#text-data').keyup(onEditTextData);
+      $('#current-sentence').keyup(this.onKeyupInCurrentSentence);
+      $('#text-data').keyup(this.onEditTextData);
 
       // onkeyup is a global variable for JS runtime
-      onkeyup = onKeyupInDocument;
+      onkeyup = this.onKeyupInDocument;
 
       // direct graph-editing stuff
-      $('#edit').keyup(onKeyupInEditLabel);
+      $('#edit').keyup(this.onKeyupInEditLabel);
 
       // prevent accidentally leaving the page
       window.onbeforeunload = function () {
@@ -16662,9 +16734,323 @@ var GUI = function () {
       throw new errors.NotImplementedError();
     }
   }, {
+    key: 'onKeyupInDocument',
+    value: function onKeyupInDocument(event) {
+      log.error('called onKeyupInDocument(' + event.which + ')');
+
+      // returns true if it caught something
+      if (gui.onCtrlKeyup(event)) return;
+
+      // editing an input
+      if ($('#text-data').is(':focus') || $('#edit').is(':focus')) return;
+
+      // if we get here, we're handling a keypress without an input-focus or ctrl-press
+      // (which means it wasn't already handled)
+      log.error('onKeyupInDocument(): handling event.which:' + event.which);
+
+      switch (event.which) {
+        case KEYS.DELETE:
+        case KEYS.BACKSPACE:
+        case KEYS.X:
+          if (cy.$('.selected').length) {
+            graph.removeDependency(cy.$('.selected'));
+          } else if (true /* cy.$('.supAct').length */) {
+              // removeSup(st);
+            }
+          break;
+
+        case KEYS.D:
+          if (cy.$('.selected').length) {
+            cy.$('.selected').toggleClass('moving');
+            this.moving_dependency = !this.moving_dependency;
+          }
+          break;
+
+        case KEYS.M:
+          if (cy.$('node.form.activated').length) {
+            cy.$('node.form.activated').removeClass('activated').addClass('merge');
+          } else if (cy.$('node.form.merge').length) cy.$('node.form.merge').addClass('activated').removeClass('merge');
+
+        case KEYS.P:
+          // if (true/* text not focused */)
+          // setPunct()
+          break;
+
+        case KEYS.R:
+          if (cy.$('node.form.activated')) setAsRoot(cy.$('node.form.activated'));
+          break;
+
+        case KEYS.S:
+          // wf.addClass('supertoken');
+          // wf.removeClass('activated');
+          break;
+
+        case KEYS.LEFT:
+        case KEYS.RIGHT:
+          if (cy.$('node.form.merge').length) {
+            mergeNodes(event.which === KEYS.LEFT ? 'left' : 'right', 'subtoken');
+          } else if (true /* cy.$('.supertoken') */) {
+              // mergeNodes(toMerge, KEYS.SIDES[key.which], 'subtoken');
+              // mergeNodes(toSup, KEYS.SIDES[key.which], 'supertoken');
+            }
+          break;
+
+        case KEYS.EQUALS:
+        case KEYS.EQUALS_:
+          // if (key.shiftKey)
+          true;
+          // CURRENT_ZOOM += 0.1
+          // else
+          // cy.fit();
+          // cy.zoom(CURRENT_ZOOM)
+          // cy.center();
+          break;
+
+        case KEYS.MINUS:
+        case KEYS.MINUS_:
+          // CURRENT_ZOOM = cy.zoom();
+          // if (key.shiftKey)
+          true;
+          //  CURRENT_ZOOM -= 0.1;
+
+          // cy.zoom(CURRENT_ZOOM);
+          // cy.center();
+          break;
+
+        default:
+          if (47 < event.which && event.which < 58) {// key in 0-9
+            // const num = event.which - 48;
+            // CURRENT_ZOOM = 1.0;
+            // cy.zoom(CURRENT_ZOOM);
+            // cy.center();
+          }
+
+      }
+    }
+  }, {
+    key: 'onCtrlKeyup',
+    value: function onCtrlKeyup(event) {
+      log.debug('called onCtrlKeyup(which:' + event.which + ', pressed:' + JSON.stringify(pressed) + ')');
+
+      // handle Ctrl + <keypress>
+      // solution based on https://stackoverflow.com/a/12444641/5181692
+      pressed[event.which] = event.type == 'keyup';
+      log.error('ctrl: ' + pressed[KEYS.CTRL] + ', shift: ' + pressed[KEYS.CTRL] + ', y: ' + pressed[KEYS.Y] + ', z: ' + pressed[KEYS.Z] + ', this: ' + event.which);
+
+      if (!pressed[KEYS.CTRL]) return false;
+
+      if (pressed[KEYS.PAGE_DOWN]) {
+        if (pressed[KEYS.SHIFT]) {
+          manager.last();
+        } else {
+          manager.next();
+        }
+        pressed = {};
+        pressed[KEYS.CTRL] = true;
+        return true;
+      } else if (pressed[KEYS.PAGE_UP]) {
+        if (pressed[KEYS.SHIFT]) {
+          manager.first();
+        } else {
+          manager.prev();
+        }
+        pressed = {};
+        pressed[KEYS.CTRL] = true;
+        return true;
+      } else if (pressed[KEYS.Z] && !pressed[KEYS.SHIFT]) {
+        undoManager.undo();
+        return true;
+      } else if (pressed[KEYS.Y] || pressed[KEYS.Z]) {
+        undoManager.redo();
+        setTimeout(function () {
+          // catch only events w/in next 500 msecs
+          pressed[KEYS.SHIFT] = false;
+        }, 500);
+        return true;
+      } else {
+        log.debug('onCtrlKeyup(): uncaught key combination');
+      }
+
+      return false;
+    }
+  }, {
+    key: 'onKeyupInCurrentSentence',
+    value: function onKeyupInCurrentSentence(event) {
+      log.debug('called onKeyupInCurrentSentence(' + event.which + ')');
+
+      switch (event.which) {
+        case KEYS.ENTER:
+          goToSentence();
+          break;
+        case KEYS.LEFT:
+        case KEYS.J:
+          prevSentence();
+          break;
+        case KEYS.RIGHT:
+        case KEYS.K:
+          nextSentence();
+          break;
+        case KEYS.MINUS:
+          removeSentence();
+          break;
+        case KEYS.EQUALS:
+          insertSentence();
+          break;
+      }
+    }
+  }, {
+    key: 'onKeyupInEditLabel',
+    value: function onKeyupInEditLabel(event) {
+      log.debug('called onKeyupInEditLabel(' + event.which + ')');
+
+      switch (event.which) {
+        case KEYS.ENTER:
+          onClickCanvas();
+          break;
+        case KEYS.TAB:
+          console.log('what should happen here???');
+          break;
+        case KEYS.ESC:
+          this.editing = null;
+          onClickCanvas();
+          break;
+      }
+    }
+  }, {
+    key: 'onEditTextData',
+    value: function onEditTextData(event) {
+      log.debug('called onEditTextData(key: ' + event.which + ')');
+
+      //saveGraphEdits();
+
+      switch (event.which) {
+        case KEYS.ESC:
+          this.blur();
+          break;
+        case KEYS.ENTER:
+          gui.onEnter(event);
+          break;
+        default:
+          manager.parse();
+      }
+    }
+  }, {
     key: 'onEnter',
     value: function onEnter(event) {
-      console.log('on enter');
+      log.debug('called onEnter()');
+
+      var sentence = manager.sentence,
+          cursor = $('#text-data').prop('selectionStart') - 1,
+          lines = sentence.split(/\n/),
+          lineId = null,
+          before = void 0,
+          during = void 0,
+          after = void 0,
+          cursorLine = 0;
+
+      if (gui.is_table_view) {
+
+        var target = $(event.target);
+        cursor = parseInt(target.attr('row-id')) || parseInt(target.attr('col-id'));
+        cursorLine = target.attr('row-id');
+      } else {
+
+        if (manager.format === 'Unknown' || manager.format === 'plain text') return;
+
+        // get current line number
+        var acc = 0;
+        $.each(lines, function (i, line) {
+          acc += line.length;
+          if (acc + i < cursor) cursorLine = i + 1;
+        });
+        log.debug('onEnter(): cursor on line[' + cursorLine + ']: "' + lines[cursorLine] + '"');
+
+        // advance the cursor until we are at the end of a line that isn't followed by a comment
+        //   or at the very beginning of the textarea
+        if (cursor !== 0 || sentence.startsWith('#')) {
+          log.debug('onEnter(): cursor[' + cursor + ']: "' + sentence[cursor] + '" (not at textarea start OR textarea has comments)');
+          while (sentence[cursor + 1] === '#' || sentence[cursor] !== '\n') {
+            log.debug('onEnter(): cursor[' + cursor + ']: "' + sentence[cursor] + '", line[' + cursorLine + ']: ' + lines[cursorLine]);
+            if (cursor === sentence.length) break;
+            if (sentence[cursor] === '\n') cursorLine++;
+            cursor++;
+          }
+        } else {
+          log.debug('onEnter(): cursor[' + cursor + ']: "' + sentence[cursor] + '" (at textarea start)');
+          cursorLine = -1;
+        }
+      }
+
+      log.debug('onEnter(): cursor[' + cursor + ']: "' + sentence[cursor] + '", line[' + cursorLine + ']: ' + lines[cursorLine]);
+
+      if (event.preventDefault) // bc of testing, sometimes these are fake events
+        event.preventDefault();
+
+      switch (manager.format) {
+        case 'CoNLL-U':
+
+          if (cursor) {
+            var tabs = lines[cursorLine].split('\t');
+            var token = manager.current.getById(tabs[0]).token;
+            manager.current.insertTokenAfter(token);
+          } else {
+            var _token = manager.current[0].token;
+            manager.current.insertTokenBefore(_token);
+          }
+
+          var is_table_view = manager.current.is_table_view;
+          var column_visibilities = manager.current.column_visibilities;
+          manager.parse(manager.conllu);
+          manager.current.is_table_view = is_table_view;
+          manager.current.column_visibilities = column_visibilities;
+          break;
+
+        case 'CG3':
+
+          /*
+          // advance to the end of an analysis
+          log.debug(`onEnter(): line[${cursorLine}]: "${lines[cursorLine]}", cursor[${cursor}]: "${sentence[cursor]}"`);
+          while (cursorLine < lines.length - 1) {
+          if (lines[cursorLine + 1].startsWith('"<'))
+          break;
+          cursorLine++;
+          cursor += lines[cursorLine].length + 1;
+          log.debug(`onEnter(): incrementing line[${cursorLine}]: "${lines[cursorLine]}", cursor[${cursor}]: "${sentence[cursor]}"`);
+          }
+          lineId = lines.slice(0, cursorLine + 1).reduce((acc, line) => {
+          return acc + line.startsWith('"<');
+          }, 0) + 1;
+          log.debug(`onEnter(): inserting line with id: ${lineId}`);
+          log.debug(`onEnter(): resetting all content lines: [${lines}]`);
+          const incrementIndices = (lines, lineId) => {
+          return lines.map((line) => {
+          if (line.startsWith('#'))
+          return line;
+          (line.match(/[#>][0-9]+/g) || []).map((match) => {
+          let id = parseInt(match.slice(1));
+          id += (id >= lineId ? 1 : 0);
+          line = line.replace(match, `${match.slice(0,1)}${id}`)
+          });
+          return line;
+          });
+          }
+          before = incrementIndices(lines.slice(0, cursorLine + 1), lineId);
+          during = [`"<_>"`, `\t${getCG3Analysis(lineId, {id:lineId})}`];
+          after = incrementIndices(lines.slice(cursorLine + 1), lineId);
+          log.debug(`onEnter(): preceding line(s) : [${before}]`);
+          log.debug(`onEnter(): interceding lines : [${during}]`);
+          log.debug(`onEnter(): proceeding line(s): [${after}]`);
+          $('#text-data').val(before.concat(during, after).join('\n'))
+          .prop('selectionStart', cursor)
+          .prop('selectionEnd', cursor);*/
+
+          break;
+
+        default:
+          insertSentence();
+      }
+
+      gui.update();
     }
   }, {
     key: 'is_table_view',
@@ -16713,6 +17099,9 @@ $(function () {
 
 	manager.reset();
 	gui.bind();
+
+	$('#tabConllu').click();
+	$('#btnToggleTable').click();
 });
 
 module.exports = {
@@ -16796,16 +17185,6 @@ var Manager = function () {
     key: 'last',
     value: function last() {
       this.index = this.length - 1;
-    }
-  }, {
-    key: 'set',
-    value: function set(token, field, value) {
-      if (field === 'id') return;
-
-      console.log(field, value);
-      this._sentences[this.index][field] = value;
-      console.log(this.current);
-      gui.update();
     }
   }, {
     key: 'setSentence',
@@ -16985,7 +17364,6 @@ var Manager = function () {
     },
     set: function set(sent) {
       if (sent instanceof nx.Sentence) this._sentences[this.index] = sent;
-      console.log(sent);
     }
   }, {
     key: 'sentence',
@@ -17053,7 +17431,6 @@ function newSentence(text) {
   }
 
   sent.currentFormat = format;
-  console.log(sent);
   sent.is_table_view = false;
   sent.column_visibilities = new Array(10).fill(true);
 

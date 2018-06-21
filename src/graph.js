@@ -28,6 +28,10 @@ class Graph {
   update() {
 
   }
+
+  removeDependency(ele) {
+
+  }
 }
 
 module.exports = Graph;
