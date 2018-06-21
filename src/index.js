@@ -26,8 +26,7 @@ $(() => {
 	manager.reset();
 	gui.bind();
 
-	$('#tabConllu').click();
-	$('#btnToggleTable').click();
+	manager.parse(require('./test/data/conllu').from_cg3_with_spans);
 
 });
 

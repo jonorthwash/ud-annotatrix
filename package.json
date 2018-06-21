@@ -6,7 +6,6 @@
   "dependencies": {
     "bootstrap": "^4.1.1",
     "canvas2svg": "^1.0.16",
-    "cytoscape": "^3.2.13",
     "jquery": "^3.2.1",
     "jquery-autocomplete": "^1.2.8",
     "l20n": "^5.0.0",
@@ -39,7 +38,8 @@
   "scripts": {
     "test": "mocha src/test/index.js",
     "coverage": "nyc mocha src/test/index.js",
-    "build": "gulp"
+    "build": "gulp",
+    "build-tree": "./scripts/rebuild-tree.sh"
   },
   "repository": {
     "type": "git",

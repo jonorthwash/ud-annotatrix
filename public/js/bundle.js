@@ -10371,6 +10371,20 @@ const _ = require('underscore');
 
 const NotatrixError = require('./errors').NotatrixError;
 
+/**
+ * convert a string to subscripts (for ele labels)
+ *
+ * @param {String} str string to be subscripted
+ * @return {String}
+ */
+function toSubscript(str) {
+  const subscripts = { 0:'₀', 1:'₁', 2:'₂', 3:'₃', 4:'₄', 5:'₅',
+    6:'₆', 7:'₇', 8:'₈', 9:'₉', '-':'₋', '(':'₍', ')':'₎' };
+
+  return str.split('').map((char) => {
+    return (subscripts[char] || char);
+  }).join('');
+}
 
 /**
  * strip whitespace from a string
@@ -10820,6 +10834,8 @@ class Analysis {
     let eles = [];
 
     if (this.isCurrent) {
+      const formLabel = `${this.form}${this.isSuperToken
+        ? toSubscript(this.id) : ''}`;
       eles.push({ // "number" node
         data: {
           id: `num-${this.id}`,
@@ -10838,8 +10854,10 @@ class Analysis {
           name: `form`,
           attr: `form`,
           form: this.form,
-          label: null, // TODO: fix
-          length: null, // TODO: relies on label
+          label: formLabel,
+          length: `${formLabel.length > 3
+            ? formLabel.length * 0.7
+            : formLabel.length}em`,
           state: `normal`,
           parent: `num-${this.id}`,
           analysis: this
@@ -10883,10 +10901,10 @@ class Analysis {
             target: `form-${head.id}`,
             targetAnalysis: head,
             length: `${deprel.length / 3}em`,
-            label: null, // TODO implement
-            ctrl: new Array(4).fill(null) // TODO implement
+            label: null, // NB overwrite this before use
+            ctrl: null   // NB overwrite this before use
           },
-          classes: null // TODO implement
+          classes: null  // NB overwrite this before use
         });
 
       });
@@ -11314,7 +11332,7 @@ class Analysis {
       if (token === this.sentence.getById(token.id) || !this.sentence.options.help.deps)
         deps.push(`${token.id || token}${deprel ? `:${deprel}` : ''}`);
     });
-    return deps.join('|');
+    return deps.join('|') || '_';
   }
 
   /**
@@ -11495,6 +11513,7 @@ const InvalidCG3Error     = require('./errors').InvalidCG3Error;
 const InvalidCoNLLUError  = require('./errors').InvalidCoNLLUError
 
 const Token = require('./token');
+const Analysis = require('./analysis');
 
 // define all the regex we use in this module here
 const regex = {
@@ -11510,6 +11529,7 @@ function getIndices(tok) {
 
   let superTokenId = -1,
     subTokenId = -1,
+    analysisId = 0,
     found = false,
     isSubToken = false;
 
@@ -11517,6 +11537,7 @@ function getIndices(tok) {
 
     if (found)
       return;
+
 
     if (token.isSubToken) {
       subTokenId++;
@@ -11668,12 +11689,25 @@ class Sentence {
 
   // manipulate token array
 
+  /**
+   * insert a token AFTER the given token
+   *
+   * NOTE: if only passed 1 arg, it will insert a token constructed from
+   *   the params { form: 'inserted' }
+   *
+   * @param {Token} atToken
+   * @param {(Token|null)} newToken
+   * @return {Sentence}
+   *
+   * @throws {NotatrixError} if given invalid token for first param
+   */
   insertTokenBefore(atToken, newToken) {
+    
     if (!(atToken instanceof Token))
       throw new NotatrixError('unable to insert token: not instance of Token');
 
     if (!(newToken instanceof Token))
-      newToken = Token.fromParams(this, {});
+      newToken = Token.fromParams(this, { form: 'inserted' });
 
     const indices = getIndices(atToken);
     if (indices === null)
@@ -11684,12 +11718,25 @@ class Sentence {
       : this[indices.super].insertSubTokenAt(indices.sub, newToken);
   }
 
+  /**
+   * insert a token AFTER the given token
+   *
+   * NOTE: if only passed 1 arg, it will insert a token constructed from
+   *   the params { form: 'inserted' }
+   *
+   * @param {Token} atToken
+   * @param {(Token|null)} newToken
+   * @return {Sentence}
+   *
+   * @throws {NotatrixError} if given invalid token for first param
+   */
   insertTokenAfter(atToken, newToken) {
+
     if (!(atToken instanceof Token))
       throw new NotatrixError('unable to insert token: not instance of Token');
 
     if (!(newToken instanceof Token))
-      newToken = Token.fromParams(this, {});
+      newToken = Token.fromParams(this, { form: 'inserted' });
 
     const indices = getIndices(atToken);
     if (indices === null)
@@ -11698,6 +11745,82 @@ class Sentence {
     return indices.sub === null
       ? this.insertTokenAt(indices.super + 1, newToken)
       : this[indices.super].insertSubTokenAt(indices.sub + 1, newToken);
+  }
+
+  /**
+   * insert an analysis BEFORE the given analysis
+   *
+   * NOTE: if only passed 1 arg, it will insert an analysis constructed from
+   *   the params { form: 'inserted' }
+   *
+   * @param {Analysis} atAnalysis
+   * @param {(Analysis|null)} newAnalysis
+   * @return {Sentence}
+   *
+   * @throws {NotatrixError} if given invalid analysis for first param
+   */
+  insertAnalysisBefore(atAnalysis, newAnalysis) {
+
+    if (!(atAnalysis instanceof Analysis))
+      throw new NotatrixError('unable to insert analysis: not instance of Analysis');
+
+    if (!(newAnalysis instanceof Analysis))
+      newAnalysis = Token.fromParams(this, { form: 'inserted' }).analysis;
+
+    const indices = getIndices(atAnalysis.token);
+    if (indices === null)
+      return null;
+
+    const token = indices.sub === null
+      ? this[indices.super].token
+      : this[indices.super][indices.sub].token;
+
+    let analysisId = -1;
+    token.forEach((ana, i) => {
+      if (ana === atAnalysis)
+        analysisId = i;
+    });
+
+    if (analysisId > -1)
+      return token.insertAnalysisAt(analysisId, newAnalysis);
+  }
+
+  /**
+   * insert an analysis AFTER the given analysis
+   *
+   * NOTE: if only passed 1 arg, it will insert an analysis constructed from
+   *   the params { form: 'inserted' }
+   *
+   * @param {Analysis} atAnalysis
+   * @param {(Analysis|null)} newAnalysis
+   * @return {Sentence}
+   *
+   * @throws {NotatrixError} if given invalid analysis for first param
+   */
+  insertAnalysisAfter(atAnalysis, newAnalysis) {
+
+    if (!(atAnalysis instanceof Analysis))
+      throw new NotatrixError('unable to insert analysis: not instance of Analysis');
+
+    if (!(newAnalysis instanceof Analysis))
+      newAnalysis = Token.fromParams(this, { form: 'inserted' }).analysis;
+
+    const indices = getIndices(atAnalysis.token);
+    if (indices === null)
+      return null;
+
+    const token = indices.sub === null
+      ? this[indices.super].token
+      : this[indices.super][indices.sub].token;
+
+    let analysisId = -1;
+    token.forEach((ana, i) => {
+      if (ana === atAnalysis)
+        analysisId = i;
+    });
+
+    if (analysisId > -1)
+      return token.insertAnalysisAt(analysisId + 1, newAnalysis);
   }
 
   /**
@@ -12325,7 +12448,7 @@ Sentence.prototype.__proto__ = new Proxy(Sentence.prototype.__proto__, {
 // expose to application
 module.exports = Sentence;
 
-},{"./errors":3,"./token":6,"underscore":7}],6:[function(require,module,exports){
+},{"./analysis":2,"./errors":3,"./token":6,"underscore":7}],6:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
@@ -15302,7 +15425,9 @@ module.exports = {
 	defaultFilename: 'ud-annotatrix-corpus',
 	defaultSentence: 'Welcome to the UD-Annotatrix',
 	defaultInsertedSentence: 'inserted',
-	defaultLoggingLevel: 'ERROR'
+	defaultLoggingLevel: 'ERROR',
+	defaultEdgeHeight: 40,
+	defaultEdgeCoeff: 1
 };
 
 },{}],12:[function(require,module,exports){
@@ -16411,8 +16536,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var $ = require('jquery');
 var _ = require('underscore');
 
+var cfg = require('./config');
 var funcs = require('./funcs');
-var CY_STYLE = require('./cy-style.js');
+var CY_STYLE = require('./cy-style');
 
 var Graph = function () {
   function Graph(mgr, options) {
@@ -16433,8 +16559,29 @@ var Graph = function () {
   }
 
   _createClass(Graph, [{
+    key: 'eles',
+    value: function eles() {
+      return _.map(manager.current.eles, function (ele) {
+        if (ele.data.name === 'dependency') {
+
+          var src = ele.data.sourceAnalysis,
+              tar = ele.data.targetAnalysis;
+
+          ele.data.label = gui.is_ltr ? tar.num < src.num ? src.deprel + '\u22B3' : '\u22B2' + src.deprel : tar.num < src.num ? '\u22B2' + src.deprel : src.deprel + '\u22B3';
+
+          ele.data.ctrl = new Array(4).fill(getEdgeHeight(src.num, tar.num));
+          ele.classes = 'dependency';
+        }
+
+        return ele;
+      });
+    }
+  }, {
     key: 'update',
     value: function update() {}
+  }, {
+    key: 'clear',
+    value: function clear() {}
   }, {
     key: 'removeDependency',
     value: function removeDependency(ele) {}
@@ -16443,9 +16590,21 @@ var Graph = function () {
   return Graph;
 }();
 
+function getEdgeHeight(srcNum, tarNum) {
+
+  var edgeHeight = cfg.defaultEdgeHeight * (tarNum - srcNum);
+  if (gui.is_ltr) edgeHeight *= -1;
+  if (Math.abs(edgeHeight) !== 1) edgeHeight *= cfg.defaultEdgeCoeff;
+  if (gui.is_vertical) edgeHeight = 45;
+
+  log.debug('getEdgeHeight(): ' + edgeHeight);
+
+  return edgeHeight;
+}
+
 module.exports = Graph;
 
-},{"./cy-style.js":14,"./funcs":17,"jquery":1,"underscore":7}],19:[function(require,module,exports){
+},{"./config":11,"./cy-style":14,"./funcs":17,"jquery":1,"underscore":7}],19:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -16609,7 +16768,6 @@ var GUI = function () {
           break;
       }
 
-      console.log(manager.format, this.is_table_view);
       if (manager.format !== 'CoNLL-U') this.is_table_view = false;
 
       if (this.is_table_view) {
@@ -16880,21 +17038,21 @@ var GUI = function () {
 
       switch (event.which) {
         case KEYS.ENTER:
-          goToSentence();
+          manager.index = parseInt(gui.read('current-sentence')) - 1;
           break;
         case KEYS.LEFT:
         case KEYS.J:
-          prevSentence();
+          manager.prev();
           break;
         case KEYS.RIGHT:
         case KEYS.K:
-          nextSentence();
+          manager.next();
           break;
         case KEYS.MINUS:
-          removeSentence();
+          manager.removeSentence();
           break;
         case KEYS.EQUALS:
-          insertSentence();
+          manager.insertSentence();
           break;
       }
     }
@@ -16905,14 +17063,14 @@ var GUI = function () {
 
       switch (event.which) {
         case KEYS.ENTER:
-          onClickCanvas();
+          graph.clear();
           break;
         case KEYS.TAB:
           console.log('what should happen here???');
           break;
         case KEYS.ESC:
           this.editing = null;
-          onClickCanvas();
+          graph.clear();
           break;
       }
     }
@@ -16998,15 +17156,18 @@ var GUI = function () {
             manager.current.insertTokenBefore(_token);
           }
 
+          // parse but persist the table settings
           var is_table_view = manager.current.is_table_view;
           var column_visibilities = manager.current.column_visibilities;
           manager.parse(manager.conllu);
           manager.current.is_table_view = is_table_view;
           manager.current.column_visibilities = column_visibilities;
+
           break;
 
         case 'CG3':
 
+          throw new errors.NotImplementedError('can\'t onEnter with CG3 :/');
           /*
           // advance to the end of an analysis
           log.debug(`onEnter(): line[${cursorLine}]: "${lines[cursorLine]}", cursor[${cursor}]: "${sentence[cursor]}"`);
@@ -17071,7 +17232,7 @@ var GUI = function () {
 
 module.exports = GUI;
 
-},{"./convert":12,"./corpus":13,"./errors":16,"./funcs":17,"./table":23,"./undo-manager":24,"jquery":1}],20:[function(require,module,exports){
+},{"./convert":12,"./corpus":13,"./errors":16,"./funcs":17,"./table":23,"./undo-manager":25,"jquery":1}],20:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -17100,8 +17261,7 @@ $(function () {
 	manager.reset();
 	gui.bind();
 
-	$('#tabConllu').click();
-	$('#btnToggleTable').click();
+	manager.parse(require('./test/data/conllu').from_cg3_with_spans);
 });
 
 module.exports = {
@@ -17110,7 +17270,7 @@ module.exports = {
 	Log: Log
 };
 
-},{"./browser-logger":10,"./config":11,"./errors":16,"./funcs":17,"./graph":18,"./gui":19,"./manager":21,"./server":22,"jquery":1,"notatrix":4,"underscore":7}],21:[function(require,module,exports){
+},{"./browser-logger":10,"./config":11,"./errors":16,"./funcs":17,"./graph":18,"./gui":19,"./manager":21,"./server":22,"./test/data/conllu":24,"jquery":1,"notatrix":4,"underscore":7}],21:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -17611,7 +17771,46 @@ module.exports = {
   edit: edit
 };
 
-},{"./validate":25,"jquery":1}],24:[function(require,module,exports){
+},{"./validate":26,"jquery":1}],24:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+  nested_2: '# text = ab cde f h\n1-2\tab\t_\t_\t_\t_\t_\t_\t_\t_\n1\ta\tA\t_\t_\t_\t_\t_\t_\t_\n2\tb\tB\t_\t_\t_\t_\t_\t_\t_\n3-5\tcde\t_\t_\t_\t_\t_\t_\t_\t_\n3\tc\tC\t_\t_\t_\t_\t_\t_\t_\n4\td\tD\t_\t_\t_\t_\t_\t_\t_\n5\te\tE\t_\t_\t_\t_\t_\t_\t_\n6\tf\tF\t_\t_\t_\t_\t_\t_\t_\n6.1\tsilent_g\tG\t_\t_\t_\t_\t_\t_\t_\n7\th\tH\t_\t_\t_\t_\t_\t_\t_',
+
+  t: '# testing :)\n1-3\tHe\the\tdet\t_\tpos|f|sp\t_\tdet\t_\t_\n1\tboued\tboued\tn\t_\tm|sg\t4\tobj\t_\t_\n2\te\te\tvpart\t_\tobj\t4\taux\t_\t_\n3\ttebr\tdebri\xF1\tvblex\t_\tpri|p3|sg\t0\troot\t_\t_\n4\tdoob\tdoobie\tnp\t_\t_\t3\t_\t_\t_\n5\tMona\tMona\tnp\t_\tant|f|sg\t4\tnsubj\t_\t_',
+
+  empty: '1      Sue       Sue       _       _       _       _       _       _       _\n2      likes     like       _       _       _       _       _       _       _\n3      coffee    coffee       _       _       _       _       _       _       _\n4      and       and       _       _       _       _       _       _       _\n5      Bill      Bill       _       _       _       _       _       _       _\n5.1    likes     like       _       _       _       _       _       _       _\n6      tea       tea       _       _       _       _       _       _       _',
+
+  0: '# sent_id = _\n# text = this is a test\n1\tthis\t_\t_\t_\t_\t_\t_\t_\t_\n2\tis\t_\t_\t_\t_\t_\t_\t_\t_\n3\ta\t_\t_\t_\t_\t_\t_\t_\t_\n4\ttest\t_\t_\t_\t_\t_\t_\t_\t_',
+
+  1: '1\tthis\t_\t_\t_\t_\t_\t_\t_\t_\n2\tis\t_\t_\t_\t_\t_\t_\t_\t_\n3\ta\t_\t_\t_\t_\t_\t_\t_\t_\n4\ttest\t_\t_\t_\t_\t_\t_\t_\t_',
+
+  cat_ancora: '# url = https://raw.githubusercontent.com/UniversalDependencies/UD_Catalan-AnCora/dev/ca_ancora-ud-test.conllu\n# sent_id = test-s1\n# text = El darrer n\xFAmero de l\'Observatori del Mercat de Treball d\'Osona inclou un informe especial sobre la contractaci\xF3 a trav\xE9s de les empreses de treball temporal, les ETT.\n# orig_file_sentence 001#1\n1\tEl\tel\tDET\tDET\tDefinite=Def|Gender=Masc|Number=Sing|PronType=Art\t3\tdet\t_\t_\n2\tdarrer\tdarrer\tADJ\tADJ\tGender=Masc|Number=Sing|NumType=Ord\t3\tamod\t_\t_\n3\tn\xFAmero\tn\xFAmero\tNOUN\tNOUN\tGender=Masc|Number=Sing\t13\tnsubj\t_\t_\n4\tde\tde\tADP\tADP\tAdpType=Prep\t6\tcase\t_\t_\n5\tl\'\tel\tDET\tDET\tDefinite=Def|Number=Sing|PronType=Art\t6\tdet\t_\tSpaceAfter=No\n6\tObservatori\tObservatori\tPROPN\tPROPN\t_\t3\tnmod\t_\tMWE=Observatori_del_Mercat_de_Treball_d\'_Osona|MWEPOS=PROPN\n7\tdel\tdel\tADP\tADP\tAdpType=Preppron|Gender=Masc|Number=Sing\t8\tcase\t_\t_\n8\tMercat\tMercat\tPROPN\tPROPN\t_\t6\tflat\t_\t_\n9\tde\tde\tADP\tADP\tAdpType=Prep\t10\tcase\t_\t_\n10\tTreball\tTreball\tPROPN\tPROPN\t_\t6\tflat\t_\t_\n11\td\'\td\'\tADP\tADP\tAdpType=Prep\t12\tcase\t_\tSpaceAfter=No\n12\tOsona\tOsona\tPROPN\tPROPN\t_\t6\tflat\t_\t_\n13\tinclou\tincloure\tVERB\tVERB\tMood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin\t0\troot\t_\t_\n14\tun\tun\tNUM\tNUM\tGender=Masc|Number=Sing|NumType=Card\t15\tnummod\t_\t_\n15\tinforme\tinforme\tNOUN\tNOUN\tGender=Masc|Number=Sing\t13\tobj\t_\t_\n16\tespecial\tespecial\tADJ\tADJ\tNumber=Sing\t15\tamod\t_\t_\n17\tsobre\tsobre\tADP\tADP\tAdpType=Prep\t19\tcase\t_\t_\n18\tla\tel\tDET\tDET\tDefinite=Def|Gender=Fem|Number=Sing|PronType=Art\t19\tdet\t_\t_\n19\tcontractaci\xF3\tcontractaci\xF3\tNOUN\tNOUN\tGender=Fem|Number=Sing\t15\tnmod\t_\t_\n20\ta\ta\tADP\tADP\tAdpType=Prep\t24\tcase\t_\tMWE=a_trav\xE9s_de|MWEPOS=ADP\n21\ttrav\xE9s\ttrav\xE9s\tNOUN\tNOUN\t_\t20\tfixed\t_\t_\n22\tde\tde\tADP\tADP\tAdpType=Prep\t20\tfixed\t_\t_\n23\tles\tel\tDET\tDET\tDefinite=Def|Gender=Fem|Number=Plur|PronType=Art\t24\tdet\t_\t_\n24\tempreses\tempresa\tNOUN\tNOUN\tGender=Fem|Number=Plur\t19\tnmod\t_\t_\n25\tde\tde\tADP\tADP\tAdpType=Prep\t26\tcase\t_\t_\n26\ttreball\ttreball\tNOUN\tNOUN\tGender=Masc|Number=Sing\t24\tnmod\t_\t_\n27\ttemporal\ttemporal\tADJ\tADJ\tNumber=Sing\t26\tamod\t_\tSpaceAfter=No\n28\t,\t,\tPUNCT\tPUNCT\tPunctType=Comm\t30\tpunct\t_\t_\n29\tles\tel\tDET\tDET\tDefinite=Def|Gender=Fem|Number=Plur|PronType=Art\t30\tdet\t_\t_\n30\tETT\tETT\tPROPN\tPROPN\t_\t24\tappos\t_\tSpaceAfter=No\n31\t.\t.\tPUNCT\tPUNCT\tPunctType=Peri\t13\tpunct\t_\t_',
+
+  with_tabs: '# sent_id = chapID01:paragID1:sentID1\n# text = \u041A\u0435\u0447\u0430\u0435\u043D\u044C \u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C \u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F \u043A\u0430\u0440\u0432\u043E\u0442 .\n# text[eng] = Kechai was awoken by annoying flies.\n1\t\u041A\u0435\u0447\u0430\u0435\u043D\u044C\t\u041A\u0435\u0447\u0430\u0439\tN\tN\tSem/Ant_Mal|Prop|SP|Gen|Indef\t2\tobj\t_\t\u041A\u0435\u0447\u0430\u0435\u043D\u044C\n2\t\u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C\t\u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0435\u043C\u0441\tV\tV\tTV|Ind|Prt1|ScPl3|OcSg3\t0\troot\t_\t\u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C\n3\t\u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F\t\u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u043E\u043C\u0441\tPRC\tPrc\tV|TV|PrcPrsL|Sg|Nom|Indef\t4\tamod\t\u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F\t_\n4\t\u043A\u0430\u0440\u0432\u043E\u0442\t\u043A\u0430\u0440\u0432\u043E\tN\tN\tSem/Ani|N|Pl|Nom|Indef\t2\tnsubj\t_\t\u043A\u0430\u0440\u0432\u043E\u0442\n5\t.\t.\tCLB\tCLB\tCLB\t2\tpunct\t_\t.',
+
+  without_tabs: '# sent_id = chapID01:paragID1:sentID1\n# text = \u041A\u0435\u0447\u0430\u0435\u043D\u044C \u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C \u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F \u043A\u0430\u0440\u0432\u043E\u0442 .\n# text[eng] = Kechai was awoken by annoying flies.\n1 \u041A\u0435\u0447\u0430\u0435\u043D\u044C \u041A\u0435\u0447\u0430\u0439 N N Sem/Ant_Mal|Prop|SP|Gen|Indef 2 obj _ \u041A\u0435\u0447\u0430\u0435\u043D\u044C\n2 \u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C \u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0435\u043C\u0441 V V TV|Ind|Prt1|ScPl3|OcSg3 0 root _ \u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C\n3 \u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F \u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u043E\u043C\u0441 PRC Prc V|TV|PrcPrsL|Sg|Nom|Indef 4 amod \u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F\t_\n4 \u043A\u0430\u0440\u0432\u043E\u0442 \u043A\u0430\u0440\u0432\u043E N N Sem/Ani|N|Pl|Nom|Indef 2 nsubj _ \u043A\u0430\u0440\u0432\u043E\u0442\n5 . . CLB CLB CLB 2 punct _ .',
+
+  from_cg3_with_semicolumn: '1\tSiedzieli\u015Bmy\tsiedzie\u0107\tvblex\t_\timpf|past|p1|m|pl\t_\t_\t_\t_\n2\tw\tw\tpr\t_\t_\t_\t_\t_\t_\n3\tmoim\tm\xF3j\tprn\t_\tpos|mi|sg|loc\t_\t_\t_\t_\n4\tpokoju\tpok\xF3j\tn\t_\tmi|sg|loc\t_\t_\t_\t_\n5\t,\t,\tcm\t_\t_\t_\t_\t_\t_\n6\tpal\u0105c\tpali\u0107\tvblex\t_\timpf|pprs|adv\t_\t_\t_\t_\n7\ti\ti\tcnjcoo\t_\t_\t_\t_\t_\t_\n8\trozmawiaj\u0105c\trozmawia\u0107\tvblex\t_\timpf|pprs|adv\t_\t_\t_\t_\n9\to\to\tpr\t_\t_\t_\t_\t_\t_\n10\ttem\tto\tprn\t_\tdem|mi|sg|loc\t_\t_\t_\t_\n11\t,\t,\tcm\t_\t_\t_\t_\t_\t_\n12\tjak\tjak\trel\t_\tadv\t_\t_\t_\t_\n13\tmarni\tmarny\tadj\t_\tsint|mp|pl|nom\t_\t_\t_\t_\n14\tjeste\u015Bmy\tby\u0107\tvbser\t_\tpres|p1|pl\t_\t_\t_\t_\n15\t,\t,\tcm\t_\t_\t_\t_\t_\t_\n16\tmarni\tmarny\tadj\t_\tsint|mp|pl|nom\t_\t_\t_\t_\n17\tz\tz\tpr\t_\t_\t_\t_\t_\t_\n18\tlekarskiego\tlekarski\tadj\t_\tmi|sg|gen\t_\t_\t_\t_\n19\tpunktu\tpunkt\tn\t_\tmi|sg|gen\t_\t_\t_\t_\n20\twidzenia\twidzie\u0107\tvblex\t_\timpf|ger|nt|sg|gen\t_\t_\t_\t_\n21\tchc\u0119\tchcie\u0107\tvblex\t_\timpf|pres|p1|sg\t_\t_\t_\t_\n22\tpowiedzie\u0107\tpowiedzie\u0107\tvblex\t_\tperf|inf\t_\t_\t_\t_\n23\t,\t,\tcm\t_\t_\t_\t_\t_\t_\n24\tnaturalnie\tnaturalnie\tadv\t_\tsint\t_\t_\t_\t_\n25\t.\t.\tsent\t_\t_\t_\t_\t_\t_',
+
+  from_cg3_simple: '1\t\u041F\u0430\u0442\u0448\u0430\u043C\u0435\u043D\t\u043F\u0430\u0442\u0448\u0430\tn\t_\tins\t3\tnmod\t_\t_\n2\t\u0441\u043E\u0493\u044B\u0441\t\u0441\u043E\u0493\u044B\u0441\tn\t_\tnom\t3\tobj\t_\t_\n3\t\u0430\u0448\u049B\u0430\u043D\u0434\u0430\t\u0430\u0448\tv\t_\ttv|ger_past|loc\t12\tadvcl\t_\t_\n4\t,\t,\tcm\t_\t_\t12\tpunct\t_\t_\n5\t\u0435\u043B-\u0436\u04B1\u0440\u0442\t\u0435\u043B-\u0436\u04B1\u0440\u0442\tn\t_\tnom\t7\tconj\t_\t_\n6\t,\t,\tcm\t_\t_\t7\tpunct\t_\t_\n7\t\u043E\u0442\u0430\u043D\u044B\u043C\u0434\u044B\t\u043E\u0442\u0430\u043D\tn\t_\tpx1sg|acc\t8\tobj\t_\t_\n8\t\u049B\u043E\u0440\u0493\u0430\u0443\u0493\u0430\t\u049B\u043E\u0440\u0493\u0430\tv\t_\ttv|ger|dat\t12\tadvcl\t_\t_\n9\t,\t,\tcm\t_\t_\t12\tpunct\t_\t_\n10\t\u0431\u0456\u0437\t\u0431\u0456\u0437\tprn\t_\tpers|p1|pl|nom\t12\tnsubj\t_\t_\n11\t\u0441\u043E\u0493\u044B\u0441\u049B\u0430\t\u0441\u043E\u0493\u044B\u0441\tn\t_\tdat\t12\tnmod\t_\t_\n12\t\u0431\u0430\u0440\u0434\u044B\u049B\t\u0431\u0430\u0440\tv\t_\tiv|ifi|p1|pl\t0\troot\t_\t_\n13\t.\t.\tsent\t_\t_\t12\tpunct\t_\t_\n',
+
+  from_cg3_with_spans: '# text = He boued e tebr Mona er gegin.\n# text[eng] = Mona eats her food here in the kitchen.\n# labels = press_1986 ch_syntax p_197 to_check\n1\tHe\the\tdet\t_\tpos|f|sp\t2\tdet\t_\t_\n2\tboued\tboued\tn\t_\tm|sg\t4\tobj\t_\t_\n3\te\te\tvpart\t_\tobj\t4\taux\t_\t_\n4\ttebr\tdebri\xF1\tvblex\t_\tpri|p3|sg\t0\troot\t_\t_\n5\tMona\tMona\tnp\t_\tant|f|sg\t4\tnsubj\t_\t_\n6-7\ter\t_\t_\t_\t_\t_\t_\t_\t_\n6\t_\te\tpr\t_\t_\t8\tcase\t_\t_\n7\t_\tan\tdet\t_\tdef|sp\t8\tdet\t_\t_\n8\tgegin\tkegin\tn\t_\tf|sg\t4\tobl\t_\t_\n9\t.\t.\tsent\t_\t_\t4\tpunct\t_\t_\n',
+
+  rueter_long: '# sent_id = BryzhinskijMixail_Kirdazht_manu:3859\n# text = \u041D\u043E \u0437\u044F\u0440\u0441 \u0432\u0430\u043B\u0433\u0441\u044C , \u0437\u044F\u0440\u0441 \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u0441\u044C \u0434\u044B \u043C\u0435\u043A\u0435\u0432 \u043F\u0430\u0440\u0441\u0442\u0435 \u043F\u0435\u043A\u0441\u0442\u043D\u0435\u0441\u044C \u0432\u0435\u043B\u0435 \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C , \u043A\u0443\u0436\u043E \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C , \u043A\u0443\u0440\u043E \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u0434\u044B \u044D\u0441\u0435\u0441\u0442 \u044E\u0440\u0442\u0441 \u0441\u043E\u0432\u0430\u043C\u043E \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u044D\u0440\u044C\u0432\u0430 \u043B\u0438\u0441\u0438\u0446\u044F\u043D\u0442\u0435\u043D\u044C \u0441\u043E\u0432\u0438\u0446\u044F\u043D\u0442\u0435\u043D\u044C \u0442\u0435 \u0441\u0432\u0430\u043B \u0442\u0435\u0439\u043D\u0435\u043C\u0430 , \u043A\u0435\u043D\u043A\u0448\u0442\u043D\u0435 \u0441\u0432\u0430\u043B \u043F\u0435\u043A\u0441\u0442\u0430\u0437\u044C \u0443\u043B\u0435\u0437\u0442 ; \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u0441\u044B\u0437\u044C \u043A\u0435\u043B\u0435\u0441 \u0430\u043D\u0441\u044F\u043A \u0432\u0430\u043B\u0441\u043A\u0435 \u043C\u0430\u0440\u0442\u043E \u0434\u044B \u0447\u043E\u043F\u043E\u043D\u044C\u0431\u0435\u043B\u0435\u0432 \u2014 \u0440\u0430\u043A\u0448\u0430\u043D\u044C \u043B\u0438\u0432\u0442\u0435\u043C\u0430 \u0441\u043E\u0432\u0430\u0432\u0442\u043E\u043C\u0430 \u0448\u043A\u0430\u043D\u0435 , \u043A\u0443\u0439\u043C\u0435\u0441\u044C \u0442\u0430\u0433\u043E \u0441\u0442\u0430\u043A\u0430\u043B\u0433\u0430\u0434\u0441\u044C .\n# text_en = But by the time he got down the hill, opened and closed the village gate, the lane gate, the cluster gate and the one to their own home (something everyone coming or going had to do, so the gates would always be closed; they were only opened in the morning and at dusk for taking out and letting in the cattle), the wicker of clay had grown heavy again.\n# text_fi = Kun Ket\u0161ai tuli m\xE4elt\xE4 alas, avasi ja sulki huolellisesti kyl\xE4ver\xE4j\xE4ns\xE4, ??aukio/kentt\xE4ver\xE4j\xE4n, kujaver\xE4j\xE4n ja oman kotiver\xE4j\xE4n, savikontti ehti taas alkaa painaa h\xE4nen selk\xE4\xE4ns\xE4. (Kaikkien k\xE4vij\xF6iden tulee tehd\xE4 n\xE4in, jotta ver\xE4j\xE4t olisivat aina kiinni, ver\xE4j\xE4th\xE4n pidet\xE4\xE4n selkosen sel\xE4ll\xE4\xE4n vain aamulla ja illansuussa, kun karjaa ajetaan laitumelle tai kotiin.)\n1 \u041D\u043E \u043D\u043E CCONJ CC _ 3 cc _ _\n2 \u0437\u044F\u0440\u0441 \u0437\u044F\u0440\u0441 ADV Adv|Der/Ill|Adv|Sem/Time Derivation=Ill|AdvType=Tim 3 mark _ _\n3 \u0432\u0430\u043B\u0433\u0441\u044C \u0432\u0430\u043B\u0433\u043E\u043C\u0441 VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 51 advcl _ SpaceAfter=No\n4 , , PUNCT CLB _ 6 punct _ _\n5 \u0437\u044F\u0440\u0441 \u0437\u044F\u0440\u0441 ADV Adv|Der/Ill|Adv|Sem/Time Derivation=Ill|AdvType=Tim 6 mark _ _\n6 \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u0441\u044C \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u043C\u0441 VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 3 conj _ _\n7 \u0434\u044B \u0434\u044B CCONJ CC _ 10 cc _ _\n8 \u043C\u0435\u043A\u0435\u0432 \u043C\u0435\u043A\u0435\u0432 ADV Adv|Lat|Sg|Nom|Indef Case=Lat|Case=Nom|Definite=Ind|Number=Sing 10 advmod _ _\n9 \u043F\u0430\u0440\u0441\u0442\u0435 \u043F\u0430\u0440\u0441\u0442\u0435 ADV Adv|Manner AdvType=Man 10 advmod _ _\n10 \u043F\u0435\u043A\u0441\u0442\u043D\u0435\u0441\u044C \u043F\u0435\u043A\u0441\u0442\u043D\u0435\u043C\u0441 VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 3 conj _ _\n11 \u0432\u0435\u043B\u0435 \u0432\u0435\u043B\u0435 NOUN N|Sem/Inanim_Cnt|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 10 obj _ _\n12 \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u043A\u0435\u043D\u043A\u0448 NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 11 goeswith _ SpaceAfter=No\n13 , , PUNCT CLB _ 15 punct _ _\n14 \u043A\u0443\u0436\u043E \u043A\u0443\u0436\u043E NOUN N|Sem/Inanim_Cnt|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 12 conj _ _\n15 \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u043A\u0435\u043D\u043A\u0448 NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 14 goeswith _ SpaceAfter=No\n16 , , PUNCT CLB _ 18 punct _ _\n17 \u043A\u0443\u0440\u043E \u043A\u0443\u0440\u043E NOUN N|Sem/Inanim_Cnt|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 12 conj _ _\n18 \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u043A\u0435\u043D\u043A\u0448 NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 17 goeswith _ _\n19 \u0434\u044B \u0434\u044B CCONJ CC _ 23 cc _ _\n20 \u044D\u0441\u0435\u0441\u0442 \u044D\u0441\u044C PRON Pron|Refl|Pl3|Gen|Variant=Short Case=Gen|Number=Plur|Person=3|PronType=Refl|Variant=Short 22 nmod _ _\n21 \u044E\u0440\u0442\u0441 \u044E\u0440\u0442 NOUN N|Sem/Inanim_Cnt|SP|Ill|Indef Case=Ill|Definite=Ind|Number=Plur,Sing 20 case _ _\n22 \u0441\u043E\u0432\u0430\u043C\u043E \u0441\u043E\u0432\u0430\u043C\u043E NOUN N|IV|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing|Valency=1 23 compound _ _\n23 \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u043A\u0435\u043D\u043A\u0448 NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 12 conj _ _\n24 ( ( PUNCT PUNCT _ 29 punct _ SpaceAfter=No\n25 \u044D\u0440\u044C\u0432\u0430 \u044D\u0440\u044C\u0432\u0430 DET Det|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 26 det _ _\n26 \u043B\u0438\u0441\u0438\u0446\u044F\u043D\u0442\u0435\u043D\u044C-\u0441\u043E\u0432\u0438\u0446\u044F\u043D\u0442\u0435\u043D\u044C \u043B\u0438\u0441\u0438\u0446\u044F\u0442-\u0441\u043E\u0432\u0438\u0446\u044F\u0442 NOUN N|V|NomAg|Sg|Dat|Def Case=Dat|Definite=Def|Derivation=NomAg|Number=Sing 29 obl _ _\n27 \u0442\u0435 \u0442\u0435 PRON Pron|Dem|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing|PronType=Dem 29 nsubj _ _\n28 \u0441\u0432\u0430\u043B \u0441\u0432\u0430\u043B ADV Adv|Tot|Sem/Time_dur PronType=Tot|PronType=Tot 29 advmod _ _\n29 \u0442\u0435\u0439\u043D\u0435\u043C\u0430 \u0442\u0435\u0439\u043D\u0435\u043Cc VERB V|TV|Oblig|Clitic=Cop|Prs|ScSg3 Valency=2|VerbForm=Oblig|Clitic=Cop|Number[subj]=Sing|Person[subj]=3|Tense=Pres 3 parataxis _ SpaceAfter=No\n30 , , PUNCT CLB _ 33 punct _ _\n31 \u043A\u0435\u043D\u043A\u0448\u0442\u043D\u0435 \u043A\u0435\u043D\u043A\u0448 NOUN N|Sem/Inanim_Cnt|Pl|Nom|Def Case=Nom|Definite=Def|Number=Plur 34 nsubj _ _\n32 \u0441\u0432\u0430\u043B \u0441\u0432\u0430\u043B ADV Adv|Tot|Sem/Time_dur PronType=Tot|PronType=Tot 33 advmod _ _\n33 \u043F\u0435\u043A\u0441\u0442\u0430\u0437\u044C \u043F\u0435\u043A\u0441\u0442\u0430\u043C\u0441 VERB V|Der/\u041E\u0437\u044C|Ger Derivation=Ozj|VerbForm=Conv 29 ccomp _ _\n34 \u0443\u043B\u0435\u0437\u0442 \u0443\u043B\u0435\u043C\u0441 AUX V|IV|Opt|ScPl3 Mood=Opt|Number[subj]=Plur|Person[subj]=3|Valency=1 33 cop _ SpaceAfter=No\n35 ; ; PUNCT CLB _ 29 punct _ _\n36 \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u0441\u044B\u0437\u044C \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u043C\u0441 VERB V|Ind|Prs|ScPl3|Obj3 Mood=Ind|Number[subj]=Plur|Person[subj]=3|Tense=Pres|Obj3 29 conj _ _\n37 \u043A\u0435\u043B\u0435\u0441 \u043A\u0435\u043B\u0435\u0441 ADV Adv Adv 36 advmod _ _\n38 \u0430\u043D\u0441\u044F\u043A \u0430\u043D\u0441\u044F\u043A ADV Adv Adv 39 advmod _ _\n39 \u0432\u0430\u043B\u0441\u043A\u0435 \u0432\u0430\u043B\u0441\u043A\u0435 NOUN N|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 36 obl _ _\n40 \u043C\u0430\u0440\u0442\u043E \u043C\u0430\u0440\u0442\u043E ADP Adp|Po AdpType=Post 39 case _ _\n41 \u0434\u044B \u0434\u044B CCONJ CC _ 42 cc _ _\n42 \u0447\u043E\u043F\u043E\u043D\u044C\u0431\u0435\u043B\u0435\u0432 \u0447\u043E\u043F\u043E\u043D\u044C\u0431\u0435\u043B\u0435\u0432 ADV Adv|Lat Case=Lat 39 conj _ _\n43 \u2014 \u2014 PUNCT CLB _ 46 punct _ _\n44 \u0440\u0430\u043A\u0448\u0430\u043D\u044C \u0440\u0430\u043A\u0448\u0430 NOUN N|Sem/Anim_Cnt|SP|Gen|Indef Case=Gen|Definite=Ind|Number=Plur,Sing 45 nmod:gobj _ _\n45 \u043B\u0438\u0432\u0442\u0435\u043C\u0430-\u0441\u043E\u0432\u0430\u0432\u0442\u043E\u043C\u0430 \u043B\u0438\u0432\u0442\u0435\u043C\u0430-\u0441\u043E\u0432\u0430\u0432\u0442\u043E\u043C\u0430 NOUN N|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 36 nmod _ _\n46 \u0448\u043A\u0430\u043D\u0435 \u0448\u043A\u0430 NOUN N|Sem/Time|SP|Temp|Indef Case=Temp|Definite=Ind|Number=Plur,Sing 39 conj _ SpaceAfter=No\n47 ) ) PUNCT PUNCT _ 29 punct _ SpaceAfter=No\n48 , , PUNCT CLB _ 29 punct _ _\n49 \u043A\u0443\u0439\u043C\u0435\u0441\u044C \u043A\u0443\u0439\u043C\u0435 NOUN N|Sem/Inanim_Cnt|Sg|Nom|Def Case=Nom|Definite=Def|Number=Sing 51 nsubj _ _\n50 \u0442\u0430\u0433\u043E \u0442\u0430\u0433\u043E ADV Adv|Sem/Time AdvType=Tim 51 advmod _ _\n51 \u0441\u0442\u0430\u043A\u0430\u043B\u0433\u0430\u0434\u0441\u044C \u0441\u0442\u0430\u043A\u0430\u043B\u0433\u0430\u0434\u043E\u043C\u0441 VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 0 root _ SpaceAfter=No\n52 . . PUNCT CLB _ 51 punct _ _',
+
+  katya_aplonova_large_arrows: '# sent_id = html/meyer_gorog-contes_bambara_10amadu_tara.dis.html:16\n# text = ko ni i sera ka jiri nin bulu s\xF2r\xF2 ka na ni a ye, ko c\xE8k\xF2r\xF2ba b\xE8 se ka furak\xE8 o la.\n1\tko\tk\xF3\tPART\tcop\t_\t4\tdiscourse\t_\tGloss=QUOT\n2\tni\tn\xED\tSCONJ\tconj\t_\t4\tmark\t_\tGloss=si\n3\ti\t\xED\tPRON\tpers\tPronType=Prs\t4\tnsubj\t_\tGloss=2.SG\n4\tsera\tsera\tVERB\tv\tAspect=Perf|Valency=1|Polarity=Pos\t19\tadvcl\t_\tGloss=arriver|Morf=arriver,PFV.INTR\n5\tka\tk\xE0\tAUX\tpm\t_\t9\taux\t_\tGloss=INF\n6\tjiri\tj\xEDri\tNOUN\tn\t_\t8\tnmod:poss\t_\tGloss=arbre\n7\tnin\tn\xECn\tDET\tprn/dtm\tPronType=Dem|Definite-Def\t6\tdet\t_\tGloss=DEM\n8\tbulu\tb\xFAlu\tNOUN\tn\t_\t9\tobj\t_\tGloss=feuille\n9\ts\xF2r\xF2\ts\u0254\u0300r\u0254\tVERB\tv\t_\t4\txcomp\t_\tGloss=obtenir\n10\tka\tk\xE0\tAUX\tpm\t_\t11\taux\t_\tGloss=INF\n11\tna\tn\xE0\tVERB\tv\t_\t9\txcomp\t_\tGloss=venir\n12\tni\tn\xED\tADP\tconj/prep\t_\t13\tcase\t_\tGloss=et\n13\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t11\tobl\t_\tGloss=3SG\n14\tye\ty\xE9\tADP\tpp\t_\t13\tcase\t_\tGloss=PP\n15\t,\t,\tPUNCT\t_\t_\t4\tpunct\t_\tGloss=,\n16\tko\tk\xF3\tPART\tcop\t_\t19\tdiscourse\t_\tGloss=QUOT\n17\tc\xE8k\xF2r\xF2ba\tc\u025B\u0300.k\u0254r\u0254.ba\tNOUN\tn\t_\t19\tnsubj\t_\tGloss=vieillard|Morf=vieillard,m\xE2le,vieux,AUGM\n18\tb\xE8\tb\u025B\u0301\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t19\taux\t_\tGloss=IPFV.AFF\n19\tse\ts\xE9\tVERB\tv\t_\t0\troot\t_\tGloss=arriver\n20\tka\tk\xE0\tAUX\tpm\t_\t21\taux\t_\tGloss=INF\n21\tfurak\xE8\tf\xFAra.k\u025B\tVERB\tv\t_\t19\txcomp\t_\tGloss=soigner|Morf=soigner,feuille,faire\n22\to\t\xF2\tPRON\tprn\t_\t21\tobl\t_\tGloss=ce\n23\tla\tl\xE1\tADP\tpp\t_\t22\tcase\t_\tGloss=dans\n24\t.\t.\tPUNCT\t_\t_\t19\tpunct\t_\tGloss=.\n',
+
+  katya_aplonova_long: '# sent_id = html/meyer_gorog-contes_bambara_10amadu_tara.dis.html:19\n# text = ko u ye m\xF2g\xF2 nyini a ye, min b\xE8 a furak\xE8 sisan ko c\xE8 ye furak\xE8li cogoya b\xE8\xE8 f\xF2, ko fura nin s\xF2r\xF2 ka g\xE8l\xE8n ko epi ko ni o ye a s\xF2r\xF2 u ye ale den de ye, ni min b\xE8 sa de furanyini f\xE8 a ka sa nin min b\xE8 balo o ka balo ko u k\xF2n\xF2nt\xF2 b\xE8\xE8 ka taga fura nin nyini, ko u k\xF2n\xF2nt\xF2 b\xE8\xE8 ka taga ko nin min seginna ka a s\xF2r\xF2 fura ma na, ko a b\xE8 o den nin haramuya ka o g\xE8n, ka a b\xE8 a ba fana g\xE8n ko u ka a fil\xE8 u y\xE8r\xE8 ni min ma s\xF2n fana ko a b\xE8 o g\xE8n, o ni a ba b\xE8\xE8.\n# label = too_long_to_cut\n1\tko\tk\xF3\tPART\tcop\t_\t5\tdiscourse\t_\tGloss=QUOT\n2\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t5\tnsubj\t_\tGloss=3PL\n3\tye\ty\xE9\tAUX\tpm\tAspect=Perf|Valency=2|Polarity=Pos\t5\taux\t_\tGloss=PFV.TR\n4\tm\xF2g\xF2\tm\u0254\u0300g\u0254\tNOUN\tn\t_\t5\tobj\t_\tGloss=homme\n5\tnyini\t\u0272\xEDni\tVERB\tv\t_\t0\troot\t_\tGloss=chercher\n6\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t5\tobl\t_\tGloss=3SG\n7\tye\ty\xE9\tADP\tpp\t_\t6\tcase\t_\tGloss=PP\n8\t,\t,\tPUNCT\t_\t_\t5\tpunct\t_\tGloss=,\n9\tmin\tm\xEDn\tPRON\tprn\tPronType=Rel\t_\t_\t_\tGloss=REL\n10\tb\xE8\tb\u025B\u0301\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t_\t_\t_\tGloss=IPFV.AFF\n11\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n12\tfurak\xE8\tf\xFAra.k\u025B\tVERB\tv\t_\t_\t_\t_\tGloss=soigner|Morf=soigner,feuille,faire\n13\tsisan\ts\xEDsan\tADV\tadv/n\t_\t_\t_\t_\tGloss=maintenant\n14\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n15\tc\xE8\tc\u025B\u0300\tNOUN\tn\t_\t_\t_\t_\tGloss=m\xE2le\n16\tye\tye\tAUX\tpm\tAspect=Perf|Valency=2|Polarity=Pos\t_\t_\t_\tGloss=PFV.TR\n17\tfurak\xE8li\tf\xFArak\u025Bli\tNOUN\tn\tVerbalForm=Vnoun\t_\t_\t_\tGloss=traitement|Morf=traitement,feuille,faire,NMLZ\n18\tcogoya\tc\xF3goya\tNOUN\tn\t_\t_\t_\t_\tGloss=mani\xE8re|Morf=mani\xE8re,mani\xE8re,ABSTR\n19\tb\xE8\xE8\tb\u025B\u0301\u025B\tDET\tdtm\t_\t_\t_\t_\tGloss=tout\n20\tf\xF2\tf\u0254\u0301\tVERB\tv\t_\t_\t_\t_\tGloss=dire\n21\t,\t,\tPUNCT\t_\t_\t_\t_\t_\tGloss=,\n22\tko\tk\xF3\tPART\tcop\t_\t27\tdiscourse\t_\tGloss=QUOT\n23\tfura\tf\xFAra\tNOUN\tn\t_\t25\tnmod:poss\t_\tGloss=feuille\n24\tnin\tn\xECn\tDET\tdtm\tPronType=Dem|Definite-Def\t23\tdet\t_\tGloss=DEM\n25\ts\xF2r\xF2\ts\u0254\u0300r\u0254\tNOUN\tv\t_\t27\tnsubj\t_\tGloss=obtenir\n26\tka\tka\tAUX\tpm\tPolarity=Pos\t27\taux\t_\tGloss=QUAL.AFF\n27\tg\xE8l\xE8n\tg\u025B\u0300l\u025Bn\tVERB\tvq\t_\t_\t_\t_\tGloss=dur\n28\tko\tk\xF3\tPART\tcop\t_\t29\tdiscourse\t_\tGloss=QUOT\n29\tepi\tepi\tCCONJ\tconj\t_\t27\tcc\t_\tGloss=ETRG.FRA\n30\tko\tk\xF3\tVERB\tcop\t_\t37\tdiscourse\t_\tGloss=QUOT\n31\tni\tn\xED\tSCONJ\tconj\t_\t35\tmark\t_\tGloss=si\n32\to\t\xF2\tPRON\tprn\t_\t35\tnsubj\t_\tGloss=ce\n33\tye\tye\tAUX\tpm\tAspect=Perf|Valency=2|Polarity=Pos\t35\taux\t_\tGloss=PFV.TR\n34\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t35\tobj\t_\tGloss=3SG\n35\ts\xF2r\xF2\ts\u0254\u0300r\u0254\tVERB\tv\t_\t37\tadvcl\t_\tGloss=obtenir\n36\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t37\tnsubj\t_\tGloss=3PL\n37\tye\ty\xE9\tVERB\tcop\tPolarity=Pos\t27\tparataxis\t_\tGloss=EQU\n38\tale\t\xE0l\xEA\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3|PronType=Emp\t39\tnmod:poss\t_\tGloss=3SG.EMPH\n39\tden\td\xE9n\tNOUN\tn\t_\t37\tobl\t_\tGloss=enfant\n40\tde\td\xE8\tPART\tprt\t_\t39\tdiscourse\t_\tGloss=FOC\n41\tye\ty\xE9\tADP\tpp\t_\t39\tcase\t_\tGloss=PP\n42\t,\t,\tPUNCT\t_\t_\t37\tpunct\t_\tGloss=,\n43\tni\tn\xED\tSCONJ\tconj\t_\t46\tmark\t_\tGloss=si\n44\tmin\tm\xEEn\tPRON\tprn\tPronType=Rel\t46\t_\t_\tGloss=REL\n45\tb\xE8\tb\u025B\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t46\t_\t_\tGloss=IPFV.AFF\n46\tsa\ts\xE0\tVERB\tv\t_\t52\t_\t_\tGloss=mourir\n47\tde\td\xE8\tPART\tprt\t_\t46\t_\t_\tGloss=FOC\n48\tfuranyini\tfura\u0272ini\tNOUN\tn\t_\t46\t_\t_\tGloss=feuille|Morf=feuille,chercher\n49\tf\xE8\tf\u025B\u0300\tADP\tpp\t_\t48\t_\t_\tGloss=par\n50\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t52\t_\t_\tGloss=3SG\n51\tka\tka\tAUX\tpm\tMood=Subj|Polarity=Aff\t52\t_\t_\tGloss=SBJV\n52\tsa\ts\xE0\tVERB\tv\t_\t37\t_\t_\tGloss=mourir\n53\tnin\tn\xED\tSCONJ\tconj\t_\t56\tmark\t_\tGloss=quand\n54\tmin\tm\xEEn\tPRON\tprn\tPronType=Rel\t56\t_\t_\tGloss=REL\n55\tb\xE8\tb\u025B\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t56\t_\t_\tGloss=IPFV.AFF\n56\tbalo\tb\xE1lo\tVERB\tv\t_\t59\t_\t_\tGloss=vivre\n57\to\t\xF2\tPRON\tprn\t_\t59\t_\t_\tGloss=ce\n58\tka\tka\tAUX\tpm\tMood=Subj|Polarity=Aff\t59\t_\t_\tGloss=SBJV\n59\tbalo\tb\xE1lo\tVERB\tv\t_\t52\t_\t_\tGloss=vivre\n60\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n61\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t_\t_\t_\tGloss=3PL\n62\tk\xF2n\xF2nt\xF2\tk\u0254\u0300n\u0254nt\u0254n\tNUM\tnum\t_\t_\t_\t_\tGloss=neuf\n63\tb\xE8\xE8\tb\u025B\u0301\u025B\tDET\tdtm\t_\t_\t_\t_\tGloss=tout\n64\tka\tka\tAUX\tpm\tMood=Subj|Polarity=Aff\t_\t_\t_\tGloss=SBJV\n65\ttaga\tt\xE1ga\tVERB\tv\t_\t59\t_\t_\tGloss=aller\n66\tfura\tf\xFAra\tNOUN\tn\t_\t_\t_\t_\tGloss=feuille\n67\tnin\tn\xECn\tDET\tdtm\tPronType=Dem|Definite-Def\t_\t_\t_\tGloss=DEM\n68\tnyini\t\u0272\xEDni\tVERB\tv\t_\t_\t_\t_\tGloss=chercher\n69\t,\t,\tPUNCT\t_\t_\t_\t_\t_\tGloss=,\n70\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n71\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t_\t_\t_\tGloss=3PL\n72\tk\xF2n\xF2nt\xF2\tk\u0254\u0300n\u0254nt\u0254n\tNUM\tnum\t_\t_\t_\t_\tGloss=neuf\n73\tb\xE8\xE8\tb\u025B\u0301\u025B\tDET\tdtm\t_\t_\t_\t_\tGloss=tout\n74\tka\tka\tAUX\tpm\tMood=Subj|Polarity=Aff\t_\t_\t_\tGloss=SBJV\n75\ttaga\tt\xE1ga\tVERB\tv\t_\t65\t_\t_\tGloss=aller\n76\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n77\tnin\tn\xED\tSCONJ\tconj\t_\t_\t_\t_\tGloss=quand\n78\tmin\tm\xEEn\tPRON\tprn\tPronType=Rel\t_\t_\t_\tGloss=REL\n79\tseginna\tseginna\tVERB\tv\tAspect=Perf|Valency=1|Polarity=Pos\t85\t_\t_\tGloss=revenir|Morf=revenir,PFV.INTR\n80\tka\tk\xE0\tAUX\tpm\t_\t_\t_\t_\tGloss=INF\n81\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n82\ts\xF2r\xF2\ts\u0254\u0300r\u0254\tVERB\tv\t_\t_\t_\t_\tGloss=obtenir\n83\tfura\tf\xFAra\tNOUN\tn\t_\t_\t_\t_\tGloss=feuille\n84\tma\tma\tAUX\tpm\tPolarity=Neg|Aspect=Perf\t_\t_\t_\tGloss=PFV.NEG\n85\tna\tn\xE0\tVERB\tv\t_\t75\t_\t_\tGloss=venir\n86\t,\t,\tPUNCT\t_\t_\t_\t_\t_\tGloss=,\n87\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n88\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n89\tb\xE8\tb\u025B\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t_\t_\t_\tGloss=IPFV.AFF\n90\to\t\xF2\tPRON\tprn\t_\t_\t_\t_\tGloss=ce\n91\tden\td\xE9n\tNOUN\tn\t_\t_\t_\t_\tGloss=enfant\n92\tnin\tn\xECn\tDET\tdtm\tPronType=Dem|Definite-Def\t_\t_\t_\tGloss=DEM\n93\tharamuya\th\xE0ramuya\tVERB\tv\t_\t85\t_\t_\tGloss=interdire|Morf=interdire,interdire,ABSTR\n94\tka\tk\xE0\tAUX\tpm\t_\t_\t_\t_\tGloss=INF\n95\to\t\xF2\tPRON\tprn\t_\t_\t_\t_\tGloss=ce\n96\tg\xE8n\tg\u025B\u0301n\tVERB\tv\t_\t_\t_\t_\tGloss=chasser\n97\t,\t,\tPUNCT\t_\t_\t_\t_\t_\tGloss=,\n98\tka\tk\xE0\tAUX\tpm\t_\t_\t_\t_\tGloss=INF\n99\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n100\tb\xE8\tb\u025B\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t_\t_\t_\tGloss=IPFV.AFF\n101\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n102\tba\tb\xE1\tNOUN\tn\t_\t_\t_\t_\tGloss=m\xE8re\n103\tfana\tf\xE1na\tPART\tprt\t_\t_\t_\t_\tGloss=aussi\n104\tg\xE8n\tg\u025B\u0301n\tVERB\tv\t_\t_\t_\t_\tGloss=chasser\n105\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n106\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t_\t_\t_\tGloss=3PL\n107\tka\tka\tAUX\tpm\tMood=Subj|Polarity=Aff\t_\t_\t_\tGloss=SBJV\n108\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n109\tfil\xE8\tf\xEDl\u025B\tVERB\tv\t_\t_\t_\t_\tGloss=regarder\n110\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t_\t_\t_\tGloss=3PL\n111\ty\xE8r\xE8\ty\u025B\u0300r\u025B\u0302\tDET\tdtm\t_\t_\t_\t_\tGloss=m\xEAme\n112\tni\tn\xED\tSCONJ\tconj\t_\t_\t_\t_\tGloss=si\n113\tmin\tm\xEEn\tPRON\tprn\tPronType=Rel\t_\t_\t_\tGloss=REL\n114\tma\tma\tAUX\tpm\tPolarity=Neg|Aspect=Perf\t_\t_\t_\tGloss=PFV.NEG\n115\ts\xF2n\ts\u0254\u0300n\tVERB\tv\t_\t_\t_\t_\tGloss=accepter\n116\tfana\tf\xE1na\tPART\tprt\t_\t_\t_\t_\tGloss=aussi\n117\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n118\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n119\tb\xE8\tb\u025B\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t_\t_\t_\tGloss=IPFV.AFF\n120\to\t\xF2\tPRON\tprn\t_\t_\t_\t_\tGloss=ce\n121\tg\xE8n\tg\u025B\u0301n\tVERB\tv\t_\t_\t_\t_\tGloss=chasser\n122\t,\t,\tPUNCT\t_\t_\t_\t_\t_\tGloss=,\n123\to\t\xF2\tPRON\tprn\t_\t_\t_\t_\tGloss=ce\n124\tni\tni\tCCONJ\tconj\t_\t_\t_\t_\tGloss=et\n125\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n126\tba\tb\xE1\tNOUN\tn\t_\t_\t_\t_\tGloss=m\xE8re\n127\tb\xE8\xE8\tb\u025B\u0301\u025B\tDET\tdtm\t_\t_\t_\t_\tGloss=tout\n128\t.\t.\tPUNCT\t_\t_\t_\t_\t_\tGloss=.',
+
+  ud_example_tabs: '1\tThey\tthey\tPRON\tPRP\tCase=Nom|Number=Plur\t2\tnsubj\t2:nsubj|4:nsubj\t_\n2\tbuy\tbuy\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Pres\t0\troot\t0:root\t_\n3\tand\tand\tCONJ\tCC\t_\t4\tcc\t4:cc\t_\n4\tsell\tsell\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Pres\t2\tconj\t0:root|2:conj\t_\n5\tbooks\tbook\tNOUN\tNNS\tNumber=Plur\t2\tobj\t2:obj|4:obj\t_\n6\t.\t.\tPUNCT\t.\t_\t2\tpunct\t2:punct\t_',
+
+  ud_example_spaces: '1    They     they    PRON    PRP    Case=Nom|Number=Plur               2    nsubj    2:nsubj|4:nsubj _\n2    buy      buy     VERB    VBP    Number=Plur|Person=3|Tense=Pres    0    root     0:root          _\n3    and      and     CONJ    CC     _                                  4    cc       4:cc            _\n4    sell     sell    VERB    VBP    Number=Plur|Person=3|Tense=Pres    2    conj     0:root|2:conj   _\n5    books    book    NOUN    NNS    Number=Plur                        2    obj      2:obj|4:obj     _\n6    .        .       PUNCT   .      _                                  2    punct    2:punct         _',
+
+  ud_example_modified: '1\tThey\tthey\tPRON\tPRP\tCase=Nom|Number=Plur\t2\tnsubj\t2:nsubj|4:nsubj\t_\n2\tbuy\tbuy\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Presroot\t0:root\t_\t_\t_\n3\tand\tand\tCONJ\tCC\t_\t4\tcc\t4:cc\t_\n4\tsell\tsell\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Presconj\t0:root|2:conj\t_\t_\t_\n5\tbooks\tbook\tNOUN\tNNS\tNumber=Plur\t2\tobj\t2:obj|4:obj\t_\n6\t.\t.\tPUNCT\t.\t_\t2\tpunct\t2:punct\t_'
+};
+
+},{}],25:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -17639,7 +17838,7 @@ module.exports = function () {
 	updateUndoButtons();
 };
 
-},{"jquery":1,"undo-manager":8}],25:[function(require,module,exports){
+},{"jquery":1,"undo-manager":8}],26:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');

@@ -15,7 +15,12 @@ nx.Sentence.prototype.currentFormat = null;
 
 class Manager {
 
-  constructor() { }
+  constructor() {
+    funcs.global().gui = new GUI();
+    funcs.global().graph = new Graph();
+
+    this.reset();
+  }
 
   reset() {
     this.filename = cfg.defaultFilename;

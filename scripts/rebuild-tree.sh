@@ -31,7 +31,7 @@ if [ ! -d $layout_dir ]; then
   exit 1
 fi
 
-tree_path=standalone/lib/ext/cytoscape/tree.js
+tree_path=./src/tree.js
 
 if [ ! -f $tree_path ]; then
   echo "Error: unable to locate $tree_path (aborting)"
@@ -48,9 +48,14 @@ echo -n "press <Enter> to confirm "
 read
 
 cd $cytoscape_dir
-npm run build
-cp build/cytoscape.min.js $this_dir/standalone/lib/ext
 
-echo "successfully copied $build_dir/cytoscape.min.js into extensions"
+if [ ! -d node_modules ]; then
+  npm install
+fi
+
+npm run build
+cp build/cytoscape*.js $this_dir/src/cytoscape
+
+echo "successfully copied built files into src/cytoscape/"
 
 exit 0

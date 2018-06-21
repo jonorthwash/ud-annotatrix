@@ -125,7 +125,9 @@ class GUI {
     this.editing = null;
 
     this.inBrowser = funcs.inBrowser();
-    setupUndos();
+
+    if (this.inBrowser)
+      setupUndos();
 
   }
 
@@ -170,7 +172,6 @@ class GUI {
         break;
     }
 
-    console.log(manager.format, this.is_table_view);
     if (manager.format !== 'CoNLL-U')
       this.is_table_view = false;
 
@@ -458,21 +459,21 @@ class GUI {
 
 		switch (event.which) {
       case (KEYS.ENTER):
-				goToSentence();
+        manager.index = parseInt(gui.read('current-sentence')) - 1;
 				break;
   		case (KEYS.LEFT):
   		case (KEYS.J):
-				prevSentence();
+        manager.prev();
 				break;
   		case (KEYS.RIGHT):
   		case (KEYS.K):
-				nextSentence();
+        manager.next();
 				break;
   		case (KEYS.MINUS):
-				removeSentence();
+        manager.removeSentence();
 				break;
   		case (KEYS.EQUALS):
-				insertSentence();
+				manager.insertSentence();
 				break;
 		}
   }
@@ -481,14 +482,14 @@ class GUI {
 
 		switch (event.which) {
 		  case (KEYS.ENTER):
-				onClickCanvas();
+        graph.clear();
 				break;
 		  case (KEYS.TAB):
 				console.log('what should happen here???');
 				break;
 		  case (KEYS.ESC):
 				this.editing = null;
-				onClickCanvas();
+        graph.clear();
 				break;
 		}
   }
@@ -584,6 +585,7 @@ class GUI {
 
 			case ('CG3'):
 
+        throw new errors.NotImplementedError('can\'t onEnter with CG3 :/');
         /*
 				// advance to the end of an analysis
 				log.debug(`onEnter(): line[${cursorLine}]: "${lines[cursorLine]}", cursor[${cursor}]: "${sentence[cursor]}"`);

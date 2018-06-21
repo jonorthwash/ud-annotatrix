@@ -5,4 +5,6 @@ module.exports = {
 	defaultSentence: 'Welcome to the UD-Annotatrix',
 	defaultInsertedSentence: 'inserted',
 	defaultLoggingLevel: 'ERROR',
+	defaultEdgeHeight: 40,
+	defaultEdgeCoeff: 1,
 }

@@ -40,7 +40,7 @@ module.exports = () => {
   		expect(mgr.index).to.equal(-1);
 
   		mgr._sentences = [ new nx.Sentence() ];
-  		
+
   		expect(mgr.length).to.equal(1);
   		mgr.first();
   		expect(mgr.index).to.equal(0);
@@ -96,6 +96,7 @@ module.exports = () => {
   	it(`should insert and remove sentences correctly`, () => {
 
   		const mgr = new Manager();
+
   		expect(mgr.length).to.equal(1);
   		expect(mgr.index).to.equal(0);
   		expect(mgr.getSentence(0).text).to.equal('Welcome to the UD-Annotatrix');
@@ -233,6 +234,7 @@ module.exports = () => {
 			], datum => {
 
 				const mgr = new Manager();
+
 				mgr.parse(datum.str);
 				expect(mgr.length).to.equal(datum.split.length);
 				expect(mgr.index).to.equal(datum.split.length - 1);
