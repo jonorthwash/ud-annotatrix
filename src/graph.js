@@ -65,7 +65,7 @@ class Graph {
         ? sort.vertical
         : gui.is_ltr
           ? sort.ltr
-          : sort.simple)
+          : sort.rtl)
     };
     this.options.elements = this.eles();
 
@@ -93,11 +93,11 @@ function getEdgeHeight(srcNum, tarNum) {
 
   let edgeHeight = cfg.defaultEdgeHeight * (tarNum - srcNum);
   if (gui.is_ltr)
-      edgeHeight *= -1;
+    edgeHeight *= -1;
   if (Math.abs(edgeHeight) !== 1)
-      edgeHeight *= cfg.defaultEdgeCoeff;
+    edgeHeight *= cfg.defaultEdgeCoeff;
   if (gui.is_vertical)
-      edgeHeight = 45;
+    edgeHeight = 45;
 
   log.debug(`getEdgeHeight(): ${edgeHeight}`);
 

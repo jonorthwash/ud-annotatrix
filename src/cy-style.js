@@ -1,3 +1,4 @@
+'use strict';
 
 // is defined in a js file, because fetch doesn't work offline in chrome
 
@@ -218,3 +219,5 @@ const CY_STYLE = [{
         'target-arrow-color': MOVING_COLOR
     }
 }];
+
+module.exports = CY_STYLE;

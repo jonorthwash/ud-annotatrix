@@ -16,6 +16,8 @@ nx.Sentence.prototype.currentFormat = null;
 class Manager {
 
   constructor() {
+
+    funcs.global().manager = this;
     funcs.global().gui = new GUI();
     funcs.global().graph = new Graph();
 
