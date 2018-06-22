@@ -3,90 +3,90 @@
 // is defined in a js file, because fetch doesn't work offline in chrome
 
 const ACTIVE_COLOR = '#2653c9',
-    NORMAL_COLOR = '#7fa2ff',
-    FANCY_COLOR = '#cc22fc',
-    POS_COLOR = '#afa2ff',
-    ST_COLOR = '#bcd2ff',
-    MOVING_COLOR = '#00f';
+  NORMAL_COLOR = '#7fa2ff',
+  FANCY_COLOR = '#cc22fc',
+  POS_COLOR = '#afa2ff',
+  ST_COLOR = '#bcd2ff',
+  MOVING_COLOR = '#00f';
 
 const CY_STYLE = [{
   'selector': '*.disabled',
   'style': {
-      'opacity': 0.4/*
-      'background-color': '#f00',
-      'color': '#0ff'*/
+    'opacity': 0.4/*
+    'background-color': '#f00',
+    'color': '#0ff'*/
   }
 },
   {
     'selector': 'node',
     'style': {
-        'height': 20,
-        'background-color': NORMAL_COLOR,
-        'shape': 'roundrectangle',
-        'text-valign': 'center',
-        'text-halign': 'center',
-        'border-color': '#000',
-        'border-width': 1
-    }
-}, {
-    'selector': 'node.form',
-    'style': {
-        'width': 'data(length)',
-        'label': 'data(label)'
+      'height': 20,
+      'background-color': NORMAL_COLOR,
+      'shape': 'roundrectangle',
+      'text-valign': 'center',
+      'text-halign': 'center',
+      'border-color': '#000',
+      'border-width': 1
   }
 }, {
-    'selector': 'node.multiword',
-    'style': {
-        'background-color': ST_COLOR,
-        'text-background-color': NORMAL_COLOR,
-        'text-background-opacity': 0.9,
-        'text-border-color': '#000',
-        'text-border-opacity': 0.9,
-        'text-border-width': '1px',
-        'text-background-shape': 'roundrectangle',
-        'text-valign': 'top',
-        'label': 'data(label)'
+  'selector': 'node.form',
+  'style': {
+    'width': 'data(length)',
+    'label': 'data(label)'
   }
 }, {
-    'selector': '.supAct',
-    'style': {
-        'background-color': ACTIVE_COLOR
-    }
+  'selector': 'node.multiword',
+  'style': {
+    'background-color': ST_COLOR,
+    'text-background-color': NORMAL_COLOR,
+    'text-background-opacity': 0.9,
+    'text-border-color': '#000',
+    'text-border-opacity': 0.9,
+    'text-border-width': '1px',
+    'text-background-shape': 'roundrectangle',
+    'text-valign': 'top',
+    'label': 'data(label)'
+  }
 }, {
-    'selector': 'node.form.arc-source, node.form.arc-target',
-    'style': {
-        'border-color': FANCY_COLOR
-    }
+  'selector': '.supAct',
+  'style': {
+    'background-color': ACTIVE_COLOR
+  }
 }, {
-    'selector': 'node.form.root',
-    'style': {
-        'font-weight': 'bold',
-        //'text-border-width': '2em',
-        'border-width': '2px'
-    }
+  'selector': 'node.form.arc-source, node.form.arc-target',
+  'style': {
+    'border-color': FANCY_COLOR
+  }
 }, {
-    'selector': 'node.form.activated',
-    'style': {
-        'background-color': ACTIVE_COLOR
-    }
+  'selector': 'node.form.root',
+  'style': {
+    'font-weight': 'bold',
+    //'text-border-width': '2em',
+    'border-width': '2px'
+  }
 }, {
-    'selector': 'node.form.activated.retokenize',
-    'style': {
-        'background-color': POS_COLOR,
-        'border-color': FANCY_COLOR
-    }
+  'selector': 'node.form.activated',
+  'style': {
+    'background-color': ACTIVE_COLOR
+  }
 }, {
-    'selector': 'node.form.merge',
-    'style': {
-        'background-color': POS_COLOR,
-        'border-color': FANCY_COLOR
-    }
+  'selector': 'node.form.activated.retokenize',
+  'style': {
+    'background-color': POS_COLOR,
+    'border-color': FANCY_COLOR
+  }
 }, {
-    'selector': 'node.form.supertoken',
-    'style': {
-        'background-color': POS_COLOR,
-        'border-color': FANCY_COLOR
-    }
+  'selector': 'node.form.merge',
+  'style': {
+    'background-color': POS_COLOR,
+    'border-color': FANCY_COLOR
+  }
+}, {
+  'selector': 'node.form.supertoken',
+  'style': {
+    'background-color': POS_COLOR,
+    'border-color': FANCY_COLOR
+  }
 }, {
   'selector': 'node.pos',
   'style': {
@@ -187,37 +187,37 @@ const CY_STYLE = [{
     'text-events': 'yes'
   }
 }, {
-    'selector': 'edge.dependency.selected',
-    'style': {
-        'line-color': FANCY_COLOR,
-        'target-arrow-color': FANCY_COLOR
-    }
+  'selector': 'edge.dependency.selected',
+  'style': {
+      'line-color': FANCY_COLOR,
+      'target-arrow-color': FANCY_COLOR
+  }
 }, {'selector': 'edge.pos',
   'style': {
     'curve-style': 'haystack'
   }
 }, {
-    'selector': 'node.number',
-    'style': {
-        'background-opacity': 0,
-        'border-opacity': 0,
-        'padding': 0,
-        'text-background-color': POS_COLOR,
-        'text-background-opacity': 0.9,
-        'text-border-color': '#000',
-        'text-border-opacity': 0.9,
-        'text-border-width': '1px',
-        'text-background-shape': 'roundrectangle',
-        'text-halign': 'right',
-        'label': 'data(label)',
-        'events': 'no'
+  'selector': 'node.number',
+  'style': {
+    'background-opacity': 0,
+    'border-opacity': 0,
+    'padding': 0,
+    'text-background-color': POS_COLOR,
+    'text-background-opacity': 0.9,
+    'text-border-color': '#000',
+    'text-border-opacity': 0.9,
+    'text-border-width': '1px',
+    'text-background-shape': 'roundrectangle',
+    'text-halign': 'right',
+    'label': 'data(label)',
+    'events': 'no'
   }
 }, {
-    'selector': 'edge.moving',
-    'style': {
-        'line-color': MOVING_COLOR,
-        'target-arrow-color': MOVING_COLOR
-    }
+  'selector': 'edge.moving',
+  'style': {
+    'line-color': MOVING_COLOR,
+    'target-arrow-color': MOVING_COLOR
+  }
 }];
 
 module.exports = CY_STYLE;
