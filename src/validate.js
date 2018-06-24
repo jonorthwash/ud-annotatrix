@@ -366,6 +366,7 @@ function is_relation_conflict(tree) {
 
 
 module.exports = {
+  U_DEPRELS,
   is_upos,
   is_udeprel,
   is_leaf,

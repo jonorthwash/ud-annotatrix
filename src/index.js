@@ -20,13 +20,10 @@ $(() => {
 	funcs.global().log = new Log(cfg.defaultLoggingLevel);
 	funcs.global().server = new Server();
 	funcs.global().manager = new Manager();
-	funcs.global().gui = new GUI();
-	funcs.global().graph = new Graph();
 
-	manager.reset();
 	gui.bind();
 
-	manager.parse(require('./test/data/conllu').from_cg3_with_spans);
+	manager.parse(require('./test/data/conllu').empty);
 
 });
 

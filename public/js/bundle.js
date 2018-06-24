@@ -10890,10 +10890,11 @@ class Analysis {
 
         if (!head || !head.id) // ROOT
           return;
+        console.log('head');
 
         eles.push({
           data: {
-            id: `dep-${this.id}`,
+            id: `dep-${this.id}_${head.id}`,
             name: `dependency`,
             attr: `deprel`,
             source: `form-${this.id}`,
@@ -10949,7 +10950,11 @@ class Analysis {
     if (this.changeHead(head, deprel))
       return this;
 
-    // otherwise push a new one
+    // get rid of "empty" value
+    if (this._heads.length === 1 && this._heads[0].token === '_')
+      this._heads = [];
+
+    // otherwise push a new one    
     this._heads.push({
       token: head,
       deprel: deprel
@@ -11059,6 +11064,10 @@ class Analysis {
     // first try to change an existing one (don't want duplicate deps)
     if (this.changeDep(dep, deprel))
       return this;
+
+    // get rid of "empty" value
+    if (this._deps.length === 1 && this._deps[0].token === '_')
+      this._deps = [];
 
     // otherwise push a new one
     this._deps.push({
@@ -16302,213 +16311,213 @@ var ACTIVE_COLOR = '#2653c9',
     MOVING_COLOR = '#00f';
 
 var CY_STYLE = [{
-    'selector': '*.disabled',
-    'style': {
-        'opacity': 0.4 /*
-                       'background-color': '#f00',
-                       'color': '#0ff'*/
-    }
+  'selector': '*.disabled',
+  'style': {
+    'opacity': 0.4 /*
+                   'background-color': '#f00',
+                   'color': '#0ff'*/
+  }
 }, {
-    'selector': 'node',
-    'style': {
-        'height': 20,
-        'background-color': NORMAL_COLOR,
-        'shape': 'roundrectangle',
-        'text-valign': 'center',
-        'text-halign': 'center',
-        'border-color': '#000',
-        'border-width': 1
-    }
+  'selector': 'node',
+  'style': {
+    'height': 20,
+    'background-color': NORMAL_COLOR,
+    'shape': 'roundrectangle',
+    'text-valign': 'center',
+    'text-halign': 'center',
+    'border-color': '#000',
+    'border-width': 1
+  }
 }, {
-    'selector': 'node.form',
-    'style': {
-        'width': 'data(length)',
-        'label': 'data(label)'
-    }
+  'selector': 'node.form',
+  'style': {
+    'width': 'data(length)',
+    'label': 'data(label)'
+  }
 }, {
-    'selector': 'node.multiword',
-    'style': {
-        'background-color': ST_COLOR,
-        'text-background-color': NORMAL_COLOR,
-        'text-background-opacity': 0.9,
-        'text-border-color': '#000',
-        'text-border-opacity': 0.9,
-        'text-border-width': '1px',
-        'text-background-shape': 'roundrectangle',
-        'text-valign': 'top',
-        'label': 'data(label)'
-    }
+  'selector': 'node.multiword',
+  'style': {
+    'background-color': ST_COLOR,
+    'text-background-color': NORMAL_COLOR,
+    'text-background-opacity': 0.9,
+    'text-border-color': '#000',
+    'text-border-opacity': 0.9,
+    'text-border-width': '1px',
+    'text-background-shape': 'roundrectangle',
+    'text-valign': 'top',
+    'label': 'data(label)'
+  }
 }, {
-    'selector': '.supAct',
-    'style': {
-        'background-color': ACTIVE_COLOR
-    }
+  'selector': '.supAct',
+  'style': {
+    'background-color': ACTIVE_COLOR
+  }
 }, {
-    'selector': 'node.form.arc-source, node.form.arc-target',
-    'style': {
-        'border-color': FANCY_COLOR
-    }
+  'selector': 'node.form.arc-source, node.form.arc-target',
+  'style': {
+    'border-color': FANCY_COLOR
+  }
 }, {
-    'selector': 'node.form.root',
-    'style': {
-        'font-weight': 'bold',
-        //'text-border-width': '2em',
-        'border-width': '2px'
-    }
+  'selector': 'node.form.root',
+  'style': {
+    'font-weight': 'bold',
+    //'text-border-width': '2em',
+    'border-width': '2px'
+  }
 }, {
-    'selector': 'node.form.activated',
-    'style': {
-        'background-color': ACTIVE_COLOR
-    }
+  'selector': 'node.form.activated',
+  'style': {
+    'background-color': ACTIVE_COLOR
+  }
 }, {
-    'selector': 'node.form.activated.retokenize',
-    'style': {
-        'background-color': POS_COLOR,
-        'border-color': FANCY_COLOR
-    }
+  'selector': 'node.form.activated.retokenize',
+  'style': {
+    'background-color': POS_COLOR,
+    'border-color': FANCY_COLOR
+  }
 }, {
-    'selector': 'node.form.merge',
-    'style': {
-        'background-color': POS_COLOR,
-        'border-color': FANCY_COLOR
-    }
+  'selector': 'node.form.merge',
+  'style': {
+    'background-color': POS_COLOR,
+    'border-color': FANCY_COLOR
+  }
 }, {
-    'selector': 'node.form.supertoken',
-    'style': {
-        'background-color': POS_COLOR,
-        'border-color': FANCY_COLOR
-    }
+  'selector': 'node.form.supertoken',
+  'style': {
+    'background-color': POS_COLOR,
+    'border-color': FANCY_COLOR
+  }
 }, {
-    'selector': 'node.pos',
-    'style': {
-        'width': 'data(length)',
-        'label': 'data(label)',
-        'background-color': POS_COLOR
-    }
+  'selector': 'node.pos',
+  'style': {
+    'width': 'data(length)',
+    'label': 'data(label)',
+    'background-color': POS_COLOR
+  }
 }, {
-    'selector': 'edge',
-    'style': {
-        'width': 3,
-        'opacity': 0.766,
-        'line-color': '#111',
-        'control-point-weights': '0.2 0.25 0.75 0.8'
-    }
+  'selector': 'edge',
+  'style': {
+    'width': 3,
+    'opacity': 0.766,
+    'line-color': '#111',
+    'control-point-weights': '0.2 0.25 0.75 0.8'
+  }
 }, {
-    'selector': 'edge.incomplete',
-    'style': {
-        'target-arrow-shape': 'triangle',
-        'target-arrow-color': '#aaa',
-        'line-color': '#aaa',
-        'text-margin-y': -10,
-        'curve-style': 'unbundled-bezier',
-        'control-point-distances': 'data(ctrl)',
-        'control-point-weights': '0 0.25 0.75 1',
-        'arrow-scale': '1.5',
-        'edge-distances': 'node-position',
-        'label': 'data(label)',
-        'text-events': 'yes'
-    }
+  'selector': 'edge.incomplete',
+  'style': {
+    'target-arrow-shape': 'triangle',
+    'target-arrow-color': '#aaa',
+    'line-color': '#aaa',
+    'text-margin-y': -10,
+    'curve-style': 'unbundled-bezier',
+    'control-point-distances': 'data(ctrl)',
+    'control-point-weights': '0 0.25 0.75 1',
+    'arrow-scale': '1.5',
+    'edge-distances': 'node-position',
+    'label': 'data(label)',
+    'text-events': 'yes'
+  }
 }, {
-    'selector': 'edge.incomplete.vertical',
-    'style': {
-        'text-margin-y': 0,
-        'text-background-opacity': 1,
-        'text-background-color': 'white',
-        'text-background-shape': 'roundrectangle',
-        'text-border-color': 'black',
-        'text-border-width': 1,
-        'text-border-opacity': 1,
-        'control-point-weights': '0.15 0.45 0.55 0.85',
-        'text-margin-x': 'data(length)',
-        'source-distance-from-node': 10,
-        'target-distance-from-node': 10
-    }
+  'selector': 'edge.incomplete.vertical',
+  'style': {
+    'text-margin-y': 0,
+    'text-background-opacity': 1,
+    'text-background-color': 'white',
+    'text-background-shape': 'roundrectangle',
+    'text-border-color': 'black',
+    'text-border-width': 1,
+    'text-border-opacity': 1,
+    'control-point-weights': '0.15 0.45 0.55 0.85',
+    'text-margin-x': 'data(length)',
+    'source-distance-from-node': 10,
+    'target-distance-from-node': 10
+  }
 }, {
-    'selector': 'edge.incomplete.horizontal',
-    'style': {
-        'text-margin-y': -10,
-        'text-margin-x': 0,
-        'text-background-opacity': 0,
-        'text-border-opacity': 0,
-        'control-point-weights': '0 0.25 0.75 1',
-        'source-distance-from-node': 0,
-        'target-distance-from-node': 0
-    }
+  'selector': 'edge.incomplete.horizontal',
+  'style': {
+    'text-margin-y': -10,
+    'text-margin-x': 0,
+    'text-background-opacity': 0,
+    'text-border-opacity': 0,
+    'control-point-weights': '0 0.25 0.75 1',
+    'source-distance-from-node': 0,
+    'target-distance-from-node': 0
+  }
 }, {
-    'selector': 'edge.error',
-    'style': {
-        'target-arrow-shape': 'triangle',
-        'target-arrow-color': '#d11',
-        'line-color': '#d11',
-        'text-margin-y': -10,
-        'curve-style': 'unbundled-bezier',
-        'control-point-distances': 'data(ctrl)',
-        'control-point-weights': '0 0.25 0.75 1',
-        'arrow-scale': '1.5',
-        'edge-distances': 'node-position',
-        'label': 'data(label)',
-        'text-events': 'yes'
-    }
+  'selector': 'edge.error',
+  'style': {
+    'target-arrow-shape': 'triangle',
+    'target-arrow-color': '#d11',
+    'line-color': '#d11',
+    'text-margin-y': -10,
+    'curve-style': 'unbundled-bezier',
+    'control-point-distances': 'data(ctrl)',
+    'control-point-weights': '0 0.25 0.75 1',
+    'arrow-scale': '1.5',
+    'edge-distances': 'node-position',
+    'label': 'data(label)',
+    'text-events': 'yes'
+  }
 }, {
-    'selector': 'edge.enhanced',
-    'style': {
-        'target-arrow-shape': 'triangle',
-        'target-arrow-color': '#045',
-        'line-color': '#045',
-        'text-margin-y': -10,
-        'curve-style': 'unbundled-bezier',
-        'control-point-distances': 'data(ctrl)',
-        'control-point-weights': '0 0.25 0.75 1',
-        'edge-distances': 'node-position',
-        'arrow-scale': '1.5',
-        'label': 'data(label)',
-        'text-events': 'yes'
-    }
+  'selector': 'edge.enhanced',
+  'style': {
+    'target-arrow-shape': 'triangle',
+    'target-arrow-color': '#045',
+    'line-color': '#045',
+    'text-margin-y': -10,
+    'curve-style': 'unbundled-bezier',
+    'control-point-distances': 'data(ctrl)',
+    'control-point-weights': '0 0.25 0.75 1',
+    'edge-distances': 'node-position',
+    'arrow-scale': '1.5',
+    'label': 'data(label)',
+    'text-events': 'yes'
+  }
 }, {
-    'selector': 'edge.dependency',
-    'style': {
-        'target-arrow-shape': 'triangle',
-        'target-arrow-color': '#111',
-        'text-margin-y': -10,
-        'curve-style': 'unbundled-bezier',
-        'control-point-distances': 'data(ctrl)',
-        'control-point-weights': '0 0.25 0.75 1',
-        'edge-distances': 'node-position',
-        'label': 'data(label)',
-        'text-events': 'yes'
-    }
+  'selector': 'edge.dependency',
+  'style': {
+    'target-arrow-shape': 'triangle',
+    'target-arrow-color': '#111',
+    'text-margin-y': -10,
+    'curve-style': 'unbundled-bezier',
+    'control-point-distances': 'data(ctrl)',
+    'control-point-weights': '0 0.25 0.75 1',
+    'edge-distances': 'node-position',
+    'label': 'data(label)',
+    'text-events': 'yes'
+  }
 }, {
-    'selector': 'edge.dependency.selected',
-    'style': {
-        'line-color': FANCY_COLOR,
-        'target-arrow-color': FANCY_COLOR
-    }
+  'selector': 'edge.dependency.selected',
+  'style': {
+    'line-color': FANCY_COLOR,
+    'target-arrow-color': FANCY_COLOR
+  }
 }, { 'selector': 'edge.pos',
-    'style': {
-        'curve-style': 'haystack'
-    }
+  'style': {
+    'curve-style': 'haystack'
+  }
 }, {
-    'selector': 'node.number',
-    'style': {
-        'background-opacity': 0,
-        'border-opacity': 0,
-        'padding': 0,
-        'text-background-color': POS_COLOR,
-        'text-background-opacity': 0.9,
-        'text-border-color': '#000',
-        'text-border-opacity': 0.9,
-        'text-border-width': '1px',
-        'text-background-shape': 'roundrectangle',
-        'text-halign': 'right',
-        'label': 'data(label)',
-        'events': 'no'
-    }
+  'selector': 'node.number',
+  'style': {
+    'background-opacity': 0,
+    'border-opacity': 0,
+    'padding': 0,
+    'text-background-color': POS_COLOR,
+    'text-background-opacity': 0.9,
+    'text-border-color': '#000',
+    'text-border-opacity': 0.9,
+    'text-border-width': '1px',
+    'text-background-shape': 'roundrectangle',
+    'text-halign': 'right',
+    'label': 'data(label)',
+    'events': 'no'
+  }
 }, {
-    'selector': 'edge.moving',
-    'style': {
-        'line-color': MOVING_COLOR,
-        'target-arrow-color': MOVING_COLOR
-    }
+  'selector': 'edge.moving',
+  'style': {
+    'line-color': MOVING_COLOR,
+    'target-arrow-color': MOVING_COLOR
+  }
 }];
 
 module.exports = CY_STYLE;
@@ -19529,6 +19538,7 @@ var cytoscape = require('./cytoscape/cytoscape');
 var funcs = require('./funcs');
 var CY_STYLE = require('./cy-style');
 var sort = require('./sort');
+var validate = require('./validate');
 
 var Graph = function () {
   function Graph(mgr, options) {
@@ -19584,14 +19594,298 @@ var Graph = function () {
       window.cy = cytoscape(this.options).minZoom(0.1).maxZoom(10.0).fit().zoom(null) // TODO: gui.zoom
       .center().pan(null); // TODO: gui.pan
 
-      // this.bind()
+      this.bind();
+    }
+  }, {
+    key: 'bind',
+    value: function bind() {
+      /**
+       * Binds event handlers to cy elements.
+       * NOTE: If you change the style of a node (e.g. its selector) then
+       * you also need to update it here.
+       */
+
+      // set a countdown to triggering a "background" click unless a node/edge intercepts it
+      $('#cy canvas, #mute').mouseup(function (event) {
+        setTimeout(function () {
+          graph.clear();
+          setTimeout(function () {
+            // wait another full second before unsetting
+            gui.intercepted = false;
+          });
+        }, 100);
+      });
+      $('#cy canvas').mousemove(function (event) {
+        gui.intercepted = true;
+      });
+      $('#edit').mouseup(function (event) {
+        gui.intercepted = true;
+      });
+      cy.on('click', '*', function (event) {
+        gui.intercepted = true;
+
+        // DEBUG: this line should be taken out in production
+        console.info('clicked ' + event.target.attr('id') + ', data:', event.target.data());
+      });
+
+      cy.on('click', 'node.form', onClickFormNode);
+      cy.on('click', 'node.pos', onClickPosNode);
+      cy.on('click', '$node > node', onClickChildNode);
+      cy.on('cxttapend', 'node.form', onCxttapendFormNode);
+
+      cy.on('click', 'edge.dependency', onClickDependencyEdge);
+      cy.on('cxttapend', 'edge.dependency', onCxttapendDependencyEdge);
     }
   }, {
     key: 'clear',
-    value: function clear() {}
+    value: function clear() {
+      log.debug('called onClickCanvas(intercepted: ' + gui.intercepted + ')');
+
+      // intercepted by clicking a canvas subobject || mousemove (i.e. drag) || #edit
+      if (gui.intercepted) return;
+
+      graph.save();
+
+      cy.$('.activated').removeClass('activated');
+      cy.$('.arc-source').removeClass('arc-source');
+      cy.$('.arc-target').removeClass('arc-target');
+      cy.$('.selected').removeClass('selected');
+      cy.$('.moving').removeClass('moving');
+      cy.$('.merge').removeClass('merge');
+      gui.moving_dependency = false;
+
+      $('#mute').removeClass('activated');
+      $('#edit').removeClass('activated');
+    }
+  }, {
+    key: 'save',
+    value: function save() {
+      log.debug('called saveGraphEdits(target:' + (gui.editing ? gui.editing.attr('id') : 'null') + ', text:' + (gui.editing ? $('#edit').val() : '') + ')');
+
+      cy.$('.input').removeClass('input');
+
+      if (gui.editing === null) return; // nothing to do
+
+      var conllu = gui.editing.data().conllu || gui.editing.data().sourceConllu;
+      var newAttrKey = gui.editing.data().attr;
+      var newAttrValue = $('#edit').val();
+      log.debug('saveGraphEdits(): ' + newAttrKey + ' set =>"' + newAttrValue + '", whitespace:' + /[ \t\n]+/g.test(newAttrValue));
+
+      // check we don't have any whitespace
+      if (/\s+/g.test(newAttrValue)) {
+        var message = 'ERROR: Unable to add changes with whitespace!  Try creating a new node first.';
+        log.error(message);
+        alert(message); // TODO: probably should streamline errors
+        gui.editing = null;
+        return;
+      }
+
+      var oldAttrValue = modify(conllu.superTokenId, conllu.subTokenId, newAttrKey, newAttrValue);
+      window.undoManager.add({
+        undo: function undo() {
+          modify(conllu.superTokenId, conllu.subTokenId, newAttrKey, oldAttrValue);
+        },
+        redo: function redo() {
+          modify(conllu.superTokenId, conllu.subTokenId, newAttrKey, newAttrValue);
+        }
+      });
+
+      gui.editing = null;
+    }
+  }, {
+    key: 'editLabel',
+    value: function editLabel(target) {
+      log.debug('called graph.editLabel(' + target.attr('id') + ')');
+
+      target.addClass('input');
+
+      // get rid of direction arrows
+      var label = target.data('label').replace(/[⊳⊲]/, '');
+      target.data('label', label);
+
+      // get bounding box
+      var bbox = target.renderedBoundingBox();
+      bbox.color = target.style('background-color');
+      if (target.data('name') === 'dependency') {
+        bbox.w = 100;
+        bbox.h = cy.nodes()[0].renderedHeight();
+        bbox.color = 'white';
+
+        if (gui.is_vertical) {
+          bbox.y1 += (bbox.y2 - bbox.y1) / 2 - 15;
+          bbox.x1 = bbox.x2 - 70;
+        } else {
+          bbox.x1 += (bbox.x2 - bbox.x1) / 2 - 50;
+        }
+      }
+
+      // TODO: rank the labels + make the style better
+      var autocompletes = target.data('name') === 'pos-node' ? U_POS : target.data('name') === 'dependency' ? validate.U_DEPRELS : [];
+
+      // add the edit input
+      $('#edit').val('').focus().val(label).css('top', bbox.y1).css('left', bbox.x1).css('height', bbox.h).css('width', bbox.w + 5).attr('target', target.attr('id')).addClass('activated').selfcomplete({
+        lookup: autocompletes,
+        tabDisabled: false,
+        autoSelectFirst: true,
+        lookupLimit: 5 });
+
+      // add the background-mute div
+      $('#mute').addClass('activated').css('height', gui.is_vertical ? gui.tokens.length * 50 + 'px' : $(window).width() - 10);
+
+      $('#edit').focus(); // move cursor to the end
+      if (target.data('name') === 'dependency') $('#edit').select(); // highlight the current contents
+    }
+  }, {
+    key: 'makeDependency',
+    value: function makeDependency(src, tar) {
+      console.log(src, tar);
+      log.debug('called makeDependency(' + src.attr('id') + '=>' + tar.attr('id') + ')');
+      /**
+       * Called by clicking a form-node while there is already an active form-node.
+       * Changes the text data and redraws the graph. Currently supports only conllu.
+       */
+
+      src = src.data('analysis');
+      tar = tar.data('analysis');
+
+      if (src === tar) {
+        log.warn('makeDependency(): unable to create dependency within superToken ' + src.superTokenId);
+        return;
+      }
+
+      var oldHead = manager.current.getById(src.head);
+      src.addHead(tar);
+      manager.parse(manager.conllu);
+
+      window.undoManager.add({
+        undo: function undo() {
+          src.removeHead(tar);
+          manager.parse(manager.conllu);
+        },
+        redo: function redo() {
+          src.addHead(tar);
+          manager.parse(manager.conllu);
+        }
+      });
+      /*
+      // TODO:
+      // If the target POS tag is PUNCT set the deprel to @punct [99%]
+      // IF the target POS tag is CCONJ set the deprel to @cc [88%]
+      // IF the target POS tag is SCONJ set the deprel to @mark [86%]
+      // IF the target POS tag is DET set the deprel to @det [83%]
+       const POS_TO_REL = {
+          'PUNCT': 'punct',
+          'DET': 'det',
+          'CCONJ': 'cc',
+          'SCONJ': 'mark'
+      }
+       // TODO: Put this somewhere better
+      if (thisToken.upostag in POS_TO_REL)
+          sentAndPrev = changeConlluAttr(sent, indices, 'deprel', POS_TO_REL[thisToken.upostag]);
+       let isValidDep = true;
+      if (thisToken.upostag === 'PUNCT' && !is_projective_nodes(sent.tokens, [targetIndex])) {
+          log.warn('writeArc(): Non-projective punctuation');
+          isValidDep = false
+      }*/
+    }
   }, {
     key: 'removeDependency',
-    value: function removeDependency(ele) {}
+    value: function removeDependency(ele) {
+      log.debug('called removeDependency(' + ele.attr('id') + ')');
+
+      var source = ele.data('sourceConllu'),
+          oldHead = modify(source.superTokenId, source.subTokenId, 'head', undefined),
+          oldDeprel = modify(source.superTokenId, source.subTokenId, 'deprel', undefined);
+
+      window.undoManager.add({
+        undo: function undo() {
+          modify(source.superTokenId, source.subTokenId, 'head', oldHead);
+          modify(source.superTokenId, source.subTokenId, 'deprel', oldDeprel);
+        },
+        redo: function redo() {
+          modify(source.superTokenId, source.subTokenId, 'head', undefined);
+          modify(source.superTokenId, source.subTokenId, 'deprel', undefined);
+        }
+      });
+    }
+  }, {
+    key: 'setAsRoot',
+    value: function setAsRoot(ele) {
+      log.debug('called setAsRoot(' + ele.attr('id') + ')');
+
+      // check if there is already a root
+      var oldRoot = void 0;
+      gui.iterTokens(function (num, token) {
+        if (token.deprel.toLowerCase() === 'root' && token.head == 0) oldRoot = token;
+      });
+      log.error('setAsRoot(): oldRoot: ' + oldRoot.superTokenId + ':' + (oldRoot.subTokenId || '_'));
+
+      if (oldRoot) {
+        // unset as root
+        modify(oldRoot.superTokenId, oldRoot.subTokenId, 'head', undefined);
+        modify(oldRoot.superTokenId, oldRoot.subTokenId, 'deprel', undefined);
+      }
+
+      // set new root
+      ele = ele.data('conllu');
+      var eleOldHead = modify(ele.superTokenId, ele.subTokenId, 'head', 0),
+          eleOldDeprel = modify(ele.superTokenId, ele.subTokenId, 'deprel', 'root');
+
+      window.undoManager.add({
+        undo: function undo() {
+          if (oldRoot) {
+            modify(oldRoot.superTokenId, oldRoot.subTokenId, 'head', 0);
+            modify(oldRoot.superTokenId, oldRoot.subTokenId, 'deprel', 'root');
+          }
+          modify(ele.superTokenId, ele.subTokenId, 'head', eleOldHead);
+          modify(ele.superTokenId, ele.subTokenId, 'deprel', eleOldDeprel);
+        },
+        redo: function redo() {
+          if (oldRoot) {
+            modify(oldRoot.superTokenId, oldRoot.subTokenId, 'head', undefined);
+            modify(oldRoot.superTokenId, oldRoot.subTokenId, 'deprel', undefined);
+          }
+          modify(ele.superTokenId, ele.subTokenId, 'head', 0);
+          modify(ele.superTokenId, ele.subTokenId, 'deprel', 'root');
+        }
+      });
+    }
+  }, {
+    key: 'merge',
+    value: function merge(direction, strategy) {
+      log.error('called mergeNodes(' + dir + ')');
+
+      // old: (toMerge, side, how)
+
+      /* Support for merging tokens into either a new token or a supertoken.
+      Recieves the node to merge, side (right or left) and a string denoting
+      how to merge the nodes. In case of success, redraws the tree. */
+      // const indices = findConlluId(toMerge);
+
+      var oldSentence = manager.sentence;
+
+      // prefer traits on this one
+      var major = cy.$('.merge').data('conllu');
+      // either one to the left or to the right (w/o wrapping)
+      var minor = manager.current.tokens[major.superTokenId + (direction === 'left' ? -1 : 1)];
+
+      // make sure we have stuff
+      if (!major || !minor) {
+        log.error('mergeNodes(): cannot merge these tokens');
+        return;
+      }
+
+      manager.current.merge(major, minor, strategy);
+
+      undoManager.add({
+        undo: function undo() {
+          manager.parse(oldSentence);
+        },
+        redo: function redo() {
+          manager.parse(manager.conllu);
+        }
+      });
+    }
   }]);
 
   return Graph;
@@ -19609,9 +19903,158 @@ function getEdgeHeight(srcNum, tarNum) {
   return edgeHeight;
 }
 
+function modify(superTokenId, subTokenId, attrKey, attrValue) {
+  log.info('called modify(superTokenId:' + superTokenId + ', subTokenId:' + subTokenId + ', attr:' + attrKey + '=>' + attrValue + ')');
+
+  var conllu = manager.current;
+  log.debug('modify(): before: ' + conllu.tokens[superTokenId][attrKey]);
+
+  if (attrKey === 'head') // need this here b/c [set head] sets a pointer to a token
+    attrValue = conllu.getById(attrValue);
+
+  var oldValue = void 0;
+  if (subTokenId !== null && subTokenId !== undefined) {
+    oldValue = conllu.tokens[superTokenId].tokens[subTokenId][attrKey];
+    conllu.tokens[superTokenId].tokens[subTokenId][attrKey] = attrValue;
+  } else {
+    oldValue = conllu.tokens[superTokenId][attrKey];
+    conllu.tokens[superTokenId][attrKey] = attrValue;
+  }
+
+  log.debug('modify(): during: ' + conllu.tokens[superTokenId][attrKey]);
+  manager.parse(conllu.serial);
+  log.debug('modify(): after:  ' + manager.current.tokens[superTokenId][attrKey]);
+
+  // return oldValue for undo/redo purposes
+  return oldValue;
+}
+
+function onClickFormNode(event) {
+  var target = event.target;
+  log.critical('called onClickFormNode(' + target.attr('id') + ')');
+
+  if (gui.moving_dependency) {
+
+    var source = cy.$('.arc-source');
+
+    graph.makeDependency(source, target);
+    cy.$('.moving').removeClass('moving');
+    gui.moving_dependency = false;
+
+    // right-click the new edge
+    cy.$('#' + source.attr('id') + ' -> #' + target.attr('id')).trigger('cxttapend');
+  } else {
+
+    graph.save();
+
+    cy.$('.arc-source').removeClass('arc-source');
+    cy.$('.arc-target').removeClass('arc-target');
+    cy.$('.selected').removeClass('selected');
+
+    if (target.hasClass('activated')) {
+      target.removeClass('activated');
+    } else {
+
+      var _source = cy.$('.activated');
+      target.addClass('activated');
+
+      // if there was already an activated node
+      if (_source.length === 1) {
+        graph.makeDependency(_source, target);
+        _source.removeClass('activated');
+        target.removeClass('activated');
+      }
+    }
+  }
+}
+
+function onClickPosNode(event) {
+  var target = event.target;
+  log.debug('called onClickPosNode(' + target.attr('id') + ')');
+
+  graph.save();
+  gui.editing = target;
+
+  cy.$('.activated').removeClass('activated');
+  cy.$('.arc-source').removeClass('arc-source');
+  cy.$('.arc-target').removeClass('arc-target');
+  cy.$('.selected').removeClass('selected');
+
+  graph.editLabel(target);
+}
+
+function onClickChildNode(event) {
+  // NB: event.target is the PARENT of a child we click
+  var target = event.target;
+  log.debug('called onClickChildNode(' + target.attr('id') + ')');
+  target.toggleClass('supAct');
+  console.info('onClickChildNode()', event);
+  alert('onClickChildNode()');
+}
+
+function onCxttapendFormNode(event) {
+  var target = event.target;
+  log.debug('called onCxttapendFormNode(' + target.attr('id') + ')');
+
+  graph.save();
+  gui.editing = target;
+
+  cy.$('.activated').removeClass('activated');
+  cy.$('.arc-source').removeClass('arc-source');
+  cy.$('.arc-target').removeClass('arc-target');
+  cy.$('.selected').removeClass('selected');
+
+  graph.editLabel(target);
+}
+
+function onClickDependencyEdge(event) {
+  var target = event.target;
+  log.debug('called onClickDependencyEdge(' + target.attr('id') + ')');
+
+  graph.save();
+  gui.editing = target;
+
+  cy.$('.activated').removeClass('activated');
+  cy.$('.arc-source').removeClass('arc-source');
+  cy.$('.arc-target').removeClass('arc-target');
+  cy.$('.selected').removeClass('selected');
+
+  graph.editLabel(target);
+}
+
+function onCxttapendDependencyEdge(event) {
+  var target = event.target;
+  log.debug('called onCxttapendDependencyEdge(' + target.attr('id') + ')');
+
+  /**
+   * Activated when an arc is selected. Adds classes showing what is selected.
+   */
+
+  graph.save();
+
+  cy.$('.activated').removeClass('activated');
+
+  if (target.hasClass('selected')) {
+
+    cy.$('#' + target.data('source')).removeClass('arc-source');
+    cy.$('#' + target.data('target')).removeClass('arc-target'); // visual effects on targeted node
+    target.removeClass('selected');
+  } else {
+
+    cy.$('.arc-source').removeClass('arc-source');
+    cy.$('#' + target.data('source')).addClass('arc-source');
+
+    cy.$('.arc-target').removeClass('arc-target');
+    cy.$('#' + target.data('target')).addClass('arc-target');
+
+    cy.$('.selected').removeClass('selected');
+    target.addClass('selected');
+  }
+}
+
 module.exports = Graph;
 
-},{"./config":13,"./cy-style":16,"./cytoscape/cytoscape":17,"./funcs":20,"./sort":26,"jquery":1,"underscore":9}],22:[function(require,module,exports){
+},{"./config":13,"./cy-style":16,"./cytoscape/cytoscape":17,"./funcs":20,"./sort":26,"./validate":30,"jquery":1,"underscore":9}],22:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -20263,13 +20706,10 @@ $(function () {
 	funcs.global().log = new Log(cfg.defaultLoggingLevel);
 	funcs.global().server = new Server();
 	funcs.global().manager = new Manager();
-	funcs.global().gui = new GUI();
-	funcs.global().graph = new Graph();
 
-	manager.reset();
 	gui.bind();
 
-	manager.parse(require('./test/data/conllu').from_cg3_with_spans);
+	manager.parse(require('./test/data/conllu').empty);
 });
 
 module.exports = {
@@ -21248,6 +21688,7 @@ function is_relation_conflict(tree) {
 }
 
 module.exports = {
+  U_DEPRELS: U_DEPRELS,
   is_upos: is_upos,
   is_udeprel: is_udeprel,
   is_leaf: is_leaf,
