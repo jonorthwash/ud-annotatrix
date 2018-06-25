@@ -2,6 +2,7 @@
 
 const $ = require('jquery');
 const _ = require('underscore');
+require('./autocomplete');
 
 const cfg = require('./config');
 const cytoscape = require('./cytoscape/cytoscape');
@@ -202,11 +203,13 @@ class Graph {
 
     // TODO: rank the labels + make the style better
     const autocompletes = target.data('name') === 'pos-node'
-      ? U_POS
+      ? validate.U_POS
       : target.data('name') === 'dependency'
         ? validate.U_DEPRELS
         : [];
 
+    console.log(autocompletes)
+    console.log($('#edit').autocomplete)
     // add the edit input
     $('#edit')
       .val('')
@@ -218,7 +221,7 @@ class Graph {
       .css('width', bbox.w + 5)
       .attr('target', target.attr('id'))
       .addClass('activated')
-      .selfcomplete({
+      .autocomplete({
         lookup: autocompletes,
         tabDisabled: false,
         autoSelectFirst: true,
