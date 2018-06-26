@@ -20732,10 +20732,10 @@ var Graph = function () {
 
       if (gui.editing === null) return; // nothing to do
 
-      var conllu = gui.editing.data().conllu || gui.editing.data().sourceConllu;
-      var newAttrKey = gui.editing.data().attr;
+      var analysis = gui.editing.data().analysis || gui.editing.data().sourceAnalysis;
+      var attrKey = gui.editing.data().attr;
       var newAttrValue = $('#edit').val();
-      log.debug('saveGraphEdits(): ' + newAttrKey + ' set =>"' + newAttrValue + '", whitespace:' + /[ \t\n]+/g.test(newAttrValue));
+      log.debug('saveGraphEdits(): ' + attrKey + ' set =>"' + newAttrValue + '", whitespace:' + /\s+/g.test(newAttrValue));
 
       // check we don't have any whitespace
       if (/\s+/g.test(newAttrValue)) {
@@ -20746,13 +20746,19 @@ var Graph = function () {
         return;
       }
 
-      var oldAttrValue = modify(conllu.superTokenId, conllu.subTokenId, newAttrKey, newAttrValue);
+      var oldAttrValue = analysis[attrKey];
+      analysis[attrKey] = newAttrValue;
+      console.log(analysis);
+      manager.parse(manager.conllu);
+
       window.undoManager.add({
         undo: function undo() {
-          modify(conllu.superTokenId, conllu.subTokenId, newAttrKey, oldAttrValue);
+          analysis[attrKey] = oldAttrValue;
+          manager.parse(manager.conllu);
         },
         redo: function redo() {
-          modify(conllu.superTokenId, conllu.subTokenId, newAttrKey, newAttrValue);
+          analysis[attrKey] = newAttrValue;
+          manager.parse(manager.conllu);
         }
       });
 
@@ -20788,8 +20794,8 @@ var Graph = function () {
       // TODO: rank the labels + make the style better
       var autocompletes = target.data('name') === 'pos-node' ? validate.U_POS : target.data('name') === 'dependency' ? validate.U_DEPRELS : [];
 
-      console.log(autocompletes);
-      console.log($('#edit').autocomplete);
+      //console.log(autocompletes)
+      //console.log($('#edit').autocomplete)
       // add the edit input
       $('#edit').val('').focus().val(label).css('top', bbox.y1).css('left', bbox.x1).css('height', bbox.h).css('width', bbox.w + 5).attr('target', target.attr('id')).addClass('activated').autocomplete({
         lookup: autocompletes,

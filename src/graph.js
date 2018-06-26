@@ -149,10 +149,10 @@ class Graph {
     if (gui.editing === null)
       return; // nothing to do
 
-    const conllu = gui.editing.data().conllu || gui.editing.data().sourceConllu;
-    const newAttrKey = gui.editing.data().attr;
+    const analysis = gui.editing.data().analysis || gui.editing.data().sourceAnalysis;
+    const attrKey = gui.editing.data().attr;
     const newAttrValue = $('#edit').val();
-    log.debug(`saveGraphEdits(): ${newAttrKey} set =>"${newAttrValue}", whitespace:${/[ \t\n]+/g.test(newAttrValue)}`);
+    log.debug(`saveGraphEdits(): ${attrKey} set =>"${newAttrValue}", whitespace:${/\s+/g.test(newAttrValue)}`);
 
     // check we don't have any whitespace
     if (/\s+/g.test(newAttrValue)) {
@@ -163,13 +163,19 @@ class Graph {
       return;
     }
 
-    const oldAttrValue = modify(conllu.superTokenId, conllu.subTokenId, newAttrKey, newAttrValue);
+    const oldAttrValue = analysis[attrKey];
+    analysis[attrKey] = newAttrValue;
+    console.log(analysis);
+    manager.parse(manager.conllu);
+
     window.undoManager.add({
       undo: () => {
-        modify(conllu.superTokenId, conllu.subTokenId, newAttrKey, oldAttrValue);
+        analysis[attrKey] = oldAttrValue;
+        manager.parse(manager.conllu);
       },
       redo: () => {
-        modify(conllu.superTokenId, conllu.subTokenId, newAttrKey, newAttrValue);
+        analysis[attrKey] = newAttrValue;
+        manager.parse(manager.conllu);
       }
     });
 
@@ -208,8 +214,8 @@ class Graph {
         ? validate.U_DEPRELS
         : [];
 
-    console.log(autocompletes)
-    console.log($('#edit').autocomplete)
+    //console.log(autocompletes)
+    //console.log($('#edit').autocomplete)
     // add the edit input
     $('#edit')
       .val('')
