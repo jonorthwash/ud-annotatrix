@@ -21,9 +21,7 @@ $(() => {
 	funcs.global().server = new Server();
 	funcs.global().manager = new Manager();
 
-	gui.bind();
-
-	manager.parse(require('./test/data/conllu').empty);
+	manager.parse(require('./test/data/conllu').from_cg3_with_spans);
 
 });
 

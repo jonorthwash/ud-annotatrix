@@ -126,13 +126,15 @@ class GUI {
 
     this.inBrowser = funcs.inBrowser();
 
-    if (this.inBrowser)
+    if (this.inBrowser) {
       setupUndos();
+      undoManager.setCallback(this.update);
+    }
 
   }
 
   update() {
-    if (!this.inBrowser)
+    if (!gui.inBrowser)
       return;
 
     // textarea
@@ -150,6 +152,9 @@ class GUI {
       $('#btnUploadCorpus').addClass('disabled');
     if (manager.format !== 'CoNLL-U')
       $('#btnToggleTable').addClass('disabled');
+
+    $('#btnUndo').prop('disabled', !undoManager.hasUndo());
+    $('#btnRedo').prop('disabled', !undoManager.hasRedo());
 
     $('.nav-link').removeClass('active').show();
     switch (manager.format) {
@@ -173,9 +178,9 @@ class GUI {
     }
 
     if (manager.format !== 'CoNLL-U')
-      this.is_table_view = false;
+      gui.is_table_view = false;
 
-    if (this.is_table_view) {
+    if (gui.is_table_view) {
       $('#btnToggleTable i').removeClass('fa-code');
       $('#text-data').hide();
       $('#table-data').show();
@@ -186,7 +191,7 @@ class GUI {
       $('#table-data').hide();
     }
 
-    if (this.is_textarea_visible) {
+    if (gui.is_textarea_visible) {
       $('#data-container').show();
       $('#top-buttons-container').removeClass('extra-space');
       $('#btnToggleTable').show();
@@ -306,7 +311,7 @@ class GUI {
   }
 
   onKeyupInDocument(event) {
-		log.error(`called onKeyupInDocument(${event.which})`);
+		log.info(`called onKeyupInDocument(${event.which})`);
 
 		// returns true if it caught something
 		if (gui.onCtrlKeyup(event))
@@ -318,7 +323,7 @@ class GUI {
 
 		// if we get here, we're handling a keypress without an input-focus or ctrl-press
 		// (which means it wasn't already handled)
-		log.error(`onKeyupInDocument(): handling event.which:${event.which}`);
+		log.debug(`onKeyupInDocument(): handling event.which:${event.which}`);
 
 		switch (event.which) {
   		case (KEYS.DELETE):
@@ -356,7 +361,7 @@ class GUI {
 
   		case (KEYS.R):
 				if (cy.$('node.form.activated'))
-					setAsRoot(cy.$('node.form.activated'));
+					graph.setRoot(cy.$('node.form.activated'));
 				break;
 
   		case (KEYS.S):
@@ -412,7 +417,7 @@ class GUI {
 		// handle Ctrl + <keypress>
 		// solution based on https://stackoverflow.com/a/12444641/5181692
 		pressed[event.which] = (event.type == 'keyup');
-		log.error(`ctrl: ${pressed[KEYS.CTRL]}, shift: ${pressed[KEYS.CTRL]}, y: ${pressed[KEYS.Y]}, z: ${pressed[KEYS.Z]}, this: ${event.which}`);
+		log.info(`ctrl: ${pressed[KEYS.CTRL]}, shift: ${pressed[KEYS.CTRL]}, y: ${pressed[KEYS.Y]}, z: ${pressed[KEYS.Z]}, this: ${event.which}`);
 
 		if (!pressed[KEYS.CTRL])
 			return false;
@@ -488,7 +493,7 @@ class GUI {
 				console.log('what should happen here???');
 				break;
 		  case (KEYS.ESC):
-				this.editing = null;
+				gui.editing = null;
         graph.clear();
 				break;
 		}

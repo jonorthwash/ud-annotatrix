@@ -6,8 +6,8 @@ require('./autocomplete');
 
 const cfg = require('./config');
 const cytoscape = require('./cytoscape/cytoscape');
+const errors = require('./errors');
 const funcs = require('./funcs');
-const CY_STYLE = require('./cy-style');
 const sort = require('./sort');
 const validate = require('./validate');
 
@@ -22,12 +22,10 @@ class Graph {
       zoomingEnabled: true,
       userZoomingEnabled: false,
       wheelSensitivity: 0.1,
-      style: CY_STYLE,
+      style: require('./cy-style'),
       layout: null,
       elements: []
     });
-
-
   }
 
   eles() {
@@ -149,104 +147,26 @@ class Graph {
     if (gui.editing === null)
       return; // nothing to do
 
-    const analysis = gui.editing.data().analysis || gui.editing.data().sourceAnalysis;
-    const attrKey = gui.editing.data().attr;
-    const newAttrValue = $('#edit').val();
-    log.debug(`saveGraphEdits(): ${attrKey} set =>"${newAttrValue}", whitespace:${/\s+/g.test(newAttrValue)}`);
+    const analysis = gui.editing.data().analysis || gui.editing.data().sourceAnalysis,
+      attr = gui.editing.data().attr,
+      oldValue = analysis[attr],
+      newValue = $('#edit').val();
 
-    // check we don't have any whitespace
-    if (/\s+/g.test(newAttrValue)) {
-      const message = 'ERROR: Unable to add changes with whitespace!  Try creating a new node first.';
-      log.error(message);
-      alert(message); // TODO: probably should streamline errors
-      gui.editing = null;
-      return;
-    }
-
-    const oldAttrValue = analysis[attrKey];
-    analysis[attrKey] = newAttrValue;
-    console.log(analysis);
-    manager.parse(manager.conllu);
+    modify(analysis.id, attr, newValue);
 
     window.undoManager.add({
       undo: () => {
-        analysis[attrKey] = oldAttrValue;
-        manager.parse(manager.conllu);
+        modify(analysis.id, attr, oldValue);
       },
       redo: () => {
-        analysis[attrKey] = newAttrValue;
-        manager.parse(manager.conllu);
+        modify(analysis.id, attr, newValue);
       }
     });
 
     gui.editing = null;
   }
 
-  editLabel(target) {
-    log.debug(`called graph.editLabel(${target.attr('id')})`);
-
-    target.addClass('input');
-
-    // get rid of direction arrows
-    const label = target.data('label').replace(/[⊳⊲]/, '');
-    target.data('label', label);
-
-    // get bounding box
-    let bbox = target.renderedBoundingBox();
-    bbox.color = target.style('background-color');
-    if (target.data('name') === 'dependency') {
-      bbox.w = 100;
-      bbox.h = cy.nodes()[0].renderedHeight();
-      bbox.color = 'white';
-
-      if (gui.is_vertical) {
-        bbox.y1 += (bbox.y2 - bbox.y1)/2 - 15;
-        bbox.x1  = bbox.x2 - 70;
-      } else {
-        bbox.x1 += (bbox.x2 - bbox.x1)/2 - 50;
-      }
-    }
-
-    // TODO: rank the labels + make the style better
-    const autocompletes = target.data('name') === 'pos-node'
-      ? validate.U_POS
-      : target.data('name') === 'dependency'
-        ? validate.U_DEPRELS
-        : [];
-
-    //console.log(autocompletes)
-    //console.log($('#edit').autocomplete)
-    // add the edit input
-    $('#edit')
-      .val('')
-      .focus()
-      .val(label)
-      .css('top', bbox.y1)
-      .css('left', bbox.x1)
-      .css('height', bbox.h)
-      .css('width', bbox.w + 5)
-      .attr('target', target.attr('id'))
-      .addClass('activated')
-      .autocomplete({
-        lookup: autocompletes,
-        tabDisabled: false,
-        autoSelectFirst: true,
-        lookupLimit: 5 });
-
-    // add the background-mute div
-    $('#mute').addClass('activated')
-      .css('height', gui.is_vertical
-        ? `${gui.tokens.length * 50}px`
-        : $(window).width() - 10);
-
-    $('#edit').focus(); // move cursor to the end
-    if (target.data('name') === 'dependency')
-      $('#edit').select(); // highlight the current contents
-
-  }
-
   makeDependency(src, tar) {
-    console.log(src, tar);
     log.debug(`called makeDependency(${src.attr('id')}=>${tar.attr('id')})`);
     /**
      * Called by clicking a form-node while there is already an active form-node.
@@ -261,20 +181,19 @@ class Graph {
       return;
     }
 
-    const oldHead = manager.current.getById(src.head);
-    src.addHead(tar);
-    manager.parse(manager.conllu);
+    addHead(src.id, tar.id);
 
-    window.undoManager.add({
+    undoManager.add({
       undo: () => {
-        src.removeHead(tar);
-        manager.parse(manager.conllu);
+        removeHead(src.id, tar.id);
+        graph.clear();
       },
       redo: () => {
-        src.addHead(tar);
-        manager.parse(manager.conllu);
+        addHead(src.id, tar.id);
+        graph.clear();
       }
     });
+
     /*
     // TODO:
     // If the target POS tag is PUNCT set the deprel to @punct [99%]
@@ -303,65 +222,70 @@ class Graph {
   removeDependency(ele) {
     log.debug(`called removeDependency(${ele.attr('id')})`);
 
-    const source = ele.data('sourceConllu'),
-      oldHead    = modify(source.superTokenId, source.subTokenId, 'head', undefined),
-      oldDeprel  = modify(source.superTokenId, source.subTokenId, 'deprel', undefined);
+    const src = ele.data('sourceAnalysis'),
+      tar = ele.data('targetAnalysis');
 
-    window.undoManager.add({
+    removeHead(src.id, tar.id);
+
+    undoManager.add({
       undo: () => {
-        modify(source.superTokenId, source.subTokenId, 'head', oldHead);
-        modify(source.superTokenId, source.subTokenId, 'deprel', oldDeprel);
+        addHead(src.id, tar.id);
       },
       redo: () => {
-        modify(source.superTokenId, source.subTokenId, 'head', undefined);
-        modify(source.superTokenId, source.subTokenId, 'deprel', undefined);
+        removeHead(src.id, tar.id);
       }
     });
   }
 
-  setAsRoot(ele) {
+  setRoot(ele) {
     log.debug(`called setAsRoot(${ele.attr('id')})`);
 
     // check if there is already a root
     let oldRoot;
-    gui.iterTokens((num, token) => {
-      if ((token.deprel).toLowerCase() === 'root' && token.head == 0)
-        oldRoot = token;
+    manager.current.forEach(token => {
+      token.forEach(analysis => {
+        if (analysis.head == 0 || analysis.deprel.toLowerCase() == 'root')
+          oldRoot = analysis;
+      });
     });
-    log.error(`setAsRoot(): oldRoot: ${oldRoot.superTokenId}:${oldRoot.subTokenId || '_'}`);
 
     if (oldRoot) {
-      // unset as root
-      modify(oldRoot.superTokenId, oldRoot.subTokenId, 'head', undefined);
-      modify(oldRoot.superTokenId, oldRoot.subTokenId, 'deprel', undefined);
+      modify(oldRoot.id, 'head', []);
+      modify(oldRoot.id, 'deprel', undefined);
     }
 
     // set new root
-    ele = ele.data('conllu');
-    const eleOldHead = modify(ele.superTokenId, ele.subTokenId, 'head', 0),
-      eleOldDeprel = modify(ele.superTokenId, ele.subTokenId, 'deprel', 'root');
+    const newRoot = ele.data('analysis'),
+      oldHead = newRoot.head,
+      oldDeprel = newRoot.deprel;
 
-    window.undoManager.add({
+    modify(newRoot.id, 'head', '0');
+    modify(newRoot.id, 'deprel', 'root');
+
+    undoManager.add({
       undo: () => {
         if (oldRoot) {
-          modify(oldRoot.superTokenId, oldRoot.subTokenId, 'head', 0);
-          modify(oldRoot.superTokenId, oldRoot.subTokenId, 'deprel', 'root');
+          modify(oldRoot.id, 'head', '0');
+          modify(oldRoot.id, 'deprel', 'root');
         }
-        modify(ele.superTokenId, ele.subTokenId, 'head', eleOldHead);
-        modify(ele.superTokenId, ele.subTokenId, 'deprel', eleOldDeprel);
+
+        modify(newRoot.id, 'head', oldHead);
+        modify(newRoot.id, 'deprel', oldDeprel);
       },
       redo: () => {
         if (oldRoot) {
-          modify(oldRoot.superTokenId, oldRoot.subTokenId, 'head', undefined);
-          modify(oldRoot.superTokenId, oldRoot.subTokenId, 'deprel', undefined);
+          modify(oldRoot.id, 'head', []);
+          modify(oldRoot.id, 'deprel', undefined);
         }
-        modify(ele.superTokenId, ele.subTokenId, 'head', 0);
-        modify(ele.superTokenId, ele.subTokenId, 'deprel', 'root');
+
+        modify(newRoot.id, 'head', '0');
+        modify(newRoot.id, 'deprel', 'root');
       }
     });
   }
 
   merge(direction, strategy) {
+    throw new errors.NotImplementedError('merging not implemented');
     log.error(`called mergeNodes(${dir})`);
 
     // old: (toMerge, side, how)
@@ -412,35 +336,9 @@ function getEdgeHeight(srcNum, tarNum) {
   return edgeHeight;
 }
 
-function modify(superTokenId, subTokenId, attrKey, attrValue) {
-  log.info(`called modify(superTokenId:${superTokenId}, subTokenId:${subTokenId}, attr:${attrKey}=>${attrValue})`);
-
-  const conllu = manager.current;
-  log.debug(`modify(): before: ${conllu.tokens[superTokenId][attrKey]}`);
-
-  if (attrKey === 'head') // need this here b/c [set head] sets a pointer to a token
-    attrValue = conllu.getById(attrValue);
-
-  let oldValue;
-  if (subTokenId !== null && subTokenId !== undefined) {
-    oldValue = conllu.tokens[superTokenId].tokens[subTokenId][attrKey];
-    conllu.tokens[superTokenId].tokens[subTokenId][attrKey] = attrValue;
-  } else {
-    oldValue = conllu.tokens[superTokenId][attrKey];
-    conllu.tokens[superTokenId][attrKey] = attrValue;
-  }
-
-  log.debug(`modify(): during: ${conllu.tokens[superTokenId][attrKey]}`);
-  manager.parse(conllu.serial);
-  log.debug(`modify(): after:  ${manager.current.tokens[superTokenId][attrKey]}`);
-
-  // return oldValue for undo/redo purposes
-  return oldValue;
-}
-
 function onClickFormNode(event) {
   const target = event.target;
-  log.critical(`called onClickFormNode(${target.attr('id')})`);
+  log.debug(`called onClickFormNode(${target.attr('id')})`);
 
   if (gui.moving_dependency) {
 
@@ -491,7 +389,7 @@ function onClickPosNode(event) {
   cy.$('.arc-target').removeClass('arc-target');
   cy.$('.selected').removeClass('selected');
 
-  graph.editLabel(target);
+  editLabel(target);
 }
 
 function onClickChildNode(event) {
@@ -515,7 +413,7 @@ function onCxttapendFormNode(event) {
   cy.$('.arc-target').removeClass('arc-target');
   cy.$('.selected').removeClass('selected');
 
-  graph.editLabel(target);
+  editLabel(target);
 }
 
 function onClickDependencyEdge(event) {
@@ -530,7 +428,7 @@ function onClickDependencyEdge(event) {
   cy.$('.arc-target').removeClass('arc-target');
   cy.$('.selected').removeClass('selected');
 
-  graph.editLabel(target);
+  editLabel(target);
 }
 
 function onCxttapendDependencyEdge(event) {
@@ -563,6 +461,101 @@ function onCxttapendDependencyEdge(event) {
       target.addClass('selected');
 
     }
+}
+
+function editLabel(target) {
+  log.debug(`called editLabel(${target.attr('id')})`);
+
+  target.addClass('input');
+
+  // get rid of direction arrows
+  const label = target.data('label').replace(/[⊳⊲]/, '');
+  target.data('label', label);
+
+  // get bounding box
+  let bbox = target.renderedBoundingBox();
+  bbox.color = target.style('background-color');
+  if (target.data('name') === 'dependency') {
+    bbox.w = 100;
+    bbox.h = cy.nodes()[0].renderedHeight();
+    bbox.color = 'white';
+
+    if (gui.is_vertical) {
+      bbox.y1 += (bbox.y2 - bbox.y1)/2 - 15;
+      bbox.x1  = bbox.x2 - 70;
+    } else {
+      bbox.x1 += (bbox.x2 - bbox.x1)/2 - 50;
+    }
+  }
+
+  // TODO: rank the labels + make the style better
+  const autocompletes = target.data('name') === 'pos-node'
+    ? validate.U_POS
+    : target.data('name') === 'dependency'
+      ? validate.U_DEPRELS
+      : [];
+
+  //console.log(autocompletes)
+  //console.log($('#edit').autocomplete)
+  // add the edit input
+  $('#edit')
+    .val('')
+    .focus()
+    .val(label)
+    .css('top', bbox.y1)
+    .css('left', bbox.x1)
+    .css('height', bbox.h)
+    .css('width', bbox.w + 5)
+    .attr('target', target.attr('id'))
+    .addClass('activated');
+    /*.autocomplete({
+      lookup: autocompletes,
+      tabDisabled: false,
+      autoSelectFirst: true,
+      lookupLimit: 5 });*/
+
+  // add the background-mute div
+  $('#mute').addClass('activated')
+    .css('height', gui.is_vertical
+      ? `${gui.tokens.length * 50}px`
+      : $(window).width() - 10);
+
+  $('#edit').focus(); // move cursor to the end
+  if (target.data('name') === 'dependency')
+    $('#edit').select(); // highlight the current contents
+}
+
+function modify(id, attr, value) {
+
+  // check we don't have any whitespace
+  if (/\s+/g.test(value)) {
+    const message = 'ERROR: Unable to add changes with whitespace!  Try creating a new node first.';
+    log.error(message);
+    alert(message); // TODO: probably should streamline errors
+    gui.editing = null;
+    return;
+  }
+
+  const ana = manager.current.getById(id);
+
+  ana[attr] = value;
+  gui.update();
+}
+
+function addHead(srcId, tarId) {
+  const src = manager.current.getById(srcId),
+    tar = manager.current.getById(tarId);
+
+  src.addHead(tar);
+  gui.update();
+}
+
+function removeHead(srcId, tarId) {
+  const src = manager.current.getById(srcId),
+    tar = manager.current.getById(tarId);
+
+  src.removeHead(tar);
+  gui.update();
 }
 
 

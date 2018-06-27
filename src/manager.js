@@ -20,6 +20,7 @@ class Manager {
     funcs.global().manager = this;
     funcs.global().gui = new GUI();
     funcs.global().graph = new Graph();
+    gui.bind();
 
     this.reset();
   }
@@ -111,7 +112,13 @@ class Manager {
     if (!this.current)
       return null;
 
-    return this.current.data;
+    if (this.format === 'CoNLL-U') {
+      return this.current.conllu;
+    } else if (this.format === 'CG3') {
+      return this.current.cg3;
+    } else {
+      return this.current;
+    }
   }
   set sentence(text) {
     return this.setSentence(text);
@@ -257,7 +264,6 @@ class Manager {
 
 
 
-
   get format() {
     if (this.current)
       return this.current.currentFormat;
@@ -304,13 +310,10 @@ function newSentence(text) {
 
   if (format === 'CoNLL-U') {
     sent = nx.Sentence.fromConllu(text);
-    sent.data = sent.conllu;
   } else if (format === 'CG3') {
     sent = nx.Sentence.fromCG3(text);
-    sent.data = sent.cg3;
   } else {
     sent = nx.Sentence.fromText(text);
-    sent.data = text;
   }
 
   sent.currentFormat = format;
