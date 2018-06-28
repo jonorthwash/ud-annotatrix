@@ -93,12 +93,8 @@ class Graph {
 
     // set a countdown to triggering a "background" click unless a node/edge intercepts it
     $('#cy canvas, #mute').mouseup((event) => {
-      setTimeout(() => {
-        graph.clear();
-        setTimeout(() => { // wait another full second before unsetting
-          gui.intercepted = false;
-        });
-      }, 100);
+      gui.intercepted = false;
+      setTimeout(graph.clear, 100);
     });
     $('#cy canvas').mousemove((event) => {
       gui.intercepted = true;
@@ -106,7 +102,7 @@ class Graph {
     $('#edit').mouseup((event) => {
       gui.intercepted = true;
     });
-    cy.on('click', '*', (event) => {
+    cy.on('click, cxttapend', '*', (event) => {
       gui.intercepted = true;
 
       // DEBUG: this line should be taken out in production
@@ -123,7 +119,7 @@ class Graph {
   }
 
   clear() {
-    log.debug(`called onClickCanvas(intercepted: ${gui.intercepted})`);
+    log.error(`called onClickCanvas(intercepted: ${gui.intercepted})`);
 
     // intercepted by clicking a canvas subobject || mousemove (i.e. drag) || #edit
     if (gui.intercepted)
@@ -346,8 +342,10 @@ function onClickFormNode(event) {
 
   if (gui.moving_dependency) {
 
+    const dep = cy.$('.selected');
     const source = cy.$('.arc-source');
 
+    graph.removeDependency(dep);
     graph.makeDependency(source, target);
     cy.$('.moving').removeClass('moving');
     gui.moving_dependency = false;

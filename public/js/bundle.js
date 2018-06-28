@@ -20669,13 +20669,10 @@ var Graph = function () {
 
       window.cy = cytoscape(this.options).minZoom(0.1).maxZoom(10.0).zoom(gui.zoom).pan(gui.pan);
 
-      console.log(gui.zoom, gui.pan, !gui.zoom && !gui.pan);
-      if (!gui.zoom && !gui.pan) {
-        console.log('hi');
-        setTimeout(function () {
-          cy.fit().center();
-        }, 5);
-      }
+      // add a slight delay to ensure this gets drawn last
+      if (!gui.zoom && !gui.pan) setTimeout(function () {
+        cy.fit().center();
+      }, 5);
 
       this.bind();
     }
@@ -20690,13 +20687,8 @@ var Graph = function () {
 
       // set a countdown to triggering a "background" click unless a node/edge intercepts it
       $('#cy canvas, #mute').mouseup(function (event) {
-        setTimeout(function () {
-          graph.clear();
-          setTimeout(function () {
-            // wait another full second before unsetting
-            gui.intercepted = false;
-          });
-        }, 100);
+        gui.intercepted = false;
+        setTimeout(graph.clear, 100);
       });
       $('#cy canvas').mousemove(function (event) {
         gui.intercepted = true;
@@ -20704,8 +20696,9 @@ var Graph = function () {
       $('#edit').mouseup(function (event) {
         gui.intercepted = true;
       });
-      cy.on('click', '*', function (event) {
+      cy.on('click, cxttapend', '*', function (event) {
         gui.intercepted = true;
+        console.log('intercepted');
 
         // DEBUG: this line should be taken out in production
         console.info('clicked ' + event.target.attr('id') + ', data:', event.target.data());
@@ -20722,7 +20715,7 @@ var Graph = function () {
   }, {
     key: 'clear',
     value: function clear() {
-      log.debug('called onClickCanvas(intercepted: ' + gui.intercepted + ')');
+      log.error('called onClickCanvas(intercepted: ' + gui.intercepted + ')');
 
       // intercepted by clicking a canvas subobject || mousemove (i.e. drag) || #edit
       if (gui.intercepted) return;
@@ -20944,8 +20937,10 @@ function onClickFormNode(event) {
 
   if (gui.moving_dependency) {
 
+    var dep = cy.$('.selected');
     var source = cy.$('.arc-source');
 
+    graph.removeDependency(dep);
     graph.makeDependency(source, target);
     cy.$('.moving').removeClass('moving');
     gui.moving_dependency = false;
@@ -21146,6 +21141,8 @@ module.exports = Graph;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var $ = require('jquery');
@@ -21337,6 +21334,7 @@ var GUI = function () {
       }
 
       try {
+        // need this in case `cy` DNE
         gui.zoom = cy.zoom();
         gui.pan = cy.pan();
       } catch (e) {
@@ -21435,12 +21433,12 @@ var GUI = function () {
   }, {
     key: 'zoomIn',
     value: function zoomIn() {
-      throw new errors.NotImplementedError();
+      console.log('zoom in', gui.zoom);
     }
   }, {
     key: 'zoomOut',
     value: function zoomOut() {
-      throw new errors.NotImplementedError();
+      console.log('zoom out', gui.zoom);
     }
   }, {
     key: 'onKeyupInDocument',
@@ -21463,15 +21461,15 @@ var GUI = function () {
         case KEYS.X:
           if (cy.$('.selected').length) {
             graph.removeDependency(cy.$('.selected'));
-          } else if (true /* cy.$('.supAct').length */) {
-              // removeSup(st);
-            }
+          } /* else if (cy.$('.supAct').length) {
+            removeSup(st);
+            }*/
           break;
 
         case KEYS.D:
           if (cy.$('.selected').length) {
             cy.$('.selected').toggleClass('moving');
-            this.moving_dependency = !this.moving_dependency;
+            gui.moving_dependency = !gui.moving_dependency;
           }
           break;
 
@@ -21549,35 +21547,41 @@ var GUI = function () {
       if (!pressed[KEYS.CTRL]) return false;
 
       if (pressed[KEYS.PAGE_DOWN]) {
+        var _pressed;
+
         if (pressed[KEYS.SHIFT]) {
           manager.last();
         } else {
           manager.next();
         }
-        pressed = {};
-        pressed[KEYS.CTRL] = true;
+        pressed = (_pressed = {}, _defineProperty(_pressed, KEYS.CTRL, true), _defineProperty(_pressed, KEYS.SHIFT, pressed[KEYS.SHIFT]), _pressed);
         return true;
       } else if (pressed[KEYS.PAGE_UP]) {
+        var _pressed2;
+
         if (pressed[KEYS.SHIFT]) {
           manager.first();
         } else {
           manager.prev();
         }
-        pressed = {};
-        pressed[KEYS.CTRL] = true;
+        pressed = (_pressed2 = {}, _defineProperty(_pressed2, KEYS.CTRL, true), _defineProperty(_pressed2, KEYS.SHIFT, pressed[KEYS.SHIFT]), _pressed2);
         return true;
       } else if (pressed[KEYS.Z] && !pressed[KEYS.SHIFT]) {
         undoManager.undo();
+        pressed = _defineProperty({}, KEYS.CTRL, true);
         return true;
       } else if (pressed[KEYS.Y] || pressed[KEYS.Z]) {
+        var _pressed4;
+
         undoManager.redo();
+        pressed = (_pressed4 = {}, _defineProperty(_pressed4, KEYS.CTRL, true), _defineProperty(_pressed4, KEYS.SHIFT, pressed[KEYS.SHIFT]), _pressed4);
         setTimeout(function () {
           // catch only events w/in next 500 msecs
           pressed[KEYS.SHIFT] = false;
         }, 500);
         return true;
       } else {
-        log.debug('onCtrlKeyup(): uncaught key combination');
+        log.error('onCtrlKeyup(): uncaught key combination');
       }
 
       return false;

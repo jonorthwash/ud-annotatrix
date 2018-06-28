@@ -312,11 +312,9 @@ class GUI {
 
   zoomIn() {
     console.log('zoom in', gui.zoom);
-    throw new errors.NotImplementedError();
   }
   zoomOut() {
     console.log('zoom out', gui.zoom);
-    throw new errors.NotImplementedError();
   }
 
   onKeyupInDocument(event) {
@@ -340,15 +338,15 @@ class GUI {
   		case (KEYS.X):
 				if (cy.$('.selected').length) {
 					graph.removeDependency(cy.$('.selected'));
-				} else if (true/* cy.$('.supAct').length */) {
-					// removeSup(st);
-				}
+				}/* else if (cy.$('.supAct').length) {
+					removeSup(st);
+				}*/
 				break;
 
   		case (KEYS.D):
 				if (cy.$('.selected').length) {
 					cy.$('.selected').toggleClass('moving');
-					this.moving_dependency = !this.moving_dependency;
+					gui.moving_dependency = !gui.moving_dependency;
 				}
 				break;
 
@@ -437,8 +435,7 @@ class GUI {
 			} else {
 				manager.next();
 			}
-			pressed = {};
-			pressed[KEYS.CTRL] = true;
+      pressed = { [KEYS.CTRL]: true, [KEYS.SHIFT]: pressed[KEYS.SHIFT] };
 			return true;
 
 		} else if (pressed[KEYS.PAGE_UP]) {
@@ -447,23 +444,24 @@ class GUI {
 			} else {
 				manager.prev()
 			}
-			pressed = {};
-			pressed[KEYS.CTRL] = true;
+      pressed = { [KEYS.CTRL]: true, [KEYS.SHIFT]: pressed[KEYS.SHIFT] };
 			return true;
 
 		} else if (pressed[KEYS.Z] && !pressed[KEYS.SHIFT]) {
 			undoManager.undo();
+      pressed = { [KEYS.CTRL]: true };
 			return true;
 
 		} else if (pressed[KEYS.Y] || pressed[KEYS.Z]) {
 			undoManager.redo();
+      pressed = { [KEYS.CTRL]: true, [KEYS.SHIFT]: pressed[KEYS.SHIFT] };
 			setTimeout(() => { // catch only events w/in next 500 msecs
 				pressed[KEYS.SHIFT] = false;
 			}, 500);
 			return true;
 
 		} else {
-			log.debug(`onCtrlKeyup(): uncaught key combination`);
+			log.error(`onCtrlKeyup(): uncaught key combination`);
 		}
 
 		return false;
