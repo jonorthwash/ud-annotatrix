@@ -72,10 +72,14 @@ class Graph {
     window.cy = cytoscape(this.options)
       .minZoom(0.1)
       .maxZoom(10.0)
-      .fit()
-      .zoom(null) // TODO: gui.zoom
-      .center()
-      .pan(null); // TODO: gui.pan
+      .zoom(gui.zoom)
+      .pan(gui.pan);
+
+    // add a slight delay to ensure this gets drawn last
+    if (!gui.zoom && !gui.pan)
+      setTimeout(() => {
+        cy.fit().center();
+      }, 5);
 
     this.bind()
   }

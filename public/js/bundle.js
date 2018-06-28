@@ -20667,8 +20667,15 @@ var Graph = function () {
       };
       this.options.elements = this.eles();
 
-      window.cy = cytoscape(this.options).minZoom(0.1).maxZoom(10.0).fit().zoom(null) // TODO: gui.zoom
-      .center().pan(null); // TODO: gui.pan
+      window.cy = cytoscape(this.options).minZoom(0.1).maxZoom(10.0).zoom(gui.zoom).pan(gui.pan);
+
+      console.log(gui.zoom, gui.pan, !gui.zoom && !gui.pan);
+      if (!gui.zoom && !gui.pan) {
+        console.log('hi');
+        setTimeout(function () {
+          cy.fit().center();
+        }, 5);
+      }
 
       this.bind();
     }
@@ -21329,6 +21336,13 @@ var GUI = function () {
         $('#btnToggleTable').hide();
       }
 
+      try {
+        gui.zoom = cy.zoom();
+        gui.pan = cy.pan();
+      } catch (e) {
+        gui.zoom = null;
+        gui.pan = null;
+      }
       graph.update();
     }
   }, {

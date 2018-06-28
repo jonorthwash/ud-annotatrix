@@ -202,6 +202,13 @@ class GUI {
       $('#btnToggleTable').hide();
     }
 
+    try { // need this in case `cy` DNE
+      gui.zoom = cy.zoom();
+      gui.pan  = cy.pan();
+    } catch (e) {
+      gui.zoom = null;
+      gui.pan  = null;
+    }
     graph.update();
   }
 
