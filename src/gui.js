@@ -311,9 +311,11 @@ class GUI {
   }
 
   zoomIn() {
+    console.log('zoom in', gui.zoom);
     throw new errors.NotImplementedError();
   }
   zoomOut() {
+    console.log('zoom out', gui.zoom);
     throw new errors.NotImplementedError();
   }
 
