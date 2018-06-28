@@ -20672,6 +20672,8 @@ var Graph = function () {
       // add a slight delay to ensure this gets drawn last
       if (!gui.zoom && !gui.pan) setTimeout(function () {
         cy.fit().center();
+        gui.zoom = cy.zoom();
+        gui.pan = cy.pan();
       }, 5);
 
       this.bind();
@@ -20698,7 +20700,6 @@ var Graph = function () {
       });
       cy.on('click, cxttapend', '*', function (event) {
         gui.intercepted = true;
-        console.log('intercepted');
 
         // DEBUG: this line should be taken out in production
         console.info('clicked ' + event.target.attr('id') + ', data:', event.target.data());
@@ -21433,12 +21434,14 @@ var GUI = function () {
   }, {
     key: 'zoomIn',
     value: function zoomIn() {
-      console.log('zoom in', gui.zoom);
+      cy.zoom(gui.zoom * 1.1);
+      gui.update();
     }
   }, {
     key: 'zoomOut',
     value: function zoomOut() {
-      console.log('zoom out', gui.zoom);
+      cy.zoom(gui.zoom / 1.1);
+      gui.update();
     }
   }, {
     key: 'onKeyupInDocument',
@@ -21474,13 +21477,20 @@ var GUI = function () {
           break;
 
         case KEYS.M:
-          if (cy.$('node.form.activated').length) {
-            cy.$('node.form.activated').removeClass('activated').addClass('merge');
-          } else if (cy.$('node.form.merge').length) cy.$('node.form.merge').addClass('activated').removeClass('merge');
+          /*if (cy.$('node.form.activated').length) {
+          	cy.$('node.form.activated')
+          		.removeClass('activated')
+          		.addClass('merge');
+          	} else if (cy.$('node.form.merge').length)
+          	cy.$('node.form.merge')
+          		.addClass('activated')
+          		.removeClass('merge');*/
+
+          break;
 
         case KEYS.P:
-          // if (true/* text not focused */)
-          // setPunct()
+          /* if (text not focused)
+          	setPunct();*/
           break;
 
         case KEYS.R:
@@ -21494,42 +21504,38 @@ var GUI = function () {
 
         case KEYS.LEFT:
         case KEYS.RIGHT:
-          if (cy.$('node.form.merge').length) {
-            mergeNodes(event.which === KEYS.LEFT ? 'left' : 'right', 'subtoken');
-          } else if (true /* cy.$('.supertoken') */) {
-              // mergeNodes(toMerge, KEYS.SIDES[key.which], 'subtoken');
-              // mergeNodes(toSup, KEYS.SIDES[key.which], 'supertoken');
-            }
+          /*if (cy.$('node.form.merge').length) {
+          	mergeNodes(event.which === KEYS.LEFT ? 'left' : 'right', 'subtoken');
+          } else if (cy.$('.supertoken')) {
+          	// mergeNodes(toMerge, KEYS.SIDES[key.which], 'subtoken');
+          	// mergeNodes(toSup, KEYS.SIDES[key.which], 'supertoken');
+          }*/
           break;
 
         case KEYS.EQUALS:
         case KEYS.EQUALS_:
-          // if (key.shiftKey)
-          true;
-          // CURRENT_ZOOM += 0.1
-          // else
-          // cy.fit();
-          // cy.zoom(CURRENT_ZOOM)
-          // cy.center();
+          if (event.shiftKey) {
+            gui.zoomIn();
+          } else {
+            cy.fit().center();
+          }
           break;
 
         case KEYS.MINUS:
         case KEYS.MINUS_:
-          // CURRENT_ZOOM = cy.zoom();
-          // if (key.shiftKey)
-          true;
-          //  CURRENT_ZOOM -= 0.1;
-
-          // cy.zoom(CURRENT_ZOOM);
-          // cy.center();
+          if (event.shiftKey) {
+            gui.zoomOut();
+          } else {
+            cy.fit().center();
+          }
           break;
 
         default:
-          if (47 < event.which && event.which < 58) {// key in 0-9
-            // const num = event.which - 48;
-            // CURRENT_ZOOM = 1.0;
-            // cy.zoom(CURRENT_ZOOM);
-            // cy.center();
+          if (47 < event.which && event.which < 58) {
+            // key in 0-9
+            var num = event.which - 48;
+            cy.zoom(Math.pow(1.5, num - 5));
+            gui.update();
           }
 
       }

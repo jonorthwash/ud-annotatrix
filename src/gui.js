@@ -311,10 +311,12 @@ class GUI {
   }
 
   zoomIn() {
-    console.log('zoom in', gui.zoom);
+    cy.zoom(gui.zoom * 1.1);
+    gui.update();
   }
   zoomOut() {
-    console.log('zoom out', gui.zoom);
+    cy.zoom(gui.zoom / 1.1);
+    gui.update();
   }
 
   onKeyupInDocument(event) {
@@ -351,7 +353,7 @@ class GUI {
 				break;
 
   		case (KEYS.M):
-				if (cy.$('node.form.activated').length) {
+				/*if (cy.$('node.form.activated').length) {
 					cy.$('node.form.activated')
 						.removeClass('activated')
 						.addClass('merge');
@@ -359,11 +361,13 @@ class GUI {
 				} else if (cy.$('node.form.merge').length)
 					cy.$('node.form.merge')
 						.addClass('activated')
-						.removeClass('merge');
+						.removeClass('merge');*/
+
+        break;
 
   		case (KEYS.P):
-				// if (true/* text not focused */)
-					// setPunct()
+				/* if (text not focused)
+					setPunct();*/
 				break;
 
   		case (KEYS.R):
@@ -378,42 +382,37 @@ class GUI {
 
   		case (KEYS.LEFT):
   		case (KEYS.RIGHT):
-				if (cy.$('node.form.merge').length) {
+				/*if (cy.$('node.form.merge').length) {
 					mergeNodes(event.which === KEYS.LEFT ? 'left' : 'right', 'subtoken');
-				} else if (true/* cy.$('.supertoken') */) {
+				} else if (cy.$('.supertoken')) {
 					// mergeNodes(toMerge, KEYS.SIDES[key.which], 'subtoken');
 					// mergeNodes(toSup, KEYS.SIDES[key.which], 'supertoken');
-				}
+				}*/
 				break;
 
   		case (KEYS.EQUALS):
   		case (KEYS.EQUALS_):
-				// if (key.shiftKey)
-					true;
-					// CURRENT_ZOOM += 0.1
-				// else
-					// cy.fit();
-				// cy.zoom(CURRENT_ZOOM)
-				// cy.center();
+				if (event.shiftKey) {
+          gui.zoomIn();
+        } else {
+          cy.fit().center();
+        }
 				break;
 
   		case (KEYS.MINUS):
   		case (KEYS.MINUS_):
-				// CURRENT_ZOOM = cy.zoom();
-				// if (key.shiftKey)
-					true;
-					//  CURRENT_ZOOM -= 0.1;
-
-				// cy.zoom(CURRENT_ZOOM);
-    		// cy.center();
-				break;
+        if (event.shiftKey) {
+          gui.zoomOut();
+        } else {
+          cy.fit().center();
+        }
+        break;
 
       default:
 				if (47 < event.which && event.which < 58) {// key in 0-9
-					// const num = event.which - 48;
-					// CURRENT_ZOOM = 1.0;
-					// cy.zoom(CURRENT_ZOOM);
-					// cy.center();
+					const num = event.which - 48;
+          cy.zoom(1.5 ** (num - 5));
+          gui.update();
 				}
 
 		}

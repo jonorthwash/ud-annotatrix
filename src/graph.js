@@ -79,6 +79,8 @@ class Graph {
     if (!gui.zoom && !gui.pan)
       setTimeout(() => {
         cy.fit().center();
+        gui.zoom = cy.zoom();
+        gui.pan = cy.pan();
       }, 5);
 
     this.bind()
