@@ -20,7 +20,7 @@ if hash virtualenv 2>/dev/null; then
   # virtual environment use instructions
   echo ""
   echo "NOTE: Python virtual environment activated ($GREEN$VENV$RESET);"
-  echo "  to deactivate, type ${GREEN}$ deactivate${RESET}."
+  echo "  to deactivate, type ${GREEN}deactivate${RESET}."
   echo ""
 
 fi
@@ -35,10 +35,10 @@ echo "backend : TkAgg" > ~/.matplotlib/matplotlibrc
 # basic ENV file
 ENV=.env
 if [ ! -f $ENV ]; then
-  echo "VIRTUAL_ENV=$VENV" >> $ENV
-  echo "PATH_TO_CORPORA=corpora" >> $ENV
-  echo "SECRET_KEY=annotatrixareforkids" >> $ENV
-  echo "HOST=127.0.0.1" >> $ENV
-  echo "PORT=5316" >> $ENV
-  echo "DEBUG=DEBUG" >> $ENV
+  echo "VIRTUAL_ENV=$VENV
+PATH_TO_CORPORA=corpora
+SECRET_KEY=annotatrixareforkids
+HOST=127.0.0.1
+PORT=5316
+DEBUG=DEBUG" > $ENV
 fi
