@@ -21,8 +21,6 @@ $(() => {
 	funcs.global().server = new Server();
 	funcs.global().manager = new Manager();
 
-	manager.parse(require('./test/data/conllu').from_cg3_with_spans);
-
 });
 
 module.exports = {

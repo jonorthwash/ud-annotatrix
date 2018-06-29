@@ -15,8 +15,8 @@ class Server {
 				dataType: 'json',
 				success: (data) => {
 					log.info(`checkServer AJAX response: ${JSON.stringify(data)}`);
-					IS_SERVER_RUNNING = true;
-					getSentence(1);
+					this.is_running = true;
+					//getSentence(1);
 				},
 				error: function(data){
 					log.info('Unable to complete AJAX request for checkServer()');

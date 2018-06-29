@@ -117,7 +117,7 @@ class Manager {
     } else if (this.format === 'CG3') {
       return this.current.cg3;
     } else {
-      return this.current;
+      return this.current.text;
     }
   }
   set sentence(text) {
@@ -154,6 +154,7 @@ class Manager {
     return this._sentences[index];
   }
   insertSentence(index, text) {
+    console.log(index, text);
 
     if (text === null || text === undefined) { // if only passed 1 arg
       text = index || cfg.defaultInsertedSentence;
@@ -284,7 +285,9 @@ class Manager {
     if (this.current)
       return this.current.cg3;
   }
-
+  get graphable() {
+    return this.format === 'CoNLL-U' || this.format === 'CG3';
+  }
 
 
 

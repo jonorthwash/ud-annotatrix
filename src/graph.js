@@ -29,26 +29,28 @@ class Graph {
   }
 
   eles() {
-    return _.map(manager.current.eles, ele => {
-      if (ele.data.name === 'dependency') {
+    if (manager.graphable)
+      return _.map(manager.current.eles, ele => {
+        if (ele.data.name === 'dependency') {
 
-        const src = ele.data.sourceAnalysis,
-          tar = ele.data.targetAnalysis;
+          const src = ele.data.sourceAnalysis,
+            tar = ele.data.targetAnalysis;
 
-        ele.data.label = gui.is_ltr
-          ? tar.num < src.num
-            ? `${src.deprel}⊳`
-            : `⊲${src.deprel}`
-          : tar.num < src.num
-            ? `⊲${src.deprel}`
-            : `${src.deprel}⊳`;
+          ele.data.label = gui.is_ltr
+            ? tar.num < src.num
+              ? `${src.deprel}⊳`
+              : `⊲${src.deprel}`
+            : tar.num < src.num
+              ? `⊲${src.deprel}`
+              : `${src.deprel}⊳`;
 
-        ele.data.ctrl = new Array(4).fill(getEdgeHeight(src.num, tar.num));
-        ele.classes = 'dependency';
-      }
+          ele.data.ctrl = new Array(4).fill(getEdgeHeight(src.num, tar.num));
+          ele.classes = 'dependency';
+        }
 
-      return ele;
-    });
+        return ele;
+      });
+    return [];
   }
 
   update() {
@@ -104,7 +106,7 @@ class Graph {
     $('#edit').mouseup((event) => {
       gui.intercepted = true;
     });
-    cy.on('click, cxttapend', '*', (event) => {
+    cy.on('click cxttapend', '*', (event) => {
       gui.intercepted = true;
 
       // DEBUG: this line should be taken out in production
@@ -546,11 +548,12 @@ function modify(id, attr, value) {
   gui.update();
 }
 
-function addHead(srcId, tarId) {
+function addHead(srcId, tarId, dep='') {
   const src = manager.current.getById(srcId),
     tar = manager.current.getById(tarId);
 
-  src.addHead(tar);
+  console.log(dep)
+  src.addHead(tar, dep);
   gui.update();
 }
 

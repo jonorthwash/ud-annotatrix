@@ -6,6 +6,7 @@
   "dependencies": {
     "bootstrap": "^4.1.1",
     "canvas2svg": "^1.0.16",
+    "express": "^4.16.3",
     "jquery": "^3.2.1",
     "jquery-autocomplete": "^1.2.8",
     "l20n": "^5.0.0",
@@ -38,7 +39,7 @@
   "scripts": {
     "test": "mocha src/test/index.js",
     "coverage": "nyc mocha src/test/index.js",
-    "build": "gulp",
+    "build": "gulp && cp node_modules/jquery/dist/jquery.* node_modules/jquery-autocomplete/jquery.autocomplete.js public/js",
     "build-tree": "./scripts/rebuild-tree.sh"
   },
   "repository": {

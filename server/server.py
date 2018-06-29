@@ -33,7 +33,7 @@ welcome = '''
 *******************************************************************************
 '''
 
-app = Flask(__name__, static_folder='../standalone', static_url_path='/annotatrix')
+app = Flask(__name__, static_folder='../public/', static_url_path='/annotatrix')
 
 if not os.path.exists(PATH_TO_CORPORA):
     logger.info('Initializing: Corpus ({})'.format(PATH_TO_CORPORA))
@@ -143,7 +143,7 @@ def annotatrix():
 @app.route('/', methods=['GET', 'POST'])
 def index():
     logger.info('{} /'.format(request.method))
-    return send_from_directory('../standalone', 'welcome_page.html')
+    return app.send_static_file('html/welcome_page.html')
 
 
 # @app.route('/<treebank_id>', methods=['GET', 'POST'])
@@ -154,9 +154,24 @@ def index():
 @app.route('/annotatrix/<treebank_id>')
 def corpus_page(treebank_id):
     logger.info('corpus page for treebank_id: {}'.format(treebank_id))
-    if '.' in treebank_id:
-        return send_from_directory('../standalone', treebank_id)
-    return send_from_directory('../standalone', 'annotator.html')
+    #if '.' in treebank_id:
+        #return send_from_directory('../standalone', treebank_id)
+    return app.send_static_file('html/annotator.html')
+
+
+@app.route('/css/<file>')
+def serve_css(file):
+    return app.send_static_file(f'css/{file}');
+
+
+@app.route('/js/<file>')
+def serve_js(file):
+    return app.send_static_file(f'js/{file}');
+
+
+@app.route('/fonts/<file>')
+def serve_font(file):
+    return app.send_static_file(f'fonts/{file}');
 
 
 def treebank_path(treebank_id, extension='.db'):
@@ -171,7 +186,6 @@ def treebank_path(treebank_id, extension='.db'):
     @return path to corpus file (with extension)
     '''
     return os.path.join(PATH_TO_CORPORA, treebank_id.strip('#') + extension)
-
 
 
 
