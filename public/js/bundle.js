@@ -17327,7 +17327,8 @@ var $ = require('jquery');
 var server = require('./server');
 
 function upload(event) {
-  return server.upload();
+  debugger;
+  return server.push();
 }
 
 function export_(event) {
@@ -17366,11 +17367,25 @@ function print(event) {
   throw new Error('corpus::print() not implemented');
 }
 
+function fromLocalStorage() {
+  console.log('load from local storage');
+}
+
+function fromServer() {
+  console.log('load from server');
+}
+
 module.exports = {
   upload: upload,
   export: export_,
   clear: clear,
-  print: print
+  print: print,
+  load: {
+    from: {
+      localStorage: fromLocalStorage,
+      server: fromServer
+    }
+  }
 };
 
 },{"./server":26,"jquery":1}],17:[function(require,module,exports){
@@ -21941,7 +21956,6 @@ var Manager = function () {
   }, {
     key: 'insertSentence',
     value: function insertSentence(index, text) {
-      console.log(index, text);
 
       if (text === null || text === undefined) {
         // if only passed 1 arg
@@ -22200,6 +22214,7 @@ var Server = function () {
 				success: function success(data) {
 					log.info('checkServer AJAX response: ' + JSON.stringify(data));
 					_this.is_running = true;
+					gui.update();
 					//getSentence(1);
 				},
 				error: function error(data) {
@@ -22217,23 +22232,26 @@ var Server = function () {
 		value: function push() {
 			if (!this.is_running) return null;
 
-			/*
-   const curSent = $('#text-data').val(),
-   	sentNum = $('#current-sentence').val(),
-   	treebank_id = location.href.split('/')[4];
-   	$.ajax({
-   	type: 'POST',
-   	url: '/save',
-   	data: {
-   		content: curSent,
-   		treebank_id: treebank_id,
-   		sentNum: sentNum
-   	},
-   	dataType: 'json',
-   	success: function(data){
-   		log.info('Update was performed');
-   	}
-   });*/
+			var content = manager.sentence,
+			    sentNum = manager.index,
+			    treebank_id = location.href.split('/')[4];
+
+			console.log(sent, num, treebank);
+
+			$.ajax({
+				type: 'POST',
+				url: '/save',
+				data: {
+					content: sent,
+					sentNum: sentNum,
+					treebank_id: treebank_id
+				},
+				dataType: 'json',
+				success: function success(data) {
+					console.log(data);
+					log.info('Update was performed');
+				}
+			});
 		}
 	}, {
 		key: 'pull',

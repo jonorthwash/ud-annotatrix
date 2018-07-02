@@ -16,6 +16,7 @@ class Server {
 				success: (data) => {
 					log.info(`checkServer AJAX response: ${JSON.stringify(data)}`);
 					this.is_running = true;
+					gui.update();
 					//getSentence(1);
 				},
 				error: function(data){
@@ -32,24 +33,26 @@ class Server {
 		if (!this.is_running)
 			return null;
 
-		/*
-		const curSent = $('#text-data').val(),
-			sentNum = $('#current-sentence').val(),
+		const content = manager.sentence,
+			sentNum = manager.index,
 			treebank_id = location.href.split('/')[4];
+
+		console.log(sent, num, treebank)
 
 		$.ajax({
 			type: 'POST',
 			url: '/save',
 			data: {
-				content: curSent,
-				treebank_id: treebank_id,
-				sentNum: sentNum
+				content: sent,
+				sentNum: sentNum,
+				treebank_id: treebank_id
 			},
 			dataType: 'json',
 			success: function(data){
+				console.log(data);
 				log.info('Update was performed');
 			}
-		});*/
+		});
 	}
 
 	pull(sentNum) {

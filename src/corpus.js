@@ -5,7 +5,8 @@ const $ = require('jquery');
 const server = require('./server');
 
 function upload(event) {
-  return server.upload();
+  debugger;
+  return server.push();
 }
 
 function export_(event) {
@@ -46,9 +47,23 @@ function print(event) {
   throw new Error('corpus::print() not implemented');
 }
 
+function fromLocalStorage() {
+  console.log('load from local storage');
+}
+
+function fromServer() {
+  console.log('load from server');
+}
+
 module.exports = {
   upload,
   export: export_,
   clear,
   print,
+  load: {
+    from: {
+      localStorage: fromLocalStorage,
+      server: fromServer
+    }
+  }
 }

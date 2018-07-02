@@ -154,7 +154,6 @@ class Manager {
     return this._sentences[index];
   }
   insertSentence(index, text) {
-    console.log(index, text);
 
     if (text === null || text === undefined) { // if only passed 1 arg
       text = index || cfg.defaultInsertedSentence;
