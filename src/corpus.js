@@ -2,10 +2,7 @@
 
 const $ = require('jquery');
 
-const server = require('./server');
-
 function upload(event) {
-  debugger;
   return server.push();
 }
 

@@ -43,7 +43,8 @@ class CorpusDB():
         """
         db = sqlite3.connect(self.path)
         cur = db.cursor()
-        cur.execute('SELECT sentence FROM corpus WHERE SentNum = ?', (int(sent_num) - 1,))
+        print('SELECT sentence FROM corpus WHERE SentNum = ?', (int(sent_num),))
+        cur.execute('SELECT sentence FROM corpus WHERE SentNum = ?', (int(sent_num),))
         sentence = cur.fetchone()[0]
         db.commit()
         cur.execute('SELECT COUNT(sentence) FROM corpus')
@@ -55,8 +56,8 @@ class CorpusDB():
     def update_db(self, sentence, sent_num):
         db = sqlite3.connect(self.path)
         cur = db.cursor()
-        sent_num = int(sent_num) - 1
-        cur.execute('UPDATE corpus SET sentence = (?) WHERE SentNum = (?)', (sentence, sent_num))
+        sent_num = int(sent_num)
+        cur.execute('INSERT or REPLACE into corpus (sentence, SentNum) VALUES (?, ?)', (sentence, sent_num))
         db.commit()
         db.close()
 

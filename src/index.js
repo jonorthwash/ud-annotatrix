@@ -1,5 +1,7 @@
 'use strict';
 
+require('babel-polyfill');
+
 const $ = require('jquery');
 const _ = require('underscore');
 const nx = require('notatrix');

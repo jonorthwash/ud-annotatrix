@@ -66,9 +66,41 @@ class Manager {
     }
 
     this._index = Math.floor(index); // enforce integer
-    gui.update();
 
-    return this.index;
+    if (server.is_running) {
+      server.pull(this.index).then(
+        data => {
+          console.log(1, data);
+        },
+        data => {
+          console.log(2, data);
+        }
+      );
+    } else {
+      gui.update();
+      return this.index;
+    }
+
+    /*
+    new Promise((resolve, reject) => {
+
+      if (server.is_running) {
+        const res = await server.pull(this.index);
+        console.log(res);
+      }
+
+    }).then(
+      res => {
+        console.log('1', res);
+        gui.update();
+      },
+      res => {
+        console.log(2, res);
+        gui.update();
+      }
+    );
+
+    return this.index;*/
   }
   first() {
     this.index = this.length ? 0 : -1;

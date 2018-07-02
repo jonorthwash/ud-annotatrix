@@ -51,10 +51,10 @@ def save_corpus():
         sent_num = request.form['sentNum']
         if os.path.exists(db_path):
             logger.debug('/save updating db at {}'.format(db_path))
-            db = CorpusDB(db_path)
-            db.update_db(sent, sent_num)
         else:
-            logger.warn('/save no db found at {}'.format(db_path))
+            logger.warn('/save no db found at {}, creating new one'.format(db_path))
+        db = CorpusDB(db_path)
+        db.update_db(sent, sent_num)
         return jsonify()
     else:
         logger.warn('/save no form received')
@@ -66,6 +66,9 @@ def load_sentence():
     logger.info('{} /load'.format(request.method))
     if request.form:
         logger.info('/load form: {}'.format(request.form))
+        if 'treebank_id' not in request.form or 'sentNum' not in request.form:
+            logger.error('/load invalid form, required keys: "treebank_id", "sentNum"')
+            return jsonify({'content': 'something wrong'})
         treebank_id = request.form['treebank_id']
         db_path = treebank_path(treebank_id)
         sent_num = request.form['sentNum']
