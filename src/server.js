@@ -54,8 +54,7 @@ class Server {
 			},
 			dataType: 'json',
 			success: data => {
-				console.log(data);
-				log.info('Update was performed');
+				log.info(`Update was performed: ${JSON.stringify(data)}`);
 			}
 		});
 	}

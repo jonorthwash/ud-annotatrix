@@ -13,8 +13,7 @@ function export_(event) {
 
   //Export Corpora to file
   if (server.is_running) {
-      throw new NotImplementedError('corpus::export() not implemented for server interaction');
-      //downloadCorpus();
+    server.download();
   } else {
 
     const link = $('<a>')

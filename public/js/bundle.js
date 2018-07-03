@@ -24883,8 +24883,7 @@ function export_(event) {
 
   //Export Corpora to file
   if (server.is_running) {
-    throw new NotImplementedError('corpus::export() not implemented for server interaction');
-    //downloadCorpus();
+    server.download();
   } else {
 
     var link = $('<a>').attr('download', manager.filename).attr('href', 'data:text/plain; charset=utf-8,' + manager.encode());
@@ -29830,8 +29829,7 @@ var Server = function () {
 				},
 				dataType: 'json',
 				success: function success(data) {
-					console.log(data);
-					log.info('Update was performed');
+					log.info('Update was performed: ' + JSON.stringify(data));
 				}
 			});
 		}

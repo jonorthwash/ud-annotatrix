@@ -22,31 +22,29 @@ gulp.task('js', () => {
 });
 
 gulp.task('uglify', () => {
-  return browserify('src/notatrix.js', {
-      standalone: 'nx'
+  return browserify('src/index.js', {
+      standalone: 'uda'
     })
     .transform('babelify', {
-      presets: ['env'],
-      plugins: ["transform-es5-property-mutators"]
+      presets: ['env']
     })
     .bundle()
-    .pipe(source('notatrix.js'))
+    .pipe(source('bundle.js'))
     .pipe(buffer())
-    .pipe(gulp.dest('build'))
-    .pipe(rename('notatrix.min.js'))
+    .pipe(gulp.dest('public/js'))
+    .pipe(rename('bundle.min.js'))
     .pipe(sourcemaps.init())
     .pipe(uglify())
     .pipe(sourcemaps.write('.', {
-      mapFile: (filename) => {
+      mapFile: filename => {
         return filename.replace(/min\.js/, 'js');
       }
     }))
-    .pipe(gulp.dest('build'));
-})
-
-gulp.task('watch', () => {
-  gulp.watch('src/*.js', gulp.series('uglify', 'js'));
+    .pipe(gulp.dest('public/js'));
 });
 
-gulp.task('default', ['js']);
-//gulp.task('default', gulp.series('uglify', 'js', 'watch'));
+gulp.task('watch', () => {
+  gulp.watch('src/*.js', [/*'uglify', */'js']);
+});
+
+gulp.task('default', [/*'uglify', */'js', 'watch']);
