@@ -55,7 +55,7 @@ def save_corpus():
             logger.warn('/save no db found at {}, creating new one'.format(db_path))
         db = CorpusDB(db_path)
         db.update_db(sent, sent_num)
-        return jsonify()
+        return jsonify({ 'success': 'true' })
     else:
         logger.warn('/save no form received')
     return jsonify()
