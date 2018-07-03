@@ -226,6 +226,8 @@ class GUI {
   }
 
   bind() {
+    if (!this.inBrowser)
+      return;
 
     $('#btnPrevSentence').click(e => {
       manager.prev();

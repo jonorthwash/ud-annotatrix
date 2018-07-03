@@ -27101,7 +27101,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var $ = require('jquery');
 var _ = require('underscore');
-require('./selfcomplete');
 
 var cfg = require('./config');
 var cytoscape = require('./cytoscape/cytoscape');
@@ -27126,6 +27125,9 @@ var Graph = function () {
       layout: null,
       elements: []
     });
+
+    // only do this for in-browser ... add the .selfcomplete method to $()
+    if (gui.inBrowser) require('./selfcomplete');
   }
 
   _createClass(Graph, [{
@@ -27860,6 +27862,8 @@ var GUI = function () {
     value: function bind() {
       var _this = this;
 
+      if (!this.inBrowser) return;
+
       $('#btnPrevSentence').click(function (e) {
         manager.prev();
       });
@@ -28576,7 +28580,7 @@ var Manager = function () {
       console.log("FIX ME");
       this._index = Math.floor(index); // enforce integer
 
-      if (server.is_running) {
+      if (server && server.is_running) {
         server.pull(this.index).then(function (data) {
           console.log(1, data);
         }, function (data) {

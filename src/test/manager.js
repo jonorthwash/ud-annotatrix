@@ -20,6 +20,8 @@ module.exports = () => {
 
   	it(`should navigate between sentences correctly`, () => {
 
+      // dummy server object
+      global.server = null;
 	  	const mgr = new Manager();
   		mgr._sentences = [];
 
@@ -95,6 +97,8 @@ module.exports = () => {
 
   	it(`should insert and remove sentences correctly`, () => {
 
+      // dummy server object
+      global.server = null;
   		const mgr = new Manager();
 
   		expect(mgr.length).to.equal(1);
@@ -161,7 +165,7 @@ module.exports = () => {
   		expect(removed.text).to.equal('test5');
 
   		removed = mgr.removeSentence(2);
-  		expect(mgr.length).to.equal(4);
+  		expect(mgr.length).to.equal(4); // NOTE: extra space
   		expect(mgr.index).to.equal(3);
   		expect(mgr.getSentence(0).text).to.equal('test3');
   		expect(mgr.getSentence(1).text).to.equal('test2');
@@ -209,8 +213,8 @@ module.exports = () => {
   		expect(mgr.getSentence(3)).to.equal(null);
   		expect(removed.text).to.equal('push2');
 
-  		mgr.setSentence(0, 'set1');
   		mgr.setSentence(1, 'set2');
+      mgr.setSentence(0, 'set1');
   		mgr.setSentence(2, 'set3');
   		mgr.setSentence(3, 'set4');
   		mgr.setSentence('set5');
@@ -233,6 +237,8 @@ module.exports = () => {
 				{ str:'one. two! three?', split:['one.', ' two!', ' three?'] },
 			], datum => {
 
+        // dummy server object
+        global.server = null;
 				const mgr = new Manager();
 
 				mgr.parse(datum.str);
@@ -240,7 +246,6 @@ module.exports = () => {
 				expect(mgr.index).to.equal(datum.split.length - 1);
 
 				_.each(datum.split, (chunk, i) => {
-					console.log(mgr.getSentence(i).conllu)
 					expect(mgr.getSentence(i).text).to.equal(utils.reformatParsedText(chunk));
 				});
 			});

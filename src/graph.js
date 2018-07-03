@@ -2,7 +2,6 @@
 
 const $ = require('jquery');
 const _ = require('underscore');
-require('./selfcomplete');
 
 const cfg = require('./config');
 const cytoscape = require('./cytoscape/cytoscape');
@@ -26,6 +25,10 @@ class Graph {
       layout: null,
       elements: []
     });
+
+    // only do this for in-browser ... add the .selfcomplete method to $()
+    if (gui.inBrowser)
+      require('./selfcomplete');
   }
 
   eles() {

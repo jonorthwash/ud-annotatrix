@@ -68,7 +68,7 @@ class Manager {
     console.log("FIX ME");
     this._index = Math.floor(index); // enforce integer
 
-    if (server.is_running) {
+    if (server && server.is_running) {
       server.pull(this.index).then(
         data => {
           console.log(1, data);

@@ -6,8 +6,8 @@ const data = require('./data/index');
 function noop() {}
 
 // regex
-const punct = /([.,?!])/,
-  puncts = /([.,?!]+)/g;
+const punct = /([.?!])/,
+  puncts = /([.?!]+)/g;
 
 module.exports = {
   noop,
@@ -44,5 +44,5 @@ module.exports = {
     }
     return Math.floor(Math.random() * max) + min;
   },
-  
+
 };
