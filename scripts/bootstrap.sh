@@ -27,11 +27,7 @@ fi
 
 # install required python packages
 # without "Requirement already satisfied warnings"
-#
-# NOTE: this sometimes fails on `matplotlib` .. if so, then
-#   just prepend "sudo -H" to the command below
-#
-pip3 install -r requirements.txt 1> >(grep -v 'Requirement already satisfied' 1>&2)
+pip3 install --user -r requirements.txt 1> >(grep -v 'Requirement already satisfied' 1>&2)
 
 # fix matplotlib compatibility in virtualenv
 echo "backend : TkAgg" > ~/.matplotlib/matplotlibrc
@@ -47,5 +43,5 @@ PORT=5316
 DEBUG=DEBUG" > $ENV
 fi
 
-# import js stuff
+# install js stuff
 npm install
