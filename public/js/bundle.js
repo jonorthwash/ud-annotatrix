@@ -23031,1072 +23031,6 @@ module.exports = {
 },{}],338:[function(require,module,exports){
 'use strict';
 
-var jQuery = require('jquery');
-
-/**
- * @preserve jQuery Autocomplete plugin v1.2.6
- * @homepage http://xdsoft.net/jqplugins/autocomplete/
- * @license MIT - MIT-LICENSE.txt
- * (c) 2014, Chupurnov Valeriy <chupurnov@gmail.com>
- */
-(function ($) {
-	'use strict';
-
-	var ARROWLEFT = 37,
-	    ARROWRIGHT = 39,
-	    ARROWUP = 38,
-	    ARROWDOWN = 40,
-	    TAB = 9,
-	    CTRLKEY = 17,
-	    SHIFTKEY = 16,
-	    DEL = 46,
-	    ENTER = 13,
-	    ESC = 27,
-	    BACKSPACE = 8,
-	    AKEY = 65,
-	    CKEY = 67,
-	    VKEY = 86,
-	    ZKEY = 90,
-	    YKEY = 89,
-	    defaultSetting = {},
-
-	//currentInput = false,
-	ctrlDown = false,
-	    shiftDown = false,
-	    publics = {},
-	    accent_map = {
-		'ẚ': 'a', 'Á': 'a', 'á': 'a', 'À': 'a', 'à': 'a', 'Ă': 'a', 'ă': 'a', 'Ắ': 'a', 'ắ': 'a', 'Ằ': 'a', 'ằ': 'a', 'Ẵ': 'a', 'ẵ': 'a', 'Ẳ': 'a',
-		'Ẫ': 'a', 'ẫ': 'a', 'Ẩ': 'a', 'ẩ': 'a', 'Ǎ': 'a', 'ǎ': 'a', 'Å': 'a', 'å': 'a', 'Ǻ': 'a', 'ǻ': 'a', 'Ä': 'a', 'ä': 'a', 'Ǟ': 'a', 'ǟ': 'a',
-		'Ã': 'a', 'ã': 'a', 'Ȧ': 'a', 'ȧ': 'a', 'Ǡ': 'a', 'ǡ': 'a', 'Ą': 'a', 'ą': 'a', 'Ā': 'a', 'ā': 'a', 'Ả': 'a', 'ả': 'a', 'Ȁ': 'a', 'ȁ': 'a',
-		'Ȃ': 'a', 'ȃ': 'a', 'Ạ': 'a', 'ạ': 'a', 'Ặ': 'a', 'ặ': 'a', 'Ậ': 'a', 'ậ': 'a', 'Ḁ': 'a', 'ḁ': 'a', 'Ⱥ': 'a', 'ⱥ': 'a', 'Ǽ': 'a', 'ǽ': 'a',
-		'Ǣ': 'a', 'ǣ': 'a', 'Ḃ': 'b', 'ḃ': 'b', 'Ḅ': 'b', 'ḅ': 'b', 'Ḇ': 'b', 'ḇ': 'b', 'Ƀ': 'b', 'ƀ': 'b', 'ᵬ': 'b', 'Ɓ': 'b', 'ɓ': 'b', 'Ƃ': 'b',
-		'ƃ': 'b', 'Ć': 'c', 'ć': 'c', 'Ĉ': 'c', 'ĉ': 'c', 'Č': 'c', 'č': 'c', 'Ċ': 'c', 'ċ': 'c', 'Ç': 'c', 'ç': 'c', 'Ḉ': 'c', 'ḉ': 'c', 'Ȼ': 'c',
-		'ȼ': 'c', 'Ƈ': 'c', 'ƈ': 'c', 'ɕ': 'c', 'Ď': 'd', 'ď': 'd', 'Ḋ': 'd', 'ḋ': 'd', 'Ḑ': 'd', 'ḑ': 'd', 'Ḍ': 'd', 'ḍ': 'd', 'Ḓ': 'd', 'ḓ': 'd',
-		'Ḏ': 'd', 'ḏ': 'd', 'Đ': 'd', 'đ': 'd', 'ᵭ': 'd', 'Ɖ': 'd', 'ɖ': 'd', 'Ɗ': 'd', 'ɗ': 'd', 'Ƌ': 'd', 'ƌ': 'd', 'ȡ': 'd', 'ð': 'd', 'É': 'e',
-		'Ə': 'e', 'Ǝ': 'e', 'ǝ': 'e', 'é': 'e', 'È': 'e', 'è': 'e', 'Ĕ': 'e', 'ĕ': 'e', 'Ê': 'e', 'ê': 'e', 'Ế': 'e', 'ế': 'e', 'Ề': 'e', 'ề': 'e',
-		'Ễ': 'e', 'ễ': 'e', 'Ể': 'e', 'ể': 'e', 'Ě': 'e', 'ě': 'e', 'Ë': 'e', 'ë': 'e', 'Ẽ': 'e', 'ẽ': 'e', 'Ė': 'e', 'ė': 'e', 'Ȩ': 'e', 'ȩ': 'e',
-		'Ḝ': 'e', 'ḝ': 'e', 'Ę': 'e', 'ę': 'e', 'Ē': 'e', 'ē': 'e', 'Ḗ': 'e', 'ḗ': 'e', 'Ḕ': 'e', 'ḕ': 'e', 'Ẻ': 'e', 'ẻ': 'e', 'Ȅ': 'e', 'ȅ': 'e',
-		'Ȇ': 'e', 'ȇ': 'e', 'Ẹ': 'e', 'ẹ': 'e', 'Ệ': 'e', 'ệ': 'e', 'Ḙ': 'e', 'ḙ': 'e', 'Ḛ': 'e', 'ḛ': 'e', 'Ɇ': 'e', 'ɇ': 'e', 'ɚ': 'e', 'ɝ': 'e',
-		'Ḟ': 'f', 'ḟ': 'f', 'ᵮ': 'f', 'Ƒ': 'f', 'ƒ': 'f', 'Ǵ': 'g', 'ǵ': 'g', 'Ğ': 'g', 'ğ': 'g', 'Ĝ': 'g', 'ĝ': 'g', 'Ǧ': 'g', 'ǧ': 'g', 'Ġ': 'g',
-		'ġ': 'g', 'Ģ': 'g', 'ģ': 'g', 'Ḡ': 'g', 'ḡ': 'g', 'Ǥ': 'g', 'ǥ': 'g', 'Ɠ': 'g', 'ɠ': 'g', 'Ĥ': 'h', 'ĥ': 'h', 'Ȟ': 'h', 'ȟ': 'h', 'Ḧ': 'h',
-		'ḧ': 'h', 'Ḣ': 'h', 'ḣ': 'h', 'Ḩ': 'h', 'ḩ': 'h', 'Ḥ': 'h', 'ḥ': 'h', 'Ḫ': 'h', 'ḫ': 'h', 'H': 'h', '̱': 'h', 'ẖ': 'h', 'Ħ': 'h', 'ħ': 'h',
-		'Ⱨ': 'h', 'ⱨ': 'h', 'Í': 'i', 'í': 'i', 'Ì': 'i', 'ì': 'i', 'Ĭ': 'i', 'ĭ': 'i', 'Î': 'i', 'î': 'i', 'Ǐ': 'i', 'ǐ': 'i', 'Ï': 'i', 'ï': 'i',
-		'Ḯ': 'i', 'ḯ': 'i', 'Ĩ': 'i', 'ĩ': 'i', 'İ': 'i', 'i': 'i', 'Į': 'i', 'į': 'i', 'Ī': 'i', 'ī': 'i', 'Ỉ': 'i', 'ỉ': 'i', 'Ȉ': 'i', 'ȉ': 'i',
-		'Ȋ': 'i', 'ȋ': 'i', 'Ị': 'i', 'ị': 'i', 'Ḭ': 'i', 'ḭ': 'i', 'I': 'i', 'ı': 'i', 'Ɨ': 'i', 'ɨ': 'i', 'Ĵ': 'j', 'ĵ': 'j', 'J': 'j', '̌': 'j',
-		'ǰ': 'j', 'ȷ': 'j', 'Ɉ': 'j', 'ɉ': 'j', 'ʝ': 'j', 'ɟ': 'j', 'ʄ': 'j', 'Ḱ': 'k', 'ḱ': 'k', 'Ǩ': 'k', 'ǩ': 'k', 'Ķ': 'k', 'ķ': 'k', 'Ḳ': 'k',
-		'ḳ': 'k', 'Ḵ': 'k', 'ḵ': 'k', 'Ƙ': 'k', 'ƙ': 'k', 'Ⱪ': 'k', 'ⱪ': 'k', 'Ĺ': 'a', 'ĺ': 'l', 'Ľ': 'l', 'ľ': 'l', 'Ļ': 'l', 'ļ': 'l', 'Ḷ': 'l',
-		'ḷ': 'l', 'Ḹ': 'l', 'ḹ': 'l', 'Ḽ': 'l', 'ḽ': 'l', 'Ḻ': 'l', 'ḻ': 'l', 'Ł': 'l', 'ł': 'l', '̣': 'l', 'Ŀ': 'l',
-		'ŀ': 'l', 'Ƚ': 'l', 'ƚ': 'l', 'Ⱡ': 'l', 'ⱡ': 'l', 'Ɫ': 'l', 'ɫ': 'l', 'ɬ': 'l', 'ɭ': 'l', 'ȴ': 'l', 'Ḿ': 'm', 'ḿ': 'm', 'Ṁ': 'm', 'ṁ': 'm',
-		'Ṃ': 'm', 'ṃ': 'm', 'ɱ': 'm', 'Ń': 'n', 'ń': 'n', 'Ǹ': 'n', 'ǹ': 'n', 'Ň': 'n', 'ň': 'n', 'Ñ': 'n', 'ñ': 'n', 'Ṅ': 'n', 'ṅ': 'n', 'Ņ': 'n',
-		'ņ': 'n', 'Ṇ': 'n', 'ṇ': 'n', 'Ṋ': 'n', 'ṋ': 'n', 'Ṉ': 'n', 'ṉ': 'n', 'Ɲ': 'n', 'ɲ': 'n', 'Ƞ': 'n', 'ƞ': 'n', 'ɳ': 'n', 'ȵ': 'n', 'N': 'n',
-		'̈': 'n', 'n': 'n', 'Ó': 'o', 'ó': 'o', 'Ò': 'o', 'ò': 'o', 'Ŏ': 'o', 'ŏ': 'o', 'Ô': 'o', 'ô': 'o', 'Ố': 'o', 'ố': 'o', 'Ồ': 'o',
-		'ồ': 'o', 'Ỗ': 'o', 'ỗ': 'o', 'Ổ': 'o', 'ổ': 'o', 'Ǒ': 'o', 'ǒ': 'o', 'Ö': 'o', 'ö': 'o', 'Ȫ': 'o', 'ȫ': 'o', 'Ő': 'o', 'ő': 'o', 'Õ': 'o',
-		'õ': 'o', 'Ṍ': 'o', 'ṍ': 'o', 'Ṏ': 'o', 'ṏ': 'o', 'Ȭ': 'o', 'ȭ': 'o', 'Ȯ': 'o', 'ȯ': 'o', 'Ȱ': 'o', 'ȱ': 'o', 'Ø': 'o', 'ø': 'o', 'Ǿ': 'o',
-		'ǿ': 'o', 'Ǫ': 'o', 'ǫ': 'o', 'Ǭ': 'o', 'ǭ': 'o', 'Ō': 'o', 'ō': 'o', 'Ṓ': 'o', 'ṓ': 'o', 'Ṑ': 'o', 'ṑ': 'o', 'Ỏ': 'o', 'ỏ': 'o', 'Ȍ': 'o',
-		'ȍ': 'o', 'Ȏ': 'o', 'ȏ': 'o', 'Ơ': 'o', 'ơ': 'o', 'Ớ': 'o', 'ớ': 'o', 'Ờ': 'o', 'ờ': 'o', 'Ỡ': 'o', 'ỡ': 'o', 'Ở': 'o', 'ở': 'o', 'Ợ': 'o',
-		'ợ': 'o', 'Ọ': 'o', 'ọ': 'o', 'Ộ': 'o', 'ộ': 'o', 'Ɵ': 'o', 'ɵ': 'o', 'Ṕ': 'p', 'ṕ': 'p', 'Ṗ': 'p', 'ṗ': 'p', 'Ᵽ': 'p', 'Ƥ': 'p', 'ƥ': 'p',
-		'P': 'p', '̃': 'p', 'p': 'p', 'ʠ': 'q', 'Ɋ': 'q', 'ɋ': 'q', 'Ŕ': 'r', 'ŕ': 'r', 'Ř': 'r', 'ř': 'r', 'Ṙ': 'r', 'ṙ': 'r', 'Ŗ': 'r',
-		'ŗ': 'r', 'Ȑ': 'r', 'ȑ': 'r', 'Ȓ': 'r', 'ȓ': 'r', 'Ṛ': 'r', 'ṛ': 'r', 'Ṝ': 'r', 'ṝ': 'r', 'Ṟ': 'r', 'ṟ': 'r', 'Ɍ': 'r', 'ɍ': 'r', 'ᵲ': 'r',
-		'ɼ': 'r', 'Ɽ': 'r', 'ɽ': 'r', 'ɾ': 'r', 'ᵳ': 'r', 'ß': 's', 'Ś': 's', 'ś': 's', 'Ṥ': 's', 'ṥ': 's', 'Ŝ': 's', 'ŝ': 's', 'Š': 's', 'š': 's',
-		'Ṧ': 's', 'ṧ': 's', 'Ṡ': 's', 'ṡ': 's', 'ẛ': 's', 'Ş': 's', 'ş': 's', 'Ṣ': 's', 'ṣ': 's', 'Ṩ': 's', 'ṩ': 's', 'Ș': 's', 'ș': 's', 'ʂ': 's',
-		'S': 's', '̩': 's', 's': 's', 'Þ': 't', 'þ': 't', 'Ť': 't', 'ť': 't', 'T': 't', 'ẗ': 't', 'Ṫ': 't', 'ṫ': 't', 'Ţ': 't', 'ţ': 't', 'Ṭ': 't',
-		'ṭ': 't', 'Ț': 't', 'ț': 't', 'Ṱ': 't', 'ṱ': 't', 'Ṯ': 't', 'ṯ': 't', 'Ŧ': 't', 'ŧ': 't', 'Ⱦ': 't', 'ⱦ': 't', 'ᵵ': 't',
-		'ƫ': 't', 'Ƭ': 't', 'ƭ': 't', 'Ʈ': 't', 'ʈ': 't', 'ȶ': 't', 'Ú': 'u', 'ú': 'u', 'Ù': 'u', 'ù': 'u', 'Ŭ': 'u', 'ŭ': 'u', 'Û': 'u', 'û': 'u',
-		'Ǔ': 'u', 'ǔ': 'u', 'Ů': 'u', 'ů': 'u', 'Ü': 'u', 'ü': 'u', 'Ǘ': 'u', 'ǘ': 'u', 'Ǜ': 'u', 'ǜ': 'u', 'Ǚ': 'u', 'ǚ': 'u', 'Ǖ': 'u', 'ǖ': 'u',
-		'Ű': 'u', 'ű': 'u', 'Ũ': 'u', 'ũ': 'u', 'Ṹ': 'u', 'ṹ': 'u', 'Ų': 'u', 'ų': 'u', 'Ū': 'u', 'ū': 'u', 'Ṻ': 'u', 'ṻ': 'u', 'Ủ': 'u', 'ủ': 'u',
-		'Ȕ': 'u', 'ȕ': 'u', 'Ȗ': 'u', 'ȗ': 'u', 'Ư': 'u', 'ư': 'u', 'Ứ': 'u', 'ứ': 'u', 'Ừ': 'u', 'ừ': 'u', 'Ữ': 'u', 'ữ': 'u', 'Ử': 'u', 'ử': 'u',
-		'Ự': 'u', 'ự': 'u', 'Ụ': 'u', 'ụ': 'u', 'Ṳ': 'u', 'ṳ': 'u', 'Ṷ': 'u', 'ṷ': 'u', 'Ṵ': 'u', 'ṵ': 'u', 'Ʉ': 'u', 'ʉ': 'u', 'Ṽ': 'v', 'ṽ': 'v',
-		'Ṿ': 'v', 'ṿ': 'v', 'Ʋ': 'v', 'ʋ': 'v', 'Ẃ': 'w', 'ẃ': 'w', 'Ẁ': 'w', 'ẁ': 'w', 'Ŵ': 'w', 'ŵ': 'w', 'W': 'w', '̊': 'w', 'ẘ': 'w', 'Ẅ': 'w',
-		'ẅ': 'w', 'Ẇ': 'w', 'ẇ': 'w', 'Ẉ': 'w', 'ẉ': 'w', 'Ẍ': 'x', 'ẍ': 'x', 'Ẋ': 'x', 'ẋ': 'x', 'Ý': 'y', 'ý': 'y', 'Ỳ': 'y', 'ỳ': 'y', 'Ŷ': 'y',
-		'ŷ': 'y', 'Y': 'y', 'ẙ': 'y', 'Ÿ': 'y', 'ÿ': 'y', 'Ỹ': 'y', 'ỹ': 'y', 'Ẏ': 'y', 'ẏ': 'y', 'Ȳ': 'y', 'ȳ': 'y', 'Ỷ': 'y', 'ỷ': 'y',
-		'Ỵ': 'y', 'ỵ': 'y', 'ʏ': 'y', 'Ɏ': 'y', 'ɏ': 'y', 'Ƴ': 'y', 'ƴ': 'y', 'Ź': 'z', 'ź': 'z', 'Ẑ': 'z', 'ẑ': 'z', 'Ž': 'z', 'ž': 'z', 'Ż': 'z',
-		'ż': 'z', 'Ẓ': 'z', 'ẓ': 'z', 'Ẕ': 'z', 'ẕ': 'z', 'Ƶ': 'z', 'ƶ': 'z', 'Ȥ': 'z', 'ȥ': 'z', 'ʐ': 'z', 'ʑ': 'z', 'Ⱬ': 'z', 'ⱬ': 'z', 'Ǯ': 'z',
-		'ǯ': 'z', 'ƺ': 'z', '２': '2', '６': '6', 'Ｂ': 'B', 'Ｆ': 'F', 'Ｊ': 'J', 'Ｎ': 'N', 'Ｒ': 'R', 'Ｖ': 'V', 'Ｚ': 'Z', 'ｂ': 'b', 'ｆ': 'f', 'ｊ': 'j',
-		'ｎ': 'n', 'ｒ': 'r', 'ｖ': 'v', 'ｚ': 'z', '１': '1', '５': '5', '９': '9', 'Ａ': 'A', 'Ｅ': 'E', 'Ｉ': 'I', 'Ｍ': 'M', 'Ｑ': 'Q', 'Ｕ': 'U', 'Ｙ': 'Y',
-		'ａ': 'a', 'ｅ': 'e', 'ｉ': 'i', 'ｍ': 'm', 'ｑ': 'q', 'ｕ': 'u', 'ｙ': 'y', '０': '0', '４': '4', '８': '8', 'Ｄ': 'D', 'Ｈ': 'H', 'Ｌ': 'L', 'Ｐ': 'P',
-		'Ｔ': 'T', 'Ｘ': 'X', 'ｄ': 'd', 'ｈ': 'h', 'ｌ': 'l', 'ｐ': 'p', 'ｔ': 't', 'ｘ': 'x', '３': '3', '７': '7', 'Ｃ': 'C', 'Ｇ': 'G', 'Ｋ': 'K', 'Ｏ': 'O',
-		'Ｓ': 'S', 'Ｗ': 'W', 'ｃ': 'c', 'ｇ': 'g', 'ｋ': 'k', 'ｏ': 'o', 'ｓ': 's', 'ｗ': 'w', 'ẳ': 'a', 'Â': 'a', 'â': 'a', 'Ấ': 'a', 'ấ': 'a', 'Ầ': 'a', 'ầ': 'a'
-	};
-
-	if (window.getComputedStyle === undefined) {
-		window.getComputedStyle = function () {
-			function getPixelSize(element, style, property, fontSize) {
-				var sizeWithSuffix = style[property],
-				    size = parseFloat(sizeWithSuffix),
-				    suffix = sizeWithSuffix.split(/\d/)[0],
-				    rootSize;
-
-				fontSize = fontSize !== null ? fontSize : /%|em/.test(suffix) && element.parentElement ? getPixelSize(element.parentElement, element.parentElement.currentStyle, 'fontSize', null) : 16;
-				rootSize = property === 'fontSize' ? fontSize : /width/i.test(property) ? element.clientWidth : element.clientHeight;
-
-				return suffix === 'em' ? size * fontSize : suffix === 'in' ? size * 96 : suffix === 'pt' ? size * 96 / 72 : suffix === '%' ? size / 100 * rootSize : size;
-			}
-
-			function setShortStyleProperty(style, property) {
-				var borderSuffix = property === 'border' ? 'Width' : '',
-				    t = property + 'Top' + borderSuffix,
-				    r = property + 'Right' + borderSuffix,
-				    b = property + 'Bottom' + borderSuffix,
-				    l = property + 'Left' + borderSuffix;
-
-				style[property] = (style[t] === style[r] === style[b] === style[l] ? [style[t]] : style[t] === style[b] && style[l] === style[r] ? [style[t], style[r]] : style[l] === style[r] ? [style[t], style[r], style[b]] : [style[t], style[r], style[b], style[l]]).join(' ');
-			}
-
-			function CSSStyleDeclaration(element) {
-				var currentStyle = element.currentStyle,
-				    style = this,
-				    property,
-				    fontSize = getPixelSize(element, currentStyle, 'fontSize', null);
-
-				for (property in currentStyle) {
-					if (Object.prototype.hasOwnProperty.call(currentStyle, property)) {
-						if (/width|height|margin.|padding.|border.+W/.test(property) && style[property] !== 'auto') {
-							style[property] = getPixelSize(element, currentStyle, property, fontSize) + 'px';
-						} else if (property === 'styleFloat') {
-							style.float = currentStyle[property];
-						} else {
-							style[property] = currentStyle[property];
-						}
-					}
-				}
-
-				setShortStyleProperty(style, 'margin');
-				setShortStyleProperty(style, 'padding');
-				setShortStyleProperty(style, 'border');
-
-				style.fontSize = fontSize + 'px';
-
-				return style;
-			}
-
-			CSSStyleDeclaration.prototype = {
-				constructor: CSSStyleDeclaration,
-				getPropertyPriority: function getPropertyPriority() {},
-				getPropertyValue: function getPropertyValue(prop) {
-					return this[prop] || '';
-				},
-				item: function item() {},
-				removeProperty: function removeProperty() {},
-				setProperty: function setProperty() {},
-				getPropertyCSSValue: function getPropertyCSSValue() {}
-			};
-
-			function getComputedStyle(element) {
-				return new CSSStyleDeclaration(element);
-			}
-
-			return getComputedStyle;
-		}(this);
-	}
-
-	$(document).on('keydown.xdsoftctrl', function (e) {
-		if (e.keyCode === CTRLKEY) {
-			ctrlDown = true;
-		}
-		if (e.keyCode === SHIFTKEY) {
-			ctrlDown = true;
-		}
-	}).on('keyup.xdsoftctrl', function (e) {
-		if (e.keyCode === CTRLKEY) {
-			ctrlDown = false;
-		}
-		if (e.keyCode === SHIFTKEY) {
-			ctrlDown = false;
-		}
-	});
-
-	function accentReplace(s) {
-		if (!s) {
-			return '';
-		}
-		var ret = '',
-		    i;
-		for (i = 0; i < s.length; i += 1) {
-			ret += accent_map[s.charAt(i)] || s.charAt(i);
-		}
-		return ret;
-	}
-
-	function escapeRegExp(str) {
-		return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
-	}
-
-	function getCaretPosition(input) {
-		if (!input) {
-			return;
-		}
-		if (input.selectionStart) {
-			return input.selectionStart;
-		}
-		if (document.selection) {
-			input.focus();
-			var sel = document.selection.createRange(),
-			    selLen = document.selection.createRange().text.length;
-			sel.moveStart('character', -input.value.length);
-			return sel.text.length - selLen;
-		}
-	}
-
-	function setCaretPosition(input, pos) {
-		if (input.setSelectionRange) {
-			input.focus();
-			input.setSelectionRange(pos, pos);
-		} else if (input.createTextRange) {
-			var range = input.createTextRange();
-			range.collapse(true);
-			range.moveEnd('character', pos);
-			range.moveStart('character', pos);
-			range.select();
-		}
-	}
-
-	function isset(value) {
-		return value !== undefined;
-	}
-
-	function safe_call(callback, args, callback2, defaultValue) {
-		if (isset(callback) && !$.isArray(callback)) {
-			return $.isFunction(callback) ? callback.apply(this, args) : defaultValue;
-		}
-		if (isset(callback2)) {
-			return safe_call.call(this, callback2, args);
-		}
-		return defaultValue;
-	};
-
-	function __safe(callbackName, source, args, defaultValue) {
-		var undefinedVar;
-		return safe_call.call(this, isset(this.source[source]) && Object.prototype.hasOwnProperty.call(this.source[source], callbackName) ? this.source[source][callbackName] : undefinedVar, args, function () {
-			return safe_call.call(this, isset(this[callbackName][source]) ? this[callbackName][source] : isset(this[callbackName][0]) ? this[callbackName][0] : Object.prototype.hasOwnProperty.call(this, callbackName) ? this[callbackName] : undefinedVar, args, defaultSetting[callbackName][source] || defaultSetting[callbackName][0] || defaultSetting[callbackName], defaultValue);
-		}, defaultValue);
-	};
-
-	function __get(property, source) {
-		if (!isset(source)) source = 0;
-
-		if ($.isArray(this.source) && isset(this.source[source]) && isset(this.source[source][property])) return this.source[source][property];
-
-		if (isset(this[property])) {
-			if ($.isArray(this[property])) {
-				if (isset(this[property][source])) return this[property][source];
-				if (isset(this[property][0])) return this[property][0];
-				return null;
-			}
-			return this[property];
-		}
-
-		return null;
-	};
-
-	function loadRemote(url, sourceObject, done, debug) {
-		if (sourceObject.xhr) {
-			sourceObject.xhr.abort();
-		}
-		sourceObject.xhr = $.ajax($.extend(true, {
-			url: url,
-			type: 'GET',
-			async: true,
-			cache: false,
-			dataType: 'json'
-		}, sourceObject.ajax)).done(function (data) {
-			done && done.apply(this, $.makeArray(arguments));
-		}).fail(function (jqXHR, textStatus) {
-			if (debug) console.log("Request failed: " + textStatus);
-		});
-	}
-
-	function findRight(data, query) {
-		var right = false,
-		    source;
-
-		for (source = 0; source < data.length; source += 1) {
-			if (right = __safe.call(this, "findRight", source, [data[source], query, source])) {
-				return { right: right, source: source };
-			}
-		}
-
-		return false;
-	}
-
-	function processData(data, query) {
-		var source;
-		preparseData.call(this, data, query);
-
-		for (source = 0; source < data.length; source += 1) {
-			data[source] = __safe.call(this, 'filter', source, [data[source], query, source], data[source]);
-		}
-	};
-
-	function collectData(query, datasource, callback) {
-		var options = this,
-		    source;
-
-		if ($.isFunction(options.source)) {
-			options.source.apply(options, [query, function (items) {
-				datasource = [items];
-				safe_call.call(options, callback, [query]);
-			}, datasource, 0]);
-		} else {
-			for (source = 0; source < options.source.length; source += 1) {
-				if ($.isArray(options.source[source])) {
-					datasource[source] = options.source[source];
-				} else if ($.isFunction(options.source[source])) {
-					(function (source) {
-						options.source[source].apply(options, [query, function (items) {
-							if (!datasource[source]) {
-								datasource[source] = [];
-							}
-
-							if (items && $.isArray(items)) {
-								switch (options.appendMethod) {
-									case 'replace':
-										datasource[source] = items;
-										break;
-									default:
-										datasource[source] = datasource[source].concat(items);
-								}
-							}
-
-							safe_call.call(options, callback, [query]);
-						}, datasource, source]);
-					})(source);
-				} else {
-					switch (options.source[source].type) {
-						case 'remote':
-							if (isset(options.source[source].url)) {
-								if (!isset(options.source[source].minLength) || query.length >= options.source[source].minLength) {
-									var url = __safe.call(options, 'replace', source, [options.source[source].url, query], '');
-									if (!datasource[source]) {
-										datasource[source] = [];
-									}
-									(function (source) {
-										loadRemote(url, options.source[source], function (resp) {
-											datasource[source] = resp;
-											safe_call.call(options, callback, [query]);
-										}, options.debug);
-									})(source);
-								}
-							}
-							break;
-						default:
-							if (isset(options.source[source]['data'])) {
-								datasource[source] = options.source[source]['data'];
-							} else {
-								datasource[source] = options.source[source];
-							}
-					}
-				}
-			}
-		}
-		safe_call.call(options, callback, [query]);
-	};
-
-	function preparseData(data, query) {
-		for (var source = 0; source < data.length; source++) {
-			data[source] = __safe.call(this, 'preparse', source, [data[source], query], data[source]);
-		}
-	};
-
-	function renderData(data, query) {
-		var source,
-		    i,
-		    $div,
-		    $divs = [];
-
-		for (source = 0; source < data.length; source += 1) {
-			for (i = 0; i < data[source].length; i += 1) {
-				if ($divs.length >= this.limit) break;
-
-				$div = $(__safe.call(this, 'render', source, [data[source][i], source, i, query], ''));
-
-				$div.data('source', source);
-				$div.data('pid', i);
-				$div.data('item', data[source][i]);
-
-				$divs.push($div);
-			}
-		}
-
-		return $divs;
-	};
-
-	function getItem($div, dataset) {
-		if (isset($div.data('source')) && isset($div.data('pid')) && isset(dataset[$div.data('source')]) && isset(dataset[$div.data('source')][$div.data('pid')])) {
-			return dataset[$div.data('source')][$div.data('pid')];
-		}
-		return false;
-	};
-
-	function getValue($div, dataset) {
-		var item = getItem($div, dataset);
-
-		if (item) {
-			return __safe.call(this, 'getValue', $div.data('source'), [item, $div.data('source')]);
-		} else {
-			if (isset($div.data('value'))) {
-				return decodeURIComponent($div.data('value'));
-			} else {
-				return $div.html();
-			}
-		}
-	};
-
-	defaultSetting = {
-		minLength: 0,
-		valueKey: 'value',
-		titleKey: 'title',
-		highlight: true,
-
-		showHint: true,
-
-		dropdownWidth: '100%',
-		dropdownStyle: {},
-		itemStyle: {},
-		hintStyle: false,
-		style: false,
-
-		debug: true,
-		openOnFocus: false,
-		closeOnBlur: true,
-
-		autoselect: false,
-
-		accents: true,
-		replaceAccentsForRemote: true,
-
-		limit: 20,
-		visibleLimit: 20,
-		visibleHeight: 0,
-		defaultHeightItem: 30,
-
-		timeoutUpdate: 10,
-
-		get: function get(property, source) {
-			return __get.call(this, property, source);
-		},
-
-		replace: [function (url, query) {
-			if (this.replaceAccentsForRemote) {
-				query = accentReplace(query);
-			}
-			return url.replace('%QUERY%', encodeURIComponent(query));
-		}],
-
-		equal: function equal(value, query) {
-			return query.toLowerCase() == value.substr(0, query.length).toLowerCase();
-		},
-
-		findRight: [function (items, query, source) {
-			var results = [],
-			    value = '',
-			    i;
-			if (items) {
-				for (i = 0; i < items.length; i += 1) {
-					value = __safe.call(this, 'getValue', source, [items[i], source]);
-					if (__safe.call(this, 'equal', source, [value, query, source], false)) {
-						return items[i];
-					}
-				}
-			}
-			return false;
-		}],
-
-		valid: [function (value, query) {
-			if (this.accents) {
-				value = accentReplace(value);
-				query = accentReplace(query);
-			}
-			return value.toLowerCase().indexOf(query.toLowerCase()) != -1;
-		}],
-
-		filter: [function (items, query, source) {
-			var results = [],
-			    value = '',
-			    i;
-			if (items) {
-				for (i = 0; i < items.length; i += 1) {
-					value = isset(items[i][this.get('valueKey', source)]) ? items[i][this.get('valueKey', source)] : items[i].toString();
-					if (__safe.call(this, 'valid', source, [value, query])) {
-						results.push(items[i]);
-					}
-				}
-			}
-			return results;
-		}],
-
-		preparse: function preparse(items) {
-			return items;
-		},
-
-		getValue: [function (item, source) {
-			return isset(item[this.get('valueKey', source)]) ? item[this.get('valueKey', source)] : item.toString();
-		}],
-
-		getTitle: [function (item, source) {
-			return isset(item[this.get('titleKey', source)]) ? item[this.get('titleKey', source)] : item.toString();
-		}],
-
-		render: [function (item, source, pid, query) {
-			var value = __safe.call(this, "getValue", source, [item, source], defaultSetting.getValue[0].call(this, item, source)),
-			    title = __safe.call(this, "getTitle", source, [item, source], defaultSetting.getTitle[0].call(this, item, source)),
-			    _value = '',
-			    _query = '',
-			    _title = '',
-			    hilite_hints = '',
-			    highlighted = '',
-			    c,
-			    h,
-			    i,
-			    spos = 0;
-
-			if (this.highlight) {
-				if (!this.accents) {
-					title = title.replace(new RegExp('(' + escapeRegExp(query) + ')', 'i'), '<b>$1</b>');
-				} else {
-					_title = accentReplace(title).toLowerCase().replace(/[<>]+/g, ''), _query = accentReplace(query).toLowerCase().replace(/[<>]+/g, '');
-
-					hilite_hints = _title.replace(new RegExp(escapeRegExp(_query), 'g'), '<' + _query + '>');
-					for (i = 0; i < hilite_hints.length; i += 1) {
-						c = title.charAt(spos);
-						h = hilite_hints.charAt(i);
-						if (h === '<') {
-							highlighted += '<b>';
-						} else if (h === '>') {
-							highlighted += '</b>';
-						} else {
-							spos += 1;
-							highlighted += c;
-						}
-					}
-					title = highlighted;
-				}
-			}
-
-			return '<div ' + (value == query ? 'class="active"' : '') + ' data-value="' + encodeURIComponent(value) + '">' + title + '</div>';
-		}],
-		appendMethod: 'concat', // supported merge and replace 
-		source: [],
-		afterSelected: function afterSelected() {}
-	};
-	function init(that, options) {
-		if ($(that).hasClass('xdsoft_input')) return;
-
-		var $box = $('<div class="xdsoft_autocomplete"></div>'),
-		    $dropdown = $('<div class="xdsoft_autocomplete_dropdown"></div>'),
-		    $hint = $('<input readonly class="xdsoft_autocomplete_hint"/>'),
-		    $input = $(that),
-		    timer1 = 0,
-		    intervalForVisibility,
-		    dataset = [],
-		    iOpen = false,
-		    value = '',
-		    currentValue = '',
-		    currentSelect = '',
-		    active = null,
-		    pos = 0;
-
-		//it can be used to access settings
-		$input.data('autocomplete_options', options);
-
-		$dropdown.on('mousedown', function (e) {
-			e.preventDefault();
-			e.stopPropagation();
-		}).on('updatescroll.xdsoft', function () {
-			var _act = $dropdown.find('.active');
-			if (!_act.length) {
-				return;
-			}
-
-			var top = _act.position().top,
-			    actHght = _act.outerHeight(true),
-			    scrlTop = $dropdown.scrollTop(),
-			    hght = $dropdown.height();
-
-			if (top < 0) {
-				$dropdown.scrollTop(scrlTop - Math.abs(top));
-			} else if (top + actHght > hght) {
-				$dropdown.scrollTop(scrlTop + top + actHght - hght);
-			}
-		});
-
-		$box.css({
-			'display': $input.css('display'),
-			'width': $input.css('width')
-		});
-
-		if (options.style) $box.css(options.style);
-
-		$input.addClass('xdsoft_input').attr('autocomplete', 'off');
-
-		var xDown = null;
-		var yDown = null;
-		var isSwipe = false;
-		$dropdown.on('mousemove', 'div', function () {
-			if ($(this).hasClass('active')) return true;
-			$dropdown.find('div').removeClass('active');
-			$(this).addClass('active');
-		}).on('mousedown', 'div', function (e) {
-			$dropdown.find('div').removeClass('active');
-			$(this).addClass('active');
-			$input.trigger('pick.xdsoft');
-		}).on('touchstart', 'div', function (e) {
-			xDown = e.originalEvent.touches[0].clientX;
-			yDown = e.originalEvent.touches[0].clientY;
-		}).on('touchend', 'div', function (e) {
-			if (isSwipe === false) {
-				$dropdown.find('div').removeClass('active');
-				$(this).addClass('active');
-				$input.trigger('pick.xdsoft');
-			}
-
-			isSwipe = false;
-		}).on('touchmove', 'div', function (e) {
-			if (!xDown || !yDown) {
-				return;
-			}
-
-			var xUp = e.originalEvent.touches[0].clientX;
-			var yUp = e.originalEvent.touches[0].clientY;
-
-			var xDiff = xDown - xUp;
-			var yDiff = yDown - yUp;
-
-			if (Math.abs(xDiff) > Math.abs(yDiff)) {
-				if (xDiff > 0) {
-					isSwipe = 'left';
-				} else {
-					isSwipe = 'right';
-				}
-			} else {
-				if (yDiff > 0) {
-					isSwipe = 'top';
-				} else {
-					isSwipe = 'bottm';
-				}
-			}
-
-			xDown = null;
-			yDown = null;
-		});
-
-		function manageData() {
-			if ($input.val() != currentValue) {
-				currentValue = $input.val();
-			} else {
-				return;
-			}
-			if (currentValue.length < options.minLength) {
-				$input.trigger('close.xdsoft');
-				return;
-			}
-			collectData.call(options, currentValue, dataset, function (query) {
-				if (query != currentValue) {
-					return;
-				}
-				var right;
-				processData.call(options, dataset, query);
-
-				$input.trigger('updateContent.xdsoft');
-
-				if (options.showHint && currentValue.length && currentValue.length <= $input.prop('size') && (right = findRight.call(options, dataset, currentValue))) {
-					var title = __safe.call(options, 'getTitle', right.source, [right.right, right.source]);
-					title = query + title.substr(query.length);
-					$hint.val(title);
-				} else {
-					$hint.val('');
-				}
-			});
-
-			return;
-		}
-
-		function manageKey(event) {
-			var key = event.keyCode,
-			    right;
-
-			switch (key) {
-				case AKEY:case CKEY:case VKEY:case ZKEY:case YKEY:
-					if (event.shiftKey || event.ctrlKey) {
-						return true;
-					}
-					break;
-				case SHIFTKEY:
-				case CTRLKEY:
-					return true;
-					break;
-				case ARROWRIGHT:
-				case ARROWLEFT:
-					if (ctrlDown || shiftDown || event.shiftKey || event.ctrlKey) {
-						return true;
-					}
-					value = $input.val();
-					pos = getCaretPosition($input[0]);
-					if (key === ARROWRIGHT && pos === value.length) {
-						if (right = findRight.call(options, dataset, value)) {
-							$input.trigger('pick.xdsoft', [__safe.call(options, 'getValue', right.source, [right.right, right.source])]);
-						} else {
-							$input.trigger('pick.xdsoft');
-						}
-						event.preventDefault();
-						return false;
-					}
-					return true;
-				case TAB:
-					return true;
-				case ENTER:
-					if (iOpen) {
-						$input.trigger('pick.xdsoft');
-						event.preventDefault();
-						return false;
-					} else {
-						return true;
-					}
-					break;
-				case ESC:
-					$input.val(currentValue).trigger('close.xdsoft');
-					event.preventDefault();
-					return false;
-				case ARROWDOWN:
-				case ARROWUP:
-					if (!iOpen) {
-						$input.trigger('open.xdsoft');
-						$input.trigger('updateContent.xdsoft');
-						event.preventDefault();
-						return false;
-					}
-
-					active = $dropdown.find('div.active');
-
-					var next = key == ARROWDOWN ? 'next' : 'prev',
-					    timepick = true;
-
-					if (active.length) {
-						active.removeClass('active');
-						if (active[next]().length) {
-							active[next]().addClass('active');
-						} else {
-							$input.val(currentValue);
-							timepick = false;
-						}
-					} else {
-						$dropdown.children().eq(key == ARROWDOWN ? 0 : -1).addClass('active');
-					}
-
-					if (timepick) {
-						$input.trigger('timepick.xdsoft');
-					}
-
-					$dropdown.trigger('updatescroll.xdsoft');
-
-					event.preventDefault();
-					return false;
-			}
-			return;
-		}
-
-		$input.data('xdsoft_autocomplete', dataset).after($box).on('pick.xdsoft', function (event, _value) {
-
-			$input.trigger('timepick.xdsoft', _value);
-
-			currentSelect = currentValue = $input.val();
-
-			$input.trigger('close.xdsoft');
-
-			//currentInput = false;
-
-			active = $dropdown.find('div.active').eq(0);
-
-			if (!active.length) active = $dropdown.children().first();
-
-			$input.trigger('selected.xdsoft', [getItem(active, dataset)]);
-
-			if (options.afterSelected) options.afterSelected();
-		}).on('timepick.xdsoft', function (event, _value) {
-			active = $dropdown.find('div.active');
-
-			if (!active.length) active = $dropdown.children().first();
-
-			if (active.length) {
-				if (!isset(_value)) {
-					$input.val(getValue.call(options, active, dataset));
-				} else {
-					$input.val(_value);
-				}
-				$input.trigger('autocompleted.xdsoft', [getItem(active, dataset)]);
-				$hint.val('');
-				setCaretPosition($input[0], $input.val().length);
-			}
-		}).on('keydown.xdsoft input.xdsoft cut.xdsoft paste.xdsoft', function (event) {
-			var ret = manageKey(event);
-
-			if (ret === false || ret === true) {
-				return ret;
-			}
-
-			setTimeout(function () {
-				manageData();
-			}, 1);
-
-			manageData();
-		}).on('change.xdsoft', function (event) {
-			currentValue = $input.val();
-		});
-
-		currentValue = $input.val();
-
-		collectData.call(options, $input.val(), dataset, function (query) {
-			processData.call(options, dataset, query);
-		});
-
-		if (options.openOnFocus) {
-			$input.on('focusin.xdsoft', function () {
-				$input.trigger('open.xdsoft');
-				$input.trigger('updateContent.xdsoft');
-			});
-		}
-
-		if (options.closeOnBlur) $input.on('focusout.xdsoft', function () {
-			$input.trigger('close.xdsoft');
-		});
-
-		$box.append($input).append($dropdown);
-
-		var olderBackground = false,
-		    timerUpdate = 0;
-
-		$input.on('updateHelperPosition.xdsoft', function () {
-			clearTimeout(timerUpdate);
-			timerUpdate = setTimeout(function () {
-				$box.css({
-					'display': $input.css('display'),
-					'width': $input.css('width')
-				});
-				$dropdown.css($.extend(true, {
-					left: $input.position().left,
-					top: $input.position().top + parseInt($input.css('marginTop')) + parseInt($input[0].offsetHeight),
-					marginLeft: $input.css('marginLeft'),
-					marginRight: $input.css('marginRight'),
-					width: options.dropdownWidth == '100%' ? $input[0].offsetWidth : options.dropdownWidth
-				}, options.dropdownStyle));
-
-				if (options.showHint) {
-					var style = getComputedStyle($input[0], "");
-
-					$hint[0].style.cssText = style.cssText;
-
-					$hint.css({
-						'box-sizing': style.boxSizing,
-						borderStyle: 'solid',
-						borderCollapse: style.borderCollapse,
-						borderLeftWidth: style.borderLeftWidth,
-						borderRightWidth: style.borderRightWidth,
-						borderTopWidth: style.borderTopWidth,
-						borderBottomWidth: style.borderBottomWidth,
-						paddingBottom: style.paddingBottom,
-						marginBottom: style.marginBottom,
-						paddingTop: style.paddingTop,
-						marginTop: style.marginTop,
-						paddingLeft: style.paddingLeft,
-						marginLeft: style.marginLeft,
-						paddingRight: style.paddingRight,
-						marginRight: style.marginRight,
-						maxHeight: style.maxHeight,
-						minHeight: style.minHeight,
-						maxWidth: style.maxWidth,
-						minWidth: style.minWidth,
-						width: style.width,
-						letterSpacing: style.letterSpacing,
-						lineHeight: style.lineHeight,
-						outlineWidth: style.outlineWidth,
-						fontFamily: style.fontFamily,
-						fontVariant: style.fontVariant,
-						fontStyle: $input.css('fontStyle'),
-						fontSize: $input.css('fontSize'),
-						fontWeight: $input.css('fontWeight'),
-						flex: style.flex,
-						justifyContent: style.justifyContent,
-						borderRadius: style.borderRadius,
-						'-webkit-box-shadow': 'none',
-						'box-shadow': 'none'
-					});
-
-					$input.css('font-size', $input.css('fontSize')); // fix bug with em font size
-
-					$hint.innerHeight($input.innerHeight());
-
-					$hint.css($.extend(true, {
-						position: 'absolute',
-						zIndex: '1',
-						borderColor: 'transparent',
-						outlineColor: 'transparent',
-						left: $input.position().left,
-						top: $input.position().top,
-						background: $input.css('background')
-					}, options.hintStyle));
-
-					if (olderBackground !== false) {
-						$hint.css('background', olderBackground);
-					} else {
-						olderBackground = $input.css('background');
-					}
-
-					try {
-						$input[0].style.setProperty('background', 'transparent', 'important');
-					} catch (e) {
-						$input.css('background', 'transparent');
-					}
-
-					$box.append($hint);
-				}
-			}, options.timeoutUpdate || 1);
-		});
-
-		if ($input.is(':visible')) {
-			$input.trigger('updateHelperPosition.xdsoft');
-		} else {
-			intervalForVisibility = setInterval(function () {
-				if ($input.is(':visible')) {
-					$input.trigger('updateHelperPosition.xdsoft');
-					clearInterval(intervalForVisibility);
-				}
-			}, 100);
-		}
-
-		$(window).on('resize', function () {
-			$box.css({
-				'width': 'auto'
-			});
-			$input.trigger('updateHelperPosition.xdsoft');
-		});
-
-		$input.on('close.xdsoft', function () {
-			if (!iOpen) {
-				return;
-			}
-
-			$dropdown.hide();
-
-			$hint.val('');
-
-			if (!options.autoselect) {
-				$input.val(currentValue);
-			}
-
-			iOpen = false;
-
-			//currentInput = false;
-		}).on('updateContent.xdsoft', function () {
-			var out = renderData.call(options, dataset, $input.val()),
-			    hght = 10;
-
-			if (out.length) {
-				$input.trigger('open.xdsoft');
-			} else {
-				$input.trigger('close.xdsoft');
-				return;
-			}
-
-			$(out).each(function () {
-				this.css($.extend(true, {
-					paddingLeft: $input.css('paddingLeft'),
-					paddingRight: $input.css('paddingRight')
-				}, options.itemStyle));
-			});
-
-			$dropdown.html(out);
-
-			if (options.visibleHeight) {
-				hght = options.visibleHeight;
-			} else {
-				hght = options.visibleLimit * ((out[0] ? out[0].outerHeight(true) : 0) || options.defaultHeightItem) + 5;
-			}
-
-			$dropdown.css('maxHeight', hght + 'px');
-		}).on('open.xdsoft', function () {
-			if (iOpen) return;
-
-			$dropdown.show();
-
-			iOpen = true;
-
-			//currentInput = $input;
-		}).on('destroy.xdsoft', function () {
-			$input.removeClass('xdsoft');
-			$box.after($input);
-			$box.remove();
-			clearTimeout(timer1);
-			clearTimeout(intervalForVisibility);
-			//currentInput = false;
-			$input.data('xdsoft_autocomplete', null);
-			$input.off('.xdsoft');
-		});
-	};
-
-	publics = {
-		destroy: function destroy() {
-			return this.trigger('destroy.xdsoft');
-		},
-		update: function update() {
-			return this.trigger('updateHelperPosition.xdsoft');
-		},
-		options: function options(_options) {
-			if (this.data('autocomplete_options') && $.isPlainObject(_options)) {
-				this.data('autocomplete_options', $.extend(true, this.data('autocomplete_options'), _options));
-			}
-			return this;
-		},
-		setSource: function setSource(_newsource, id) {
-			if (this.data('autocomplete_options') && ($.isPlainObject(_newsource) || $.isFunction(_newsource) || $.isArray(_newsource))) {
-				var options = this.data('autocomplete_options'),
-				    dataset = this.data('xdsoft_autocomplete'),
-				    source = options.source;
-				if (id !== undefined && !isNaN(id)) {
-					if ($.isPlainObject(_newsource) || $.isArray(_newsource)) {
-						source[id] = $.extend(true, $.isArray(_newsource) ? [] : {}, _newsource);
-					} else {
-						source[id] = _newsource;
-					}
-				} else {
-					if ($.isFunction(_newsource)) {
-						this.data('autocomplete_options').source = _newsource;
-					} else {
-						$.extend(true, source, _newsource);
-					}
-				}
-
-				collectData.call(options, this.val(), dataset, function (query) {
-					processData.call(options, dataset, query);
-				});
-			}
-			return this;
-		},
-		getSource: function getSource(id) {
-			if (this.data('autocomplete_options')) {
-				var source = this.data('autocomplete_options').source;
-				if (id !== undefined && !isNaN(id) && source[id]) {
-					return source[id];
-				} else {
-					return source;
-				}
-			}
-			return null;
-		}
-	};
-
-	$.fn.autocomplete = function (_options, _second, _third) {
-		if ($.type(_options) === 'string' && publics[_options]) {
-			return publics[_options].call(this, _second, _third);
-		}
-		return this.each(function () {
-			var options = $.extend(true, {}, defaultSetting, _options);
-			init(this, options);
-		});
-	};
-})(jQuery);
-
-},{"jquery":327}],339:[function(require,module,exports){
-'use strict';
-
 /*
  * Logger object
  *
@@ -24316,7 +23250,7 @@ var Log = function () {
 
 module.exports = Log;
 
-},{}],340:[function(require,module,exports){
+},{}],339:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -24328,7 +23262,7 @@ module.exports = {
 	defaultEdgeCoeff: 1
 };
 
-},{}],341:[function(require,module,exports){
+},{}],340:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -24868,7 +23802,7 @@ module.exports = {
 	}
 };
 
-},{"./alerts":337,"./detect":345,"notatrix":330,"underscore":335}],342:[function(require,module,exports){
+},{"./alerts":337,"./detect":344,"notatrix":330,"underscore":335}],341:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -24933,7 +23867,7 @@ module.exports = {
   }
 };
 
-},{"jquery":327}],343:[function(require,module,exports){
+},{"jquery":327}],342:[function(require,module,exports){
 'use strict';
 
 // is defined in a js file, because fetch doesn't work offline in chrome
@@ -25157,7 +24091,7 @@ var CY_STYLE = [{
 
 module.exports = CY_STYLE;
 
-},{}],344:[function(require,module,exports){
+},{}],343:[function(require,module,exports){
 (function (global,setImmediate){
 'use strict';var _typeof2=typeof Symbol==="function"&&typeof Symbol.iterator==="symbol"?function(obj){return typeof obj;}:function(obj){return obj&&typeof Symbol==="function"&&obj.constructor===Symbol&&obj!==Symbol.prototype?"symbol":typeof obj;};(function webpackUniversalModuleDefinition(root,factory){if((typeof exports==='undefined'?'undefined':_typeof2(exports))==='object'&&(typeof module==='undefined'?'undefined':_typeof2(module))==='object')module.exports=factory();else if(typeof define==='function'&&define.amd)define([],factory);else if((typeof exports==='undefined'?'undefined':_typeof2(exports))==='object')exports["cytoscape"]=factory();else root["cytoscape"]=factory();})(typeof self!=='undefined'?self:undefined,function(){return(/******/function(modules){// webpackBootstrap
 /******/// The module cache
@@ -27878,7 +26812,7 @@ for(var j=0;j<props.length;j++){var prop=props[j];style.css(prop.name,prop.value
 }}return style;};module.exports=Stylesheet;/***/},/* 139 *//***/function(module,exports,__webpack_require__){"use strict";module.exports="snapshot-0678d67a83-1529619708361";/***/}]/******/));});
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("timers").setImmediate)
-},{"timers":334}],345:[function(require,module,exports){
+},{"timers":334}],344:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -27932,7 +26866,7 @@ function detectFormat(text) {
 
 module.exports = detectFormat;
 
-},{"underscore":335}],346:[function(require,module,exports){
+},{"underscore":335}],345:[function(require,module,exports){
 'use strict';
 
 /**
@@ -28115,7 +27049,7 @@ module.exports = {
   ParseError: ParseError
 };
 
-},{}],347:[function(require,module,exports){
+},{}],346:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -28158,7 +27092,7 @@ module.exports = {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"underscore":335}],348:[function(require,module,exports){
+},{"underscore":335}],347:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -28167,7 +27101,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var $ = require('jquery');
 var _ = require('underscore');
-require('./autocomplete');
+require('./selfcomplete');
 
 var cfg = require('./config');
 var cytoscape = require('./cytoscape/cytoscape');
@@ -28649,12 +27583,12 @@ function editLabel(target) {
   //console.log(autocompletes)
   //console.log($('#edit').autocomplete)
   // add the edit input
-  $('#edit').val('').focus().val(label).css('top', bbox.y1).css('left', bbox.x1).css('height', bbox.h).css('width', bbox.w + 5).attr('target', target.attr('id')).addClass('activated');
-  /*.autocomplete({
+  $('#edit').val('').focus().val(label).css('top', bbox.y1).css('left', bbox.x1).css('height', bbox.h).css('width', bbox.w + 5).attr('target', target.attr('id')).addClass('activated').selfcomplete({
     lookup: autocompletes,
     tabDisabled: false,
     autoSelectFirst: true,
-    lookupLimit: 5 });*/
+    lookupLimit: 5
+  });
 
   // add the background-mute div
   $('#mute').addClass('activated').css('height', gui.is_vertical ? gui.tokens.length * 50 + 'px' : $(window).width() - 10);
@@ -28701,7 +27635,7 @@ function removeHead(srcId, tarId) {
 
 module.exports = Graph;
 
-},{"./autocomplete":338,"./config":340,"./cy-style":343,"./cytoscape/cytoscape":344,"./errors":346,"./funcs":347,"./sort":353,"./validate":356,"jquery":327,"underscore":335}],349:[function(require,module,exports){
+},{"./config":339,"./cy-style":342,"./cytoscape/cytoscape":343,"./errors":345,"./funcs":346,"./selfcomplete":351,"./sort":353,"./validate":356,"jquery":327,"underscore":335}],348:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -29357,7 +28291,7 @@ var GUI = function () {
 
 module.exports = GUI;
 
-},{"./convert":341,"./corpus":342,"./errors":346,"./funcs":347,"./table":354,"./undo-manager":355,"jquery":327}],350:[function(require,module,exports){
+},{"./convert":340,"./corpus":341,"./errors":345,"./funcs":346,"./table":354,"./undo-manager":355,"jquery":327}],349:[function(require,module,exports){
 'use strict';
 
 require('babel-polyfill');
@@ -29390,7 +28324,7 @@ module.exports = {
 	Log: Log
 };
 
-},{"./browser-logger":339,"./config":340,"./errors":346,"./funcs":347,"./graph":348,"./gui":349,"./manager":351,"./server":352,"babel-polyfill":1,"jquery":327,"notatrix":330,"underscore":335}],351:[function(require,module,exports){
+},{"./browser-logger":338,"./config":339,"./errors":345,"./funcs":346,"./graph":347,"./gui":348,"./manager":350,"./server":352,"babel-polyfill":1,"jquery":327,"notatrix":330,"underscore":335}],350:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -29639,6 +28573,7 @@ var Manager = function () {
         index = this.length - 1;
       }
 
+      console.log("FIX ME");
       this._index = Math.floor(index); // enforce integer
 
       if (server.is_running) {
@@ -29760,12 +28695,1019 @@ function newSentence(text) {
 
 module.exports = Manager;
 
-},{"./config":340,"./detect":345,"./errors":346,"./funcs":347,"./graph":348,"./gui":349,"jquery":327,"notatrix":330,"underscore":335}],352:[function(require,module,exports){
+},{"./config":339,"./detect":344,"./errors":345,"./funcs":346,"./graph":347,"./gui":348,"jquery":327,"notatrix":330,"underscore":335}],351:[function(require,module,exports){
+'use strict';
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+// Note: I had to change the name from [Aa]utocomplete to [Ss]elfcomplete
+// in order to get this to work at the same time as JQuery-UI
+
+/**
+*  Ajax Selfcomplete for jQuery, version 1.4.4
+*  (c) 2017 Tomas Kirda
+*
+*  Ajax Selfcomplete for jQuery is freely distributable under the terms of an MIT-style license.
+*  For details, see the web site: https://github.com/devbridge/jQuery-Selfcomplete
+*/
+
+/*jslint  browser: true, white: true, single: true, this: true, multivar: true */
+/*global define, window, document, jQuery, exports, require */
+
+// Expose plugin as an AMD module if AMD loader is present:
+(function (factory) {
+    "use strict";
+
+    if (typeof define === 'function' && define.amd) {
+        // AMD. Register as an anonymous module.
+        define(['jquery'], factory);
+    } else if ((typeof exports === 'undefined' ? 'undefined' : _typeof(exports)) === 'object' && typeof require === 'function') {
+        // Browserify
+        factory(require('jquery'));
+    } else {
+        // Browser globals
+        factory(jQuery);
+    }
+})(function ($) {
+    'use strict';
+
+    var utils = function () {
+        return {
+            escapeRegExChars: function escapeRegExChars(value) {
+                return value.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&");
+            },
+            createNode: function createNode(containerClass) {
+                var div = document.createElement('div');
+                div.className = containerClass;
+                div.style.position = 'absolute';
+                div.style.display = 'none';
+                return div;
+            }
+        };
+    }(),
+        keys = {
+        ESC: 27,
+        TAB: 9,
+        RETURN: 13,
+        LEFT: 37,
+        UP: 38,
+        RIGHT: 39,
+        DOWN: 40
+    },
+        noop = $.noop;
+
+    function Selfcomplete(el, options) {
+        var that = this;
+
+        // Shared variables:
+        that.element = el;
+        that.el = $(el);
+        that.suggestions = [];
+        that.badQueries = [];
+        that.selectedIndex = -1;
+        that.currentValue = that.element.value;
+        that.timeoutId = null;
+        that.cachedResponse = {};
+        that.onChangeTimeout = null;
+        that.onChange = null;
+        that.isLocal = false;
+        that.suggestionsContainer = null;
+        that.noSuggestionsContainer = null;
+        that.options = $.extend({}, Selfcomplete.defaults, options);
+        that.classes = {
+            selected: 'selfcomplete-selected',
+            suggestion: 'selfcomplete-suggestion'
+        };
+        that.hint = null;
+        that.hintValue = '';
+        that.selection = null;
+
+        // Initialize and set options:
+        that.initialize();
+        that.setOptions(options);
+    }
+
+    Selfcomplete.utils = utils;
+
+    $.Selfcomplete = Selfcomplete;
+
+    Selfcomplete.defaults = {
+        ajaxSettings: {},
+        autoSelectFirst: false,
+        appendTo: 'body',
+        serviceUrl: null,
+        lookup: null,
+        onSelect: null,
+        width: 'auto',
+        minChars: 1,
+        maxHeight: 300,
+        deferRequestBy: 0,
+        params: {},
+        formatResult: _formatResult,
+        formatGroup: _formatGroup,
+        delimiter: null,
+        zIndex: 9999,
+        type: 'GET',
+        noCache: false,
+        onSearchStart: noop,
+        onSearchComplete: noop,
+        onSearchError: noop,
+        preserveInput: false,
+        containerClass: 'selfcomplete-suggestions',
+        tabDisabled: false,
+        dataType: 'text',
+        currentRequest: null,
+        triggerSelectOnValidInput: true,
+        preventBadQueries: true,
+        lookupFilter: _lookupFilter,
+        paramName: 'query',
+        transformResult: _transformResult,
+        showNoSuggestionNotice: false,
+        noSuggestionNotice: 'No results',
+        orientation: 'bottom',
+        forceFixPosition: false
+    };
+
+    function _lookupFilter(suggestion, originalQuery, queryLowerCase) {
+        return suggestion.value.toLowerCase().startsWith(queryLowerCase) !== false;
+    };
+
+    function _transformResult(response) {
+        return typeof response === 'string' ? $.parseJSON(response) : response;
+    };
+
+    function _formatResult(suggestion, currentValue) {
+        // Do not replace anything if the current value is empty
+        if (!currentValue) {
+            return suggestion.value;
+        }
+
+        var pattern = '(' + utils.escapeRegExChars(currentValue) + ')';
+
+        return suggestion.value.replace(new RegExp(pattern, 'gi'), '<strong>$1<\/strong>').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/&lt;(\/?strong)&gt;/g, '<$1>');
+    };
+
+    function _formatGroup(suggestion, category) {
+        return '<div class="selfcomplete-group">' + category + '</div>';
+    };
+
+    Selfcomplete.prototype = {
+
+        initialize: function initialize() {
+            var that = this,
+                suggestionSelector = '.' + that.classes.suggestion,
+                selected = that.classes.selected,
+                options = that.options,
+                container;
+
+            // Remove selfcomplete attribute to prevent native suggestions:
+            that.element.setAttribute('selfcomplete', 'off');
+
+            // html() deals with many types: htmlString or Element or Array or jQuery
+            that.noSuggestionsContainer = $('<div class="selfcomplete-no-suggestion"></div>').html(this.options.noSuggestionNotice).get(0);
+
+            that.suggestionsContainer = Selfcomplete.utils.createNode(options.containerClass);
+
+            container = $(that.suggestionsContainer);
+
+            container.appendTo(options.appendTo || 'body');
+
+            // Only set width if it was provided:
+            if (options.width !== 'auto') {
+                container.css('width', options.width);
+            }
+
+            // Listen for mouse over event on suggestions list:
+            container.on('mouseover.selfcomplete', suggestionSelector, function () {
+                that.activate($(this).data('index'));
+            });
+
+            // Deselect active element when mouse leaves suggestions container:
+            container.on('mouseout.selfcomplete', function () {
+                that.selectedIndex = -1;
+                container.children('.' + selected).removeClass(selected);
+            });
+
+            // Listen for click event on suggestions list:
+            container.on('click.selfcomplete', suggestionSelector, function () {
+                that.select($(this).data('index'));
+            });
+
+            container.on('click.selfcomplete', function () {
+                clearTimeout(that.blurTimeoutId);
+            });
+
+            that.fixPositionCapture = function () {
+                if (that.visible) {
+                    that.fixPosition();
+                }
+            };
+
+            $(window).on('resize.selfcomplete', that.fixPositionCapture);
+
+            that.el.on('keydown.selfcomplete', function (e) {
+                that.onKeyPress(e);
+            });
+            that.el.on('keyup.selfcomplete', function (e) {
+                that.onKeyUp(e);
+            });
+            that.el.on('blur.selfcomplete', function () {
+                that.onBlur();
+            });
+            that.el.on('focus.selfcomplete', function () {
+                that.onFocus();
+            });
+            that.el.on('change.selfcomplete', function (e) {
+                that.onKeyUp(e);
+            });
+            that.el.on('input.selfcomplete', function (e) {
+                that.onKeyUp(e);
+            });
+        },
+
+        onFocus: function onFocus() {
+            var that = this;
+
+            that.fixPosition();
+
+            if (that.el.val().length >= that.options.minChars) {
+                that.onValueChange();
+            }
+        },
+
+        onBlur: function onBlur() {
+            var that = this;
+
+            // If user clicked on a suggestion, hide() will
+            // be canceled, otherwise close suggestions
+            that.blurTimeoutId = setTimeout(function () {
+                that.hide();
+            }, 200);
+        },
+
+        abortAjax: function abortAjax() {
+            var that = this;
+            if (that.currentRequest) {
+                that.currentRequest.abort();
+                that.currentRequest = null;
+            }
+        },
+
+        setOptions: function setOptions(suppliedOptions) {
+            var that = this,
+                options = $.extend({}, that.options, suppliedOptions);
+
+            that.isLocal = Array.isArray(options.lookup);
+
+            if (that.isLocal) {
+                options.lookup = that.verifySuggestionsFormat(options.lookup);
+            }
+
+            options.orientation = that.validateOrientation(options.orientation, 'bottom');
+
+            // Adjust height, width and z-index:
+            $(that.suggestionsContainer).css({
+                'max-height': options.maxHeight + 'px',
+                'width': options.width + 'px',
+                'z-index': options.zIndex
+            });
+
+            this.options = options;
+        },
+
+        clearCache: function clearCache() {
+            this.cachedResponse = {};
+            this.badQueries = [];
+        },
+
+        clear: function clear() {
+            this.clearCache();
+            this.currentValue = '';
+            this.suggestions = [];
+        },
+
+        disable: function disable() {
+            var that = this;
+            that.disabled = true;
+            clearTimeout(that.onChangeTimeout);
+            that.abortAjax();
+        },
+
+        enable: function enable() {
+            this.disabled = false;
+        },
+
+        fixPosition: function fixPosition() {
+            // Use only when container has already its content
+
+            var that = this,
+                $container = $(that.suggestionsContainer),
+                containerParent = $container.parent().get(0);
+            // Fix position automatically when appended to body.
+            // In other cases force parameter must be given.
+            if (containerParent !== document.body && !that.options.forceFixPosition) {
+                return;
+            }
+
+            // Choose orientation
+            var orientation = that.options.orientation,
+                containerHeight = $container.outerHeight(),
+                height = that.el.outerHeight(),
+                offset = that.el.offset(),
+                styles = { 'top': offset.top, 'left': offset.left };
+
+            if (orientation === 'auto') {
+                var viewPortHeight = $(window).height(),
+                    scrollTop = $(window).scrollTop(),
+                    topOverflow = -scrollTop + offset.top - containerHeight,
+                    bottomOverflow = scrollTop + viewPortHeight - (offset.top + height + containerHeight);
+
+                orientation = Math.max(topOverflow, bottomOverflow) === topOverflow ? 'top' : 'bottom';
+            }
+
+            if (orientation === 'top') {
+                styles.top += -containerHeight;
+            } else {
+                styles.top += height;
+            }
+
+            // If container is not positioned to body,
+            // correct its position using offset parent offset
+            if (containerParent !== document.body) {
+                var opacity = $container.css('opacity'),
+                    parentOffsetDiff;
+
+                if (!that.visible) {
+                    $container.css('opacity', 0).show();
+                }
+
+                parentOffsetDiff = $container.offsetParent().offset();
+                styles.top -= parentOffsetDiff.top;
+                styles.left -= parentOffsetDiff.left;
+
+                if (!that.visible) {
+                    $container.css('opacity', opacity).hide();
+                }
+            }
+
+            if (that.options.width === 'auto') {
+                styles.width = that.el.outerWidth() + 'px';
+            }
+
+            $container.css(styles);
+        },
+
+        isCursorAtEnd: function isCursorAtEnd() {
+            var that = this,
+                valLength = that.el.val().length,
+                selectionStart = that.element.selectionStart,
+                range;
+
+            if (typeof selectionStart === 'number') {
+                return selectionStart === valLength;
+            }
+            if (document.selection) {
+                range = document.selection.createRange();
+                range.moveStart('character', -valLength);
+                return valLength === range.text.length;
+            }
+            return true;
+        },
+
+        onKeyPress: function onKeyPress(e) {
+            var that = this;
+
+            // If suggestions are hidden and user presses arrow down, display suggestions:
+            if (!that.disabled && !that.visible && e.which === keys.DOWN && that.currentValue) {
+                that.suggest();
+                return;
+            }
+
+            if (that.disabled || !that.visible) {
+                return;
+            }
+
+            switch (e.which) {
+                case keys.ESC:
+                    that.el.val(that.currentValue);
+                    that.hide();
+                    break;
+                case keys.RIGHT:
+                    if (that.hint && that.options.onHint && that.isCursorAtEnd()) {
+                        that.selectHint();
+                        break;
+                    }
+                    return;
+                case keys.TAB:
+                    if (that.hint && that.options.onHint) {
+                        that.selectHint();
+                        return;
+                    }
+                    if (that.selectedIndex === -1) {
+                        that.hide();
+                        return;
+                    }
+                    that.select(that.selectedIndex);
+                    if (that.options.tabDisabled === false) {
+                        return;
+                    }
+                    break;
+                case keys.RETURN:
+                    if (that.selectedIndex === -1) {
+                        that.hide();
+                        return;
+                    }
+                    that.select(that.selectedIndex);
+                    break;
+                case keys.UP:
+                    that.moveUp();
+                    break;
+                case keys.DOWN:
+                    that.moveDown();
+                    break;
+                default:
+                    return;
+            }
+
+            // Cancel event if function did not return:
+            e.stopImmediatePropagation();
+            e.preventDefault();
+        },
+
+        onKeyUp: function onKeyUp(e) {
+            var that = this;
+
+            if (that.disabled) {
+                return;
+            }
+
+            switch (e.which) {
+                case keys.UP:
+                case keys.DOWN:
+                    return;
+            }
+
+            clearTimeout(that.onChangeTimeout);
+
+            if (that.currentValue !== that.el.val()) {
+                that.findBestHint();
+                if (that.options.deferRequestBy > 0) {
+                    // Defer lookup in case when value changes very quickly:
+                    that.onChangeTimeout = setTimeout(function () {
+                        that.onValueChange();
+                    }, that.options.deferRequestBy);
+                } else {
+                    that.onValueChange();
+                }
+            }
+        },
+
+        onValueChange: function onValueChange() {
+            if (this.ignoreValueChange) {
+                this.ignoreValueChange = false;
+                return;
+            }
+
+            var that = this,
+                options = that.options,
+                value = that.el.val(),
+                query = that.getQuery(value);
+
+            if (that.selection && that.currentValue !== query) {
+                that.selection = null;
+                (options.onInvalidateSelection || $.noop).call(that.element);
+            }
+
+            clearTimeout(that.onChangeTimeout);
+            that.currentValue = value;
+            that.selectedIndex = -1;
+
+            // Check existing suggestion for the match before proceeding:
+            if (options.triggerSelectOnValidInput && that.isExactMatch(query)) {
+                that.select(0);
+                return;
+            }
+
+            if (query.length < options.minChars) {
+                that.hide();
+            } else {
+                that.getSuggestions(query);
+            }
+        },
+
+        isExactMatch: function isExactMatch(query) {
+            var suggestions = this.suggestions;
+
+            return suggestions.length === 1 && suggestions[0].value.toLowerCase() === query.toLowerCase();
+        },
+
+        getQuery: function getQuery(value) {
+            var delimiter = this.options.delimiter,
+                parts;
+
+            if (!delimiter) {
+                return value;
+            }
+            parts = value.split(delimiter);
+            return $.trim(parts[parts.length - 1]);
+        },
+
+        getSuggestionsLocal: function getSuggestionsLocal(query) {
+            var that = this,
+                options = that.options,
+                queryLowerCase = query.toLowerCase(),
+                filter = options.lookupFilter,
+                limit = parseInt(options.lookupLimit, 10),
+                data;
+
+            data = {
+                suggestions: $.grep(options.lookup, function (suggestion) {
+                    return filter(suggestion, query, queryLowerCase);
+                })
+            };
+
+            if (limit && data.suggestions.length > limit) {
+                data.suggestions = data.suggestions.slice(0, limit);
+            }
+
+            return data;
+        },
+
+        getSuggestions: function getSuggestions(q) {
+            var response,
+                that = this,
+                options = that.options,
+                serviceUrl = options.serviceUrl,
+                params,
+                cacheKey,
+                ajaxSettings;
+
+            options.params[options.paramName] = q;
+
+            if (options.onSearchStart.call(that.element, options.params) === false) {
+                return;
+            }
+
+            params = options.ignoreParams ? null : options.params;
+
+            if ($.isFunction(options.lookup)) {
+                options.lookup(q, function (data) {
+                    that.suggestions = data.suggestions;
+                    that.suggest();
+                    options.onSearchComplete.call(that.element, q, data.suggestions);
+                });
+                return;
+            }
+
+            if (that.isLocal) {
+                response = that.getSuggestionsLocal(q);
+            } else {
+                if ($.isFunction(serviceUrl)) {
+                    serviceUrl = serviceUrl.call(that.element, q);
+                }
+                cacheKey = serviceUrl + '?' + $.param(params || {});
+                response = that.cachedResponse[cacheKey];
+            }
+
+            if (response && Array.isArray(response.suggestions)) {
+                that.suggestions = response.suggestions;
+                that.suggest();
+                options.onSearchComplete.call(that.element, q, response.suggestions);
+            } else if (!that.isBadQuery(q)) {
+                that.abortAjax();
+
+                ajaxSettings = {
+                    url: serviceUrl,
+                    data: params,
+                    type: options.type,
+                    dataType: options.dataType
+                };
+
+                $.extend(ajaxSettings, options.ajaxSettings);
+
+                that.currentRequest = $.ajax(ajaxSettings).done(function (data) {
+                    var result;
+                    that.currentRequest = null;
+                    result = options.transformResult(data, q);
+                    that.processResponse(result, q, cacheKey);
+                    options.onSearchComplete.call(that.element, q, result.suggestions);
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    options.onSearchError.call(that.element, q, jqXHR, textStatus, errorThrown);
+                });
+            } else {
+                options.onSearchComplete.call(that.element, q, []);
+            }
+        },
+
+        isBadQuery: function isBadQuery(q) {
+            if (!this.options.preventBadQueries) {
+                return false;
+            }
+
+            var badQueries = this.badQueries,
+                i = badQueries.length;
+
+            while (i--) {
+                if (q.indexOf(badQueries[i]) === 0) {
+                    return true;
+                }
+            }
+
+            return false;
+        },
+
+        hide: function hide() {
+            var that = this,
+                container = $(that.suggestionsContainer);
+
+            if ($.isFunction(that.options.onHide) && that.visible) {
+                that.options.onHide.call(that.element, container);
+            }
+
+            that.visible = false;
+            that.selectedIndex = -1;
+            clearTimeout(that.onChangeTimeout);
+            $(that.suggestionsContainer).hide();
+            that.signalHint(null);
+        },
+
+        suggest: function suggest() {
+            if (!this.suggestions.length) {
+                if (this.options.showNoSuggestionNotice) {
+                    this.noSuggestions();
+                } else {
+                    this.hide();
+                }
+                return;
+            }
+
+            var that = this,
+                options = that.options,
+                groupBy = options.groupBy,
+                formatResult = options.formatResult,
+                value = that.getQuery(that.currentValue),
+                className = that.classes.suggestion,
+                classSelected = that.classes.selected,
+                container = $(that.suggestionsContainer),
+                noSuggestionsContainer = $(that.noSuggestionsContainer),
+                beforeRender = options.beforeRender,
+                html = '',
+                category,
+                formatGroup = function formatGroup(suggestion, index) {
+                var currentCategory = suggestion.data[groupBy];
+
+                if (category === currentCategory) {
+                    return '';
+                }
+
+                category = currentCategory;
+
+                return options.formatGroup(suggestion, category);
+            };
+
+            if (options.triggerSelectOnValidInput && that.isExactMatch(value)) {
+                that.select(0);
+                return;
+            }
+
+            // Build suggestions inner HTML:
+            $.each(that.suggestions, function (i, suggestion) {
+                if (groupBy) {
+                    html += formatGroup(suggestion, value, i);
+                }
+
+                html += '<div class="' + className + '" data-index="' + i + '">' + formatResult(suggestion, value, i) + '</div>';
+            });
+
+            this.adjustContainerWidth();
+
+            noSuggestionsContainer.detach();
+            container.html(html);
+
+            if ($.isFunction(beforeRender)) {
+                beforeRender.call(that.element, container, that.suggestions);
+            }
+
+            that.fixPosition();
+            container.show();
+
+            // Select first value by default:
+            if (options.autoSelectFirst) {
+                that.selectedIndex = 0;
+                container.scrollTop(0);
+                container.children('.' + className).first().addClass(classSelected);
+            }
+
+            that.visible = true;
+            that.findBestHint();
+        },
+
+        noSuggestions: function noSuggestions() {
+            var that = this,
+                beforeRender = that.options.beforeRender,
+                container = $(that.suggestionsContainer),
+                noSuggestionsContainer = $(that.noSuggestionsContainer);
+
+            this.adjustContainerWidth();
+
+            // Some explicit steps. Be careful here as it easy to get
+            // noSuggestionsContainer removed from DOM if not detached properly.
+            noSuggestionsContainer.detach();
+
+            // clean suggestions if any
+            container.empty();
+            container.append(noSuggestionsContainer);
+
+            if ($.isFunction(beforeRender)) {
+                beforeRender.call(that.element, container, that.suggestions);
+            }
+
+            that.fixPosition();
+
+            container.show();
+            that.visible = true;
+        },
+
+        adjustContainerWidth: function adjustContainerWidth() {
+            var that = this,
+                options = that.options,
+                width,
+                container = $(that.suggestionsContainer);
+
+            // If width is auto, adjust width before displaying suggestions,
+            // because if instance was created before input had width, it will be zero.
+            // Also it adjusts if input width has changed.
+            if (options.width === 'auto') {
+                width = that.el.outerWidth();
+                container.css('width', width > 0 ? width : 300);
+            } else if (options.width === 'flex') {
+                // Trust the source! Unset the width property so it will be the max length
+                // the containing elements.
+                container.css('width', '');
+            }
+        },
+
+        findBestHint: function findBestHint() {
+            var that = this,
+                value = that.el.val().toLowerCase(),
+                bestMatch = null;
+
+            if (!value) {
+                return;
+            }
+
+            $.each(that.suggestions, function (i, suggestion) {
+                var foundMatch = suggestion.value.toLowerCase().indexOf(value) === 0;
+                if (foundMatch) {
+                    bestMatch = suggestion;
+                }
+                return !foundMatch;
+            });
+
+            that.signalHint(bestMatch);
+        },
+
+        signalHint: function signalHint(suggestion) {
+            var hintValue = '',
+                that = this;
+            if (suggestion) {
+                hintValue = that.currentValue + suggestion.value.substr(that.currentValue.length);
+            }
+            if (that.hintValue !== hintValue) {
+                that.hintValue = hintValue;
+                that.hint = suggestion;
+                (this.options.onHint || $.noop)(hintValue);
+            }
+        },
+
+        verifySuggestionsFormat: function verifySuggestionsFormat(suggestions) {
+            // If suggestions is string array, convert them to supported format:
+            if (suggestions.length && typeof suggestions[0] === 'string') {
+                return $.map(suggestions, function (value) {
+                    return { value: value, data: null };
+                });
+            }
+
+            return suggestions;
+        },
+
+        validateOrientation: function validateOrientation(orientation, fallback) {
+            orientation = $.trim(orientation || '').toLowerCase();
+
+            if ($.inArray(orientation, ['auto', 'bottom', 'top']) === -1) {
+                orientation = fallback;
+            }
+
+            return orientation;
+        },
+
+        processResponse: function processResponse(result, originalQuery, cacheKey) {
+            var that = this,
+                options = that.options;
+
+            result.suggestions = that.verifySuggestionsFormat(result.suggestions);
+
+            // Cache results if cache is not disabled:
+            if (!options.noCache) {
+                that.cachedResponse[cacheKey] = result;
+                if (options.preventBadQueries && !result.suggestions.length) {
+                    that.badQueries.push(originalQuery);
+                }
+            }
+
+            // Return if originalQuery is not matching current query:
+            if (originalQuery !== that.getQuery(that.currentValue)) {
+                return;
+            }
+
+            that.suggestions = result.suggestions;
+            that.suggest();
+        },
+
+        activate: function activate(index) {
+            var that = this,
+                activeItem,
+                selected = that.classes.selected,
+                container = $(that.suggestionsContainer),
+                children = container.find('.' + that.classes.suggestion);
+
+            container.find('.' + selected).removeClass(selected);
+
+            that.selectedIndex = index;
+
+            if (that.selectedIndex !== -1 && children.length > that.selectedIndex) {
+                activeItem = children.get(that.selectedIndex);
+                $(activeItem).addClass(selected);
+                return activeItem;
+            }
+
+            return null;
+        },
+
+        selectHint: function selectHint() {
+            var that = this,
+                i = $.inArray(that.hint, that.suggestions);
+
+            that.select(i);
+        },
+
+        select: function select(i) {
+            var that = this;
+            that.hide();
+            that.onSelect(i);
+        },
+
+        moveUp: function moveUp() {
+            var that = this;
+
+            if (that.selectedIndex === -1) {
+                return;
+            }
+
+            if (that.selectedIndex === 0) {
+                $(that.suggestionsContainer).children().first().removeClass(that.classes.selected);
+                that.selectedIndex = -1;
+                that.ignoreValueChange = false;
+                that.el.val(that.currentValue);
+                that.findBestHint();
+                return;
+            }
+
+            that.adjustScroll(that.selectedIndex - 1);
+        },
+
+        moveDown: function moveDown() {
+            var that = this;
+
+            if (that.selectedIndex === that.suggestions.length - 1) {
+                return;
+            }
+
+            that.adjustScroll(that.selectedIndex + 1);
+        },
+
+        adjustScroll: function adjustScroll(index) {
+            var that = this,
+                activeItem = that.activate(index);
+
+            if (!activeItem) {
+                return;
+            }
+
+            var offsetTop,
+                upperBound,
+                lowerBound,
+                heightDelta = $(activeItem).outerHeight();
+
+            offsetTop = activeItem.offsetTop;
+            upperBound = $(that.suggestionsContainer).scrollTop();
+            lowerBound = upperBound + that.options.maxHeight - heightDelta;
+
+            if (offsetTop < upperBound) {
+                $(that.suggestionsContainer).scrollTop(offsetTop);
+            } else if (offsetTop > lowerBound) {
+                $(that.suggestionsContainer).scrollTop(offsetTop - that.options.maxHeight + heightDelta);
+            }
+
+            if (!that.options.preserveInput) {
+                // During onBlur event, browser will trigger "change" event,
+                // because value has changed, to avoid side effect ignore,
+                // that event, so that correct suggestion can be selected
+                // when clicking on suggestion with a mouse
+                that.ignoreValueChange = true;
+                that.el.val(that.getValue(that.suggestions[index].value));
+            }
+
+            that.signalHint(null);
+        },
+
+        onSelect: function onSelect(index) {
+            var that = this,
+                onSelectCallback = that.options.onSelect,
+                suggestion = that.suggestions[index];
+
+            that.currentValue = that.getValue(suggestion.value);
+
+            if (that.currentValue !== that.el.val() && !that.options.preserveInput) {
+                that.el.val(that.currentValue);
+            }
+
+            that.signalHint(null);
+            that.suggestions = [];
+            that.selection = suggestion;
+
+            if ($.isFunction(onSelectCallback)) {
+                onSelectCallback.call(that.element, suggestion);
+            }
+        },
+
+        getValue: function getValue(value) {
+            var that = this,
+                delimiter = that.options.delimiter,
+                currentValue,
+                parts;
+
+            if (!delimiter) {
+                return value;
+            }
+
+            currentValue = that.currentValue;
+            parts = currentValue.split(delimiter);
+
+            if (parts.length === 1) {
+                return value;
+            }
+
+            return currentValue.substr(0, currentValue.length - parts[parts.length - 1].length) + value;
+        },
+
+        dispose: function dispose() {
+            var that = this;
+            that.el.off('.selfcomplete').removeData('selfcomplete');
+            $(window).off('resize.selfcomplete', that.fixPositionCapture);
+            $(that.suggestionsContainer).remove();
+        }
+    };
+
+    // Create chainable jQuery plugin:
+    console.log($.fn);
+    $.fn.devbridgeSelfcomplete = function (options, args) {
+        var dataKey = 'selfcomplete';
+        // If function invoked without argument return
+        // instance of the first matched element:
+        if (!arguments.length) {
+            return this.first().data(dataKey);
+        }
+
+        return this.each(function () {
+            var inputElement = $(this),
+                instance = inputElement.data(dataKey);
+
+            if (typeof options === 'string') {
+                if (instance && typeof instance[options] === 'function') {
+                    instance[options](args);
+                }
+            } else {
+                // If instance already exists, destroy it:
+                if (instance && instance.dispose) {
+                    instance.dispose();
+                }
+                instance = new Selfcomplete(this, options);
+                inputElement.data(dataKey, instance);
+            }
+        });
+    };
+
+    // Don't overwrite if it already exists
+    if (!$.fn.selfcomplete) {
+        $.fn.selfcomplete = $.fn.devbridgeSelfcomplete;
+    }
+});
+
+},{"jquery":327}],352:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -29835,57 +29777,36 @@ var Server = function () {
 		}
 	}, {
 		key: 'pull',
-		value: function () {
-			var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(sentNum) {
-				return regeneratorRuntime.wrap(function _callee$(_context) {
-					while (1) {
-						switch (_context.prev = _context.next) {
-							case 0:
-								if (this.is_running) {
-									_context.next = 2;
-									break;
-								}
+		value: function pull(sentNum) {
+			if (!this.is_running) return null;
 
-								return _context.abrupt('return', null);
+			return $.ajax({
+				type: 'POST',
+				url: '/load',
+				data: {
+					treebank_id: this.treebank_id,
+					sentNum: sentNum
+				},
+				dataType: 'json',
+				success: function success(data) {
+					console.log(data);
+					return data;
 
-							case 2:
-								return _context.abrupt('return', $.ajax({
-									type: 'POST',
-									url: '/load',
-									data: {
-										treebank_id: this.treebank_id,
-										sentNum: sentNum
-									},
-									dataType: 'json',
-									success: function success(data) {
-										console.log(data);
-										return data;
+					/*
+     if (data['content']) {
+     	const sentence = data['content'],
+     			max = data['max'];
+     	$('#text-data').val(sentence);
+     	$('#total-sentences').html(max);
+     	AVAILABLE_SENTENCES = max;
+     }*/
+				}
+			});
 
-										/*
-          if (data['content']) {
-          	const sentence = data['content'],
-          			max = data['max'];
-          	$('#text-data').val(sentence);
-          	$('#total-sentences').html(max);
-          	AVAILABLE_SENTENCES = max;
-          }*/
-									}
-								}));
-
-							case 3:
-							case 'end':
-								return _context.stop();
-						}
-					}
-				}, _callee, this);
-			}));
-
-			function pull(_x) {
-				return _ref.apply(this, arguments);
-			}
-
-			return pull;
-		}()
+			/*
+   $('#current-sentence').val(sentNum);
+   CURRENT_SENTENCE = sentNum;*/
+		}
 	}, {
 		key: 'download',
 		value: function download() {
@@ -30397,5 +30318,5 @@ module.exports = {
   is_relation_conflict: is_relation_conflict
 };
 
-},{"jquery":327}]},{},[350])(350)
+},{"jquery":327}]},{},[349])(349)
 });

@@ -2,7 +2,7 @@
 
 const $ = require('jquery');
 const _ = require('underscore');
-require('./autocomplete');
+require('./selfcomplete');
 
 const cfg = require('./config');
 const cytoscape = require('./cytoscape/cytoscape');
@@ -513,12 +513,13 @@ function editLabel(target) {
     .css('height', bbox.h)
     .css('width', bbox.w + 5)
     .attr('target', target.attr('id'))
-    .addClass('activated');
-    /*.autocomplete({
+    .addClass('activated')
+    .selfcomplete({
       lookup: autocompletes,
       tabDisabled: false,
       autoSelectFirst: true,
-      lookupLimit: 5 });*/
+      lookupLimit: 5
+    });
 
   // add the background-mute div
   $('#mute').addClass('activated')

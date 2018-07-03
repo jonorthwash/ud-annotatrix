@@ -59,7 +59,7 @@ class Server {
 		});
 	}
 
-	async pull(sentNum) {
+	pull(sentNum) {
 		if (!this.is_running)
 			return null;
 

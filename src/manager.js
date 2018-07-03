@@ -65,6 +65,7 @@ class Manager {
       index = this.length - 1;
     }
 
+    console.log("FIX ME");
     this._index = Math.floor(index); // enforce integer
 
     if (server.is_running) {
