@@ -19,3 +19,6 @@ logs
 node_modules
 build
 .nyc_output
+
+# ubuntu process files
+.nfs*
