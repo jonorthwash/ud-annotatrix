@@ -18384,84 +18384,103 @@ class Analysis {
     let eles = [];
 
     if (this.isCurrent) {
-      const formLabel = `${this.form}${this.isSuperToken
-        ? toSubscript(this.id) : ''}`;
-      eles.push({ // "number" node
-        data: {
-          id: `num-${this.id}`,
-          num: this.num,
-          name: 'number',
-          label: this.id,
-          pos: this.pos,
-          parent: this.id,
-          analysis: this
-        },
-        classes: 'number'
-      }, { // "form" node
-        data: {
-          id: `form-${this.id}`,
-          num: this.num,
-          name: `form`,
-          attr: `form`,
-          form: this.form,
-          label: formLabel,
-          length: `${formLabel.length > 3
-            ? formLabel.length * 0.7
-            : formLabel.length}em`,
-          state: `normal`,
-          parent: `num-${this.id}`,
-          analysis: this
-        },
-        classes: `form${this.head == 0 ? ' root' : ''}`
-      }, { // "pos" node
-        data: {
-          id: `pos-node-${this.id}`,
-          num: this.num,
-          name: `pos-node`,
-          attr: `upostag`,
-          label: this.pos || '',
-          length: `${(this.pos || '').length * 0.7 + 1}em`,
-          analysis: this
-        },
-        classes: 'pos'
-      }, { // "pos" edge
-        data: {
-          id: `pos-edge-${this.id}`,
-          num: this.num,
-          name: `pos-edge`,
-          source: `form-${this.id}`,
-          target: `pos-node-${this.id}`
-        },
-        classes: 'pos'
-      });
 
-      this.eachHead((head, deprel) => {
-        deprel = deprel || '';
+      if (this.isSuperToken) {
 
-        if (!head || !head.id) // ROOT
-          return;
-
-        eles.push({
+        eles.push({ // multiword label
           data: {
-            id: `dep_${this.id}_${head.id}`,
-            name: `dependency`,
-            attr: `deprel`,
-            source: `form-${this.id}`,
-            sourceAnalysis: this,
-            target: `form-${head.id}`,
-            targetAnalysis: head,
-            length: `${deprel.length / 3}em`,
-            label: null, // NB overwrite this before use
-            ctrl: null   // NB overwrite this before use
+            id: `multiword-${this.id}`,
+            num: this.num,
+            name: `multiword`,
+            label: `${this.form} ${toSubscript(this.id)}`,
+            /*length: `${this.form.length > 3
+              ? this.form.length * 0.7
+              : this.form.length}em`*/
           },
-          classes: null  // NB overwrite this before use
+          classes: 'multiword'
+        }/*, {
+
+        } */);
+
+        _.each(this.subTokens, subToken => {
+          eles = eles.concat(subToken.eles);
         });
 
-      });
+      } else {
 
-      _.each(this.subTokens, subToken => {
-        eles = eles.concat(subToken.eles);
-      });
+        eles.push({ // "number" node
+          data: {
+            id: `num-${this.id}`,
+            num: this.num,
+            name: 'number',
+            label: this.id,
+            pos: this.pos,
+            parent: this.superToken ? `multiword-${this.superToken.id}` : null,//this.id,
+            analysis: this
+          },
+          classes: 'number'
+        }, { // "form" node
+          data: {
+            id: `form-${this.id}`,
+            num: this.num,
+            name: `form`,
+            attr: `form`,
+            form: this.form,
+            label: this.form,
+            length: `${this.form.length > 3
+              ? this.form.length * 0.7
+              : this.form.length}em`,
+            state: `normal`,
+            parent: `num-${this.id}`,
+            analysis: this
+          },
+          classes: `form${this.head == 0 ? ' root' : ''}`
+        }, { // "pos" node
+          data: {
+            id: `pos-node-${this.id}`,
+            num: this.num,
+            name: `pos-node`,
+            attr: `upostag`,
+            label: this.pos || '',
+            length: `${(this.pos || '').length * 0.7 + 1}em`,
+            analysis: this
+          },
+          classes: 'pos'
+        }, { // "pos" edge
+          data: {
+            id: `pos-edge-${this.id}`,
+            num: this.num,
+            name: `pos-edge`,
+            source: `form-${this.id}`,
+            target: `pos-node-${this.id}`
+          },
+          classes: 'pos'
+        });
+
+        this.eachHead((head, deprel) => {
+          deprel = deprel || '';
+
+          if (!head || !head.id) // ROOT
+            return;
+
+          eles.push({
+            data: {
+              id: `dep_${this.id}_${head.id}`,
+              name: `dependency`,
+              attr: `deprel`,
+              source: `form-${this.id}`,
+              sourceAnalysis: this,
+              target: `form-${head.id}`,
+              targetAnalysis: head,
+              length: `${deprel.length / 3}em`,
+              label: null, // NB overwrite this before use
+              ctrl: null   // NB overwrite this before use
+            },
+            classes: null  // NB overwrite this before use
+          });
+
+        });
+      }
     }
 
     return eles;
@@ -18503,7 +18522,7 @@ class Analysis {
     if (this._heads.length === 1 && this._heads[0].token === '_')
       this._heads = [];
 
-    // otherwise push a new one    
+    // otherwise push a new one
     this._heads.push({
       token: head,
       deprel: deprel
@@ -18896,7 +18915,7 @@ class Analysis {
         deps.push(`${token}${deprel ? `:${deprel}` : ''}`);
       }
     });
-    return deps.join('|') || '_';
+    return deps.join('|') || fallback;
   }
 
   /**
@@ -23031,6 +23050,14 @@ module.exports = {
 },{}],338:[function(require,module,exports){
 'use strict';
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var cfg = require('./config');
+
 /*
  * Logger object
  *
@@ -23054,12 +23081,6 @@ module.exports = {
  *   is console.error
  */
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 var Log = function () {
   function Log(levelName) {
     var writer = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : console.log;
@@ -23076,7 +23097,7 @@ var Log = function () {
       'OK': 'green'
     };
 
-    this.level = levelName;
+    this.level = levelName || cfg.defaultLoggingLevel;
 
     // try to override the l20n logging
     try {
@@ -23250,7 +23271,7 @@ var Log = function () {
 
 module.exports = Log;
 
-},{}],339:[function(require,module,exports){
+},{"./config":339}],339:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -23917,7 +23938,7 @@ var CY_STYLE = [{
     'label': 'data(label)'
   }
 }, {
-  'selector': '.supAct',
+  'selector': 'node.multiword-active',
   'style': {
     'background-color': ACTIVE_COLOR
   }
@@ -27204,6 +27225,7 @@ var Graph = function () {
 
       cy.on('click', 'node.form', onClickFormNode);
       cy.on('click', 'node.pos', onClickPosNode);
+      cy.on('click', 'node.multiword', onClickMultiwordNode);
       cy.on('click', '$node > node', onClickChildNode);
       cy.on('cxttapend', 'node.form', onCxttapendFormNode);
 
@@ -27221,6 +27243,7 @@ var Graph = function () {
       graph.save();
 
       cy.$('.activated').removeClass('activated');
+      cy.$('.multiword-active').removeClass('multiword-active');
       cy.$('.arc-source').removeClass('arc-source');
       cy.$('.arc-target').removeClass('arc-target');
       cy.$('.selected').removeClass('selected');
@@ -27483,6 +27506,18 @@ function onClickPosNode(event) {
   cy.$('.selected').removeClass('selected');
 
   editLabel(target);
+}
+
+function onClickMultiwordNode(event) {
+  console.log('clicked multiword node');
+  var target = event.target;
+
+  if (target.hasClass('multiword-active')) {
+    target.removeClass('multiword-active');
+  } else {
+    cy.$('.multiword-active').removeClass('multiword-active');
+    target.addClass('multiword-active');
+  }
 }
 
 function onClickChildNode(event) {
@@ -28300,35 +28335,23 @@ module.exports = GUI;
 
 require('babel-polyfill');
 
-var $ = require('jquery');
-var _ = require('underscore');
-var nx = require('notatrix');
-
-var GUI = require('./gui');
-var Graph = require('./graph');
 var Log = require('./browser-logger');
 var Manager = require('./manager');
 var Server = require('./server');
 
-var cfg = require('./config');
-var errors = require('./errors');
 var funcs = require('./funcs');
 
 // on ready
 $(function () {
 
-	funcs.global().log = new Log(cfg.defaultLoggingLevel);
+	funcs.global().log = new Log();
 	funcs.global().server = new Server();
 	funcs.global().manager = new Manager();
+
+	manager.parse('1\tword\n2-3\tsuper\n2\tsub1\n3\tsub2');
 });
 
-module.exports = {
-	nx: nx,
-	errors: errors,
-	Log: Log
-};
-
-},{"./browser-logger":338,"./config":339,"./errors":345,"./funcs":346,"./graph":347,"./gui":348,"./manager":350,"./server":352,"babel-polyfill":1,"jquery":327,"notatrix":330,"underscore":335}],350:[function(require,module,exports){
+},{"./browser-logger":338,"./funcs":346,"./manager":350,"./server":352,"babel-polyfill":1}],350:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();

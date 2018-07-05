@@ -118,6 +118,7 @@ class Graph {
 
     cy.on('click', 'node.form', onClickFormNode);
     cy.on('click', 'node.pos', onClickPosNode);
+    cy.on('click', 'node.multiword', onClickMultiwordNode);
     cy.on('click', '$node > node', onClickChildNode);
     cy.on('cxttapend', 'node.form', onCxttapendFormNode);
 
@@ -135,6 +136,7 @@ class Graph {
     graph.save();
 
     cy.$('.activated').removeClass('activated');
+    cy.$('.multiword-active').removeClass('multiword-active');
     cy.$('.arc-source').removeClass('arc-source');
     cy.$('.arc-target').removeClass('arc-target');
     cy.$('.selected').removeClass('selected');
@@ -399,6 +401,18 @@ function onClickPosNode(event) {
   cy.$('.selected').removeClass('selected');
 
   editLabel(target);
+}
+
+function onClickMultiwordNode(event) {
+  console.log('clicked multiword node');
+  const target = event.target;
+
+  if (target.hasClass('multiword-active')) {
+    target.removeClass('multiword-active');
+  } else {
+    cy.$('.multiword-active').removeClass('multiword-active');
+    target.addClass('multiword-active');
+  }
 }
 
 function onClickChildNode(event) {

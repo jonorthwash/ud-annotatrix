@@ -48,7 +48,7 @@ const CY_STYLE = [{
     'label': 'data(label)'
   }
 }, {
-  'selector': '.supAct',
+  'selector': 'node.multiword-active',
   'style': {
     'background-color': ACTIVE_COLOR
   }
