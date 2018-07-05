@@ -1,12 +1,13 @@
 'use strict';
 
 const _ = require('underscore');
+const cfg = require('./config');
 
 class Log {
   constructor(levelName, writer = console.log) {
 
     this._write = writer;
-    this.level = levelName;
+    this.level = levelName || cfg.defaultLoggingLevel;
 
   }
 

@@ -1,5 +1,7 @@
 'use strict';
 
+const cfg = require('./config');
+
 /*
  * Logger object
  *
@@ -35,7 +37,7 @@ class Log {
       'OK': 'green'
     };
 
-    this.level = levelName;
+    this.level = levelName || cfg.defaultLoggingLevel;
 
     // try to override the l20n logging
     try {
