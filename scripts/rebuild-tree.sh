@@ -54,7 +54,9 @@ if [ ! -d node_modules ]; then
 fi
 
 npm run build
-cp build/cytoscape*.js $this_dir/src/cytoscape
+cp build/cytoscape.* $this_dir/src/cytoscape
+cd $this_dir
+npm run build
 
 echo "successfully copied built files into src/cytoscape/"
 
