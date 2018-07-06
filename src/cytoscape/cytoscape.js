@@ -16449,9 +16449,9 @@ styfn.parseImpl = function (name, value, propIsBypass, propIsFlat) {
   if (!property) {
     return null;
   } // return null on property of unknown name
-  if (value === undefined || value === null) {
+  if (value === undefined) {
     return null;
-  } // can't assign null
+  } // can't assign undefined
 
   // the property may be an alias
   if (property.alias) {
@@ -16623,7 +16623,9 @@ styfn.parseImpl = function (name, value, propIsBypass, propIsFlat) {
       name: name,
       value: valArr,
       pfValue: pfValArr,
-      strValue: valArr.join(' '),
+      strValue: valArr.map(function (val, i) {
+        return val + (unitsArr[i] || '');
+      }).join(' '),
       bypass: propIsBypass,
       units: unitsArr
     };
@@ -20539,7 +20541,7 @@ TreeLayout.prototype.run = function () {
       // iterate through all the nodes and set the cellWidth and cellHeight
       // to the maximum width/height seen in the graph plus a padding value
       for (var _i = 0; _i < nodes.length; _i++) {
-        var clumpId = parseInt(nodes[_i]._private.data.num);
+        var clumpId = parseInt(nodes[_i]._private.data.numNoSuperTokens);
         posWordMax[clumpId] = 0;
       }
       for (var _i2 = 0; _i2 < nodes.length; _i2++) {
@@ -20563,7 +20565,7 @@ TreeLayout.prototype.run = function () {
 
         //console.log('tree.js: [' + i + '] ' + node._private.data.label);
         //console.log('tree.js: [' + i + '] ' + node._private.data.id);
-        var _clumpId = parseInt(node._private.data.num);
+        var _clumpId = parseInt(node._private.data.numNoSuperTokens);
         //console.log('tree.js: [' + i + '] ' + clumpId);
         posWordMax[_clumpId] = Math.max(posWordMax[_clumpId], nbb.w + p);
         //console.log('tree.js: [' + i + '] ' + posWordMax[clumpId]);
@@ -20597,6 +20599,10 @@ TreeLayout.prototype.run = function () {
     var col = 0;
     var moveToNextCell = function moveToNextCell() {
       col++;
+      /*do {
+        col++;
+      } while (!posWordMax[col]);
+      */
       if (col >= cols) {
         col = 0;
         row++;
@@ -20658,6 +20664,9 @@ TreeLayout.prototype.run = function () {
 
         var prevNodes = 0;
         for (var ii = 0; ii < col; ii++) {
+          /*while (!posWordMax[ii])
+            ii++;
+           console.log(ii, posWordMax[ii]));*/
           prevNodes += posWordMax[ii];
         }
         var pad = 2;
@@ -20667,6 +20676,18 @@ TreeLayout.prototype.run = function () {
         //x = col * cellWidth + cellWidth / 2 + bb.x1;
         y = row * cellHeight + cellHeight / 2 + bb.y1;
 
+        console.log({
+          ele: element.data(),
+          x: x,
+          prevNodes: prevNodes,
+          pad: pad,
+          col: col,
+          posWordMax: posWordMax,
+          y: y,
+          row: row,
+          cellHeight: cellHeight,
+          'bb-y1': bb.y1
+        });
         log.debug('tree.js [' + row + '][' + col + '] x,y = ' + x + ',' + y);
 
         use(row, col);
@@ -20677,6 +20698,7 @@ TreeLayout.prototype.run = function () {
       return { x: x, y: y };
     };
 
+    console.log('laying out');
     nodes.layoutPositions(this, options, getPos);
   }
 
@@ -22490,7 +22512,7 @@ BRp.getControlPoints = function (edge) {
   var rs = edge[0]._private.rscratch;
   var type = rs.edgeType;
 
-  if (type === 'bezier' || type === 'multibezier') {
+  if (type === 'bezier' || type === 'multibezier' || type === 'self' || type === 'compound') {
     return getPts(rs.ctrlpts);
   }
 };
@@ -30153,7 +30175,7 @@ module.exports = Stylesheet;
 "use strict";
 
 
-module.exports = "snapshot-0678d67a83-1529619708361";
+module.exports = "snapshot-2fd4aa6cc2-1530911359692";
 
 /***/ })
 /******/ ]);
