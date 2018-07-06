@@ -2,15 +2,8 @@
 
 const _ = require('underscore');
 
-function getIndex(ele) {
-
-  // NB: sorting will break if sentence has more than this many tokens
-  const LARGE_NUMBER = 10000,
-    id = parseInt(ele.data('num')),
-    offset = (ele.data('name') === 'pos-node' || ele.data('name') === 'super-dummy') ? LARGE_NUMBER : 0;
-
-  return isNaN(id) ? -Infinity : id + offset;
-}
+// NB: sorting will break if sentence has more than this many tokens
+const LARGE_NUMBER = 10000;
 
 function vertical(n1, n2) {
   const num1 = parseInt(n1.id().slice(2)),
@@ -31,23 +24,41 @@ function vertical(n1, n2) {
 
 function ltr(n1, n2) {
 
-  const num1 = getIndex(n1);
-  const num2 = getIndex(n2);
+  const num = (node) => {
+    const id = parseInt(node.data('num')),
+      offset = node.data('name') === 'pos-node'
+        ? LARGE_NUMBER : 0;
 
-  return (num1 === num2 ? 0 : num1 < num2 ? -1 : 1);
+    return isNaN(id) ? -Infinity : id + offset;
+  };
+
+  const num1 = num(n1);
+  const num2 = num(n2);
+
+  return (num1 === num2
+    ? 0
+    : num1 < num2
+      ? -1
+      :  1);
 }
 
 function rtl(n1, n2) {
-  if ((n1.hasClass('wf') && n2.hasClass('wf')) // if the nodes have the same class
-    || (n1.hasClass('pos') && n2.hasClass('pos'))) {
-    return simpleIdSorting(n1, n2) * -1;
-  } else if (n1.hasClass('wf') && n2.hasClass('pos')) {
-    return -1;
-  } else if (n1.hasClass('pos') && n2.hasClass('wf')) {
-    return 1;
-  } else {
-    return 0;
-  }
+  const num = (node) => {
+    const id = parseInt(node.data('num')),
+      offset = node.data('name') === 'pos-node'
+        ? 0 : LARGE_NUMBER;
+
+    return isNaN(id) ? -Infinity : id + offset;
+  };
+
+  const num1 = num(n1);
+  const num2 = num(n2);
+
+  return (num1 === num2
+    ? 0
+    : num1 < num2
+      ?  1
+      : -1);
 }
 
 module.exports = {
