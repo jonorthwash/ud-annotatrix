@@ -12,13 +12,13 @@ gulp.task('js', () => {
       standalone: 'uda'
     })
     .transform('babelify', {
-      presets: ['env']
+      presets: ['env'],
+      compact: false
     })
     .bundle()
     .pipe(source('bundle.js'))
     .pipe(buffer())
     .pipe(gulp.dest('public/js'));
-
 });
 
 gulp.task('uglify', () => {
