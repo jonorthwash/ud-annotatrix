@@ -315,10 +315,14 @@ class GUI {
   zoomIn() {
     cy.zoom(gui.zoom * 1.1);
     gui.update();
+
+    return this;
   }
   zoomOut() {
     cy.zoom(gui.zoom / 1.1);
     gui.update();
+
+    return this;
   }
 
   onKeyupInDocument(event) {
