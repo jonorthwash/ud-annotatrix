@@ -414,6 +414,11 @@ class GUI {
         }
         break;
 
+      case (KEYS.ENTER):
+        gui.intercepted = false;
+        graph.clear();
+        break;
+
       default:
 				if (47 < event.which && event.which < 58) {// key in 0-9
 					const num = event.which - 48;
