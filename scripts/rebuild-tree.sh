@@ -23,7 +23,6 @@ if [ "$1" == "auto-install" ]; then
   cd cytoscape.js
   git checkout master
   git pull
-  npm install
   cytoscape_dir=/tmp/cytoscape.js
   layout_dir=$cytoscape_dir/src/extensions/layout
 elif [ ! -d $layout_dir ]; then
