@@ -967,7 +967,6 @@
     };
 
     // Create chainable jQuery plugin:
-    console.log($.fn)
     $.fn.devbridgeSelfcomplete = function (options, args) {
         var dataKey = 'selfcomplete';
         // If function invoked without argument return
