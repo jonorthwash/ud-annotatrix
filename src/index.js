@@ -15,6 +15,4 @@ $(() => {
 	funcs.global().server = new Server();
 	funcs.global().manager = new Manager();
 
-	manager.parse(`1\tword\n2-3\tsuper\n2\tsub1\n3\tsub2`);
-
 });
