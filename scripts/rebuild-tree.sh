@@ -9,15 +9,6 @@
 # current repository, and run this script before viewing your changes
 # in the browser.  (It takes care of copying and building stuff.)
 #
-# NB: this should be run in the top-level project directory with
-#      cytoscape.js in a neighbor directory, e.g.:
-#
-# projects
-# \-- cytoscape.js
-# |   \-- files .....
-# \-- ud-annotatrix [CWD]
-#    \-- files
-#
 
 cytoscape_git_url=https://github.com/cytoscape/cytoscape.js.git
 this_dir=`pwd`
@@ -59,7 +50,7 @@ fi
 
 cp $tree_path $layout_dir
 
-# add the implementation to the index if it's not already there
+# add the implementation to this layout index
 if ! grep "name:\W*tree\W*impl:\W*require(\W*tree\W*)" $layout_dir/index.js >/dev/null; then
   sed -i .backup $'s/}$/},\\\n  { name: \'tree\', impl: require( \'.\/tree\' ) }/g' $layout_dir/index.js
 fi
