@@ -146,7 +146,7 @@ TreeLayout.prototype.run = function(){
       // iterate through all the nodes and set the cellWidth and cellHeight
       // to the maximum width/height seen in the graph plus a padding value
       for( let i = 0; i < nodes.length; i++ ){
-        let clumpId = parseInt(nodes[i]._private.data.numNoSuperTokens);
+        let clumpId = parseInt(nodes[i]._private.data.clump);
         posWordMax[clumpId] = 0;
       }
       for( let i = 0; i < nodes.length; i++ ){
@@ -169,7 +169,7 @@ TreeLayout.prototype.run = function(){
 
         //console.log('tree.js: [' + i + '] ' + node._private.data.label);
         //console.log('tree.js: [' + i + '] ' + node._private.data.id);
-        let clumpId = parseInt(node._private.data.numNoSuperTokens);
+        let clumpId = parseInt(node._private.data.clump);
         //console.log('tree.js: [' + i + '] ' + clumpId);
         posWordMax[clumpId] = Math.max(posWordMax[clumpId], nbb.w + p);
         //console.log('tree.js: [' + i + '] ' + posWordMax[clumpId]);

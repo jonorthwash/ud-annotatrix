@@ -19779,7 +19779,7 @@ TreeLayout.prototype.run = function () {
       // iterate through all the nodes and set the cellWidth and cellHeight
       // to the maximum width/height seen in the graph plus a padding value
       for (var _i = 0; _i < nodes.length; _i++) {
-        var clumpId = parseInt(nodes[_i]._private.data.numNoSuperTokens);
+        var clumpId = parseInt(nodes[_i]._private.data.clump);
         posWordMax[clumpId] = 0;
       }
       for (var _i2 = 0; _i2 < nodes.length; _i2++) {
@@ -19803,7 +19803,7 @@ TreeLayout.prototype.run = function () {
 
         //console.log('tree.js: [' + i + '] ' + node._private.data.label);
         //console.log('tree.js: [' + i + '] ' + node._private.data.id);
-        var _clumpId = parseInt(node._private.data.numNoSuperTokens);
+        var _clumpId = parseInt(node._private.data.clump);
         //console.log('tree.js: [' + i + '] ' + clumpId);
         posWordMax[_clumpId] = Math.max(posWordMax[_clumpId], nbb.w + p);
         //console.log('tree.js: [' + i + '] ' + posWordMax[clumpId]);
@@ -29393,7 +29393,7 @@ module.exports = Stylesheet;
 "use strict";
 
 
-module.exports = "snapshot-2fd4aa6cc2-1530988962287";
+module.exports = "snapshot-2fd4aa6cc2-1531006893492";
 
 /***/ })
 /******/ ]);
