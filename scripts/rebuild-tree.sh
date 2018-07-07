@@ -5,7 +5,7 @@
 # 5/30/18
 #
 # This script makes editing the "tree" layout extension for cytoscape
-# much simpler and easier.  Simply edit the version of "tree.js" in the
+# much simpler and easier.  Simply edit the version of "src/tree.js" in the
 # current repository, and run this script before viewing your changes
 # in the browser.  (It takes care of copying and building stuff.)
 #
@@ -19,19 +19,38 @@
 #    \-- files
 #
 
+cytoscape_git_url=https://github.com/cytoscape/cytoscape.js.git
 this_dir=`pwd`
-cytoscape_dir=../cytoscape.js
+cytoscape_dir=${CYTOSCAPE:=../cytoscape.js}
 layout_dir=$cytoscape_dir/src/extensions/layout
 
-if [ ! -d $layout_dir ]; then
-  echo "Error: unable to locate $layout_dir try running"
+if [ "$1" == "auto-install" ]; then
+  cd /tmp
+  if [ ! -d cytoscape.js ]; then
+    git clone $cytoscape_git_url
+  fi
+  cd cytoscape.js
+  git checkout master
+  git pull
+  npm install
+  cytoscape_dir=/tmp/cytoscape.js
+  layout_dir=$cytoscape_dir/src/extensions/layout
+elif [ ! -d $layout_dir ]; then
+  echo "Error: unable to automatically locate $layout_dir; try running"
   echo " $ cd .."
-  echo " $ git clone https://github.com/cytoscape/cytoscape.js.git"
+  echo " $ git clone $cytoscape_git_url"
+  echo " $ cd cytoscape.js"
   echo " $ npm install"
+  echo ""
+  echo "OR to install automatically, try running"
+  echo " $ $0 auto-install"
+  echo ""
+  echo "OR if it's installed elsewhere, try running"
+  echo " $ CYTOSCAPE=/path/to/cytoscape.js $0"
   exit 1
 fi
 
-tree_path=./src/tree.js
+tree_path=$this_dir/src/tree.js
 
 if [ ! -f $tree_path ]; then
   echo "Error: unable to locate $tree_path (aborting)"
@@ -40,12 +59,10 @@ fi
 
 cp $tree_path $layout_dir
 
-echo "add the following line to $layout_dir/index.js:"
-echo ""
-echo " { name: 'tree', impl: require('./tree') }"
-echo ""
-echo -n "press <Enter> to confirm "
-read
+# add the implementation to the index if it's not already there
+if ! grep "name:\W*tree\W*impl:\W*require(\W*tree\W*)" $layout_dir/index.js >/dev/null; then
+  sed -i .backup $'s/}$/},\\\n  { name: \'tree\', impl: require( \'.\/tree\' ) }/g' $layout_dir/index.js
+fi
 
 cd $cytoscape_dir
 
