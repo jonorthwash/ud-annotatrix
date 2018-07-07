@@ -41,7 +41,7 @@
     "test": "mocha src/test/index.js",
     "coverage": "nyc mocha src/test/index.js",
     "build": "gulp",
-    "build-watch": "gulp watch"
+    "build-watch": "gulp && gulp watch"
   },
   "repository": {
     "type": "git",
