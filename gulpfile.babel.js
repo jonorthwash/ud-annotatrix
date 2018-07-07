@@ -8,9 +8,7 @@ const uglify = require('gulp-uglify');
 const sourcemaps = require('gulp-sourcemaps');
 
 gulp.task('js', () => {
-  return browserify('src/index.js', {
-      standalone: 'uda'
-    })
+  return browserify('src/index.js')
     .transform('babelify', {
       presets: ['env'],
       compact: false
@@ -21,12 +19,12 @@ gulp.task('js', () => {
     .pipe(gulp.dest('public/js'));
 });
 
+/*
 gulp.task('uglify', () => {
-  return browserify('src/index.js', {
-      standalone: 'uda'
-    })
+  return browserify('src/index.js')
     .transform('babelify', {
-      presets: ['env']
+      presets: ['env'],
+      compact: true
     })
     .bundle()
     .pipe(source('bundle.js'))
@@ -42,9 +40,25 @@ gulp.task('uglify', () => {
     }))
     .pipe(gulp.dest('public/js'));
 });
+*//*
+gulp.task('uglifyify', () => {
+  return browserify('src/index.js')
+    .transform('babelify', {
+      presets: ['env'],
+      compact: true
+    })
+    .transform('uglifyify', {
+      sourceMap: true
+    })
+    .bundle()
+    .pipe(source('bundle.min.js'))
+    .pipe(buffer())
+    .pipe(gulp.dest('public/js'));
+});
+*/
 
 gulp.task('watch', () => {
-  gulp.watch('src/*.js', [/*'uglify', */'js']);
+  gulp.watch('src/*.js', [/*'uglify'*/, 'js']);
 });
 
-gulp.task('default', [/*'uglify', */'js', 'watch']);
+gulp.task('default', [/*'uglify'*/, 'js']);

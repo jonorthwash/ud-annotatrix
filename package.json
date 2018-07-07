@@ -40,8 +40,8 @@
   "scripts": {
     "test": "mocha src/test/index.js",
     "coverage": "nyc mocha src/test/index.js",
-    "build": "gulp && cp node_modules/jquery/dist/jquery.* node_modules/jquery-autocomplete/jquery.autocomplete.js public/js",
-    "build-tree": "./scripts/rebuild-tree.sh"
+    "build": "gulp",
+    "build-watch": "gulp watch"
   },
   "repository": {
     "type": "git",
