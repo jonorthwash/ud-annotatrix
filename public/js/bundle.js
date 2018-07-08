@@ -54760,7 +54760,7 @@ var sort = require('./sort');
 var validate = require('./validate');
 
 var Graph = function () {
-  function Graph(mgr, options) {
+  function Graph(options) {
     _classCallCheck(this, Graph);
 
     this.options = _.defaults(options, {
@@ -55277,7 +55277,6 @@ function addHead(srcId, tarId) {
   var src = manager.current.getById(srcId),
       tar = manager.current.getById(tarId);
 
-  console.log(dep);
   src.addHead(tar, dep);
   gui.update();
 }
@@ -55292,7 +55291,7 @@ function removeHead(srcId, tarId) {
 
 module.exports = Graph;
 
-},{"./config":339,"./cy-style":341,"./cytoscape/cytoscape":342,"./errors":344,"./funcs":345,"./selfcomplete":350,"./sort":352,"./validate":355,"jquery":327,"underscore":335}],347:[function(require,module,exports){
+},{"./config":339,"./cy-style":341,"./cytoscape/cytoscape":342,"./errors":344,"./funcs":345,"./selfcomplete":351,"./sort":353,"./validate":356,"jquery":327,"underscore":335}],347:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -55610,6 +55609,31 @@ var GUI = function () {
       gui.update();
 
       return this;
+    }
+  }, {
+    key: 'state',
+    get: function get() {
+      return {
+
+        is_textarea_visible: this.is_textarea_visible,
+        is_vertical: this.is_vertical,
+        is_ltr: this.is_ltr,
+        is_enhanced: this.is_enhanced,
+
+        pan: this.pan,
+        zoom: this.zoom
+
+      };
+    },
+    set: function set(state) {
+      this.is_textarea_visible = state.is_textarea_visible, this.is_vertical = state.is_vertical;
+      this.is_ltr = state.is_ltr;
+      this.is_enhanced = state.is_enhanced;
+
+      this.pan = state.pan;
+      this.zoom = state.zoom;
+
+      this.update();
     }
   }, {
     key: 'is_table_view',
@@ -55969,7 +55993,7 @@ function clearCorpus(event) {
 
 module.exports = GUI;
 
-},{"./convert":340,"./errors":344,"./funcs":345,"./table":353,"./undo-manager":354,"jquery":327}],348:[function(require,module,exports){
+},{"./convert":340,"./errors":344,"./funcs":345,"./table":354,"./undo-manager":355,"jquery":327}],348:[function(require,module,exports){
 'use strict';
 
 require('babel-polyfill');
@@ -55988,7 +56012,132 @@ $(function () {
 	funcs.global().manager = new Manager();
 });
 
-},{"./browser-logger":338,"./funcs":345,"./manager":349,"./server":351,"babel-polyfill":1}],349:[function(require,module,exports){
+},{"./browser-logger":338,"./funcs":345,"./manager":350,"./server":352,"babel-polyfill":1}],349:[function(require,module,exports){
+'use strict';
+
+function isAvailable() {
+
+  try {
+    localStorage;
+  } catch (e) {
+    return false;
+  }
+
+  /* Taken from https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API */
+
+  try {
+    var x = '__storage_test__';
+
+    localStorage.setItem(x, x);
+    localStorage.removeItem(x);
+    return true;
+  } catch (e) {
+
+    return e instanceof DOMException && (e.code === 1014 // Firefox
+    || e.code === 22 // everything else
+
+    // test name field too, because code might not be present
+    || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' // Firefox
+    || e.name === 'QuotaExceededError') // everything else
+
+    // acknowledge QuotaExceededError only if there's something already stored
+    && localStorage.length !== 0;
+  }
+}
+
+function getAvailableSpace() {
+
+  /* Returns the remaining available space in localStorage */
+  if (!isAvailable()) return 0;
+
+  var max = 10 * 1024 * 1024,
+      testKey = 'size-test-' + Math.random().toString(); // generate random key
+  var i = 64,
+      string1024 = '',
+      string = '',
+      found = 0;
+
+  if (localStorage) {
+
+    error = error || 25e4;
+
+    // fill a string with 1024 symbols/bytes
+    while (i--) {
+      string1024 += 1e16;
+    } // fill a string with "max" amount of symbols/bytes
+    i = max / 1024;
+    while (i--) {
+      string += string1024;
+    }i = max;
+
+    // binary search
+    while (i > 1) {
+      try {
+        localStorage.setItem(testKey, string.substr(0, i));
+        localStorage.removeItem(testKey);
+
+        if (found < i - error) {
+          found = i;
+          i *= 1.5;
+        } else {
+          break;
+        }
+      } catch (e) {
+        localStorage.removeItem(testKey);
+        i = found + (i - found) / 2;
+      }
+    }
+  }
+
+  return found;
+}
+
+function isQuotaExceeded(event) {
+
+  if (event && event.code === 22) {
+    return true;
+  } else if (event && event.code === 1014) {
+    return event.name === 'NS_ERROR_DOM_QUOTA_REACHED';
+  } else if (event) {
+    return event.number === -2147024882; // IE8
+  }
+
+  return false;
+}
+
+function formatUploadSize(fileSize) {
+
+  if (fileSize < 1024) return fileSize + ' B';
+
+  if (fileSize < 1048576) return (fileSize / 1024).toFixed(1) + ' kB';
+
+  return (fileSize / 1048576).toFixed(1) + ' mB';
+}
+
+function save(key, value) {
+  console.log('saving', isAvailable());
+
+  if (!isAvailable()) return null;
+
+  return localStorage.setItem(key, value);
+}
+
+function load(key) {
+  if (!isAvailable()) return null;
+
+  return localStorage.getItem(key);
+}
+
+module.exports = {
+  isAvailable: isAvailable,
+  isQuotaExceeded: isQuotaExceeded,
+  getAvailableSpace: getAvailableSpace,
+  formatUploadSize: formatUploadSize,
+  save: save,
+  load: load
+};
+
+},{}],350:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -56006,6 +56155,9 @@ var GUI = require('./gui');
 var Graph = require('./graph');
 var errors = require('./errors');
 var detectFormat = require('./detect');
+var storage = require('./local-storage');
+
+var LOCAL_STORAGE_KEY = 'ud_annotatrix';
 
 var Manager = function () {
   function Manager() {
@@ -56198,14 +56350,36 @@ var Manager = function () {
       gui.update();
     }
   }, {
+    key: 'save',
+    value: function save() {
+
+      var state = JSON.stringify({
+        filename: this.filename,
+        index: this._index,
+        sentences: this.map(function (i, sent) {
+          return {
+            nx: sent.nx,
+            column_visibilities: sent.column_visibilities,
+            currentFormat: sent.currentFormat,
+            is_table_view: sent.is_table_view,
+            nx_initialized: sent.nx_initialized
+          };
+        }),
+        gui: gui.state
+      });
+
+      if (server.is_running) {
+        console.error('server save not implemented');
+      } else {
+
+        storage.save(LOCAL_STORAGE_KEY, state);
+      }
+
+      return state;
+    }
+  }, {
     key: 'load',
     value: function load() {}
-  }, {
-    key: 'loadFromLocalStorage',
-    value: function loadFromLocalStorage() {}
-  }, {
-    key: 'loadFromServer',
-    value: function loadFromServer() {}
   }, {
     key: 'upload',
     value: function upload() {
@@ -56406,7 +56580,7 @@ function updateSentence(oldSent, text) {
 
 module.exports = Manager;
 
-},{"./config":339,"./detect":343,"./errors":344,"./funcs":345,"./graph":346,"./gui":347,"jquery":327,"notatrix":330,"underscore":335}],350:[function(require,module,exports){
+},{"./config":339,"./detect":343,"./errors":344,"./funcs":345,"./graph":346,"./gui":347,"./local-storage":349,"jquery":327,"notatrix":330,"underscore":335}],351:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -57414,7 +57588,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     }
 });
 
-},{"jquery":327}],351:[function(require,module,exports){
+},{"jquery":327}],352:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -57536,7 +57710,7 @@ function getTreebankId() {
 
 module.exports = Server;
 
-},{"jquery":327}],352:[function(require,module,exports){
+},{"jquery":327}],353:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -57594,7 +57768,7 @@ module.exports = {
   rtl: rtl
 };
 
-},{"underscore":335}],353:[function(require,module,exports){
+},{"underscore":335}],354:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -57663,7 +57837,7 @@ module.exports = {
   edit: edit
 };
 
-},{"./validate":355,"jquery":327}],354:[function(require,module,exports){
+},{"./validate":356,"jquery":327}],355:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -57680,7 +57854,7 @@ module.exports = function () {
 	});
 };
 
-},{"jquery":327,"undo-manager":336}],355:[function(require,module,exports){
+},{"jquery":327,"undo-manager":336}],356:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');

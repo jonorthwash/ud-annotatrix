@@ -11,7 +11,7 @@ const sort = require('./sort');
 const validate = require('./validate');
 
 class Graph {
-  constructor(mgr, options) {
+  constructor(options) {
 
     this.options = _.defaults(options, {
       container: funcs.inBrowser() ? $('#cy') : null,
@@ -561,7 +561,6 @@ function addHead(srcId, tarId, dep='') {
   const src = manager.current.getById(srcId),
     tar = manager.current.getById(tarId);
 
-  console.log(dep)
   src.addHead(tar, dep);
   gui.update();
 }

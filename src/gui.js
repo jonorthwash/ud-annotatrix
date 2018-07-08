@@ -132,6 +132,32 @@ class GUI {
 
   }
 
+  get state() {
+    return {
+
+      is_textarea_visible: this.is_textarea_visible,
+      is_vertical:         this.is_vertical,
+      is_ltr:              this.is_ltr,
+      is_enhanced:         this.is_enhanced,
+
+      pan:  this.pan,
+      zoom: this.zoom
+
+    };
+  }
+
+  set state(state) {
+    this.is_textarea_visible = state.is_textarea_visible,
+    this.is_vertical         = state.is_vertical;
+    this.is_ltr              = state.is_ltr;
+    this.is_enhanced         = state.is_enhanced;
+
+    this.pan  = state.pan;
+    this.zoom = state.zoom;
+
+    this.update();
+  }
+
   update() {
     if (!gui.inBrowser)
       return;

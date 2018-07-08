@@ -11,6 +11,9 @@ const GUI = require('./gui');
 const Graph = require('./graph');
 const errors = require('./errors');
 const detectFormat = require('./detect');
+const storage = require('./local-storage');
+
+const LOCAL_STORAGE_KEY = 'ud_annotatrix';
 
 class Manager {
 
@@ -323,15 +326,37 @@ class Manager {
 
 
 
+  save() {
+
+    const state = JSON.stringify({
+      filename: this.filename,
+      index: this._index,
+      sentences: this.map((i, sent) => {
+        return {
+          nx: sent.nx,
+          column_visibilities: sent.column_visibilities,
+          currentFormat: sent.currentFormat,
+          is_table_view: sent.is_table_view,
+          nx_initialized: sent.nx_initialized
+        };
+      }),
+      gui: gui.state
+    });
+
+    if (server.is_running) {
+      console.error('server save not implemented');
+    } else {
+
+      storage.save(LOCAL_STORAGE_KEY, state);
+
+    }
+
+    return state;
+  }
   load() {
 
   }
-  loadFromLocalStorage() {
 
-  }
-  loadFromServer() {
-
-  }
 
 
 
