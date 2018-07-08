@@ -25,6 +25,10 @@ class Manager {
     gui.bind();
 
     this.reset();
+    this.load();
+
+    // save once per second
+    setInterval(() => this.save(), 1000);
   }
 
   reset() {
@@ -355,6 +359,34 @@ class Manager {
   }
   load() {
 
+    let state = server.is_running
+      ? null // not implemented
+      : storage.load(LOCAL_STORAGE_KEY);
+
+    if (!state) // unable to load
+      return null;
+
+    // parse it back from a string
+    state = JSON.parse(state);
+
+    this.filename = state.filename;
+    this._index = state.index;
+
+    this._sentences = state.sentences.map(sent => {
+
+      let sentence = nx.Sentence.fromNx(sent.nx);
+      sentence.column_visibilities = sent.column_visibilities;
+      sentence.currentFormat = sent.currentFormat;
+      sentence.is_table_view = sent.is_table_view;
+      sentence.nx_initialized = sent.nx_initialized;
+      return sentence;
+
+    });
+
+    // this triggers a gui refresh
+    gui.state = state.gui;
+
+    return state;
   }
 
 
@@ -395,9 +427,7 @@ class Manager {
 
 function updateSentence(oldSent, text) {
 
-  text = text || cfg.defaultInsertedSentence;
   const format = detectFormat(text);
-
   let sent;
 
   if (format === 'CoNLL-U') {
@@ -423,6 +453,10 @@ function updateSentence(oldSent, text) {
     } else {
       sent = nx.Sentence.fromText(text);
     }
+
+  } else if (format === 'Unknown') {
+
+    sent = nx.Sentence.fromText('');
 
   } else {
     throw new Error(`format not yet supported: ${format}`)

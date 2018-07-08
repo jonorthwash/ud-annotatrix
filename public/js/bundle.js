@@ -56115,7 +56115,6 @@ function formatUploadSize(fileSize) {
 }
 
 function save(key, value) {
-  console.log('saving', isAvailable());
 
   if (!isAvailable()) return null;
 
@@ -56123,6 +56122,7 @@ function save(key, value) {
 }
 
 function load(key) {
+
   if (!isAvailable()) return null;
 
   return localStorage.getItem(key);
@@ -56161,6 +56161,8 @@ var LOCAL_STORAGE_KEY = 'ud_annotatrix';
 
 var Manager = function () {
   function Manager() {
+    var _this = this;
+
     _classCallCheck(this, Manager);
 
     funcs.global().manager = this;
@@ -56169,6 +56171,12 @@ var Manager = function () {
     gui.bind();
 
     this.reset();
+    this.load();
+
+    // save once per second
+    setInterval(function () {
+      return _this.save();
+    }, 1000);
   }
 
   _createClass(Manager, [{
@@ -56379,7 +56387,35 @@ var Manager = function () {
     }
   }, {
     key: 'load',
-    value: function load() {}
+    value: function load() {
+
+      var state = server.is_running ? null // not implemented
+      : storage.load(LOCAL_STORAGE_KEY);
+
+      if (!state) // unable to load
+        return null;
+
+      // parse it back from a string
+      state = JSON.parse(state);
+
+      this.filename = state.filename;
+      this._index = state.index;
+
+      this._sentences = state.sentences.map(function (sent) {
+
+        var sentence = nx.Sentence.fromNx(sent.nx);
+        sentence.column_visibilities = sent.column_visibilities;
+        sentence.currentFormat = sent.currentFormat;
+        sentence.is_table_view = sent.is_table_view;
+        sentence.nx_initialized = sent.nx_initialized;
+        return sentence;
+      });
+
+      // this triggers a gui refresh
+      gui.state = state.gui;
+
+      return state;
+    }
   }, {
     key: 'upload',
     value: function upload() {
@@ -56404,10 +56440,10 @@ var Manager = function () {
   }, {
     key: 'encode',
     value: function encode() {
-      var _this = this;
+      var _this2 = this;
 
       return encodeURIComponent(this.map(function (i, sent) {
-        return '[UD-Annotatrix: id="' + (i + 1) + '" format="' + manager.format + '"]\n      ' + (manager.format === 'Unknown' ? '' : _this.sentence);
+        return '[UD-Annotatrix: id="' + (i + 1) + '" format="' + manager.format + '"]\n      ' + (manager.format === 'Unknown' ? '' : _this2.sentence);
       }).join('\n\n'));
     }
   }, {
@@ -56539,9 +56575,7 @@ var Manager = function () {
 
 function updateSentence(oldSent, text) {
 
-  text = text || cfg.defaultInsertedSentence;
   var format = detectFormat(text);
-
   var sent = void 0;
 
   if (format === 'CoNLL-U') {
@@ -56566,6 +56600,9 @@ function updateSentence(oldSent, text) {
     } else {
       sent = nx.Sentence.fromText(text);
     }
+  } else if (format === 'Unknown') {
+
+    sent = nx.Sentence.fromText('');
   } else {
     throw new Error('format not yet supported: ' + format);
   }
