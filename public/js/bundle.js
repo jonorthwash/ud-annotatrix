@@ -18014,7 +18014,7 @@ function cg3FormatOutput(analysis, tabs) {
   let deprel = analysis.deprel ? ` @${analysis.deprel}` : '';
   let id = analysis.id ? ` #${analysis.id}->` : '';
   let head = (id && analysis.head) ? `${analysis.head}` : ``;
-  let dependency = analysis.sentence.options.showEmptyDependencies || analysis.head !== fallback
+  let dependency = analysis.sentence.options.showEmptyDependencies || analysis.head
     ? `${id}${head}`
     : ``;
 
@@ -18064,6 +18064,12 @@ class Analysis {
     this._heads = [];
     this._deps = [];
 
+    // internal index (see Sentence::index and Token::index), don't change this!
+    this.id = null;
+
+    // array of Tokens
+    this.subTokens = [];
+
     // iterate over passed params
     _.each(params, (value, key) => {
       if (value === undefined || fields.indexOf(key) === -1) {
@@ -18077,12 +18083,6 @@ class Analysis {
 
     // save updated params (mostly for debugging purposes)
     this.params = params || {};
-
-    // internal index (see Sentence::index and Token::index), don't change this!
-    this.id = null;
-
-    // array of Tokens
-    this.subTokens = [];
 
     // safe to unset this now
     this.initializing = false;
@@ -18194,6 +18194,19 @@ class Analysis {
       : index > this.length - 1 ? this.length - 1
       : parseInt(index);
 
+    // unlink heads and deps from the token to be removed
+    this.sentence.forEach(token => {
+      token.analysis
+        .eachHead(head => {
+          if (head === this[index])
+            token.analysis.removeHead(head);
+        })
+        .eachDep(dep => {
+          if (dep === this[index])
+            token.analysis.removeDep(dep);
+        });
+    });
+
     // remove the superToken pointer from the removed token
     this.subTokens[index].superToken = null;
 
@@ -18296,6 +18309,41 @@ class Analysis {
   }
 
   /**
+   * deserialize an internal representation
+   *
+   * @param {(String|Object)} nx JSON string or object
+   * @return {undefined}
+   */
+  set nx(nx) {
+
+    // parse the JSON if it's a string
+    nx = (typeof nx === 'string')
+      ? JSON.parse(nx)
+      : nx;
+
+    this.params = nx.params;
+    _.each(nx.values, (value, key) => {
+      this[key] = value;
+    });
+
+  }
+
+  /**
+   * static method allowing us to construct a new Analysis directly from an
+   *   Nx string and bind it to a token
+   *
+   * @param {Token} token
+   * @param {String} serial
+   * @return {Analysis}
+   */
+  static fromNx(token, serial) {
+    let analysis = new Analysis(token);
+    analysis.nx = serial;
+    return analysis;
+  }
+
+
+  /**
    * get a plain-text formatted string of the analysis
    *
    * @return {String}
@@ -18383,7 +18431,6 @@ class Analysis {
   get eles() {
     let eles = [];
 
-    console.log(this.numNoSuperTokens);
     if (this.isCurrent) {
 
       if (this.isSuperToken) {
@@ -18392,7 +18439,7 @@ class Analysis {
           data: {
             id: `multiword-${this.id}`,
             num: this.num,
-            numNoSuperTokens: this.numNoSuperTokens,
+            clump: this.clump,
             name: `multiword`,
             label: `${this.form} ${toSubscript(this.id)}`,
             /*length: `${this.form.length > 3
@@ -18414,7 +18461,7 @@ class Analysis {
           data: {
             id: `num-${this.id}`,
             num: this.num,
-            numNoSuperTokens: this.numNoSuperTokens,
+            clump: this.clump,
             name: 'number',
             label: this.id,
             pos: this.pos,
@@ -18426,7 +18473,7 @@ class Analysis {
           data: {
             id: `form-${this.id}`,
             num: this.num,
-            numNoSuperTokens: this.numNoSuperTokens,
+            clump: this.clump,
             name: `form`,
             attr: `form`,
             form: this.form,
@@ -18443,7 +18490,7 @@ class Analysis {
           data: {
             id: `pos-node-${this.id}`,
             num: this.num,
-            numNoSuperTokens: this.numNoSuperTokens,
+            clump: this.clump,
             name: `pos-node`,
             attr: `upostag`,
             label: this.pos || '',
@@ -18455,7 +18502,7 @@ class Analysis {
           data: {
             id: `pos-edge-${this.id}`,
             num: this.num,
-            numNoSuperTokens: this.numNoSuperTokens,
+            clump: this.clump,
             name: `pos-edge`,
             source: `form-${this.id}`,
             target: `pos-node-${this.id}`
@@ -18757,9 +18804,11 @@ class Analysis {
    * @return {(String|undefined)}
    */
   get lemma() {
-    return this.sentence.options.help.lemma
-      ? this._lemma || this._form
-      : this._lemma;
+    return this.isSuperToken
+      ? null
+      : this.sentence.options.help.lemma
+        ? this._lemma || this._form
+        : this._lemma;
   }
 
   /**
@@ -18789,7 +18838,9 @@ class Analysis {
    * @return {(String|undefined)}
    */
   get upostag() {
-    return this._upostag;
+    return this.isSuperToken
+      ? null
+      : this._upostag;
   }
 
   /**
@@ -18807,7 +18858,9 @@ class Analysis {
    * @return {(String|undefined)}
    */
   get xpostag() {
-    return this._xpostag;
+    return this.isSuperToken
+      ? null
+      : this._xpostag;
   }
 
   /**
@@ -18825,7 +18878,9 @@ class Analysis {
    * @return {(String|undefined)}
    */
   get feats() {
-    return this._feats;
+    return this.isSuperToken
+      ? null
+      : this._feats;
   }
 
   /**
@@ -18844,6 +18899,9 @@ class Analysis {
    * @return {(String)}
    */
   get head() {
+    if (this.isSuperToken)
+      return null;
+
     if (this.sentence.options.showEnhanced) {
       let heads = [];
       this.eachHead((token, deprel) => {
@@ -18853,12 +18911,12 @@ class Analysis {
           heads.push(`${token}${deprel ? `:${deprel}` : ''}`);
         }
       });
-      return heads.join('|') || fallback;
+      return heads.join('|') || null;
 
     } else {
       return this._heads.length
         ? this._heads[0].id || this._heads[0]
-        : fallback;
+        : null;
     }
   }
 
@@ -18869,6 +18927,8 @@ class Analysis {
    * @return {undefined}
    */
   set head(heads) {
+
+    heads = heads || [];
     if (typeof heads === 'string')
       heads = parseEnhancedString(heads);
 
@@ -18894,7 +18954,9 @@ class Analysis {
    * @return {(String|undefined)}
    */
   get deprel() {
-    return this._deprel;
+    return this.isSuperToken
+      ? null
+      : this._deprel;
   }
 
   /**
@@ -18912,6 +18974,9 @@ class Analysis {
    * @return {(String)}
    */
   get deps() {
+    if (this.isSuperToken)
+      return null;
+
     // don't worry about enhanced stuff for deps (always can be multiple)
     let deps = [];
     this.eachDep((token, deprel) => {
@@ -18921,7 +18986,7 @@ class Analysis {
         deps.push(`${token}${deprel ? `:${deprel}` : ''}`);
       }
     });
-    return deps.join('|') || fallback;
+    return deps.join('|') || null;
   }
 
   /**
@@ -18931,6 +18996,8 @@ class Analysis {
    * @return {undefined}
    */
   set deps(deps) {
+
+    deps = deps || [];
     if (typeof deps === 'string')
       deps = parseEnhancedString(deps);
 
@@ -18956,6 +19023,7 @@ class Analysis {
    * @return {(String|undefined)}
    */
   get misc() {
+    // superTokens can have "misc" field
     return this._misc;
   }
 
@@ -19117,41 +19185,6 @@ const regex = {
   cg3TokenContent: /^;?\s+"(.|\\")*"/
 }
 
-function getIndices(tok) {
-
-  let superTokenId = -1,
-    subTokenId = -1,
-    analysisId = 0,
-    found = false,
-    isSubToken = false;
-
-  tok.sentence.forEach(token => {
-
-    if (found)
-      return;
-
-
-    if (token.isSubToken) {
-      subTokenId++;
-      isSubToken = true;
-    } else {
-      superTokenId++;
-      subTokenId = -1;
-      isSubToken = false;
-    }
-
-    if (token === tok)
-      found = true;
-
-  });
-
-  return superTokenId === -1
-    ? null
-    : {
-        super: superTokenId,
-        sub: isSubToken ? subTokenId : null
-      };
-}
 
 /**
  * this class contains all the information associated with a sentence, including
@@ -19227,6 +19260,47 @@ class Sentence {
     // chaining
     return this;
   }
+  /**
+   * loop through the tokens in the sentence and return the superToken and
+   *   subToken indices
+   * @param {Token} tok token to search for
+   * @return {(Object|null)}
+   */
+  getIndices(tok) {
+
+    let superTokenId = -1,
+      subTokenId = -1,
+      analysisId = 0,
+      found = false,
+      isSubToken = false;
+
+    tok.sentence.forEach(token => {
+
+      if (found)
+        return;
+
+
+      if (token.isSubToken) {
+        subTokenId++;
+        isSubToken = true;
+      } else {
+        superTokenId++;
+        subTokenId = -1;
+        isSubToken = false;
+      }
+
+      if (token === tok)
+        found = true;
+
+    });
+
+    return superTokenId === -1
+      ? null
+      : {
+          super: superTokenId,
+          sub: isSubToken ? subTokenId : null
+        };
+  }
 
 
   /**
@@ -19301,7 +19375,7 @@ class Sentence {
     if (!(newToken instanceof Token))
       newToken = Token.fromParams(this, { form: 'inserted' });
 
-    const indices = getIndices(atToken);
+    const indices = this.getIndices(atToken);
     if (indices === null)
       return null;
 
@@ -19330,7 +19404,7 @@ class Sentence {
     if (!(newToken instanceof Token))
       newToken = Token.fromParams(this, { form: 'inserted' });
 
-    const indices = getIndices(atToken);
+    const indices = this.getIndices(atToken);
     if (indices === null)
       return null;
 
@@ -19359,7 +19433,7 @@ class Sentence {
     if (!(newAnalysis instanceof Analysis))
       newAnalysis = Token.fromParams(this, { form: 'inserted' }).analysis;
 
-    const indices = getIndices(atAnalysis.token);
+    const indices = this.getIndices(atAnalysis.token);
     if (indices === null)
       return null;
 
@@ -19397,7 +19471,7 @@ class Sentence {
     if (!(newAnalysis instanceof Analysis))
       newAnalysis = Token.fromParams(this, { form: 'inserted' }).analysis;
 
-    const indices = getIndices(atAnalysis.token);
+    const indices = this.getIndices(atAnalysis.token);
     if (indices === null)
       return null;
 
@@ -19477,6 +19551,19 @@ class Sentence {
     index = index < 0 ? 0
       : index > this.tokens.length - 1 ? this.tokens.length - 1
       : parseInt(index);
+
+    // unlink heads and deps from the token to be removed
+    this.forEach(token => {
+      token.analysis
+        .eachHead(head => {
+          if (head === this[index])
+            token.analysis.removeHead(head);
+        })
+        .eachDep(dep => {
+          if (dep === this[index])
+            token.analysis.removeDep(dep);
+        });
+    });
 
     // array splicing, return spliced element
     return this.tokens.splice(index, 1)[0];
@@ -19570,6 +19657,42 @@ class Sentence {
       options: this.options,
       tokens: tokens
     }, null, this.options.prettyOutput ? 2 : 0);
+  }
+
+  /**
+   * deserialize an internal representation
+   *
+   * @param {(String|Object)} nx JSON string or object
+   * @return {String}
+   */
+  set nx(nx) {
+
+    // parse the JSON if it's a string
+    nx = (typeof nx === 'string')
+      ? JSON.parse(nx)
+      : nx;
+
+    this.options = nx.options;
+    this.comments = nx.comments;
+    this.tokens = nx.tokens.map(tokenNx => {
+      return Token.fromNx(this, tokenNx);
+    });
+
+    return this.attach().nx;
+  }
+
+  /**
+   * static method allowing us to construct a new Sentence directly from an
+   *   Nx string
+   *
+   * @param {String} serial
+   * @param {Object} options (optional)
+   * @return {Sentence}
+   */
+  static fromNx(serial, options) {
+    let sent = new Sentence(options);
+    sent.nx = serial;
+    return sent;
   }
 
   /**
@@ -19931,10 +20054,10 @@ class Sentence {
     // track "overall" index number (id) and "empty" index number and "absolute" num
     // NOTE: CoNLL-U indices start at 1 (0 is root), so we will increment this
     //   index before using it (see Token::index)
-    let id = 0, empty = 0, num = 0, numNoSuperTokens = 0;
+    let id = 0, empty = 0, num = 0, clump = 0;
     _.each(this.tokens, token => {
       // allow each token to return counters for the next guy
-      [id, empty, num, numNoSuperTokens] = token.index(id, empty, num, numNoSuperTokens);
+      [id, empty, num, clump] = token.index(id, empty, num, clump);
     });
 
     // chaining
@@ -20470,44 +20593,60 @@ class Token {
     return this.removeAnalysisAt(Infinity);
   }
 
-  // token insertion, removal, moving // TODO
-  /*insertBefore(token) {
-    const indices = this.getIndices();
-    return this.sentence.insertTokenAt(indices, token);
-  }
-  insertAfter(token) {
-    const indices = this.getIndicesAfter();
-    return this.sentence.insertTokenAt(indices, token);
-  }
-  insertSubTokenBefore(subToken) {
-
-  }
-  insertSubTokenAfter(subToken) {
-
-  }
-  remove() {
-
-  }
-  moveBefore(token) {
-
-  }
-  moveAfter(token) {
-
-  }
-  makeSubTokenOf(token) {
-
-  }
-
   // token combining, merging, splitting
+
   combineWith(token) {
 
   }
   mergeWith(token) {
+    if (!(token instanceof Token))
+      throw new NotatrixError('unable to merge: not instance of Token');
 
+    if (this === token)
+      throw new NotatrixError('unable to merge: can\'t merge with self');
+
+    if (this.isSuperToken || token.isSuperToken)
+      throw new NotatrixError('unable to merge: can\'t merge superTokens');
+
+    if (this.superToken !== token.superToken)
+      throw new NotatrixError('unable to merge: can\'t merge tokens with different superTokens');
+
+    const dist = Math.abs(this.analysis.clump - token.analysis.clump);
+    if (dist !== 1)
+      throw new NotatrixError('unable to merge: tokens must be adjacent');
+
+    if (this.analysis === null || token.analysis === null)
+      throw new NotatrixError('unable to merge: tokens must have at least one analysis');
+
+    // combine the form and lemma fields
+    this.analysis.form = ((this.analysis.form || '') + (token.analysis.form || '')) || null;
+    this.analysis.lemma = ((this.analysis.lemma || '') + (token.analysis.lemma || '')) || null;
+
+    // take one of these fields
+    this.upostag = this.upostag || token.upostag || null;
+    this.xpostag = this.xpostag || token.xpostag || null;
+    this.feats = this.feats || token.feats || null;
+    this.misc = this.misc || token.misc || null;
+
+    // remove the token
+    if (token.isSubToken) {
+
+      const indices = this.sentence.getIndices(token);
+      this.superToken.removeSubTokenAt(indices.sub);
+
+    } else {
+
+      const indices = this.sentence.getIndices(token);
+      this.sentence.removeTokenAt(indices.super);
+
+    }
+
+    this.sentence.index();
+    return this; // chaining
   }
   split() {
 
-  }*/
+  }
 
   // internal format
 
@@ -20576,19 +20715,19 @@ class Token {
    *
    * @throws {NotatrixError} if given invalid id or empty
    */
-  index(id, empty, num, numNoSuperTokens) {
+  index(id, empty, num, clump) {
 
     id = parseInt(id);
     empty = parseInt(empty);
     num = parseInt(num);
-    numNoSuperTokens = parseInt(numNoSuperTokens);
+    clump = parseInt(clump);
 
-    if (isNaN(id) || isNaN(empty) || isNaN(num) || isNaN(numNoSuperTokens))
+    if (isNaN(id) || isNaN(empty) || isNaN(num) || isNaN(clump))
       throw new NotatrixError('can\'t index tokens using non-integers, make sure to call Sentence.index()')
 
     // if no analysis, nothing to do
     if (this.analysis === null)
-      return [id, empty, num, numNoSuperTokens];
+      return [id, empty, num, clump];
 
     // iterate over analyses
     this.forEach(analysis => {
@@ -20599,7 +20738,7 @@ class Token {
 
           // save the absolute index
           this.analysis.num = num;
-          this.analysis.numNoSuperTokens = null;
+          this.analysis.clump = null;
           num++;
 
           // index subTokens
@@ -20617,8 +20756,8 @@ class Token {
             subToken.forEach(analysis => {
               analysis.num = num;
               num++;
-              analysis.numNoSuperTokens = numNoSuperTokens;
-              numNoSuperTokens++;
+              analysis.clump = clump;
+              clump++;
             });
           });
 
@@ -20632,8 +20771,8 @@ class Token {
           // save the absolute index
           this.analysis.num = num;
           num++;
-          this.analysis.numNoSuperTokens = numNoSuperTokens;
-          numNoSuperTokens++;
+          this.analysis.clump = clump;
+          clump++;
 
           if (this.isEmpty) {
             empty++; // incr empty counter
@@ -20668,7 +20807,7 @@ class Token {
     });
 
     // return updated indices
-    return [id, empty, num, numNoSuperTokens];
+    return [id, empty, num, clump];
   }
 
   /**
@@ -20687,8 +20826,50 @@ class Token {
     // serialize other data
     return {
       current: this.current,
+      isEmpty: this.isEmpty,
       analyses: analyses
     };
+  }
+
+  /**
+   * deserialize an internal representation
+   *
+   * @param {(String|Object)} nx JSON string or object
+   * @return {undefined}
+   */
+  set nx(nx) {
+
+    // parse the JSON if it's a string
+    nx = (typeof nx === 'string')
+      ? JSON.parse(nx)
+      : nx;
+
+    this.analyses = nx.analyses.map(analysisNx => {
+
+      let analysis = Analysis.fromNx(this, analysisNx);
+      analysis.subTokens = analysisNx.subTokens.map(subTokenNx => {
+        return Token.fromNx(this.sentence, subTokenNx);
+      });
+      return analysis;
+
+    });
+    this.current = nx.current;
+    this._isEmpty = nx.isEmpty;
+
+  }
+
+  /**
+   * static method allowing us to construct a new Token directly from an
+   *   Nx string and bind it to a sentence
+   *
+   * @param {Sentence} sent
+   * @param {String} serial
+   * @return {Token}
+   */
+  static fromNx(sent, serial) {
+    let token = new Token(sent);
+    token.nx = serial;
+    return token;
   }
 
   /**
@@ -20800,8 +20981,12 @@ class Token {
     // iterate over the strings
     for (let i=1; i<tokenLines.length; i++) {
 
-      // ignore leading semicolons (TODO: determine what these are)
-      let line = tokenLines[i].replace(/^;/, '');
+      let line = tokenLines[i];
+      if (/^;/.test(line)) {
+        // strip leading semicolons
+        line = line.replace(/^;/, '');
+        // TODO: save this information somewhere
+      }
 
       // determine line indent
       let indent = getIndent(line);
@@ -23835,72 +24020,7 @@ module.exports = {
 	}
 };
 
-},{"./alerts":337,"./detect":344,"notatrix":330,"underscore":335}],341:[function(require,module,exports){
-'use strict';
-
-var $ = require('jquery');
-
-function upload(event) {
-  return server.push();
-}
-
-function export_(event) {
-
-  if (!gui.inBrowser) return null;
-
-  //Export Corpora to file
-  if (server.is_running) {
-    server.download();
-  } else {
-
-    var link = $('<a>').attr('download', manager.filename).attr('href', 'data:text/plain; charset=utf-8,' + manager.encode());
-    $('body').append(link);
-    link[0].click();
-  }
-}
-
-function clear(event) {
-  var force = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
-
-  if (!force) {
-    var conf = confirm('Do you want to clear the corpus (remove all sentences)?');
-    if (!conf) {
-      log.info('corpus::clear(): not clearing corpus');
-      return;
-    }
-  }
-
-  manager.reset();
-  return;
-}
-
-function print(event) {
-  throw new Error('corpus::print() not implemented');
-}
-
-function fromLocalStorage() {
-  console.log('load from local storage');
-}
-
-function fromServer() {
-  console.log('load from server');
-}
-
-module.exports = {
-  upload: upload,
-  export: export_,
-  clear: clear,
-  print: print,
-  load: {
-    from: {
-      localStorage: fromLocalStorage,
-      server: fromServer
-    }
-  }
-};
-
-},{"jquery":327}],342:[function(require,module,exports){
+},{"./alerts":337,"./detect":343,"notatrix":330,"underscore":335}],341:[function(require,module,exports){
 'use strict';
 
 // is defined in a js file, because fetch doesn't work offline in chrome
@@ -24124,7 +24244,7 @@ var CY_STYLE = [{
 
 module.exports = CY_STYLE;
 
-},{}],343:[function(require,module,exports){
+},{}],342:[function(require,module,exports){
 (function (global,setImmediate){
 'use strict';
 
@@ -44719,7 +44839,7 @@ var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbo
             // iterate through all the nodes and set the cellWidth and cellHeight
             // to the maximum width/height seen in the graph plus a padding value
             for (var _i = 0; _i < nodes.length; _i++) {
-              var clumpId = parseInt(nodes[_i]._private.data.numNoSuperTokens);
+              var clumpId = parseInt(nodes[_i]._private.data.clump);
               posWordMax[clumpId] = 0;
             }
             for (var _i2 = 0; _i2 < nodes.length; _i2++) {
@@ -44743,7 +44863,7 @@ var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbo
 
               //console.log('tree.js: [' + i + '] ' + node._private.data.label);
               //console.log('tree.js: [' + i + '] ' + node._private.data.id);
-              var _clumpId = parseInt(node._private.data.numNoSuperTokens);
+              var _clumpId = parseInt(node._private.data.clump);
               //console.log('tree.js: [' + i + '] ' + clumpId);
               posWordMax[_clumpId] = Math.max(posWordMax[_clumpId], nbb.w + p);
               //console.log('tree.js: [' + i + '] ' + posWordMax[clumpId]);
@@ -44777,10 +44897,6 @@ var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbo
           var col = 0;
           var moveToNextCell = function moveToNextCell() {
             col++;
-            /*do {
-              col++;
-            } while (!posWordMax[col]);
-            */
             if (col >= cols) {
               col = 0;
               row++;
@@ -44842,9 +44958,6 @@ var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbo
 
               var prevNodes = 0;
               for (var ii = 0; ii < col; ii++) {
-                /*while (!posWordMax[ii])
-                  ii++;
-                 console.log(ii, posWordMax[ii]));*/
                 prevNodes += posWordMax[ii];
               }
               var pad = 2;
@@ -44854,18 +44967,6 @@ var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbo
               //x = col * cellWidth + cellWidth / 2 + bb.x1;
               y = row * cellHeight + cellHeight / 2 + bb.y1;
 
-              console.log({
-                ele: element.data(),
-                x: x,
-                prevNodes: prevNodes,
-                pad: pad,
-                col: col,
-                posWordMax: posWordMax,
-                y: y,
-                row: row,
-                cellHeight: cellHeight,
-                'bb-y1': bb.y1
-              });
               log.debug('tree.js [' + row + '][' + col + '] x,y = ' + x + ',' + y);
 
               use(row, col);
@@ -44876,7 +44977,6 @@ var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbo
             return { x: x, y: y };
           };
 
-          console.log('laying out');
           nodes.layoutPositions(this, options, getPos);
         }
 
@@ -54353,7 +54453,7 @@ var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbo
 
       "use strict";
 
-      module.exports = "snapshot-2fd4aa6cc2-1530911359692";
+      module.exports = "snapshot-2fd4aa6cc2-1531006893492";
 
       /***/
     }]
@@ -54362,7 +54462,7 @@ var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbo
 });
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("timers").setImmediate)
-},{"timers":334}],344:[function(require,module,exports){
+},{"timers":334}],343:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -54416,7 +54516,7 @@ function detectFormat(text) {
 
 module.exports = detectFormat;
 
-},{"underscore":335}],345:[function(require,module,exports){
+},{"underscore":335}],344:[function(require,module,exports){
 'use strict';
 
 /**
@@ -54599,7 +54699,7 @@ module.exports = {
   ParseError: ParseError
 };
 
-},{}],346:[function(require,module,exports){
+},{}],345:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -54642,7 +54742,7 @@ module.exports = {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"underscore":335}],347:[function(require,module,exports){
+},{"underscore":335}],346:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -54754,8 +54854,7 @@ var Graph = function () {
 
       cy.on('click', 'node.form', onClickFormNode);
       cy.on('click', 'node.pos', onClickPosNode);
-      cy.on('click', 'node.multiword', onClickMultiwordNode);
-      cy.on('click', '$node > node', onClickChildNode);
+      cy.on('click', '$node > node', onClickMultiwordNode);
       cy.on('cxttapend', 'node.form', onCxttapendFormNode);
 
       cy.on('click', 'edge.dependency', onClickDependencyEdge);
@@ -55050,15 +55149,6 @@ function onClickMultiwordNode(event) {
   }
 }
 
-function onClickChildNode(event) {
-  // NB: event.target is the PARENT of a child we click
-  var target = event.target;
-  log.debug('called onClickChildNode(' + target.attr('id') + ')');
-  target.toggleClass('supAct');
-  console.info('onClickChildNode()', event);
-  alert('onClickChildNode()');
-}
-
 function onCxttapendFormNode(event) {
   var target = event.target;
   log.debug('called onCxttapendFormNode(' + target.attr('id') + ')');
@@ -55202,7 +55292,7 @@ function removeHead(srcId, tarId) {
 
 module.exports = Graph;
 
-},{"./config":339,"./cy-style":342,"./cytoscape/cytoscape":343,"./errors":345,"./funcs":346,"./selfcomplete":351,"./sort":353,"./validate":356,"jquery":327,"underscore":335}],348:[function(require,module,exports){
+},{"./config":339,"./cy-style":341,"./cytoscape/cytoscape":342,"./errors":344,"./funcs":345,"./selfcomplete":350,"./sort":352,"./validate":355,"jquery":327,"underscore":335}],347:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -55214,7 +55304,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var $ = require('jquery');
 
 var convert = require('./convert');
-var corpus = require('./corpus');
 var funcs = require('./funcs');
 var errors = require('./errors');
 var setupUndos = require('./undo-manager');
@@ -55308,7 +55397,7 @@ var toggle = {
 var pressed = {}; // used for onCtrlKeyup
 
 var GUI = function () {
-  function GUI(mgr) {
+  function GUI() {
     _classCallCheck(this, GUI);
 
     this.keys = KEYS;
@@ -55355,6 +55444,9 @@ var GUI = function () {
       $('#btnRedo').prop('disabled', !undoManager.hasRedo());
 
       $('.nav-link').removeClass('active').show();
+      $('#text-data').prop('readonly', false);
+      $('.readonly').removeClass('readonly');
+
       switch (manager.format) {
         case 'Unknown':
           $('.nav-link').hide();
@@ -55370,6 +55462,10 @@ var GUI = function () {
           break;
         case 'plain text':
           $('#tabText').hide(); // NOTE: no break here
+          if (manager.current.nx_initialized) {
+            $('#text-data').prop('readonly', true);
+            $('#tabOther').addClass('readonly');
+          }
         default:
           $('#tabOther').addClass('active').show().text(manager.format);
           break;
@@ -55446,11 +55542,11 @@ var GUI = function () {
         manager.insertSentence('');
       });
 
-      $('#btnUploadCorpus').click(corpus.upload);
-      $('#btnExportCorpus').click(corpus.export);
+      $('#btnUploadCorpus').click(manager.upload);
+      $('#btnExportCorpus').click(manager.export);
       //$('#btnSaveServer').click(saveOnServer);
-      $('#btnDiscardCorpus').click(corpus.clear);
-      $('#btnPrintCorpus').click(corpus.print);
+      $('#btnDiscardCorpus').click(clearCorpus);
+      $('#btnPrintCorpus').click(manager.print);
 
       $('#btnHelp').click(function (e) {
         window.open('help.html', '_blank').focus();
@@ -55460,13 +55556,18 @@ var GUI = function () {
       });
 
       $('#tabText').click(function (e) {
-        manager.parse(convert.to.plainText(manager.sentence));
+        //$()
+        manager.parse(convert.to.plainText(_this.read('text-data')));
       });
       $('#tabConllu').click(function (e) {
-        manager.parse(convert.to.conllu(manager.sentence));
+        //if (manager.format !== 'Plain text' || !manager.current.nx_initialized)
+        manager.current.nx_initialized = true;
+        manager.parse(convert.to.conllu(_this.read('text-data')));
       });
       $('#tabCG3').click(function (e) {
-        manager.parse(convert.to.cg3(manager.sentence));
+        //if (manager.format !== 'Plain text' || !manager.current.nx_initialized)
+        manager.current.nx_initialized = true;
+        manager.parse(convert.to.cg3(_this.read('text-data')));
       });
 
       $('#btnToggleTable').click(this.toggle.table);
@@ -55476,14 +55577,10 @@ var GUI = function () {
       $('#vertical').click(this.toggle.vertical);
       $('#enhanced').click(this.toggle.enhanced);
 
-      $('#current-sentence').keyup(this.onKeyupInCurrentSentence);
-      $('#text-data').keyup(this.onEditTextData);
-
-      // onkeyup is a global variable for JS runtime
-      onkeyup = this.onKeyupInDocument;
-
-      // direct graph-editing stuff
-      $('#edit').keyup(this.onKeyupInEditLabel);
+      $('#current-sentence').keyup(onKeyupInCurrentSentence);
+      $('#text-data').keyup(onEditTextData);
+      $('#edit').keyup(onKeyupInEditLabel);
+      onkeyup = onKeyupInDocument;
 
       // prevent accidentally leaving the page
       window.onbeforeunload = function () {
@@ -55515,341 +55612,6 @@ var GUI = function () {
       return this;
     }
   }, {
-    key: 'onKeyupInDocument',
-    value: function onKeyupInDocument(event) {
-      log.info('called onKeyupInDocument(' + event.which + ')');
-
-      // returns true if it caught something
-      if (gui.onCtrlKeyup(event)) return;
-
-      // editing an input
-      if ($('#text-data').is(':focus') || $('#edit').is(':focus')) return;
-
-      // if we get here, we're handling a keypress without an input-focus or ctrl-press
-      // (which means it wasn't already handled)
-      log.debug('onKeyupInDocument(): handling event.which:' + event.which);
-
-      switch (event.which) {
-        case KEYS.DELETE:
-        case KEYS.BACKSPACE:
-        case KEYS.X:
-          if (cy.$('.selected').length) {
-            graph.removeDependency(cy.$('.selected'));
-          } /* else if (cy.$('.supAct').length) {
-            removeSup(st);
-            }*/
-          break;
-
-        case KEYS.D:
-          if (cy.$('.selected').length) {
-            cy.$('.selected').toggleClass('moving');
-            gui.moving_dependency = !gui.moving_dependency;
-          }
-          break;
-
-        case KEYS.M:
-          /*if (cy.$('node.form.activated').length) {
-          	cy.$('node.form.activated')
-          		.removeClass('activated')
-          		.addClass('merge');
-          	} else if (cy.$('node.form.merge').length)
-          	cy.$('node.form.merge')
-          		.addClass('activated')
-          		.removeClass('merge');*/
-
-          break;
-
-        case KEYS.P:
-          /* if (text not focused)
-          	setPunct();*/
-          break;
-
-        case KEYS.R:
-          if (cy.$('node.form.activated')) graph.setRoot(cy.$('node.form.activated'));
-          break;
-
-        case KEYS.S:
-          // wf.addClass('supertoken');
-          // wf.removeClass('activated');
-          break;
-
-        case KEYS.LEFT:
-        case KEYS.RIGHT:
-          /*if (cy.$('node.form.merge').length) {
-          	mergeNodes(event.which === KEYS.LEFT ? 'left' : 'right', 'subtoken');
-          } else if (cy.$('.supertoken')) {
-          	// mergeNodes(toMerge, KEYS.SIDES[key.which], 'subtoken');
-          	// mergeNodes(toSup, KEYS.SIDES[key.which], 'supertoken');
-          }*/
-          break;
-
-        case KEYS.EQUALS:
-        case KEYS.EQUALS_:
-          if (event.shiftKey) {
-            gui.zoomIn();
-          } else {
-            cy.fit().center();
-          }
-          break;
-
-        case KEYS.MINUS:
-        case KEYS.MINUS_:
-          if (event.shiftKey) {
-            gui.zoomOut();
-          } else {
-            cy.fit().center();
-          }
-          break;
-
-        case KEYS.ENTER:
-          gui.intercepted = false;
-          graph.clear();
-
-        default:
-          if (47 < event.which && event.which < 58) {
-            // key in 0-9
-            var num = event.which - 48;
-            cy.zoom(Math.pow(1.5, num - 5));
-            gui.update();
-          }
-
-      }
-    }
-  }, {
-    key: 'onCtrlKeyup',
-    value: function onCtrlKeyup(event) {
-      log.debug('called onCtrlKeyup(which:' + event.which + ', pressed:' + JSON.stringify(pressed) + ')');
-
-      // handle Ctrl + <keypress>
-      // solution based on https://stackoverflow.com/a/12444641/5181692
-      pressed[event.which] = event.type == 'keyup';
-      log.info('ctrl: ' + pressed[KEYS.CTRL] + ', shift: ' + pressed[KEYS.CTRL] + ', y: ' + pressed[KEYS.Y] + ', z: ' + pressed[KEYS.Z] + ', this: ' + event.which);
-
-      if (!pressed[KEYS.CTRL]) return false;
-
-      if (pressed[KEYS.PAGE_DOWN]) {
-        var _pressed;
-
-        if (pressed[KEYS.SHIFT]) {
-          manager.last();
-        } else {
-          manager.next();
-        }
-        pressed = (_pressed = {}, _defineProperty(_pressed, KEYS.CTRL, true), _defineProperty(_pressed, KEYS.SHIFT, pressed[KEYS.SHIFT]), _pressed);
-        return true;
-      } else if (pressed[KEYS.PAGE_UP]) {
-        var _pressed2;
-
-        if (pressed[KEYS.SHIFT]) {
-          manager.first();
-        } else {
-          manager.prev();
-        }
-        pressed = (_pressed2 = {}, _defineProperty(_pressed2, KEYS.CTRL, true), _defineProperty(_pressed2, KEYS.SHIFT, pressed[KEYS.SHIFT]), _pressed2);
-        return true;
-      } else if (pressed[KEYS.Z] && !pressed[KEYS.SHIFT]) {
-        undoManager.undo();
-        pressed = _defineProperty({}, KEYS.CTRL, true);
-        return true;
-      } else if (pressed[KEYS.Y] || pressed[KEYS.Z]) {
-        var _pressed4;
-
-        undoManager.redo();
-        pressed = (_pressed4 = {}, _defineProperty(_pressed4, KEYS.CTRL, true), _defineProperty(_pressed4, KEYS.SHIFT, pressed[KEYS.SHIFT]), _pressed4);
-        setTimeout(function () {
-          // catch only events w/in next 500 msecs
-          pressed[KEYS.SHIFT] = false;
-        }, 500);
-        return true;
-      } else {
-        log.error('onCtrlKeyup(): uncaught key combination');
-      }
-
-      return false;
-    }
-  }, {
-    key: 'onKeyupInCurrentSentence',
-    value: function onKeyupInCurrentSentence(event) {
-      log.debug('called onKeyupInCurrentSentence(' + event.which + ')');
-
-      switch (event.which) {
-        case KEYS.ENTER:
-          manager.index = parseInt(gui.read('current-sentence')) - 1;
-          break;
-        case KEYS.LEFT:
-        case KEYS.J:
-          manager.prev();
-          break;
-        case KEYS.RIGHT:
-        case KEYS.K:
-          manager.next();
-          break;
-        case KEYS.MINUS:
-          manager.removeSentence();
-          break;
-        case KEYS.EQUALS:
-          manager.insertSentence();
-          break;
-      }
-    }
-  }, {
-    key: 'onKeyupInEditLabel',
-    value: function onKeyupInEditLabel(event) {
-      log.debug('called onKeyupInEditLabel(' + event.which + ')');
-
-      switch (event.which) {
-        case KEYS.ENTER:
-          graph.clear();
-          break;
-        case KEYS.TAB:
-          console.log('what should happen here???');
-          break;
-        case KEYS.ESC:
-          gui.editing = null;
-          graph.clear();
-          break;
-      }
-    }
-  }, {
-    key: 'onEditTextData',
-    value: function onEditTextData(event) {
-      log.debug('called onEditTextData(key: ' + event.which + ')');
-
-      //saveGraphEdits();
-
-      switch (event.which) {
-        case KEYS.ESC:
-          this.blur();
-          break;
-        case KEYS.ENTER:
-          gui.onEnter(event);
-          break;
-        default:
-          manager.parse();
-      }
-    }
-  }, {
-    key: 'onEnter',
-    value: function onEnter(event) {
-      log.debug('called onEnter()');
-
-      var sentence = manager.sentence,
-          cursor = $('#text-data').prop('selectionStart') - 1,
-          lines = sentence.split(/\n/),
-          lineId = null,
-          before = void 0,
-          during = void 0,
-          after = void 0,
-          cursorLine = 0;
-
-      if (gui.is_table_view) {
-
-        var target = $(event.target);
-        cursor = parseInt(target.attr('row-id')) || parseInt(target.attr('col-id'));
-        cursorLine = target.attr('row-id');
-      } else {
-
-        if (manager.format === 'Unknown' || manager.format === 'plain text') return;
-
-        // get current line number
-        var acc = 0;
-        $.each(lines, function (i, line) {
-          acc += line.length;
-          if (acc + i < cursor) cursorLine = i + 1;
-        });
-        log.debug('onEnter(): cursor on line[' + cursorLine + ']: "' + lines[cursorLine] + '"');
-
-        // advance the cursor until we are at the end of a line that isn't followed by a comment
-        //   or at the very beginning of the textarea
-        if (cursor !== 0 || sentence.startsWith('#')) {
-          log.debug('onEnter(): cursor[' + cursor + ']: "' + sentence[cursor] + '" (not at textarea start OR textarea has comments)');
-          while (sentence[cursor + 1] === '#' || sentence[cursor] !== '\n') {
-            log.debug('onEnter(): cursor[' + cursor + ']: "' + sentence[cursor] + '", line[' + cursorLine + ']: ' + lines[cursorLine]);
-            if (cursor === sentence.length) break;
-            if (sentence[cursor] === '\n') cursorLine++;
-            cursor++;
-          }
-        } else {
-          log.debug('onEnter(): cursor[' + cursor + ']: "' + sentence[cursor] + '" (at textarea start)');
-          cursorLine = -1;
-        }
-      }
-
-      log.debug('onEnter(): cursor[' + cursor + ']: "' + sentence[cursor] + '", line[' + cursorLine + ']: ' + lines[cursorLine]);
-
-      if (event.preventDefault) // bc of testing, sometimes these are fake events
-        event.preventDefault();
-
-      switch (manager.format) {
-        case 'CoNLL-U':
-
-          if (cursor) {
-            var tabs = lines[cursorLine].split('\t');
-            var token = manager.current.getById(tabs[0]).token;
-            manager.current.insertTokenAfter(token);
-          } else {
-            var _token = manager.current[0].token;
-            manager.current.insertTokenBefore(_token);
-          }
-
-          // parse but persist the table settings
-          var is_table_view = manager.current.is_table_view;
-          var column_visibilities = manager.current.column_visibilities;
-          manager.parse(manager.conllu);
-          manager.current.is_table_view = is_table_view;
-          manager.current.column_visibilities = column_visibilities;
-
-          break;
-
-        case 'CG3':
-
-          throw new errors.NotImplementedError('can\'t onEnter with CG3 :/');
-          /*
-          // advance to the end of an analysis
-          log.debug(`onEnter(): line[${cursorLine}]: "${lines[cursorLine]}", cursor[${cursor}]: "${sentence[cursor]}"`);
-          while (cursorLine < lines.length - 1) {
-          if (lines[cursorLine + 1].startsWith('"<'))
-          break;
-          cursorLine++;
-          cursor += lines[cursorLine].length + 1;
-          log.debug(`onEnter(): incrementing line[${cursorLine}]: "${lines[cursorLine]}", cursor[${cursor}]: "${sentence[cursor]}"`);
-          }
-          lineId = lines.slice(0, cursorLine + 1).reduce((acc, line) => {
-          return acc + line.startsWith('"<');
-          }, 0) + 1;
-          log.debug(`onEnter(): inserting line with id: ${lineId}`);
-          log.debug(`onEnter(): resetting all content lines: [${lines}]`);
-          const incrementIndices = (lines, lineId) => {
-          return lines.map((line) => {
-          if (line.startsWith('#'))
-          return line;
-          (line.match(/[#>][0-9]+/g) || []).map((match) => {
-          let id = parseInt(match.slice(1));
-          id += (id >= lineId ? 1 : 0);
-          line = line.replace(match, `${match.slice(0,1)}${id}`)
-          });
-          return line;
-          });
-          }
-          before = incrementIndices(lines.slice(0, cursorLine + 1), lineId);
-          during = [`"<_>"`, `\t${getCG3Analysis(lineId, {id:lineId})}`];
-          after = incrementIndices(lines.slice(cursorLine + 1), lineId);
-          log.debug(`onEnter(): preceding line(s) : [${before}]`);
-          log.debug(`onEnter(): interceding lines : [${during}]`);
-          log.debug(`onEnter(): proceeding line(s): [${after}]`);
-          $('#text-data').val(before.concat(during, after).join('\n'))
-          .prop('selectionStart', cursor)
-          .prop('selectionEnd', cursor);*/
-
-          break;
-
-        default:
-          insertSentence();
-      }
-
-      gui.update();
-    }
-  }, {
     key: 'is_table_view',
     get: function get() {
       return manager.current.is_table_view;
@@ -55866,9 +55628,348 @@ var GUI = function () {
   return GUI;
 }();
 
+function onKeyupInDocument(event) {
+  log.info('called onKeyupInDocument(' + event.which + ')');
+
+  // returns true if it caught something
+  if (onCtrlKeyup(event)) return;
+
+  // editing an input
+  if ($('#text-data').is(':focus') || $('#edit').is(':focus')) return;
+
+  // if we get here, we're handling a keypress without an input-focus or ctrl-press
+  // (which means it wasn't already handled)
+  log.debug('onKeyupInDocument(): handling event.which:' + event.which);
+
+  switch (event.which) {
+    case KEYS.DELETE:
+    case KEYS.BACKSPACE:
+    case KEYS.X:
+      if (cy.$('.selected').length) {
+        graph.removeDependency(cy.$('.selected'));
+      } /* else if (cy.$('.supAct').length) {
+         removeSup(st);
+        }*/
+      break;
+
+    case KEYS.D:
+      if (cy.$('.selected').length) {
+        cy.$('.selected').toggleClass('moving');
+        gui.moving_dependency = !gui.moving_dependency;
+      }
+      break;
+
+    case KEYS.M:
+      /*if (cy.$('node.form.activated').length) {
+        cy.$('node.form.activated')
+          .removeClass('activated')
+          .addClass('merge');
+       } else if (cy.$('node.form.merge').length)
+        cy.$('node.form.merge')
+          .addClass('activated')
+          .removeClass('merge');*/
+
+      break;
+
+    case KEYS.P:
+      /* if (text not focused)
+        setPunct();*/
+      break;
+
+    case KEYS.R:
+      if (cy.$('node.form.activated')) graph.setRoot(cy.$('node.form.activated'));
+      break;
+
+    case KEYS.S:
+      // wf.addClass('supertoken');
+      // wf.removeClass('activated');
+      break;
+
+    case KEYS.LEFT:
+    case KEYS.RIGHT:
+      /*if (cy.$('node.form.merge').length) {
+        mergeNodes(event.which === KEYS.LEFT ? 'left' : 'right', 'subtoken');
+      } else if (cy.$('.supertoken')) {
+        // mergeNodes(toMerge, KEYS.SIDES[key.which], 'subtoken');
+        // mergeNodes(toSup, KEYS.SIDES[key.which], 'supertoken');
+      }*/
+      break;
+
+    case KEYS.EQUALS:
+    case KEYS.EQUALS_:
+      if (event.shiftKey) {
+        gui.zoomIn();
+      } else {
+        cy.fit().center();
+      }
+      break;
+
+    case KEYS.MINUS:
+    case KEYS.MINUS_:
+      if (event.shiftKey) {
+        gui.zoomOut();
+      } else {
+        cy.fit().center();
+      }
+      break;
+
+    case KEYS.ENTER:
+      gui.intercepted = false;
+      graph.clear();
+      break;
+
+    default:
+      if (47 < event.which && event.which < 58) {
+        // key in 0-9
+        var num = event.which - 48;
+        cy.zoom(Math.pow(1.5, num - 5));
+        gui.update();
+      }
+
+  }
+}
+function onCtrlKeyup(event) {
+  log.debug('called onCtrlKeyup(which:' + event.which + ', pressed:' + JSON.stringify(pressed) + ')');
+
+  // handle Ctrl + <keypress>
+  // solution based on https://stackoverflow.com/a/12444641/5181692
+  pressed[event.which] = event.type == 'keyup';
+  log.info('ctrl: ' + pressed[KEYS.CTRL] + ', shift: ' + pressed[KEYS.CTRL] + ', y: ' + pressed[KEYS.Y] + ', z: ' + pressed[KEYS.Z] + ', this: ' + event.which);
+
+  if (!pressed[KEYS.CTRL]) return false;
+
+  if (pressed[KEYS.PAGE_DOWN]) {
+    var _pressed;
+
+    if (pressed[KEYS.SHIFT]) {
+      manager.last();
+    } else {
+      manager.next();
+    }
+    pressed = (_pressed = {}, _defineProperty(_pressed, KEYS.CTRL, true), _defineProperty(_pressed, KEYS.SHIFT, pressed[KEYS.SHIFT]), _pressed);
+    return true;
+  } else if (pressed[KEYS.PAGE_UP]) {
+    var _pressed2;
+
+    if (pressed[KEYS.SHIFT]) {
+      manager.first();
+    } else {
+      manager.prev();
+    }
+    pressed = (_pressed2 = {}, _defineProperty(_pressed2, KEYS.CTRL, true), _defineProperty(_pressed2, KEYS.SHIFT, pressed[KEYS.SHIFT]), _pressed2);
+    return true;
+  } else if (pressed[KEYS.Z] && !pressed[KEYS.SHIFT]) {
+    undoManager.undo();
+    pressed = _defineProperty({}, KEYS.CTRL, true);
+    return true;
+  } else if (pressed[KEYS.Y] || pressed[KEYS.Z]) {
+    var _pressed4;
+
+    undoManager.redo();
+    pressed = (_pressed4 = {}, _defineProperty(_pressed4, KEYS.CTRL, true), _defineProperty(_pressed4, KEYS.SHIFT, pressed[KEYS.SHIFT]), _pressed4);
+    setTimeout(function () {
+      // catch only events w/in next 500 msecs
+      pressed[KEYS.SHIFT] = false;
+    }, 500);
+    return true;
+  } else {
+    log.error('onCtrlKeyup(): uncaught key combination');
+  }
+
+  return false;
+}
+function onKeyupInCurrentSentence(event) {
+  log.debug('called onKeyupInCurrentSentence(' + event.which + ')');
+
+  switch (event.which) {
+    case KEYS.ENTER:
+      manager.index = parseInt(gui.read('current-sentence')) - 1;
+      break;
+    case KEYS.LEFT:
+    case KEYS.J:
+      manager.prev();
+      break;
+    case KEYS.RIGHT:
+    case KEYS.K:
+      manager.next();
+      break;
+    case KEYS.MINUS:
+      manager.removeSentence();
+      break;
+    case KEYS.EQUALS:
+      manager.insertSentence();
+      break;
+  }
+}
+function onKeyupInEditLabel(event) {
+  log.debug('called onKeyupInEditLabel(' + event.which + ')');
+
+  switch (event.which) {
+    case KEYS.ENTER:
+      graph.clear();
+      break;
+    case KEYS.TAB:
+      console.log('what should happen here???');
+      break;
+    case KEYS.ESC:
+      gui.editing = null;
+      graph.clear();
+      break;
+  }
+}
+function onEditTextData(event) {
+  log.debug('called onEditTextData(key: ' + event.which + ', parseTimer: ' + gui.parseTimer + ')');
+
+  switch (event.which) {
+    case KEYS.ESC:
+      this.blur();
+      break;
+
+    case KEYS.ENTER:
+      onEnter(event);
+      break;
+
+    default:
+      // wait a full second before parsing (this prevents immediate trimming
+      //   of whitespace and other annoying side effects), and avoid redundant
+      //   parsing if we edit again w/in that 1-sec window
+      clearTimeout(gui.parseTimer);
+      gui.parseTimer = setTimeout(manager.parse, 1000);
+  }
+}
+function onEnter(event) {
+  log.debug('called onEnter()');
+
+  var sentence = manager.sentence,
+      cursor = $('#text-data').prop('selectionStart') - 1,
+      lines = sentence.split(/\n/),
+      lineId = null,
+      before = void 0,
+      during = void 0,
+      after = void 0,
+      cursorLine = 0;
+
+  if (gui.is_table_view) {
+
+    var target = $(event.target);
+    cursor = parseInt(target.attr('row-id')) || parseInt(target.attr('col-id'));
+    cursorLine = target.attr('row-id');
+  } else {
+
+    if (manager.format === 'Unknown' || manager.format === 'plain text') return;
+
+    // get current line number
+    var acc = 0;
+    $.each(lines, function (i, line) {
+      acc += line.length;
+      if (acc + i < cursor) cursorLine = i + 1;
+    });
+    log.debug('onEnter(): cursor on line[' + cursorLine + ']: "' + lines[cursorLine] + '"');
+
+    // advance the cursor until we are at the end of a line that isn't followed by a comment
+    //   or at the very beginning of the textarea
+    if (cursor !== 0 || sentence.startsWith('#')) {
+      log.debug('onEnter(): cursor[' + cursor + ']: "' + sentence[cursor] + '" (not at textarea start OR textarea has comments)');
+      while (sentence[cursor + 1] === '#' || sentence[cursor] !== '\n') {
+        log.debug('onEnter(): cursor[' + cursor + ']: "' + sentence[cursor] + '", line[' + cursorLine + ']: ' + lines[cursorLine]);
+        if (cursor === sentence.length) break;
+        if (sentence[cursor] === '\n') cursorLine++;
+        cursor++;
+      }
+    } else {
+      log.debug('onEnter(): cursor[' + cursor + ']: "' + sentence[cursor] + '" (at textarea start)');
+      cursorLine = -1;
+    }
+  }
+
+  log.debug('onEnter(): cursor[' + cursor + ']: "' + sentence[cursor] + '", line[' + cursorLine + ']: ' + lines[cursorLine]);
+
+  if (event.preventDefault) // bc of testing, sometimes these are fake events
+    event.preventDefault();
+
+  switch (manager.format) {
+    case 'CoNLL-U':
+
+      if (cursor) {
+        var tabs = lines[cursorLine].split('\t');
+        var token = manager.current.getById(tabs[0]).token;
+        manager.current.insertTokenAfter(token);
+      } else {
+        var _token = manager.current[0].token;
+        manager.current.insertTokenBefore(_token);
+      }
+
+      // parse but persist the table settings
+      var is_table_view = manager.current.is_table_view;
+      var column_visibilities = manager.current.column_visibilities;
+      manager.parse(manager.conllu);
+      manager.current.is_table_view = is_table_view;
+      manager.current.column_visibilities = column_visibilities;
+
+      break;
+
+    case 'CG3':
+
+      throw new errors.NotImplementedError('can\'t onEnter with CG3 :/');
+      /*
+      // advance to the end of an analysis
+      log.debug(`onEnter(): line[${cursorLine}]: "${lines[cursorLine]}", cursor[${cursor}]: "${sentence[cursor]}"`);
+      while (cursorLine < lines.length - 1) {
+          if (lines[cursorLine + 1].startsWith('"<'))
+              break;
+          cursorLine++;
+          cursor += lines[cursorLine].length + 1;
+          log.debug(`onEnter(): incrementing line[${cursorLine}]: "${lines[cursorLine]}", cursor[${cursor}]: "${sentence[cursor]}"`);
+      }
+       lineId = lines.slice(0, cursorLine + 1).reduce((acc, line) => {
+          return acc + line.startsWith('"<');
+      }, 0) + 1;
+      log.debug(`onEnter(): inserting line with id: ${lineId}`);
+      log.debug(`onEnter(): resetting all content lines: [${lines}]`);
+       const incrementIndices = (lines, lineId) => {
+        return lines.map((line) => {
+          if (line.startsWith('#'))
+            return line;
+          (line.match(/[#>][0-9]+/g) || []).map((match) => {
+            let id = parseInt(match.slice(1));
+            id += (id >= lineId ? 1 : 0);
+            line = line.replace(match, `${match.slice(0,1)}${id}`)
+          });
+          return line;
+        });
+      }
+      before = incrementIndices(lines.slice(0, cursorLine + 1), lineId);
+      during = [`"<_>"`, `\t${getCG3Analysis(lineId, {id:lineId})}`];
+      after = incrementIndices(lines.slice(cursorLine + 1), lineId);
+       log.debug(`onEnter(): preceding line(s) : [${before}]`);
+      log.debug(`onEnter(): interceding lines : [${during}]`);
+      log.debug(`onEnter(): proceeding line(s): [${after}]`);
+       $('#text-data').val(before.concat(during, after).join('\n'))
+        .prop('selectionStart', cursor)
+        .prop('selectionEnd', cursor);*/
+
+      break;
+
+    default:
+      insertSentence();
+  }
+
+  gui.update();
+}
+
+function clearCorpus(event) {
+  var conf = confirm('Do you want to clear the corpus (remove all sentences)?');
+  if (!conf) {
+    log.info('corpus::clear(): not clearing corpus');
+    return;
+  }
+
+  manager.reset();
+}
+
 module.exports = GUI;
 
-},{"./convert":340,"./corpus":341,"./errors":345,"./funcs":346,"./table":354,"./undo-manager":355,"jquery":327}],349:[function(require,module,exports){
+},{"./convert":340,"./errors":344,"./funcs":345,"./table":353,"./undo-manager":354,"jquery":327}],348:[function(require,module,exports){
 'use strict';
 
 require('babel-polyfill');
@@ -55885,11 +55986,9 @@ $(function () {
 	funcs.global().log = new Log();
 	funcs.global().server = new Server();
 	funcs.global().manager = new Manager();
-
-	manager.parse('1\tword\n2-3\tsuper\n2\tsub1\n3\tsub2');
 });
 
-},{"./browser-logger":338,"./funcs":346,"./manager":350,"./server":352,"babel-polyfill":1}],350:[function(require,module,exports){
+},{"./browser-logger":338,"./funcs":345,"./manager":349,"./server":351,"babel-polyfill":1}],349:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -55899,6 +55998,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var $ = require('jquery');
 var _ = require('underscore');
 var nx = require('notatrix');
+nx.Sentence.prototype.currentFormat = null;
 
 var cfg = require('./config');
 var funcs = require('./funcs');
@@ -55906,8 +56006,6 @@ var GUI = require('./gui');
 var Graph = require('./graph');
 var errors = require('./errors');
 var detectFormat = require('./detect');
-
-nx.Sentence.prototype.currentFormat = null;
 
 var Manager = function () {
   function Manager() {
@@ -55932,8 +56030,8 @@ var Manager = function () {
       this.insertSentence(cfg.defaultSentence);
     }
   }, {
-    key: 'each',
-    value: function each(callback) {
+    key: 'map',
+    value: function map(callback) {
       return this._sentences.map(function (sentence, i) {
         return callback(i, sentence);
       });
@@ -55984,7 +56082,7 @@ var Manager = function () {
 
       if (0 > index || index > this.length - 1) return null;
 
-      this._sentences[index] = newSentence(text);
+      this._sentences[index] = updateSentence(this._sentences[index], text);
       gui.update();
 
       return this.getSentence(index);
@@ -56014,7 +56112,7 @@ var Manager = function () {
 
       index = index < 0 ? 0 : index > this.length ? this.length : parseInt(index);
 
-      var sent = newSentence(text);
+      var sent = updateSentence({}, text);
       this._sentences = this._sentences.slice(0, index).concat(sent).concat(this._sentences.slice(index));
 
       this.index = index;
@@ -56083,36 +56181,65 @@ var Manager = function () {
   }, {
     key: 'parse',
     value: function parse(text) {
-      var _this = this;
 
       // if not passed explicitly, read from the textarea
       text = text || gui.read('text-data');
-      var splitted = this.split(text);
+      var splitted = manager.split(text);
 
       // overwrite contents of #text-data
-      this.sentence = splitted[0];
+      manager.sentence = splitted[0];
 
       // iterate over all elements except the first
       _.each(splitted, function (split, i) {
         if (!i) return; // skip first
-        _this.insertSentence(split);
+        manager.insertSentence(split);
       });
 
       gui.update();
     }
   }, {
+    key: 'load',
+    value: function load() {}
+  }, {
+    key: 'loadFromLocalStorage',
+    value: function loadFromLocalStorage() {}
+  }, {
+    key: 'loadFromServer',
+    value: function loadFromServer() {}
+  }, {
+    key: 'upload',
+    value: function upload() {
+      return server.push();
+    }
+  }, {
     key: 'export',
     value: function _export() {
-      var _this2 = this;
 
-      return this.each(function (i, sent) {
-        return '[UD-Annotatrix: id="' + (i + 1) + '" format="' + manager.format + '"]\n      ' + (manager.format === 'Unknown' ? '' : _this2.sentence);
-      }).join('\n\n');
+      if (!gui.inBrowser) return null;
+
+      // export corpora to file
+      if (server.is_running) {
+        server.download();
+      } else {
+
+        var link = $('<a>').attr('download', manager.filename).attr('href', 'data:text/plain; charset=utf-8,' + manager.encode());
+        $('body').append(link);
+        link[0].click();
+      }
     }
   }, {
     key: 'encode',
     value: function encode() {
-      return encodeURIComponent(this.export());
+      var _this = this;
+
+      return encodeURIComponent(this.map(function (i, sent) {
+        return '[UD-Annotatrix: id="' + (i + 1) + '" format="' + manager.format + '"]\n      ' + (manager.format === 'Unknown' ? '' : _this.sentence);
+      }).join('\n\n'));
+    }
+  }, {
+    key: 'print',
+    value: function print() {
+      throw new Error('print() not implemented');
     }
   }, {
     key: 'length',
@@ -56197,7 +56324,7 @@ var Manager = function () {
   }, {
     key: 'sentences',
     get: function get() {
-      return this.each(function (i, sent) {
+      return this.map(function (i, sent) {
         return sent.text;
       });
     }
@@ -56236,31 +56363,50 @@ var Manager = function () {
   return Manager;
 }();
 
-function newSentence(text) {
+function updateSentence(oldSent, text) {
 
   text = text || cfg.defaultInsertedSentence;
+  var format = detectFormat(text);
 
-  var sent = void 0,
-      format = detectFormat(text);
+  var sent = void 0;
 
   if (format === 'CoNLL-U') {
-    sent = nx.Sentence.fromConllu(text);
+
+    if (manager.format === 'plain text') {
+      sent = manager.current;
+    } else {
+      sent = nx.Sentence.fromConllu(text);
+    }
   } else if (format === 'CG3') {
-    sent = nx.Sentence.fromCG3(text);
+
+    if (manager.format === 'plain text') {
+      sent = manager.current;
+    } else {
+      sent = nx.Sentence.fromCG3(text);
+    }
+  } else if (format === 'plain text') {
+
+    if (oldSent.nx_initialized) {
+      // don't overwrite stuff :)
+      sent = oldSent;
+    } else {
+      sent = nx.Sentence.fromText(text);
+    }
   } else {
-    sent = nx.Sentence.fromText(text);
+    throw new Error('format not yet supported: ' + format);
   }
 
   sent.currentFormat = format;
-  sent.is_table_view = false;
-  sent.column_visibilities = new Array(10).fill(true);
+  sent.nx_initialized = oldSent.nx_initialized || false;
+  sent.is_table_view = oldSent.is_table_view || false;
+  sent.column_visibilities = oldSent.column_visibilities || new Array(10).fill(true);
 
   return sent;
 }
 
 module.exports = Manager;
 
-},{"./config":339,"./detect":344,"./errors":345,"./funcs":346,"./graph":347,"./gui":348,"jquery":327,"notatrix":330,"underscore":335}],351:[function(require,module,exports){
+},{"./config":339,"./detect":343,"./errors":344,"./funcs":345,"./graph":346,"./gui":347,"jquery":327,"notatrix":330,"underscore":335}],350:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -57235,7 +57381,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     };
 
     // Create chainable jQuery plugin:
-    console.log($.fn);
     $.fn.devbridgeSelfcomplete = function (options, args) {
         var dataKey = 'selfcomplete';
         // If function invoked without argument return
@@ -57269,7 +57414,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     }
 });
 
-},{"jquery":327}],352:[function(require,module,exports){
+},{"jquery":327}],351:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -57391,7 +57536,7 @@ function getTreebankId() {
 
 module.exports = Server;
 
-},{"jquery":327}],353:[function(require,module,exports){
+},{"jquery":327}],352:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -57449,7 +57594,7 @@ module.exports = {
   rtl: rtl
 };
 
-},{"underscore":335}],354:[function(require,module,exports){
+},{"underscore":335}],353:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -57518,7 +57663,7 @@ module.exports = {
   edit: edit
 };
 
-},{"./validate":356,"jquery":327}],355:[function(require,module,exports){
+},{"./validate":355,"jquery":327}],354:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -57535,7 +57680,7 @@ module.exports = function () {
 	});
 };
 
-},{"jquery":327,"undo-manager":336}],356:[function(require,module,exports){
+},{"jquery":327,"undo-manager":336}],355:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -57882,4 +58027,4 @@ module.exports = {
   is_relation_conflict: is_relation_conflict
 };
 
-},{"jquery":327}]},{},[349]);
+},{"jquery":327}]},{},[348]);

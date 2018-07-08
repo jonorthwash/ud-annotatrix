@@ -118,8 +118,7 @@ class Graph {
 
     cy.on('click', 'node.form', onClickFormNode);
     cy.on('click', 'node.pos', onClickPosNode);
-    cy.on('click', 'node.multiword', onClickMultiwordNode);
-    cy.on('click', '$node > node', onClickChildNode);
+    cy.on('click', '$node > node', onClickMultiwordNode);
     cy.on('cxttapend', 'node.form', onCxttapendFormNode);
 
     cy.on('click', 'edge.dependency', onClickDependencyEdge);
@@ -414,15 +413,6 @@ function onClickMultiwordNode(event) {
     cy.$('.multiword-active').removeClass('multiword-active');
     target.addClass('multiword-active');
   }
-}
-
-function onClickChildNode(event) {
-  // NB: event.target is the PARENT of a child we click
-  const target = event.target;
-  log.debug(`called onClickChildNode(${target.attr('id')})`);
-  target.toggleClass('supAct');
-  console.info('onClickChildNode()', event);
-  alert('onClickChildNode()');
 }
 
 function onCxttapendFormNode(event) {
