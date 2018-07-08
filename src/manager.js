@@ -3,6 +3,7 @@
 const $ = require('jquery');
 const _ = require('underscore');
 const nx = require('notatrix');
+nx.Sentence.prototype.currentFormat = null;
 
 const cfg = require('./config');
 const funcs = require('./funcs');
@@ -10,8 +11,6 @@ const GUI = require('./gui');
 const Graph = require('./graph');
 const errors = require('./errors');
 const detectFormat = require('./detect');
-
-nx.Sentence.prototype.currentFormat = null;
 
 class Manager {
 
@@ -36,7 +35,7 @@ class Manager {
   get length() {
     return this._sentences.length;
   }
-  each(callback) {
+  map(callback) {
     return this._sentences.map((sentence, i) => {
       return callback(i, sentence);
     });
@@ -157,7 +156,7 @@ class Manager {
     return this.setSentence(text);
   }
   get sentences() {
-    return this.each((i, sent) => {
+    return this.map((i, sent) => {
       return sent.text;
     });
   }
@@ -171,7 +170,7 @@ class Manager {
     if (0 > index || index > this.length - 1)
       return null;
 
-    this._sentences[index] = newSentence(text);
+    this._sentences[index] = updateSentence(this._sentences[index], text);
     gui.update();
 
     return this.getSentence(index);
@@ -201,7 +200,7 @@ class Manager {
       : index > this.length ? this.length
       : parseInt(index);
 
-    const sent = newSentence(text);
+    const sent = updateSentence({}, text);
     this._sentences = this._sentences.slice(0, index)
       .concat(sent)
       .concat(this._sentences.slice(index));
@@ -280,15 +279,15 @@ class Manager {
 
     // if not passed explicitly, read from the textarea
     text = text || gui.read('text-data');
-    let splitted = this.split(text);
+    let splitted = manager.split(text);
 
     // overwrite contents of #text-data
-    this.sentence = splitted[0];
+    manager.sentence = splitted[0];
 
     // iterate over all elements except the first
     _.each(splitted, (split, i) => {
       if (!i) return; // skip first
-      this.insertSentence(split);
+      manager.insertSentence(split);
     });
 
     gui.update();
@@ -324,36 +323,90 @@ class Manager {
 
 
 
+  load() {
+
+  }
+  loadFromLocalStorage() {
+
+  }
+  loadFromServer() {
+
+  }
+
+
+
+  upload() {
+    return server.push();
+  }
   export() {
-    return this.each((i, sent) => {
-      return `[UD-Annotatrix: id="${i+1}" format="${manager.format}"]
-      ${ (manager.format === 'Unknown') ? '' : this.sentence }`;
-    }).join('\n\n');
+
+    if (!gui.inBrowser)
+      return null;
+
+    // export corpora to file
+    if (server.is_running) {
+      server.download();
+    } else {
+
+      const link = $('<a>')
+        .attr('download', manager.filename)
+        .attr('href', `data:text/plain; charset=utf-8,${manager.encode()}`);
+      $('body').append(link);
+      link[0].click();
+
+    }
   }
   encode() {
-    return encodeURIComponent(this.export());
+    return encodeURIComponent(this.map((i, sent) => {
+      return `[UD-Annotatrix: id="${i+1}" format="${manager.format}"]
+      ${ (manager.format === 'Unknown') ? '' : this.sentence }`;
+    }).join('\n\n'));
+  }
+  print() {
+    throw new Error('print() not implemented');
   }
 
 }
 
-function newSentence(text) {
+function updateSentence(oldSent, text) {
 
   text = text || cfg.defaultInsertedSentence;
+  const format = detectFormat(text);
 
-  let sent,
-    format = detectFormat(text);
+  let sent;
 
   if (format === 'CoNLL-U') {
-    sent = nx.Sentence.fromConllu(text);
+
+    if (manager.format === 'plain text') {
+      sent = manager.current;
+    } else {
+      sent = nx.Sentence.fromConllu(text);
+    }
+
   } else if (format === 'CG3') {
-    sent = nx.Sentence.fromCG3(text);
+
+    if (manager.format === 'plain text') {
+      sent = manager.current;
+    } else {
+      sent = nx.Sentence.fromCG3(text);
+    }
+
+  } else if (format === 'plain text') {
+
+    if (oldSent.nx_initialized) { // don't overwrite stuff :)
+      sent = oldSent;
+    } else {
+      sent = nx.Sentence.fromText(text);
+    }
+
   } else {
-    sent = nx.Sentence.fromText(text);
+    throw new Error(`format not yet supported: ${format}`)
   }
 
   sent.currentFormat = format;
-  sent.is_table_view = false;
-  sent.column_visibilities = new Array(10).fill(true);
+  sent.nx_initialized = oldSent.nx_initialized || false;
+  sent.is_table_view = oldSent.is_table_view || false;
+  sent.column_visibilities = oldSent.column_visibilities || new Array(10).fill(true);
 
   return sent;
 }
