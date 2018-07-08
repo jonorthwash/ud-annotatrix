@@ -29,9 +29,6 @@ fi
 # without "Requirement already satisfied warnings"
 pip3 install --user -r requirements.txt 1> >(grep -v 'Requirement already satisfied' 1>&2)
 
-# fix matplotlib compatibility in virtualenv
-echo "backend : TkAgg" > ~/.matplotlib/matplotlibrc
-
 # basic ENV file
 ENV=.env
 if [ ! -f $ENV ]; then
