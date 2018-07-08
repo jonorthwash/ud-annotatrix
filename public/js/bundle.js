@@ -55684,14 +55684,15 @@ function onKeyupInDocument(event) {
       break;
 
     case KEYS.M:
-      /*if (cy.$('node.form.activated').length) {
-        cy.$('node.form.activated')
-          .removeClass('activated')
-          .addClass('merge');
-       } else if (cy.$('node.form.merge').length)
-        cy.$('node.form.merge')
-          .addClass('activated')
-          .removeClass('merge');*/
+      if (cy.$('node.form.merge').length) {
+
+        cy.$('node.form.activated').removeClass('activated');
+
+        cy.$('node.form.merge').addClass('activated').removeClass('merge');
+      } else if (cy.$('node.form.activated').length) {
+
+        cy.$('node.form.activated').removeClass('activated').addClass('merge');
+      }
 
       break;
 
@@ -55710,13 +55711,24 @@ function onKeyupInDocument(event) {
       break;
 
     case KEYS.LEFT:
+
+      // avoid panning the window
+      if (event.preventDefault) event.preventDefault();
+
+      if (cy.$('node.form.merge').length) mergeNodes('left');
+      break;
+
     case KEYS.RIGHT:
-      /*if (cy.$('node.form.merge').length) {
-        mergeNodes(event.which === KEYS.LEFT ? 'left' : 'right', 'subtoken');
-      } else if (cy.$('.supertoken')) {
+
+      // avoid panning the window
+      if (event.preventDefault) event.preventDefault();
+
+      if (cy.$('node.form.merge').length) {
+        mergeNodes('right');
+      } /*else if (cy.$('.supertoken')) {
         // mergeNodes(toMerge, KEYS.SIDES[key.which], 'subtoken');
         // mergeNodes(toSup, KEYS.SIDES[key.which], 'supertoken');
-      }*/
+        }*/
       break;
 
     case KEYS.EQUALS:
@@ -55989,6 +56001,28 @@ function clearCorpus(event) {
   }
 
   manager.reset();
+}
+
+function mergeNodes(direction) {
+
+  // the highlighted one is the "major" token
+  var major = cy.$('node.form.merge').data().analysis;
+
+  // find the "minor" token by moving either one clump to the left or right
+  var minorClump = major.clump + (direction === 'left' && gui.is_ltr || direction === 'right' && !gui.is_ltr ? -1 : 1);
+
+  // iterate tokens until we find a matching candidate
+  var minor = null;
+  major.sentence.forEach(function (token) {
+    if (token.analysis.clump === minorClump) minor = token.analysis;
+  });
+
+  // do the merge
+  if (major && minor) major.token.mergeWith(minor.token);
+
+  // clean up
+  cy.$('node.form.merge').removeClass('merge');
+  gui.update();
 }
 
 module.exports = GUI;
