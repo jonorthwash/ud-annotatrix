@@ -7,6 +7,7 @@ const funcs = require('./funcs');
 const errors = require('./errors');
 const setupUndos = require('./undo-manager');
 const table = require('./table');
+const storage = require('./local-storage');
 
 const KEYS = {
   DELETE: 46,
@@ -726,6 +727,7 @@ function clearCorpus(event) {
     return;
   }
 
+  storage.clear();
   manager.reset();
 }
 

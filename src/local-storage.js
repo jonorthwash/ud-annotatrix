@@ -1,5 +1,7 @@
 'use strict';
 
+const KEY = require('./config').localStorageKey;
+
 function isAvailable() {
 
   try {
@@ -107,20 +109,28 @@ function formatUploadSize(fileSize) {
   return `${(fileSize/1048576).toFixed(1)} mB`;
 }
 
-function save(key, value) {
+function save(value) {
 
   if (!isAvailable())
     return null;
 
-  return localStorage.setItem(key, value);
+  return localStorage.setItem(KEY, value);
 }
 
-function load(key) {
+function load() {
 
   if (!isAvailable())
     return null;
 
-  return localStorage.getItem(key);
+  return localStorage.getItem(KEY);
+}
+
+function clear() {
+
+  if (!isAvailable())
+    return null;
+
+  return localStorage.removeItem(KEY);
 }
 
 module.exports = {
@@ -129,5 +139,6 @@ module.exports = {
   getAvailableSpace,
   formatUploadSize,
   save,
-  load
+  load,
+  clear
 };

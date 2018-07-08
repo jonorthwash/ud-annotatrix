@@ -7,4 +7,6 @@ module.exports = {
 	defaultLoggingLevel: 'ERROR',
 	defaultEdgeHeight: 40,
 	defaultEdgeCoeff: 1,
+
+	localStorageKey: 'ud-annotatrix'
 }

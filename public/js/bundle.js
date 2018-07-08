@@ -23477,7 +23477,9 @@ module.exports = {
 	defaultInsertedSentence: 'inserted',
 	defaultLoggingLevel: 'ERROR',
 	defaultEdgeHeight: 40,
-	defaultEdgeCoeff: 1
+	defaultEdgeCoeff: 1,
+
+	localStorageKey: 'ud-annotatrix'
 };
 
 },{}],340:[function(require,module,exports){
@@ -55307,6 +55309,7 @@ var funcs = require('./funcs');
 var errors = require('./errors');
 var setupUndos = require('./undo-manager');
 var table = require('./table');
+var storage = require('./local-storage');
 
 var KEYS = {
   DELETE: 46,
@@ -56000,6 +56003,7 @@ function clearCorpus(event) {
     return;
   }
 
+  storage.clear();
   manager.reset();
 }
 
@@ -56027,7 +56031,7 @@ function mergeNodes(direction) {
 
 module.exports = GUI;
 
-},{"./convert":340,"./errors":344,"./funcs":345,"./table":354,"./undo-manager":355,"jquery":327}],348:[function(require,module,exports){
+},{"./convert":340,"./errors":344,"./funcs":345,"./local-storage":349,"./table":354,"./undo-manager":355,"jquery":327}],348:[function(require,module,exports){
 'use strict';
 
 require('babel-polyfill');
@@ -56048,6 +56052,8 @@ $(function () {
 
 },{"./browser-logger":338,"./funcs":345,"./manager":350,"./server":352,"babel-polyfill":1}],349:[function(require,module,exports){
 'use strict';
+
+var KEY = require('./config').localStorageKey;
 
 function isAvailable() {
 
@@ -56148,18 +56154,25 @@ function formatUploadSize(fileSize) {
   return (fileSize / 1048576).toFixed(1) + ' mB';
 }
 
-function save(key, value) {
+function save(value) {
 
   if (!isAvailable()) return null;
 
-  return localStorage.setItem(key, value);
+  return localStorage.setItem(KEY, value);
 }
 
-function load(key) {
+function load() {
 
   if (!isAvailable()) return null;
 
-  return localStorage.getItem(key);
+  return localStorage.getItem(KEY);
+}
+
+function clear() {
+
+  if (!isAvailable()) return null;
+
+  return localStorage.removeItem(KEY);
 }
 
 module.exports = {
@@ -56168,10 +56181,11 @@ module.exports = {
   getAvailableSpace: getAvailableSpace,
   formatUploadSize: formatUploadSize,
   save: save,
-  load: load
+  load: load,
+  clear: clear
 };
 
-},{}],350:[function(require,module,exports){
+},{"./config":339}],350:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -56190,8 +56204,6 @@ var Graph = require('./graph');
 var errors = require('./errors');
 var detectFormat = require('./detect');
 var storage = require('./local-storage');
-
-var LOCAL_STORAGE_KEY = 'ud_annotatrix';
 
 var Manager = function () {
   function Manager() {
@@ -56414,7 +56426,7 @@ var Manager = function () {
         console.error('server save not implemented');
       } else {
 
-        storage.save(LOCAL_STORAGE_KEY, state);
+        storage.save(state);
       }
 
       return state;
@@ -56424,7 +56436,7 @@ var Manager = function () {
     value: function load() {
 
       var state = server.is_running ? null // not implemented
-      : storage.load(LOCAL_STORAGE_KEY);
+      : storage.load();
 
       if (!state) // unable to load
         return null;

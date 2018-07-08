@@ -13,8 +13,6 @@ const errors = require('./errors');
 const detectFormat = require('./detect');
 const storage = require('./local-storage');
 
-const LOCAL_STORAGE_KEY = 'ud_annotatrix';
-
 class Manager {
 
   constructor() {
@@ -351,7 +349,7 @@ class Manager {
       console.error('server save not implemented');
     } else {
 
-      storage.save(LOCAL_STORAGE_KEY, state);
+      storage.save(state);
 
     }
 
@@ -361,7 +359,7 @@ class Manager {
 
     let state = server.is_running
       ? null // not implemented
-      : storage.load(LOCAL_STORAGE_KEY);
+      : storage.load();
 
     if (!state) // unable to load
       return null;
