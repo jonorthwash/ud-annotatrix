@@ -772,3 +772,7 @@ td .parse-error {
 #top-buttons-container.extra-space {
   margin-bottom: 1ex;
 }
+
+.readonly:after {
+  content: " (readonly)"
+}
