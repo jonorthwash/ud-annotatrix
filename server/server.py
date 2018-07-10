@@ -14,9 +14,10 @@ from flask import send_from_directory
 from flask import url_for
 import os
 import uuid
-from db import CorpusDB
+from db2 import CorpusDB
 from env import Env
 from log import Logger
+import json
 
 env = Env(filename='.env')
 
@@ -32,6 +33,8 @@ welcome = '''
 * NOW POINT YOUR BROWSER AT: http://{}:{}/                           *
 *******************************************************************************
 '''
+on_success = { 'status': 'success' }
+on_failure = { 'status': 'failure' }
 
 app = Flask(__name__, static_folder='../public/', static_url_path='/annotatrix')
 
@@ -45,44 +48,55 @@ def save_corpus():
     logger.info('{} /save'.format(request.method))
     if request.form:
         logger.info('/save form: {}'.format(request.form))
-        sent = request.form['content']
-        treebank_id = request.form['treebank_id']
-        db_path = treebank_path(treebank_id)
-        sent_num = request.form['sentNum']
+
+        state = json.loads(request.form['state']) # parse
+        db_path = treebank_path(request.form['treebank_id'])
         if os.path.exists(db_path):
             logger.debug('/save updating db at {}'.format(db_path))
         else:
             logger.warn('/save no db found at {}, creating new one'.format(db_path))
+
         db = CorpusDB(db_path)
-        db.update_db(sent, sent_num)
-        return jsonify({ 'success': 'true' })
+        try:
+            db.update_db(state)
+            return jsonify(on_success)
+        except ValueError as e:
+            logger.error(e)
+
     else:
         logger.warn('/save no form received')
-    return jsonify()
+
+    return jsonify(on_failure)
 
 
-@app.route('/load', methods=['GET', 'POST'])
-def load_sentence():
-    logger.info('{} /load'.format(request.method))
-    if request.form:
-        logger.info('/load form: {}'.format(request.form))
-        if 'treebank_id' not in request.form or 'sentNum' not in request.form:
-            logger.error('/load invalid form, required keys: "treebank_id", "sentNum"')
-            return jsonify({'content': 'something wrong'})
-        treebank_id = request.form['treebank_id']
-        db_path = treebank_path(treebank_id)
-        sent_num = request.form['sentNum']
-        if os.path.exists(db_path):
-            logger.debug('/load updating db at {}'.format(db_path))
-            db = CorpusDB(db_path)
-            sent, max_sent = db.get_sentence(sent_num)
-            return jsonify({'content': sent, 'max': max_sent})
+@app.route('/load/<treebank_id>/', defaults={'num': None})
+@app.route('/load/<treebank_id>/<num>', methods=['GET'])
+def load_sentence(treebank_id, num):
+    logger.info(f'{request.method} /load/{treebank_id}/{num}')
+
+    db_path = treebank_path(treebank_id)
+    if not os.path.exists(db_path):
+        logger.warn(f'/load no db found at {db_path}')
+        return jsonify(on_failure)
+
+    db = CorpusDB(db_path)
+    try:
+
+        if num is None:
+            sents, max_sents, filename, gui = db.get_sentences()
         else:
-            logger.warn('/load no db found at {}'.format(db_path))
-            return jsonify({'content': 'something wrong'})
-    else:
-        logger.warn('/load no form received')
-    return jsonify()
+            sents, max_sents, filename, gui = db.get_sentence(num)
+
+        return jsonify({
+            'sentences': sents,
+            'max': max_sents,
+            'filename': filename,
+            'gui': gui
+        })
+
+    except ValueError as e:
+        logger.error(e)
+        return jsonify(on_failure)
 
 
 @app.route('/annotatrix/download', methods=['GET', 'POST'])
