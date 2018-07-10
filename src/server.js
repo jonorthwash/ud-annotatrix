@@ -1,10 +1,11 @@
 'use strict';
 
 const $ = require('jquery');
+const storage = require('./local-storage');
 
 class Server {
 	constructor() {
-		this.treebank_id = location.href.split('/')[4];
+		this.treebank_id = getTreebankId();
 		this.check();
 	}
 
@@ -22,74 +23,79 @@ class Server {
 					log.info(`checkServer AJAX response: ${JSON.stringify(data)}`);
 					this.is_running = true;
 					gui.update();
-					//getSentence(1);
+					this.load();
 				},
 				error: data => {
-					log.info('Unable to complete AJAX request for checkServer()');
-					//loadFromLocalStorage();
+					log.error('Unable to complete AJAX request for check()');
 				}
 			});
 		} catch (e) {
-			log.error(`AJAX error in checkServer: ${e.message}`);
+			log.error(`AJAX error in check(): ${e.message}`);
 		}
 	}
 
-	push() {
+	save(state) {
+
 		if (!this.is_running)
 			return null;
 
-		// TODO: instead of taking manager.sentence, we should instead save some
-		//   object like { nx: Object, settings: Object } or something
-
-		const content = manager.sentence,
-			sentNum = manager.index;
-
-		$.ajax({
-			type: 'POST',
-			url: '/save',
-			data: {
-				content: content,
-				sentNum: sentNum,
-				treebank_id: this.treebank_id
-			},
-			dataType: 'json',
-			success: data => {
-				log.info(`Update was performed: ${JSON.stringify(data)}`);
-			}
-		});
+		try {
+			$.ajax({
+				type: 'POST',
+				url: '/save',
+				data: {
+					state: state,
+					treebank_id: this.treebank_id
+				},
+				dataType: 'json',
+				success: data => {
+					if (data.status === 'failure') {
+						log.error('Unable to save(): server error');
+					} else {
+						log.info('Successfully saved to server');
+					}
+				},
+				error: data => {
+					log.error('Unable to complete AJAX request for save()')
+				}
+			});
+		} catch (e) {
+			log.error(`AJAX error in save(): ${e.message}`);
+		}
 	}
 
-	pull(sentNum) {
-		if (!this.is_running)
+	load() {
+
+ 		if (!this.is_running)
 			return null;
 
-		return $.ajax({
-			type: 'POST',
-			url: '/load',
-			data: {
-				treebank_id: this.treebank_id,
-				sentNum: sentNum
-			},
-			dataType: 'json',
-			success: data => {
-				console.log(data);
-				return data;
+		try {
+			$.ajax({
+				type: 'GET',
+				url: `/load/${this.treebank_id}/`,
+				success: data => {
+					if (data.status === 'failure') {
+						log.error('Unable to load(): server error');
+					} else {
+						log.info('Successfully loaded from server');
 
-				/*
-				if (data['content']) {
-					const sentence = data['content'],
-							max = data['max'];
-					$('#text-data').val(sentence);
-					$('#total-sentences').html(max);
-					AVAILABLE_SENTENCES = max;
-				}*/
-			}
-		});
+						manager.load({
+							filename: data.filename,
+							gui: JSON.parse(data.gui),
+							sentences: data.sentences.map(JSON.parse),
+							index: 0
+						});
+					}
+				},
+				error: data => {
+					log.critical('Unable to complete AJAX request for load()');
+				}
+			})
+		} catch (e) {
+			log.critical(`AJAX error in load(): ${e.message}`);
+		}
 
-		/*
-		$('#current-sentence').val(sentNum);
-		CURRENT_SENTENCE = sentNum;*/
-
+		return null; // want the loading to fail
 	}
 
 	download() {
