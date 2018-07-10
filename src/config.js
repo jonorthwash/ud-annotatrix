@@ -8,5 +8,6 @@ module.exports = {
 	defaultEdgeHeight: 40,
 	defaultEdgeCoeff: 1,
 
-	localStorageKey: 'ud-annotatrix'
+	localStorageKey: 'ud-annotatrix',
+	saveInterval: 1000 // msecs
 }
