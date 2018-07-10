@@ -135,9 +135,9 @@ function clear() {
 
 module.exports = {
   isAvailable,
-  isQuotaExceeded,
-  getAvailableSpace,
-  formatUploadSize,
+  //isQuotaExceeded,
+  //getAvailableSpace,
+  //formatUploadSize,
   save,
   load,
   clear
