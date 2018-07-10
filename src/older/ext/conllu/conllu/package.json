@@ -1,0 +1,92 @@
+{
+  "_args": [
+    [
+      "conllu",
+      "/home/maryszmary/Documents/ud-annotatrix/conllu"
+    ]
+  ],
+  "_from": "conllu@latest",
+  "_id": "conllu@0.1.1",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/conllu",
+  "_nodeVersion": "4.2.6",
+  "_npmOperationalInternal": {
+    "host": "packages-12-west.internal.npmjs.com",
+    "tmp": "tmp/conllu-0.1.1.tgz_1480007912259_0.4644815940409899"
+  },
+  "_npmUser": {
+    "email": "gwinnie32@gmail.com",
+    "name": "magdalena"
+  },
+  "_npmVersion": "3.5.2",
+  "_phantomChildren": {},
+  "_requested": {
+    "name": "conllu",
+    "raw": "conllu",
+    "rawSpec": "",
+    "scope": null,
+    "spec": "latest",
+    "type": "tag"
+  },
+  "_requiredBy": [
+    "#USER"
+  ],
+  "_resolved": "https://registry.npmjs.org/conllu/-/conllu-0.1.1.tgz",
+  "_shasum": "c0350b02a0b1e6412d7f6cee4935ef496a7cf68e",
+  "_shrinkwrap": null,
+  "_spec": "conllu",
+  "_where": "/home/maryszmary/Documents/ud-annotatrix/conllu",
+  "bugs": {
+    "url": "https://github.com/FrancessFractal/conllu/issues"
+  },
+  "contributors": [
+    {
+      "name": "Magdalena Parks",
+      "url": "https://github.com/FrancessFractal"
+    },
+    {
+      "name": "Allison Adams",
+      "url": "https://github.com/aadams297"
+    },
+    {
+      "name": "Manon Knoertzer",
+      "url": "https://github.com/Manon78"
+    }
+  ],
+  "dependencies": {},
+  "description": "Conllu is a JavaScript library capable of manipulating files in the CoNLL-U format.",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.1.2",
+    "rewire": "^2.5.2"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "dist": {
+    "shasum": "c0350b02a0b1e6412d7f6cee4935ef496a7cf68e",
+    "tarball": "https://registry.npmjs.org/conllu/-/conllu-0.1.1.tgz"
+  },
+  "gitHead": "586499c882360914b9ce3c710663bf09ff691d46",
+  "homepage": "https://github.com/FrancessFractal/conllu#readme",
+  "license": "CC-BY-SA-4.0",
+  "main": "index.js",
+  "maintainers": [
+    {
+      "name": "magdalena",
+      "email": "gwinnie32@gmail.com"
+    }
+  ],
+  "name": "conllu",
+  "optionalDependencies": {},
+  "readme": "ERROR: No README data found!",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FrancessFractal/conllu.git"
+  },
+  "scripts": {
+    "test": "./node_modules/mocha/bin/mocha"
+  },
+  "version": "0.1.1"
+}
