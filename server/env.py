@@ -8,7 +8,6 @@ class Env(object):
 		self.variables = {}
 
 		if os.path.exists(self.filepath):
-			print('doesn\'t exist')
 			self.read()
 
 		self.set('ROOT', self.root)

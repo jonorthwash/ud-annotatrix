@@ -1,0 +1,20 @@
+# text = He boued e tebr Mona er gegin.
+# text[eng] = Mona eats her food here in the kitchen.
+# labels = press_1986 ch_syntax p_197 to_check
+"<He>"
+	"he" det pos f sp @det #1->2
+"<boued>"
+	"boued" n m sg @obj #2->4
+"<e>"
+	"e" vpart obj @aux #3->4
+"<tebr>"
+	"debriñ" vblex pri p3 sg @root #4->0
+"<Mona>"
+	"Mona" np ant f sg @nsubj #5->4
+"<er>"
+	"e" pr @case #6->8
+		"an" det def sp @det #7->8
+"<gegin>"
+	"kegin" n f sg @obl #8->4
+"<.>"
+	"." sent @punct #9->4

@@ -1,0 +1,112 @@
+[{
+  "data": {
+    "id": "nf1",
+    "form": "I",
+    "length": "1em"
+  },
+  "classes": "wf"
+}, {
+  "data": {
+    "id": "nf2",
+    "form": "wanna",
+    "length": "5em"
+  },
+  "classes": "wf"
+}, {
+  "data": {
+    "id": "nf3",
+    "form": "skate",
+    "length": "5em"
+  },
+  "classes": "wf"
+}, {
+  "data": {
+    "id": "nf4",
+    "form": ".",
+    "length": "1em"
+  },
+  "classes": "wf"
+}, {
+  "data": {
+    "id": "np1",
+    "pos": "PRON",
+    "length": "4em"
+  },
+  "classes": "pos"
+}, {
+  "data": {
+    "id": "np2",
+    "pos": "vbmod",
+    "length": "5em"
+  },
+  "classes": "pos"
+}, {
+  "data": {
+    "id": "np3",
+    "pos": "V",
+    "length": "1em"
+  },
+  "classes": "pos"
+}, {
+  "data": {
+    "id": "np4",
+    "pos": "PUNCT",
+    "length": "5em"
+  },
+  "classes": "pos"
+}, {
+  "data": {
+    "id": "e1",
+    "source": "nf2",
+    "target": "nf1",
+    "label": "subj",
+    "ctrl": [40, 40, 40, 40]
+  },
+  "classes": "dependency"
+}, {
+  "data": {
+    "id": "e2",
+    "source": "nf2",
+    "target": "nf3",
+    "label": "sent",
+    "ctrl": [-40, -40, -40, -40]
+  },
+  "classes": "dependency"
+}, {
+  "data": {
+    "id": "e3",
+    "source": "nf2",
+    "target": "nf4",
+    "label": "punct",
+    "ctrl": [-80, -80, -80, -80]
+  },
+  "classes": "dependency"
+}, {
+  "data": {
+    "id": "e1-pos",
+    "source": "nf1",
+    "target": "np1"
+  },
+  "classes": "pos"
+}, {
+  "data": {
+    "id": "e2-pos",
+    "source": "nf2",
+    "target": "np2"
+  },
+  "classes": "pos"
+}, {
+  "data": {
+    "id": "e3-pos",
+    "source": "nf3",
+    "target": "np3"
+  },
+  "classes": "pos"
+}, {
+  "data": {
+    "id": "e4-pos",
+    "source": "nf4",
+    "target": "np4"
+  },
+  "classes": "pos"
+}]

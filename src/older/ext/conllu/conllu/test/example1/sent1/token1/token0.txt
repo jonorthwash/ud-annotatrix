@@ -1,0 +1,1 @@
+2	have	have	VERB	VBP	Number=Sing|Person=1|Tense=Pres	0	root	_	_
