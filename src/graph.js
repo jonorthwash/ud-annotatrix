@@ -29,6 +29,137 @@ class Graph {
     // only do this for in-browser ... add the .selfcomplete method to $()
     if (gui.inBrowser)
       require('./selfcomplete');
+
+    // cy handlers
+    this.click = {
+      form: event => {
+        const target = event.target;
+        log.debug(`called onClickFormNode(${target.attr('id')})`);
+
+        if (gui.moving_dependency) {
+
+          const dep = cy.$('.selected');
+          const source = cy.$('.arc-source');
+
+          this.makeDependency(source, target);
+          this.removeDependency(dep);
+          cy.$('.moving').removeClass('moving');
+          gui.moving_dependency = false;
+
+          // right-click the new edge
+          cy.$(`#${source.attr('id')} -> #${target.attr('id')}`).trigger('cxttapend');
+
+        } else {
+
+          this.save();
+
+          cy.$('.arc-source').removeClass('arc-source');
+          cy.$('.arc-target').removeClass('arc-target');
+          cy.$('.selected').removeClass('selected');
+
+          if (target.hasClass('activated')) {
+            target.removeClass('activated');
+
+          } else {
+
+            const source = cy.$('.activated');
+            target.addClass('activated');
+
+            // if there was already an activated node
+            if (source.length === 1) {
+              this.makeDependency(source, target);
+              source.removeClass('activated');
+              target.removeClass('activated');
+            }
+          }
+        }
+      },
+      pos: event => {
+        const target = event.target;
+        log.debug(`called onClickPosNode(${target.attr('id')})`);
+
+        this.save();
+        gui.editing = target;
+
+        cy.$('.activated').removeClass('activated');
+        cy.$('.arc-source').removeClass('arc-source');
+        cy.$('.arc-target').removeClass('arc-target');
+        cy.$('.selected').removeClass('selected');
+
+        editLabel(target);
+      },
+      multiword: event => {
+        const target = event.target;
+
+        if (target.hasClass('multiword-active')) {
+          target.removeClass('multiword-active');
+        } else {
+          cy.$('.multiword-active').removeClass('multiword-active');
+          target.addClass('multiword-active');
+        }
+      },
+      dependency: event => {
+        const target = event.target;
+        log.debug(`called onClickDependencyEdge(${target.attr('id')})`);
+
+        this.save();
+        gui.editing = target;
+
+        cy.$('.activated').removeClass('activated');
+        cy.$('.arc-source').removeClass('arc-source');
+        cy.$('.arc-target').removeClass('arc-target');
+        cy.$('.selected').removeClass('selected');
+
+        editLabel(target);
+      }
+    };
+    this.cxttapend = {
+      form: event => {
+        const target = event.target;
+        log.debug(`called onCxttapendFormNode(${target.attr('id')})`);
+
+        this.save();
+        gui.editing = target;
+
+        cy.$('.activated').removeClass('activated');
+        cy.$('.arc-source').removeClass('arc-source');
+        cy.$('.arc-target').removeClass('arc-target');
+        cy.$('.selected').removeClass('selected');
+
+        editLabel(target);
+      },
+      dependency: event => {
+        const target = event.target;
+        log.debug(`called onCxttapendDependencyEdge(${target.attr('id')})`);
+
+        /**
+         * Activated when an arc is selected. Adds classes showing what is selected.
+         */
+
+        this.save();
+
+        cy.$('.activated').removeClass('activated');
+
+        if (target.hasClass('selected')) {
+
+          cy.$(`#${target.data('source')}`).removeClass('arc-source');
+          cy.$(`#${target.data('target')}`).removeClass('arc-target');  // visual effects on targeted node
+          target.removeClass('selected');
+
+        } else {
+
+          cy.$('.arc-source').removeClass('arc-source');
+          cy.$(`#${target.data('source')}`).addClass('arc-source');
+
+          cy.$('.arc-target').removeClass('arc-target');
+          cy.$(`#${target.data('target')}`).addClass('arc-target');
+
+          cy.$('.selected').removeClass('selected');
+          target.addClass('selected');
+
+        }
+      }
+    };
   }
 
   eles() {
@@ -99,40 +230,40 @@ class Graph {
      */
 
     // set a countdown to triggering a "background" click unless a node/edge intercepts it
-    $('#cy canvas, #mute').mouseup((event) => {
+    $('#cy canvas, #mute').mouseup(event => {
       gui.intercepted = false;
-      setTimeout(graph.clear, 100);
+      setTimeout(() => this.clear(), 100);
     });
-    $('#cy canvas').mousemove((event) => {
+    $('#cy canvas').mousemove(event => {
       gui.intercepted = true;
     });
-    $('#edit').mouseup((event) => {
+    $('#edit').mouseup(event => {
       gui.intercepted = true;
     });
-    cy.on('click cxttapend', '*', (event) => {
+    cy.on('click cxttapend', '*', event => {
       gui.intercepted = true;
 
       // DEBUG: this line should be taken out in production
       console.info(`clicked ${event.target.attr('id')}, data:`, event.target.data());
     });
 
-    cy.on('click', 'node.form', onClickFormNode);
-    cy.on('click', 'node.pos', onClickPosNode);
-    cy.on('click', '$node > node', onClickMultiwordNode);
-    cy.on('cxttapend', 'node.form', onCxttapendFormNode);
-
-    cy.on('click', 'edge.dependency', onClickDependencyEdge);
-    cy.on('cxttapend', 'edge.dependency', onCxttapendDependencyEdge);
+    // bind the cy events
+    cy.on('click', 'node.form', e => this.click.form(e));
+    cy.on('click', 'node.pos', e => this.click.pos(e));
+    cy.on('click', '$node > node', e => this.click.multiword(e));
+    cy.on('click', 'edge.dependency', e => this.click.dependency(e));
+    cy.on('cxttapend', 'node.form', e => this.cxttapend.form(e));
+    cy.on('cxttapend', 'edge.dependency', e => this.cxttapend.dependency(e));
   }
 
   clear() {
-    log.error(`called onClickCanvas(intercepted: ${gui.intercepted})`);
+    log.info(`called onClickCanvas(intercepted: ${gui.intercepted})`);
 
     // intercepted by clicking a canvas subobject || mousemove (i.e. drag) || #edit
     if (gui.intercepted)
       return;
 
-    graph.save();
+    this.save();
 
     cy.$('.activated').removeClass('activated');
     cy.$('.multiword-active').removeClass('multiword-active');
@@ -195,11 +326,11 @@ class Graph {
     undoManager.add({
       undo: () => {
         removeHead(src.id, tar.id);
-        graph.clear();
+        this.clear();
       },
       redo: () => {
         addHead(src.id, tar.id);
-        graph.clear();
+        this.clear();
       }
     });
 
@@ -345,138 +476,6 @@ function getEdgeHeight(srcNum, tarNum) {
   return edgeHeight;
 }
 
-function onClickFormNode(event) {
-  const target = event.target;
-  log.debug(`called onClickFormNode(${target.attr('id')})`);
-
-  if (gui.moving_dependency) {
-
-    const dep = cy.$('.selected');
-    const source = cy.$('.arc-source');
-
-    graph.removeDependency(dep);
-    graph.makeDependency(source, target);
-    cy.$('.moving').removeClass('moving');
-    gui.moving_dependency = false;
-
-    // right-click the new edge
-    cy.$(`#${source.attr('id')} -> #${target.attr('id')}`).trigger('cxttapend');
-
-  } else {
-
-    graph.save();
-
-    cy.$('.arc-source').removeClass('arc-source');
-    cy.$('.arc-target').removeClass('arc-target');
-    cy.$('.selected').removeClass('selected');
-
-    if (target.hasClass('activated')) {
-      target.removeClass('activated');
-
-    } else {
-
-      const source = cy.$('.activated');
-      target.addClass('activated');
-
-      // if there was already an activated node
-      if (source.length === 1) {
-        graph.makeDependency(source, target);
-        source.removeClass('activated');
-        target.removeClass('activated');
-      }
-    }
-  }
-}
-
-function onClickPosNode(event) {
-  const target = event.target;
-  log.debug(`called onClickPosNode(${target.attr('id')})`);
-
-  graph.save();
-  gui.editing = target;
-
-  cy.$('.activated').removeClass('activated');
-  cy.$('.arc-source').removeClass('arc-source');
-  cy.$('.arc-target').removeClass('arc-target');
-  cy.$('.selected').removeClass('selected');
-
-  editLabel(target);
-}
-
-function onClickMultiwordNode(event) {
-  console.log('clicked multiword node');
-  const target = event.target;
-
-  if (target.hasClass('multiword-active')) {
-    target.removeClass('multiword-active');
-  } else {
-    cy.$('.multiword-active').removeClass('multiword-active');
-    target.addClass('multiword-active');
-  }
-}
-
-function onCxttapendFormNode(event) {
-  const target = event.target;
-  log.debug(`called onCxttapendFormNode(${target.attr('id')})`);
-
-  graph.save();
-  gui.editing = target;
-
-  cy.$('.activated').removeClass('activated');
-  cy.$('.arc-source').removeClass('arc-source');
-  cy.$('.arc-target').removeClass('arc-target');
-  cy.$('.selected').removeClass('selected');
-
-  editLabel(target);
-}
-
-function onClickDependencyEdge(event) {
-  const target = event.target;
-  log.debug(`called onClickDependencyEdge(${target.attr('id')})`);
-
-  graph.save();
-  gui.editing = target;
-
-  cy.$('.activated').removeClass('activated');
-  cy.$('.arc-source').removeClass('arc-source');
-  cy.$('.arc-target').removeClass('arc-target');
-  cy.$('.selected').removeClass('selected');
-
-  editLabel(target);
-}
-
-function onCxttapendDependencyEdge(event) {
-    const target = event.target;
-    log.debug(`called onCxttapendDependencyEdge(${target.attr('id')})`);
-
-    /**
-     * Activated when an arc is selected. Adds classes showing what is selected.
-     */
-
-    graph.save();
-
-    cy.$('.activated').removeClass('activated');
-
-    if (target.hasClass('selected')) {
-
-      cy.$(`#${target.data('source')}`).removeClass('arc-source');
-      cy.$(`#${target.data('target')}`).removeClass('arc-target');  // visual effects on targeted node
-      target.removeClass('selected');
-
-    } else {
-
-      cy.$('.arc-source').removeClass('arc-source');
-      cy.$(`#${target.data('source')}`).addClass('arc-source');
-
-      cy.$('.arc-target').removeClass('arc-target');
-      cy.$(`#${target.data('target')}`).addClass('arc-target');
-
-      cy.$('.selected').removeClass('selected');
-      target.addClass('selected');
-
-    }
-}
-
 function editLabel(target) {
   log.debug(`called editLabel(${target.attr('id')})`);
 
@@ -509,8 +508,6 @@ function editLabel(target) {
       ? validate.U_DEPRELS
       : [];
 
-  //console.log(autocompletes)
-  //console.log($('#edit').autocomplete)
   // add the edit input
   $('#edit')
     .val('')

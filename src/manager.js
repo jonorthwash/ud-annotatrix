@@ -69,43 +69,9 @@ class Manager {
       index = this.length - 1;
     }
 
-    console.log("FIX ME");
     this._index = Math.floor(index); // enforce integer
-
-    if (server && server.is_running) {
-      server.pull(this.index).then(
-        data => {
-          console.log(1, data);
-        },
-        data => {
-          console.log(2, data);
-        }
-      );
-    } else {
-      gui.update();
-      return this.index;
-    }
-
-    /*
-    new Promise((resolve, reject) => {
-
-      if (server.is_running) {
-        const res = await server.pull(this.index);
-        console.log(res);
-      }
-
-    }).then(
-      res => {
-        console.log('1', res);
-        gui.update();
-      },
-      res => {
-        console.log(2, res);
-        gui.update();
-      }
-    );
-
-    return this.index;*/
+    gui.update();
+    return this.index;
   }
   first() {
     this.index = this.length ? 0 : -1;
@@ -284,15 +250,15 @@ class Manager {
 
     // if not passed explicitly, read from the textarea
     text = text || gui.read('text-data');
-    let splitted = manager.split(text);
+    let splitted = this.split(text);
 
     // overwrite contents of #text-data
-    manager.sentence = splitted[0];
+    this.sentence = splitted[0];
 
     // iterate over all elements except the first
     _.each(splitted, (split, i) => {
       if (!i) return; // skip first
-      manager.insertSentence(split);
+      this.insertSentence(split);
     });
 
     gui.update();
@@ -345,20 +311,18 @@ class Manager {
       gui: gui.state
     });
 
-    if (server.is_running) {
-      console.error('server save not implemented');
+    if (server && server.is_running) {
+      server.save(state);
     } else {
-
       storage.save(state);
-
     }
 
     return state;
   }
   load() {
 
-    let state = server.is_running
-      ? null // not implemented
+    let state = (server && server.is_running)
+      ? server.load()
       : storage.load();
 
     if (!state) // unable to load
@@ -391,7 +355,7 @@ class Manager {
 
 
   upload() {
-    return server.push();
+    return this.save();
   }
   export() {
 
@@ -404,8 +368,8 @@ class Manager {
     } else {
 
       const link = $('<a>')
-        .attr('download', manager.filename)
-        .attr('href', `data:text/plain; charset=utf-8,${manager.encode()}`);
+        .attr('download', this.filename)
+        .attr('href', `data:text/plain; charset=utf-8,${this.encode()}`);
       $('body').append(link);
       link[0].click();
 
@@ -413,8 +377,8 @@ class Manager {
   }
   encode() {
     return encodeURIComponent(this.map((i, sent) => {
-      return `[UD-Annotatrix: id="${i+1}" format="${manager.format}"]
-      ${ (manager.format === 'Unknown') ? '' : this.sentence }`;
+      return `[UD-Annotatrix: id="${i+1}" format="${this.format}"]
+      ${ (this.format === 'Unknown') ? '' : this.sentence }`;
     }).join('\n\n'));
   }
   print() {
@@ -425,26 +389,29 @@ class Manager {
 
 function updateSentence(oldSent, text) {
 
-  const format = detectFormat(text);
+  const currentSent = manager.current,
+    oldFormat = manager.format,
+    newFormat = detectFormat(text);
+
   let sent;
 
-  if (format === 'CoNLL-U') {
+  if (newFormat === 'CoNLL-U') {
 
-    if (manager.format === 'plain text') {
-      sent = manager.current;
+    if (oldFormat === 'plain text') { // don't overwrite stuff :)
+      sent = currentSent;
     } else {
       sent = nx.Sentence.fromConllu(text);
     }
 
-  } else if (format === 'CG3') {
+  } else if (newFormat === 'CG3') {
 
-    if (manager.format === 'plain text') {
-      sent = manager.current;
+    if (oldFormat === 'plain text') { // don't overwrite stuff :)
+      sent = currentSent;
     } else {
       sent = nx.Sentence.fromCG3(text);
     }
 
-  } else if (format === 'plain text') {
+  } else if (newFormat === 'plain text') {
 
     if (oldSent.nx_initialized) { // don't overwrite stuff :)
       sent = oldSent;
@@ -452,15 +419,15 @@ function updateSentence(oldSent, text) {
       sent = nx.Sentence.fromText(text);
     }
 
-  } else if (format === 'Unknown') {
+  } else if (newFormat === 'Unknown') {
 
     sent = nx.Sentence.fromText('');
 
   } else {
-    throw new Error(`format not yet supported: ${format}`)
+    throw new Error(`format not yet supported: ${newFormat}`)
   }
 
-  sent.currentFormat = format;
+  sent.currentFormat = newFormat;
   sent.nx_initialized = oldSent.nx_initialized || false;
   sent.is_table_view = oldSent.is_table_view || false;
   sent.column_visibilities = oldSent.column_visibilities || new Array(10).fill(true);

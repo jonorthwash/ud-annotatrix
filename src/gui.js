@@ -160,7 +160,7 @@ class GUI {
   }
 
   update() {
-    if (!gui.inBrowser)
+    if (!this.inBrowser)
       return;
 
     // textarea
@@ -211,9 +211,9 @@ class GUI {
     }
 
     if (manager.format !== 'CoNLL-U')
-      gui.is_table_view = false;
+      this.is_table_view = false;
 
-    if (gui.is_table_view) {
+    if (this.is_table_view) {
       $('#btnToggleTable i').removeClass('fa-code');
       $('#text-data').hide();
       $('#table-data').show();
@@ -224,7 +224,7 @@ class GUI {
       $('#table-data').hide();
     }
 
-    if (gui.is_textarea_visible) {
+    if (this.is_textarea_visible) {
       $('#data-container').show();
       $('#top-buttons-container').removeClass('extra-space');
       $('#btnToggleTable').show();
@@ -236,11 +236,11 @@ class GUI {
     }
 
     try { // need this in case `cy` DNE
-      gui.zoom = cy.zoom();
-      gui.pan  = cy.pan();
+      this.zoom = cy.zoom();
+      this.pan  = cy.pan();
     } catch (e) {
-      gui.zoom = null;
-      gui.pan  = null;
+      this.zoom = null;
+      this.pan  = null;
     }
     graph.update();
   }
@@ -262,47 +262,43 @@ class GUI {
     if (!this.inBrowser)
       return;
 
-    $('#btnPrevSentence').click(e => {
-      manager.prev();
-    });
-    $('#btnNextSentence').click(e => {
-      manager.next();
-    });
+    $('#btnPrevSentence').click(e => manager.prev());
+    $('#btnNextSentence').click(e => manager.next());
     $('#current-sentence').blur(e => {
       const index = parseInt(this.read('current-sentence')) - 1;
       manager.index = index;
     });
-    $('#btnRemoveSentence').click(e => {
-      manager.removeSentence();
-    });
-    $('#btnAddSentence').click(e => {
-      manager.insertSentence('');
-    });
+    $('#btnRemoveSentence').click(e => manager.removeSentence());
+    $('#btnAddSentence').click(e => manager.insertSentence());
 
-    $('#btnUploadCorpus').click(manager.upload);
-    $('#btnExportCorpus').click(manager.export);
+    $('#btnUploadCorpus').click(e => manager.upload());
+    $('#btnExportCorpus').click(e => manager.export());
     //$('#btnSaveServer').click(saveOnServer);
-    $('#btnDiscardCorpus').click(clearCorpus);
-    $('#btnPrintCorpus').click(manager.print);
+    $('#btnDiscardCorpus').click(e => {
+      const conf = confirm('Do you want to clear the corpus (remove all sentences)?');
+      if (!conf) {
+        log.info('corpus::clear(): not clearing corpus');
+        return;
+      }
 
-    $('#btnHelp').click(e => {
-      window.open('help.html', '_blank').focus();
+      storage.clear();
+      manager.reset();
     });
+    $('#btnPrintCorpus').click(e => manager.print());
+
+    $('#btnHelp').click(e => window.open('help.html', '_blank').focus());
     $('#btnSettings').click(e => {
       throw new errors.NotImplementedError('show settings not implemented');
     });
 
     $('#tabText').click(e => {
-      //$()
       manager.parse(convert.to.plainText(this.read('text-data')));
     });
     $('#tabConllu').click(e => {
-      //if (manager.format !== 'Plain text' || !manager.current.nx_initialized)
       manager.current.nx_initialized = true;
       manager.parse(convert.to.conllu(this.read('text-data')));
     });
     $('#tabCG3').click(e => {
-      //if (manager.format !== 'Plain text' || !manager.current.nx_initialized)
       manager.current.nx_initialized = true;
       manager.parse(convert.to.cg3(this.read('text-data')));
     });
@@ -314,13 +310,14 @@ class GUI {
     $('#vertical').click(this.toggle.vertical);
     $('#enhanced').click(this.toggle.enhanced);
 
-    $('#current-sentence').keyup(onKeyupInCurrentSentence);
-    $('#text-data').keyup(onEditTextData);
-    $('#edit').keyup(onKeyupInEditLabel);
+    $('#current-sentence').keyup(e => onKeyupInCurrentSentence(e));
+    $('#text-data').keyup(e => onEditTextData(e));
+    $('#edit').keyup(e => onKeyupInEditLabel(e));
     onkeyup = onKeyupInDocument;
 
     // prevent accidentally leaving the page
     window.onbeforeunload = () => {
+      manager.save();
       // DEBUG: uncomment this line for production
       // return 'Are you sure you want to leave?';
     };
@@ -347,14 +344,14 @@ class GUI {
   }
 
   zoomIn() {
-    cy.zoom(gui.zoom * 1.1);
-    gui.update();
+    cy.zoom(this.zoom * 1.1);
+    this.update();
 
     return this;
   }
   zoomOut() {
-    cy.zoom(gui.zoom / 1.1);
-    gui.update();
+    cy.zoom(this.zoom / 1.1);
+    this.update();
 
     return this;
   }
@@ -589,7 +586,9 @@ function onEditTextData(event) {
       //   of whitespace and other annoying side effects), and avoid redundant
       //   parsing if we edit again w/in that 1-sec window
       clearTimeout(gui.parseTimer);
-      gui.parseTimer = setTimeout(manager.parse, 1000);
+      gui.parseTimer = setTimeout(() => {
+        manager.parse();
+      }, 1000);
   }
 
 }
@@ -718,17 +717,6 @@ function onEnter(event) {
   }
 
   gui.update();
-}
-
-function clearCorpus(event) {
-  const conf = confirm('Do you want to clear the corpus (remove all sentences)?');
-  if (!conf) {
-    log.info('corpus::clear(): not clearing corpus');
-    return;
-  }
-
-  storage.clear();
-  manager.reset();
 }
 
 function mergeNodes(direction) {
