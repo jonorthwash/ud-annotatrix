@@ -25,8 +25,8 @@ class Manager {
     this.reset();
     this.load();
 
-    // save once per second
-    setInterval(() => this.save(), 1000);
+    // save once every ? msecs
+    setInterval(() => this.save(), cfg.saveInterval);
   }
 
   reset() {
@@ -311,25 +311,24 @@ class Manager {
       gui: gui.state
     });
 
-    if (server && server.is_running) {
+    storage.save(state)
+    if (server && server.is_running)
       server.save(state);
-    } else {
-      storage.save(state);
-    }
 
     return state;
   }
-  load() {
+  load(state) {
 
-    let state = (server && server.is_running)
+    state = state || (server && server.is_running
       ? server.load()
-      : storage.load();
+      : storage.load());
 
     if (!state) // unable to load
       return null;
 
     // parse it back from a string
-    state = JSON.parse(state);
+    if (typeof state === 'string')
+      state = JSON.parse(state);
 
     this.filename = state.filename;
     this._index = state.index;
