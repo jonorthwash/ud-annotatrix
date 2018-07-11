@@ -283,7 +283,6 @@ class Graph {
   }
 
   save() {
-    console.log('saving');
     log.debug(`called saveGraphEdits(target:${gui.editing ? gui.editing.attr('id') : 'null'}, text:${gui.editing ? $('#edit').val() : ''})`);
 
     cy.$('.input').removeClass('input');

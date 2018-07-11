@@ -128,7 +128,7 @@ class GUI {
 
     if (this.inBrowser) {
       setupUndos();
-      undoManager.setCallback(this.update);
+      undoManager.setCallback(() => this.update());
     }
 
   }
