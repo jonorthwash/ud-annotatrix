@@ -15,4 +15,6 @@ $(() => {
 	funcs.global().server = new Server();
 	funcs.global().manager = new Manager();
 
+	manager.parse(require('./test/data/conllu').labels_1);
+
 });
