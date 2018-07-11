@@ -2,11 +2,13 @@
 
 class ProgressBar {
   constructor() {
-    this.element = $('#progressBar');
+    this.element = gui.inBrowser
+      ? $('#progressBar')
+      : null;
   }
 
   update() {
-    if (!manager.current)
+    if (!manager.current || !this.element)
       return;
 
     const percentage = manager.current.progress * 100;
