@@ -19637,6 +19637,40 @@ class Sentence {
   // external formats
 
   /**
+   * returns the % (as a number in [0,1]) annotation of the sentence
+   *
+   * @return {Number}
+   */
+  get progress() {
+
+    let done = 0,
+      total = 0;
+
+    this.forEach(token => {
+
+      total += 2;
+
+      if (!token.analysis)
+        return;
+
+      if (token.analysis.head)
+        done++;
+      if (token.analysis.pos)
+        done++;
+
+      token.analysis.eachHead(head => {
+
+        total++;
+        if (!!head.deprel)
+          done++;
+
+      });
+    });
+
+    return total ? done / total : 1;
+  }
+
+  /**
    * get a serial version of the internal sentence representation
    *
    * @return {String}
@@ -54761,6 +54795,7 @@ var errors = require('./errors');
 var funcs = require('./funcs');
 var sort = require('./sort');
 var validate = require('./validate');
+var ProgressBar = require('./progress-bar');
 
 var Graph = function () {
   function Graph(options) {
@@ -54783,6 +54818,8 @@ var Graph = function () {
 
     // only do this for in-browser ... add the .selfcomplete method to $()
     if (gui.inBrowser) require('./selfcomplete');
+
+    this.progressBar = new ProgressBar();
 
     // cy handlers
     this.click = {
@@ -54956,6 +54993,7 @@ var Graph = function () {
       }, 5);
 
       this.bind();
+      this.progressBar.update();
     }
   }, {
     key: 'bind',
@@ -55311,7 +55349,7 @@ function removeHead(srcId, tarId) {
 
 module.exports = Graph;
 
-},{"./config":339,"./cy-style":341,"./cytoscape/cytoscape":342,"./errors":344,"./funcs":345,"./selfcomplete":351,"./sort":353,"./validate":356,"jquery":327,"underscore":335}],347:[function(require,module,exports){
+},{"./config":339,"./cy-style":341,"./cytoscape/cytoscape":342,"./errors":344,"./funcs":345,"./progress-bar":351,"./selfcomplete":352,"./sort":354,"./validate":357,"jquery":327,"underscore":335}],347:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -56059,7 +56097,7 @@ function mergeNodes(direction) {
 
 module.exports = GUI;
 
-},{"./convert":340,"./errors":344,"./funcs":345,"./local-storage":349,"./table":354,"./undo-manager":355,"jquery":327}],348:[function(require,module,exports){
+},{"./convert":340,"./errors":344,"./funcs":345,"./local-storage":349,"./table":355,"./undo-manager":356,"jquery":327}],348:[function(require,module,exports){
 'use strict';
 
 require('babel-polyfill');
@@ -56078,7 +56116,7 @@ $(function () {
 	funcs.global().manager = new Manager();
 });
 
-},{"./browser-logger":338,"./funcs":345,"./manager":350,"./server":352,"babel-polyfill":1}],349:[function(require,module,exports){
+},{"./browser-logger":338,"./funcs":345,"./manager":350,"./server":353,"babel-polyfill":1}],349:[function(require,module,exports){
 'use strict';
 
 var KEY = require('./config').localStorageKey;
@@ -56665,6 +56703,35 @@ function updateSentence(oldSent, text) {
 module.exports = Manager;
 
 },{"./config":339,"./detect":343,"./errors":344,"./funcs":345,"./graph":346,"./gui":347,"./local-storage":349,"jquery":327,"notatrix":330,"underscore":335}],351:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var ProgressBar = function () {
+  function ProgressBar() {
+    _classCallCheck(this, ProgressBar);
+
+    this.element = $('#progressBar');
+  }
+
+  _createClass(ProgressBar, [{
+    key: 'update',
+    value: function update() {
+      if (!manager.current) return;
+
+      var percentage = manager.current.progress * 100;
+      this.element.css('width', percentage + '%');
+    }
+  }]);
+
+  return ProgressBar;
+}();
+
+module.exports = ProgressBar;
+
+},{}],352:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -57672,7 +57739,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     }
 });
 
-},{"jquery":327}],352:[function(require,module,exports){
+},{"jquery":327}],353:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -57801,7 +57868,7 @@ function getTreebankId() {
 
 module.exports = Server;
 
-},{"./local-storage":349,"jquery":327}],353:[function(require,module,exports){
+},{"./local-storage":349,"jquery":327}],354:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -57859,7 +57926,7 @@ module.exports = {
   rtl: rtl
 };
 
-},{"underscore":335}],354:[function(require,module,exports){
+},{"underscore":335}],355:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -57928,7 +57995,7 @@ module.exports = {
   edit: edit
 };
 
-},{"./validate":356,"jquery":327}],355:[function(require,module,exports){
+},{"./validate":357,"jquery":327}],356:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -57945,7 +58012,7 @@ module.exports = function () {
 	});
 };
 
-},{"jquery":327,"undo-manager":336}],356:[function(require,module,exports){
+},{"jquery":327,"undo-manager":336}],357:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');

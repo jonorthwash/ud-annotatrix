@@ -9,6 +9,7 @@ const errors = require('./errors');
 const funcs = require('./funcs');
 const sort = require('./sort');
 const validate = require('./validate');
+const ProgressBar = require('./progress-bar');
 
 class Graph {
   constructor(options) {
@@ -29,6 +30,8 @@ class Graph {
     // only do this for in-browser ... add the .selfcomplete method to $()
     if (gui.inBrowser)
       require('./selfcomplete');
+
+    this.progressBar = new ProgressBar();
 
     // cy handlers
     this.click = {
@@ -219,7 +222,8 @@ class Graph {
         gui.pan = cy.pan();
       }, 5);
 
-    this.bind()
+    this.bind();
+    this.progressBar.update();
   }
 
   bind() {
