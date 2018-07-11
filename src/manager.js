@@ -9,6 +9,7 @@ const cfg = require('./config');
 const funcs = require('./funcs');
 const GUI = require('./gui');
 const Graph = require('./graph');
+const LabelManager = require('./labels');
 const errors = require('./errors');
 const detectFormat = require('./detect');
 const storage = require('./local-storage');
@@ -20,6 +21,7 @@ class Manager {
     funcs.global().manager = this;
     funcs.global().gui = new GUI();
     funcs.global().graph = new Graph();
+    funcs.global().labels = new LabelManager();
     gui.bind();
 
     this.reset();
@@ -430,6 +432,8 @@ function updateSentence(oldSent, text) {
   sent.nx_initialized = oldSent.nx_initialized || false;
   sent.is_table_view = oldSent.is_table_view || false;
   sent.column_visibilities = oldSent.column_visibilities || new Array(10).fill(true);
+
+  labels.parse(sent.comments);
 
   return sent;
 }
