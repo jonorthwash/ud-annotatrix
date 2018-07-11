@@ -16,3 +16,5 @@ $(() => {
 	funcs.global().manager = new Manager();
 
 });
+
+module.exports = require('./test/data/index');
