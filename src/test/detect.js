@@ -12,8 +12,8 @@ const detectFormat = require('../detect');
 // export the test suite
 module.exports = () => {
   describe('detect.js', () => {
-    it(`should detect all the formats`, () => {
-      utils.forEachText((text, format, name) => {
+    utils.forEachText((text, format, name) => {
+      it(`should detect ${format}:${name}`, () => {
 
         const detectedFormat = detectFormat(text);
         expect(detectedFormat).to.equal(format);
