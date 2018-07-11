@@ -10,6 +10,13 @@ labels_1: `# text = "This is a simple sentence."
 5	sentence	sentence	_	_	_	_	_	_	_
 6	.	.	PUNCT	PUNCT	_	_	_	_	_`,
 
+labels_2: `# labels = one_label second third-label
+# labels = row_2 again:here this, that
+1	This	This	_	_	_	_	_	_	_`,
+
+labels_3: `# tags = this-is-a-tag test testing test
+1	This	This	_	_	_	_	_	_	_`,
+
 nested_2: `# text = ab cde f h
 1-2	ab	_	_	_	_	_	_	_	_
 1	a	A	_	_	_	_	_	_	_
