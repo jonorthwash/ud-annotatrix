@@ -54501,7 +54501,7 @@ function detectFormat(text) {
 
   if (word.match(/^\W*[\'|\"]</)) {
     format = 'CG3';
-  } else if (word.match(/^\W*1/)) {
+  } else if (word.match(/^\s*1/)) {
     format = 'CoNLL-U'; // UNSAFE: the first token in the string should start with "1"
   } else if (text.includes('(') && text.includes('\n') // SD needs to be at least two lines
   && (text.includes(')\n') || text[text.length - 1] === ')')) {
