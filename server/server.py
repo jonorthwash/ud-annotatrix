@@ -14,7 +14,7 @@ from flask import send_from_directory
 from flask import url_for
 import os
 import uuid
-from db2 import CorpusDB
+from db import CorpusDB
 from env import Env
 from log import Logger
 import json
