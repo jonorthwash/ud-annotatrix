@@ -6,3 +6,4 @@ require('./browser-logger')();
 require('./detect')();
 require('./convert')();
 require('./manager')();
+require('./labels')();
