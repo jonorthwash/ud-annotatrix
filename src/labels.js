@@ -223,7 +223,12 @@ class LabelManager {
   }
   handleClickResetColor(event) {
 
-    console.log('click reset color');
+    const target = $(event.target),
+      name = target.closest('li').attr('name'),
+      label = this.get(name);
+
+    label.changeColor();
+    this.update();
 
   }
   handleClickSave(event) {
