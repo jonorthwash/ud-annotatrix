@@ -21,7 +21,7 @@ class Manager {
     funcs.global().manager = this;
     funcs.global().gui = new GUI();
     funcs.global().graph = new Graph();
-    funcs.global().labels = new LabelManager();
+    funcs.global().labeler = new LabelManager();
     gui.bind();
 
     this.reset();
@@ -255,6 +255,7 @@ class Manager {
     let splitted = this.split(text);
 
     // overwrite contents of #text-data
+    this._sentences[0] = {}; // sort of a hack to get around updateSentence() behavior
     this.sentence = splitted[0];
 
     // iterate over all elements except the first
@@ -264,6 +265,7 @@ class Manager {
     });
 
     gui.update();
+    return this; // chaining
   }
 
 
@@ -276,6 +278,13 @@ class Manager {
   get comments() {
     if (this.current)
       return this.current.comments;
+  }
+  set comments(comments) {
+    if (!this.current)
+      return;
+
+    this.current.comments = comments;
+    gui.update();
   }
   get tokens() {
     if (this.current)
@@ -342,6 +351,9 @@ class Manager {
       sentence.currentFormat = sent.currentFormat;
       sentence.is_table_view = sent.is_table_view;
       sentence.nx_initialized = sent.nx_initialized;
+
+      labeler.parse(sentence.comments);
+
       return sentence;
 
     });
@@ -433,7 +445,7 @@ function updateSentence(oldSent, text) {
   sent.is_table_view = oldSent.is_table_view || false;
   sent.column_visibilities = oldSent.column_visibilities || new Array(10).fill(true);
 
-  labels.parse(sent.comments);
+  labeler.parse(sent.comments);
 
   return sent;
 }
