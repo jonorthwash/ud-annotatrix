@@ -221,13 +221,24 @@
 		</div -->
 
 		<div id="label-container" class="row">
-			<div id="new-label">
-				<button id="btnNewLabel" class="btn btn-secondary">
-					New
-				</button>
-			</div>
-			<div id="all-labels">
-			</div>
+			<ul id="labels-horiz-current" class="labels-horiz">
+				<li id="label-controller" class="dropdown label">
+					<span>
+						labels:
+					</span>
+					<div id="labels-dropdown" class="dropdown-content">
+						<input id="label-input" />
+						<ul id="labels-vert">
+						</ul>
+					</div>
+				</li>
+			</ul>
+			|
+			<ul id="labels-horiz-all" class="labels-horiz">
+				<li class="label">
+					all:
+				</li>
+			</ul>
 		</div>
 
 		<div id="data-container">
