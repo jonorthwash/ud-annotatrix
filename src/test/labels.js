@@ -88,6 +88,35 @@ module.exports = () => {
 
     });
 
+    describe(`know whether a given sentence has a given label`, () => {
+
+      const _data = {
+        labels_1: ['label1', 'another_label', 'a-third-label'],
+        labels_2: ['one_label', 'second', 'third-label',
+          'row_2', 'again:here', 'this', 'that' ],
+        labels_3: ['this-is-a-tag', 'test', 'testing'],
+        nested_2: []
+      };
+      let allLabels = _.reduce(_data, (l, labels) => l.concat(labels), []);
+
+      const labeler = new LabelManager();
+
+      let i = -1;
+      _.each(_data, (labels, name) => {
+        it(`should read for CoNLL-U:${name}`, () => {
+          const stub = sinon.stub(manager, 'getSentence').callsFake(i => {
+            return nx.Sentence.fromConllu(data['CoNLL-U'][name]);
+          });
+
+          manager.index = i++;
+          _.each(allLabels, label => {
+            expect(labeler.has(label)).to.equal(labels.indexOf(label) > -1);
+          });
+          manager.getSentence.restore();
+        });
+      });
+    });
+
     describe('pick a text color sanely', () => {
 
       const labelName = 'test',
