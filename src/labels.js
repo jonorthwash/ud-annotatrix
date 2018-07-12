@@ -57,6 +57,17 @@ class LabelManager {
     return this; // chaining
   }
 
+  get(name) {
+
+    let ret = null;
+    _.each(this.labels, label => {
+      if (label.name === name)
+        ret = label;
+    });
+
+    return ret;
+  }
+
   add(name) {
 
     let found = false;
