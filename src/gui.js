@@ -242,6 +242,7 @@ class GUI {
       this.zoom = null;
       this.pan  = null;
     }
+    labeler.update();
     graph.update();
   }
 
@@ -309,6 +310,11 @@ class GUI {
     $('#RTL').click(this.toggle.rtl);
     $('#vertical').click(this.toggle.vertical);
     $('#enhanced').click(this.toggle.enhanced);
+
+    $('#label-input').keyup(e => {
+      if (e.which === KEYS.ENTER)
+        labeler.handleEnter(e);
+    });
 
     $('#current-sentence').keyup(e => onKeyupInCurrentSentence(e));
     $('#text-data').keyup(e => onEditTextData(e));
@@ -473,13 +479,6 @@ function onKeyupInDocument(event) {
       graph.clear();
       break;
 
-    default:
-      if (47 < event.which && event.which < 58) {// key in 0-9
-        const num = event.which - 48;
-        cy.zoom(1.5 ** (num - 5));
-        gui.update();
-      }
-
   }
 }
 function onCtrlKeyup(event) {
@@ -522,6 +521,13 @@ function onCtrlKeyup(event) {
     setTimeout(() => { // catch only events w/in next 500 msecs
       pressed[KEYS.SHIFT] = false;
     }, 500);
+    return true;
+
+  } else if (47 < event.which && event.which < 58) { // key in 0-9
+
+    const num = event.which - 48;
+    cy.zoom(1.5 ** (num - 5));
+    gui.update();
     return true;
 
   } else {
