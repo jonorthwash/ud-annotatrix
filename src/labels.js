@@ -7,9 +7,25 @@ const regex = {
   content: /([\w-:]*)/
 };
 
+// NOTE: 16777215 (base 10) = ffffff (base 16)
+const magic = 16777215;
+
 class Label {
   constructor(name) {
     this.name = name;
+    this.color = getRandomHexColor();
+  }
+
+  changeColor(color) {
+    if (color) {
+      const int = parseInt(color, 16);
+      if (isNaN(int) || int < 0 || int > magic)
+        return null; // out of bounds
+    } else {
+      color = getRandomHexColor();
+    }
+
+    this.color = color;
   }
 }
 
@@ -54,6 +70,10 @@ class LabelManager {
   update() {
 
   }
+}
+
+function getRandomHexColor() {
+  return `#${Math.floor(Math.random()*magic).toString(16)}`;
 }
 
 module.exports = LabelManager;
