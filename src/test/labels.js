@@ -64,7 +64,15 @@ module.exports = () => {
           tColor: '#ffffff'
         },
         {
+          bColor: '#0106a0',
+          tColor: '#ffffff'
+        },
+        {
           bColor: '#ffffff',
+          tColor: '#000000'
+        },
+        {
+          bColor: '#aaaaaa',
           tColor: '#000000'
         }
       ];
