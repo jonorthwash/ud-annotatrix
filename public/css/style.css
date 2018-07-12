@@ -776,3 +776,12 @@ td .parse-error {
 .readonly:after {
   content: " (readonly)"
 }
+
+#label-container {
+  background-color: #fff;
+  display: flex;
+}
+
+#btnNewLabel {
+  cursor: pointer;
+}

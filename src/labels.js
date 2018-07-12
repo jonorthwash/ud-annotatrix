@@ -17,6 +17,7 @@ class Label {
   }
 
   changeColor(color) {
+    
     if (color) {
       const int = parseInt(color, 16);
       if (isNaN(int) || int < 0 || int > magic)

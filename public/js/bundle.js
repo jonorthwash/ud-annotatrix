@@ -19185,6 +19185,7 @@ const regex = {
   cg3TokenContent: /^;?\s+"(.|\\")*"/
 }
 
+const fallback = '_';
 
 /**
  * this class contains all the information associated with a sentence, including
@@ -19653,15 +19654,15 @@ class Sentence {
       if (!token.analysis)
         return;
 
-      if (token.analysis.head)
+      if (token.analysis.head && token.analysis.head !== fallback)
         done++;
-      if (token.analysis.pos)
+      if (token.analysis.pos && token.analysis.head !== fallback)
         done++;
 
       token.analysis.eachHead(head => {
 
         total++;
-        if (!!head.deprel)
+        if (head.deprel && head.deprel !== fallback)
           done++;
 
       });
@@ -23137,7 +23138,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             limit = 0,
             isExecuting = false,
             callback,
-
+            
             // functions
             execute;
 
@@ -23167,12 +23168,12 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
                 commands.splice(index + 1, commands.length - index);
 
                 commands.push(command);
-
+                
                 // if limit is set, remove items from the start
                 if (limit && commands.length > limit) {
                     removeFromTo(commands, 0, -(limit+1));
                 }
-
+                
                 // set the current index to the end
                 index = commands.length - 1;
                 if (callback) {
@@ -23249,7 +23250,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             getIndex: function() {
                 return index;
             },
-
+            
             setLimit: function (l) {
                 limit = l;
             }
@@ -56128,15 +56129,80 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var _ = require('underscore');
+
+var regex = {
+  comment: /(labels|tags)\s*=\s*(.*)$/,
+  content: /([\w-:]*)/
+};
+
+// NOTE: 16777215 (base 10) = ffffff (base 16)
+var magic = 16777215;
+
+var Label = function () {
+  function Label(name) {
+    _classCallCheck(this, Label);
+
+    this.name = name;
+    this.color = getRandomHexColor();
+  }
+
+  _createClass(Label, [{
+    key: 'changeColor',
+    value: function changeColor(color) {
+
+      if (color) {
+        var int = parseInt(color, 16);
+        if (isNaN(int) || int < 0 || int > magic) return null; // out of bounds
+      } else {
+        color = getRandomHexColor();
+      }
+
+      this.color = color;
+    }
+  }]);
+
+  return Label;
+}();
+
 var LabelManager = function () {
   function LabelManager() {
     _classCallCheck(this, LabelManager);
+
+    this.labels = [];
   }
 
   _createClass(LabelManager, [{
     key: 'parse',
     value: function parse(comments) {
-      console.log(comments);
+      var _this = this;
+
+      _.each(comments, function (comment) {
+
+        var labelString = comment.match(regex.comment);
+        if (!labelString) return;
+
+        labelString[2].split(/\s/).forEach(function (label) {
+
+          var content = label.match(regex.content);
+          if (content) _this.add(content[1]);
+        });
+      });
+
+      return this; // chaining
+    }
+  }, {
+    key: 'add',
+    value: function add(name) {
+
+      var found = false;
+      _.each(this.labels, function (label) {
+        if (label.name === name) found = true;
+      });
+
+      if (!found) this.labels.push(new Label(name));
+
+      return this; // chaining
     }
   }, {
     key: 'update',
@@ -56146,9 +56212,13 @@ var LabelManager = function () {
   return LabelManager;
 }();
 
+function getRandomHexColor() {
+  return '#' + Math.floor(Math.random() * magic).toString(16);
+}
+
 module.exports = LabelManager;
 
-},{}],350:[function(require,module,exports){
+},{"underscore":335}],350:[function(require,module,exports){
 'use strict';
 
 var KEY = require('./config').localStorageKey;
@@ -58036,6 +58106,10 @@ module.exports = {
 
 module.exports = {
   labels_1: '# text = "This is a simple sentence."\n# labels = label1 another_label a-third-label\n1\tThis\tThis\t_\t_\t_\t_\t_\t_\t_\n2\tis\tis\t_\t_\t_\t_\t_\t_\t_\n3\ta\ta\t_\t_\t_\t_\t_\t_\t_\n4\tsimple\tsimple\t_\t_\t_\t_\t_\t_\t_\n5\tsentence\tsentence\t_\t_\t_\t_\t_\t_\t_\n6\t.\t.\tPUNCT\tPUNCT\t_\t_\t_\t_\t_',
+
+  labels_2: '# labels = one_label second third-label\n# labels = row_2 again:here this, that\n1\tThis\tThis\t_\t_\t_\t_\t_\t_\t_',
+
+  labels_3: '# tags = this-is-a-tag test testing test\n1\tThis\tThis\t_\t_\t_\t_\t_\t_\t_',
 
   nested_2: '# text = ab cde f h\n1-2\tab\t_\t_\t_\t_\t_\t_\t_\t_\n1\ta\tA\t_\t_\t_\t_\t_\t_\t_\n2\tb\tB\t_\t_\t_\t_\t_\t_\t_\n3-5\tcde\t_\t_\t_\t_\t_\t_\t_\t_\n3\tc\tC\t_\t_\t_\t_\t_\t_\t_\n4\td\tD\t_\t_\t_\t_\t_\t_\t_\n5\te\tE\t_\t_\t_\t_\t_\t_\t_\n6\tf\tF\t_\t_\t_\t_\t_\t_\t_\n6.1\tsilent_g\tG\t_\t_\t_\t_\t_\t_\t_\n7\th\tH\t_\t_\t_\t_\t_\t_\t_',
 
