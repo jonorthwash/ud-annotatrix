@@ -51,6 +51,41 @@ module.exports = () => {
 
     describe('parse comments on aggregate', () => {
 
+      const names = [
+        'labels_1',
+        'labels_2',
+        'labels_3',
+        'nested_2'
+      ];
+      const labels = [
+        'label1',
+        'another_label',
+        'a-third-label',
+        'one_label',
+        'second',
+        'third-label',
+        'row_2',
+        'again:here',
+        'this',
+        'that',
+        'this-is-a-tag',
+        'test',
+        'testing'
+      ];
+      const labeler = new LabelManager();
+
+      it(`should parse labels from CoNLL-U:{${names.join(' ')}}`, () => {
+        _.each(names, name => {
+
+          const conllu = data['CoNLL-U'][name],
+            s = nx.Sentence.fromConllu(conllu);
+
+          labeler.parse(s.comments);
+        });
+
+        expect(labeler.labels.map(label => label.name)).to.deep.equal(labels);
+      });
+
     });
 
     describe('pick a text color sanely', () => {
