@@ -120,7 +120,10 @@ module.exports = () => {
     describe('pick a text color sanely', () => {
 
       const labelName = 'test',
-        label = new LabelManager().add(labelName).get(labelName);
+        labeler = new LabelManager();
+
+      labeler.add(labelName);
+      const label = labeler.get(labelName);
 
       const _data = [
         {
