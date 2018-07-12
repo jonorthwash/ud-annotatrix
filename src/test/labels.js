@@ -43,6 +43,7 @@ module.exports = () => {
           labeler = new LabelManager();
 
         labeler.parse(s.comments);
+        expect(labeler.labels.map(label => label.name)).to.deep.equal(datum.labels);
       });
     });
   });
