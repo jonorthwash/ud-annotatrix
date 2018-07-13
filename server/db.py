@@ -21,7 +21,7 @@ class CorpusDB():
         db = sqlite3.connect(self.path)
         cur = db.cursor()
         cur.execute('CREATE TABLE corpus (num integer primary key, sent)')
-        cur.execute('CREATE TABLE meta (num integer primary key, filename, gui)')
+        cur.execute('CREATE TABLE meta (num integer primary key, filename, gui, labeler)')
         db.commit()
 
     def write_corpus(self, corpus, corpus_name):
@@ -60,8 +60,8 @@ class CorpusDB():
 
         db.close()
 
-        filename, gui = self.get_meta()
-        return sentence, max_sent, filename, gui
+        filename, gui, labeler = self.get_meta()
+        return sentence, max_sent, filename, gui, labeler
 
     def get_sentences(self):
         """
@@ -79,8 +79,8 @@ class CorpusDB():
 
         db.close()
 
-        filename, gui = self.get_meta()
-        return sentences, len(sentences), filename, gui
+        filename, gui, labeler = self.get_meta()
+        return sentences, len(sentences), filename, gui, labeler
 
     def get_meta(self):
         """
@@ -89,7 +89,7 @@ class CorpusDB():
         db = sqlite3.connect(self.path)
         cur = db.cursor()
 
-        cur.execute('SELECT filename, gui FROM meta')
+        cur.execute('SELECT filename, gui, labeler FROM meta')
         meta = cur.fetchall()
         if not meta:
             raise ValueError(f'unable to get meta')
@@ -98,7 +98,7 @@ class CorpusDB():
         db.commit()
 
         db.close()
-        return meta[0], meta[1]
+        return meta[0], meta[1], meta[2]
 
     def update_db(self, state):
         db = sqlite3.connect(self.path)
@@ -109,9 +109,10 @@ class CorpusDB():
             sent = json.dumps(sentences[i])
             cur.execute('INSERT or REPLACE into corpus (num, sent) VALUES (?, ?)', (i, sent))
 
-        cur.execute('INSERT or REPLACE into meta (num, filename, gui) VALUES (0, ?, ?)', (
+        cur.execute('INSERT or REPLACE into meta (num, filename, gui, labeler) VALUES (0, ?, ?, ?)', (
             state['filename'],
-            json.dumps(state['gui'])
+            json.dumps(state['gui']),
+            json.dumps(state['labeler'])
         ));
 
         db.commit()
