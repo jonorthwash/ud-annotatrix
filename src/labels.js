@@ -149,11 +149,9 @@ class Labeler {
   }
 
   parse(comments) {
-    _.each(comments, comment => {
-      _.each(Labeler.parseComment(comment), label => {
-        if (label)
-          this._add(label);
-      });
+    _.each(Labeler.parseComments(comments), label => {
+      if (label)
+        this._add(label);
     });
 
     return this; // chaining
