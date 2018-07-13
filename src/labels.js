@@ -1,6 +1,7 @@
 'use strict';
 
 const _ = require('underscore');
+const $ = require('jquery');
 
 const regex = {
   comment: /(labels|tags)\s*=\s*(.*)$/,
@@ -39,6 +40,105 @@ class Label {
 class LabelManager {
   constructor() {
     this.labels = [];
+
+    // don't want the "jQuery needs a window" errors during testing
+    if (!gui || !gui.inBrowser)
+      return this;
+
+    $('#label-input').keyup(e => {
+      if (e.which === 13) // enter
+        this.handle.enter(e);
+    });
+
+    this.handle = {
+      enter: event => {
+        const names = $('#label-input').val().trim();
+        this.addLabels(names);
+
+        $('#label-input').val('');
+        gui.update();
+      },
+
+      click: {
+        chevron: event => {
+          const target = $(event.target),
+            hidden = $(target.closest('li').find('.label-hidden')),
+            display = hidden.css('display');
+
+          $('.label-hidden')
+            .css('display', 'none')
+            .closest('li').find('.chevron')
+              .removeClass('fa-chevron-up')
+              .addClass('fa-chevron-down');
+
+          if (display === 'none')
+            hidden
+              .css('display', 'block')
+              .closest('li').find('.chevron')
+                .addClass('fa-chevron-up')
+                .removeClass('fa-chevron-down');
+        },
+
+        checkbox: event => {
+          const target = $(event.target),
+            checked = target.attr('type') === 'checked',
+            name = target.closest('li').attr('name');
+
+          target
+            .toggleClass('fa-check-square-o')
+            .toggleClass('fa-square-o')
+            .attr('type', checked ? 'unchecked' : 'checked');
+
+          if (checked) {
+            this.removeLabelFromComments(name);
+          } else {
+            this.addLabelToComments(name);
+          }
+
+          gui.update();
+        },
+
+        label: event => {
+          console.log('click label');
+        },
+
+        times: event => {
+          const target = $(event.target),
+            name = target.closest('li').attr('name');
+
+          const response = confirm(`Are you sure you want to delete the label "${name}" from all sentences?`);
+          if (!response)
+            return;
+
+          this.remove(name);
+          gui.update();
+        },
+
+        refresh: event => {
+          const target = $(event.target),
+            name = target.closest('li').attr('name'),
+            label = this.get(name);
+
+          label.changeColor();
+          this.update();
+          flashDropdown(name);
+        },
+
+        save: event => {
+          const target = $(event.target),
+            li = target.closest('li'),
+            oldName = li.attr('name'),
+            newName = li.find('input[name="name"]').val(),
+            desc = li.find('input[name="desc"]').val(),
+            color = li.find('input[name="color"]').val();
+
+          this.edit(oldName, newName, desc, color);
+
+          gui.update();
+          flashDropdown(name);
+        }
+      }
+    }
   }
 
   parse(comments) {
@@ -97,7 +197,37 @@ class LabelManager {
     return !found; // so we know if success or not
   }
 
+  remove(name) {
+    this.labels = this.labels.filter(label => {
+      if (label.name !== name)
+        return label;
+    });
+    for (let i=0; i<manager.length; i++) {
+      this.removeLabelFromComments(i, name);
+    }
+  }
+
+  edit(oldName, newName, desc, color) {
+    const label = this.get(oldName);
+
+    if (newName) {
+      for (let i=0; i<manager.length; i++) {
+        this.changeLabelInComments(i, label.name, name);
+      }
+      label.name = name;
+    }
+
+    if (desc)
+      label.desc = desc;
+
+    if (color)
+      label.changeColor(`#${color}`);
+  }
+
   update() {
+
+    if (!gui || !gui.inBrowser)
+      return;
 
     $('#labels-vert').children().detach();
     $('.labels-horiz').children().not(':first-child').detach();
@@ -113,15 +243,15 @@ class LabelManager {
 
       const name  = $(`<span class="label-name">${label.name}</span>`)
         .prepend(`<span class="square" style="background-color:${label.bColor};" />`)
-        .click(e => this.handleClickLabel(e));
+        .click(e => this.handle.click.label(e));
       const chev  = $(`<i class="fa fa-chevron-down chevron" aria-hidden="true" />`)
-        .click(e => this.handleClickChevron(e));
+        .click(e => this.handle.click.chevron(e));
       const check = $(`<i class="fa" aria-hidden="true" type="checked" />`)
         .addClass(this.has(label.name) ? 'fa-check-square-o' : 'fa-square-o')
         .attr('type', this.has(label.name) ? 'checked' : 'unchecked')
-        .click(e => this.handleClickCheckbox(e));
+        .click(e => this.handle.click.checkbox(e));
       const times = $(`<i class="fa fa-times" aria-hidden="true" />`)
-        .click(e => this.handleClickTimes(e));
+        .click(e => this.handle.click.times(e));
       header.append(name, chev, check, times);
 
       const hNameContainer = $(`<div />`)
@@ -132,7 +262,7 @@ class LabelManager {
         .append(`<input name="desc" value="${label.desc}" />`);
       const hColorName = $(`<input name="color" value="${label.bColor.substr(1)}" />`);
       const hColorReset = $(`<button type="button" class="btn btn-secondary refresh-color"><i class="fa fa-refresh" /></button>`)
-        .click(e => this.handleClickResetColor(e));
+        .click(e => this.handle.click.refresh(e));
       const hColorSquare = $(`<span class="square" style="background-color:${label.bColor};" />`);
       const hColorInputs = $('<div class="color-inputs" pattern="[A-Fa-f\d]{6}">')
         .text('#')
@@ -141,7 +271,7 @@ class LabelManager {
         .text('Color:')
         .append(hColorInputs);
       const hSaveButton = $(`<button type="button" class="btn btn-secondary">Save</button>`)
-        .click(e => this.handleClickSave(e));
+        .click(e => this.handle.click.save(e));
       hidden.append(hNameContainer, hDescContainer, hColorContainer, hSaveButton);
 
       $('#labels-vert').append(vert)
@@ -151,7 +281,7 @@ class LabelManager {
         .text(label.name)
         .css('background-color', label.bColor)
         .css('color', label.tColor)
-        .click(e => this.handleClickLabel(e));
+        .click(e => this.handle.click.label(e));
 
       if (this.has(label.name)) {
         $('#labels-horiz-current').append(horiz);
@@ -162,109 +292,61 @@ class LabelManager {
     });
   }
 
-  handleEnter(event) {
-
-    const names = $('#label-input').val().trim();
-
-    _.each(names.split(/\s+/), name => {
+  addLabels(string) {
+    _.each(string.split(/\s+/), name => {
       if (name && this.add(name))
-        addLabelToComments(name);
+        this.addLabelToComments(name);
+    });
+  }
+
+  addLabelToComments(index, name) {
+
+    if (name === undefined) {
+      name = index;
+      index = manager.index;
+    }
+
+    let done = false;
+    manager.getSentence(index).comments = manager.getSentence(index).comments.map(comment => {
+
+      if (comment.match(regex.comment) && !done) {
+        comment = `${comment} ${name}`;
+        done = true;
+      }
+
+      return comment;
     });
 
-    $('#label-input').val('');
-    gui.update();
+    if (!done)
+      manager.comments = manager.comments.concat([`labels = ${name}`]);
   }
-  handleClickChevron(event) {
-    const target = $(event.target),
-      hidden = $(target.closest('li').find('.label-hidden')),
-      display = hidden.css('display');
 
-    $('.label-hidden')
-      .css('display', 'none')
-      .closest('li').find('.chevron')
-        .removeClass('fa-chevron-up')
-        .addClass('fa-chevron-down');
+  removeLabelFromComments(index, name) {
 
-    if (display === 'none')
-      hidden
-        .css('display', 'block')
-        .closest('li').find('.chevron')
-          .addClass('fa-chevron-up')
-          .removeClass('fa-chevron-down');
-  }
-  handleClickCheckbox(event) {
-
-    const target = $(event.target),
-      checked = target.attr('type') === 'checked',
-      name = target.closest('li').attr('name');
-
-    target
-      .toggleClass('fa-check-square-o')
-      .toggleClass('fa-square-o')
-      .attr('type', checked ? 'unchecked' : 'checked');
-
-    if (checked) {
-      removeLabelFromComments(name);
-    } else {
-      addLabelToComments(name);
+    if (name === undefined) {
+      name = index;
+      index = manager.index;
     }
 
-    gui.update();
-  }
-  handleClickLabel(event) {
-
-    console.log('click label');
-
-  }
-  handleClickTimes(event) {
-
-    const target = $(event.target),
-      name = target.closest('li').attr('name');
-
-    const response = confirm(`Are you sure you want to delete the label "${name}" from all sentences?`);
-    if (!response)
-      return;
-
-    this.labels = this.labels.filter(label => {
-      if (label.name !== name)
-        return label;
+    const reg = new RegExp(` ${name}( ?)`);
+    manager.getSentence(index).comments = manager.getSentence(index).comments.map(comment => {
+      return comment.replace(reg, '$1')
     });
-    for (let i=0; i<manager.length; i++) {
-      removeLabelFromComments(i, name);
+  }
+
+  changeLabelInComments(index, oldName, newName) {
+    if (newName === undefined) {
+      newName = oldName;
+      oldName = index;
+      index = manager.index;
     }
 
-    gui.update();
+    const reg = new RegExp(` ${oldName}( ?)`);
+    manager.getSentence(index).comments = manager.getSentence(index).comments.map(comment => {
+      return comment.replace(reg, ` ${newName}$1`)
+    });
   }
-  handleClickResetColor(event) {
 
-    const target = $(event.target),
-      name = target.closest('li').attr('name'),
-      label = this.get(name);
-
-    label.changeColor();
-    this.update();
-    flashDropdown(name);
-  }
-  handleClickSave(event) {
-
-    const target = $(event.target),
-      li = target.closest('li'),
-      label = this.get(li.attr('name')),
-      name = li.find('input[name="name"]').val(),
-      desc = li.find('input[name="desc"]').val(),
-      color = li.find('input[name="color"]').val();
-
-    for (let i=0; i<manager.length; i++) {
-      changeLabelInComments(i, label.name, name);
-    }
-
-    label.name = name;
-    label.desc = desc;
-    label.changeColor(`#${color}`);
-
-    gui.update();
-    flashDropdown(name);
-  }
 }
 
 function flashDropdown(name) {
@@ -283,54 +365,6 @@ function flashDropdown(name) {
 
   // wait 0.5 secs to return to standard dropdown behavior
   setTimeout(() => dropdown.css('display', ''), 500);
-}
-
-function addLabelToComments(index, name) {
-
-  if (name === undefined) {
-    name = index;
-    index = manager.index;
-  }
-
-  let done = false;
-  manager.getSentence(index).comments = manager.getSentence(index).comments.map(comment => {
-
-    if (comment.match(regex.comment) && !done) {
-      comment = `${comment} ${name}`;
-      done = true;
-    }
-
-    return comment;
-  });
-
-  if (!done)
-    manager.comments = manager.comments.concat([`labels = ${name}`]);
-}
-
-function removeLabelFromComments(index, name) {
-
-  if (name === undefined) {
-    name = index;
-    index = manager.index;
-  }
-
-  const reg = new RegExp(` ${name}( ?)`);
-  manager.getSentence(index).comments = manager.getSentence(index).comments.map(comment => {
-    return comment.replace(reg, '$1')
-  });
-}
-
-function changeLabelInComments(index, oldName, newName) {
-  if (newName === undefined) {
-    newName = oldName;
-    oldName = index;
-    index = manager.index;
-  }
-
-  const reg = new RegExp(` ${oldName}( ?)`);
-  manager.getSentence(index).comments = manager.getSentence(index).comments.map(comment => {
-    return comment.replace(reg, ` ${newName}$1`)
-  });
 }
 
 function parseComment(comment) {
