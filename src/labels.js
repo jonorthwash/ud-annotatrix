@@ -175,7 +175,7 @@ class LabelManager {
 
   static parseComments(comments) {
     return _.reduce(comments, (l, comment) => {
-      return l.concat(LabelManager.parseComment(labels));
+      return l.concat(LabelManager.parseComment(comment));
     }, []);
   }
 
