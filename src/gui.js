@@ -311,11 +311,6 @@ class GUI {
     $('#vertical').click(this.toggle.vertical);
     $('#enhanced').click(this.toggle.enhanced);
 
-    $('#label-input').keyup(e => {
-      if (e.which === KEYS.ENTER)
-        labeler.handleEnter(e);
-    });
-
     $('#current-sentence').keyup(e => onKeyupInCurrentSentence(e));
     $('#text-data').keyup(e => onEditTextData(e));
     $('#edit').keyup(e => onKeyupInEditLabel(e));
