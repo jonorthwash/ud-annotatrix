@@ -119,6 +119,10 @@ module.exports = () => {
     });
 
     describe('pick a text color sanely', () => {
+      global.manager = {
+        index: 0,
+        getSentence: i => nx.Sentence.fromText('')
+      };
 
       const labelName = 'test',
         labeler = new LabelManager();

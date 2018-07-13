@@ -54,8 +54,10 @@ class LabelManager {
       enter: event => {
         const names = $('#label-input').val().trim();
         _.each(names.split(/\s+/), name => {
-          if (name && this._add(name))
-            this.addLabel(name);
+          if (name)
+            this._add(name)
+          //if (name && this._add(name))
+            //this.addLabel(name);
         });
 
         $('#label-input').val('');
@@ -222,6 +224,8 @@ class LabelManager {
     if (!found)
       this.labels.push(new Label(name));
 
+    this.addLabel(name);
+
     return !found; // so we know if success or not
   }
 
@@ -341,7 +345,7 @@ class LabelManager {
     });
 
     if (!done)
-      manager.comments = manager.comments.concat([`labels = ${name}`]);
+      manager.getSentence(index).comments = manager.getSentence(index).comments.concat([`labels = ${name}`]);
   }
 
   removeLabel(index, name) {
