@@ -214,6 +214,8 @@ class LabelManager {
 
   edit(name, values) {
     const label = this.get(name);
+    if (!label)
+      return null;
 
     if (values.name) {
       for (let i=0; i<manager.length; i++) {
