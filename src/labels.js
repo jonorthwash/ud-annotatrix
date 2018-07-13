@@ -53,7 +53,10 @@ class LabelManager {
     this.handle = {
       enter: event => {
         const names = $('#label-input').val().trim();
-        this.addLabels(names);
+        _.each(names.split(/\s+/), name => {
+          if (name && this.add(name))
+            this.addLabelToComments(name);
+        });
 
         $('#label-input').val('');
         gui.update();
@@ -214,7 +217,7 @@ class LabelManager {
 
     if (values.name) {
       for (let i=0; i<manager.length; i++) {
-        this.changeLabelInComments(i, name, values.name);
+        this.changeLabelInComments(i, label.name, values.name);
       }
       label.name = values.name;
     }
@@ -291,13 +294,6 @@ class LabelManager {
         $('#labels-horiz-all').append(horiz);
       }
 
-    });
-  }
-
-  addLabels(string) {
-    _.each(string.split(/\s+/), name => {
-      if (name && this.add(name))
-        this.addLabelToComments(name);
     });
   }
 
