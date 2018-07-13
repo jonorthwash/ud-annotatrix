@@ -836,7 +836,7 @@ li.label {
   margin: 0 0.5em;
 }
 
-.label-name .square {
+.label .square {
   display: inline-block;
   width: 14px;
   height: 14px;
@@ -866,4 +866,23 @@ li.label {
 
 #labels-horiz-all li.label {
   opacity: 0.3;
+}
+
+input[name="color"] {
+  width: 7em;
+}
+
+.color-inputs {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.color-inputs .square {
+  width: 37px;
+  height: 30.8px;
+}
+
+.refresh-color {
+  font-size: 0.8rem;
 }
