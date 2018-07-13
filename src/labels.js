@@ -15,16 +15,18 @@ class Label {
     this.name = name;
     this.bColor = hashStringToHex(name);
     this.tColor = getTextColor(this.bColor);
-    this.description = '';
+    this.desc = '';
   }
 
   changeColor(color) {
 
     if (color) {
-      color = (color.match(/^#?([a-f\d]{6})/) || [])[1];
+      color = (color.match(/^#?([a-f\d]{6})/i) || [])[1];
       const int = parseInt(color, 16);
       if (isNaN(int) || int < 0 || int > magic)
         return null; // out of bounds
+
+      color = `#${color}`;
     } else {
       color = getRandomHexColor();
     }
@@ -127,7 +129,7 @@ class LabelManager {
         .append(`<input name="name" value="${label.name}" />`);
       const hDescContainer = $(`<div />`)
         .text('Description:')
-        .append(`<input name="desc" value="${label.description}" />`);
+        .append(`<input name="desc" value="${label.desc}" />`);
       const hColorName = $(`<input name="color" value="${label.bColor.substr(1)}" />`);
       const hColorReset = $(`<button type="button" class="btn btn-secondary refresh-color"><i class="fa fa-refresh" /></button>`)
         .click(e => this.handleClickResetColor(e));
@@ -241,31 +243,48 @@ class LabelManager {
 
     label.changeColor();
     this.update();
+    flashDropdown(name);
+  }
+  handleClickSave(event) {
 
+    const target = $(event.target),
+      li = target.closest('li'),
+      label = this.get(li.attr('name')),
+      name = li.find('input[name="name"]').val(),
+      desc = li.find('input[name="desc"]').val(),
+      color = li.find('input[name="color"]').val();
+
+    for (let i=0; i<manager.length; i++) {
+      changeLabelInComments(i, label.name, name);
+    }
+
+    label.name = name;
+    label.desc = desc;
+    label.changeColor(`#${color}`);
+
+    gui.update();
+    flashDropdown(name);
+  }
+}
+
+function flashDropdown(name) {
+  const dropdown = $('.dropdown-content');
+
+  // show dropdown part immediately
+  dropdown.css('display', 'block');
+
+  // expand chevron-click style
+  if (name)
     $(`li.vert-label[name="${name}"]`).find('.label-hidden')
       .css('display', 'block')
       .find('.chevron')
         .addClass('fa-chevron-up')
         .removeClass('fa-chevron-down');
 
-    flashDropdown();
-  }
-  handleClickSave(event) {
-
-    console.log('click save');
-
-  }
+  // wait 0.5 secs to return to standard dropdown behavior
+  setTimeout(() => dropdown.css('display', ''), 500);
 }
 
-function flashDropdown() {
-  const dropdown = $('.dropdown-content');
-
-  // show it immediately
-  dropdown.css('display', 'block');
-
-  // wait 0.5 secs to return to standard behavior
-  setTimeout(dropdown.css('display', ''), 500);
-}
 function addLabelToComments(index, name) {
 
   if (name === undefined) {
@@ -298,6 +317,19 @@ function removeLabelFromComments(index, name) {
   const reg = new RegExp(` ${name}( ?)`);
   manager.getSentence(index).comments = manager.getSentence(index).comments.map(comment => {
     return comment.replace(reg, '$1')
+  });
+}
+
+function changeLabelInComments(index, oldName, newName) {
+  if (newName === undefined) {
+    newName = oldName;
+    oldName = index;
+    index = manager.index;
+  }
+
+  const reg = new RegExp(` ${oldName}( ?)`);
+  manager.getSentence(index).comments = manager.getSentence(index).comments.map(comment => {
+    return comment.replace(reg, ` ${newName}$1`)
   });
 }
 
