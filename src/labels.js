@@ -54,8 +54,8 @@ class LabelManager {
       enter: event => {
         const names = $('#label-input').val().trim();
         _.each(names.split(/\s+/), name => {
-          if (name && this.add(name))
-            this.addLabelToComments(name);
+          if (name && this._add(name))
+            this.addLabel(name);
         });
 
         $('#label-input').val('');
@@ -93,9 +93,9 @@ class LabelManager {
             .attr('type', checked ? 'unchecked' : 'checked');
 
           if (checked) {
-            this.removeLabelFromComments(name);
+            this.removeLabel(name);
           } else {
-            this.addLabelToComments(name);
+            this.addLabel(name);
           }
 
           gui.update();
@@ -150,7 +150,7 @@ class LabelManager {
     _.each(comments, comment => {
       _.each(parseComment(comment), label => {
         if (label)
-          this.add(label);
+          this._add(label);
       });
     });
 
@@ -189,7 +189,7 @@ class LabelManager {
     return ret;
   }
 
-  add(name) {
+  _add(name) {
 
     let found = false;
     _.each(this.labels, label => {
@@ -209,7 +209,7 @@ class LabelManager {
         return label;
     });
     for (let i=0; i<manager.length; i++) {
-      this.removeLabelFromComments(i, name);
+      this.removeLabel(i, name);
     }
   }
 
@@ -220,7 +220,7 @@ class LabelManager {
 
     if (values.name) {
       for (let i=0; i<manager.length; i++) {
-        this.changeLabelInComments(i, label.name, values.name);
+        this.changeLabel(i, label.name, values.name);
       }
       label.name = values.name;
     }
@@ -300,7 +300,7 @@ class LabelManager {
     });
   }
 
-  addLabelToComments(index, name) {
+  addLabel(index, name) {
 
     if (name === undefined) {
       name = index;
@@ -322,7 +322,7 @@ class LabelManager {
       manager.comments = manager.comments.concat([`labels = ${name}`]);
   }
 
-  removeLabelFromComments(index, name) {
+  removeLabel(index, name) {
 
     if (name === undefined) {
       name = index;
@@ -335,7 +335,7 @@ class LabelManager {
     });
   }
 
-  changeLabelInComments(index, oldName, newName) {
+  changeLabel(index, oldName, newName) {
     if (newName === undefined) {
       newName = oldName;
       oldName = index;
