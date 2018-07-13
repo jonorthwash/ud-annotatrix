@@ -37,7 +37,7 @@ class Label {
   }
 }
 
-class LabelManager {
+class Labeler {
   constructor() {
     this.labels = [];
 
@@ -150,7 +150,7 @@ class LabelManager {
 
   parse(comments) {
     _.each(comments, comment => {
-      _.each(LabelManager.parseComment(comment), label => {
+      _.each(Labeler.parseComment(comment), label => {
         if (label)
           this._add(label);
       });
@@ -177,7 +177,7 @@ class LabelManager {
 
   static parseComments(comments) {
     return _.reduce(comments, (l, comment) => {
-      return l.concat(LabelManager.parseComment(comment));
+      return l.concat(Labeler.parseComment(comment));
     }, []);
   }
 
@@ -192,7 +192,7 @@ class LabelManager {
 
     let has = false;
     _.each(comments, comment => {
-      _.each(LabelManager.parseComment(comment), label => {
+      _.each(Labeler.parseComment(comment), label => {
         if (name === label)
           has = true;
       });
@@ -444,4 +444,4 @@ function getTextColor(background) {
   return color;
 }
 
-module.exports = LabelManager;
+module.exports = Labeler;

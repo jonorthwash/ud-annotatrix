@@ -9,7 +9,7 @@ utils.setupLogger();
 const nx = require('notatrix');
 
 const data = require('./data/index');
-const LabelManager = require('../labels');
+const Labeler = require('../labels');
 const errors = require('../errors');
 global.gui = null;
 
@@ -42,7 +42,7 @@ module.exports = () => {
 
           const conllu = data['CoNLL-U'][datum.name],
             s = nx.Sentence.fromConllu(conllu),
-            labeler = new LabelManager();
+            labeler = new Labeler();
 
           labeler.parse(s.comments);
           expect(labeler.labels.map(label => label.name)).to.deep.equal(datum.labels);
@@ -73,7 +73,7 @@ module.exports = () => {
         'test',
         'testing'
       ];
-      const labeler = new LabelManager();
+      const labeler = new Labeler();
 
       it(`should parse labels from CoNLL-U:{${names.join(' ')}}`, () => {
         _.each(names, name => {
@@ -100,7 +100,7 @@ module.exports = () => {
       };
       let allLabels = _.reduce(_data, (l, labels) => l.concat(labels), []);
 
-      const labeler = new LabelManager();
+      const labeler = new Labeler();
 
       let i = -1;
       _.each(_data, (labels, name) => {
@@ -125,7 +125,7 @@ module.exports = () => {
       };
 
       const labelName = 'test',
-        labeler = new LabelManager();
+        labeler = new Labeler();
 
       labeler._add(labelName);
       const label = labeler.get(labelName);
@@ -159,7 +159,7 @@ module.exports = () => {
 
     describe(`edit an existing label`, () => {
 
-      const labeler = new LabelManager();
+      const labeler = new Labeler();
       labeler._add('default');
       const defaultColor = labeler.get('default').bColor;
 
@@ -231,7 +231,7 @@ module.exports = () => {
     });
 
     describe(`remove an existing label`, () => {
-      const labeler = new LabelManager();
+      const labeler = new Labeler();
       labeler._add('default');
       labeler._add('other');
 
@@ -268,14 +268,14 @@ module.exports = () => {
             ['this-is-a-tag', 'test', 'testing'] ],
           allLabels = _.reduce(labels, (l, labels) => l.concat(labels), []),
           sentences = _data.map(name => nx.Sentence.fromConllu(data['CoNLL-U'][name])),
-          labeler = new LabelManager();
+          labeler = new Labeler();
 
         sinon.stub(manager, 'getSentence').callsFake(i => {
           return sentences[i];
         });
 
         const parse = i => {
-          return LabelManager.parseComments(manager.getSentence(i).comments);
+          return Labeler.parseComments(manager.getSentence(i).comments);
         }
 
         // setup
