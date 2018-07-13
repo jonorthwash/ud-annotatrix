@@ -173,6 +173,12 @@ class LabelManager {
     return labels;
   }
 
+  static parseComments(comments) {
+    return _.reduce(comments, (l, comment) => {
+      return l.concat(LabelManager.parseComment(labels));
+    }, []);
+  }
+
   has(index, name) {
 
     if (name === undefined) {
