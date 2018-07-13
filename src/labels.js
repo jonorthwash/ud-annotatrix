@@ -180,10 +180,11 @@ class LabelManager {
   get(name) {
 
     let ret = null;
-    _.each(this.labels, label => {
-      if (label.name === name)
-        ret = label;
-    });
+    if (name && typeof name === 'string')
+      _.each(this.labels, label => {
+        if (label.name === name)
+          ret = label;
+      });
 
     return ret;
   }
@@ -228,7 +229,7 @@ class LabelManager {
       label.desc = values.desc;
 
     if (values.color)
-      label.changeColor(`#${values.color}`);
+      label.changeColor(values.color.startsWith('#') ? values.color : `#${values.color}`);
   }
 
   update() {
