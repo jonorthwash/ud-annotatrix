@@ -11,6 +11,7 @@ const nx = require('notatrix');
 const data = require('./data/index');
 const LabelManager = require('../labels');
 const errors = require('../errors');
+global.gui = null;
 
 module.exports = () => {
   describe('labels.js', () => {
@@ -149,6 +150,79 @@ module.exports = () => {
           label.changeColor(datum.bColor);
           expect(label.tColor).to.equal(datum.tColor);
         });
+      });
+    });
+
+    describe(`edit an existing label`, () => {
+
+      const labeler = new LabelManager();
+      labeler.add('default');
+      const defaultColor = labeler.get('default').bColor;
+
+      it(`should edit the name`, () => {
+        const label = labeler.get('default');
+
+        // change it
+        labeler.edit('default', { name: 'changed' });
+        expect(label.name).to.equal('changed');
+        expect(label.desc).to.equal('');
+        expect(label.bColor).to.equal(defaultColor);
+        
+        // change it (to an invalid value)
+        labeler.edit('changed', { name: '' });
+        expect(label.name).to.equal('changed');
+        expect(label.desc).to.equal('');
+        expect(label.bColor).to.equal(defaultColor);
+
+        // change it back
+        labeler.edit('changed', { name: 'default' });
+        expect(label.name).to.equal('default');
+        expect(label.desc).to.equal('');
+        expect(label.bColor).to.equal(defaultColor);
+      });
+
+      it(`should edit the description`, () => {
+        const label = labeler.get('default');
+
+        // change it
+        labeler.edit('default', { desc: 'description' });
+        expect(label.name).to.equal('default');
+        expect(label.desc).to.equal('description');
+        expect(label.bColor).to.equal(defaultColor);
+
+        // change it back
+        labeler.edit('default', { desc: '' });
+        expect(label.name).to.equal('default');
+        expect(label.desc).to.equal('');
+        expect(label.bColor).to.equal(defaultColor);
+      });
+
+      it(`should change the color`, () => {
+        const label = labeler.get('default');
+
+        // change it (with #)
+        labeler.edit('default', { color: '#420420' });
+        expect(label.name).to.equal('default');
+        expect(label.desc).to.equal('');
+        expect(label.bColor).to.equal('#420420');
+
+        // change it (without #)
+        labeler.edit('default', { color: '123456' });
+        expect(label.name).to.equal('default');
+        expect(label.desc).to.equal('');
+        expect(label.bColor).to.equal('#123456');
+
+        // change it (to an invalid value)
+        labeler.edit('default', { color: '69' });
+        expect(label.name).to.equal('default');
+        expect(label.desc).to.equal('');
+        expect(label.bColor).to.equal('#123456');
+
+        // change it back
+        labeler.edit('default', { color: defaultColor });
+        expect(label.name).to.equal('default');
+        expect(label.desc).to.equal('');
+        expect(label.bColor).to.equal(defaultColor);
       });
     });
   });
