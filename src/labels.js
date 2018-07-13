@@ -222,7 +222,7 @@ class LabelManager {
       label.name = values.name;
     }
 
-    if (values.desc)
+    if (values.desc || values.desc === '')
       label.desc = values.desc;
 
     if (values.color)
