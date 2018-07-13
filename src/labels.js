@@ -148,13 +148,29 @@ class LabelManager {
 
   parse(comments) {
     _.each(comments, comment => {
-      _.each(parseComment(comment), label => {
+      _.each(LabelManager.parseComment(comment), label => {
         if (label)
           this._add(label);
       });
     });
 
     return this; // chaining
+  }
+
+  static parseComment(comment) {
+    let labels = [];
+    const labelString = comment.match(regex.comment);
+
+    if (labelString)
+      labelString[2].split(/\s/).forEach(label => {
+
+        const content = label.match(regex.content);
+        if (content)
+          labels.push(content[1]);
+
+      });
+
+    return labels;
   }
 
   has(index, name) {
@@ -168,7 +184,7 @@ class LabelManager {
 
     let has = false;
     _.each(comments, comment => {
-      _.each(parseComment(comment), label => {
+      _.each(LabelManager.parseComment(comment), label => {
         if (name === label)
           has = true;
       });
@@ -366,23 +382,6 @@ function flashDropdown(name) {
 
   // wait 0.5 secs to return to standard dropdown behavior
   setTimeout(() => dropdown.css('display', ''), 500);
-}
-
-function parseComment(comment) {
-
-  let labels = [];
-  const labelString = comment.match(regex.comment);
-
-  if (labelString)
-    labelString[2].split(/\s/).forEach(label => {
-
-      const content = label.match(regex.content);
-      if (content)
-        labels.push(content[1]);
-
-    });
-
-  return labels;
 }
 
 function hashStringToHex(string) {
