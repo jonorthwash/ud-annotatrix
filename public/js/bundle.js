@@ -23137,7 +23137,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             limit = 0,
             isExecuting = false,
             callback,
-            
+
             // functions
             execute;
 
@@ -23167,12 +23167,12 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
                 commands.splice(index + 1, commands.length - index);
 
                 commands.push(command);
-                
+
                 // if limit is set, remove items from the start
                 if (limit && commands.length > limit) {
                     removeFromTo(commands, 0, -(limit+1));
                 }
-                
+
                 // set the current index to the end
                 index = commands.length - 1;
                 if (callback) {
@@ -23249,7 +23249,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             getIndex: function() {
                 return index;
             },
-            
+
             setLimit: function (l) {
                 limit = l;
             }
@@ -23507,8 +23507,8 @@ module.exports = Log;
 
 module.exports = {
 	defaultFilename: 'ud-annotatrix-corpus',
-	defaultSentence: 'Welcome to the UD-Annotatrix',
-	defaultInsertedSentence: 'inserted',
+	defaultSentence: '',
+	defaultInsertedSentence: '',
 	defaultLoggingLevel: 'ERROR',
 	defaultEdgeHeight: 40,
 	defaultEdgeCoeff: 1,
@@ -55071,7 +55071,6 @@ var Graph = function () {
   }, {
     key: 'save',
     value: function save() {
-      console.log('saving');
       log.debug('called saveGraphEdits(target:' + (gui.editing ? gui.editing.attr('id') : 'null') + ', text:' + (gui.editing ? $('#edit').val() : '') + ')');
 
       cy.$('.input').removeClass('input');
@@ -55456,6 +55455,8 @@ var pressed = {}; // used for onCtrlKeyup
 
 var GUI = function () {
   function GUI() {
+    var _this = this;
+
     _classCallCheck(this, GUI);
 
     this.keys = KEYS;
@@ -55477,7 +55478,9 @@ var GUI = function () {
 
     if (this.inBrowser) {
       setupUndos();
-      undoManager.setCallback(this.update);
+      undoManager.setCallback(function () {
+        return _this.update();
+      });
     }
   }
 
@@ -55579,7 +55582,7 @@ var GUI = function () {
   }, {
     key: 'bind',
     value: function bind() {
-      var _this = this;
+      var _this2 = this;
 
       if (!this.inBrowser) return;
 
@@ -55590,7 +55593,7 @@ var GUI = function () {
         return manager.next();
       });
       $('#current-sentence').blur(function (e) {
-        var index = parseInt(_this.read('current-sentence')) - 1;
+        var index = parseInt(_this2.read('current-sentence')) - 1;
         manager.index = index;
       });
       $('#btnRemoveSentence').click(function (e) {
@@ -55629,15 +55632,15 @@ var GUI = function () {
       });
 
       $('#tabText').click(function (e) {
-        manager.parse(convert.to.plainText(_this.read('text-data')));
+        manager.parse(convert.to.plainText(_this2.read('text-data')));
       });
       $('#tabConllu').click(function (e) {
         manager.current.nx_initialized = true;
-        manager.parse(convert.to.conllu(_this.read('text-data')));
+        manager.parse(convert.to.conllu(_this2.read('text-data')));
       });
       $('#tabCG3').click(function (e) {
         manager.current.nx_initialized = true;
-        manager.parse(convert.to.cg3(_this.read('text-data')));
+        manager.parse(convert.to.cg3(_this2.read('text-data')));
       });
 
       $('#btnToggleTable').click(this.toggle.table);
