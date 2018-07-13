@@ -9,7 +9,7 @@ const cfg = require('./config');
 const funcs = require('./funcs');
 const GUI = require('./gui');
 const Graph = require('./graph');
-const LabelManager = require('./labels');
+const Labeler = require('./labels');
 const errors = require('./errors');
 const detectFormat = require('./detect');
 const storage = require('./local-storage');
@@ -21,7 +21,7 @@ class Manager {
     funcs.global().manager = this;
     funcs.global().gui = new GUI();
     funcs.global().graph = new Graph();
-    funcs.global().labeler = new LabelManager();
+    funcs.global().labeler = new Labeler();
     gui.bind();
 
     this.reset();
@@ -35,6 +35,7 @@ class Manager {
     this.filename = cfg.defaultFilename;
 
     this._sentences = [];
+    this._filtered = null;
     this._index = -1;
 
     this.insertSentence(cfg.defaultSentence);
