@@ -57004,7 +57004,8 @@ var Manager = function () {
             nx_initialized: sent.nx_initialized
           };
         }),
-        gui: gui.state
+        gui: gui.state,
+        labeler: labeler.state
       });
 
       storage.save(state);
@@ -57041,6 +57042,7 @@ var Manager = function () {
       });
 
       // this triggers a gui refresh
+      labeler.state = state.labeler;
       gui.state = state.gui;
 
       return state;
