@@ -13,7 +13,7 @@ const magic = 16777215;
 class Label {
   constructor(name) {
     this.name = name;
-    this.bColor = getRandomHexColor();
+    this.bColor = hashStringToHex(name);
     this.tColor = getTextColor(this.bColor);
     this.description = '';
   }
@@ -128,13 +128,16 @@ class LabelManager {
       const hDescContainer = $(`<div />`)
         .text('Description:')
         .append(`<input name="desc" value="${label.description}" />`);
-      const hColorName = $(`<input name="color" value="${label.bColor}" />`);
-      const hColorReset = $(`<button type="button" class="btn btn-secondary"><i class="fa fa-refresh" /></button>`)
+      const hColorName = $(`<input name="color" value="${label.bColor.substr(1)}" />`);
+      const hColorReset = $(`<button type="button" class="btn btn-secondary refresh-color"><i class="fa fa-refresh" /></button>`)
         .click(e => this.handleClickResetColor(e));
       const hColorSquare = $(`<span class="square" style="background-color:${label.bColor};" />`);
+      const hColorInputs = $('<div class="color-inputs" pattern="[A-Fa-f\d]{6}">')
+        .text('#')
+        .append(hColorName, hColorReset, hColorSquare);
       const hColorContainer = $(`<div />`)
         .text('Color:')
-        .append(hColorName, hColorReset, hColorSquare);
+        .append(hColorInputs);
       const hSaveButton = $(`<button type="button" class="btn btn-secondary">Save</button>`)
         .click(e => this.handleClickSave(e));
       hidden.append(hNameContainer, hDescContainer, hColorContainer, hSaveButton);
@@ -167,6 +170,7 @@ class LabelManager {
     });
 
     $('#label-input').val('');
+    gui.update();
   }
   handleClickChevron(event) {
     const target = $(event.target),
@@ -202,6 +206,8 @@ class LabelManager {
     } else {
       addLabelToComments(name);
     }
+
+    gui.update();
   }
   handleClickLabel(event) {
 
@@ -213,6 +219,10 @@ class LabelManager {
     const target = $(event.target),
       name = target.closest('li').attr('name');
 
+    const response = confirm(`Are you sure you want to delete the label "${name}" from all sentences?`);
+    if (!response)
+      return;
+
     this.labels = this.labels.filter(label => {
       if (label.name !== name)
         return label;
@@ -220,6 +230,8 @@ class LabelManager {
     for (let i=0; i<manager.length; i++) {
       removeLabelFromComments(i, name);
     }
+
+    gui.update();
   }
   handleClickResetColor(event) {
 
@@ -230,6 +242,13 @@ class LabelManager {
     label.changeColor();
     this.update();
 
+    $(`li.vert-label[name="${name}"]`).find('.label-hidden')
+      .css('display', 'block')
+      .find('.chevron')
+        .addClass('fa-chevron-up')
+        .removeClass('fa-chevron-down');
+
+    flashDropdown();
   }
   handleClickSave(event) {
 
@@ -238,6 +257,15 @@ class LabelManager {
   }
 }
 
+function flashDropdown() {
+  const dropdown = $('.dropdown-content');
+
+  // show it immediately
+  dropdown.css('display', 'block');
+
+  // wait 0.5 secs to return to standard behavior
+  setTimeout(dropdown.css('display', ''), 500);
+}
 function addLabelToComments(index, name) {
 
   if (name === undefined) {
@@ -246,7 +274,7 @@ function addLabelToComments(index, name) {
   }
 
   let done = false;
-  manager.comments = manager.getSentence(index).comments.map(comment => {
+  manager.getSentence(index).comments = manager.getSentence(index).comments.map(comment => {
 
     if (comment.match(regex.comment) && !done) {
       comment = `${comment} ${name}`;
@@ -268,7 +296,7 @@ function removeLabelFromComments(index, name) {
   }
 
   const reg = new RegExp(` ${name}( ?)`);
-  manager.comments = manager.getSentence(index).comments.map(comment => {
+  manager.getSentence(index).comments = manager.getSentence(index).comments.map(comment => {
     return comment.replace(reg, '$1')
   });
 }
@@ -288,6 +316,20 @@ function parseComment(comment) {
     });
 
   return labels;
+}
+
+function hashStringToHex(string) {
+  let hash = 0;
+  for (let i=0; i<string.length; i++) {
+    hash = string.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  let hex = '#';
+  for (let i=0; i<3; i++) {
+    const value = (hash >> (i*8)) & 0xFF;
+    hex += ('00' + value.toString(16)).substr(-2);
+  }
+  return hex;
 }
 
 function getRandomHexColor() {
