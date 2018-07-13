@@ -127,12 +127,14 @@ class LabelManager {
         save: event => {
           const target = $(event.target),
             li = target.closest('li'),
-            oldName = li.attr('name'),
-            newName = li.find('input[name="name"]').val(),
-            desc = li.find('input[name="desc"]').val(),
-            color = li.find('input[name="color"]').val();
+            name = li.attr('name'),
+            values = {
+              name: li.find('input[name="name"]').val(),
+              desc: li.find('input[name="desc"]').val(),
+              color: li.find('input[name="color"]').val()
+            };
 
-          this.edit(oldName, newName, desc, color);
+          this.edit(name, values);
 
           gui.update();
           flashDropdown(name);
@@ -207,21 +209,21 @@ class LabelManager {
     }
   }
 
-  edit(oldName, newName, desc, color) {
-    const label = this.get(oldName);
+  edit(name, values) {
+    const label = this.get(name);
 
-    if (newName) {
+    if (values.name) {
       for (let i=0; i<manager.length; i++) {
-        this.changeLabelInComments(i, label.name, name);
+        this.changeLabelInComments(i, name, values.name);
       }
-      label.name = name;
+      label.name = values.name;
     }
 
-    if (desc)
-      label.desc = desc;
+    if (values.desc)
+      label.desc = values.desc;
 
-    if (color)
-      label.changeColor(`#${color}`);
+    if (values.color)
+      label.changeColor(`#${values.color}`);
   }
 
   update() {
