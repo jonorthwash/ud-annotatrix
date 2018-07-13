@@ -2,6 +2,7 @@
 
 const _ = require('underscore');
 const $ = require('jquery');
+const DeserializationError = require('./errors').DeserializationError;
 
 const regex = {
   comment: /(labels|tags)\s*=\s*(.*)$/,
@@ -13,6 +14,9 @@ const magic = 16777215;
 
 class Label {
   constructor(name) {
+
+    name = name || 'default';
+
     this.name = name;
     this.bColor = hashStringToHex(name);
     this.tColor = getTextColor(this.bColor);
@@ -25,7 +29,7 @@ class Label {
       color = (color.match(/^#?([a-f\d]{6})/i) || [])[1];
       const int = parseInt(color, 16);
       if (isNaN(int) || int < 0 || int > magic)
-        return null; // out of bounds
+        return false; // out of bounds
 
       color = `#${color}`;
     } else {
@@ -34,6 +38,32 @@ class Label {
 
     this.bColor = color;
     this.tColor = getTextColor(color);
+
+    return true;
+  }
+
+  get state() {
+    return {
+      name: this.name,
+      desc: this.desc,
+      bColor: this.bColor,
+      tColor: this.tColor
+    };
+  }
+
+  set state(state) {
+    if (!state.name)
+      throw new DeserializationError(`cannot set name to "${state.name}"`);
+
+    state.desc = state.desc || '';
+    if (typeof state.desc !== 'string')
+      throw new DeserializationError(`cannot set description to non-string value`);
+
+    this.name = state.name;
+    this.desc = state.desc;
+
+    if (!this.changeColor(state.bColor))
+      throw new DeserializationError(`cannot set background color to "${state.bColor}"`);
   }
 }
 
@@ -55,8 +85,8 @@ class Labeler {
         const names = $('#label-input').val().trim();
         _.each(names.split(/\s+/), name => {
           if (name)
-            this._add(name)
-          //if (name && this._add(name))
+            this.add(name)
+          //if (name && this.add(name))
             //this.addLabel(name);
         });
 
@@ -151,7 +181,7 @@ class Labeler {
   parse(comments) {
     _.each(Labeler.parseComments(comments), label => {
       if (label)
-        this._add(label);
+        this.add(label);
     });
 
     return this; // chaining
@@ -211,7 +241,7 @@ class Labeler {
     return ret;
   }
 
-  _add(name) {
+  add(name) {
 
     let found = false;
     _.each(this.labels, label => {
@@ -372,6 +402,19 @@ class Labeler {
     });
   }
 
+  get state() {
+    return {
+      labels: this.labels.map(label => label.state)
+    };
+  }
+
+  set state(state) {
+    this.labels = state.labels.map(labelState => {
+      let label = new Label();
+      label.state = labelState;
+      return label;
+    });
+  }
 }
 
 function flashDropdown(name) {

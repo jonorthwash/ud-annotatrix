@@ -127,7 +127,7 @@ module.exports = () => {
       const labelName = 'test',
         labeler = new Labeler();
 
-      labeler._add(labelName);
+      labeler.add(labelName);
       const label = labeler.get(labelName);
 
       const _data = [
@@ -160,7 +160,7 @@ module.exports = () => {
     describe(`edit an existing label`, () => {
 
       const labeler = new Labeler();
-      labeler._add('default');
+      labeler.add('default');
       const defaultColor = labeler.get('default').bColor;
 
       it(`should edit the name`, () => {
@@ -232,8 +232,8 @@ module.exports = () => {
 
     describe(`remove an existing label`, () => {
       const labeler = new Labeler();
-      labeler._add('default');
-      labeler._add('other');
+      labeler.add('default');
+      labeler.add('other');
 
       const labels = () => {
         return labeler.labels.map(label => label.name);
@@ -298,6 +298,102 @@ module.exports = () => {
         expect(parse(1)).to.deep.equal(labels[1]);
 
         manager.getSentence.restore();
+      });
+    });
+
+    describe(`serialize and deserialize`, () => {
+
+      // ignore the semi-random stuff (i.e. the color hashes)
+      const getState = () => {
+        return {
+          labels: labeler.state.labels.map(label => {
+            return {
+              name: label.name,
+              desc: label.desc
+            }
+          })
+        };
+      };
+
+      global.manager = {
+        index: 0,
+        getSentence: i => nx.Sentence.fromText('')
+      };
+
+      const labeler = new Labeler();
+      labeler.add('one');
+      labeler.add('two');
+      labeler.add('three');
+
+      it(`should serialize`, () => {
+        expect(getState()).to.deep.equal({
+          labels: [
+            {
+              name: 'one',
+              desc: ''
+            },
+            {
+              name: 'two',
+              desc: ''
+            },
+            {
+              name: 'three',
+              desc: ''
+            }
+          ]
+        });
+      });
+
+      it(`should deserialize`, () => {
+        _.each([{
+          name: 'valid',
+        }, {
+          name: 'valid',
+          desc: ''
+        }, {
+          name: 'valid',
+          desc: 'description string',
+        }, {
+          name: 'valid',
+          desc: '',
+          bColor: '#ffffff'
+        }, {
+          name: 'valid',
+          desc: '',
+          bColor: 'ffffff'
+        }], validLabel => {
+          labeler.state = { labels: [validLabel] };
+          _.each(validLabel, (value, key) => {
+
+            if (key === 'bColor' && !value.startsWith('#')) {
+              expect(labeler.get(validLabel.name)[key]).to.equal(`#${value}`);
+            } else {
+              expect(labeler.get(validLabel.name)[key]).to.equal(value);
+            }
+            
+          });
+        });
+      });
+
+      it(`should throw errors when trying to deserialize from invalid serial data`, () => {
+        _.each([{
+          name: ''
+        }, {
+          name: 'valid',
+          desc: []
+        }, {
+          name: 'valid',
+          desc: '',
+          bColor: 'black'
+        }, {
+          name: 'valid',
+          desc: '',
+          bColor: '#fff'
+        }], invalidLabel => {
+          expect(() => {
+            labeler.state = { labels: [invalidLabel] };
+          }).to.throw(errors.DeserializationError);
+        });
       });
     });
   });

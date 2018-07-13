@@ -54728,12 +54728,41 @@ var ParseError = function (_AnnotatrixError4) {
   return ParseError;
 }(AnnotatrixError);
 
+/**
+ *
+ */
+
+
+var DeserializationError = function (_AnnotatrixError5) {
+  _inherits(DeserializationError, _AnnotatrixError5);
+
+  function DeserializationError() {
+    var _ref6;
+
+    _classCallCheck(this, DeserializationError);
+
+    for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+      args[_key6] = arguments[_key6];
+    }
+
+    var _this6 = _possibleConstructorReturn(this, (_ref6 = DeserializationError.__proto__ || Object.getPrototypeOf(DeserializationError)).call.apply(_ref6, [this].concat(args)));
+
+    if (Error.captureStackTrace) Error.captureStackTrace(_this6, DeserializationError);
+
+    _this6.name = 'DeserializationError';
+    return _this6;
+  }
+
+  return DeserializationError;
+}(AnnotatrixError);
+
 module.exports = {
   AnnotatrixError: AnnotatrixError,
   NotImplementedError: NotImplementedError,
   // AssertionError,
   GUIError: GUIError,
-  ParseError: ParseError
+  ParseError: ParseError,
+  DeserializationError: DeserializationError
 };
 
 },{}],345:[function(require,module,exports){
@@ -56132,6 +56161,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var _ = require('underscore');
 var $ = require('jquery');
+var DeserializationError = require('./errors').DeserializationError;
 
 var regex = {
   comment: /(labels|tags)\s*=\s*(.*)$/,
@@ -56144,6 +56174,8 @@ var magic = 16777215;
 var Label = function () {
   function Label(name) {
     _classCallCheck(this, Label);
+
+    name = name || 'default';
 
     this.name = name;
     this.bColor = hashStringToHex(name);
@@ -56158,7 +56190,7 @@ var Label = function () {
       if (color) {
         color = (color.match(/^#?([a-f\d]{6})/i) || [])[1];
         var int = parseInt(color, 16);
-        if (isNaN(int) || int < 0 || int > magic) return null; // out of bounds
+        if (isNaN(int) || int < 0 || int > magic) return false; // out of bounds
 
         color = '#' + color;
       } else {
@@ -56167,6 +56199,29 @@ var Label = function () {
 
       this.bColor = color;
       this.tColor = getTextColor(color);
+
+      return true;
+    }
+  }, {
+    key: 'state',
+    get: function get() {
+      return {
+        name: this.name,
+        desc: this.desc,
+        bColor: this.bColor,
+        tColor: this.tColor
+      };
+    },
+    set: function set(state) {
+      if (!state.name) throw new DeserializationError('cannot set name to "' + state.name + '"');
+
+      state.desc = state.desc || '';
+      if (typeof state.desc !== 'string') throw new DeserializationError('cannot set description to non-string value');
+
+      this.name = state.name;
+      this.desc = state.desc;
+
+      if (!this.changeColor(state.bColor)) throw new DeserializationError('cannot set background color to "' + state.bColor + '"');
     }
   }]);
 
@@ -56193,8 +56248,8 @@ var Labeler = function () {
       enter: function enter(event) {
         var names = $('#label-input').val().trim();
         _.each(names.split(/\s+/), function (name) {
-          if (name) _this._add(name);
-          //if (name && this._add(name))
+          if (name) _this.add(name);
+          //if (name && this.add(name))
           //this.addLabel(name);
         });
 
@@ -56278,10 +56333,8 @@ var Labeler = function () {
     value: function parse(comments) {
       var _this2 = this;
 
-      _.each(comments, function (comment) {
-        _.each(Labeler.parseComment(comment), function (label) {
-          if (label) _this2._add(label);
-        });
+      _.each(Labeler.parseComments(comments), function (label) {
+        if (label) _this2.add(label);
       });
 
       return this; // chaining
@@ -56318,8 +56371,8 @@ var Labeler = function () {
       return ret;
     }
   }, {
-    key: '_add',
-    value: function _add(name) {
+    key: 'add',
+    value: function add(name) {
 
       var found = false;
       _.each(this.labels, function (label) {
@@ -56470,6 +56523,22 @@ var Labeler = function () {
         return comment.replace(reg, ' ' + newName + '$1');
       });
     }
+  }, {
+    key: 'state',
+    get: function get() {
+      return {
+        labels: this.labels.map(function (label) {
+          return label.state;
+        })
+      };
+    },
+    set: function set(state) {
+      this.labels = state.labels.map(function (labelState) {
+        var label = new Label();
+        label.state = labelState;
+        return label;
+      });
+    }
   }], [{
     key: 'parseComment',
     value: function parseComment(comment) {
@@ -56560,7 +56629,7 @@ function getTextColor(background) {
 
 module.exports = Labeler;
 
-},{"jquery":327,"underscore":335}],350:[function(require,module,exports){
+},{"./errors":344,"jquery":327,"underscore":335}],350:[function(require,module,exports){
 'use strict';
 
 var KEY = require('./config').localStorageKey;
