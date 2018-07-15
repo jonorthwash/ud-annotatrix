@@ -70,6 +70,7 @@ class Label {
 class Labeler {
   constructor() {
     this.labels = [];
+    this.filter = new Set();
 
     // don't want the "jQuery needs a window" errors during testing
     if (!gui || !gui.inBrowser)
@@ -345,6 +346,9 @@ class Labeler {
         .css('color', label.tColor)
         .click(e => this.handle.click.label(e));
 
+      if (this.filter.has(label.name))
+        horiz.addClass('filter-active');
+
       if (this.has(label.name)) {
         $('#labels-horiz-current').append(horiz);
       } else {
@@ -404,7 +408,8 @@ class Labeler {
 
   get state() {
     return {
-      labels: this.labels.map(label => label.state)
+      labels: this.labels.map(label => label.state),
+      filter: _.map(Array.from(this.filter), label => label.name)
     };
   }
 
@@ -414,7 +419,31 @@ class Labeler {
       label.state = labelState;
       return label;
     });
+
+    this.filter = new Set();
+    _.each(state.filter, name => {
+      this.addFilter(name);
+    });
   }
+
+  addFilter(name) {
+
+  }
+  filter(name) {
+    return this.addFilter(name); // alias
+  }
+
+  removeFilter(name) {
+
+  }
+  unfilter(name) {
+    return this.removeFilter(name); // alias
+  }
+
+  clearFilter() {
+
+  }
+
 }
 
 function flashDropdown(name) {
