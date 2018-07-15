@@ -35,7 +35,7 @@ class Manager {
     this.filename = cfg.defaultFilename;
 
     this._sentences = [];
-    this._filtered = null;
+    this._filtered = [];
     this._index = -1;
 
     this.insertSentence(cfg.defaultSentence);
@@ -47,6 +47,18 @@ class Manager {
     return this._sentences.map((sentence, i) => {
       return callback(i, sentence);
     });
+  }
+  updateFilter() {
+
+    this._filtered = [];
+    this.map(i => {
+      labeler._filter.forEach(name => {
+        if (labeler.has(i, name) && this._filtered.indexOf(i) === -1)
+          this._filtered.push(i);
+      });
+    });
+
+    return this;
   }
 
 
@@ -255,14 +267,13 @@ class Manager {
     text = text || gui.read('text-data');
     let splitted = this.split(text);
 
-    // overwrite contents of #text-data
-    this._sentences[0] = {}; // sort of a hack to get around updateSentence() behavior
-    this.sentence = splitted[0];
+    // set the first one at the current index
+    this._sentences[this.index] = new nx.Sentence; // hack to get around updateSentence() behavior
+    this.setSentence(this.index, splitted[0]);
 
     // iterate over all elements except the first
     _.each(splitted, (split, i) => {
-      if (!i) return; // skip first
-      this.insertSentence(split);
+      if (i) this.insertSentence(split);
     });
 
     gui.update();
