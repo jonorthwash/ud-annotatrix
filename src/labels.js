@@ -448,7 +448,8 @@ class Labeler {
   }
 
   clearFilter() {
-
+    this._filter.forEach(name => this.removeFilter(name));
+    return this;
   }
 
 }
