@@ -42,67 +42,6 @@ const KEYS = {
   Z: 90,
   0: 48
 };
-const toggle = {
-  table: (event) => {
-    gui.is_table_view = !gui.is_table_view;
-    gui.update();
-  },
-
-  tableColumn: (event) => {
-
-    const target = $(event.target),
-      col = target.attr('col-id');
-
-    gui.column_visible(col, !gui.column_visible(col));
-    target.toggleClass('column-hidden')
-      .find('i')
-        .toggleClass('fa-angle-double-right')
-        .toggleClass('fa-angle-double-left');
-
-    $(`td[col-id=${col}]`)
-      .css('visibility', gui.column_visible(col) ? 'visible' : 'hidden');
-
-    gui.update();
-  },
-
-  textarea: (event) => {
-
-    $('#btnToggleTextarea i')
-			.toggleClass('fa-chevron-up')
-			.toggleClass('fa-chevron-down')
-    gui.is_textarea_visible = !gui.is_textarea_visible;
-
-    gui.update();
-  },
-
-  rtl: (event) => {
-
-    $('#RTL .fa')
-			.toggleClass('fa-align-right')
-			.toggleClass('fa-align-left');
-		gui.is_ltr = !gui.is_ltr;
-
-    gui.update();
-  },
-
-  vertical: (event) => {
-
-    $('#vertical .fa').toggleClass('fa-rotate-90');
-    gui.is_vertical = !gui.is_vertical;
-
-    gui.update();
-  },
-
-  enhanced: (event) => {
-
-    $('#enhanced .fa')
-			.toggleClass('fa-tree')
-			.toggleClass('fa-magic');
-    gui.is_enhanced = !gui.is_enhanced;
-
-    gui.update();
-  }
-}
 
 var pressed = {}; // used for onCtrlKeyup
 
@@ -110,9 +49,9 @@ class GUI {
   constructor() {
 
     this.keys = KEYS;
-    this.toggle = toggle;
 
     this.is_textarea_visible = true;
+    this.are_labels_visible = true;
     this.is_vertical = false;
     this.is_ltr = true;
     this.is_enhanced = false;
@@ -131,12 +70,76 @@ class GUI {
       undoManager.setCallback(() => this.update());
     }
 
+    this.toggle = {
+      table: (event) => {
+        this.is_table_view = !this.is_table_view;
+        this.update();
+      },
+
+      tableColumn: (event) => {
+
+        const target = $(event.target),
+          col = target.attr('col-id');
+
+        this.column_visible(col, !this.column_visible(col));
+        target.toggleClass('column-hidden')
+          .find('i')
+            .toggleClass('fa-angle-double-right')
+            .toggleClass('fa-angle-double-left');
+
+        $(`td[col-id=${col}]`)
+          .css('visibility', this.column_visible(col) ? 'visible' : 'hidden');
+
+        this.update();
+      },
+
+      textarea: (event) => {
+
+        $('#btnToggleTextarea i')
+    			.toggleClass('fa-chevron-up')
+    			.toggleClass('fa-chevron-down')
+        this.is_textarea_visible = !this.is_textarea_visible;
+        this.are_labels_visible = !this.are_labels_visible;
+
+        this.update();
+      },
+
+      rtl: (event) => {
+
+        $('#RTL .fa')
+    			.toggleClass('fa-align-right')
+    			.toggleClass('fa-align-left');
+    		this.is_ltr = !this.is_ltr;
+
+        this.update();
+      },
+
+      vertical: (event) => {
+
+        $('#vertical .fa').toggleClass('fa-rotate-90');
+        this.is_vertical = !this.is_vertical;
+
+        this.update();
+      },
+
+      enhanced: (event) => {
+
+        $('#enhanced .fa')
+    			.toggleClass('fa-tree')
+    			.toggleClass('fa-magic');
+        this.is_enhanced = !this.is_enhanced;
+
+        this.update();
+      }
+    }
+
   }
 
   get state() {
     return {
 
       is_textarea_visible: this.is_textarea_visible,
+      are_labels_visible:  this.are_labels_visible,
       is_vertical:         this.is_vertical,
       is_ltr:              this.is_ltr,
       is_enhanced:         this.is_enhanced,
@@ -149,6 +152,7 @@ class GUI {
 
   set state(state) {
     this.is_textarea_visible = state.is_textarea_visible,
+    this.are_labels_visible  = state.are_labels_visible,
     this.is_vertical         = state.is_vertical;
     this.is_ltr              = state.is_ltr;
     this.is_enhanced         = state.is_enhanced;
@@ -235,6 +239,8 @@ class GUI {
       $('#btnToggleTable').hide();
     }
 
+    $('#label-container').css('display', this.are_labels_visible ? 'flex' : 'none');
+
     try { // need this in case `cy` DNE
       this.zoom = cy.zoom();
       this.pan  = cy.pan();
@@ -304,12 +310,12 @@ class GUI {
       manager.parse(convert.to.cg3(this.read('text-data')));
     });
 
-    $('#btnToggleTable').click(this.toggle.table);
-    $('#btnToggleTextarea').click(this.toggle.textarea);
-    $('.thead-default th').click(this.toggle.tableColumn);
-    $('#RTL').click(this.toggle.rtl);
-    $('#vertical').click(this.toggle.vertical);
-    $('#enhanced').click(this.toggle.enhanced);
+    $('#btnToggleTable').click(e => this.toggle.table(e));
+    $('#btnToggleTextarea').click(e => this.toggle.textarea(e));
+    $('.thead-default th').click(e => this.toggle.tableColumn(e));
+    $('#RTL').click(e => this.toggle.rtl(e));
+    $('#vertical').click(e => this.toggle.vertical(e));
+    $('#enhanced').click(e => this.toggle.enhanced(e));
 
     $('#current-sentence').keyup(e => onKeyupInCurrentSentence(e));
     $('#text-data').keyup(e => onEditTextData(e));
