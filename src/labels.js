@@ -87,8 +87,8 @@ class Labeler {
         _.each(names.split(/\s+/), name => {
           if (name)
             this.add(name)
-          //if (name && this.add(name))
-            //this.addLabel(name);
+
+          this.addLabel(name); // add to the comments
         });
 
         $('#label-input').val('');
@@ -180,6 +180,7 @@ class Labeler {
   }
 
   parse(comments) {
+    console.log('parse', comments);
     _.each(Labeler.parseComments(comments), label => {
       if (label)
         this.add(label);
@@ -252,8 +253,6 @@ class Labeler {
 
     if (!found)
       this._labels.push(new Label(name));
-
-    this.addLabel(name);
 
     return !found; // so we know if success or not
   }
