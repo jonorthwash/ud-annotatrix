@@ -8,8 +8,9 @@ utils.setupLogger();
 
 const nx = require('notatrix');
 
-const data = require('./data/index');
+const conllu = require('./data/index')['CoNLL-U'];
 const Labeler = require('../labels');
+const Manager = require('../manager');
 const errors = require('../errors');
 global.gui = null;
 
@@ -17,7 +18,7 @@ module.exports = () => {
   describe('labels.js', () => {
     describe('parse comments individually', () => {
 
-      const _data = [
+      const data = [
         {
           name: 'labels_1',
           labels: ['label1', 'another_label', 'a-third-label']
@@ -37,11 +38,10 @@ module.exports = () => {
         }
       ];
 
-      _.each(_data, datum => {
+      _.each(data, datum => {
         it(`should parse labels from CoNLL-U:${datum.name}`, () => {
 
-          const conllu = data['CoNLL-U'][datum.name],
-            s = nx.Sentence.fromConllu(conllu),
+          const s = nx.Sentence.fromConllu(conllu[datum.name]),
             labeler = new Labeler();
 
           labeler.parse(s.comments);
@@ -78,8 +78,7 @@ module.exports = () => {
       it(`should parse labels from CoNLL-U:{${names.join(' ')}}`, () => {
         _.each(names, name => {
 
-          const conllu = data['CoNLL-U'][name],
-            s = nx.Sentence.fromConllu(conllu);
+          const s = nx.Sentence.fromConllu(conllu[name]);
 
           labeler.parse(s.comments);
         });
@@ -91,22 +90,22 @@ module.exports = () => {
 
     describe(`know whether a given sentence has a given label`, () => {
 
-      const _data = {
+      const data = {
         labels_1: ['label1', 'another_label', 'a-third-label'],
         labels_2: ['one_label', 'second', 'third-label',
           'row_2', 'again:here', 'this', 'that' ],
         labels_3: ['this-is-a-tag', 'test', 'testing'],
         nested_2: []
       };
-      let allLabels = _.reduce(_data, (l, labels) => l.concat(labels), []);
+      let allLabels = _.reduce(data, (l, labels) => l.concat(labels), []);
 
       const labeler = new Labeler();
 
       let i = -1;
-      _.each(_data, (labels, name) => {
+      _.each(data, (labels, name) => {
         it(`should read for CoNLL-U:${name}`, () => {
           sinon.stub(manager, 'getSentence').callsFake(i => {
-            return nx.Sentence.fromConllu(data['CoNLL-U'][name]);
+            return nx.Sentence.fromConllu(conllu[name]);
           });
 
           manager.index = i++;
@@ -130,7 +129,7 @@ module.exports = () => {
       labeler.add(labelName);
       const label = labeler.get(labelName);
 
-      const _data = [
+      const data = [
         {
           bColor: '#000000',
           tColor: '#ffffff'
@@ -149,7 +148,7 @@ module.exports = () => {
         }
       ];
 
-      _.each(_data, datum => {
+      _.each(data, datum => {
         it(`should pick correctly when background="${datum.bColor}"`, () => {
           label.changeColor(datum.bColor);
           expect(label.tColor).to.equal(datum.tColor);
@@ -261,13 +260,13 @@ module.exports = () => {
 
       it(`should update comments accordingly`, () => {
 
-        const _data = ['labels_1', 'labels_2', 'labels_3'],
+        const data = ['labels_1', 'labels_2', 'labels_3'],
           labels = [
             ['label1', 'another_label', 'a-third-label'],
             ['one_label', 'second', 'third-label', 'row_2', 'again:here', 'this', 'that'],
             ['this-is-a-tag', 'test', 'testing'] ],
           allLabels = _.reduce(labels, (l, labels) => l.concat(labels), []),
-          sentences = _data.map(name => nx.Sentence.fromConllu(data['CoNLL-U'][name])),
+          sentences = data.map(name => nx.Sentence.fromConllu(conllu[name])),
           labeler = new Labeler();
 
         sinon.stub(manager, 'getSentence').callsFake(i => {
@@ -279,7 +278,7 @@ module.exports = () => {
         }
 
         // setup
-        for (let i=0; i<_data.length; i++) {
+        for (let i=0; i<data.length; i++) {
           labeler.parse(manager.getSentence(i).comments)
         }
 
@@ -396,6 +395,19 @@ module.exports = () => {
             labeler.state = { labels: [invalidLabel] };
           }).to.throw(errors.DeserializationError);
         });
+      });
+    });
+
+    describe('filter', () => {
+      it(`should add and remove things from the active filter`, () => {
+        const manager = new Manager().parse([
+          conllu.labels_1,
+          conllu.labels_2,
+          conllu.labels_3,
+          conllu.labels_4
+        ].join('\n\n'));
+
+        console.log(manager.length, labeler);
       });
     });
   });
