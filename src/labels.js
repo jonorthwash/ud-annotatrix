@@ -427,14 +427,14 @@ class Labeler {
   }
 
   addFilter(name) {
-
+    this.filter.add(name);
   }
   filter(name) {
     return this.addFilter(name); // alias
   }
 
   removeFilter(name) {
-
+    this.filter.delete(name);
   }
   unfilter(name) {
     return this.removeFilter(name); // alias
