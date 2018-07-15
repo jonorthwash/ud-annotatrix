@@ -19185,6 +19185,7 @@ const regex = {
   cg3TokenContent: /^;?\s+"(.|\\")*"/
 }
 
+const fallback = '_';
 
 /**
  * this class contains all the information associated with a sentence, including
@@ -19653,15 +19654,15 @@ class Sentence {
       if (!token.analysis)
         return;
 
-      if (token.analysis.head)
+      if (token.analysis.head && token.analysis.head !== fallback)
         done++;
-      if (token.analysis.pos)
+      if (token.analysis.pos && token.analysis.head !== fallback)
         done++;
 
       token.analysis.eachHead(head => {
 
         total++;
-        if (!!head.deprel)
+        if (head.deprel && head.deprel !== fallback)
           done++;
 
       });
@@ -23137,7 +23138,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             limit = 0,
             isExecuting = false,
             callback,
-
+            
             // functions
             execute;
 
@@ -23167,12 +23168,12 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
                 commands.splice(index + 1, commands.length - index);
 
                 commands.push(command);
-
+                
                 // if limit is set, remove items from the start
                 if (limit && commands.length > limit) {
                     removeFromTo(commands, 0, -(limit+1));
                 }
-
+                
                 // set the current index to the end
                 index = commands.length - 1;
                 if (callback) {
@@ -23249,7 +23250,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             getIndex: function() {
                 return index;
             },
-
+            
             setLimit: function (l) {
                 limit = l;
             }
@@ -55430,57 +55431,6 @@ var KEYS = {
   Z: 90,
   0: 48
 };
-var toggle = {
-  table: function table(event) {
-    gui.is_table_view = !gui.is_table_view;
-    gui.update();
-  },
-
-  tableColumn: function tableColumn(event) {
-
-    var target = $(event.target),
-        col = target.attr('col-id');
-
-    gui.column_visible(col, !gui.column_visible(col));
-    target.toggleClass('column-hidden').find('i').toggleClass('fa-angle-double-right').toggleClass('fa-angle-double-left');
-
-    $('td[col-id=' + col + ']').css('visibility', gui.column_visible(col) ? 'visible' : 'hidden');
-
-    gui.update();
-  },
-
-  textarea: function textarea(event) {
-
-    $('#btnToggleTextarea i').toggleClass('fa-chevron-up').toggleClass('fa-chevron-down');
-    gui.is_textarea_visible = !gui.is_textarea_visible;
-
-    gui.update();
-  },
-
-  rtl: function rtl(event) {
-
-    $('#RTL .fa').toggleClass('fa-align-right').toggleClass('fa-align-left');
-    gui.is_ltr = !gui.is_ltr;
-
-    gui.update();
-  },
-
-  vertical: function vertical(event) {
-
-    $('#vertical .fa').toggleClass('fa-rotate-90');
-    gui.is_vertical = !gui.is_vertical;
-
-    gui.update();
-  },
-
-  enhanced: function enhanced(event) {
-
-    $('#enhanced .fa').toggleClass('fa-tree').toggleClass('fa-magic');
-    gui.is_enhanced = !gui.is_enhanced;
-
-    gui.update();
-  }
-};
 
 var pressed = {}; // used for onCtrlKeyup
 
@@ -55491,9 +55441,9 @@ var GUI = function () {
     _classCallCheck(this, GUI);
 
     this.keys = KEYS;
-    this.toggle = toggle;
 
     this.is_textarea_visible = true;
+    this.are_labels_visible = true;
     this.is_vertical = false;
     this.is_ltr = true;
     this.is_enhanced = false;
@@ -55513,6 +55463,59 @@ var GUI = function () {
         return _this.update();
       });
     }
+
+    this.toggle = {
+      table: function table(event) {
+        _this.is_table_view = !_this.is_table_view;
+        _this.update();
+      },
+
+      tableColumn: function tableColumn(event) {
+
+        var target = $(event.target),
+            col = target.attr('col-id');
+
+        _this.column_visible(col, !_this.column_visible(col));
+        target.toggleClass('column-hidden').find('i').toggleClass('fa-angle-double-right').toggleClass('fa-angle-double-left');
+
+        $('td[col-id=' + col + ']').css('visibility', _this.column_visible(col) ? 'visible' : 'hidden');
+
+        _this.update();
+      },
+
+      textarea: function textarea(event) {
+
+        $('#btnToggleTextarea i').toggleClass('fa-chevron-up').toggleClass('fa-chevron-down');
+        _this.is_textarea_visible = !_this.is_textarea_visible;
+        _this.are_labels_visible = !_this.are_labels_visible;
+
+        _this.update();
+      },
+
+      rtl: function rtl(event) {
+
+        $('#RTL .fa').toggleClass('fa-align-right').toggleClass('fa-align-left');
+        _this.is_ltr = !_this.is_ltr;
+
+        _this.update();
+      },
+
+      vertical: function vertical(event) {
+
+        $('#vertical .fa').toggleClass('fa-rotate-90');
+        _this.is_vertical = !_this.is_vertical;
+
+        _this.update();
+      },
+
+      enhanced: function enhanced(event) {
+
+        $('#enhanced .fa').toggleClass('fa-tree').toggleClass('fa-magic');
+        _this.is_enhanced = !_this.is_enhanced;
+
+        _this.update();
+      }
+    };
   }
 
   _createClass(GUI, [{
@@ -55525,8 +55528,10 @@ var GUI = function () {
 
       // navigation buttons
       $('.btn').removeClass('disabled');
-      $('#total-sentences').text(manager.length);
-      $('#current-sentence').val(manager.index + 1);
+
+      manager.updateFilter();
+      $('#total-sentences').text(manager.totalSentences);
+      $('#current-sentence').text(manager.currentSentence);
       if (!manager.index) $('#btnPrevSentence').addClass('disabled');
       if (manager.index === manager.length - 1) $('#btnNextSentence').addClass('disabled');
       if (!server.is_running) $('#btnUploadCorpus').addClass('disabled');
@@ -55586,6 +55591,8 @@ var GUI = function () {
         $('.nav-link').not('.active').hide();
         $('#btnToggleTable').hide();
       }
+
+      $('#label-container').css('display', this.are_labels_visible ? 'flex' : 'none');
 
       try {
         // need this in case `cy` DNE
@@ -55675,12 +55682,24 @@ var GUI = function () {
         manager.parse(convert.to.cg3(_this2.read('text-data')));
       });
 
-      $('#btnToggleTable').click(this.toggle.table);
-      $('#btnToggleTextarea').click(this.toggle.textarea);
-      $('.thead-default th').click(this.toggle.tableColumn);
-      $('#RTL').click(this.toggle.rtl);
-      $('#vertical').click(this.toggle.vertical);
-      $('#enhanced').click(this.toggle.enhanced);
+      $('#btnToggleTable').click(function (e) {
+        return _this2.toggle.table(e);
+      });
+      $('#btnToggleTextarea').click(function (e) {
+        return _this2.toggle.textarea(e);
+      });
+      $('.thead-default th').click(function (e) {
+        return _this2.toggle.tableColumn(e);
+      });
+      $('#RTL').click(function (e) {
+        return _this2.toggle.rtl(e);
+      });
+      $('#vertical').click(function (e) {
+        return _this2.toggle.vertical(e);
+      });
+      $('#enhanced').click(function (e) {
+        return _this2.toggle.enhanced(e);
+      });
 
       $('#current-sentence').keyup(function (e) {
         return onKeyupInCurrentSentence(e);
@@ -55729,6 +55748,7 @@ var GUI = function () {
       return {
 
         is_textarea_visible: this.is_textarea_visible,
+        are_labels_visible: this.are_labels_visible,
         is_vertical: this.is_vertical,
         is_ltr: this.is_ltr,
         is_enhanced: this.is_enhanced,
@@ -55739,7 +55759,7 @@ var GUI = function () {
       };
     },
     set: function set(state) {
-      this.is_textarea_visible = state.is_textarea_visible, this.is_vertical = state.is_vertical;
+      this.is_textarea_visible = state.is_textarea_visible, this.are_labels_visible = state.are_labels_visible, this.is_vertical = state.is_vertical;
       this.is_ltr = state.is_ltr;
       this.is_enhanced = state.is_enhanced;
 
@@ -56234,7 +56254,8 @@ var Labeler = function () {
 
     _classCallCheck(this, Labeler);
 
-    this.labels = [];
+    this._labels = [];
+    this._filter = new Set();
 
     // don't want the "jQuery needs a window" errors during testing
     if (!gui || !gui.inBrowser) return this;
@@ -56249,8 +56270,8 @@ var Labeler = function () {
         var names = $('#label-input').val().trim();
         _.each(names.split(/\s+/), function (name) {
           if (name) _this.add(name);
-          //if (name && this.add(name))
-          //this.addLabel(name);
+
+          _this.addLabel(name); // add to the comments
         });
 
         $('#label-input').val('');
@@ -56364,7 +56385,7 @@ var Labeler = function () {
     value: function get(name) {
 
       var ret = null;
-      if (name && typeof name === 'string') _.each(this.labels, function (label) {
+      if (name && typeof name === 'string') _.each(this._labels, function (label) {
         if (label.name === name) ret = label;
       });
 
@@ -56375,20 +56396,18 @@ var Labeler = function () {
     value: function add(name) {
 
       var found = false;
-      _.each(this.labels, function (label) {
+      _.each(this._labels, function (label) {
         if (label.name === name) found = true;
       });
 
-      if (!found) this.labels.push(new Label(name));
-
-      this.addLabel(name);
+      if (!found) this._labels.push(new Label(name));
 
       return !found; // so we know if success or not
     }
   }, {
     key: 'remove',
     value: function remove(name) {
-      this.labels = this.labels.filter(function (label) {
+      this._labels = this._labels.filter(function (label) {
         if (label.name !== name) return label;
       });
       for (var i = 0; i < manager.length; i++) {
@@ -56422,7 +56441,7 @@ var Labeler = function () {
       $('#labels-vert').children().detach();
       $('.labels-horiz').children().not(':first-child').detach();
 
-      _.each(this.labels, function (label) {
+      _.each(this._labels, function (label) {
 
         // first make the list items
         var vert = $('<li name="' + label.name + '" class="label vert-label" />');
@@ -56465,6 +56484,8 @@ var Labeler = function () {
         var horiz = $('<li name="' + label.name + '" class="label horiz-label" />').text(label.name).css('background-color', label.bColor).css('color', label.tColor).click(function (e) {
           return _this3.handle.click.label(e);
         });
+
+        if (_this3._filter.has(label.name)) horiz.addClass('filter-active');
 
         if (_this3.has(label.name)) {
           $('#labels-horiz-current').append(horiz);
@@ -56524,19 +56545,67 @@ var Labeler = function () {
       });
     }
   }, {
+    key: 'addFilter',
+    value: function addFilter(name) {
+      var _this4 = this;
+
+      // make sure it's a valid name
+      manager.map(function (i) {
+        if (_this4.has(i, name)) _this4._filter.add(name);
+      });
+
+      return this; // chaining
+    }
+  }, {
+    key: 'filter',
+    value: function filter(name) {
+      return this.addFilter(name); // alias
+    }
+  }, {
+    key: 'removeFilter',
+    value: function removeFilter(name) {
+      this._filter.delete(name);
+      return this;
+    }
+  }, {
+    key: 'unfilter',
+    value: function unfilter(name) {
+      return this.removeFilter(name); // alias
+    }
+  }, {
+    key: 'clearFilter',
+    value: function clearFilter() {
+      var _this5 = this;
+
+      this._filter.forEach(function (name) {
+        return _this5.removeFilter(name);
+      });
+      return this;
+    }
+  }, {
     key: 'state',
     get: function get() {
       return {
-        labels: this.labels.map(function (label) {
+        labels: this._labels.map(function (label) {
           return label.state;
+        }),
+        filter: _.map(Array.from(this._filter), function (label) {
+          return label.name;
         })
       };
     },
     set: function set(state) {
-      this.labels = state.labels.map(function (labelState) {
+      var _this6 = this;
+
+      this._labels = state.labels.map(function (labelState) {
         var label = new Label();
         label.state = labelState;
         return label;
+      });
+
+      this._filter = new Set();
+      _.each(state.filter, function (name) {
+        _this6.addFilter(name);
       });
     }
   }], [{
@@ -56812,8 +56881,10 @@ var Manager = function () {
       this.filename = cfg.defaultFilename;
 
       this._sentences = [];
-      this._filtered = null;
       this._index = -1;
+
+      this._filtered = [];
+      this._filterIndex = null;
 
       this.insertSentence(cfg.defaultSentence);
     }
@@ -56823,6 +56894,22 @@ var Manager = function () {
       return this._sentences.map(function (sentence, i) {
         return callback(i, sentence);
       });
+    }
+  }, {
+    key: 'updateFilter',
+    value: function updateFilter() {
+      var _this2 = this;
+
+      this._filtered = [];
+      this.map(function (i) {
+        labeler._filter.forEach(function (name) {
+          if (labeler.has(i, name) && _this2._filtered.indexOf(i) === -1) _this2._filtered.push(i);
+        });
+      });
+
+      this._filterIndex = this._filtered.length ? this._filterIndex || 0 : null;
+
+      return this;
     }
   }, {
     key: 'first',
@@ -56969,20 +57056,19 @@ var Manager = function () {
   }, {
     key: 'parse',
     value: function parse(text) {
-      var _this2 = this;
+      var _this3 = this;
 
       // if not passed explicitly, read from the textarea
       text = text || gui.read('text-data');
       var splitted = this.split(text);
 
-      // overwrite contents of #text-data
-      this._sentences[0] = {}; // sort of a hack to get around updateSentence() behavior
-      this.sentence = splitted[0];
+      // set the first one at the current index
+      this._sentences[this.index] = new nx.Sentence(); // hack to get around updateSentence() behavior
+      this.setSentence(this.index, splitted[0]);
 
       // iterate over all elements except the first
       _.each(splitted, function (split, i) {
-        if (!i) return; // skip first
-        _this2.insertSentence(split);
+        if (i) _this3.insertSentence(split);
       });
 
       gui.update();
@@ -57071,10 +57157,10 @@ var Manager = function () {
   }, {
     key: 'encode',
     value: function encode() {
-      var _this3 = this;
+      var _this4 = this;
 
       return encodeURIComponent(this.map(function (i, sent) {
-        return '[UD-Annotatrix: id="' + (i + 1) + '" format="' + _this3.format + '"]\n      ' + (_this3.format === 'Unknown' ? '' : _this3.sentence);
+        return '[UD-Annotatrix: id="' + (i + 1) + '" format="' + _this4.format + '"]\n      ' + (_this4.format === 'Unknown' ? '' : _this4.sentence);
       }).join('\n\n'));
     }
   }, {
@@ -57086,6 +57172,16 @@ var Manager = function () {
     key: 'length',
     get: function get() {
       return this._sentences.length;
+    }
+  }, {
+    key: 'totalSentences',
+    get: function get() {
+      return this._filtered.length ? this._filtered.length + ' (total: ' + this.length + ')' : '' + this.length;
+    }
+  }, {
+    key: 'currentSentence',
+    get: function get() {
+      return this._filtered.length ? this._filterIndex + 1 : this.index + 1;
     }
   }, {
     key: 'index',
