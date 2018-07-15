@@ -13,6 +13,7 @@ const Labeler = require('../labels');
 const Manager = require('../manager');
 const errors = require('../errors');
 global.gui = null;
+global.server = null;
 
 module.exports = () => {
   describe('labels.js', () => {
@@ -45,7 +46,7 @@ module.exports = () => {
             labeler = new Labeler();
 
           labeler.parse(s.comments);
-          expect(labeler.labels.map(label => label.name)).to.deep.equal(datum.labels);
+          expect(labeler._labels.map(label => label.name)).to.deep.equal(datum.labels);
         });
       });
     });
@@ -83,7 +84,7 @@ module.exports = () => {
           labeler.parse(s.comments);
         });
 
-        expect(labeler.labels.map(label => label.name)).to.deep.equal(labels);
+        expect(labeler._labels.map(label => label.name)).to.deep.equal(labels);
       });
 
     });
@@ -235,7 +236,7 @@ module.exports = () => {
       labeler.add('other');
 
       const labels = () => {
-        return labeler.labels.map(label => label.name);
+        return labeler._labels.map(label => label.name);
       }
 
       it(`should remove a label if it exists`, () => {
@@ -283,7 +284,7 @@ module.exports = () => {
         }
 
         // sanity check
-        expect(labeler.labels.map(label => label.name)).to.deep.equal(allLabels);
+        expect(labeler._labels.map(label => label.name)).to.deep.equal(allLabels);
 
         // add a label from 'labels_2' to 'labels_1'
         labeler.addLabel(0, 'one_label');
@@ -399,7 +400,8 @@ module.exports = () => {
     });
 
     describe('filter', () => {
-      it(`should add and remove things from the active filter`, () => {
+      it(`should add and remove things from Labeler._filter by name`, () => {
+
         const manager = new Manager().parse([
           conllu.labels_1,
           conllu.labels_2,
@@ -407,7 +409,161 @@ module.exports = () => {
           conllu.labels_4
         ].join('\n\n'));
 
-        console.log(manager.length, labeler);
+        // should initialize correctly
+        expect(manager._filtered.length).to.equal(0);
+        expect(labeler._filter.size).to.equal(0);
+
+        // should do nothing when given an invalid name to add
+        labeler
+          .addFilter('this-is-not-a-valid-name')
+          .addFilter(null)
+          .addFilter()
+          .addFilter([1, 2, 3]);
+        expect(labeler._filter.size).to.equal(0);
+
+        // should add to _filter when given a valid name
+        labeler
+          .addFilter('label1')
+          .addFilter('new');
+        expect(labeler._filter.size).to.equal(2);
+
+        // should do nothing when given an invalid name to remove
+        labeler
+          .removeFilter('this-is-not-a-valid-name')
+          .removeFilter('another_label');
+        expect(labeler._filter.size).to.equal(2);
+
+        // should remove from _filter when given something being filtered
+        labeler
+          .removeFilter('new');
+        expect(labeler._filter.size).to.equal(1);
+
+      });
+
+      it(`should use Labeler._filter to update Manager._filter correctly`, () => {
+
+        const manager = new Manager().parse([
+          conllu.labels_1,
+          conllu.labels_2,
+          conllu.labels_3,
+          conllu.labels_4
+        ].join('\n\n'));
+
+        manager.index = 0;
+
+        // this should be on none of the sentences
+        manager.updateFilter();
+        expect(manager._filtered).to.deep.equal([]);
+        expect(manager.totalSentences).to.equal('4');
+
+        // this one should only be on sentence #1
+        labeler.addFilter('another_label');
+        manager.updateFilter();
+        expect(manager._filtered).to.deep.equal([0]);
+        expect(manager.totalSentences).to.equal('1 (total: 4)');
+
+        // this is also only on sentence #1
+        labeler.addFilter('a-third-label');
+        manager.updateFilter();
+        expect(manager._filtered).to.deep.equal([0]);
+        expect(manager.totalSentences).to.equal('1 (total: 4)');
+
+        // only on #2
+        labeler.addFilter('third-label');
+        manager.updateFilter();
+        expect(manager._filtered).to.deep.equal([0, 1]);
+        expect(manager.totalSentences).to.equal('2 (total: 4)');
+
+        labeler.removeFilter('third-label');
+        manager.updateFilter();
+        expect(manager._filtered).to.deep.equal([0]);
+        expect(manager.totalSentences).to.equal('1 (total: 4)');
+
+        labeler.removeFilter('a-third-label');
+        manager.updateFilter();
+        expect(manager._filtered).to.deep.equal([0]);
+        expect(manager.totalSentences).to.equal('1 (total: 4)');
+
+        labeler.removeFilter('another_label');
+        manager.updateFilter();
+        expect(manager._filtered).to.deep.equal([]);
+        expect(manager.totalSentences).to.equal('4');
+
+        // on #1 and #4
+        labeler.addFilter('label1');
+        manager.updateFilter();
+        expect(manager._filtered).to.deep.equal([0, 3]);
+        expect(manager.totalSentences).to.equal('2 (total: 4)');
+
+        labeler.clearFilter();
+        manager.updateFilter();
+        expect(manager._filtered).to.deep.equal([]);
+        expect(manager.totalSentences).to.equal('4');
+
+      });
+
+      it(`should pan differently when there is a filter`, () => {
+
+        const manager = new Manager().parse([
+          conllu.labels_1,
+          conllu.labels_2,
+          conllu.labels_3,
+          conllu.labels_4
+        ].join('\n\n'));
+
+        // sanity check
+        manager.index = 0;
+        labeler.addFilter('label1').addFilter('this-is-a-tag');
+        manager.updateFilter();
+        expect(manager._filtered).to.deep.equal([0, 2, 3]);
+        expect(manager.totalSentences).to.equal('3 (total: 4)');
+        expect(manager.current).to.equal(manager.getSentence(0));
+
+        manager.last();
+        expect(manager.current).to.equal(manager.getSentence(3));
+
+        manager.first();
+        expect(manager.current).to.equal(manager.getSentence(0));
+
+        manager.next();
+        expect(manager.current).to.equal(manager.getSentence(2));
+
+        manager.next();
+        expect(manager.current).to.equal(manager.getSentence(3));
+
+        manager.next();
+        expect(manager.current).to.equal(manager.getSentence(3));
+
+        manager.prev();
+        expect(manager.current).to.equal(manager.getSentence(2));
+
+        manager.prev();
+        expect(manager.current).to.equal(manager.getSentence(0));
+
+        manager.prev();
+        expect(manager.current).to.equal(manager.getSentence(0));
+
+        throw new Error('set the index directly'); // TODO
+        
+        // reset
+        labeler.clearFilter();
+        manager.updateFilter();
+        manager.index = 0;
+
+        // check what happens when we add a filter than the current
+        //   sentence doesn't have
+        labeler.addFilter('one_label');
+        manager.updateFilter();
+        expect(manager._filtered).to.deep.equal([1, 3]);
+        expect(manager.totalSentences).to.equal('2 (total: 4)');
+        expect(manager.current).to.equal(manager.getSentence(1));
+
+        manager.last();
+        expect(manager.current).to.equal(manager.getSentence(3));
+
+        manager.first();
+        expect(manager.current).to.equal(manager.getSentence(1));
+
       });
     });
   });
