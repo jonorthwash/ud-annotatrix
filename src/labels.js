@@ -69,8 +69,8 @@ class Label {
 
 class Labeler {
   constructor() {
-    this.labels = [];
-    this.filter = new Set();
+    this._labels = [];
+    this._filter = new Set();
 
     // don't want the "jQuery needs a window" errors during testing
     if (!gui || !gui.inBrowser)
@@ -234,7 +234,7 @@ class Labeler {
 
     let ret = null;
     if (name && typeof name === 'string')
-      _.each(this.labels, label => {
+      _.each(this._labels, label => {
         if (label.name === name)
           ret = label;
       });
@@ -245,13 +245,13 @@ class Labeler {
   add(name) {
 
     let found = false;
-    _.each(this.labels, label => {
+    _.each(this._labels, label => {
       if (label.name === name)
         found = true;
     });
 
     if (!found)
-      this.labels.push(new Label(name));
+      this._labels.push(new Label(name));
 
     this.addLabel(name);
 
@@ -259,7 +259,7 @@ class Labeler {
   }
 
   remove(name) {
-    this.labels = this.labels.filter(label => {
+    this._labels = this._labels.filter(label => {
       if (label.name !== name)
         return label;
     });
@@ -295,7 +295,7 @@ class Labeler {
     $('#labels-vert').children().detach();
     $('.labels-horiz').children().not(':first-child').detach();
 
-    _.each(this.labels, label => {
+    _.each(this._labels, label => {
 
       // first make the list items
       const vert = $(`<li name="${label.name}" class="label vert-label" />`);
@@ -346,7 +346,7 @@ class Labeler {
         .css('color', label.tColor)
         .click(e => this.handle.click.label(e));
 
-      if (this.filter.has(label.name))
+      if (this._filter.has(label.name))
         horiz.addClass('filter-active');
 
       if (this.has(label.name)) {
@@ -408,33 +408,38 @@ class Labeler {
 
   get state() {
     return {
-      labels: this.labels.map(label => label.state),
-      filter: _.map(Array.from(this.filter), label => label.name)
+      labels: this._labels.map(label => label.state),
+      filter: _.map(Array.from(this._filter), label => label.name)
     };
   }
 
   set state(state) {
-    this.labels = state.labels.map(labelState => {
+    this._labels = state.labels.map(labelState => {
       let label = new Label();
       label.state = labelState;
       return label;
     });
 
-    this.filter = new Set();
+    this._filter = new Set();
     _.each(state.filter, name => {
       this.addFilter(name);
     });
   }
 
   addFilter(name) {
-    this.filter.add(name);
+
+    let found = false;
+    manager.map((i, sent) => {
+      console.log(this.has(i, name))
+    });
+    this._filter.add(name);
   }
   filter(name) {
     return this.addFilter(name); // alias
   }
 
   removeFilter(name) {
-    this.filter.delete(name);
+    this._filter.delete(name);
   }
   unfilter(name) {
     return this.removeFilter(name); // alias
