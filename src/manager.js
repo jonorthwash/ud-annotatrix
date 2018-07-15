@@ -35,8 +35,10 @@ class Manager {
     this.filename = cfg.defaultFilename;
 
     this._sentences = [];
-    this._filtered = [];
     this._index = -1;
+
+    this._filtered = [];
+    this._filterIndex = null;
 
     this.insertSentence(cfg.defaultSentence);
   }
@@ -58,9 +60,22 @@ class Manager {
       });
     });
 
+    this._filterIndex = this._filtered.length
+      ? this._filterIndex || 0
+      : null;
+
     return this;
   }
-
+  get totalSentences() {
+    return this._filtered.length
+      ? `${this._filtered.length} (total: ${this.length})`
+      : `${this.length}`;
+  }
+  get currentSentence() {
+    return this._filtered.length
+      ? this._filterIndex + 1
+      : this.index + 1;
+  }
 
 
 
@@ -70,50 +85,89 @@ class Manager {
   }
   set index(index) {
 
+    const total = this._filtered.length || this.length;
+
     index = parseInt(index);
     if (isNaN(index)) {
       log.warn(`Annotatrix: index out of range: ${index}`);
       index = this.index;
 
-    } else if (index < 0 && this.length) {
+    } else if (index < 0 && total) {
       log.warn(`Annotatrix: index out of range: ${index + 1}`);
       index = 0;
 
-    } else if (index > this.length - 1) {
+    } else if (index > total - 1) {
       log.warn(`Annotatrix: index out of range: ${index + 1}`);
-      index = this.length - 1;
+      index = total - 1;
     }
 
-    this._index = Math.floor(index); // enforce integer
+    if (this._filtered.length) {
+      this._filterIndex = index;
+      this._index = this._filtered[index];
+    } else {
+      this._filterIndex = null;
+      this._index = index;
+    }
+
     gui.update();
     return this.index;
   }
   first() {
+
+    this.updateFilter();
+
     this.index = this.length ? 0 : -1;
+    return this;
   }
   prev() {
+
     if (!this.length)
       return null;
 
-    if (this.index === 0) {
+    this.updateFilter();
+
+    let index = this._filtered.length
+      ? this._filterIndex
+      : this._index;
+
+    if (index === 0) {
       log.warn(`Annotatrix: already at the first sentence!`);
       return null;
     }
 
-    this.index--;
-    return this.sentence;
+    this.index = --index;
+    return this;
   }
   next() {
-    if (this.index === this._sentences.length - 1) {
+
+    if (!this.length)
+      return null;
+
+    this.updateFilter();
+
+    let index = this._filtered.length
+      ? this._filterIndex
+      : this._index;
+    let total = this._filtered.length
+      ? this._filtered.length - 1
+      : this._length - 1;
+
+    if (index === total) {
       log.warn(`Annotatrix: already at the last sentence!`);
       return null;
     }
 
-    this.index++;
-    return this.sentence;
+    this.index = ++index;
+    return this;
   }
   last() {
-    this.index = this.length - 1;
+
+    this.updateFilter();
+
+    this.index = this._filtered.length
+      ? this._filtered.length - 1
+      : this.length - 1;
+    return this;
   }
 
 
@@ -371,8 +425,10 @@ class Manager {
 
     });
 
-    // this triggers a gui refresh
     labeler.state = state.labeler;
+    this.updateFilter(); // use the filters set in labeler
+
+    // this triggers a gui refresh
     gui.state = state.gui;
 
     return state;
