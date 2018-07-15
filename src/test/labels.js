@@ -321,11 +321,13 @@ module.exports = () => {
       };
 
       const labeler = new Labeler();
-      labeler.add('one');
-      labeler.add('two');
-      labeler.add('three');
 
       it(`should serialize`, () => {
+
+        labeler.add('one');
+        labeler.add('two');
+        labeler.add('three');
+
         expect(getState()).to.deep.equal({
           labels: [
             {
@@ -370,7 +372,7 @@ module.exports = () => {
             } else {
               expect(labeler.get(validLabel.name)[key]).to.equal(value);
             }
-            
+
           });
         });
       });
