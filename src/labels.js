@@ -427,14 +427,11 @@ class Labeler {
 
   addFilter(name) {
 
-    let found = false;
-
+    // make sure it's a valid name
     manager.map(i => {
-      found = found || this.has(i, name);
+      if (this.has(i, name))
+        this._filter.add(name);
     });
-
-    if (found)
-      this._filter.add(name)
 
     return this; // chaining
   }
