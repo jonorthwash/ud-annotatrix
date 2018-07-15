@@ -172,8 +172,10 @@ class GUI {
 
     // navigation buttons
     $('.btn').removeClass('disabled');
-    $('#total-sentences').text(manager.length);
-    $('#current-sentence').val(manager.index + 1);
+
+    manager.updateFilter();
+    $('#total-sentences').text(manager.totalSentences);
+    $('#current-sentence').text(manager.currentSentence);
     if (!manager.index)
       $('#btnPrevSentence').addClass('disabled');
     if (manager.index === manager.length - 1)
