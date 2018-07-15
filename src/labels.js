@@ -180,7 +180,7 @@ class Labeler {
   }
 
   parse(comments) {
-    console.log('parse', comments);
+
     _.each(Labeler.parseComments(comments), label => {
       if (label)
         this.add(label);
@@ -428,10 +428,15 @@ class Labeler {
   addFilter(name) {
 
     let found = false;
-    manager.map((i, sent) => {
-      console.log(this.has(i, name))
+
+    manager.map(i => {
+      found = found || this.has(i, name);
     });
-    this._filter.add(name);
+
+    if (found)
+      this._filter.add(name)
+
+    return this; // chaining
   }
   filter(name) {
     return this.addFilter(name); // alias
@@ -439,6 +444,7 @@ class Labeler {
 
   removeFilter(name) {
     this._filter.delete(name);
+    return this;
   }
   unfilter(name) {
     return this.removeFilter(name); // alias
