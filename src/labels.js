@@ -452,6 +452,17 @@ class Labeler {
     return this;
   }
 
+  toggleFilter(name) {
+    
+    if (this._filter.has(name)) {
+      this.removeFilter(name);
+    } else {
+      this.addFilter(name):
+    }
+
+    return this;
+  }
+
 }
 
 function flashDropdown(name) {
