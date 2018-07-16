@@ -782,107 +782,123 @@ td .parse-error {
   display: flex;
 }
 
-.dropdown {
-}
-
-.dropdown:hover .dropdown-content {
-  display: block;
-}
-
-.dropdown-content {
-  display: none;
-  position: absolute;
-  background-color: #f9f9f9;
-  min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-  padding: 12px 16px;
-  z-index: 1;
-}
-
-#labels-vert {
+#labels-horiz {
   list-style: none;
-  margin: 0.5em 0;
+  margin: 0 0.5em;
   padding: 0;
+  display: flex;
 }
 
-#labels-vert li.label {
-  width: 100%;
+#label-controller .label-text {
+  padding: 0 1em;
 }
 
 li.label {
-  border-bottom: 1px solid #eaecef;
-  padding: 0.25em 0;
-  cursor: pointer;
+  display: inline;
 }
 
-#labels-vert li:hover {
-  background-color: #eee;
+li.label.filtering .label-text {
+  border-color: #444;
+  -moz-box-shadow: 5px #999999;
+  -webkit-box-shadow: 5px #999999;
+  box-shadow: 0 0 5px 5px #999999;
 }
 
-.label-header {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.label-header i.fa {
-  color: #868e96;
-  margin: 0 0.1em;
-}
-
-.label-name {
-  flex-grow: 1;
-  margin: 0 0.5em;
-}
-
-.label .square {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  margin-top: -1px;
-  margin-right: 0.25em;
-  vertical-align: middle;
-  border-radius: 3px;
-}
-
-.label-hidden {
-  display: none;
-}
-
-.labels-horiz {
-  list-style: none;
-  margin: 0 0.5em;
-  padding: 0;
-}
-
-.labels-horiz li.label {
-  display: inline-block;
-  margin: 0 0.5em;
-  font-weight: 600;
-  border-radius: 3px;
-  padding: 0.25em;
-}
-
-#labels-horiz-all li.label {
+li.label.not-in-comments .label-text {
   opacity: 0.3;
 }
 
-input[name="color"] {
-  width: 7em;
+li.label.control .label-text {
+  border-color: #868e96;
 }
 
-.color-inputs {
+li.label .label-text {
+  display: inline-block;
+  margin: 0.5em;
+  font-weight: 600;
+  border-radius: 3px;
+  padding: 0.25em 1em;
+  border: 5px solid #eee;
+  border-radius: 5px;
+}
+
+li.label .label-hidden {
+
+  /*
+  */
+  display: none;
+  flex-flow: column;
+
+  position: absolute;
+  background-color: #eee;
+  min-width: 160px;
+
+  padding: 12px 16px;
+  z-index: 1;
+  border: 3px solid #333;
+  border-radius: 3px;
+
+}
+
+li.label:hover .label-hidden {
   display: flex;
+}
+
+li.label .label-hidden-group {
+  display: flex;
+  flex-flow: column;
   justify-content: space-around;
-  align-items: center;
 }
 
-.color-inputs .square {
-  width: 37px;
-  height: 30.8px;
+li.label .label-hidden-item {
+  display: flex;
+  flex-flow: column;
+  width: 100%;
 }
 
-.refresh-color {
+li.label .label-hidden-item-inner {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+li.label .checkbox-label {
+  width: 10ch;
+}
+
+li.label .hex-color-group {
+  margin-right: 0.5em;
+}
+
+li.label .refresh-color {
   font-size: 0.8rem;
+}
+
+li.label .delete-button {
+  background-color: #b22;
+}
+
+li.label .btn {
+  border: 0;
+}
+
+li.label .btn:hover {
+  cursor: pointer;
+}
+
+li.label hr {
+  margin: 1.5em;
+}
+
+li.label input[type="checkbox"] {
+  margin: 0 0.5em;
+  cursor: pointer;
+}
+
+li.label input[name="label-color"] {
+  width: 8ch;
+}
+
+#label-clear-filter {
+  cursor: pointer;
 }
