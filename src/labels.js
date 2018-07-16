@@ -11,6 +11,7 @@ const regex = {
 
 // NOTE: 16777215 (base 10) = ffffff (base 16)
 const magic = 16777215;
+const ENTER = 13;
 
 class Label {
   constructor(name) {
@@ -65,6 +66,129 @@ class Label {
     if (!this.changeColor(state.bColor))
       throw new DeserializationError(`cannot set background color to "${state.bColor}"`);
   }
+
+  render(labeler) {
+
+    const inComments = labeler.has(this.name),
+      filtering = labeler._filter.has(this.name);
+
+    $(`#labels-horiz`).append($('<li>')
+      .attr('name', this.name)
+      .addClass('label horiz')
+      .addClass(inComments ? 'in-comments' : 'not-in-comments')
+      .addClass(filtering  ? 'filtering'   : 'not-filtering')
+      .append($('<div>')
+        .addClass('label-text')
+        .text(this.name)
+        .css('background-color', this.bColor)
+        .css('color', this.tColor)
+        .click(e => labeler.handle.click.label(e))
+      )
+      .append($('<div>')
+        .addClass('label-hidden')
+        .append($('<div>')
+          .addClass('label-hidden-group')
+          .append($('<div>')
+            .addClass('label-hidden-item')
+            .append($('<strong>')
+              .text('Name')
+            )
+            .append($('<input>')
+              .attr('name', 'label-name')
+              .val(this.name)
+              .keyup(e => labeler.handle.keyup.name(e))
+            ))
+          .append($('<div>')
+            .addClass('label-hidden-item')
+            .append($('<strong>')
+              .text('Description')
+            )
+            .append($('<input>')
+              .attr('name', 'label-desc')
+              .val(this.desc)
+              .keyup(e => labeler.handle.keyup.desc(e))
+            ))
+          .append($('<div>')
+            .addClass('label-hidden-item')
+            .append($('<strong>')
+              .text('Color')
+            )
+            .append($('<div>')
+              .addClass('label-hidden-item-inner')
+              .append($('<span>')
+                .addClass('hex-color-group')
+                .text('#')
+                .append($('<input>')
+                  .attr('name', 'label-color')
+                  .attr('pattern', '[A-Fa-f\\d]{6}')
+                  .val(this.bColor.substr(1))
+                  .keyup(e => labeler.handle.keyup.color(e))
+                )
+              )
+              .append($('<button>')
+                .attr('type', 'button')
+                .addClass('btn btn-secondary refresh-color')
+                .css('background-color', this.bColor)
+                .click(e => labeler.handle.click.refresh(e))
+                .append($('<i>')
+                  .addClass('fa fa-refresh')
+                )
+              )
+            )
+          )
+        )
+        .append($('<hr>'))
+        .append($('<div>')
+          .addClass('label-hidden-group')
+          .append($('<div>')
+            .addClass('label-hidden-item')
+            .append($('<div>')
+              .addClass('label-hidden-item-inner')
+              .append($('<input>')
+                .attr('name', 'in-comments')
+                .attr('type', 'checkbox')
+                .prop('checked', inComments)
+                .click(e => labeler.handle.click.checkbox.inComments(e))
+              )
+              .append($('<span>')
+                .addClass('in-comments-label checkbox-label')
+                .text('has label')
+              )
+            )
+          )
+          .append($('<div>')
+            .addClass('label-hidden-item')
+            .append($('<div>')
+              .addClass('label-hidden-item-inner')
+              .append($('<input>')
+                .attr('name', 'filtering')
+                .attr('type', 'checkbox')
+                .prop('checked', filtering)
+                .click(e => labeler.handle.click.checkbox.filtering(e))
+              )
+              .append($('<span>')
+                .addClass('filtering-label checkbox-label')
+                .text('filtering')
+              )
+            )
+          )
+        )
+        .append($('<hr>'))
+        .append($('<div>')
+          .addClass('label-hidden-group')
+          .append($('<div>')
+            .addClass('label-hidden-item delete-item')
+            .append($('<button>')
+              .attr('type', 'button')
+              .addClass('btn btn-secondary delete-button')
+              .text('delete')
+              .click(e => labeler.handle.click.delete(e))
+            )
+          )
+        )
+      )
+    );
+  }
 }
 
 class Labeler {
@@ -77,7 +201,7 @@ class Labeler {
       return this;
 
     $('#label-input').keyup(e => {
-      if (e.which === 13) // enter
+      if (e.which === ENTER)
         this.handle.enter(e);
     });
 
@@ -96,55 +220,55 @@ class Labeler {
       },
 
       click: {
-        chevron: event => {
-          const target = $(event.target),
-            hidden = $(target.closest('li').find('.label-hidden')),
-            display = hidden.css('display');
-
-          $('.label-hidden')
-            .css('display', 'none')
-            .closest('li').find('.chevron')
-              .removeClass('fa-chevron-up')
-              .addClass('fa-chevron-down');
-
-          if (display === 'none')
-            hidden
-              .css('display', 'block')
-              .closest('li').find('.chevron')
-                .addClass('fa-chevron-up')
-                .removeClass('fa-chevron-down');
-        },
-
-        checkbox: event => {
-          const target = $(event.target),
-            checked = target.attr('type') === 'checked',
-            name = target.closest('li').attr('name');
-
-          target
-            .toggleClass('fa-check-square-o')
-            .toggleClass('fa-square-o')
-            .attr('type', checked ? 'unchecked' : 'checked');
-
-          if (checked) {
-            this.removeLabel(name);
-          } else {
-            this.addLabel(name);
-          }
-
-          gui.update();
-        },
-
         label: event => {
           const target = $(event.target),
             name = target.closest('li').attr('name');
 
           this.toggleFilter(name);
           manager.updateFilter();
-          console.log(name);
           gui.update();
+          flashDropdown(name);
         },
 
-        times: event => {
+        refresh: event => {
+          const target = $(event.target),
+            name = target.closest('li').attr('name'),
+            label = this.get(name);
+
+          label.changeColor();
+          gui.update();
+          flashDropdown(name);
+        },
+
+        checkbox: {
+          inComments: event => {
+            const target = $(event.target),
+              checked = target.is(':checked'),
+              name = target.closest('li').attr('name');
+
+            if (checked) {
+              this.addLabel(name);
+            } else {
+              this.removeLabel(name);
+            }
+
+            manager.updateFilter();
+            gui.update();
+            flashDropdown(name);
+          },
+
+          filtering: event => {
+            const target = $(event.target),
+              name = target.closest('li').attr('name');
+
+            this.toggleFilter(name);
+            manager.updateFilter();
+            gui.update();
+            flashDropdown(name);
+          }
+        },
+
+        delete: event => {
           const target = $(event.target),
             name = target.closest('li').attr('name');
 
@@ -154,35 +278,41 @@ class Labeler {
 
           this.remove(name);
           gui.update();
+        }
+      },
+
+      keyup: {
+        name: event => {
+          var target = $(event.target),
+            name = target.closest('li').attr('name');
+
+          if (event.which === ENTER) {
+            this.edit(name, { name: target.val() });
+            gui.update();
+          }
         },
 
-        refresh: event => {
-          const target = $(event.target),
-            name = target.closest('li').attr('name'),
-            label = this.get(name);
+        desc: event => {
+          var target = $(event.target),
+            name = target.closest('li').attr('name');
 
-          label.changeColor();
-          this.update();
-          flashDropdown(name);
+          if (event.which === ENTER) {
+            this.edit(name, { desc: target.val() });
+            gui.update();
+          }
         },
 
-        save: event => {
-          const target = $(event.target),
-            li = target.closest('li'),
-            name = li.attr('name'),
-            values = {
-              name: li.find('input[name="name"]').val(),
-              desc: li.find('input[name="desc"]').val(),
-              color: li.find('input[name="color"]').val()
-            };
+        color: event => {
+          var target = $(event.target),
+            name = target.closest('li').attr('name');
 
-          this.edit(name, values);
-
-          gui.update();
-          flashDropdown(name);
+          if (event.which === ENTER) {
+            this.edit(name, { color: target.val() });
+            gui.update();
+          }
         }
       }
-    }
+    };
   }
 
   parse(comments) {
@@ -297,66 +427,9 @@ class Labeler {
     if (!gui || !gui.inBrowser)
       return;
 
-    $('#labels-vert').children().detach();
-    $('.labels-horiz').children().not(':first-child').detach();
+    $('.label.horiz').detach();
 
-    _.each(this._labels, label => {
-
-      // first make the list items
-      const vert = $(`<li name="${label.name}" class="label vert-label" />`);
-
-      const header = $(`<div class="label-header" />`);
-      const hidden = $(`<div class="label-hidden" />`);
-      vert.append(header, hidden);
-
-      const name  = $(`<span class="label-name">${label.name}</span>`)
-        .prepend(`<span class="square" style="background-color:${label.bColor};" />`)
-        .click(e => this.handle.click.label(e));
-      const chev  = $(`<i class="fa fa-chevron-down chevron" aria-hidden="true" />`)
-        .click(e => this.handle.click.chevron(e));
-      const check = $(`<i class="fa" aria-hidden="true" type="checked" />`)
-        .addClass(this.has(label.name) ? 'fa-check-square-o' : 'fa-square-o')
-        .attr('type', this.has(label.name) ? 'checked' : 'unchecked')
-        .click(e => this.handle.click.checkbox(e));
-      const times = $(`<i class="fa fa-times" aria-hidden="true" />`)
-        .click(e => this.handle.click.times(e));
-      header.append(name, chev, check, times);
-
-      const hNameContainer = $(`<div />`)
-        .text('Name:')
-        .append(`<input name="name" value="${label.name}" />`);
-      const hDescContainer = $(`<div />`)
-        .text('Description:')
-        .append(`<input name="desc" value="${label.desc}" />`);
-      const hColorName = $(`<input name="color" value="${label.bColor.substr(1)}" />`);
-      const hColorReset = $(`<button type="button" class="btn btn-secondary refresh-color"><i class="fa fa-refresh" /></button>`)
-        .click(e => this.handle.click.refresh(e));
-      const hColorSquare = $(`<span class="square" style="background-color:${label.bColor};" />`);
-      const hColorInputs = $('<div class="color-inputs" pattern="[A-Fa-f\d]{6}">')
-        .text('#')
-        .append(hColorName, hColorReset, hColorSquare);
-      const hColorContainer = $(`<div />`)
-        .text('Color:')
-        .append(hColorInputs);
-      const hSaveButton = $(`<button type="button" class="btn btn-secondary">Save</button>`)
-        .click(e => this.handle.click.save(e));
-      hidden.append(hNameContainer, hDescContainer, hColorContainer, hSaveButton);
-
-      $('#labels-vert').append(vert)
-
-      // then add the actual labels
-      const horiz = $(`<li name="${label.name}" class="label horiz-label" />`)
-        .text(label.name)
-        .css('background-color', label.bColor)
-        .css('color', label.tColor)
-        .click(e => this.handle.click.label(e));
-
-      if (this._filter.has(label.name))
-        horiz.addClass('filter-active');
-
-      $(`#labels-horiz-${this.has(label.name) ? 'current' : 'all'}`).append(horiz);
-
-    });
+    _.each(this._labels, label => label.render(this));
   }
 
   addLabel(index, name) {
@@ -468,18 +541,10 @@ class Labeler {
 }
 
 function flashDropdown(name) {
-  const dropdown = $('.dropdown-content');
+  const dropdown = $(`li[name="${name}"] .label-hidden`);
 
   // show dropdown part immediately
-  dropdown.css('display', 'block');
-
-  // expand chevron-click style
-  if (name)
-    $(`li.vert-label[name="${name}"]`).find('.label-hidden')
-      .css('display', 'block')
-      .find('.chevron')
-        .addClass('fa-chevron-up')
-        .removeClass('fa-chevron-down');
+  dropdown.css('display', 'flex');
 
   // wait 0.5 secs to return to standard dropdown behavior
   setTimeout(() => dropdown.css('display', ''), 500);
