@@ -176,9 +176,9 @@ class GUI {
     manager.updateFilter();
     $('#total-sentences').text(manager.totalSentences);
     $('#current-sentence').val(manager.currentSentence);
-    if (!manager.index)
+    if (!manager.index && (manager._filtered.length || manager.length))
       $('#btnPrevSentence').addClass('disabled');
-    if (manager.index === manager.length - 1)
+    if (manager.index === (manager._filtered.length || manager.length) - 1)
       $('#btnNextSentence').addClass('disabled');
     if (!server.is_running)
       $('#btnUploadCorpus').addClass('disabled');
@@ -315,6 +315,12 @@ class GUI {
     $('#btnToggleTable').click(e => this.toggle.table(e));
     $('#btnToggleTextarea').click(e => this.toggle.textarea(e));
     $('.thead-default th').click(e => this.toggle.tableColumn(e));
+
+    $('#label-clear-filter').click(e => {
+      labeler.clearFilter();
+      gui.update();
+    });
+
     $('#RTL').click(e => this.toggle.rtl(e));
     $('#vertical').click(e => this.toggle.vertical(e));
     $('#enhanced').click(e => this.toggle.enhanced(e));
