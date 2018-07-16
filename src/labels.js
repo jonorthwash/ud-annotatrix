@@ -354,11 +354,7 @@ class Labeler {
       if (this._filter.has(label.name))
         horiz.addClass('filter-active');
 
-      if (this.has(label.name)) {
-        $('#labels-horiz-current').append(horiz);
-      } else {
-        $('#labels-horiz-all').append(horiz);
-      }
+      $(`#labels-horiz-${this.has(label.name) ? 'current' : 'all'}`).append(horiz);
 
     });
   }
@@ -414,7 +410,7 @@ class Labeler {
   get state() {
     return {
       labels: this._labels.map(label => label.state),
-      filter: _.map(Array.from(this._filter), label => label.name)
+      filter: Array.from(this._filter)
     };
   }
 
