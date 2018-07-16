@@ -19185,6 +19185,7 @@ const regex = {
   cg3TokenContent: /^;?\s+"(.|\\")*"/
 }
 
+const fallback = '_';
 
 /**
  * this class contains all the information associated with a sentence, including
@@ -19653,15 +19654,15 @@ class Sentence {
       if (!token.analysis)
         return;
 
-      if (token.analysis.head)
+      if (token.analysis.head && token.analysis.head !== fallback)
         done++;
-      if (token.analysis.pos)
+      if (token.analysis.pos && token.analysis.head !== fallback)
         done++;
 
       token.analysis.eachHead(head => {
 
         total++;
-        if (!!head.deprel)
+        if (head.deprel && head.deprel !== fallback)
           done++;
 
       });
@@ -23137,7 +23138,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             limit = 0,
             isExecuting = false,
             callback,
-
+            
             // functions
             execute;
 
@@ -23167,12 +23168,12 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
                 commands.splice(index + 1, commands.length - index);
 
                 commands.push(command);
-
+                
                 // if limit is set, remove items from the start
                 if (limit && commands.length > limit) {
                     removeFromTo(commands, 0, -(limit+1));
                 }
-
+                
                 // set the current index to the end
                 index = commands.length - 1;
                 if (callback) {
@@ -23249,7 +23250,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             getIndex: function() {
                 return index;
             },
-
+            
             setLimit: function (l) {
                 limit = l;
             }
@@ -54728,12 +54729,41 @@ var ParseError = function (_AnnotatrixError4) {
   return ParseError;
 }(AnnotatrixError);
 
+/**
+ *
+ */
+
+
+var DeserializationError = function (_AnnotatrixError5) {
+  _inherits(DeserializationError, _AnnotatrixError5);
+
+  function DeserializationError() {
+    var _ref6;
+
+    _classCallCheck(this, DeserializationError);
+
+    for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+      args[_key6] = arguments[_key6];
+    }
+
+    var _this6 = _possibleConstructorReturn(this, (_ref6 = DeserializationError.__proto__ || Object.getPrototypeOf(DeserializationError)).call.apply(_ref6, [this].concat(args)));
+
+    if (Error.captureStackTrace) Error.captureStackTrace(_this6, DeserializationError);
+
+    _this6.name = 'DeserializationError';
+    return _this6;
+  }
+
+  return DeserializationError;
+}(AnnotatrixError);
+
 module.exports = {
   AnnotatrixError: AnnotatrixError,
   NotImplementedError: NotImplementedError,
   // AssertionError,
   GUIError: GUIError,
-  ParseError: ParseError
+  ParseError: ParseError,
+  DeserializationError: DeserializationError
 };
 
 },{}],345:[function(require,module,exports){
@@ -55180,14 +55210,16 @@ var Graph = function () {
         });
       });
 
+      // set new root
+      var newRoot = ele.data('analysis');
+      if (!newRoot) return;
+
       if (oldRoot) {
         modify(oldRoot.id, 'head', []);
         modify(oldRoot.id, 'deprel', undefined);
       }
 
-      // set new root
-      var newRoot = ele.data('analysis'),
-          oldHead = newRoot.head,
+      var oldHead = newRoot.head,
           oldDeprel = newRoot.deprel;
 
       modify(newRoot.id, 'head', '0');
@@ -55348,7 +55380,7 @@ function removeHead(srcId, tarId) {
 
 module.exports = Graph;
 
-},{"./config":339,"./cy-style":341,"./cytoscape/cytoscape":342,"./errors":344,"./funcs":345,"./progress-bar":351,"./selfcomplete":352,"./sort":354,"./validate":357,"jquery":327,"underscore":335}],347:[function(require,module,exports){
+},{"./config":339,"./cy-style":341,"./cytoscape/cytoscape":342,"./errors":344,"./funcs":345,"./progress-bar":352,"./selfcomplete":353,"./sort":355,"./validate":358,"jquery":327,"underscore":335}],347:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -55399,57 +55431,6 @@ var KEYS = {
   Z: 90,
   0: 48
 };
-var toggle = {
-  table: function table(event) {
-    gui.is_table_view = !gui.is_table_view;
-    gui.update();
-  },
-
-  tableColumn: function tableColumn(event) {
-
-    var target = $(event.target),
-        col = target.attr('col-id');
-
-    gui.column_visible(col, !gui.column_visible(col));
-    target.toggleClass('column-hidden').find('i').toggleClass('fa-angle-double-right').toggleClass('fa-angle-double-left');
-
-    $('td[col-id=' + col + ']').css('visibility', gui.column_visible(col) ? 'visible' : 'hidden');
-
-    gui.update();
-  },
-
-  textarea: function textarea(event) {
-
-    $('#btnToggleTextarea i').toggleClass('fa-chevron-up').toggleClass('fa-chevron-down');
-    gui.is_textarea_visible = !gui.is_textarea_visible;
-
-    gui.update();
-  },
-
-  rtl: function rtl(event) {
-
-    $('#RTL .fa').toggleClass('fa-align-right').toggleClass('fa-align-left');
-    gui.is_ltr = !gui.is_ltr;
-
-    gui.update();
-  },
-
-  vertical: function vertical(event) {
-
-    $('#vertical .fa').toggleClass('fa-rotate-90');
-    gui.is_vertical = !gui.is_vertical;
-
-    gui.update();
-  },
-
-  enhanced: function enhanced(event) {
-
-    $('#enhanced .fa').toggleClass('fa-tree').toggleClass('fa-magic');
-    gui.is_enhanced = !gui.is_enhanced;
-
-    gui.update();
-  }
-};
 
 var pressed = {}; // used for onCtrlKeyup
 
@@ -55460,9 +55441,9 @@ var GUI = function () {
     _classCallCheck(this, GUI);
 
     this.keys = KEYS;
-    this.toggle = toggle;
 
     this.is_textarea_visible = true;
+    this.are_labels_visible = true;
     this.is_vertical = false;
     this.is_ltr = true;
     this.is_enhanced = false;
@@ -55482,6 +55463,59 @@ var GUI = function () {
         return _this.update();
       });
     }
+
+    this.toggle = {
+      table: function table(event) {
+        _this.is_table_view = !_this.is_table_view;
+        _this.update();
+      },
+
+      tableColumn: function tableColumn(event) {
+
+        var target = $(event.target),
+            col = target.attr('col-id');
+
+        _this.column_visible(col, !_this.column_visible(col));
+        target.toggleClass('column-hidden').find('i').toggleClass('fa-angle-double-right').toggleClass('fa-angle-double-left');
+
+        $('td[col-id=' + col + ']').css('visibility', _this.column_visible(col) ? 'visible' : 'hidden');
+
+        _this.update();
+      },
+
+      textarea: function textarea(event) {
+
+        $('#btnToggleTextarea i').toggleClass('fa-chevron-up').toggleClass('fa-chevron-down');
+        _this.is_textarea_visible = !_this.is_textarea_visible;
+        _this.are_labels_visible = !_this.are_labels_visible;
+
+        _this.update();
+      },
+
+      rtl: function rtl(event) {
+
+        $('#RTL .fa').toggleClass('fa-align-right').toggleClass('fa-align-left');
+        _this.is_ltr = !_this.is_ltr;
+
+        _this.update();
+      },
+
+      vertical: function vertical(event) {
+
+        $('#vertical .fa').toggleClass('fa-rotate-90');
+        _this.is_vertical = !_this.is_vertical;
+
+        _this.update();
+      },
+
+      enhanced: function enhanced(event) {
+
+        $('#enhanced .fa').toggleClass('fa-tree').toggleClass('fa-magic');
+        _this.is_enhanced = !_this.is_enhanced;
+
+        _this.update();
+      }
+    };
   }
 
   _createClass(GUI, [{
@@ -55494,10 +55528,12 @@ var GUI = function () {
 
       // navigation buttons
       $('.btn').removeClass('disabled');
-      $('#total-sentences').text(manager.length);
-      $('#current-sentence').val(manager.index + 1);
-      if (!manager.index) $('#btnPrevSentence').addClass('disabled');
-      if (manager.index === manager.length - 1) $('#btnNextSentence').addClass('disabled');
+
+      manager.updateFilter();
+      $('#total-sentences').text(manager.totalSentences);
+      $('#current-sentence').val(manager.currentSentence);
+      if (!manager.index && (manager._filtered.length || manager.length)) $('#btnPrevSentence').addClass('disabled');
+      if (manager.index === (manager._filtered.length || manager.length) - 1) $('#btnNextSentence').addClass('disabled');
       if (!server.is_running) $('#btnUploadCorpus').addClass('disabled');
       if (manager.format !== 'CoNLL-U') $('#btnToggleTable').addClass('disabled');
 
@@ -55556,6 +55592,8 @@ var GUI = function () {
         $('#btnToggleTable').hide();
       }
 
+      $('#label-container').css('display', this.are_labels_visible ? 'flex' : 'none');
+
       try {
         // need this in case `cy` DNE
         this.zoom = cy.zoom();
@@ -55564,6 +55602,7 @@ var GUI = function () {
         this.zoom = null;
         this.pan = null;
       }
+      labeler.update();
       graph.update();
     }
   }, {
@@ -55643,12 +55682,30 @@ var GUI = function () {
         manager.parse(convert.to.cg3(_this2.read('text-data')));
       });
 
-      $('#btnToggleTable').click(this.toggle.table);
-      $('#btnToggleTextarea').click(this.toggle.textarea);
-      $('.thead-default th').click(this.toggle.tableColumn);
-      $('#RTL').click(this.toggle.rtl);
-      $('#vertical').click(this.toggle.vertical);
-      $('#enhanced').click(this.toggle.enhanced);
+      $('#btnToggleTable').click(function (e) {
+        return _this2.toggle.table(e);
+      });
+      $('#btnToggleTextarea').click(function (e) {
+        return _this2.toggle.textarea(e);
+      });
+      $('.thead-default th').click(function (e) {
+        return _this2.toggle.tableColumn(e);
+      });
+
+      $('#label-clear-filter').click(function (e) {
+        labeler.clearFilter();
+        gui.update();
+      });
+
+      $('#RTL').click(function (e) {
+        return _this2.toggle.rtl(e);
+      });
+      $('#vertical').click(function (e) {
+        return _this2.toggle.vertical(e);
+      });
+      $('#enhanced').click(function (e) {
+        return _this2.toggle.enhanced(e);
+      });
 
       $('#current-sentence').keyup(function (e) {
         return onKeyupInCurrentSentence(e);
@@ -55697,6 +55754,7 @@ var GUI = function () {
       return {
 
         is_textarea_visible: this.is_textarea_visible,
+        are_labels_visible: this.are_labels_visible,
         is_vertical: this.is_vertical,
         is_ltr: this.is_ltr,
         is_enhanced: this.is_enhanced,
@@ -55707,7 +55765,7 @@ var GUI = function () {
       };
     },
     set: function set(state) {
-      this.is_textarea_visible = state.is_textarea_visible, this.is_vertical = state.is_vertical;
+      this.is_textarea_visible = state.is_textarea_visible, this.are_labels_visible = state.are_labels_visible, this.is_vertical = state.is_vertical;
       this.is_ltr = state.is_ltr;
       this.is_enhanced = state.is_enhanced;
 
@@ -55835,14 +55893,6 @@ function onKeyupInDocument(event) {
       graph.clear();
       break;
 
-    default:
-      if (47 < event.which && event.which < 58) {
-        // key in 0-9
-        var num = event.which - 48;
-        cy.zoom(Math.pow(1.5, num - 5));
-        gui.update();
-      }
-
   }
 }
 function onCtrlKeyup(event) {
@@ -55888,6 +55938,13 @@ function onCtrlKeyup(event) {
       // catch only events w/in next 500 msecs
       pressed[KEYS.SHIFT] = false;
     }, 500);
+    return true;
+  } else if (47 < event.which && event.which < 58) {
+    // key in 0-9
+
+    var num = event.which - 48;
+    cy.zoom(Math.pow(1.5, num - 5));
+    gui.update();
     return true;
   } else {
     log.error('onCtrlKeyup(): uncaught key combination');
@@ -56100,7 +56157,7 @@ function mergeNodes(direction) {
 
 module.exports = GUI;
 
-},{"./convert":340,"./errors":344,"./funcs":345,"./local-storage":349,"./table":355,"./undo-manager":356,"jquery":327}],348:[function(require,module,exports){
+},{"./convert":340,"./errors":344,"./funcs":345,"./local-storage":350,"./table":356,"./undo-manager":357,"jquery":327}],348:[function(require,module,exports){
 'use strict';
 
 require('babel-polyfill');
@@ -56119,7 +56176,541 @@ $(function () {
 	funcs.global().manager = new Manager();
 });
 
-},{"./browser-logger":338,"./funcs":345,"./manager":350,"./server":353,"babel-polyfill":1}],349:[function(require,module,exports){
+},{"./browser-logger":338,"./funcs":345,"./manager":351,"./server":354,"babel-polyfill":1}],349:[function(require,module,exports){
+'use strict';
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var _ = require('underscore');
+var $ = require('jquery');
+var DeserializationError = require('./errors').DeserializationError;
+
+var regex = {
+  comment: /(labels|tags)\s*=\s*(.*)$/,
+  content: /([\w-:]*)/
+};
+
+// NOTE: 16777215 (base 10) = ffffff (base 16)
+var magic = 16777215;
+var ENTER = 13;
+
+var Label = function () {
+  function Label(name) {
+    _classCallCheck(this, Label);
+
+    name = name || 'default';
+
+    this.name = name;
+    this.bColor = hashStringToHex(name);
+    this.tColor = getTextColor(this.bColor);
+    this.desc = '';
+  }
+
+  _createClass(Label, [{
+    key: 'changeColor',
+    value: function changeColor(color) {
+
+      if (color) {
+        color = (color.match(/^#?([a-f\d]{6})/i) || [])[1];
+        var int = parseInt(color, 16);
+        if (isNaN(int) || int < 0 || int > magic) return false; // out of bounds
+
+        color = '#' + color;
+      } else {
+        color = getRandomHexColor();
+      }
+
+      this.bColor = color;
+      this.tColor = getTextColor(color);
+
+      return true;
+    }
+  }, {
+    key: 'render',
+    value: function render(labeler) {
+
+      var inComments = labeler.has(this.name),
+          filtering = labeler._filter.has(this.name);
+
+      $('#labels-horiz').append($('<li>').attr('name', this.name).addClass('label horiz').addClass(inComments ? 'in-comments' : 'not-in-comments').addClass(filtering ? 'filtering' : 'not-filtering').append($('<div>').addClass('label-text').text(this.name).css('background-color', this.bColor).css('color', this.tColor).click(function (e) {
+        return labeler.handle.click.label(e);
+      })).append($('<div>').addClass('label-hidden').append($('<div>').addClass('label-hidden-group').append($('<div>').addClass('label-hidden-item').append($('<strong>').text('Name')).append($('<input>').attr('name', 'label-name').val(this.name).keyup(function (e) {
+        return labeler.handle.keyup.name(e);
+      }))).append($('<div>').addClass('label-hidden-item').append($('<strong>').text('Description')).append($('<input>').attr('name', 'label-desc').val(this.desc).keyup(function (e) {
+        return labeler.handle.keyup.desc(e);
+      }))).append($('<div>').addClass('label-hidden-item').append($('<strong>').text('Color')).append($('<div>').addClass('label-hidden-item-inner').append($('<span>').addClass('hex-color-group').text('#').append($('<input>').attr('name', 'label-color').attr('pattern', '[A-Fa-f\\d]{6}').val(this.bColor.substr(1)).keyup(function (e) {
+        return labeler.handle.keyup.color(e);
+      }))).append($('<button>').attr('type', 'button').addClass('btn btn-secondary refresh-color').css('background-color', this.bColor).click(function (e) {
+        return labeler.handle.click.refresh(e);
+      }).append($('<i>').addClass('fa fa-refresh')))))).append($('<hr>')).append($('<div>').addClass('label-hidden-group').append($('<div>').addClass('label-hidden-item').append($('<div>').addClass('label-hidden-item-inner').append($('<input>').attr('name', 'in-comments').attr('type', 'checkbox').prop('checked', inComments).click(function (e) {
+        return labeler.handle.click.checkbox.inComments(e);
+      })).append($('<span>').addClass('in-comments-label checkbox-label').text('has label')))).append($('<div>').addClass('label-hidden-item').append($('<div>').addClass('label-hidden-item-inner').append($('<input>').attr('name', 'filtering').attr('type', 'checkbox').prop('checked', filtering).click(function (e) {
+        return labeler.handle.click.checkbox.filtering(e);
+      })).append($('<span>').addClass('filtering-label checkbox-label').text('filtering'))))).append($('<hr>')).append($('<div>').addClass('label-hidden-group').append($('<div>').addClass('label-hidden-item delete-item').append($('<button>').attr('type', 'button').addClass('btn btn-secondary delete-button').text('delete').click(function (e) {
+        return labeler.handle.click.delete(e);
+      }))))));
+    }
+  }, {
+    key: 'state',
+    get: function get() {
+      return {
+        name: this.name,
+        desc: this.desc,
+        bColor: this.bColor,
+        tColor: this.tColor
+      };
+    },
+    set: function set(state) {
+      if (!state.name) throw new DeserializationError('cannot set name to "' + state.name + '"');
+
+      state.desc = state.desc || '';
+      if (typeof state.desc !== 'string') throw new DeserializationError('cannot set description to non-string value');
+
+      this.name = state.name;
+      this.desc = state.desc;
+
+      if (!this.changeColor(state.bColor)) throw new DeserializationError('cannot set background color to "' + state.bColor + '"');
+    }
+  }]);
+
+  return Label;
+}();
+
+var Labeler = function () {
+  function Labeler() {
+    var _this = this;
+
+    _classCallCheck(this, Labeler);
+
+    this._labels = [];
+    this._filter = new Set();
+
+    // don't want the "jQuery needs a window" errors during testing
+    if (!gui || !gui.inBrowser) return this;
+
+    $('#label-input').keyup(function (e) {
+      if (e.which === ENTER) _this.handle.enter(e);
+    });
+
+    this.handle = {
+      enter: function enter(event) {
+        var names = $('#label-input').val().trim();
+        _.each(names.split(/\s+/), function (name) {
+          if (name) _this.add(name);
+
+          _this.addLabel(name); // add to the comments
+        });
+
+        $('#label-input').val('');
+        gui.update();
+      },
+
+      click: {
+        label: function label(event) {
+          var target = $(event.target),
+              name = target.closest('li').attr('name');
+
+          _this.toggleFilter(name);
+          manager.updateFilter();
+          gui.update();
+          flashDropdown(name);
+        },
+
+        refresh: function refresh(event) {
+          var target = $(event.target),
+              name = target.closest('li').attr('name'),
+              label = _this.get(name);
+
+          label.changeColor();
+          gui.update();
+          flashDropdown(name);
+        },
+
+        checkbox: {
+          inComments: function inComments(event) {
+            var target = $(event.target),
+                checked = target.is(':checked'),
+                name = target.closest('li').attr('name');
+
+            if (checked) {
+              _this.addLabel(name);
+            } else {
+              _this.removeLabel(name);
+            }
+
+            manager.updateFilter();
+            gui.update();
+            flashDropdown(name);
+          },
+
+          filtering: function filtering(event) {
+            var target = $(event.target),
+                name = target.closest('li').attr('name');
+
+            _this.toggleFilter(name);
+            manager.updateFilter();
+            gui.update();
+            flashDropdown(name);
+          }
+        },
+
+        delete: function _delete(event) {
+          var target = $(event.target),
+              name = target.closest('li').attr('name');
+
+          var response = confirm('Are you sure you want to delete the label "' + name + '" from all sentences?');
+          if (!response) return;
+
+          _this.remove(name);
+          gui.update();
+        }
+      },
+
+      keyup: {
+        name: function name(event) {
+          var target = $(event.target),
+              name = target.closest('li').attr('name');
+
+          if (event.which === ENTER) {
+            _this.edit(name, { name: target.val() });
+            gui.update();
+          }
+        },
+
+        desc: function desc(event) {
+          var target = $(event.target),
+              name = target.closest('li').attr('name');
+
+          if (event.which === ENTER) {
+            _this.edit(name, { desc: target.val() });
+            gui.update();
+          }
+        },
+
+        color: function color(event) {
+          var target = $(event.target),
+              name = target.closest('li').attr('name');
+
+          if (event.which === ENTER) {
+            _this.edit(name, { color: target.val() });
+            gui.update();
+          }
+        }
+      }
+    };
+  }
+
+  _createClass(Labeler, [{
+    key: 'parse',
+    value: function parse(comments) {
+      var _this2 = this;
+
+      _.each(Labeler.parseComments(comments), function (label) {
+        if (label) _this2.add(label);
+      });
+
+      return this; // chaining
+    }
+  }, {
+    key: 'has',
+    value: function has(index, name) {
+
+      if (name === undefined) {
+        name = index;
+        index = manager.index;
+      }
+
+      var comments = manager.getSentence(index).comments;
+
+      var has = false;
+      _.each(comments, function (comment) {
+        _.each(Labeler.parseComment(comment), function (label) {
+          if (name === label) has = true;
+        });
+      });
+
+      return has;
+    }
+  }, {
+    key: 'get',
+    value: function get(name) {
+
+      var ret = null;
+      if (name && typeof name === 'string') _.each(this._labels, function (label) {
+        if (label.name === name) ret = label;
+      });
+
+      return ret;
+    }
+  }, {
+    key: 'add',
+    value: function add(name) {
+
+      var found = false;
+      _.each(this._labels, function (label) {
+        if (label.name === name) found = true;
+      });
+
+      if (!found) this._labels.push(new Label(name));
+
+      return !found; // so we know if success or not
+    }
+  }, {
+    key: 'remove',
+    value: function remove(name) {
+      this._labels = this._labels.filter(function (label) {
+        if (label.name !== name) return label;
+      });
+      for (var i = 0; i < manager.length; i++) {
+        this.removeLabel(i, name);
+      }
+    }
+  }, {
+    key: 'edit',
+    value: function edit(name, values) {
+      var label = this.get(name);
+      if (!label) return null;
+
+      if (values.name) {
+        for (var i = 0; i < manager.length; i++) {
+          this.changeLabel(i, label.name, values.name);
+        }
+        label.name = values.name;
+      }
+
+      if (values.desc || values.desc === '') label.desc = values.desc;
+
+      if (values.color) label.changeColor(values.color.startsWith('#') ? values.color : '#' + values.color);
+    }
+  }, {
+    key: 'update',
+    value: function update() {
+      var _this3 = this;
+
+      if (!gui || !gui.inBrowser) return;
+
+      $('.label.horiz').detach();
+
+      _.each(this._labels, function (label) {
+        return label.render(_this3);
+      });
+    }
+  }, {
+    key: 'addLabel',
+    value: function addLabel(index, name) {
+
+      if (name === undefined) {
+        name = index;
+        index = manager.index;
+      }
+
+      var done = false;
+      manager.getSentence(index).comments = manager.getSentence(index).comments.map(function (comment) {
+
+        if (comment.match(regex.comment) && !done) {
+          comment = comment + ' ' + name;
+          done = true;
+        }
+
+        return comment;
+      });
+
+      if (!done) manager.getSentence(index).comments = manager.getSentence(index).comments.concat(['labels = ' + name]);
+    }
+  }, {
+    key: 'removeLabel',
+    value: function removeLabel(index, name) {
+
+      if (name === undefined) {
+        name = index;
+        index = manager.index;
+      }
+
+      var reg = new RegExp(' ' + name + '( ?)');
+      manager.getSentence(index).comments = manager.getSentence(index).comments.map(function (comment) {
+        return comment.replace(reg, '$1');
+      });
+    }
+  }, {
+    key: 'changeLabel',
+    value: function changeLabel(index, oldName, newName) {
+      if (newName === undefined) {
+        newName = oldName;
+        oldName = index;
+        index = manager.index;
+      }
+
+      var reg = new RegExp(' ' + oldName + '( ?)');
+      manager.getSentence(index).comments = manager.getSentence(index).comments.map(function (comment) {
+        return comment.replace(reg, ' ' + newName + '$1');
+      });
+    }
+  }, {
+    key: 'addFilter',
+    value: function addFilter(name) {
+      var _this4 = this;
+
+      // make sure it's a valid name
+      manager.map(function (i) {
+        if (_this4.has(i, name)) _this4._filter.add(name);
+      });
+
+      return this; // chaining
+    }
+  }, {
+    key: 'filter',
+    value: function filter(name) {
+      return this.addFilter(name); // alias
+    }
+  }, {
+    key: 'removeFilter',
+    value: function removeFilter(name) {
+      this._filter.delete(name);
+      return this;
+    }
+  }, {
+    key: 'unfilter',
+    value: function unfilter(name) {
+      return this.removeFilter(name); // alias
+    }
+  }, {
+    key: 'clearFilter',
+    value: function clearFilter() {
+      var _this5 = this;
+
+      this._filter.forEach(function (name) {
+        return _this5.removeFilter(name);
+      });
+      return this;
+    }
+  }, {
+    key: 'toggleFilter',
+    value: function toggleFilter(name) {
+
+      if (this._filter.has(name)) {
+        this.removeFilter(name);
+      } else {
+        this.addFilter(name);
+      }
+
+      return this;
+    }
+  }, {
+    key: 'state',
+    get: function get() {
+      return {
+        labels: this._labels.map(function (label) {
+          return label.state;
+        }),
+        filter: Array.from(this._filter)
+      };
+    },
+    set: function set(state) {
+      var _this6 = this;
+
+      this._labels = state.labels.map(function (labelState) {
+        var label = new Label();
+        label.state = labelState;
+        return label;
+      });
+
+      this._filter = new Set();
+      _.each(state.filter, function (name) {
+        _this6.addFilter(name);
+      });
+    }
+  }], [{
+    key: 'parseComment',
+    value: function parseComment(comment) {
+      var labels = [];
+      var labelString = comment.match(regex.comment);
+
+      if (labelString) labelString[2].split(/\s/).forEach(function (label) {
+
+        var content = label.match(regex.content);
+        if (content) labels.push(content[1]);
+      });
+
+      return labels;
+    }
+  }, {
+    key: 'parseComments',
+    value: function parseComments(comments) {
+      return _.reduce(comments, function (l, comment) {
+        return l.concat(Labeler.parseComment(comment));
+      }, []);
+    }
+  }]);
+
+  return Labeler;
+}();
+
+function flashDropdown(name) {
+  var dropdown = $('li[name="' + name + '"] .label-hidden');
+
+  // show dropdown part immediately
+  dropdown.css('display', 'flex');
+
+  // wait 0.5 secs to return to standard dropdown behavior
+  setTimeout(function () {
+    return dropdown.css('display', '');
+  }, 500);
+}
+
+function hashStringToHex(string) {
+  var hash = 0;
+  for (var i = 0; i < string.length; i++) {
+    hash = string.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  var hex = '#';
+  for (var _i = 0; _i < 3; _i++) {
+    var value = hash >> _i * 8 & 0xFF;
+    hex += ('00' + value.toString(16)).substr(-2);
+  }
+  return hex;
+}
+
+function getRandomHexColor() {
+
+  var color = '';
+  do {
+    color = '#' + Math.floor(Math.random() * magic).toString(16);
+  } while (color.length !== 7);
+
+  return color;
+}
+
+function hexToRGB(hex) {
+  var match = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+
+  if (match) return [parseInt(match[1], 16), parseInt(match[2], 16), parseInt(match[3], 16)];
+}
+
+function getTextColor(background) {
+
+  var color = '#ffffff';
+
+  var rgb = hexToRGB(background);
+  if (!rgb) return color;
+
+  var _rgb = _slicedToArray(rgb, 3),
+      r = _rgb[0],
+      g = _rgb[1],
+      b = _rgb[2];
+
+  if (Math.pow(r, 2) + Math.pow(g, 2) + Math.pow(b, 2) > Math.pow(255 - r, 2) + Math.pow(255 - g, 2) + Math.pow(255 - b, 2)) color = '#000000';
+
+  return color;
+}
+
+module.exports = Labeler;
+
+},{"./errors":344,"jquery":327,"underscore":335}],350:[function(require,module,exports){
 'use strict';
 
 var KEY = require('./config').localStorageKey;
@@ -56254,7 +56845,7 @@ module.exports = {
   clear: clear
 };
 
-},{"./config":339}],350:[function(require,module,exports){
+},{"./config":339}],351:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -56270,6 +56861,7 @@ var cfg = require('./config');
 var funcs = require('./funcs');
 var GUI = require('./gui');
 var Graph = require('./graph');
+var Labeler = require('./labels');
 var errors = require('./errors');
 var detectFormat = require('./detect');
 var storage = require('./local-storage');
@@ -56283,6 +56875,7 @@ var Manager = function () {
     funcs.global().manager = this;
     funcs.global().gui = new GUI();
     funcs.global().graph = new Graph();
+    funcs.global().labeler = new Labeler();
     gui.bind();
 
     this.reset();
@@ -56302,6 +56895,9 @@ var Manager = function () {
       this._sentences = [];
       this._index = -1;
 
+      this._filtered = [];
+      this._filterIndex = null;
+
       this.insertSentence(cfg.defaultSentence);
     }
   }, {
@@ -56312,38 +56908,88 @@ var Manager = function () {
       });
     }
   }, {
+    key: 'updateFilter',
+    value: function updateFilter() {
+      var _this2 = this;
+
+      this._filtered = [];
+      this._filterIndex = -1;
+      this.map(function (i) {
+        labeler._filter.forEach(function (name) {
+
+          // ones that have this label
+          if (labeler.has(i, name) && _this2._filtered.indexOf(i) === -1) {
+
+            // save to array
+            _this2._filtered.push(i);
+
+            // keep counting up for the _filterIndex
+            if (i <= _this2.index) _this2._filterIndex++;
+          }
+        });
+      });
+
+      if (this._filterIndex < 0) this._filterIndex = null;
+
+      // if we filter out our current sentence
+      if (this._filtered.length && this._filtered.indexOf(this._index) === -1) this.index = 0;
+
+      return this;
+    }
+  }, {
     key: 'first',
     value: function first() {
+
+      this.updateFilter();
+
       this.index = this.length ? 0 : -1;
+      return this;
     }
   }, {
     key: 'prev',
     value: function prev() {
+
       if (!this.length) return null;
 
-      if (this.index === 0) {
+      this.updateFilter();
+
+      var index = this._filtered.length ? this._filterIndex : this._index;
+
+      if (index === 0) {
         log.warn('Annotatrix: already at the first sentence!');
         return null;
       }
 
-      this.index--;
-      return this.sentence;
+      this.index = --index;
+      return this;
     }
   }, {
     key: 'next',
     value: function next() {
-      if (this.index === this._sentences.length - 1) {
+
+      if (!this.length) return null;
+
+      this.updateFilter();
+
+      var index = this._filtered.length ? this._filterIndex : this._index;
+      var total = this._filtered.length ? this._filtered.length - 1 : this._length - 1;
+
+      if (index === total) {
         log.warn('Annotatrix: already at the last sentence!');
         return null;
       }
 
-      this.index++;
-      return this.sentence;
+      this.index = ++index;
+      return this;
     }
   }, {
     key: 'last',
     value: function last() {
-      this.index = this.length - 1;
+
+      this.updateFilter();
+
+      this.index = this._filtered.length ? this._filtered.length - 1 : this.length - 1;
+      return this;
     }
   }, {
     key: 'setSentence',
@@ -56456,22 +57102,23 @@ var Manager = function () {
   }, {
     key: 'parse',
     value: function parse(text) {
-      var _this2 = this;
+      var _this3 = this;
 
       // if not passed explicitly, read from the textarea
       text = text || gui.read('text-data');
       var splitted = this.split(text);
 
-      // overwrite contents of #text-data
-      this.sentence = splitted[0];
+      // set the first one at the current index
+      this._sentences[this.index] = new nx.Sentence(); // hack to get around updateSentence() behavior
+      this.setSentence(this.index, splitted[0]);
 
       // iterate over all elements except the first
       _.each(splitted, function (split, i) {
-        if (!i) return; // skip first
-        _this2.insertSentence(split);
+        if (i) _this3.insertSentence(split);
       });
 
       gui.update();
+      return this; // chaining
     }
   }, {
     key: 'save',
@@ -56489,7 +57136,8 @@ var Manager = function () {
             nx_initialized: sent.nx_initialized
           };
         }),
-        gui: gui.state
+        gui: gui.state,
+        labeler: labeler.state
       });
 
       storage.save(state);
@@ -56519,8 +57167,14 @@ var Manager = function () {
         sentence.currentFormat = sent.currentFormat;
         sentence.is_table_view = sent.is_table_view;
         sentence.nx_initialized = sent.nx_initialized;
+
+        labeler.parse(sentence.comments);
+
         return sentence;
       });
+
+      labeler.state = state.labeler;
+      this.updateFilter(); // use the filters set in labeler
 
       // this triggers a gui refresh
       gui.state = state.gui;
@@ -56551,10 +57205,10 @@ var Manager = function () {
   }, {
     key: 'encode',
     value: function encode() {
-      var _this3 = this;
+      var _this4 = this;
 
       return encodeURIComponent(this.map(function (i, sent) {
-        return '[UD-Annotatrix: id="' + (i + 1) + '" format="' + _this3.format + '"]\n      ' + (_this3.format === 'Unknown' ? '' : _this3.sentence);
+        return '[UD-Annotatrix: id="' + (i + 1) + '" format="' + _this4.format + '"]\n      ' + (_this4.format === 'Unknown' ? '' : _this4.sentence);
       }).join('\n\n'));
     }
   }, {
@@ -56568,25 +57222,44 @@ var Manager = function () {
       return this._sentences.length;
     }
   }, {
+    key: 'totalSentences',
+    get: function get() {
+      return this._filtered.length ? this._filtered.length + ' (total: ' + this.length + ')' : '' + this.length;
+    }
+  }, {
+    key: 'currentSentence',
+    get: function get() {
+      return this.index + 1;
+    }
+  }, {
     key: 'index',
     get: function get() {
       return this._index;
     },
     set: function set(index) {
 
+      var total = this._filtered.length || this.length;
+
       index = parseInt(index);
       if (isNaN(index)) {
         log.warn('Annotatrix: index out of range: ' + index);
-        index = this.index;
-      } else if (index < 0 && this.length) {
+        index = this._filterIndex || this.index;
+      } else if (index < 0 && total) {
         log.warn('Annotatrix: index out of range: ' + (index + 1));
         index = 0;
-      } else if (index > this.length - 1) {
+      } else if (index > total - 1) {
         log.warn('Annotatrix: index out of range: ' + (index + 1));
-        index = this.length - 1;
+        index = total - 1;
       }
 
-      this._index = Math.floor(index); // enforce integer
+      if (this._filtered.length) {
+        this._filterIndex = index;
+        this._index = this._filtered[index];
+      } else {
+        this._filterIndex = null;
+        this._index = index;
+      }
+
       gui.update();
       return this.index;
     }
@@ -56630,6 +57303,12 @@ var Manager = function () {
     key: 'comments',
     get: function get() {
       if (this.current) return this.current.comments;
+    },
+    set: function set(comments) {
+      if (!this.current) return;
+
+      this.current.comments = comments;
+      gui.update();
     }
   }, {
     key: 'tokens',
@@ -56700,12 +57379,14 @@ function updateSentence(oldSent, text) {
   sent.is_table_view = oldSent.is_table_view || false;
   sent.column_visibilities = oldSent.column_visibilities || new Array(10).fill(true);
 
+  labeler.parse(sent.comments);
+
   return sent;
 }
 
 module.exports = Manager;
 
-},{"./config":339,"./detect":343,"./errors":344,"./funcs":345,"./graph":346,"./gui":347,"./local-storage":349,"jquery":327,"notatrix":330,"underscore":335}],351:[function(require,module,exports){
+},{"./config":339,"./detect":343,"./errors":344,"./funcs":345,"./graph":346,"./gui":347,"./labels":349,"./local-storage":350,"jquery":327,"notatrix":330,"underscore":335}],352:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -56716,13 +57397,13 @@ var ProgressBar = function () {
   function ProgressBar() {
     _classCallCheck(this, ProgressBar);
 
-    this.element = $('#progressBar');
+    this.element = gui.inBrowser ? $('#progressBar') : null;
   }
 
   _createClass(ProgressBar, [{
     key: 'update',
     value: function update() {
-      if (!manager.current) return;
+      if (!manager.current || !this.element) return;
 
       var percentage = manager.current.progress * 100;
       this.element.css('width', percentage + '%');
@@ -56734,7 +57415,7 @@ var ProgressBar = function () {
 
 module.exports = ProgressBar;
 
-},{}],352:[function(require,module,exports){
+},{}],353:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -57742,7 +58423,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     }
 });
 
-},{"jquery":327}],353:[function(require,module,exports){
+},{"jquery":327}],354:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -57871,7 +58552,7 @@ function getTreebankId() {
 
 module.exports = Server;
 
-},{"./local-storage":349,"jquery":327}],354:[function(require,module,exports){
+},{"./local-storage":350,"jquery":327}],355:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -57929,7 +58610,7 @@ module.exports = {
   rtl: rtl
 };
 
-},{"underscore":335}],355:[function(require,module,exports){
+},{"underscore":335}],356:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -57998,7 +58679,7 @@ module.exports = {
   edit: edit
 };
 
-},{"./validate":357,"jquery":327}],356:[function(require,module,exports){
+},{"./validate":358,"jquery":327}],357:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -58015,7 +58696,7 @@ module.exports = function () {
 	});
 };
 
-},{"jquery":327,"undo-manager":336}],357:[function(require,module,exports){
+},{"jquery":327,"undo-manager":336}],358:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');

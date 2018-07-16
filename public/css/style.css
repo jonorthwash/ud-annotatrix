@@ -780,6 +780,7 @@ td .parse-error {
 #label-container {
   background-color: #fff;
   display: flex;
+  padding: 0;
 }
 
 #labels-horiz {
