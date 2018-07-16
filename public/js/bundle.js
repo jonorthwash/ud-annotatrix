@@ -55531,9 +55531,9 @@ var GUI = function () {
 
       manager.updateFilter();
       $('#total-sentences').text(manager.totalSentences);
-      $('#current-sentence').text(manager.currentSentence);
-      if (!manager.index) $('#btnPrevSentence').addClass('disabled');
-      if (manager.index === manager.length - 1) $('#btnNextSentence').addClass('disabled');
+      $('#current-sentence').val(manager.currentSentence);
+      if (!manager.index && (manager._filtered.length || manager.length)) $('#btnPrevSentence').addClass('disabled');
+      if (manager.index === (manager._filtered.length || manager.length) - 1) $('#btnNextSentence').addClass('disabled');
       if (!server.is_running) $('#btnUploadCorpus').addClass('disabled');
       if (manager.format !== 'CoNLL-U') $('#btnToggleTable').addClass('disabled');
 
@@ -55691,6 +55691,12 @@ var GUI = function () {
       $('.thead-default th').click(function (e) {
         return _this2.toggle.tableColumn(e);
       });
+
+      $('#label-clear-filter').click(function (e) {
+        labeler.clearFilter();
+        gui.update();
+      });
+
       $('#RTL').click(function (e) {
         return _this2.toggle.rtl(e);
       });
@@ -56190,6 +56196,7 @@ var regex = {
 
 // NOTE: 16777215 (base 10) = ffffff (base 16)
 var magic = 16777215;
+var ENTER = 13;
 
 var Label = function () {
   function Label(name) {
@@ -56221,6 +56228,31 @@ var Label = function () {
       this.tColor = getTextColor(color);
 
       return true;
+    }
+  }, {
+    key: 'render',
+    value: function render(labeler) {
+
+      var inComments = labeler.has(this.name),
+          filtering = labeler._filter.has(this.name);
+
+      $('#labels-horiz').append($('<li>').attr('name', this.name).addClass('label horiz').addClass(inComments ? 'in-comments' : 'not-in-comments').addClass(filtering ? 'filtering' : 'not-filtering').append($('<div>').addClass('label-text').text(this.name).css('background-color', this.bColor).css('color', this.tColor).click(function (e) {
+        return labeler.handle.click.label(e);
+      })).append($('<div>').addClass('label-hidden').append($('<div>').addClass('label-hidden-group').append($('<div>').addClass('label-hidden-item').append($('<strong>').text('Name')).append($('<input>').attr('name', 'label-name').val(this.name).keyup(function (e) {
+        return labeler.handle.keyup.name(e);
+      }))).append($('<div>').addClass('label-hidden-item').append($('<strong>').text('Description')).append($('<input>').attr('name', 'label-desc').val(this.desc).keyup(function (e) {
+        return labeler.handle.keyup.desc(e);
+      }))).append($('<div>').addClass('label-hidden-item').append($('<strong>').text('Color')).append($('<div>').addClass('label-hidden-item-inner').append($('<span>').addClass('hex-color-group').text('#').append($('<input>').attr('name', 'label-color').attr('pattern', '[A-Fa-f\\d]{6}').val(this.bColor.substr(1)).keyup(function (e) {
+        return labeler.handle.keyup.color(e);
+      }))).append($('<button>').attr('type', 'button').addClass('btn btn-secondary refresh-color').css('background-color', this.bColor).click(function (e) {
+        return labeler.handle.click.refresh(e);
+      }).append($('<i>').addClass('fa fa-refresh')))))).append($('<hr>')).append($('<div>').addClass('label-hidden-group').append($('<div>').addClass('label-hidden-item').append($('<div>').addClass('label-hidden-item-inner').append($('<input>').attr('name', 'in-comments').attr('type', 'checkbox').prop('checked', inComments).click(function (e) {
+        return labeler.handle.click.checkbox.inComments(e);
+      })).append($('<span>').addClass('in-comments-label checkbox-label').text('has label')))).append($('<div>').addClass('label-hidden-item').append($('<div>').addClass('label-hidden-item-inner').append($('<input>').attr('name', 'filtering').attr('type', 'checkbox').prop('checked', filtering).click(function (e) {
+        return labeler.handle.click.checkbox.filtering(e);
+      })).append($('<span>').addClass('filtering-label checkbox-label').text('filtering'))))).append($('<hr>')).append($('<div>').addClass('label-hidden-group').append($('<div>').addClass('label-hidden-item delete-item').append($('<button>').attr('type', 'button').addClass('btn btn-secondary delete-button').text('delete').click(function (e) {
+        return labeler.handle.click.delete(e);
+      }))))));
     }
   }, {
     key: 'state',
@@ -56261,8 +56293,7 @@ var Labeler = function () {
     if (!gui || !gui.inBrowser) return this;
 
     $('#label-input').keyup(function (e) {
-      if (e.which === 13) // enter
-        _this.handle.enter(e);
+      if (e.which === ENTER) _this.handle.enter(e);
     });
 
     this.handle = {
@@ -56279,45 +56310,14 @@ var Labeler = function () {
       },
 
       click: {
-        chevron: function chevron(event) {
-          var target = $(event.target),
-              hidden = $(target.closest('li').find('.label-hidden')),
-              display = hidden.css('display');
-
-          $('.label-hidden').css('display', 'none').closest('li').find('.chevron').removeClass('fa-chevron-up').addClass('fa-chevron-down');
-
-          if (display === 'none') hidden.css('display', 'block').closest('li').find('.chevron').addClass('fa-chevron-up').removeClass('fa-chevron-down');
-        },
-
-        checkbox: function checkbox(event) {
-          var target = $(event.target),
-              checked = target.attr('type') === 'checked',
-              name = target.closest('li').attr('name');
-
-          target.toggleClass('fa-check-square-o').toggleClass('fa-square-o').attr('type', checked ? 'unchecked' : 'checked');
-
-          if (checked) {
-            _this.removeLabel(name);
-          } else {
-            _this.addLabel(name);
-          }
-
-          gui.update();
-        },
-
         label: function label(event) {
-          console.log('click label');
-        },
-
-        times: function times(event) {
           var target = $(event.target),
               name = target.closest('li').attr('name');
 
-          var response = confirm('Are you sure you want to delete the label "' + name + '" from all sentences?');
-          if (!response) return;
-
-          _this.remove(name);
+          _this.toggleFilter(name);
+          manager.updateFilter();
           gui.update();
+          flashDropdown(name);
         },
 
         refresh: function refresh(event) {
@@ -56326,24 +56326,79 @@ var Labeler = function () {
               label = _this.get(name);
 
           label.changeColor();
-          _this.update();
+          gui.update();
           flashDropdown(name);
         },
 
-        save: function save(event) {
+        checkbox: {
+          inComments: function inComments(event) {
+            var target = $(event.target),
+                checked = target.is(':checked'),
+                name = target.closest('li').attr('name');
+
+            if (checked) {
+              _this.addLabel(name);
+            } else {
+              _this.removeLabel(name);
+            }
+
+            manager.updateFilter();
+            gui.update();
+            flashDropdown(name);
+          },
+
+          filtering: function filtering(event) {
+            var target = $(event.target),
+                name = target.closest('li').attr('name');
+
+            _this.toggleFilter(name);
+            manager.updateFilter();
+            gui.update();
+            flashDropdown(name);
+          }
+        },
+
+        delete: function _delete(event) {
           var target = $(event.target),
-              li = target.closest('li'),
-              name = li.attr('name'),
-              values = {
-            name: li.find('input[name="name"]').val(),
-            desc: li.find('input[name="desc"]').val(),
-            color: li.find('input[name="color"]').val()
-          };
+              name = target.closest('li').attr('name');
 
-          _this.edit(name, values);
+          var response = confirm('Are you sure you want to delete the label "' + name + '" from all sentences?');
+          if (!response) return;
 
+          _this.remove(name);
           gui.update();
-          flashDropdown(name);
+        }
+      },
+
+      keyup: {
+        name: function name(event) {
+          var target = $(event.target),
+              name = target.closest('li').attr('name');
+
+          if (event.which === ENTER) {
+            _this.edit(name, { name: target.val() });
+            gui.update();
+          }
+        },
+
+        desc: function desc(event) {
+          var target = $(event.target),
+              name = target.closest('li').attr('name');
+
+          if (event.which === ENTER) {
+            _this.edit(name, { desc: target.val() });
+            gui.update();
+          }
+        },
+
+        color: function color(event) {
+          var target = $(event.target),
+              name = target.closest('li').attr('name');
+
+          if (event.which === ENTER) {
+            _this.edit(name, { color: target.val() });
+            gui.update();
+          }
         }
       }
     };
@@ -56438,60 +56493,10 @@ var Labeler = function () {
 
       if (!gui || !gui.inBrowser) return;
 
-      $('#labels-vert').children().detach();
-      $('.labels-horiz').children().not(':first-child').detach();
+      $('.label.horiz').detach();
 
       _.each(this._labels, function (label) {
-
-        // first make the list items
-        var vert = $('<li name="' + label.name + '" class="label vert-label" />');
-
-        var header = $('<div class="label-header" />');
-        var hidden = $('<div class="label-hidden" />');
-        vert.append(header, hidden);
-
-        var name = $('<span class="label-name">' + label.name + '</span>').prepend('<span class="square" style="background-color:' + label.bColor + ';" />').click(function (e) {
-          return _this3.handle.click.label(e);
-        });
-        var chev = $('<i class="fa fa-chevron-down chevron" aria-hidden="true" />').click(function (e) {
-          return _this3.handle.click.chevron(e);
-        });
-        var check = $('<i class="fa" aria-hidden="true" type="checked" />').addClass(_this3.has(label.name) ? 'fa-check-square-o' : 'fa-square-o').attr('type', _this3.has(label.name) ? 'checked' : 'unchecked').click(function (e) {
-          return _this3.handle.click.checkbox(e);
-        });
-        var times = $('<i class="fa fa-times" aria-hidden="true" />').click(function (e) {
-          return _this3.handle.click.times(e);
-        });
-        header.append(name, chev, check, times);
-
-        var hNameContainer = $('<div />').text('Name:').append('<input name="name" value="' + label.name + '" />');
-        var hDescContainer = $('<div />').text('Description:').append('<input name="desc" value="' + label.desc + '" />');
-        var hColorName = $('<input name="color" value="' + label.bColor.substr(1) + '" />');
-        var hColorReset = $('<button type="button" class="btn btn-secondary refresh-color"><i class="fa fa-refresh" /></button>').click(function (e) {
-          return _this3.handle.click.refresh(e);
-        });
-        var hColorSquare = $('<span class="square" style="background-color:' + label.bColor + ';" />');
-        var hColorInputs = $('<div class="color-inputs" pattern="[A-Fa-f\d]{6}">').text('#').append(hColorName, hColorReset, hColorSquare);
-        var hColorContainer = $('<div />').text('Color:').append(hColorInputs);
-        var hSaveButton = $('<button type="button" class="btn btn-secondary">Save</button>').click(function (e) {
-          return _this3.handle.click.save(e);
-        });
-        hidden.append(hNameContainer, hDescContainer, hColorContainer, hSaveButton);
-
-        $('#labels-vert').append(vert);
-
-        // then add the actual labels
-        var horiz = $('<li name="' + label.name + '" class="label horiz-label" />').text(label.name).css('background-color', label.bColor).css('color', label.tColor).click(function (e) {
-          return _this3.handle.click.label(e);
-        });
-
-        if (_this3._filter.has(label.name)) horiz.addClass('filter-active');
-
-        if (_this3.has(label.name)) {
-          $('#labels-horiz-current').append(horiz);
-        } else {
-          $('#labels-horiz-all').append(horiz);
-        }
+        return label.render(_this3);
       });
     }
   }, {
@@ -56583,15 +56588,25 @@ var Labeler = function () {
       return this;
     }
   }, {
+    key: 'toggleFilter',
+    value: function toggleFilter(name) {
+
+      if (this._filter.has(name)) {
+        this.removeFilter(name);
+      } else {
+        this.addFilter(name);
+      }
+
+      return this;
+    }
+  }, {
     key: 'state',
     get: function get() {
       return {
         labels: this._labels.map(function (label) {
           return label.state;
         }),
-        filter: _.map(Array.from(this._filter), function (label) {
-          return label.name;
-        })
+        filter: Array.from(this._filter)
       };
     },
     set: function set(state) {
@@ -56635,13 +56650,10 @@ var Labeler = function () {
 }();
 
 function flashDropdown(name) {
-  var dropdown = $('.dropdown-content');
+  var dropdown = $('li[name="' + name + '"] .label-hidden');
 
   // show dropdown part immediately
-  dropdown.css('display', 'block');
-
-  // expand chevron-click style
-  if (name) $('li.vert-label[name="' + name + '"]').find('.label-hidden').css('display', 'block').find('.chevron').addClass('fa-chevron-up').removeClass('fa-chevron-down');
+  dropdown.css('display', 'flex');
 
   // wait 0.5 secs to return to standard dropdown behavior
   setTimeout(function () {
@@ -56901,49 +56913,83 @@ var Manager = function () {
       var _this2 = this;
 
       this._filtered = [];
+      this._filterIndex = -1;
       this.map(function (i) {
         labeler._filter.forEach(function (name) {
-          if (labeler.has(i, name) && _this2._filtered.indexOf(i) === -1) _this2._filtered.push(i);
+
+          // ones that have this label
+          if (labeler.has(i, name) && _this2._filtered.indexOf(i) === -1) {
+
+            // save to array
+            _this2._filtered.push(i);
+
+            // keep counting up for the _filterIndex
+            if (i <= _this2.index) _this2._filterIndex++;
+          }
         });
       });
 
-      this._filterIndex = this._filtered.length ? this._filterIndex || 0 : null;
+      if (this._filterIndex < 0) this._filterIndex = null;
+
+      // if we filter out our current sentence
+      if (this._filtered.length && this._filtered.indexOf(this._index) === -1) this.index = 0;
 
       return this;
     }
   }, {
     key: 'first',
     value: function first() {
+
+      this.updateFilter();
+
       this.index = this.length ? 0 : -1;
+      return this;
     }
   }, {
     key: 'prev',
     value: function prev() {
+
       if (!this.length) return null;
 
-      if (this.index === 0) {
+      this.updateFilter();
+
+      var index = this._filtered.length ? this._filterIndex : this._index;
+
+      if (index === 0) {
         log.warn('Annotatrix: already at the first sentence!');
         return null;
       }
 
-      this.index--;
-      return this.sentence;
+      this.index = --index;
+      return this;
     }
   }, {
     key: 'next',
     value: function next() {
-      if (this.index === this._sentences.length - 1) {
+
+      if (!this.length) return null;
+
+      this.updateFilter();
+
+      var index = this._filtered.length ? this._filterIndex : this._index;
+      var total = this._filtered.length ? this._filtered.length - 1 : this._length - 1;
+
+      if (index === total) {
         log.warn('Annotatrix: already at the last sentence!');
         return null;
       }
 
-      this.index++;
-      return this.sentence;
+      this.index = ++index;
+      return this;
     }
   }, {
     key: 'last',
     value: function last() {
-      this.index = this.length - 1;
+
+      this.updateFilter();
+
+      this.index = this._filtered.length ? this._filtered.length - 1 : this.length - 1;
+      return this;
     }
   }, {
     key: 'setSentence',
@@ -57127,8 +57173,10 @@ var Manager = function () {
         return sentence;
       });
 
-      // this triggers a gui refresh
       labeler.state = state.labeler;
+      this.updateFilter(); // use the filters set in labeler
+
+      // this triggers a gui refresh
       gui.state = state.gui;
 
       return state;
@@ -57181,7 +57229,7 @@ var Manager = function () {
   }, {
     key: 'currentSentence',
     get: function get() {
-      return this._filtered.length ? this._filterIndex + 1 : this.index + 1;
+      return this.index + 1;
     }
   }, {
     key: 'index',
@@ -57190,19 +57238,28 @@ var Manager = function () {
     },
     set: function set(index) {
 
+      var total = this._filtered.length || this.length;
+
       index = parseInt(index);
       if (isNaN(index)) {
         log.warn('Annotatrix: index out of range: ' + index);
-        index = this.index;
-      } else if (index < 0 && this.length) {
+        index = this._filterIndex || this.index;
+      } else if (index < 0 && total) {
         log.warn('Annotatrix: index out of range: ' + (index + 1));
         index = 0;
-      } else if (index > this.length - 1) {
+      } else if (index > total - 1) {
         log.warn('Annotatrix: index out of range: ' + (index + 1));
-        index = this.length - 1;
+        index = total - 1;
       }
 
-      this._index = Math.floor(index); // enforce integer
+      if (this._filtered.length) {
+        this._filterIndex = index;
+        this._index = this._filtered[index];
+      } else {
+        this._filterIndex = null;
+        this._index = index;
+      }
+
       gui.update();
       return this.index;
     }
