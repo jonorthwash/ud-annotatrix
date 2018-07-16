@@ -64,6 +64,10 @@ class Manager {
       ? this._filterIndex || 0
       : null;
 
+    // if we filter out our current sentence
+    if (this._filtered.length && this._filtered.indexOf(this._index) === -1)
+      this.index = 0;
+
     return this;
   }
   get totalSentences() {
@@ -90,7 +94,7 @@ class Manager {
     index = parseInt(index);
     if (isNaN(index)) {
       log.warn(`Annotatrix: index out of range: ${index}`);
-      index = this.index;
+      index = this._filterIndex || this.index;
 
     } else if (index < 0 && total) {
       log.warn(`Annotatrix: index out of range: ${index + 1}`);
