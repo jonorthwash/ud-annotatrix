@@ -284,21 +284,23 @@ class Labeler {
       keyup: {
         name: event => {
           var target = $(event.target),
-            name = target.closest('li').attr('name');
+            name = target.closest('li').attr('name'),
+            value = target.val();
 
           if (event.which === ENTER) {
-            this.edit(name, { name: target.val() });
+            this.edit(name, { name: value });
             gui.update();
-            flashDropdown(name);
+            flashDropdown(value);
           }
         },
 
         desc: event => {
           var target = $(event.target),
-            name = target.closest('li').attr('name');
+            name = target.closest('li').attr('name'),
+            value = target.val();
 
           if (event.which === ENTER) {
-            this.edit(name, { desc: target.val() });
+            this.edit(name, { desc: value });
             gui.update();
             flashDropdown(name);
           }
@@ -306,10 +308,11 @@ class Labeler {
 
         color: event => {
           var target = $(event.target),
-            name = target.closest('li').attr('name');
+            name = target.closest('li').attr('name'),
+            value = target.val();
 
           if (event.which === ENTER) {
-            this.edit(name, { color: target.val() });
+            this.edit(name, { color: value });
             gui.update();
             flashDropdown(name);
           }

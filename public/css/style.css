@@ -825,8 +825,6 @@ li.label .label-text {
 
 li.label .label-hidden {
 
-  /*
-  */
   display: none;
   flex-flow: column;
 
@@ -843,6 +841,7 @@ li.label .label-hidden {
 
 li.label:hover .label-hidden {
   display: flex;
+  z-index: 2;
 }
 
 li.label .label-hidden-group {

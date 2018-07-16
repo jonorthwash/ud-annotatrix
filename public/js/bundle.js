@@ -56373,21 +56373,23 @@ var Labeler = function () {
       keyup: {
         name: function name(event) {
           var target = $(event.target),
-              name = target.closest('li').attr('name');
+              name = target.closest('li').attr('name'),
+              value = target.val();
 
           if (event.which === ENTER) {
-            _this.edit(name, { name: target.val() });
+            _this.edit(name, { name: value });
             gui.update();
-            flashDropdown(name);
+            flashDropdown(value);
           }
         },
 
         desc: function desc(event) {
           var target = $(event.target),
-              name = target.closest('li').attr('name');
+              name = target.closest('li').attr('name'),
+              value = target.val();
 
           if (event.which === ENTER) {
-            _this.edit(name, { desc: target.val() });
+            _this.edit(name, { desc: value });
             gui.update();
             flashDropdown(name);
           }
@@ -56395,10 +56397,11 @@ var Labeler = function () {
 
         color: function color(event) {
           var target = $(event.target),
-              name = target.closest('li').attr('name');
+              name = target.closest('li').attr('name'),
+              value = target.val();
 
           if (event.which === ENTER) {
-            _this.edit(name, { color: target.val() });
+            _this.edit(name, { color: value });
             gui.update();
             flashDropdown(name);
           }
