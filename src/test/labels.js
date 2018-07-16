@@ -504,12 +504,16 @@ module.exports = () => {
 
       it(`should pan differently when there is a filter`, () => {
 
-        const manager = new Manager().parse([
+        var manager = new Manager().parse([
           conllu.labels_1,
           conllu.labels_2,
           conllu.labels_3,
           conllu.labels_4
         ].join('\n\n'));
+
+        const enforce = num => {
+          expect(manager.current).to.equal(manager.getSentence(num));
+        };
 
         // sanity check
         manager.index = 0;
@@ -517,34 +521,50 @@ module.exports = () => {
         manager.updateFilter();
         expect(manager._filtered).to.deep.equal([0, 2, 3]);
         expect(manager.totalSentences).to.equal('3 (total: 4)');
-        expect(manager.current).to.equal(manager.getSentence(0));
+        enforce(0);
 
         manager.last();
-        expect(manager.current).to.equal(manager.getSentence(3));
+        enforce(3);
 
         manager.first();
-        expect(manager.current).to.equal(manager.getSentence(0));
+        enforce(0);
 
         manager.next();
-        expect(manager.current).to.equal(manager.getSentence(2));
+        enforce(2);
 
         manager.next();
-        expect(manager.current).to.equal(manager.getSentence(3));
+        enforce(3);
 
         manager.next();
-        expect(manager.current).to.equal(manager.getSentence(3));
+        enforce(3);
 
         manager.prev();
-        expect(manager.current).to.equal(manager.getSentence(2));
+        enforce(2);
 
         manager.prev();
-        expect(manager.current).to.equal(manager.getSentence(0));
+        enforce(0);
 
         manager.prev();
-        expect(manager.current).to.equal(manager.getSentence(0));
+        enforce(0);
 
-        throw new Error('set the index directly'); // TODO
-        
+        manager.index = 0;
+        enforce(0);
+
+        manager.index = 1;
+        enforce(2);
+
+        manager.index = 2;
+        enforce(3);
+
+        manager.index = 3;
+        enforce(3);
+
+        manager.index = Infinity; // fail
+        enforce(3);
+
+        manager.index = -1;
+        enforce(0);
+
         // reset
         labeler.clearFilter();
         manager.updateFilter();
@@ -556,13 +576,45 @@ module.exports = () => {
         manager.updateFilter();
         expect(manager._filtered).to.deep.equal([1, 3]);
         expect(manager.totalSentences).to.equal('2 (total: 4)');
-        expect(manager.current).to.equal(manager.getSentence(1));
+        enforce(1);
 
         manager.last();
-        expect(manager.current).to.equal(manager.getSentence(3));
+        enforce(3);
 
         manager.first();
-        expect(manager.current).to.equal(manager.getSentence(1));
+        enforce(1);
+
+        manager.next();
+        enforce(3);
+
+        manager.next();
+        enforce(3);
+
+        manager.prev();
+        enforce(1);
+
+        manager.prev();
+        enforce(1);
+
+        manager.index = 0;
+        enforce(1);
+
+        manager.index = 1;
+        enforce(3);
+
+        manager.index = 2;
+        enforce(3);
+
+        manager.index = Infinity; // fail
+        enforce(3);
+
+        manager.index = -1;
+        enforce(1);
+
+        // don't magically change indices after clearing the filter
+        labeler.clearFilter();
+        manager.updateFilter();
+        enforce(1);
 
       });
     });
