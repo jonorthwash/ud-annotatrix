@@ -135,7 +135,13 @@ class Labeler {
         },
 
         label: event => {
-          console.log('click label');
+          const target = $(event.target),
+            name = target.closest('li').attr('name');
+
+          this.toggleFilter(name);
+          manager.updateFilter();
+          console.log(name);
+          gui.update();
         },
 
         times: event => {

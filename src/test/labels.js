@@ -515,6 +515,12 @@ module.exports = () => {
           expect(manager.current).to.equal(manager.getSentence(num));
         };
 
+        const reset = () => {
+          labeler.clearFilter();
+          manager.updateFilter();
+          manager.index = 0;
+        }
+
         // sanity check
         manager.index = 0;
         labeler.addFilter('label1').addFilter('this-is-a-tag');
@@ -565,10 +571,8 @@ module.exports = () => {
         manager.index = -1;
         enforce(0);
 
-        // reset
-        labeler.clearFilter();
-        manager.updateFilter();
-        manager.index = 0;
+        // (another test case)
+        reset();
 
         // check what happens when we add a filter than the current
         //   sentence doesn't have
@@ -615,6 +619,18 @@ module.exports = () => {
         labeler.clearFilter();
         manager.updateFilter();
         enforce(1);
+
+        // (another test case)
+        reset();
+
+        // make sure we set _filterIndex sanely at the beginning
+        manager.index = 1;
+        labeler.addFilter('label1').addFilter('one_label');
+        manager.updateFilter();
+        expect(manager._filtered).to.deep.equal([0, 1, 3]);
+        enforce(1);
+        expect(manager._filterIndex).to.equal(1);
+        expect(manager._index).to.equal(1);
 
       });
     });
