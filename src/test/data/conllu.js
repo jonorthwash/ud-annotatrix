@@ -1,6 +1,25 @@
 'use strict';
 
 module.exports = {
+labels_1: `# text = "This is a simple sentence."
+# labels = label1 another_label a-third-label
+1	This	This	_	_	_	_	_	_	_
+2	is	is	_	_	_	_	_	_	_
+3	a	a	_	_	_	_	_	_	_
+4	simple	simple	_	_	_	_	_	_	_
+5	sentence	sentence	_	_	_	_	_	_	_
+6	.	.	PUNCT	PUNCT	_	_	_	_	_`,
+
+labels_2: `# labels = one_label second third-label
+# labels = row_2 again:here this, that
+1	This	This	_	_	_	_	_	_	_`,
+
+labels_3: `# tags = this-is-a-tag test testing test
+1	This	This	_	_	_	_	_	_	_`,
+
+labels_4: `# labels = new label1 one_label this-is-a-tag
+1	Hullo	hello	_	_	_	_	_	_	_`,
+
 nested_2: `# text = ab cde f h
 1-2	ab	_	_	_	_	_	_	_	_
 1	a	A	_	_	_	_	_	_	_

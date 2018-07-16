@@ -104,10 +104,25 @@ class ParseError extends AnnotatrixError {
 }
 
 
+/**
+ *
+ */
+class DeserializationError extends AnnotatrixError {
+  constructor(...args) {
+
+    super(...args);
+    if (Error.captureStackTrace)
+      Error.captureStackTrace(this, DeserializationError);
+
+    this.name = 'DeserializationError';
+  }
+}
+
 module.exports = {
   AnnotatrixError,
   NotImplementedError,
   // AssertionError,
   GUIError,
-  ParseError
+  ParseError,
+  DeserializationError
 };

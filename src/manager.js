@@ -9,6 +9,7 @@ const cfg = require('./config');
 const funcs = require('./funcs');
 const GUI = require('./gui');
 const Graph = require('./graph');
+const Labeler = require('./labels');
 const errors = require('./errors');
 const detectFormat = require('./detect');
 const storage = require('./local-storage');
@@ -20,6 +21,7 @@ class Manager {
     funcs.global().manager = this;
     funcs.global().gui = new GUI();
     funcs.global().graph = new Graph();
+    funcs.global().labeler = new Labeler();
     gui.bind();
 
     this.reset();
@@ -35,6 +37,9 @@ class Manager {
     this._sentences = [];
     this._index = -1;
 
+    this._filtered = [];
+    this._filterIndex = null;
+
     this.insertSentence(cfg.defaultSentence);
   }
   get length() {
@@ -45,7 +50,43 @@ class Manager {
       return callback(i, sentence);
     });
   }
+  updateFilter() {
 
+    this._filtered = [];
+    this._filterIndex = -1;
+    this.map(i => {
+      labeler._filter.forEach(name => {
+
+        // ones that have this label
+        if (labeler.has(i, name) && this._filtered.indexOf(i) === -1) {
+
+          // save to array
+          this._filtered.push(i);
+
+          // keep counting up for the _filterIndex
+          if (i <= this.index)
+            this._filterIndex++;
+        }
+      });
+    });
+
+    if (this._filterIndex < 0)
+      this._filterIndex = null;
+
+    // if we filter out our current sentence
+    if (this._filtered.length && this._filtered.indexOf(this._index) === -1)
+      this.index = 0;
+
+    return this;
+  }
+  get totalSentences() {
+    return this._filtered.length
+      ? `${this._filtered.length} (total: ${this.length})`
+      : `${this.length}`;
+  }
+  get currentSentence() {
+    return this.index + 1;
+  }
 
 
 
@@ -55,50 +96,89 @@ class Manager {
   }
   set index(index) {
 
+    const total = this._filtered.length || this.length;
+
     index = parseInt(index);
     if (isNaN(index)) {
       log.warn(`Annotatrix: index out of range: ${index}`);
-      index = this.index;
+      index = this._filterIndex || this.index;
 
-    } else if (index < 0 && this.length) {
+    } else if (index < 0 && total) {
       log.warn(`Annotatrix: index out of range: ${index + 1}`);
       index = 0;
 
-    } else if (index > this.length - 1) {
+    } else if (index > total - 1) {
       log.warn(`Annotatrix: index out of range: ${index + 1}`);
-      index = this.length - 1;
+      index = total - 1;
     }
 
-    this._index = Math.floor(index); // enforce integer
+    if (this._filtered.length) {
+      this._filterIndex = index;
+      this._index = this._filtered[index];
+    } else {
+      this._filterIndex = null;
+      this._index = index;
+    }
+
     gui.update();
     return this.index;
   }
   first() {
+
+    this.updateFilter();
+
     this.index = this.length ? 0 : -1;
+    return this;
   }
   prev() {
+
     if (!this.length)
       return null;
 
-    if (this.index === 0) {
+    this.updateFilter();
+
+    let index = this._filtered.length
+      ? this._filterIndex
+      : this._index;
+
+    if (index === 0) {
       log.warn(`Annotatrix: already at the first sentence!`);
       return null;
     }
 
-    this.index--;
-    return this.sentence;
+    this.index = --index;
+    return this;
   }
   next() {
-    if (this.index === this._sentences.length - 1) {
+
+    if (!this.length)
+      return null;
+
+    this.updateFilter();
+
+    let index = this._filtered.length
+      ? this._filterIndex
+      : this._index;
+    let total = this._filtered.length
+      ? this._filtered.length - 1
+      : this._length - 1;
+
+    if (index === total) {
       log.warn(`Annotatrix: already at the last sentence!`);
       return null;
     }
 
-    this.index++;
-    return this.sentence;
+    this.index = ++index;
+    return this;
   }
   last() {
-    this.index = this.length - 1;
+
+    this.updateFilter();
+
+    this.index = this._filtered.length
+      ? this._filtered.length - 1
+      : this.length - 1;
+    return this;
   }
 
 
@@ -252,16 +332,17 @@ class Manager {
     text = text || gui.read('text-data');
     let splitted = this.split(text);
 
-    // overwrite contents of #text-data
-    this.sentence = splitted[0];
+    // set the first one at the current index
+    this._sentences[this.index] = new nx.Sentence; // hack to get around updateSentence() behavior
+    this.setSentence(this.index, splitted[0]);
 
     // iterate over all elements except the first
     _.each(splitted, (split, i) => {
-      if (!i) return; // skip first
-      this.insertSentence(split);
+      if (i) this.insertSentence(split);
     });
 
     gui.update();
+    return this; // chaining
   }
 
 
@@ -274,6 +355,13 @@ class Manager {
   get comments() {
     if (this.current)
       return this.current.comments;
+  }
+  set comments(comments) {
+    if (!this.current)
+      return;
+
+    this.current.comments = comments;
+    gui.update();
   }
   get tokens() {
     if (this.current)
@@ -308,7 +396,8 @@ class Manager {
           nx_initialized: sent.nx_initialized
         };
       }),
-      gui: gui.state
+      gui: gui.state,
+      labeler: labeler.state
     });
 
     storage.save(state)
@@ -340,9 +429,15 @@ class Manager {
       sentence.currentFormat = sent.currentFormat;
       sentence.is_table_view = sent.is_table_view;
       sentence.nx_initialized = sent.nx_initialized;
+
+      labeler.parse(sentence.comments);
+
       return sentence;
 
     });
+
+    labeler.state = state.labeler;
+    this.updateFilter(); // use the filters set in labeler
 
     // this triggers a gui refresh
     gui.state = state.gui;
@@ -430,6 +525,8 @@ function updateSentence(oldSent, text) {
   sent.nx_initialized = oldSent.nx_initialized || false;
   sent.is_table_view = oldSent.is_table_view || false;
   sent.column_visibilities = oldSent.column_visibilities || new Array(10).fill(true);
+
+  labeler.parse(sent.comments);
 
   return sent;
 }

@@ -392,14 +392,17 @@ class Graph {
       });
     });
 
+    // set new root
+    const newRoot = ele.data('analysis');
+    if (!newRoot)
+      return;
+
     if (oldRoot) {
       modify(oldRoot.id, 'head', []);
       modify(oldRoot.id, 'deprel', undefined);
     }
 
-    // set new root
-    const newRoot = ele.data('analysis'),
-      oldHead = newRoot.head,
+    const oldHead = newRoot.head,
       oldDeprel = newRoot.deprel;
 
     modify(newRoot.id, 'head', '0');
