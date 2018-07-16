@@ -56378,6 +56378,7 @@ var Labeler = function () {
           if (event.which === ENTER) {
             _this.edit(name, { name: target.val() });
             gui.update();
+            flashDropdown(name);
           }
         },
 
@@ -56388,6 +56389,7 @@ var Labeler = function () {
           if (event.which === ENTER) {
             _this.edit(name, { desc: target.val() });
             gui.update();
+            flashDropdown(name);
           }
         },
 
@@ -56398,6 +56400,7 @@ var Labeler = function () {
           if (event.which === ENTER) {
             _this.edit(name, { color: target.val() });
             gui.update();
+            flashDropdown(name);
           }
         }
       }

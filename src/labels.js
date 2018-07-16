@@ -289,6 +289,7 @@ class Labeler {
           if (event.which === ENTER) {
             this.edit(name, { name: target.val() });
             gui.update();
+            flashDropdown(name);
           }
         },
 
@@ -299,6 +300,7 @@ class Labeler {
           if (event.which === ENTER) {
             this.edit(name, { desc: target.val() });
             gui.update();
+            flashDropdown(name);
           }
         },
 
@@ -309,6 +311,7 @@ class Labeler {
           if (event.which === ENTER) {
             this.edit(name, { color: target.val() });
             gui.update();
+            flashDropdown(name);
           }
         }
       }
