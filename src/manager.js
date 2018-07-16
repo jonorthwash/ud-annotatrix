@@ -53,16 +53,25 @@ class Manager {
   updateFilter() {
 
     this._filtered = [];
+    this._filterIndex = -1;
     this.map(i => {
       labeler._filter.forEach(name => {
-        if (labeler.has(i, name) && this._filtered.indexOf(i) === -1)
+
+        // ones that have this label
+        if (labeler.has(i, name) && this._filtered.indexOf(i) === -1) {
+
+          // save to array
           this._filtered.push(i);
+
+          // keep counting up for the _filterIndex
+          if (i <= this.index)
+            this._filterIndex++;
+        }
       });
     });
 
-    this._filterIndex = this._filtered.length
-      ? this._filterIndex || 0
-      : null;
+    if (this._filterIndex < 0)
+      this._filterIndex = null;
 
     // if we filter out our current sentence
     if (this._filtered.length && this._filtered.indexOf(this._index) === -1)
@@ -76,9 +85,7 @@ class Manager {
       : `${this.length}`;
   }
   get currentSentence() {
-    return this._filtered.length
-      ? this._filterIndex + 1
-      : this.index + 1;
+    return this.index + 1;
   }
 
 

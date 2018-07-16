@@ -175,7 +175,7 @@ class GUI {
 
     manager.updateFilter();
     $('#total-sentences').text(manager.totalSentences);
-    $('#current-sentence').text(manager.currentSentence);
+    $('#current-sentence').val(manager.currentSentence);
     if (!manager.index)
       $('#btnPrevSentence').addClass('disabled');
     if (manager.index === manager.length - 1)
