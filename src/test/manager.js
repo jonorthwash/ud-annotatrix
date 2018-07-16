@@ -10,6 +10,7 @@ utils.setupLogger();
 const nx = require('notatrix');
 
 const Manager = require('../manager');
+const cfg = require('../config');
 const errors = require('../errors');
 
 // export the test suite
@@ -103,13 +104,13 @@ module.exports = () => {
 
   		expect(mgr.length).to.equal(1);
   		expect(mgr.index).to.equal(0);
-  		expect(mgr.getSentence(0).text).to.equal('Welcome to the UD-Annotatrix');
+  		expect(mgr.getSentence(0).text).to.equal(cfg.defaultSentence);
   		expect(mgr.getSentence(1)).to.equal(null);
 
   		mgr.insertSentence('test');
   		expect(mgr.length).to.equal(2);
   		expect(mgr.index).to.equal(1);
-  		expect(mgr.getSentence(0).text).to.equal('Welcome to the UD-Annotatrix');
+  		expect(mgr.getSentence(0).text).to.equal(cfg.defaultSentence);
   		expect(mgr.getSentence(1).text).to.equal('test');
   		expect(mgr.getSentence(2)).to.equal(null);
 
@@ -117,7 +118,7 @@ module.exports = () => {
   		expect(mgr.length).to.equal(3);
   		expect(mgr.index).to.equal(0);
   		expect(mgr.getSentence(0).text).to.equal('test2');
-  		expect(mgr.getSentence(1).text).to.equal('Welcome to the UD-Annotatrix');
+  		expect(mgr.getSentence(1).text).to.equal(cfg.defaultSentence);
   		expect(mgr.getSentence(2).text).to.equal('test');
   		expect(mgr.getSentence(3)).to.equal(null);
 
@@ -126,7 +127,7 @@ module.exports = () => {
   		expect(mgr.index).to.equal(0);
   		expect(mgr.getSentence(0).text).to.equal('test3');
   		expect(mgr.getSentence(1).text).to.equal('test2');
-  		expect(mgr.getSentence(2).text).to.equal('Welcome to the UD-Annotatrix');
+  		expect(mgr.getSentence(2).text).to.equal(cfg.defaultSentence);
   		expect(mgr.getSentence(3).text).to.equal('test');
   		expect(mgr.getSentence(4)).to.equal(null);
 
@@ -136,7 +137,7 @@ module.exports = () => {
   		expect(mgr.getSentence(0).text).to.equal('test3');
   		expect(mgr.getSentence(1).text).to.equal('test2');
   		expect(mgr.getSentence(2).text).to.equal('test4');
-  		expect(mgr.getSentence(3).text).to.equal('Welcome to the UD-Annotatrix');
+  		expect(mgr.getSentence(3).text).to.equal(cfg.defaultSentence);
   		expect(mgr.getSentence(4).text).to.equal('test');
   		expect(mgr.getSentence(5)).to.equal(null);
 
@@ -146,7 +147,7 @@ module.exports = () => {
   		expect(mgr.getSentence(0).text).to.equal('test3');
   		expect(mgr.getSentence(1).text).to.equal('test2');
   		expect(mgr.getSentence(2).text).to.equal('test4');
-  		expect(mgr.getSentence(3).text).to.equal('Welcome to the UD-Annotatrix');
+  		expect(mgr.getSentence(3).text).to.equal(cfg.defaultSentence);
   		expect(mgr.getSentence(4).text).to.equal('test');
   		expect(mgr.getSentence(5).text).to.equal('test5');
   		expect(mgr.getSentence(6)).to.equal(null);
@@ -159,7 +160,7 @@ module.exports = () => {
   		expect(mgr.getSentence(0).text).to.equal('test3');
   		expect(mgr.getSentence(1).text).to.equal('test2');
   		expect(mgr.getSentence(2).text).to.equal('test4');
-  		expect(mgr.getSentence(3).text).to.equal('Welcome to the UD-Annotatrix');
+  		expect(mgr.getSentence(3).text).to.equal(cfg.defaultSentence);
   		expect(mgr.getSentence(4).text).to.equal('test');
   		expect(mgr.getSentence(5)).to.equal(null);
   		expect(removed.text).to.equal('test5');
@@ -169,7 +170,7 @@ module.exports = () => {
   		expect(mgr.index).to.equal(3);
   		expect(mgr.getSentence(0).text).to.equal('test3');
   		expect(mgr.getSentence(1).text).to.equal('test2');
-  		expect(mgr.getSentence(2).text).to.equal('Welcome to the UD-Annotatrix');
+  		expect(mgr.getSentence(2).text).to.equal(cfg.defaultSentence);
   		expect(mgr.getSentence(3).text).to.equal('test');
   		expect(mgr.getSentence(4)).to.equal(null);
   		expect(removed.text).to.equal('test4');
@@ -178,7 +179,7 @@ module.exports = () => {
   		expect(mgr.length).to.equal(3);
   		expect(mgr.index).to.equal(2);
   		expect(mgr.getSentence(0).text).to.equal('test2');
-  		expect(mgr.getSentence(1).text).to.equal('Welcome to the UD-Annotatrix');
+  		expect(mgr.getSentence(1).text).to.equal(cfg.defaultSentence);
   		expect(mgr.getSentence(2).text).to.equal('test');
   		expect(mgr.getSentence(3)).to.equal(null);
   		expect(removed.text).to.equal('test3');
@@ -187,7 +188,7 @@ module.exports = () => {
   		expect(mgr.length).to.equal(2);
   		expect(mgr.index).to.equal(1);
   		expect(mgr.getSentence(0).text).to.equal('test2');
-  		expect(mgr.getSentence(1).text).to.equal('Welcome to the UD-Annotatrix');
+  		expect(mgr.getSentence(1).text).to.equal(cfg.defaultSentence);
   		expect(mgr.getSentence(2)).to.equal(null);
   		expect(removed.text).to.equal('test');
 
@@ -199,7 +200,7 @@ module.exports = () => {
   		expect(mgr.length).to.equal(4);
   		expect(mgr.index).to.equal(3);
   		expect(mgr.getSentence(0).text).to.equal('test2');
-  		expect(mgr.getSentence(1).text).to.equal('Welcome to the UD-Annotatrix');
+  		expect(mgr.getSentence(1).text).to.equal(cfg.defaultSentence);
   		expect(mgr.getSentence(2).text).to.equal('push1');
   		expect(mgr.getSentence(3).text).to.equal('push2');
   		expect(mgr.getSentence(4)).to.equal(null);
@@ -208,7 +209,7 @@ module.exports = () => {
   		expect(mgr.length).to.equal(3);
   		expect(mgr.index).to.equal(2);
   		expect(mgr.getSentence(0).text).to.equal('test2');
-  		expect(mgr.getSentence(1).text).to.equal('Welcome to the UD-Annotatrix');
+  		expect(mgr.getSentence(1).text).to.equal(cfg.defaultSentence);
   		expect(mgr.getSentence(2).text).to.equal('push1');
   		expect(mgr.getSentence(3)).to.equal(null);
   		expect(removed.text).to.equal('push2');
