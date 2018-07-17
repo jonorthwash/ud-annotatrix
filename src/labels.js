@@ -5,8 +5,9 @@ const $ = require('jquery');
 const DeserializationError = require('./errors').DeserializationError;
 
 const regex = {
-  comment: /(labels|tags)\s*=\s*(.*)$/,
-  content: /([\w-:]*)/
+  labelComment: /(labels|tags)\s*=\s+(.*)$/,
+  labelContent: /([\w-:]+)/,
+  labelByName: name => new RegExp(`(\\s+)${name}(\\s+|$)`)
 };
 
 // NOTE: 16777215 (base 10) = ffffff (base 16)
@@ -267,8 +268,13 @@ class Labeler {
           if (event.which === ENTER) {
 
             if (this.has(value)) {
-              // TODO: alert here
+              // TODO: alert
               return; // don't want multiple things with the same name
+            }
+
+            if (!regex.labelContent.test(value)) {
+              // TODO: alert
+              return; // must match our content pattern
             }
 
             this.edit(name, { name: value });
@@ -317,12 +323,12 @@ class Labeler {
 
   static parseComment(comment) {
     let labels = [];
-    const labelString = comment.match(regex.comment);
+    const labelString = comment.match(regex.labelComment);
 
     if (labelString)
       labelString[2].split(/\s/).forEach(label => {
 
-        const content = label.match(regex.content);
+        const content = label.match(regex.labelContent);
         if (content)
           labels.push(content[1]);
 
@@ -435,7 +441,7 @@ class Labeler {
     let done = false;
     manager.getSentence(index).comments = manager.getSentence(index).comments.map(comment => {
 
-      if (comment.match(regex.comment) && !done) {
+      if (comment.match(regex.labelComment) && !done) {
         comment = `${comment} ${name}`;
         done = true;
       }
@@ -454,9 +460,8 @@ class Labeler {
       index = manager.index;
     }
 
-    const reg = new RegExp(`(\\s+)${name}(\\s+|$)`);
     manager.getSentence(index).comments = manager.getSentence(index).comments.map(comment => {
-      return comment.replace(reg, '$1')
+      return comment.replace(regex.labelByName(name), '$1')
     });
   }
 
@@ -468,9 +473,8 @@ class Labeler {
       index = manager.index;
     }
 
-    const reg = new RegExp(`(\\s+)${oldName}(\\s+|$)`);
     manager.getSentence(index).comments = manager.getSentence(index).comments.map(comment => {
-      return comment.replace(reg, `$1${newName}$2`);
+      return comment.replace(regex.labelByName(name), `$1${newName}$2`);
     });
   }
 

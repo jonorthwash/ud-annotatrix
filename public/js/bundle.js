@@ -56241,8 +56241,11 @@ var $ = require('jquery');
 var DeserializationError = require('./errors').DeserializationError;
 
 var regex = {
-  comment: /(labels|tags)\s*=\s*(.*)$/,
-  content: /([\w-:]*)/
+  labelComment: /(labels|tags)\s*=\s+(.*)$/,
+  labelContent: /([\w-:]+)/,
+  labelByName: function labelByName(name) {
+    return new RegExp('(\\s+)' + name + '(\\s+|$)');
+  }
 };
 
 // NOTE: 16777215 (base 10) = ffffff (base 16)
@@ -56419,8 +56422,13 @@ var Labeler = function () {
           if (event.which === ENTER) {
 
             if (_this.has(value)) {
-              // TODO: alert here
+              // TODO: alert
               return; // don't want multiple things with the same name
+            }
+
+            if (!regex.labelContent.test(value)) {
+              // TODO: alert
+              return; // must match our content pattern
             }
 
             _this.edit(name, { name: value });
@@ -56566,7 +56574,7 @@ var Labeler = function () {
       var done = false;
       manager.getSentence(index).comments = manager.getSentence(index).comments.map(function (comment) {
 
-        if (comment.match(regex.comment) && !done) {
+        if (comment.match(regex.labelComment) && !done) {
           comment = comment + ' ' + name;
           done = true;
         }
@@ -56585,9 +56593,8 @@ var Labeler = function () {
         index = manager.index;
       }
 
-      var reg = new RegExp('(\\s+)' + name + '(\\s+|$)');
       manager.getSentence(index).comments = manager.getSentence(index).comments.map(function (comment) {
-        return comment.replace(reg, '$1');
+        return comment.replace(regex.labelByName(name), '$1');
       });
     }
   }, {
@@ -56600,9 +56607,8 @@ var Labeler = function () {
         index = manager.index;
       }
 
-      var reg = new RegExp('(\\s+)' + oldName + '(\\s+|$)');
       manager.getSentence(index).comments = manager.getSentence(index).comments.map(function (comment) {
-        return comment.replace(reg, '$1' + newName + '$2');
+        return comment.replace(regex.labelByName(name), '$1' + newName + '$2');
       });
     }
   }, {
@@ -56683,11 +56689,11 @@ var Labeler = function () {
     key: 'parseComment',
     value: function parseComment(comment) {
       var labels = [];
-      var labelString = comment.match(regex.comment);
+      var labelString = comment.match(regex.labelComment);
 
       if (labelString) labelString[2].split(/\s/).forEach(function (label) {
 
-        var content = label.match(regex.content);
+        var content = label.match(regex.labelContent);
         if (content) labels.push(content[1]);
       });
 
