@@ -454,7 +454,7 @@ class Labeler {
       index = manager.index;
     }
 
-    const reg = new RegExp(`(\\s+)${name}(\\s+)`);
+    const reg = new RegExp(`(\\s+)${name}(\\s+|$)`);
     manager.getSentence(index).comments = manager.getSentence(index).comments.map(comment => {
       return comment.replace(reg, '$1')
     });
@@ -468,7 +468,7 @@ class Labeler {
       index = manager.index;
     }
 
-    const reg = new RegExp(`(\\s+)${oldName}(\\s+)`);
+    const reg = new RegExp(`(\\s+)${oldName}(\\s+|$)`);
     manager.getSentence(index).comments = manager.getSentence(index).comments.map(comment => {
       return comment.replace(reg, `$1${newName}$2`);
     });

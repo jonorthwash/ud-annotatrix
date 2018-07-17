@@ -55989,6 +55989,8 @@ function onCtrlKeyup(event) {
   } else if (47 < event.which && event.which < 58) {
     // key in 0-9
 
+    if ($(':focus').is('input')) return false;
+
     var num = event.which - 48;
     cy.zoom(Math.pow(1.5, num - 5));
     gui.update();
@@ -56363,7 +56365,7 @@ var Labeler = function () {
           var target = $(event.target),
               name = target.closest('li').attr('name');
 
-          if (labeler.has(name)) {
+          if (_this.has(name)) {
             _this.removeInComments(name);
           } else {
             _this.addInComments(name);
@@ -56415,9 +56417,16 @@ var Labeler = function () {
               value = target.val();
 
           if (event.which === ENTER) {
+
+            if (_this.has(value)) {
+              // TODO: alert here
+              return; // don't want multiple things with the same name
+            }
+
             _this.edit(name, { name: value });
+            _this.editInComments(name, value);
             gui.update();
-            flashDropdown(value);
+            flashDropdown(value, 'label-name');
           }
         },
 
@@ -56429,7 +56438,7 @@ var Labeler = function () {
           if (event.which === ENTER) {
             _this.edit(name, { desc: value });
             gui.update();
-            flashDropdown(name);
+            flashDropdown(name, 'label-desc');
           }
         },
 
@@ -56441,7 +56450,7 @@ var Labeler = function () {
           if (event.which === ENTER) {
             _this.edit(name, { color: value });
             gui.update();
-            flashDropdown(name);
+            flashDropdown(name, 'label-color');
           }
         }
       }
@@ -56521,7 +56530,7 @@ var Labeler = function () {
 
       if (values.name) {
         for (var i = 0; i < manager.length; i++) {
-          this.changeLabel(i, label.name, values.name);
+          this.editInComments(i, label.name, values.name);
         }
         label.name = values.name;
       }
@@ -56537,8 +56546,10 @@ var Labeler = function () {
 
       if (!gui || !gui.inBrowser) return;
 
-      $('.label.horiz').detach();
+      $('#label-clear-filter .label-text').addClass('disabled');
+      if (this._filter.size) $('#label-clear-filter .label-text').removeClass('disabled');
 
+      $('.label.horiz').detach();
       _.each(this._labels, function (label) {
         return label.render(_this3);
       });
@@ -56574,23 +56585,24 @@ var Labeler = function () {
         index = manager.index;
       }
 
-      var reg = new RegExp(' ' + name + '( ?)');
+      var reg = new RegExp('(\\s+)' + name + '(\\s+|$)');
       manager.getSentence(index).comments = manager.getSentence(index).comments.map(function (comment) {
         return comment.replace(reg, '$1');
       });
     }
   }, {
-    key: 'changeLabel',
-    value: function changeLabel(index, oldName, newName) {
+    key: 'editInComments',
+    value: function editInComments(index, oldName, newName) {
+
       if (newName === undefined) {
         newName = oldName;
         oldName = index;
         index = manager.index;
       }
 
-      var reg = new RegExp(' ' + oldName + '( ?)');
+      var reg = new RegExp('(\\s+)' + oldName + '(\\s+|$)');
       manager.getSentence(index).comments = manager.getSentence(index).comments.map(function (comment) {
-        return comment.replace(reg, ' ' + newName + '$1');
+        return comment.replace(reg, '$1' + newName + '$2');
       });
     }
   }, {
@@ -56693,7 +56705,7 @@ var Labeler = function () {
   return Labeler;
 }();
 
-function flashDropdown(name) {
+function flashDropdown(name, inputName) {
   var dropdown = $('li[name="' + name + '"] .label-hidden');
 
   // show dropdown part immediately
@@ -56703,6 +56715,10 @@ function flashDropdown(name) {
   setTimeout(function () {
     return dropdown.css('display', '');
   }, 500);
+
+  if (inputName) {
+    dropdown.find('input[name="' + inputName + '"]').focus();
+  }
 }
 
 function hashStringToHex(string) {
