@@ -212,7 +212,7 @@ class Labeler {
           const target = $(event.target),
             name = target.closest('li').attr('name');
 
-          if (labeler.has(name)) {
+          if (this.has(name)) {
             this.removeInComments(name);
           } else {
             this.addInComments(name);
@@ -265,9 +265,16 @@ class Labeler {
             value = target.val();
 
           if (event.which === ENTER) {
+
+            if (this.has(value)) {
+              // TODO: alert here
+              return; // don't want multiple things with the same name
+            }
+
             this.edit(name, { name: value });
+            this.editInComments(name, value);
             gui.update();
-            flashDropdown(value);
+            flashDropdown(value, 'label-name');
           }
         },
 
@@ -279,7 +286,7 @@ class Labeler {
           if (event.which === ENTER) {
             this.edit(name, { desc: value });
             gui.update();
-            flashDropdown(name);
+            flashDropdown(name, 'label-desc');
           }
         },
 
@@ -291,7 +298,7 @@ class Labeler {
           if (event.which === ENTER) {
             this.edit(name, { color: value });
             gui.update();
-            flashDropdown(name);
+            flashDropdown(name, 'label-color');
           }
         }
       }
@@ -393,7 +400,7 @@ class Labeler {
 
     if (values.name) {
       for (let i=0; i<manager.length; i++) {
-        this.changeLabel(i, label.name, values.name);
+        this.editInComments(i, label.name, values.name);
       }
       label.name = values.name;
     }
@@ -410,8 +417,11 @@ class Labeler {
     if (!gui || !gui.inBrowser)
       return;
 
-    $('.label.horiz').detach();
+    $('#label-clear-filter .label-text').addClass('disabled');
+    if (this._filter.size)
+      $('#label-clear-filter .label-text').removeClass('disabled');
 
+    $('.label.horiz').detach();
     _.each(this._labels, label => label.render(this));
   }
 
@@ -444,22 +454,23 @@ class Labeler {
       index = manager.index;
     }
 
-    const reg = new RegExp(` ${name}( ?)`);
+    const reg = new RegExp(`(\\s+)${name}(\\s+)`);
     manager.getSentence(index).comments = manager.getSentence(index).comments.map(comment => {
       return comment.replace(reg, '$1')
     });
   }
 
-  changeLabel(index, oldName, newName) {
+  editInComments(index, oldName, newName) {
+
     if (newName === undefined) {
       newName = oldName;
       oldName = index;
       index = manager.index;
     }
 
-    const reg = new RegExp(` ${oldName}( ?)`);
+    const reg = new RegExp(`(\\s+)${oldName}(\\s+)`);
     manager.getSentence(index).comments = manager.getSentence(index).comments.map(comment => {
-      return comment.replace(reg, ` ${newName}$1`)
+      return comment.replace(reg, `$1${newName}$2`);
     });
   }
 
@@ -523,7 +534,7 @@ class Labeler {
 
 }
 
-function flashDropdown(name) {
+function flashDropdown(name, inputName) {
   const dropdown = $(`li[name="${name}"] .label-hidden`);
 
   // show dropdown part immediately
@@ -531,6 +542,10 @@ function flashDropdown(name) {
 
   // wait 0.5 secs to return to standard dropdown behavior
   setTimeout(() => dropdown.css('display', ''), 500);
+
+  if (inputName) {
+    dropdown.find(`input[name="${inputName}"]`).focus();
+  }
 }
 
 function hashStringToHex(string) {
