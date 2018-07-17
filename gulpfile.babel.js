@@ -8,7 +8,9 @@ const uglify = require('gulp-uglify');
 const sourcemaps = require('gulp-sourcemaps');
 
 gulp.task('js', () => {
-  return browserify('src/index.js')
+  return browserify('src/index.js', {
+      standalone: 'data'
+    })
     .transform('babelify', {
       presets: ['env'],
       compact: false
