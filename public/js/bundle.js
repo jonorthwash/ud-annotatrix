@@ -19637,6 +19637,40 @@ class Sentence {
   // external formats
 
   /**
+   * returns the % (as a number in [0,1]) annotation of the sentence
+   *
+   * @return {Number}
+   */
+  get progress() {
+
+    let done = 0,
+      total = 0;
+
+    this.forEach(token => {
+
+      total += 2;
+
+      if (!token.analysis)
+        return;
+
+      if (token.analysis.head)
+        done++;
+      if (token.analysis.pos)
+        done++;
+
+      token.analysis.eachHead(head => {
+
+        total++;
+        if (!!head.deprel)
+          done++;
+
+      });
+    });
+
+    return total ? done / total : 1;
+  }
+
+  /**
    * get a serial version of the internal sentence representation
    *
    * @return {String}
@@ -23103,7 +23137,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             limit = 0,
             isExecuting = false,
             callback,
-            
+
             // functions
             execute;
 
@@ -23133,12 +23167,12 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
                 commands.splice(index + 1, commands.length - index);
 
                 commands.push(command);
-                
+
                 // if limit is set, remove items from the start
                 if (limit && commands.length > limit) {
                     removeFromTo(commands, 0, -(limit+1));
                 }
-                
+
                 // set the current index to the end
                 index = commands.length - 1;
                 if (callback) {
@@ -23215,7 +23249,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             getIndex: function() {
                 return index;
             },
-            
+
             setLimit: function (l) {
                 limit = l;
             }
@@ -23486,11 +23520,16 @@ module.exports = {
 },{}],340:[function(require,module,exports){
 'use strict';
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 var _ = require('underscore');
 var nx = require('notatrix');
 
 var detectFormat = require('./detect');
 var alerts = require('./alerts');
+var errors = require('./errors');
 
 /**
  *  convert2<FORMAT>() functions will try to detect the format of any input and
@@ -23515,28 +23554,28 @@ var alerts = require('./alerts');
  * @return {String}     Sentence in plain text format
  */
 function convert2PlainText(text) {
-	log.debug('called convert2PlainText(' + text + ')');
+  log.debug('called convert2PlainText(' + text + ')');
 
-	text = text; // || a.sentence;
-	var format = detectFormat(text);
+  text = text; // || a.sentence;
+  var format = detectFormat(text);
 
-	log.debug('convert2PlainText(): got format: ' + format);
-	switch (format) {
-		case 'Unknown':
-			log.warn('convert2PlainText(): failed to convert: Unknown input type');
-			return null;
-		case 'plain text':
-			log.info('convert2PlainText(): received plain text');
-			return text;
-		case 'Brackets':
-			return conllu2PlainText(brackets2Conllu(text));
-		case 'SD':
-			return conllu2PlainText(sd2Conllu(text));
-		case 'CoNLL-U':
-			return conllu2PlainText(text);
-		case 'CG3':
-			return conllu2PlainText(cg32Conllu(text));
-	}
+  log.debug('convert2PlainText(): got format: ' + format);
+  switch (format) {
+    case 'Unknown':
+      log.warn('convert2PlainText(): failed to convert: Unknown input type');
+      return null;
+    case 'plain text':
+      log.info('convert2PlainText(): received plain text');
+      return text;
+    case 'Brackets':
+      return conllu2PlainText(brackets2Conllu(text));
+    case 'SD':
+      return conllu2PlainText(sd2Conllu(text));
+    case 'CoNLL-U':
+      return conllu2PlainText(text);
+    case 'CG3':
+      return conllu2PlainText(cg32Conllu(text));
+  }
 }
 
 /**
@@ -23546,28 +23585,28 @@ function convert2PlainText(text) {
  * @return {String}     Sentence in CoNLL-U format
  */
 function convert2Conllu(text) {
-	log.debug('called convert2conllu(' + text + ')');
+  log.debug('called convert2conllu(' + text + ')');
 
-	text = text; // || a.sentence;
-	var format = detectFormat(text);
+  text = text; // || a.sentence;
+  var format = detectFormat(text);
 
-	log.debug('convert2conllu(): got format: ' + format + ', text: ' + text);
-	switch (format) {
-		case 'Unknown':
-			log.warn('convert2conllu(): failed to convert Unknown to plain text');
-			return null;
-		case 'plain text':
-			return cleanConllu(plainText2Conllu(text));
-		case 'Brackets':
-			return cleanConllu(brackets2Conllu(text));
-		case 'SD':
-			return cleanConllu(sd2Conllu(text));
-		case 'CoNLL-U':
-			log.info('convert2conllu(): received CoNLL-U');
-			return cleanConllu(text);
-		case 'CG3':
-			return cg32Conllu(text);
-	}
+  log.debug('convert2conllu(): got format: ' + format + ', text: ' + text);
+  switch (format) {
+    case 'Unknown':
+      log.warn('convert2conllu(): failed to convert Unknown to plain text');
+      return null;
+    case 'plain text':
+      return cleanConllu(plainText2Conllu(text));
+    case 'Brackets':
+      return cleanConllu(brackets2Conllu(text));
+    case 'SD':
+      return cleanConllu(sd2Conllu(text));
+    case 'CoNLL-U':
+      log.info('convert2conllu(): received CoNLL-U');
+      return cleanConllu(text);
+    case 'CG3':
+      return cg32Conllu(text);
+  }
 }
 
 /**
@@ -23577,28 +23616,28 @@ function convert2Conllu(text) {
  * @return {String}     Sentence in CG3 format
  */
 function convert2CG3(text) {
-	log.debug('called convert2CG3(' + text + ')');
+  log.debug('called convert2CG3(' + text + ')');
 
-	text = text; // || a.sentence;
-	var format = detectFormat(text);
+  text = text; // || a.sentence;
+  var format = detectFormat(text);
 
-	log.debug('convert2CG3(): got format: ' + format);
-	switch (format) {
-		case 'Unknown':
-			log.warn('convert2CG3(): failed to convert Unknown to plain text');
-			return null;
-		case 'plain text':
-			return conllu2CG3(plainText2Conllu(text));
-		case 'Brackets':
-			return conllu2CG3(brackets2Conllu(text));
-		case 'SD':
-			return conllu2CG3(sd2Conllu(text));
-		case 'CoNLL-U':
-			return conllu2CG3(text);
-		case 'CG3':
-			log.info('convert2CG3(): received CG3');
-			return text;
-	}
+  log.debug('convert2CG3(): got format: ' + format);
+  switch (format) {
+    case 'Unknown':
+      log.warn('convert2CG3(): failed to convert Unknown to plain text');
+      return null;
+    case 'plain text':
+      return conllu2CG3(plainText2Conllu(text));
+    case 'Brackets':
+      return conllu2CG3(brackets2Conllu(text));
+    case 'SD':
+      return conllu2CG3(sd2Conllu(text));
+    case 'CoNLL-U':
+      return conllu2CG3(text);
+    case 'CG3':
+      log.info('convert2CG3(): received CG3');
+      return text;
+  }
 }
 
 /**
@@ -23612,28 +23651,28 @@ function convert2CG3(text) {
  * @return {String}     Sentence in CoNLL-U format
  */
 function plainText2Conllu(text) {
-	log.debug('called plainText2Conllu(' + text + ')');
-	log.debug('plainText2Conllu(): detected format: ' + detectFormat(text));
+  log.debug('called plainText2Conllu(' + text + ')');
+  log.debug('plainText2Conllu(): detected format: ' + detectFormat(text));
 
-	// TODO: if there's punctuation in the middle of a sentence,
-	// indices shift when drawing an arc
-	// punctuation
-	text = text.replace(/([^ ])([.?!;:,])/g, '$1 $2');
+  // TODO: if there's punctuation in the middle of a sentence,
+  // indices shift when drawing an arc
+  // punctuation
+  text = text.replace(/([^ ])([.?!;:,])/g, '$1 $2');
 
-	/* get it into this form:
-  *
-  * # sent_id = _
-  * # text = $text
-  * 1    $textLine0
-  * 2    $textLine1 [...]
-  *
-  */
-	var sent = new nx.Sentence();
-	sent.conllu = text.split(' ').map(function (token, i) {
-		return i + 1 + '\t' + token; // enumerating tokens
-	}).join('\n');
+  /* get it into this form:
+   *
+   * # sent_id = _
+   * # text = $text
+   * 1    $textLine0
+   * 2    $textLine1 [...]
+   *
+   */
+  var sent = new nx.Sentence();
+  sent.conllu = text.split(' ').map(function (token, i) {
+    return i + 1 + '\t' + token; // enumerating tokens
+  }).join('\n');
 
-	return sent.conllu;
+  return sent.conllu;
 }
 
 /**
@@ -23641,91 +23680,91 @@ function plainText2Conllu(text) {
  * @param {String} text Input string(CG format)
  */
 function sd2Conllu(text) {
-	log.debug('called sd2Conllu(' + text + ')');
+  log.debug('called sd2Conllu(' + text + ')');
 
-	/* Takes a string in CG, returns a string in conllu. */
-	var inputLines = text.split('\n');
-	var tokenId = 1,
-	    tokenToId = {},
-	    // convert from a token to an index
-	heads = [],
-	    // e.g. heads[1] = 3
-	deprels = []; // e.g. deprels[1] = nsubj
+  /* Takes a string in CG, returns a string in conllu. */
+  var inputLines = text.split('\n');
+  var tokenId = 1,
+      tokenToId = {},
+      // convert from a token to an index
+  heads = [],
+      // e.g. heads[1] = 3
+  deprels = []; // e.g. deprels[1] = nsubj
 
-	// first enumerate the tokens
-	_.each(inputLines[0].split(' '), function (token, i) {
-		tokenToId[token] = tokenId;
-		tokenId += 1;
-	});
+  // first enumerate the tokens
+  _.each(inputLines[0].split(' '), function (token, i) {
+    tokenToId[token] = tokenId;
+    tokenId += 1;
+  });
 
-	// When there are two surface forms that are the same, you have to specify the one you
-	// are referring to.
-	//
-	// e.g.
-	// the bear eats the crisps.
-	// det(bear, the-1)
-	// det(crisps, the-4)
-	// nsubj(eats, bear)
-	//
-	// In fact, these numbers are optional for all, so det(bear-2, the-1) would also be valid
+  // When there are two surface forms that are the same, you have to specify the one you
+  // are referring to.
+  //
+  // e.g.
+  // the bear eats the crisps.
+  // det(bear, the-1)
+  // det(crisps, the-4)
+  // nsubj(eats, bear)
+  //
+  // In fact, these numbers are optional for all, so det(bear-2, the-1) would also be valid
 
-	// now process the dependency relations
-	_.each(inputLines, function (line, i) {
-		if (line.indexOf(',') > -1) {
-			// not root node
-			var deprel = '',
-			    headToken = '',
-			    depToken = '',
-			    reading = 'deprel'; // reading \elem [ 'deprel', 'head', 'dep' ]
+  // now process the dependency relations
+  _.each(inputLines, function (line, i) {
+    if (line.indexOf(',') > -1) {
+      // not root node
+      var deprel = '',
+          headToken = '',
+          depToken = '',
+          reading = 'deprel'; // reading \elem [ 'deprel', 'head', 'dep' ]
 
-			for (var j = 0, l = line.length; j < l; j++) {
-				var word = line[j];
+      for (var j = 0, l = line.length; j < l; j++) {
+        var word = line[j];
 
-				switch (reading) {
-					case 'deprel':
-						if (word === '(') {
-							reading = 'head';
-						} else {
-							deprel += word;
-						}
-						break;
-					case 'head':
-						if (word === ',') {
-							reading = 'dep';
-						} else {
-							headToken += word;
-						}
-						break;
-					case 'dep':
-						if (!(line[j - 1] === ',' && word === ' ' || word === ')')) depToken += word;
-						break;
-				}
-			}
+        switch (reading) {
+          case 'deprel':
+            if (word === '(') {
+              reading = 'head';
+            } else {
+              deprel += word;
+            }
+            break;
+          case 'head':
+            if (word === ',') {
+              reading = 'dep';
+            } else {
+              headToken += word;
+            }
+            break;
+          case 'dep':
+            if (!(line[j - 1] === ',' && word === ' ' || word === ')')) depToken += word;
+            break;
+        }
+      }
 
-			var depId = void 0,
-			    headId = void 0;
-			if (depToken.search(/-[0-9]+/) > 0) depId = parseInt(depToken.split('-')[1]);
-			if (headToken.search(/-[0-9]+/) > 0) headId = parseInt(headToken.split('-')[1]);
+      var depId = void 0,
+          headId = void 0;
+      if (depToken.search(/-[0-9]+/) > 0) depId = parseInt(depToken.split('-')[1]);
+      if (headToken.search(/-[0-9]+/) > 0) headId = parseInt(headToken.split('-')[1]);
 
-			log.debug('sd2Conllu(): ' + depToken + ' \u2192 ' + headToken + ' @' + deprel + ' | ' + tokenToId[depToken] + ' : tokenToId[headToken] // ' + depId + ' \u2192 ' + headId);
-			heads[depId] = headId;
-			deprels[depId] = deprel;
-		}
-	});
+      log.debug('sd2Conllu(): ' + depToken + ' \u2192 ' + headToken + ' @' + deprel + ' | ' + tokenToId[depToken] + ' : tokenToId[headToken] // ' + depId + ' \u2192 ' + headId);
+      heads[depId] = headId;
+      deprels[depId] = deprel;
+    }
+  });
 
-	tokenId = 0;
-	var sent = new nx.Sentence();
-	sent.params = inputLines[0].split(' ').map(function (token) {
-		tokenId++;
+  tokenId = 0;
+  var sent = new nx.Sentence();
+  sent.params = inputLines[0].split(' ').map(function (token) {
+    tokenId++;
 
-		return {
-			form: token,
-			head: heads[tokenId],
-			deprel: deprels[tokenId]
-		};
-	});
+    return {
+      form: token,
+      head: heads[tokenId],
+      deprel: deprels[tokenId]
+    };
+  });
 
-	return sent.conllu;
+  return sent.conllu;
 }
 
 /**
@@ -23734,13 +23773,13 @@ function sd2Conllu(text) {
  * @return {String}     Plain text
  */
 function conllu2PlainText(text) {
-	log.debug('called conllu2PlainText(' + text + ')');
+  log.debug('called conllu2PlainText(' + text + ')');
 
-	if (!text) return null;
+  if (!text) return null;
 
-	var sent = new nx.Sentence();
-	sent.conllu = text;
-	return sent.text;
+  var sent = new nx.Sentence();
+  sent.conllu = text;
+  return sent.text;
 }
 
 /**
@@ -23749,151 +23788,193 @@ function conllu2PlainText(text) {
  * @return {String}     CoNLL-U
  */
 function brackets2Conllu(text) {
-	return null;
 
-	/*
- log.debug(`called brackets2Conllu(${text})`);
- 	return null; // until we fix this guy
- 	// This code is for parsing bracketted notation like:
- // [root [nsubj I] have [obj [amod [advmod too] many] commitments] [advmod right now] [punct .]]
- // Thanks to Nick Howell for help with a Python version.
- 	/* Takes a string in bracket notation, returns a string in conllu. */
+  /**
+   * first parse the sentence into a tree
+   */
+  function parse(text) {
+    var Token = function () {
+      function Token(parent) {
+        _classCallCheck(this, Token);
 
-	/*// helper functions
- const _node = (s, j) => {
- 	log.debug(`called brackets2Conllu._node(s: ${s}, j: ${j})`);
- 		function _Node(name, s, index, children) {
- 		log.debug(`called brackets2Conllu._node._Node constructor (name: ${name}, s: ${s}, index: ${index}, children: ${children})`);
- 			this.name = name;
- 		this.s = s;
- 		this.index = index;
- 		this.children = children;
- 			this.maxindex = () => {
- 			// Returns the maximum index for the node
- 			// mx = max([c.index for c in self.children] + [self.index])
- 			let localmax = 0;
- 			if (parseInt(this.index) > localmax)
- 				localmax = parseInt(this.index);
- 				$.each(this.children, (i, child) => {
- 				if (parseInt(child.index) > localmax)
- 					localmax = parseInt(child.index);
- 			});
- 				return localmax;
- 		};
- 			this.paternity = () => {
- 			$.each(this.children, (i, child) => {
- 				child.parent = this;
- 				child.paternity();
- 			});
- 				return this;
- 		};
- 			this.parent_index = () => {
- 			if (this.parent !== undefined) {
- 				if (this.parent.index !== undefined)
- 					return this.parent.index;
- 			}
- 			return 0;
- 		};
- 	}
- 
- 	const _match = (s, up, down) => {
- 		log.debug(`called brackets2Conllu._node._match(s: ${s}, up: ${up}, down: ${down})`);
- 			let depth = 0, i = 0;
- 		while(i < s.length && depth >= 0) {
- 				if (s[i] === up)
- 				depth += 1;
- 				if (s[i] === down)
- 				depth -= 1;
- 				i++;
- 		}
- 			return s.slice(0,i-1);
- 	};
- 		const _max = (list) => {
- 		log.debug(`called brackets2Conllu._node._max(${JSON.stringify(list)})`);
- 			// Return the largest number in a list otherwise return 0
- 		// @l = the list to search in
- 		let localmax = 0;
- 		$.each(list, (i, item) => {
- 			localmax = Math.max(item, localmax);
- 		});
- 			return localmax;
- 	};
- 		const _count = (needle, haystack) => {
- 		log.debug(`called brackets2Conllu._node._count(needle: ${needle}, haystack: ${JSON.stringify(haystack)})`);
- 			// Return the number of times you see needle in the haystack
- 		// @needle = string to search for
- 		// @haystack = string to search in
- 		let acc = 0;
- 		for (let i=0, l=haystack.length; i<l; i++) {
- 			if (needle === haystack[i])
- 				acc++;
- 		}
- 		return acc;
- 	};
- 
- 	// Parse a bracketted expression
- 	// @s = the expression
- 	// @j = the index we are at
- 		if (s[0] === '[' && s[-1] === ']')
- 		s = s.slice(1, -1);
- 		const first = s.indexOf(' '), // the first space delimiter
- 		name = s.slice(0, first), // dependency relation name
- 		remainder = s.slice(first, s.length);
- 		// this is impossible to understand without meaningful variables names .....
- 	let i = 0, index = 0, children = [], word;
- 	while (i < remainder.length) {
- 			if (remainder[i] === '[') {
- 			// We're starting a new expression
- 				const m = _match(remainder.slice(i+1, remainder.length), '[', ']'),
- 				indices = [index].concat(children.map((child) => { return child.maxindex(); })),
- 				n = _node(m, _max(indices));
- 				children.push(n);
- 			i += m.length + 2;
- 				if (!word)
- 				index = _max([index, n.maxindex()]);
- 			} else if (remainder[i] !== ' ' && (remainder[i-1] === ' ' || i === 0)) {
- 				const openBracketIndex = remainder.indexOf('[', i);
- 				if (openBracketIndex < 0) {
- 				word = remainder.slice(i, remainder.length);
- 			} else {
- 				word = remainder.slice(i, remainder.indexOf(' ', i));
- 			}
- 				i += word.length;
- 			index += 1 + _count(' ', word.trim());
- 			} else {
- 			i++;
- 		}
- 	}
- 		return new _Node(name, word, index, children);
- };
- const _fillTokens = (node, tokens) => {
- 	log.debug(`called brackets2Conllu._fillTokens(node: ${node}, tokens: ${JSON.stringify(tokens)})`);
- 		let newToken = new conllu.Token();
- 	newToken.form = node.s;
- 		// TODO: automatic recognition of punctuation's POS
- 	if (newToken['form'].match(/^[!.)(»«:;?¡,"\-><]+$/))
- 		newToken.upostag = 'PUNCT';
- 		newToken.id = node.index;
- 	newToken.head = node.parent_index();
- 	newToken.deprel = node.name;
- 	log.debug(`_fillTokens() newToken: (form: ${newToken.form}, id: ${newToken.id}, head: ${newToken.head}, deprel: ${newToken.deprel})`);
- 		tokens.push(newToken);
- 	$.each(node.children, (i, child) => {
- 		tokens = _fillTokens(child, tokens);
- 	});
- 		return tokens;
- };
- 	const inputLines = text.split('\n'),
- 	comments = '';
- 	let tokens = [], // list of tokens
- 	root = _node(inputLines[0], 0);
- 	root.paternity();
- tokens = _fillTokens(root, tokens);
- log.debug(`brackets2Conllu(): tokens: ${JSON.stringify(tokens)}`);
- 	let sent = new conllu.Sentence();
- sent.comments = comments;
- sent.tokens = tokens;
- return sent.serial;*/
+        this.parent = parent;
+
+        this.deprel = null;
+        this.before = [];
+        this.words = [];
+        this.after = [];
+      }
+
+      _createClass(Token, [{
+        key: 'eachBefore',
+        value: function eachBefore(callback) {
+          for (var i = 0; i < this.before.length; i++) {
+            callback(this.before[i], i);
+          }
+        }
+      }, {
+        key: 'eachAfter',
+        value: function eachAfter(callback) {
+          for (var i = 0; i < this.after.length; i++) {
+            callback(this.after[i], i);
+          }
+        }
+      }, {
+        key: 'tokenize',
+        value: function tokenize(sent) {
+
+          this.eachBefore(function (before) {
+            sent = before.tokenize(sent);
+          });
+
+          var token = nx.Token.fromParams(sent, {
+            form: this.words.join('-'),
+            deprel: this.deprel
+          });
+          sent.insertTokenAt(Infinity, token);
+
+          this.eachAfter(function (after) {
+            sent = after.tokenize(sent);
+          });
+
+          this.analysis = token.analysis;
+
+          return sent;
+        }
+      }, {
+        key: 'dependize',
+        value: function dependize(sent, id) {
+          var _this = this;
+
+          this.eachBefore(function (before) {
+            sent = before.dependize(sent, _this.analysis.id);
+          });
+
+          var head = sent.getById(id);
+          if (head) this.analysis.addHead(head, this.deprel);
+
+          this.eachAfter(function (after) {
+            sent = after.dependize(sent, _this.analysis.id);
+          });
+
+          return sent;
+        }
+      }, {
+        key: 'toString',
+        value: function toString() {
+          return '[' + this.deprel + (this.before.length ? ' ' + this.before.map(function (token) {
+            return token.toString();
+          }).join(' ') : '') + ' ' + this.words.join(' ') + (this.after.length ? ' ' + this.after.map(function (token) {
+            return token.toString();
+          }).join(' ') : '') + ']';
+        }
+      }, {
+        key: 'push',
+        value: function push(token) {
+          if (this.words.length) {
+            this.after.push(token);
+          } else {
+            this.before.push(token);
+          }
+        }
+      }, {
+        key: 'addWord',
+        value: function addWord(word) {
+          if (!word) return;
+
+          if (this.deprel) {
+            this.words.push(word);
+          } else {
+            this.deprel = word;
+          }
+        }
+      }]);
+
+      return Token;
+    }();
+
+    var Sentence = function () {
+      function Sentence() {
+        _classCallCheck(this, Sentence);
+
+        this.parent = null;
+        this.root = [];
+        this.comments = [];
+      }
+
+      _createClass(Sentence, [{
+        key: 'encode',
+        value: function encode() {
+          var sent = new nx.Sentence();
+
+          sent = this.root.tokenize(sent);
+          sent.index();
+          sent = this.root.dependize(sent, 0);
+          sent.comments = this.comments;
+
+          return sent;
+        }
+      }, {
+        key: 'toString',
+        value: function toString() {
+          return '' + this.root.toString();
+        }
+      }, {
+        key: 'push',
+        value: function push(token) {
+          this.root = token;
+        }
+      }]);
+
+      return Sentence;
+    }();
+
+    var sent = new Sentence(),
+        parsing = sent,
+        parent = null,
+        word = '';
+
+    try {
+      _.each(text, function (char) {
+        switch (char) {
+          case '[':
+            parent = parsing;
+            parsing = new Token(parent);
+            if (parent && parent.push) parent.push(parsing);
+            word = '';
+            break;
+
+          case ']':
+            if (parsing.addWord) parsing.addWord(word);
+            parsing = parsing.parent;
+            parent = parsing.parent;
+            word = '';
+            break;
+
+          case ' ':
+            if (parsing.addWord) parsing.addWord(word);
+            word = '';
+            break;
+
+          default:
+            word += char;
+            break;
+        }
+      });
+
+      return sent;
+    } catch (e) {
+
+      if (!(e instanceof errors.ParseError)) throw e;
+
+      return null;
+    }
+  }
+
+  var parsed = parse(text);
+  var encoded = parsed.encode();
+
+  return encoded.conllu;
 }
 
 /**
@@ -23902,27 +23983,27 @@ function brackets2Conllu(text) {
  * @return {String}     CoNLL-U
  */
 function cg32Conllu(CGtext) {
-	log.debug('called cg32Conllu(' + CGtext + ')');
+  log.debug('called cg32Conllu(' + CGtext + ')');
 
-	if (!CGtext) return null;
+  if (!CGtext) return null;
 
-	/* Takes a string in CG3, returns a string in CoNLL-U. */
+  /* Takes a string in CG3, returns a string in CoNLL-U. */
 
-	// remove extra spaces before newline before processing text
-	var sent = new nx.Sentence({ catchInvalid: false });
-	sent.cg3 = CGtext.replace(/ +\n/, '\n');
+  // remove extra spaces before newline before processing text
+  var sent = new nx.Sentence({ catchInvalid: false });
+  sent.cg3 = CGtext.replace(/ +\n/, '\n');
 
-	try {
-		return sent.conllu;
-	} catch (e) {
+  try {
+    return sent.conllu;
+  } catch (e) {
 
-		if (e instanceof nx.Error.InvalidCoNLLUError) {
-			alerts.unableToConvertToConllu();
-			return null;
-		}
+    if (e instanceof nx.Error.InvalidCoNLLUError) {
+      alerts.unableToConvertToConllu();
+      return null;
+    }
 
-		throw e;
-	}
+    throw e;
+  }
 }
 
 /**
@@ -23932,24 +24013,24 @@ function cg32Conllu(CGtext) {
  * @return {String}     CG3
  */
 function conllu2CG3(conlluText) {
-	log.debug('called conllu2CG3(' + conlluText);
+  log.debug('called conllu2CG3(' + conlluText);
 
-	if (!conlluText) return null;
+  if (!conlluText) return null;
 
-	var sent = new nx.Sentence({ catchInvalid: false });
-	sent.conllu = conlluText;
+  var sent = new nx.Sentence({ catchInvalid: false });
+  sent.conllu = conlluText;
 
-	try {
-		return sent.cg3;
-	} catch (e) {
+  try {
+    return sent.cg3;
+  } catch (e) {
 
-		if (e instanceof nx.Error.InvalidCG3Error) {
-			alerts.unableToConvertToCG3();
-			return null;
-		}
+    if (e instanceof nx.Error.InvalidCG3Error) {
+      alerts.unableToConvertToCG3();
+      return null;
+    }
 
-		throw e;
-	}
+    throw e;
+  }
 }
 
 /**
@@ -23957,19 +24038,19 @@ function conllu2CG3(conlluText) {
  *  - helper function for conllu2CG3() and onEnter()
  */
 function getCG3Analysis(i, token) {
-	log.debug('called conllu2CG3:getCG3Analysis(i: ' + i + ', token: ' + JSON.stringify(token) + ')');
+  log.debug('called conllu2CG3:getCG3Analysis(i: ' + i + ', token: ' + JSON.stringify(token) + ')');
 
-	var lemma = token.lemma ? '"' + token.lemma + '"' : '""',
-	    // lemma should have "" if blank (#228)
-	pos = token.upostag || token.xpostag || '_',
-	    feats = token.feats ? ' ' + token.feats.replace(/\|/g, ' ') : '',
-	    deprel = token.deprel ? ' @' + token.deprel : ' @x',
-	    // is it really what we want by default?
-	head = token.head || '',
-	    cgToken = lemma + ' ' + pos + feats + deprel + ' #' + token.id + '->' + head;
+  var lemma = token.lemma ? '"' + token.lemma + '"' : '""',
+      // lemma should have "" if blank (#228)
+  pos = token.upostag || token.xpostag || '_',
+      feats = token.feats ? ' ' + token.feats.replace(/\|/g, ' ') : '',
+      deprel = token.deprel ? ' @' + token.deprel : ' @x',
+      // is it really what we want by default?
+  head = token.head || '',
+      cgToken = lemma + ' ' + pos + feats + deprel + ' #' + token.id + '->' + head;
 
-	log.debug('got cgToken: ' + cgToken);
-	return cgToken;
+  log.debug('got cgToken: ' + cgToken);
+  return cgToken;
 };
 
 /**
@@ -23978,52 +24059,52 @@ function getCG3Analysis(i, token) {
  * @return {String}     Cleaned up content
  */
 function cleanConllu(content) {
-	log.debug('called cleanConllu(' + content + ')');
+  log.debug('called cleanConllu(' + content + ')');
 
-	if (!content) return null;
+  if (!content) return null;
 
-	// if we don't find any tabs, then convert >1 space to tabs
-	// TODO: this should probably go somewhere else, and be more
-	// robust, think about vietnamese D:
-	var res = content.search('\n');
-	if (res < 0) return content;
+  // if we don't find any tabs, then convert >1 space to tabs
+  // TODO: this should probably go somewhere else, and be more
+  // robust, think about vietnamese D:
+  var res = content.search('\n');
+  if (res < 0) return content;
 
-	/*
- // maybe someone is just trying to type conllu directly...
- res = (content.match(/_/g) || []).length;
- if (res <= 2)
-     return content; */
+  /*
+  // maybe someone is just trying to type conllu directly...
+  res = (content.match(/_/g) || []).length;
+  if (res <= 2)
+      return content; */
 
-	// If we don't find any tabs, then we want to replace multiple spaces with tabs
-	var spaceToTab = true; //(content.search('\t') < 0);
-	var newContent = content.trim().split('\n').map(function (line) {
-		line = line.trim();
+  // If we don't find any tabs, then we want to replace multiple spaces with tabs
+  var spaceToTab = true; //(content.search('\t') < 0);
+  var newContent = content.trim().split('\n').map(function (line) {
+    line = line.trim();
 
-		// If there are no spaces and the line isn't a comment,
-		// then replace more than one space with a tab
-		if (line[0] !== '#' && spaceToTab) line = line.replace(/[ \t]+/g, '\t');
+    // If there are no spaces and the line isn't a comment,
+    // then replace more than one space with a tab
+    if (line[0] !== '#' && spaceToTab) line = line.replace(/[ \t]+/g, '\t');
 
-		return line;
-	}).join('\n');
+    return line;
+  }).join('\n');
 
-	// If there are >1 CoNLL-U format sentences is in the input, treat them as such
-	// conlluMultiInput(newContent); // TODO: move this one also inside of this func, and make a separate func for calling them all at the same time
+  // If there are >1 CoNLL-U format sentences is in the input, treat them as such
+  // conlluMultiInput(newContent); // TODO: move this one also inside of this func, and make a separate func for calling them all at the same time
 
-	//if (newContent !== content)
-	//$('#text-data').val(newContent);
+  //if (newContent !== content)
+  //$('#text-data').val(newContent);
 
-	return newContent;
+  return newContent;
 }
 
 module.exports = {
-	to: {
-		plainText: convert2PlainText,
-		conllu: convert2Conllu,
-		cg3: convert2CG3
-	}
+  to: {
+    plainText: convert2PlainText,
+    conllu: convert2Conllu,
+    cg3: convert2CG3
+  }
 };
 
-},{"./alerts":337,"./detect":343,"notatrix":330,"underscore":335}],341:[function(require,module,exports){
+},{"./alerts":337,"./detect":343,"./errors":344,"notatrix":330,"underscore":335}],341:[function(require,module,exports){
 'use strict';
 
 // is defined in a js file, because fetch doesn't work offline in chrome
@@ -55311,7 +55392,7 @@ function removeHead(srcId, tarId) {
 
 module.exports = Graph;
 
-},{"./config":339,"./cy-style":341,"./cytoscape/cytoscape":342,"./errors":344,"./funcs":345,"./selfcomplete":351,"./sort":353,"./validate":356,"jquery":327,"underscore":335}],347:[function(require,module,exports){
+},{"./config":339,"./cy-style":341,"./cytoscape/cytoscape":342,"./errors":344,"./funcs":345,"./selfcomplete":351,"./sort":353,"./validate":363,"jquery":327,"underscore":335}],347:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -56059,7 +56140,7 @@ function mergeNodes(direction) {
 
 module.exports = GUI;
 
-},{"./convert":340,"./errors":344,"./funcs":345,"./local-storage":349,"./table":354,"./undo-manager":355,"jquery":327}],348:[function(require,module,exports){
+},{"./convert":340,"./errors":344,"./funcs":345,"./local-storage":349,"./table":354,"./undo-manager":362,"jquery":327}],348:[function(require,module,exports){
 'use strict';
 
 require('babel-polyfill');
@@ -56078,7 +56159,9 @@ $(function () {
 	funcs.global().manager = new Manager();
 });
 
-},{"./browser-logger":338,"./funcs":345,"./manager":350,"./server":352,"babel-polyfill":1}],349:[function(require,module,exports){
+module.exports = require('./test/data/index');
+
+},{"./browser-logger":338,"./funcs":345,"./manager":350,"./server":352,"./test/data/index":358,"babel-polyfill":1}],349:[function(require,module,exports){
 'use strict';
 
 var KEY = require('./config').localStorageKey;
@@ -57928,7 +58011,158 @@ module.exports = {
   edit: edit
 };
 
-},{"./validate":356,"jquery":327}],355:[function(require,module,exports){
+},{"./validate":363,"jquery":327}],355:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+  0: '[root [nsubj I] have [obj [amod [advmod too] many] commitments] [advmod right now] [punct .]]'
+};
+
+},{}],356:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+	nested: '# sent_id = wikipedia:Poyvi_Paragu\xE1i:11\n# text = Poyvi pete\u0129ha \xF1ane ret\xE3megua niko ojepuru\u2019yp\xFDkuri 15 jasypo guive 16 jasypote\u0129 meve ary 1811-pe.\n# text[spa] = Bandera uno nosotros de-de _ \xE9l-se-utiliz\xF3-_ 15 maio desde 16 junio hasta a\xF1o 1811-en.\n"<Poyvi>"\n\t"poyvi" n\n"<pete\u0129ha>"\n\t"pete" n incp\n\t\t"\u0129" v tv pres\n\t\t\t"ha" subs\n\t"pete\u0129ha" num\n"<\xF1ane>"\n\t"\xF1and\xE9" prn pers p1 incl pl\n"<ret\xE3megua>"\n\t"*ret\xE3megua"\n"<niko>"\n\t"*niko"\n"<ojepuru\u02BCyp\xFDkuri>"\n\t"*ojepuru\u02BCyp\xFDkuri"\n"<15>"\n\t"15" num @amod\n"<jasypo>"\n\t"ja" n incp\n\t\t"sy" n incp\n\t\t\t"po" n\n\t"ja" n incp\n\t\t"sy" n incp\n\t\t\t"po" v iv pres\n\t"ja" n incp\n\t\t"sy" n incp\n\t\t\t"po" v tv pres\n\t"ja" prn p1 pl\n\t\t"sy" n incp\n\t\t\t"po" n\n\t"ja" prn p1 pl\n\t\t"sy" n incp\n\t\t\t"po" v iv pres\n\t"ja" prn p1 pl\n\t\t"sy" n incp\n\t\t\t"po" v tv pres\n\t"jasy" n incp\n\t\t"po" n\n\t"jasy" n incp\n\t\t"po" v iv pres\n\t"jasy" n incp\n\t\t"po" v tv pres\n\t"jasypo" n\n"<guive>"\n\t"guive" post @case\n"<16>"\n\t"16" num @amod\n"<jasypote\u0129>"\n\t"jasypote\u0129" n\n"<meve>"\n\t"peve" post @case\n"<ary>"\n\t"ary" n\n"<1811-pe>"\n\t"1811" num\n\t\t"pe" post @case',
+
+	/*nested_2: `"<ab>"
+ 	"A" #1->
+ 		"B" #2->
+ "<cde>"
+ 	"C" #3->
+ 		"D" #4->
+ 			"E" #5->
+ "<f>"
+ 	"F" #6->
+ "<h>"
+ 	"H" #7->`,*/
+
+	kdt_tagged_1: '# https://github.com/apertium/apertium-kaz/blob/master/texts/kdt.tagged.txt\n"<\u04E8\u0441\u043A\u0435\u043C\u0435\u043D\u043D\u0456\u04A3>"\n\t"\u04E8\u0441\u043A\u0435\u043C\u0435\u043D" np top gen @nmod:poss #1->3\n"<\u0430\u0440>"\n\t"\u0430\u0440" adj @amod #2->3\n"<\u0436\u0430\u0493\u044B\u043D\u0434\u0430>"\n\t"\u0436\u0430\u049B" n px3sp loc @conj #3->7\n"<,>"\n\t"," cm @punct #4->7\n"<\u0411\u04B1\u049B\u0442\u044B\u0440\u043C\u0430\u043D\u044B\u04A3>"\n\t"\u0411\u04B1\u049B\u0442\u044B\u0440\u043C\u0430" np top gen @nmod:poss #5->7\n"<\u043E\u04A3>"\n\t"\u043E\u04A3" adj @amod #6->7\n"<\u0436\u0430\u0493\u044B\u043D\u0434\u0430>"\n\t"\u0436\u0430\u049B" n px3sp loc @nmod #7->11\n"<\u04D9\u043B\u0435\u043C\u0433\u0435>"\n\t"\u04D9\u043B\u0435\u043C" n dat @nmod #8->9\n"<\u0430\u044F\u043D>"\n\t"\u0430\u044F\u043D" adj @acl #9->10\n"<\u0410\u043B\u0442\u0430\u0439>"\n\t"\u0410\u043B\u0442\u0430\u0439" np top nom @nsubj #10->11\n"<\u0431\u0430\u0440>"\n\t"\u0431\u0430\u0440" adj @root #11->0\n\t\t"\u0435" cop aor p3 sg @cop #12->11\n"<.>"\n\t"." sent @punct #13->11',
+
+	kdt_tagged_2: '# https://github.com/apertium/apertium-kaz/blob/master/texts/kdt.tagged.txt\n"<\u0410\u0442\u0442\u0430\u043D>"\n\t"\u0430\u0442\u0442\u0430\u043D" v iv imp p2 sg @root #1->0\n"<!>"\n\t"!" sent @punct #2->1',
+
+	kdt_tagged_3: '# https://github.com/apertium/apertium-kaz/blob/master/texts/kdt.tagged.txt\n"<\u041C\u0430\u043D\u0430\u0493\u044B>"\n\t"\u043C\u0430\u043D\u0430\u0493\u044B" det dem @det #1->3\n"<\u0430\u043B\u0430>"\n\t"\u0430\u043B\u0430" adj @amod #2->3\n"<\u0430\u0442\u0442\u044B>"\n\t"\u0430\u0442\u0442\u044B" adj subst nom @nsubj #3->4\n"<\u043A\u0456\u043C>"\n\t"\u043A\u0456\u043C" prn itg nom @root #4->0\n\t\t"\u0435" cop aor p3 sg @cop #5->4\n"<?>"\n\t"?" sent @punct #6->4',
+
+	0: '"<\u041F\u0430\u0442\u0448\u0430\u043C\u0435\u043D>"\n\t"\u043F\u0430\u0442\u0448\u0430" n ins @nmod #1->3\n"<\u0441\u043E\u0493\u044B\u0441>"\n\t"\u0441\u043E\u0493\u044B\u0441" n nom @obj #2->3\n"<\u0430\u0448\u049B\u0430\u043D\u0434\u0430>"\n\t"\u0430\u0448" v tv ger_past loc @advcl #3->12\n"<,>"\n\t"," cm @punct #4->12\n"<\u0435\u043B-\u0436\u04B1\u0440\u0442>"\n\t"\u0435\u043B-\u0436\u04B1\u0440\u0442" n nom @conj #5->7\n"<,>"\n\t"," cm @punct #6->7\n"<\u043E\u0442\u0430\u043D\u044B\u043C\u0434\u044B>"\n\t"\u043E\u0442\u0430\u043D" n px1sg acc @obj #7->8\n"<\u049B\u043E\u0440\u0493\u0430\u0443\u0493\u0430>"\n\t"\u049B\u043E\u0440\u0493\u0430" v tv ger dat @advcl #8->12\n"<,>"\n\t"," cm @punct #9->12\n"<\u0431\u0456\u0437>"\n\t"\u0431\u0456\u0437" prn pers p1 pl nom @nsubj #10->12\n"<\u0441\u043E\u0493\u044B\u0441\u049B\u0430>"\n\t"\u0441\u043E\u0493\u044B\u0441" n dat @nmod #11->12\n"<\u0431\u0430\u0440\u0434\u044B\u049B>"\n\t"\u0431\u0430\u0440" v iv ifi p1 pl @root #12->0\n"<.>"\n\t"." sent @punct #13->12',
+
+	1: '# text = He boued e tebr Mona er gegin.\n# text[eng] = Mona eats her food here in the kitchen.\n# labels = press_1986 ch_syntax p_197 to_check\n"<He>"\n\t"he" det pos f sp @det #1->2\n"<boued>"\n\t"boued" n m sg @obj #2->4\n"<e>"\n\t"e" vpart obj @aux #3->4\n"<tebr>"\n\t"debri\xF1" vblex pri p3 sg @root #4->0\n"<Mona>"\n\t"Mona" np ant f sg @nsubj #5->4\n"<er>"\n\t"e" pr @case #6->8\n\t\t"an" det def sp @det #7->8\n"<gegin>"\n\t"kegin" n f sg @obl #8->4\n"<.>"\n\t"." sent @punct #9->4',
+
+	2: '# text = He boued e tebr Mona er gegin.\n# text[eng] = Mona eats her food here in the kitchen.\n# labels = press_1986 ch_syntax p_197 to_check\n"<He>"\n\t"he" det pos f sp @det #1->2\n"<boued>"\n\t"boued" n m sg @obj #2->4\n"<e>"\n\t"e" vpart obj @aux #3->4\n"<tebr>"\n\t"debri\xF1" vblex pri p3 sg @root #4->0\n"<Mona>"\n\t"Mona" np ant f sg @nsubj #5->4\n"<er>"\n\t"e" pr @case #6->8\n\t\t"an" det def sp @det #7->8\n"<gegin>"\n\t"kegin" n f sg @obl #8->4\n\t"kegin" n f pl @obl\n"<.>"\n\t"." sent @punct #9->4', // note: changed line `"kegin" n f pl @obl #8->4`
+
+	with_semicolumn: '\n"<Siedzieli\u015Bmy>"\n\t"siedzie\u0107" vblex impf past p1 m pl\n"<w>"\n\t"w" pr\n"<moim>"\n;   "m\xF3j" prn pos mi sg loc\n"<pokoju>"\n\t"pok\xF3j" n mi sg loc\n"<,>"\n\t"," cm\n"<pal\u0105c>"\n\t"pali\u0107" vblex impf pprs adv\n"<i>"\n\t"i" cnjcoo\n"<rozmawiaj\u0105c>"\n\t"rozmawia\u0107" vblex impf pprs adv\n"<o>"\n\t"o" pr\n"<tem>"\n\t"to" prn dem mi sg loc\n"<,>"\n\t"," cm\n"<jak>"\n\t"jak" rel adv\n"<marni>"\n\t"marny" adj sint mp pl nom\n"<jeste\u015Bmy>"\n\t"by\u0107" vbser pres p1 pl\n"<,>"\n\t"," cm\n"<marni>"\n\t"marny" adj sint mp pl nom\n"<z>"\n\t"z" pr\n"<lekarskiego>"\n\t"lekarski" adj mi sg gen\n"<punktu>"\n\t"punkt" n mi sg gen\n"<widzenia>"\n;   "widzie\u0107" vblex impf ger nt sg gen\n"<chc\u0119>"\n\t"chcie\u0107" vblex impf pres p1 sg\n"<powiedzie\u0107>"\n\t"powiedzie\u0107" vblex perf inf\n"<,>"\n\t"," cm\n"<naturalnie>"\n\t"naturalnie" adv sint\n"<.>"\n\t"." sent',
+
+	simple: '"<\u041F\u0430\u0442\u0448\u0430\u043C\u0435\u043D>"\n\t"\u043F\u0430\u0442\u0448\u0430" n ins @nmod #1->3\n"<\u0441\u043E\u0493\u044B\u0441>"\n\t"\u0441\u043E\u0493\u044B\u0441" n nom @obj #2->3\n"<\u0430\u0448\u049B\u0430\u043D\u0434\u0430>"\n\t"\u0430\u0448" v tv ger_past loc @advcl #3->12\n"<,>"\n\t"," cm @punct #4->12\n"<\u0435\u043B-\u0436\u04B1\u0440\u0442>"\n\t"\u0435\u043B-\u0436\u04B1\u0440\u0442" n nom @conj #5->7\n"<,>"\n\t"," cm @punct #6->7\n"<\u043E\u0442\u0430\u043D\u044B\u043C\u0434\u044B>"\n\t"\u043E\u0442\u0430\u043D" n px1sg acc @obj #7->8\n"<\u049B\u043E\u0440\u0493\u0430\u0443\u0493\u0430>"\n\t"\u049B\u043E\u0440\u0493\u0430" v tv ger dat @advcl #8->12\n"<,>"\n\t"," cm @punct #9->12\n"<\u0431\u0456\u0437>"\n\t"\u0431\u0456\u0437" prn pers p1 pl nom @nsubj #10->12\n"<\u0441\u043E\u0493\u044B\u0441\u049B\u0430>"\n\t"\u0441\u043E\u0493\u044B\u0441" n dat @nmod #11->12\n"<\u0431\u0430\u0440\u0434\u044B\u049B>"\n\t"\u0431\u0430\u0440" v iv ifi p1 pl @root #12->0\n"<.>"\n\t"." sent @punct #13->12',
+
+	simple_with_comments: '# comment #1\n# comment #2\n"<\u041F\u0430\u0442\u0448\u0430\u043C\u0435\u043D>"\n\t"\u043F\u0430\u0442\u0448\u0430" n ins @nmod #1->3\n"<\u0441\u043E\u0493\u044B\u0441>"\n\t"\u0441\u043E\u0493\u044B\u0441" n nom @obj #2->3\n"<\u0430\u0448\u049B\u0430\u043D\u0434\u0430>"\n\t"\u0430\u0448" v tv ger_past loc @advcl #3->12\n"<,>"\n\t"," cm @punct #4->12\n"<\u0435\u043B-\u0436\u04B1\u0440\u0442>"\n\t"\u0435\u043B-\u0436\u04B1\u0440\u0442" n nom @conj #5->7\n"<,>"\n\t"," cm @punct #6->7\n"<\u043E\u0442\u0430\u043D\u044B\u043C\u0434\u044B>"\n\t"\u043E\u0442\u0430\u043D" n px1sg acc @obj #7->8\n"<\u049B\u043E\u0440\u0493\u0430\u0443\u0493\u0430>"\n\t"\u049B\u043E\u0440\u0493\u0430" v tv ger dat @advcl #8->12\n"<,>"\n\t"," cm @punct #9->12\n"<\u0431\u0456\u0437>"\n\t"\u0431\u0456\u0437" prn pers p1 pl nom @nsubj #10->12\n"<\u0441\u043E\u0493\u044B\u0441\u049B\u0430>"\n\t"\u0441\u043E\u0493\u044B\u0441" n dat @nmod #11->12\n"<\u0431\u0430\u0440\u0434\u044B\u049B>"\n\t"\u0431\u0430\u0440" v iv ifi p1 pl @root #12->0\n"<.>"\n\t"." sent @punct #13->12',
+
+	with_spans: '# text = He boued e tebr Mona er gegin.\n# text[eng] = Mona eats her food here in the kitchen.\n# labels = press_1986 ch_syntax p_197 to_check\n"<He>"\n\t"he" det pos f sp @det #1->2\n"<boued>"\n\t"boued" n m sg @obj #2->4\n"<e>"\n\t"e" vpart obj @aux #3->4\n"<tebr>"\n\t"debri\xF1" vblex pri p3 sg @root #4->0\n"<Mona>"\n\t"Mona" np ant f sg @nsubj #5->4\n"<er>"\n\t"e" pr @case #6->8\n\t\t"an" det def sp @det #7->8\n"<gegin>"\n\t"kegin" n f sg @obl #8->4\n"<.>"\n\t"." sent @punct #9->4',
+
+	apertium_kaz_1: '# https://bpaste.net/show/be7c03e6213e\n"<\u0427\u0430\u0443>"\n\t"*\u0427\u0430\u0443"\n"<->"\n\t"\u0445" guio\n\t"-" guio\n"<\u0447\u0430\u0443>"\n\t"*\u0447\u0430\u0443"\n"<\u0448\u044B\u0493\u0443>"\n\t"\u0448\u044B\u0493\u0443" n attr\n\t"\u0448\u044B\u049B" v tv ger nom\n\t"\u0448\u044B\u049B" v iv ger nom\n\t"\u0448\u044B\u0493\u0443" n nom\n;\t"\u0448\u044B\u0493\u0443" n nom\n;\t\t"\u0435" cop aor p3 pl REMOVE:294\n;\t"\u0448\u044B\u0493\u0443" n nom\n;\t\t"\u0435" cop aor p3 sg REMOVE:294\n;\t"\u0448\u044B\u049B" vaux ger nom REMOVE:766\n"<\u0442\u0435\u0433\u0456\u043D\u0435\u043D>"\n\t"\u0442\u0435\u043A" n px3sp abl\n;\t"\u0442\u0435\u043A" n px3sp abl\n;\t\t"\u0435" cop aor p3 pl REMOVE:294\n;\t"\u0442\u0435\u043A" n px3sp abl\n;\t\t"\u0435" cop aor p3 sg REMOVE:294\n"<\u0448\u043F\u0438\u0446\u0442\u0435\u0440>"\n\t"*\u0448\u043F\u0438\u0446\u0442\u0435\u0440"\n"<\u0442\u043E\u0431\u044B\u043D\u0430>"\n\t"\u0442\u043E\u043F" n px3sp dat\n"<\u0436\u0430\u0442\u0430\u0434\u044B>"\n\t"\u0436\u0430\u0442" v iv aor p3 sg\n;\t"\u0436\u0430\u0442" vaux aor p3 pl REMOVE:766\n;\t"\u0436\u0430\u0442" vaux aor p3 sg REMOVE:766\n;\t"\u0436\u0430\u0442" v iv aor p3 pl REMOVE:846\n"<.>"\n\t"." sent',
+
+	apertium_kaz_2: '# https://bpaste.net/show/be7c03e6213e\n"<\u049A\u0430\u043D\u044B\u043D\u0434\u0430>"\n\t"\u049B\u0430\u043D" n px3sp loc\n;\t"\u049B\u0430\u043D" n px3sp loc\n;\t\t"\u0435" cop aor p3 pl REMOVE:294\n;\t"\u049B\u0430\u043D" n px3sp loc\n;\t\t"\u0435" cop aor p3 sg REMOVE:294\n"<\u0442\u0438\u0431\u0435\u0442>"\n\t"*\u0442\u0438\u0431\u0435\u0442"\n"<\u0438\u0442\u0456\u043D\u0456\u04A3>"\n\t"\u0438\u0442" n px3sp gen\n"<(>"\n\t"(" lpar\n"<\u043C\u0430\u0441\u0442\u0438\u0444>"\n\t"*\u043C\u0430\u0441\u0442\u0438\u0444"\n"<)>"\n\t")" rpar\n"<\u049B\u0430\u043D\u044B>"\n\t"\u049B\u0430\u043D" n px3sp nom\n;\t"\u049B\u0430\u043D" n px3sp nom\n;\t\t"\u0435" cop aor p3 pl REMOVE:294\n;\t"\u049B\u0430\u043D" n px3sp nom\n;\t\t"\u0435" cop aor p3 sg REMOVE:294\n"<\u0431\u0430\u0440>"\n\t"\u0431\u0430\u0440" adj SELECT:1118\n\t"\u0431\u0430\u0440" adj subst nom SELECT:1118\n\t\t"\u0435" cop aor p3 sg\n\t"\u0431\u0430\u0440" adj subst nom SELECT:1118\n\t"\u0431\u0430\u0440" adj SELECT:1118\n\t\t"\u0435" cop aor p3 sg\n;\t"\u0431\u0430\u0440" n attr REMOVE:567\n;\t"\u0431\u0430\u0440" adj\n;\t\t"\u0435" cop aor p3 pl REMOVE:853\n;\t"\u0431\u0430\u0440" n nom\n;\t\t"\u0435" cop aor p3 pl REMOVE:853\n;\t"\u0431\u0430\u0440" adj subst nom\n;\t\t"\u0435" cop aor p3 pl REMOVE:853\n;\t"\u0431\u0430\u0440" n nom SELECT:1118\n;\t"\u0431\u0430\u0440" det qnt SELECT:1118\n;\t"\u0431\u0430\u0440" v iv imp p2 sg SELECT:1118\n;\t"\u0431\u0430\u0440" n nom SELECT:1118\n;\t\t"\u0435" cop aor p3 sg\n"<\u0434\u0435\u0433\u0435\u043D>"\n\t"\u0434\u0435" v tv gpr_past SELECT:813\n\t"\u0434\u0435" v tv gpr_past subst nom SELECT:813\n;\t"\u0434\u0435" v tv ger_past nom SELECT:813\n;\t"\u0434\u0435" v tv past p3 pl SELECT:813\n;\t"\u0434\u0435" v tv past p3 sg SELECT:813\n"<\u0442\u04B1\u0436\u044B\u0440\u044B\u043C>"\n\t"\u0442\u04B1\u0436\u044B\u0440\u044B\u043C" n nom\n\t"\u0442\u04B1\u0436\u044B\u0440\u044B\u043C" n attr\n;\t"\u0442\u04B1\u0436\u044B\u0440\u044B\u043C" n nom\n;\t\t"\u0435" cop aor p3 pl REMOVE:294\n;\t"\u0442\u04B1\u0436\u044B\u0440\u044B\u043C" n nom\n;\t\t"\u0435" cop aor p3 sg REMOVE:294\n"<\u0431\u0430\u0440>"\n\t"\u0431\u0430\u0440" adj\n\t"\u0431\u0430\u0440" n nom\n\t"\u0431\u0430\u0440" adj\n\t\t"\u0435" cop aor p3 sg\n\t"\u0431\u0430\u0440" adj subst nom\n\t\t"\u0435" cop aor p3 sg\n\t"\u0431\u0430\u0440" adj subst nom\n\t"\u0431\u0430\u0440" v iv imp p2 sg\n\t"\u0431\u0430\u0440" n nom\n\t\t"\u0435" cop aor p3 sg\n;\t"\u0431\u0430\u0440" det qnt REMOVE:551\n;\t"\u0431\u0430\u0440" n attr REMOVE:567\n;\t"\u0431\u0430\u0440" adj subst nom\n;\t\t"\u0435" cop aor p3 pl REMOVE:853\n;\t"\u0431\u0430\u0440" adj\n;\t\t"\u0435" cop aor p3 pl REMOVE:853\n;\t"\u0431\u0430\u0440" n nom\n;\t\t"\u0435" cop aor p3 pl REMOVE:853\n"<.>"\n\t"." sent'
+
+};
+
+},{}],357:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+  nested_2: '# text = ab cde f h\n1-2\tab\t_\t_\t_\t_\t_\t_\t_\t_\n1\ta\tA\t_\t_\t_\t_\t_\t_\t_\n2\tb\tB\t_\t_\t_\t_\t_\t_\t_\n3-5\tcde\t_\t_\t_\t_\t_\t_\t_\t_\n3\tc\tC\t_\t_\t_\t_\t_\t_\t_\n4\td\tD\t_\t_\t_\t_\t_\t_\t_\n5\te\tE\t_\t_\t_\t_\t_\t_\t_\n6\tf\tF\t_\t_\t_\t_\t_\t_\t_\n6.1\tsilent_g\tG\t_\t_\t_\t_\t_\t_\t_\n7\th\tH\t_\t_\t_\t_\t_\t_\t_',
+
+  t: '# testing :)\n1-3\tHe\the\tdet\t_\tpos|f|sp\t_\tdet\t_\t_\n1\tboued\tboued\tn\t_\tm|sg\t4\tobj\t_\t_\n2\te\te\tvpart\t_\tobj\t4\taux\t_\t_\n3\ttebr\tdebri\xF1\tvblex\t_\tpri|p3|sg\t0\troot\t_\t_\n4\tdoob\tdoobie\tnp\t_\t_\t3\t_\t_\t_\n5\tMona\tMona\tnp\t_\tant|f|sg\t4\tnsubj\t_\t_',
+
+  empty: '1      Sue       Sue       _       _       _       _       _       _       _\n2      likes     like       _       _       _       _       _       _       _\n3      coffee    coffee       _       _       _       _       _       _       _\n4      and       and       _       _       _       _       _       _       _\n5      Bill      Bill       _       _       _       _       _       _       _\n5.1    likes     like       _       _       _       _       _       _       _\n6      tea       tea       _       _       _       _       _       _       _',
+
+  0: '# sent_id = _\n# text = this is a test\n1\tthis\t_\t_\t_\t_\t_\t_\t_\t_\n2\tis\t_\t_\t_\t_\t_\t_\t_\t_\n3\ta\t_\t_\t_\t_\t_\t_\t_\t_\n4\ttest\t_\t_\t_\t_\t_\t_\t_\t_',
+
+  1: '1\tthis\t_\t_\t_\t_\t_\t_\t_\t_\n2\tis\t_\t_\t_\t_\t_\t_\t_\t_\n3\ta\t_\t_\t_\t_\t_\t_\t_\t_\n4\ttest\t_\t_\t_\t_\t_\t_\t_\t_',
+
+  cat_ancora: '# url = https://raw.githubusercontent.com/UniversalDependencies/UD_Catalan-AnCora/dev/ca_ancora-ud-test.conllu\n# sent_id = test-s1\n# text = El darrer n\xFAmero de l\'Observatori del Mercat de Treball d\'Osona inclou un informe especial sobre la contractaci\xF3 a trav\xE9s de les empreses de treball temporal, les ETT.\n# orig_file_sentence 001#1\n1\tEl\tel\tDET\tDET\tDefinite=Def|Gender=Masc|Number=Sing|PronType=Art\t3\tdet\t_\t_\n2\tdarrer\tdarrer\tADJ\tADJ\tGender=Masc|Number=Sing|NumType=Ord\t3\tamod\t_\t_\n3\tn\xFAmero\tn\xFAmero\tNOUN\tNOUN\tGender=Masc|Number=Sing\t13\tnsubj\t_\t_\n4\tde\tde\tADP\tADP\tAdpType=Prep\t6\tcase\t_\t_\n5\tl\'\tel\tDET\tDET\tDefinite=Def|Number=Sing|PronType=Art\t6\tdet\t_\tSpaceAfter=No\n6\tObservatori\tObservatori\tPROPN\tPROPN\t_\t3\tnmod\t_\tMWE=Observatori_del_Mercat_de_Treball_d\'_Osona|MWEPOS=PROPN\n7\tdel\tdel\tADP\tADP\tAdpType=Preppron|Gender=Masc|Number=Sing\t8\tcase\t_\t_\n8\tMercat\tMercat\tPROPN\tPROPN\t_\t6\tflat\t_\t_\n9\tde\tde\tADP\tADP\tAdpType=Prep\t10\tcase\t_\t_\n10\tTreball\tTreball\tPROPN\tPROPN\t_\t6\tflat\t_\t_\n11\td\'\td\'\tADP\tADP\tAdpType=Prep\t12\tcase\t_\tSpaceAfter=No\n12\tOsona\tOsona\tPROPN\tPROPN\t_\t6\tflat\t_\t_\n13\tinclou\tincloure\tVERB\tVERB\tMood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin\t0\troot\t_\t_\n14\tun\tun\tNUM\tNUM\tGender=Masc|Number=Sing|NumType=Card\t15\tnummod\t_\t_\n15\tinforme\tinforme\tNOUN\tNOUN\tGender=Masc|Number=Sing\t13\tobj\t_\t_\n16\tespecial\tespecial\tADJ\tADJ\tNumber=Sing\t15\tamod\t_\t_\n17\tsobre\tsobre\tADP\tADP\tAdpType=Prep\t19\tcase\t_\t_\n18\tla\tel\tDET\tDET\tDefinite=Def|Gender=Fem|Number=Sing|PronType=Art\t19\tdet\t_\t_\n19\tcontractaci\xF3\tcontractaci\xF3\tNOUN\tNOUN\tGender=Fem|Number=Sing\t15\tnmod\t_\t_\n20\ta\ta\tADP\tADP\tAdpType=Prep\t24\tcase\t_\tMWE=a_trav\xE9s_de|MWEPOS=ADP\n21\ttrav\xE9s\ttrav\xE9s\tNOUN\tNOUN\t_\t20\tfixed\t_\t_\n22\tde\tde\tADP\tADP\tAdpType=Prep\t20\tfixed\t_\t_\n23\tles\tel\tDET\tDET\tDefinite=Def|Gender=Fem|Number=Plur|PronType=Art\t24\tdet\t_\t_\n24\tempreses\tempresa\tNOUN\tNOUN\tGender=Fem|Number=Plur\t19\tnmod\t_\t_\n25\tde\tde\tADP\tADP\tAdpType=Prep\t26\tcase\t_\t_\n26\ttreball\ttreball\tNOUN\tNOUN\tGender=Masc|Number=Sing\t24\tnmod\t_\t_\n27\ttemporal\ttemporal\tADJ\tADJ\tNumber=Sing\t26\tamod\t_\tSpaceAfter=No\n28\t,\t,\tPUNCT\tPUNCT\tPunctType=Comm\t30\tpunct\t_\t_\n29\tles\tel\tDET\tDET\tDefinite=Def|Gender=Fem|Number=Plur|PronType=Art\t30\tdet\t_\t_\n30\tETT\tETT\tPROPN\tPROPN\t_\t24\tappos\t_\tSpaceAfter=No\n31\t.\t.\tPUNCT\tPUNCT\tPunctType=Peri\t13\tpunct\t_\t_',
+
+  with_tabs: '# sent_id = chapID01:paragID1:sentID1\n# text = \u041A\u0435\u0447\u0430\u0435\u043D\u044C \u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C \u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F \u043A\u0430\u0440\u0432\u043E\u0442 .\n# text[eng] = Kechai was awoken by annoying flies.\n1\t\u041A\u0435\u0447\u0430\u0435\u043D\u044C\t\u041A\u0435\u0447\u0430\u0439\tN\tN\tSem/Ant_Mal|Prop|SP|Gen|Indef\t2\tobj\t_\t\u041A\u0435\u0447\u0430\u0435\u043D\u044C\n2\t\u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C\t\u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0435\u043C\u0441\tV\tV\tTV|Ind|Prt1|ScPl3|OcSg3\t0\troot\t_\t\u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C\n3\t\u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F\t\u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u043E\u043C\u0441\tPRC\tPrc\tV|TV|PrcPrsL|Sg|Nom|Indef\t4\tamod\t\u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F\t_\n4\t\u043A\u0430\u0440\u0432\u043E\u0442\t\u043A\u0430\u0440\u0432\u043E\tN\tN\tSem/Ani|N|Pl|Nom|Indef\t2\tnsubj\t_\t\u043A\u0430\u0440\u0432\u043E\u0442\n5\t.\t.\tCLB\tCLB\tCLB\t2\tpunct\t_\t.',
+
+  without_tabs: '# sent_id = chapID01:paragID1:sentID1\n# text = \u041A\u0435\u0447\u0430\u0435\u043D\u044C \u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C \u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F \u043A\u0430\u0440\u0432\u043E\u0442 .\n# text[eng] = Kechai was awoken by annoying flies.\n1 \u041A\u0435\u0447\u0430\u0435\u043D\u044C \u041A\u0435\u0447\u0430\u0439 N N Sem/Ant_Mal|Prop|SP|Gen|Indef 2 obj _ \u041A\u0435\u0447\u0430\u0435\u043D\u044C\n2 \u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C \u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0435\u043C\u0441 V V TV|Ind|Prt1|ScPl3|OcSg3 0 root _ \u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C\n3 \u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F \u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u043E\u043C\u0441 PRC Prc V|TV|PrcPrsL|Sg|Nom|Indef 4 amod \u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F\t_\n4 \u043A\u0430\u0440\u0432\u043E\u0442 \u043A\u0430\u0440\u0432\u043E N N Sem/Ani|N|Pl|Nom|Indef 2 nsubj _ \u043A\u0430\u0440\u0432\u043E\u0442\n5 . . CLB CLB CLB 2 punct _ .',
+
+  from_cg3_with_semicolumn: '1\tSiedzieli\u015Bmy\tsiedzie\u0107\tvblex\t_\timpf|past|p1|m|pl\t_\t_\t_\t_\n2\tw\tw\tpr\t_\t_\t_\t_\t_\t_\n3\tmoim\tm\xF3j\tprn\t_\tpos|mi|sg|loc\t_\t_\t_\t_\n4\tpokoju\tpok\xF3j\tn\t_\tmi|sg|loc\t_\t_\t_\t_\n5\t,\t,\tcm\t_\t_\t_\t_\t_\t_\n6\tpal\u0105c\tpali\u0107\tvblex\t_\timpf|pprs|adv\t_\t_\t_\t_\n7\ti\ti\tcnjcoo\t_\t_\t_\t_\t_\t_\n8\trozmawiaj\u0105c\trozmawia\u0107\tvblex\t_\timpf|pprs|adv\t_\t_\t_\t_\n9\to\to\tpr\t_\t_\t_\t_\t_\t_\n10\ttem\tto\tprn\t_\tdem|mi|sg|loc\t_\t_\t_\t_\n11\t,\t,\tcm\t_\t_\t_\t_\t_\t_\n12\tjak\tjak\trel\t_\tadv\t_\t_\t_\t_\n13\tmarni\tmarny\tadj\t_\tsint|mp|pl|nom\t_\t_\t_\t_\n14\tjeste\u015Bmy\tby\u0107\tvbser\t_\tpres|p1|pl\t_\t_\t_\t_\n15\t,\t,\tcm\t_\t_\t_\t_\t_\t_\n16\tmarni\tmarny\tadj\t_\tsint|mp|pl|nom\t_\t_\t_\t_\n17\tz\tz\tpr\t_\t_\t_\t_\t_\t_\n18\tlekarskiego\tlekarski\tadj\t_\tmi|sg|gen\t_\t_\t_\t_\n19\tpunktu\tpunkt\tn\t_\tmi|sg|gen\t_\t_\t_\t_\n20\twidzenia\twidzie\u0107\tvblex\t_\timpf|ger|nt|sg|gen\t_\t_\t_\t_\n21\tchc\u0119\tchcie\u0107\tvblex\t_\timpf|pres|p1|sg\t_\t_\t_\t_\n22\tpowiedzie\u0107\tpowiedzie\u0107\tvblex\t_\tperf|inf\t_\t_\t_\t_\n23\t,\t,\tcm\t_\t_\t_\t_\t_\t_\n24\tnaturalnie\tnaturalnie\tadv\t_\tsint\t_\t_\t_\t_\n25\t.\t.\tsent\t_\t_\t_\t_\t_\t_',
+
+  from_cg3_simple: '1\t\u041F\u0430\u0442\u0448\u0430\u043C\u0435\u043D\t\u043F\u0430\u0442\u0448\u0430\tn\t_\tins\t3\tnmod\t_\t_\n2\t\u0441\u043E\u0493\u044B\u0441\t\u0441\u043E\u0493\u044B\u0441\tn\t_\tnom\t3\tobj\t_\t_\n3\t\u0430\u0448\u049B\u0430\u043D\u0434\u0430\t\u0430\u0448\tv\t_\ttv|ger_past|loc\t12\tadvcl\t_\t_\n4\t,\t,\tcm\t_\t_\t12\tpunct\t_\t_\n5\t\u0435\u043B-\u0436\u04B1\u0440\u0442\t\u0435\u043B-\u0436\u04B1\u0440\u0442\tn\t_\tnom\t7\tconj\t_\t_\n6\t,\t,\tcm\t_\t_\t7\tpunct\t_\t_\n7\t\u043E\u0442\u0430\u043D\u044B\u043C\u0434\u044B\t\u043E\u0442\u0430\u043D\tn\t_\tpx1sg|acc\t8\tobj\t_\t_\n8\t\u049B\u043E\u0440\u0493\u0430\u0443\u0493\u0430\t\u049B\u043E\u0440\u0493\u0430\tv\t_\ttv|ger|dat\t12\tadvcl\t_\t_\n9\t,\t,\tcm\t_\t_\t12\tpunct\t_\t_\n10\t\u0431\u0456\u0437\t\u0431\u0456\u0437\tprn\t_\tpers|p1|pl|nom\t12\tnsubj\t_\t_\n11\t\u0441\u043E\u0493\u044B\u0441\u049B\u0430\t\u0441\u043E\u0493\u044B\u0441\tn\t_\tdat\t12\tnmod\t_\t_\n12\t\u0431\u0430\u0440\u0434\u044B\u049B\t\u0431\u0430\u0440\tv\t_\tiv|ifi|p1|pl\t0\troot\t_\t_\n13\t.\t.\tsent\t_\t_\t12\tpunct\t_\t_\n',
+
+  from_cg3_with_spans: '# text = He boued e tebr Mona er gegin.\n# text[eng] = Mona eats her food here in the kitchen.\n# labels = press_1986 ch_syntax p_197 to_check\n1\tHe\the\tdet\t_\tpos|f|sp\t2\tdet\t_\t_\n2\tboued\tboued\tn\t_\tm|sg\t4\tobj\t_\t_\n3\te\te\tvpart\t_\tobj\t4\taux\t_\t_\n4\ttebr\tdebri\xF1\tvblex\t_\tpri|p3|sg\t0\troot\t_\t_\n5\tMona\tMona\tnp\t_\tant|f|sg\t4\tnsubj\t_\t_\n6-7\ter\t_\t_\t_\t_\t_\t_\t_\t_\n6\t_\te\tpr\t_\t_\t8\tcase\t_\t_\n7\t_\tan\tdet\t_\tdef|sp\t8\tdet\t_\t_\n8\tgegin\tkegin\tn\t_\tf|sg\t4\tobl\t_\t_\n9\t.\t.\tsent\t_\t_\t4\tpunct\t_\t_\n',
+
+  rueter_long: '# sent_id = BryzhinskijMixail_Kirdazht_manu:3859\n# text = \u041D\u043E \u0437\u044F\u0440\u0441 \u0432\u0430\u043B\u0433\u0441\u044C , \u0437\u044F\u0440\u0441 \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u0441\u044C \u0434\u044B \u043C\u0435\u043A\u0435\u0432 \u043F\u0430\u0440\u0441\u0442\u0435 \u043F\u0435\u043A\u0441\u0442\u043D\u0435\u0441\u044C \u0432\u0435\u043B\u0435 \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C , \u043A\u0443\u0436\u043E \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C , \u043A\u0443\u0440\u043E \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u0434\u044B \u044D\u0441\u0435\u0441\u0442 \u044E\u0440\u0442\u0441 \u0441\u043E\u0432\u0430\u043C\u043E \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u044D\u0440\u044C\u0432\u0430 \u043B\u0438\u0441\u0438\u0446\u044F\u043D\u0442\u0435\u043D\u044C \u0441\u043E\u0432\u0438\u0446\u044F\u043D\u0442\u0435\u043D\u044C \u0442\u0435 \u0441\u0432\u0430\u043B \u0442\u0435\u0439\u043D\u0435\u043C\u0430 , \u043A\u0435\u043D\u043A\u0448\u0442\u043D\u0435 \u0441\u0432\u0430\u043B \u043F\u0435\u043A\u0441\u0442\u0430\u0437\u044C \u0443\u043B\u0435\u0437\u0442 ; \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u0441\u044B\u0437\u044C \u043A\u0435\u043B\u0435\u0441 \u0430\u043D\u0441\u044F\u043A \u0432\u0430\u043B\u0441\u043A\u0435 \u043C\u0430\u0440\u0442\u043E \u0434\u044B \u0447\u043E\u043F\u043E\u043D\u044C\u0431\u0435\u043B\u0435\u0432 \u2014 \u0440\u0430\u043A\u0448\u0430\u043D\u044C \u043B\u0438\u0432\u0442\u0435\u043C\u0430 \u0441\u043E\u0432\u0430\u0432\u0442\u043E\u043C\u0430 \u0448\u043A\u0430\u043D\u0435 , \u043A\u0443\u0439\u043C\u0435\u0441\u044C \u0442\u0430\u0433\u043E \u0441\u0442\u0430\u043A\u0430\u043B\u0433\u0430\u0434\u0441\u044C .\n# text_en = But by the time he got down the hill, opened and closed the village gate, the lane gate, the cluster gate and the one to their own home (something everyone coming or going had to do, so the gates would always be closed; they were only opened in the morning and at dusk for taking out and letting in the cattle), the wicker of clay had grown heavy again.\n# text_fi = Kun Ket\u0161ai tuli m\xE4elt\xE4 alas, avasi ja sulki huolellisesti kyl\xE4ver\xE4j\xE4ns\xE4, ??aukio/kentt\xE4ver\xE4j\xE4n, kujaver\xE4j\xE4n ja oman kotiver\xE4j\xE4n, savikontti ehti taas alkaa painaa h\xE4nen selk\xE4\xE4ns\xE4. (Kaikkien k\xE4vij\xF6iden tulee tehd\xE4 n\xE4in, jotta ver\xE4j\xE4t olisivat aina kiinni, ver\xE4j\xE4th\xE4n pidet\xE4\xE4n selkosen sel\xE4ll\xE4\xE4n vain aamulla ja illansuussa, kun karjaa ajetaan laitumelle tai kotiin.)\n1 \u041D\u043E \u043D\u043E CCONJ CC _ 3 cc _ _\n2 \u0437\u044F\u0440\u0441 \u0437\u044F\u0440\u0441 ADV Adv|Der/Ill|Adv|Sem/Time Derivation=Ill|AdvType=Tim 3 mark _ _\n3 \u0432\u0430\u043B\u0433\u0441\u044C \u0432\u0430\u043B\u0433\u043E\u043C\u0441 VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 51 advcl _ SpaceAfter=No\n4 , , PUNCT CLB _ 6 punct _ _\n5 \u0437\u044F\u0440\u0441 \u0437\u044F\u0440\u0441 ADV Adv|Der/Ill|Adv|Sem/Time Derivation=Ill|AdvType=Tim 6 mark _ _\n6 \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u0441\u044C \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u043C\u0441 VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 3 conj _ _\n7 \u0434\u044B \u0434\u044B CCONJ CC _ 10 cc _ _\n8 \u043C\u0435\u043A\u0435\u0432 \u043C\u0435\u043A\u0435\u0432 ADV Adv|Lat|Sg|Nom|Indef Case=Lat|Case=Nom|Definite=Ind|Number=Sing 10 advmod _ _\n9 \u043F\u0430\u0440\u0441\u0442\u0435 \u043F\u0430\u0440\u0441\u0442\u0435 ADV Adv|Manner AdvType=Man 10 advmod _ _\n10 \u043F\u0435\u043A\u0441\u0442\u043D\u0435\u0441\u044C \u043F\u0435\u043A\u0441\u0442\u043D\u0435\u043C\u0441 VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 3 conj _ _\n11 \u0432\u0435\u043B\u0435 \u0432\u0435\u043B\u0435 NOUN N|Sem/Inanim_Cnt|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 10 obj _ _\n12 \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u043A\u0435\u043D\u043A\u0448 NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 11 goeswith _ SpaceAfter=No\n13 , , PUNCT CLB _ 15 punct _ _\n14 \u043A\u0443\u0436\u043E \u043A\u0443\u0436\u043E NOUN N|Sem/Inanim_Cnt|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 12 conj _ _\n15 \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u043A\u0435\u043D\u043A\u0448 NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 14 goeswith _ SpaceAfter=No\n16 , , PUNCT CLB _ 18 punct _ _\n17 \u043A\u0443\u0440\u043E \u043A\u0443\u0440\u043E NOUN N|Sem/Inanim_Cnt|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 12 conj _ _\n18 \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u043A\u0435\u043D\u043A\u0448 NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 17 goeswith _ _\n19 \u0434\u044B \u0434\u044B CCONJ CC _ 23 cc _ _\n20 \u044D\u0441\u0435\u0441\u0442 \u044D\u0441\u044C PRON Pron|Refl|Pl3|Gen|Variant=Short Case=Gen|Number=Plur|Person=3|PronType=Refl|Variant=Short 22 nmod _ _\n21 \u044E\u0440\u0442\u0441 \u044E\u0440\u0442 NOUN N|Sem/Inanim_Cnt|SP|Ill|Indef Case=Ill|Definite=Ind|Number=Plur,Sing 20 case _ _\n22 \u0441\u043E\u0432\u0430\u043C\u043E \u0441\u043E\u0432\u0430\u043C\u043E NOUN N|IV|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing|Valency=1 23 compound _ _\n23 \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u043A\u0435\u043D\u043A\u0448 NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 12 conj _ _\n24 ( ( PUNCT PUNCT _ 29 punct _ SpaceAfter=No\n25 \u044D\u0440\u044C\u0432\u0430 \u044D\u0440\u044C\u0432\u0430 DET Det|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 26 det _ _\n26 \u043B\u0438\u0441\u0438\u0446\u044F\u043D\u0442\u0435\u043D\u044C-\u0441\u043E\u0432\u0438\u0446\u044F\u043D\u0442\u0435\u043D\u044C \u043B\u0438\u0441\u0438\u0446\u044F\u0442-\u0441\u043E\u0432\u0438\u0446\u044F\u0442 NOUN N|V|NomAg|Sg|Dat|Def Case=Dat|Definite=Def|Derivation=NomAg|Number=Sing 29 obl _ _\n27 \u0442\u0435 \u0442\u0435 PRON Pron|Dem|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing|PronType=Dem 29 nsubj _ _\n28 \u0441\u0432\u0430\u043B \u0441\u0432\u0430\u043B ADV Adv|Tot|Sem/Time_dur PronType=Tot|PronType=Tot 29 advmod _ _\n29 \u0442\u0435\u0439\u043D\u0435\u043C\u0430 \u0442\u0435\u0439\u043D\u0435\u043Cc VERB V|TV|Oblig|Clitic=Cop|Prs|ScSg3 Valency=2|VerbForm=Oblig|Clitic=Cop|Number[subj]=Sing|Person[subj]=3|Tense=Pres 3 parataxis _ SpaceAfter=No\n30 , , PUNCT CLB _ 33 punct _ _\n31 \u043A\u0435\u043D\u043A\u0448\u0442\u043D\u0435 \u043A\u0435\u043D\u043A\u0448 NOUN N|Sem/Inanim_Cnt|Pl|Nom|Def Case=Nom|Definite=Def|Number=Plur 34 nsubj _ _\n32 \u0441\u0432\u0430\u043B \u0441\u0432\u0430\u043B ADV Adv|Tot|Sem/Time_dur PronType=Tot|PronType=Tot 33 advmod _ _\n33 \u043F\u0435\u043A\u0441\u0442\u0430\u0437\u044C \u043F\u0435\u043A\u0441\u0442\u0430\u043C\u0441 VERB V|Der/\u041E\u0437\u044C|Ger Derivation=Ozj|VerbForm=Conv 29 ccomp _ _\n34 \u0443\u043B\u0435\u0437\u0442 \u0443\u043B\u0435\u043C\u0441 AUX V|IV|Opt|ScPl3 Mood=Opt|Number[subj]=Plur|Person[subj]=3|Valency=1 33 cop _ SpaceAfter=No\n35 ; ; PUNCT CLB _ 29 punct _ _\n36 \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u0441\u044B\u0437\u044C \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u043C\u0441 VERB V|Ind|Prs|ScPl3|Obj3 Mood=Ind|Number[subj]=Plur|Person[subj]=3|Tense=Pres|Obj3 29 conj _ _\n37 \u043A\u0435\u043B\u0435\u0441 \u043A\u0435\u043B\u0435\u0441 ADV Adv Adv 36 advmod _ _\n38 \u0430\u043D\u0441\u044F\u043A \u0430\u043D\u0441\u044F\u043A ADV Adv Adv 39 advmod _ _\n39 \u0432\u0430\u043B\u0441\u043A\u0435 \u0432\u0430\u043B\u0441\u043A\u0435 NOUN N|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 36 obl _ _\n40 \u043C\u0430\u0440\u0442\u043E \u043C\u0430\u0440\u0442\u043E ADP Adp|Po AdpType=Post 39 case _ _\n41 \u0434\u044B \u0434\u044B CCONJ CC _ 42 cc _ _\n42 \u0447\u043E\u043F\u043E\u043D\u044C\u0431\u0435\u043B\u0435\u0432 \u0447\u043E\u043F\u043E\u043D\u044C\u0431\u0435\u043B\u0435\u0432 ADV Adv|Lat Case=Lat 39 conj _ _\n43 \u2014 \u2014 PUNCT CLB _ 46 punct _ _\n44 \u0440\u0430\u043A\u0448\u0430\u043D\u044C \u0440\u0430\u043A\u0448\u0430 NOUN N|Sem/Anim_Cnt|SP|Gen|Indef Case=Gen|Definite=Ind|Number=Plur,Sing 45 nmod:gobj _ _\n45 \u043B\u0438\u0432\u0442\u0435\u043C\u0430-\u0441\u043E\u0432\u0430\u0432\u0442\u043E\u043C\u0430 \u043B\u0438\u0432\u0442\u0435\u043C\u0430-\u0441\u043E\u0432\u0430\u0432\u0442\u043E\u043C\u0430 NOUN N|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 36 nmod _ _\n46 \u0448\u043A\u0430\u043D\u0435 \u0448\u043A\u0430 NOUN N|Sem/Time|SP|Temp|Indef Case=Temp|Definite=Ind|Number=Plur,Sing 39 conj _ SpaceAfter=No\n47 ) ) PUNCT PUNCT _ 29 punct _ SpaceAfter=No\n48 , , PUNCT CLB _ 29 punct _ _\n49 \u043A\u0443\u0439\u043C\u0435\u0441\u044C \u043A\u0443\u0439\u043C\u0435 NOUN N|Sem/Inanim_Cnt|Sg|Nom|Def Case=Nom|Definite=Def|Number=Sing 51 nsubj _ _\n50 \u0442\u0430\u0433\u043E \u0442\u0430\u0433\u043E ADV Adv|Sem/Time AdvType=Tim 51 advmod _ _\n51 \u0441\u0442\u0430\u043A\u0430\u043B\u0433\u0430\u0434\u0441\u044C \u0441\u0442\u0430\u043A\u0430\u043B\u0433\u0430\u0434\u043E\u043C\u0441 VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 0 root _ SpaceAfter=No\n52 . . PUNCT CLB _ 51 punct _ _',
+
+  katya_aplonova_large_arrows: '# sent_id = html/meyer_gorog-contes_bambara_10amadu_tara.dis.html:16\n# text = ko ni i sera ka jiri nin bulu s\xF2r\xF2 ka na ni a ye, ko c\xE8k\xF2r\xF2ba b\xE8 se ka furak\xE8 o la.\n1\tko\tk\xF3\tPART\tcop\t_\t4\tdiscourse\t_\tGloss=QUOT\n2\tni\tn\xED\tSCONJ\tconj\t_\t4\tmark\t_\tGloss=si\n3\ti\t\xED\tPRON\tpers\tPronType=Prs\t4\tnsubj\t_\tGloss=2.SG\n4\tsera\tsera\tVERB\tv\tAspect=Perf|Valency=1|Polarity=Pos\t19\tadvcl\t_\tGloss=arriver|Morf=arriver,PFV.INTR\n5\tka\tk\xE0\tAUX\tpm\t_\t9\taux\t_\tGloss=INF\n6\tjiri\tj\xEDri\tNOUN\tn\t_\t8\tnmod:poss\t_\tGloss=arbre\n7\tnin\tn\xECn\tDET\tprn/dtm\tPronType=Dem|Definite-Def\t6\tdet\t_\tGloss=DEM\n8\tbulu\tb\xFAlu\tNOUN\tn\t_\t9\tobj\t_\tGloss=feuille\n9\ts\xF2r\xF2\ts\u0254\u0300r\u0254\tVERB\tv\t_\t4\txcomp\t_\tGloss=obtenir\n10\tka\tk\xE0\tAUX\tpm\t_\t11\taux\t_\tGloss=INF\n11\tna\tn\xE0\tVERB\tv\t_\t9\txcomp\t_\tGloss=venir\n12\tni\tn\xED\tADP\tconj/prep\t_\t13\tcase\t_\tGloss=et\n13\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t11\tobl\t_\tGloss=3SG\n14\tye\ty\xE9\tADP\tpp\t_\t13\tcase\t_\tGloss=PP\n15\t,\t,\tPUNCT\t_\t_\t4\tpunct\t_\tGloss=,\n16\tko\tk\xF3\tPART\tcop\t_\t19\tdiscourse\t_\tGloss=QUOT\n17\tc\xE8k\xF2r\xF2ba\tc\u025B\u0300.k\u0254r\u0254.ba\tNOUN\tn\t_\t19\tnsubj\t_\tGloss=vieillard|Morf=vieillard,m\xE2le,vieux,AUGM\n18\tb\xE8\tb\u025B\u0301\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t19\taux\t_\tGloss=IPFV.AFF\n19\tse\ts\xE9\tVERB\tv\t_\t0\troot\t_\tGloss=arriver\n20\tka\tk\xE0\tAUX\tpm\t_\t21\taux\t_\tGloss=INF\n21\tfurak\xE8\tf\xFAra.k\u025B\tVERB\tv\t_\t19\txcomp\t_\tGloss=soigner|Morf=soigner,feuille,faire\n22\to\t\xF2\tPRON\tprn\t_\t21\tobl\t_\tGloss=ce\n23\tla\tl\xE1\tADP\tpp\t_\t22\tcase\t_\tGloss=dans\n24\t.\t.\tPUNCT\t_\t_\t19\tpunct\t_\tGloss=.\n',
+
+  katya_aplonova_long: '# sent_id = html/meyer_gorog-contes_bambara_10amadu_tara.dis.html:19\n# text = ko u ye m\xF2g\xF2 nyini a ye, min b\xE8 a furak\xE8 sisan ko c\xE8 ye furak\xE8li cogoya b\xE8\xE8 f\xF2, ko fura nin s\xF2r\xF2 ka g\xE8l\xE8n ko epi ko ni o ye a s\xF2r\xF2 u ye ale den de ye, ni min b\xE8 sa de furanyini f\xE8 a ka sa nin min b\xE8 balo o ka balo ko u k\xF2n\xF2nt\xF2 b\xE8\xE8 ka taga fura nin nyini, ko u k\xF2n\xF2nt\xF2 b\xE8\xE8 ka taga ko nin min seginna ka a s\xF2r\xF2 fura ma na, ko a b\xE8 o den nin haramuya ka o g\xE8n, ka a b\xE8 a ba fana g\xE8n ko u ka a fil\xE8 u y\xE8r\xE8 ni min ma s\xF2n fana ko a b\xE8 o g\xE8n, o ni a ba b\xE8\xE8.\n# label = too_long_to_cut\n1\tko\tk\xF3\tPART\tcop\t_\t5\tdiscourse\t_\tGloss=QUOT\n2\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t5\tnsubj\t_\tGloss=3PL\n3\tye\ty\xE9\tAUX\tpm\tAspect=Perf|Valency=2|Polarity=Pos\t5\taux\t_\tGloss=PFV.TR\n4\tm\xF2g\xF2\tm\u0254\u0300g\u0254\tNOUN\tn\t_\t5\tobj\t_\tGloss=homme\n5\tnyini\t\u0272\xEDni\tVERB\tv\t_\t0\troot\t_\tGloss=chercher\n6\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t5\tobl\t_\tGloss=3SG\n7\tye\ty\xE9\tADP\tpp\t_\t6\tcase\t_\tGloss=PP\n8\t,\t,\tPUNCT\t_\t_\t5\tpunct\t_\tGloss=,\n9\tmin\tm\xEDn\tPRON\tprn\tPronType=Rel\t_\t_\t_\tGloss=REL\n10\tb\xE8\tb\u025B\u0301\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t_\t_\t_\tGloss=IPFV.AFF\n11\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n12\tfurak\xE8\tf\xFAra.k\u025B\tVERB\tv\t_\t_\t_\t_\tGloss=soigner|Morf=soigner,feuille,faire\n13\tsisan\ts\xEDsan\tADV\tadv/n\t_\t_\t_\t_\tGloss=maintenant\n14\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n15\tc\xE8\tc\u025B\u0300\tNOUN\tn\t_\t_\t_\t_\tGloss=m\xE2le\n16\tye\tye\tAUX\tpm\tAspect=Perf|Valency=2|Polarity=Pos\t_\t_\t_\tGloss=PFV.TR\n17\tfurak\xE8li\tf\xFArak\u025Bli\tNOUN\tn\tVerbalForm=Vnoun\t_\t_\t_\tGloss=traitement|Morf=traitement,feuille,faire,NMLZ\n18\tcogoya\tc\xF3goya\tNOUN\tn\t_\t_\t_\t_\tGloss=mani\xE8re|Morf=mani\xE8re,mani\xE8re,ABSTR\n19\tb\xE8\xE8\tb\u025B\u0301\u025B\tDET\tdtm\t_\t_\t_\t_\tGloss=tout\n20\tf\xF2\tf\u0254\u0301\tVERB\tv\t_\t_\t_\t_\tGloss=dire\n21\t,\t,\tPUNCT\t_\t_\t_\t_\t_\tGloss=,\n22\tko\tk\xF3\tPART\tcop\t_\t27\tdiscourse\t_\tGloss=QUOT\n23\tfura\tf\xFAra\tNOUN\tn\t_\t25\tnmod:poss\t_\tGloss=feuille\n24\tnin\tn\xECn\tDET\tdtm\tPronType=Dem|Definite-Def\t23\tdet\t_\tGloss=DEM\n25\ts\xF2r\xF2\ts\u0254\u0300r\u0254\tNOUN\tv\t_\t27\tnsubj\t_\tGloss=obtenir\n26\tka\tka\tAUX\tpm\tPolarity=Pos\t27\taux\t_\tGloss=QUAL.AFF\n27\tg\xE8l\xE8n\tg\u025B\u0300l\u025Bn\tVERB\tvq\t_\t_\t_\t_\tGloss=dur\n28\tko\tk\xF3\tPART\tcop\t_\t29\tdiscourse\t_\tGloss=QUOT\n29\tepi\tepi\tCCONJ\tconj\t_\t27\tcc\t_\tGloss=ETRG.FRA\n30\tko\tk\xF3\tVERB\tcop\t_\t37\tdiscourse\t_\tGloss=QUOT\n31\tni\tn\xED\tSCONJ\tconj\t_\t35\tmark\t_\tGloss=si\n32\to\t\xF2\tPRON\tprn\t_\t35\tnsubj\t_\tGloss=ce\n33\tye\tye\tAUX\tpm\tAspect=Perf|Valency=2|Polarity=Pos\t35\taux\t_\tGloss=PFV.TR\n34\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t35\tobj\t_\tGloss=3SG\n35\ts\xF2r\xF2\ts\u0254\u0300r\u0254\tVERB\tv\t_\t37\tadvcl\t_\tGloss=obtenir\n36\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t37\tnsubj\t_\tGloss=3PL\n37\tye\ty\xE9\tVERB\tcop\tPolarity=Pos\t27\tparataxis\t_\tGloss=EQU\n38\tale\t\xE0l\xEA\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3|PronType=Emp\t39\tnmod:poss\t_\tGloss=3SG.EMPH\n39\tden\td\xE9n\tNOUN\tn\t_\t37\tobl\t_\tGloss=enfant\n40\tde\td\xE8\tPART\tprt\t_\t39\tdiscourse\t_\tGloss=FOC\n41\tye\ty\xE9\tADP\tpp\t_\t39\tcase\t_\tGloss=PP\n42\t,\t,\tPUNCT\t_\t_\t37\tpunct\t_\tGloss=,\n43\tni\tn\xED\tSCONJ\tconj\t_\t46\tmark\t_\tGloss=si\n44\tmin\tm\xEEn\tPRON\tprn\tPronType=Rel\t46\t_\t_\tGloss=REL\n45\tb\xE8\tb\u025B\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t46\t_\t_\tGloss=IPFV.AFF\n46\tsa\ts\xE0\tVERB\tv\t_\t52\t_\t_\tGloss=mourir\n47\tde\td\xE8\tPART\tprt\t_\t46\t_\t_\tGloss=FOC\n48\tfuranyini\tfura\u0272ini\tNOUN\tn\t_\t46\t_\t_\tGloss=feuille|Morf=feuille,chercher\n49\tf\xE8\tf\u025B\u0300\tADP\tpp\t_\t48\t_\t_\tGloss=par\n50\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t52\t_\t_\tGloss=3SG\n51\tka\tka\tAUX\tpm\tMood=Subj|Polarity=Aff\t52\t_\t_\tGloss=SBJV\n52\tsa\ts\xE0\tVERB\tv\t_\t37\t_\t_\tGloss=mourir\n53\tnin\tn\xED\tSCONJ\tconj\t_\t56\tmark\t_\tGloss=quand\n54\tmin\tm\xEEn\tPRON\tprn\tPronType=Rel\t56\t_\t_\tGloss=REL\n55\tb\xE8\tb\u025B\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t56\t_\t_\tGloss=IPFV.AFF\n56\tbalo\tb\xE1lo\tVERB\tv\t_\t59\t_\t_\tGloss=vivre\n57\to\t\xF2\tPRON\tprn\t_\t59\t_\t_\tGloss=ce\n58\tka\tka\tAUX\tpm\tMood=Subj|Polarity=Aff\t59\t_\t_\tGloss=SBJV\n59\tbalo\tb\xE1lo\tVERB\tv\t_\t52\t_\t_\tGloss=vivre\n60\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n61\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t_\t_\t_\tGloss=3PL\n62\tk\xF2n\xF2nt\xF2\tk\u0254\u0300n\u0254nt\u0254n\tNUM\tnum\t_\t_\t_\t_\tGloss=neuf\n63\tb\xE8\xE8\tb\u025B\u0301\u025B\tDET\tdtm\t_\t_\t_\t_\tGloss=tout\n64\tka\tka\tAUX\tpm\tMood=Subj|Polarity=Aff\t_\t_\t_\tGloss=SBJV\n65\ttaga\tt\xE1ga\tVERB\tv\t_\t59\t_\t_\tGloss=aller\n66\tfura\tf\xFAra\tNOUN\tn\t_\t_\t_\t_\tGloss=feuille\n67\tnin\tn\xECn\tDET\tdtm\tPronType=Dem|Definite-Def\t_\t_\t_\tGloss=DEM\n68\tnyini\t\u0272\xEDni\tVERB\tv\t_\t_\t_\t_\tGloss=chercher\n69\t,\t,\tPUNCT\t_\t_\t_\t_\t_\tGloss=,\n70\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n71\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t_\t_\t_\tGloss=3PL\n72\tk\xF2n\xF2nt\xF2\tk\u0254\u0300n\u0254nt\u0254n\tNUM\tnum\t_\t_\t_\t_\tGloss=neuf\n73\tb\xE8\xE8\tb\u025B\u0301\u025B\tDET\tdtm\t_\t_\t_\t_\tGloss=tout\n74\tka\tka\tAUX\tpm\tMood=Subj|Polarity=Aff\t_\t_\t_\tGloss=SBJV\n75\ttaga\tt\xE1ga\tVERB\tv\t_\t65\t_\t_\tGloss=aller\n76\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n77\tnin\tn\xED\tSCONJ\tconj\t_\t_\t_\t_\tGloss=quand\n78\tmin\tm\xEEn\tPRON\tprn\tPronType=Rel\t_\t_\t_\tGloss=REL\n79\tseginna\tseginna\tVERB\tv\tAspect=Perf|Valency=1|Polarity=Pos\t85\t_\t_\tGloss=revenir|Morf=revenir,PFV.INTR\n80\tka\tk\xE0\tAUX\tpm\t_\t_\t_\t_\tGloss=INF\n81\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n82\ts\xF2r\xF2\ts\u0254\u0300r\u0254\tVERB\tv\t_\t_\t_\t_\tGloss=obtenir\n83\tfura\tf\xFAra\tNOUN\tn\t_\t_\t_\t_\tGloss=feuille\n84\tma\tma\tAUX\tpm\tPolarity=Neg|Aspect=Perf\t_\t_\t_\tGloss=PFV.NEG\n85\tna\tn\xE0\tVERB\tv\t_\t75\t_\t_\tGloss=venir\n86\t,\t,\tPUNCT\t_\t_\t_\t_\t_\tGloss=,\n87\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n88\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n89\tb\xE8\tb\u025B\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t_\t_\t_\tGloss=IPFV.AFF\n90\to\t\xF2\tPRON\tprn\t_\t_\t_\t_\tGloss=ce\n91\tden\td\xE9n\tNOUN\tn\t_\t_\t_\t_\tGloss=enfant\n92\tnin\tn\xECn\tDET\tdtm\tPronType=Dem|Definite-Def\t_\t_\t_\tGloss=DEM\n93\tharamuya\th\xE0ramuya\tVERB\tv\t_\t85\t_\t_\tGloss=interdire|Morf=interdire,interdire,ABSTR\n94\tka\tk\xE0\tAUX\tpm\t_\t_\t_\t_\tGloss=INF\n95\to\t\xF2\tPRON\tprn\t_\t_\t_\t_\tGloss=ce\n96\tg\xE8n\tg\u025B\u0301n\tVERB\tv\t_\t_\t_\t_\tGloss=chasser\n97\t,\t,\tPUNCT\t_\t_\t_\t_\t_\tGloss=,\n98\tka\tk\xE0\tAUX\tpm\t_\t_\t_\t_\tGloss=INF\n99\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n100\tb\xE8\tb\u025B\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t_\t_\t_\tGloss=IPFV.AFF\n101\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n102\tba\tb\xE1\tNOUN\tn\t_\t_\t_\t_\tGloss=m\xE8re\n103\tfana\tf\xE1na\tPART\tprt\t_\t_\t_\t_\tGloss=aussi\n104\tg\xE8n\tg\u025B\u0301n\tVERB\tv\t_\t_\t_\t_\tGloss=chasser\n105\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n106\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t_\t_\t_\tGloss=3PL\n107\tka\tka\tAUX\tpm\tMood=Subj|Polarity=Aff\t_\t_\t_\tGloss=SBJV\n108\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n109\tfil\xE8\tf\xEDl\u025B\tVERB\tv\t_\t_\t_\t_\tGloss=regarder\n110\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t_\t_\t_\tGloss=3PL\n111\ty\xE8r\xE8\ty\u025B\u0300r\u025B\u0302\tDET\tdtm\t_\t_\t_\t_\tGloss=m\xEAme\n112\tni\tn\xED\tSCONJ\tconj\t_\t_\t_\t_\tGloss=si\n113\tmin\tm\xEEn\tPRON\tprn\tPronType=Rel\t_\t_\t_\tGloss=REL\n114\tma\tma\tAUX\tpm\tPolarity=Neg|Aspect=Perf\t_\t_\t_\tGloss=PFV.NEG\n115\ts\xF2n\ts\u0254\u0300n\tVERB\tv\t_\t_\t_\t_\tGloss=accepter\n116\tfana\tf\xE1na\tPART\tprt\t_\t_\t_\t_\tGloss=aussi\n117\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n118\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n119\tb\xE8\tb\u025B\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t_\t_\t_\tGloss=IPFV.AFF\n120\to\t\xF2\tPRON\tprn\t_\t_\t_\t_\tGloss=ce\n121\tg\xE8n\tg\u025B\u0301n\tVERB\tv\t_\t_\t_\t_\tGloss=chasser\n122\t,\t,\tPUNCT\t_\t_\t_\t_\t_\tGloss=,\n123\to\t\xF2\tPRON\tprn\t_\t_\t_\t_\tGloss=ce\n124\tni\tni\tCCONJ\tconj\t_\t_\t_\t_\tGloss=et\n125\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n126\tba\tb\xE1\tNOUN\tn\t_\t_\t_\t_\tGloss=m\xE8re\n127\tb\xE8\xE8\tb\u025B\u0301\u025B\tDET\tdtm\t_\t_\t_\t_\tGloss=tout\n128\t.\t.\tPUNCT\t_\t_\t_\t_\t_\tGloss=.',
+
+  ud_example_tabs: '1\tThey\tthey\tPRON\tPRP\tCase=Nom|Number=Plur\t2\tnsubj\t2:nsubj|4:nsubj\t_\n2\tbuy\tbuy\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Pres\t0\troot\t0:root\t_\n3\tand\tand\tCONJ\tCC\t_\t4\tcc\t4:cc\t_\n4\tsell\tsell\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Pres\t2\tconj\t0:root|2:conj\t_\n5\tbooks\tbook\tNOUN\tNNS\tNumber=Plur\t2\tobj\t2:obj|4:obj\t_\n6\t.\t.\tPUNCT\t.\t_\t2\tpunct\t2:punct\t_',
+
+  ud_example_spaces: '1    They     they    PRON    PRP    Case=Nom|Number=Plur               2    nsubj    2:nsubj|4:nsubj _\n2    buy      buy     VERB    VBP    Number=Plur|Person=3|Tense=Pres    0    root     0:root          _\n3    and      and     CONJ    CC     _                                  4    cc       4:cc            _\n4    sell     sell    VERB    VBP    Number=Plur|Person=3|Tense=Pres    2    conj     0:root|2:conj   _\n5    books    book    NOUN    NNS    Number=Plur                        2    obj      2:obj|4:obj     _\n6    .        .       PUNCT   .      _                                  2    punct    2:punct         _',
+
+  ud_example_modified: '1\tThey\tthey\tPRON\tPRP\tCase=Nom|Number=Plur\t2\tnsubj\t2:nsubj|4:nsubj\t_\n2\tbuy\tbuy\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Presroot\t0:root\t_\t_\t_\n3\tand\tand\tCONJ\tCC\t_\t4\tcc\t4:cc\t_\n4\tsell\tsell\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Presconj\t0:root|2:conj\t_\t_\t_\n5\tbooks\tbook\tNOUN\tNNS\tNumber=Plur\t2\tobj\t2:obj|4:obj\t_\n6\t.\t.\tPUNCT\t.\t_\t2\tpunct\t2:punct\t_'
+};
+
+},{}],358:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+  'Brackets': require('./brackets'),
+  'CG3': require('./cg3'),
+  'CoNLL-U': require('./conllu'),
+  'plain text': require('./plain-text'),
+  'SD': require('./sd'),
+  'Unknown': require('./unknown')
+};
+
+},{"./brackets":355,"./cg3":356,"./conllu":357,"./plain-text":359,"./sd":360,"./unknown":361}],359:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+  0: 'this is a test',
+  1: 'this is a test.',
+  2: 'this is a test...',
+  3: 'this is a test?',
+  4: '\tthis is a test',
+  5: 'More sentences = more data; ipso facto, yes.',
+  parens_and_numbers: '\u0414\u04D9\u04AF\u043B\u04D9\u0442\u043B\u04D9\u0440\u043D\u0435\u04A3, \u0448\u0443\u043B \u0438\u0441\u04D9\u043F\u0442\u04D9\u043D \u0420\u0443\u0441\u0438\u044F\u043D\u0435\u04A3 \u0434\u04D9, \u0434\u0438\u04A3\u0433\u0435\u0437 \u0447\u0438\u043A\u043B\u04D9\u0440\u0435 \u044F\u0440\u0434\u0430\u043D 12 \u043C\u0438\u043B\u044C (\u044F\u043A\u0438 22,2 \u043A\u043C) \u0435\u0440\u0430\u043A\u043B\u044B\u043A\u0442\u0430 \u0443\u0437\u0443\u044B \u043A\u0438\u043B\u0435\u0448\u0435\u043D\u0433\u04D9\u043D'
+};
+
+},{}],360:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+  0: 'And Robert the fourth place .\ncc(Robert, And)\norphan(Robert, place)\npunct(Robert, .)\namod(place, fourth)\ndet(place, the)',
+
+  1: 'ROOT And Robert the fourth place .\nroot(ROOT, Robert)\ncc(Robert, And)\norphan(Robert, place)\npunct(Robert, .)\namod(place, fourth)\ndet(place, the)',
+
+  2: 'ROOT I love French fries .\nroot(ROOT, love)',
+
+  // https://github.com/UniversalDependencies/docs/blob/pages-source/_u-dep/ccomp.md
+  ccomp_1: 'He says that you like to swim\nccomp(says, like)\nmark(like, that)',
+
+  ccomp_2: 'He says you like to swim\nccomp(says, like)',
+
+  ccomp_3: 'The boss said to start digging\nccomp(said, start)\nmark(start, to)',
+
+  ccomp_4: 'We started digging\nxcomp(started, digging)',
+
+  ccomp_5: 'The important thing is to keep calm.\nccomp(is, keep)\nnsubj(is, thing)',
+
+  ccomp_6: 'The problem is that this has never been tried .\nccomp(is, tried)\nnsubj(is, problem)'
+};
+
+},{}],361:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+  0: '',
+  1: '\n',
+  2: ' ',
+  3: '\t',
+  4: ' \t\n',
+  5: '    '
+};
+
+},{}],362:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -57945,7 +58179,7 @@ module.exports = function () {
 	});
 };
 
-},{"jquery":327,"undo-manager":336}],356:[function(require,module,exports){
+},{"jquery":327,"undo-manager":336}],363:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
