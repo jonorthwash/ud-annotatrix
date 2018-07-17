@@ -212,7 +212,7 @@ class Labeler {
           if (name)
             this.add(name)
 
-          this.addLabel(name); // add to the comments
+          this.addInComments(name); // add to the comments
         });
 
         $('#label-input').val('');
@@ -247,9 +247,9 @@ class Labeler {
               name = target.closest('li').attr('name');
 
             if (checked) {
-              this.addLabel(name);
+              this.addInComments(name);
             } else {
-              this.removeLabel(name);
+              this.removeInComments(name);
             }
 
             manager.updateFilter();
@@ -405,7 +405,7 @@ class Labeler {
         return label;
     });
     for (let i=0; i<manager.length; i++) {
-      this.removeLabel(i, name);
+      this.removeInComments(i, name);
     }
   }
 
@@ -438,7 +438,7 @@ class Labeler {
     _.each(this._labels, label => label.render(this));
   }
 
-  addLabel(index, name) {
+  addInComments(index, name) {
 
     if (name === undefined) {
       name = index;
@@ -460,7 +460,7 @@ class Labeler {
       manager.getSentence(index).comments = manager.getSentence(index).comments.concat([`labels = ${name}`]);
   }
 
-  removeLabel(index, name) {
+  removeInComments(index, name) {
 
     if (name === undefined) {
       name = index;

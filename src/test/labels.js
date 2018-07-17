@@ -287,7 +287,7 @@ module.exports = () => {
         expect(labeler._labels.map(label => label.name)).to.deep.equal(allLabels);
 
         // add a label from 'labels_2' to 'labels_1'
-        labeler.addLabel(0, 'one_label');
+        labeler.addInComments(0, 'one_label');
         labels[0].push('one_label');
         expect(parse(0)).to.deep.equal(labels[0]);
 
