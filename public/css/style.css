@@ -815,11 +815,10 @@ li.label.control .label-text {
 
 li.label .label-text {
   display: inline-block;
-  margin: 0.5em;
+  margin: 0.2em 0.5em;
   font-weight: 600;
-  border-radius: 3px;
   padding: 0.25em 1em;
-  border: 5px solid #eee;
+  border: 2px solid #eee;
   border-radius: 5px;
 }
 
