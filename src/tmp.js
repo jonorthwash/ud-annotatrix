@@ -3,6 +3,7 @@
 require('./test/utils').setupLogger();
 
 const _ = require('underscore');
+const nx = require('notatrix');
 const data = require('./test/data/brackets')[0];
 const ParseError = require('./errors').ParseError;
 
@@ -28,12 +29,12 @@ function parse(text) {
     toString() {
       return `[${this.deprel}${
         this.before.length
-          ? ` [${this.before.map(token => token.toString())}] `
-          : ' '
-      }${this.words.join(' ')}${
+          ? ` ${this.before.map(token => token.toString()).join(' ')}`
+          : ''
+      } ${this.words.join(' ')}${
         this.after.length
-          ? ` [${this.after.map(token => token.toString())}] `
-          : ' '
+          ? ` ${this.after.map(token => token.toString()).join(' ')}`
+          : ''
       }]`;
     }
 
@@ -45,14 +46,6 @@ function parse(text) {
         form: this.words.join(' '),
         after: this.after.map(token => token.toJSON())
       };
-    }
-
-    push(token) {
-      if (this.words.length) {
-        this.after.push(token);
-      } else {
-        this.before.push(token);
-      }
     }
 
     addWord(word) {
@@ -74,16 +67,14 @@ function parse(text) {
       this.comments = [];
     }
 
-    toString() {
-      return this.root.toString();
+    get nx() {
+      let sent = new nx.Sentence();
+
+      return sent.nx;
     }
 
-    toJSON() {
-      return {
-        name: 'Sentence',
-        comments: this.comments,
-        ROOT: this.root.toJSON()
-      };
+    toString() {
+      return `${this.root.toString()}`;
     }
 
     push(token) {
@@ -96,55 +87,61 @@ function parse(text) {
     parent = null,
     word = '';
 
-  _.each(text, char => {
-    switch (char) {
-      case ('['):
-        parent = parsing;
-        parsing = new Token(parent);
-        if (parent && parent.push)
-          parent.push(parsing)
-        word = '';
-        break;
+  try {
+    _.each(text, char => {
+      switch (char) {
+        case ('['):
+          parent = parsing;
+          parsing = new Token(parent);
+          if (parent && parent.push)
+            parent.push(parsing)
+          word = '';
+          break;
 
-      case (']'):
-        if (parsing.addWord)
-          parsing.addWord(word);
-        parsing = parsing.parent;
-        parent = parsing.parent;
-        word = '';
-        break;
+        case (']'):
+          if (parsing.addWord)
+            parsing.addWord(word);
+          parsing = parsing.parent;
+          parent = parsing.parent;
+          word = '';
+          break;
 
-      case (' '):
-        if (parsing.addWord)
-          parsing.addWord(word);
-        word = '';
-        break;
+        case (' '):
+          if (parsing.addWord)
+            parsing.addWord(word);
+          word = '';
+          break;
 
-      default:
-        word += char;
-        break;
-    }
-  });
+        default:
+          word += char;
+          break;
+      }
+    });
 
-  return sent;
+    return sent;
+
+  } catch (e) {
+
+    if (!(e instanceof ParseError))
+      throw e;
+
+    return null;
+  }
 }
 
 function convert(text) {
 
-  let parsed;
-  try {
-    parsed = parse(text);
-  } catch (e) {
-    if (e instanceof ParseError) {
-      console.log('parse error');
-    } else {
-      throw e;
-    }
-  }
+  const parsed = parse(text);
+  const converted = parsed.nx;
 
-  return parsed;
+  return converted;
 }
 
 
 module.exports = convert(data);
-console.log(convert(data).toString())
+console.log('before:');
+console.log('', data);
+console.log('parsed:')
+console.log('', parse(data).toString());
+console.log('converted:');
+console.log('', convert(data));
