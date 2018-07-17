@@ -805,12 +805,16 @@ li.label.filtering .label-text {
   box-shadow: 0 0 5px 5px #999999;
 }
 
-li.label.not-in-comments .label-text {
+li.label.not-in-comments .label-text, li.label .label-text.disabled {
   opacity: 0.3;
 }
 
 li.label.control .label-text {
   border-color: #868e96;
+}
+
+li.label .label-text.disabled {
+  cursor: default;
 }
 
 li.label .label-text {
