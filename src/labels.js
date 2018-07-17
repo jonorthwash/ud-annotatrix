@@ -209,10 +209,14 @@ class Labeler {
       enter: event => {
         const names = $('#label-input').val().trim();
         _.each(names.split(/\s+/), name => {
-          if (name)
-            this.add(name)
 
-          this.addInComments(name); // add to the comments
+          let added = false;
+          if (name)
+            added = this.add(name)
+
+          if (added)
+            this.addInComments(name); // add to the comments
+
         });
 
         $('#label-input').val('');

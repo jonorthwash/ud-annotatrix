@@ -1,4 +1,4 @@
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.data = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -19185,6 +19185,7 @@ const regex = {
   cg3TokenContent: /^;?\s+"(.|\\")*"/
 }
 
+const fallback = '_';
 
 /**
  * this class contains all the information associated with a sentence, including
@@ -19653,15 +19654,15 @@ class Sentence {
       if (!token.analysis)
         return;
 
-      if (token.analysis.head)
+      if (token.analysis.head && token.analysis.head !== fallback)
         done++;
-      if (token.analysis.pos)
+      if (token.analysis.pos && token.analysis.head !== fallback)
         done++;
 
       token.analysis.eachHead(head => {
 
         total++;
-        if (!!head.deprel)
+        if (head.deprel && head.deprel !== fallback)
           done++;
 
       });
@@ -56348,9 +56349,11 @@ var Labeler = function () {
       enter: function enter(event) {
         var names = $('#label-input').val().trim();
         _.each(names.split(/\s+/), function (name) {
-          if (name) _this.add(name);
 
-          _this.addLabel(name); // add to the comments
+          var added = false;
+          if (name) added = _this.add(name);
+
+          if (added) _this.addInComments(name); // add to the comments
         });
 
         $('#label-input').val('');
@@ -56385,9 +56388,9 @@ var Labeler = function () {
                 name = target.closest('li').attr('name');
 
             if (checked) {
-              _this.addLabel(name);
+              _this.addInComments(name);
             } else {
-              _this.removeLabel(name);
+              _this.removeInComments(name);
             }
 
             manager.updateFilter();
@@ -56520,7 +56523,7 @@ var Labeler = function () {
         if (label.name !== name) return label;
       });
       for (var i = 0; i < manager.length; i++) {
-        this.removeLabel(i, name);
+        this.removeInComments(i, name);
       }
     }
   }, {
@@ -56554,8 +56557,8 @@ var Labeler = function () {
       });
     }
   }, {
-    key: 'addLabel',
-    value: function addLabel(index, name) {
+    key: 'addInComments',
+    value: function addInComments(index, name) {
 
       if (name === undefined) {
         name = index;
@@ -56576,8 +56579,8 @@ var Labeler = function () {
       if (!done) manager.getSentence(index).comments = manager.getSentence(index).comments.concat(['labels = ' + name]);
     }
   }, {
-    key: 'removeLabel',
-    value: function removeLabel(index, name) {
+    key: 'removeInComments',
+    value: function removeInComments(index, name) {
 
       if (name === undefined) {
         name = index;
@@ -59256,5 +59259,4 @@ module.exports = {
   is_relation_conflict: is_relation_conflict
 };
 
-},{"jquery":327}]},{},[348])(348)
-});
+},{"jquery":327}]},{},[348]);
