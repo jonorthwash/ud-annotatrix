@@ -56295,9 +56295,7 @@ var Label = function () {
         return labeler.handle.keyup.color(e);
       }))).append($('<button>').attr('type', 'button').addClass('btn btn-secondary refresh-color').css('background-color', this.bColor).click(function (e) {
         return labeler.handle.click.refresh(e);
-      }).append($('<i>').addClass('fa fa-refresh')))))).append($('<hr>')).append($('<div>').addClass('label-hidden-group').append($('<div>').addClass('label-hidden-item').append($('<div>').addClass('label-hidden-item-inner').append($('<input>').attr('name', 'in-comments').attr('type', 'checkbox').prop('checked', inComments).click(function (e) {
-        return labeler.handle.click.checkbox.inComments(e);
-      })).append($('<span>').addClass('in-comments-label checkbox-label').text('has label')))).append($('<div>').addClass('label-hidden-item').append($('<div>').addClass('label-hidden-item-inner').append($('<input>').attr('name', 'filtering').attr('type', 'checkbox').prop('checked', filtering).click(function (e) {
+      }).append($('<i>').addClass('fa fa-refresh')))))).append($('<hr>')).append($('<div>').addClass('label-hidden-group').append($('<div>').addClass('label-hidden-item').append($('<div>').addClass('label-hidden-item-inner').append($('<input>').attr('name', 'filtering').attr('type', 'checkbox').prop('checked', filtering).click(function (e) {
         return labeler.handle.click.checkbox.filtering(e);
       })).append($('<span>').addClass('filtering-label checkbox-label').text('filtering'))))).append($('<hr>')).append($('<div>').addClass('label-hidden-group').append($('<div>').addClass('label-hidden-item delete-item').append($('<button>').attr('type', 'button').addClass('btn btn-secondary delete-button').text('delete').click(function (e) {
         return labeler.handle.click.delete(e);
@@ -56365,7 +56363,12 @@ var Labeler = function () {
           var target = $(event.target),
               name = target.closest('li').attr('name');
 
-          _this.toggleFilter(name);
+          if (labeler.has(name)) {
+            _this.removeInComments(name);
+          } else {
+            _this.addInComments(name);
+          }
+
           manager.updateFilter();
           gui.update();
           flashDropdown(name);
@@ -56382,22 +56385,6 @@ var Labeler = function () {
         },
 
         checkbox: {
-          inComments: function inComments(event) {
-            var target = $(event.target),
-                checked = target.is(':checked'),
-                name = target.closest('li').attr('name');
-
-            if (checked) {
-              _this.addInComments(name);
-            } else {
-              _this.removeInComments(name);
-            }
-
-            manager.updateFilter();
-            gui.update();
-            flashDropdown(name);
-          },
-
           filtering: function filtering(event) {
             var target = $(event.target),
                 name = target.closest('li').attr('name');

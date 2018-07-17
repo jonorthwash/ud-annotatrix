@@ -145,22 +145,6 @@ class Label {
             .append($('<div>')
               .addClass('label-hidden-item-inner')
               .append($('<input>')
-                .attr('name', 'in-comments')
-                .attr('type', 'checkbox')
-                .prop('checked', inComments)
-                .click(e => labeler.handle.click.checkbox.inComments(e))
-              )
-              .append($('<span>')
-                .addClass('in-comments-label checkbox-label')
-                .text('has label')
-              )
-            )
-          )
-          .append($('<div>')
-            .addClass('label-hidden-item')
-            .append($('<div>')
-              .addClass('label-hidden-item-inner')
-              .append($('<input>')
                 .attr('name', 'filtering')
                 .attr('type', 'checkbox')
                 .prop('checked', filtering)
@@ -228,7 +212,12 @@ class Labeler {
           const target = $(event.target),
             name = target.closest('li').attr('name');
 
-          this.toggleFilter(name);
+          if (labeler.has(name)) {
+            this.removeInComments(name);
+          } else {
+            this.addInComments(name);
+          }
+
           manager.updateFilter();
           gui.update();
           flashDropdown(name);
@@ -245,22 +234,6 @@ class Labeler {
         },
 
         checkbox: {
-          inComments: event => {
-            const target = $(event.target),
-              checked = target.is(':checked'),
-              name = target.closest('li').attr('name');
-
-            if (checked) {
-              this.addInComments(name);
-            } else {
-              this.removeInComments(name);
-            }
-
-            manager.updateFilter();
-            gui.update();
-            flashDropdown(name);
-          },
-
           filtering: event => {
             const target = $(event.target),
               name = target.closest('li').attr('name');
