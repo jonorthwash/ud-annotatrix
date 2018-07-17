@@ -26,6 +26,56 @@ function parse(text) {
       this.after  = [];
     }
 
+    eachBefore(callback) {
+      for (let i=0; i<this.before.length; i++) {
+        callback(this.before[i], i);
+      }
+    }
+
+    eachAfter(callback) {
+      for (let i=0; i<this.after.length; i++) {
+        callback(this.after[i], i);
+      }
+    }
+
+    tokenize(sent) {
+
+      this.eachBefore(before => {
+        sent = before.tokenize(sent);
+      });
+
+      let token = nx.Token.fromParams(sent, {
+        form: this.words.join('-'),
+        deprel: this.deprel
+      });
+      sent.insertTokenAt(Infinity, token);
+
+      this.eachAfter(after => {
+        sent = after.tokenize(sent);
+      });
+
+      this.analysis = token.analysis;
+
+      return sent;
+    }
+
+    dependize(sent, id) {
+
+      this.eachBefore(before => {
+        sent = before.dependize(sent, this.analysis.id);
+      });
+
+      const head = sent.getById(id);
+      if (head)
+        this.analysis.addHead(head, this.deprel);
+
+      this.eachAfter(after => {
+        sent = after.dependize(sent, this.analysis.id);
+      });
+
+      return sent;
+    }
+
     toString() {
       return `[${this.deprel}${
         this.before.length
@@ -38,14 +88,12 @@ function parse(text) {
       }]`;
     }
 
-    toJSON() {
-      return {
-        name: 'Token',
-        deprel: this.deprel,
-        before: this.before.map(token => token.toJSON()),
-        form: this.words.join(' '),
-        after: this.after.map(token => token.toJSON())
-      };
+    push(token) {
+      if (this.words.length) {
+        this.after.push(token);
+      } else {
+        this.before.push(token);
+      }
     }
 
     addWord(word) {
@@ -67,10 +115,15 @@ function parse(text) {
       this.comments = [];
     }
 
-    get nx() {
+    encode() {
       let sent = new nx.Sentence();
 
-      return sent.nx;
+      sent = this.root.tokenize(sent);
+      sent.index();
+      sent = this.root.dependize(sent, 0);
+      sent.comments = this.comments;
+
+      return sent;
     }
 
     toString() {
@@ -132,16 +185,18 @@ function parse(text) {
 function convert(text) {
 
   const parsed = parse(text);
-  const converted = parsed.nx;
+  const converted = parsed.encode();
 
   return converted;
 }
 
 
 module.exports = convert(data);
-console.log('before:');
-console.log('', data);
-console.log('parsed:')
-console.log('', parse(data).toString());
-console.log('converted:');
-console.log('', convert(data));
+console.log('  before:');
+console.log(data);
+console.log('  parsed:');
+//console.log('', parse(data));
+console.log(parse(data).toString());
+console.log('  converted:');
+//console.log('', convert(data)).nx;
+console.log(convert(data).conllu);
