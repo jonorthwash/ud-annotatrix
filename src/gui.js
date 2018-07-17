@@ -534,6 +534,9 @@ function onCtrlKeyup(event) {
 
   } else if (47 < event.which && event.which < 58) { // key in 0-9
 
+    if ($(':focus').is('input'))
+      return false;
+      
     const num = event.which - 48;
     cy.zoom(1.5 ** (num - 5));
     gui.update();
