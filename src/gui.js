@@ -1,7 +1,9 @@
 'use strict';
 
 const $ = require('jquery');
+const _ = require('underscore');
 
+const Menu = require('./dropdown-menu');
 const convert = require('./convert');
 const funcs = require('./funcs');
 const errors = require('./errors');
@@ -48,6 +50,8 @@ var pressed = {}; // used for onCtrlKeyup
 class GUI {
   constructor() {
 
+    this.menu = new Menu(this);
+
     this.keys = KEYS;
 
     this.is_textarea_visible = true;
@@ -71,6 +75,9 @@ class GUI {
     }
 
     this.toggle = {
+      dropdown: event => this.menu.toggle(event),
+      pin: event => this.menu.togglePinned(event),
+
       table: (event) => {
         this.is_table_view = !this.is_table_view;
         this.update();
@@ -99,7 +106,6 @@ class GUI {
     			.toggleClass('fa-chevron-up')
     			.toggleClass('fa-chevron-down')
         this.is_textarea_visible = !this.is_textarea_visible;
-        this.are_labels_visible = !this.are_labels_visible;
 
         this.update();
       },
@@ -138,6 +144,7 @@ class GUI {
   get state() {
     return {
 
+      menu:                this.menu.state,
       is_textarea_visible: this.is_textarea_visible,
       are_labels_visible:  this.are_labels_visible,
       is_vertical:         this.is_vertical,
@@ -151,6 +158,9 @@ class GUI {
   }
 
   set state(state) {
+
+    this.menu.state = state.menu;
+
     this.is_textarea_visible = state.is_textarea_visible,
     this.are_labels_visible  = state.are_labels_visible,
     this.is_vertical         = state.is_vertical;
@@ -166,6 +176,8 @@ class GUI {
   update() {
     if (!this.inBrowser)
       return;
+
+    this.menu.update();
 
     // textarea
     $('#text-data').val(manager.sentence);
@@ -241,7 +253,10 @@ class GUI {
       $('#btnToggleTable').hide();
     }
 
-    $('#label-container').css('display', this.are_labels_visible ? 'flex' : 'none');
+    $('#label-container')
+      .css('display', this.are_labels_visible && this.is_textarea_visible
+        ? 'flex'
+        : 'none');
 
     try { // need this in case `cy` DNE
       this.zoom = cy.zoom();
@@ -280,10 +295,22 @@ class GUI {
     $('#btnRemoveSentence').click(e => manager.removeSentence());
     $('#btnAddSentence').click(e => manager.insertSentence());
 
-    $('#btnUploadCorpus').click(e => manager.upload());
-    $('#btnExportCorpus').click(e => manager.export());
-    //$('#btnSaveServer').click(saveOnServer);
-    $('#btnDiscardCorpus').click(e => {
+    $('[name="save-corpus"]').click(e => {
+      if (!$(e.target).is('.pin'))
+        manager.save();
+    });
+    $('[name="upload-corpus"]').click(e => {
+      if (!$(e.target).is('.pin'))
+        manager.upload();
+    });
+    $('[name="download-corpus"]').click(e => {
+      if (!$(e.target).is('.pin'))
+        manager.export();
+    });
+    $('[name="discard-corpus"]').click(e => {
+      if ($(e.target).is('.pin'))
+        return;
+
       const conf = confirm('Do you want to clear the corpus (remove all sentences)?');
       if (!conf) {
         log.info('corpus::clear(): not clearing corpus');
@@ -293,11 +320,30 @@ class GUI {
       storage.clear();
       manager.reset();
     });
-    $('#btnPrintCorpus').click(e => manager.print());
 
-    $('#btnHelp').click(e => window.open('help.html', '_blank').focus());
-    $('#btnSettings').click(e => {
-      throw new errors.NotImplementedError('show settings not implemented');
+    $('[name="export-as-png"]').click(e => {
+      if (!$(e.target).is('.pin'))
+        manager.export.png();
+    });
+    $('[name="export-as-latex"]').click(e => {
+      if (!$(e.target).is('.pin'))
+        manager.export.latex();
+    });
+
+    $('[name="show-labels"]').click(e => {
+      if ($(e.target).is('.pin'))
+        return;
+
+      this.are_labels_visible = !this.are_labels_visible;
+      this.update();
+    });
+    $('[name="show-help"]').click(e => {
+      if (!$(e.target).is('.pin'))
+        window.open('help.html', '_blank').focus()
+    });
+    $('[name="show-settings"]').click(e => {
+      if (!$(e.target).is('.pin'))
+        window.open('settings.html', '_blank').focus()
     });
 
     $('#tabText').click(e => {
@@ -312,9 +358,12 @@ class GUI {
       manager.parse(convert.to.cg3(this.read('text-data')));
     });
 
-    $('#btnToggleTable').click(e => this.toggle.table(e));
-    $('#btnToggleTextarea').click(e => this.toggle.textarea(e));
+    $('[name="show-table"]').click(e => {
+      if (!$(e.target).is('.pin'))
+        this.toggle.table(e)
+    });
     $('.thead-default th').click(e => this.toggle.tableColumn(e));
+    $('#btnToggleTextarea').click(e => this.toggle.textarea(e));
 
     $('#label-clear-filter').click(e => {
       labeler.clearFilter();
@@ -536,7 +585,7 @@ function onCtrlKeyup(event) {
 
     if ($(':focus').is('input'))
       return false;
-      
+
     const num = event.which - 48;
     cy.zoom(1.5 ** (num - 5));
     gui.update();
