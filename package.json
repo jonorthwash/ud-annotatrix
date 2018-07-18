@@ -48,7 +48,64 @@
     "type": "git",
     "url": "git+https://github.com/jonorthwash/ud-annotatrix.git"
   },
-  "author": "Jonathan Washington",
+  "contributors": [
+    {
+      "name": "Jonathan Washington",
+      "url": "https://github.com/jonorthwash"
+    },
+    {
+      "name": "Francis Tyers",
+      "url": "https://github.com/ftyers"
+    },
+    {
+      "name": "Mariya Sheyanova",
+      "url": "https://github.com/maryszmary"
+    },
+    {
+      "name": "Kevin Murphy",
+      "url": "https://github.com/keggsmurph21"
+    },
+    {
+      "name": "Sushain Cherivirala",
+      "url": "https://github.com/sushain97"
+    },
+    {
+      "name": "Kevin Brubeck Unhammer",
+      "url": "https://gjthub.com/unhammer"
+    },
+    {
+      "name": "Tai Vongsathorn Warner",
+      "url": "https://github.com/midasdoas"
+    },
+    {
+      "name": "Daniel Swanson",
+      "url": "https://github.com/mr-martian"
+    },
+    {
+      "name": "Grzegorz Stark",
+      "url": "https://github.com/gstark0"
+    },
+    {
+      "name": "Jonathan Pan",
+      "url": "https://github.com/JPJPJPOPOP"
+    },
+    {
+      "name": "Suresh Michael Peires",
+      "url": "https://github.com/tsuresh"
+    },
+    {
+      "name": "Diogo Fernandes",
+      "url": "https://github.com/diogoscf"
+    },
+    {
+      "name": "Robin Richtsfeld",
+      "url": "https://github.com/androbin"
+    },
+    {
+      "name": "Ethan Yang",
+      "url": "https://github.com/thatprogrammer1"
+    }
+  ],
   "license": "GPL-3.0",
   "bugs": {
     "url": "https://github.com/jonorthwash/ud-annotatrix/issues"
