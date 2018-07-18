@@ -191,6 +191,12 @@ def serve_font(file):
     return app.send_static_file(f'fonts/{file}');
 
 
+@app.route('/annotatrix/help.html')
+def help_page():
+    logger.info('help page')
+    return app.send_static_file('html/help.html')
+
+
 def treebank_path(treebank_id, extension='.db'):
     '''
     Provides a consistent way to get the path to a corpus from the treebank_id.
