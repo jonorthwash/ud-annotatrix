@@ -1,4 +1,4 @@
-(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.data = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -24105,7 +24105,7 @@ module.exports = {
   }
 };
 
-},{"./alerts":337,"./detect":343,"./errors":344,"notatrix":330,"underscore":335}],341:[function(require,module,exports){
+},{"./alerts":337,"./detect":343,"./errors":345,"notatrix":330,"underscore":335}],341:[function(require,module,exports){
 'use strict';
 
 // is defined in a js file, because fetch doesn't work offline in chrome
@@ -54604,6 +54604,139 @@ module.exports = detectFormat;
 },{"underscore":335}],344:[function(require,module,exports){
 'use strict';
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var _ = require('underscore');
+var $ = require('jquery');
+
+var Menu = function () {
+  function Menu(gui) {
+    _classCallCheck(this, Menu);
+
+    this.gui = gui;
+    this.reset();
+    this.bind();
+  }
+
+  _createClass(Menu, [{
+    key: 'reset',
+    value: function reset() {
+
+      this.is_visible = false;
+      this.pinned = {
+        login: false,
+        'manage-permissions': false,
+
+        'save-corpus': false,
+        'upload-corpus': false,
+        'download-corpus': false,
+        'discard-corpus': false,
+
+        'export-as-png': false,
+        'export-as-latex': false,
+
+        'show-help': true,
+        'show-settings': false,
+        'show-table': false
+      };
+    }
+  }, {
+    key: 'bind',
+    value: function bind() {
+      var _this = this;
+
+      $('#btnMenuDropdown').click(function (e) {
+        return _this.toggle(e);
+      });
+      $('.dropdown-group-item .pin').click(function (e) {
+        return _this.togglePinned(e);
+      });
+    }
+  }, {
+    key: 'update',
+    value: function update() {
+
+      $('#dropdown-container .dropdown-toggle').removeClass('open');
+      if (this.is_visible) {
+        $('#dropdown-container .dropdown-toggle').addClass('open');
+      }
+
+      $('#dropdown-container .dropdown-content').removeClass('menu-show menu-hidden').addClass(this.is_visible ? 'menu-show' : 'menu-hidden');
+
+      $('.dropdown-group-item.pinnable, .btn.pinnable').removeClass('pinned unpinned');
+      _.each(this.pinned, function (bool, name) {
+        $('.dropdown-group-item[name="' + name + '"]').addClass(bool ? 'pinned' : 'unpinned');
+        $('.btn.pinnable[name="' + name + '"]').addClass(bool ? 'pinned' : 'unpinned');
+      });
+
+      $('.btn-group .btn').css('border-radius', '0');
+      $('.btn-group').each(function (i, group) {
+        group = $(group);
+
+        var visible = false,
+            first = null,
+            last = null;
+
+        group.children().each(function (j, btn) {
+          btn = $(btn);
+
+          if (!btn.hasClass('unpinned') && btn.hasClass('btn')) {
+            first = first || btn;
+            last = btn;
+          }
+
+          if (btn.hasClass('pinnable')) {
+            visible = visible || btn.hasClass('pinned');
+          } else {
+            visible = true;
+          }
+        });
+
+        group.css('display', visible ? 'inline-flex' : 'none');
+        if (first) first.css('border-top-left-radius', '5px').css('border-bottom-left-radius', '5px');
+        if (last) last.css('border-top-right-radius', '5px').css('border-bottom-right-radius', '5px');
+      });
+    }
+  }, {
+    key: 'toggle',
+    value: function toggle(event) {
+      this.is_visible = !this.is_visible;
+      this.gui.update();
+    }
+  }, {
+    key: 'togglePinned',
+    value: function togglePinned(event) {
+      var name = $(event.target).closest('.dropdown-group-item').attr('name');
+
+      this.pinned[name] = !this.pinned[name];
+      this.gui.update();
+    }
+  }, {
+    key: 'state',
+    get: function get() {
+      return {
+        is_visible: this.is_visible,
+        pinned: this.pinned
+      };
+    },
+    set: function set(state) {
+
+      this.reset();
+      if (state.is_visible !== undefined) this.is_visible = state.pinned;
+      if (state.pinned !== undefined) this.pinned = state.pinned;
+    }
+  }]);
+
+  return Menu;
+}();
+
+module.exports = Menu;
+
+},{"jquery":327,"underscore":335}],345:[function(require,module,exports){
+'use strict';
+
 /**
  * Custom ERROR objects
  *
@@ -54813,7 +54946,7 @@ module.exports = {
   DeserializationError: DeserializationError
 };
 
-},{}],345:[function(require,module,exports){
+},{}],346:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -54856,7 +54989,7 @@ module.exports = {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"underscore":335}],346:[function(require,module,exports){
+},{"underscore":335}],347:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -55427,7 +55560,7 @@ function removeHead(srcId, tarId) {
 
 module.exports = Graph;
 
-},{"./config":339,"./cy-style":341,"./cytoscape/cytoscape":342,"./errors":344,"./funcs":345,"./progress-bar":352,"./selfcomplete":353,"./sort":355,"./validate":365,"jquery":327,"underscore":335}],347:[function(require,module,exports){
+},{"./config":339,"./cy-style":341,"./cytoscape/cytoscape":342,"./errors":345,"./funcs":346,"./progress-bar":353,"./selfcomplete":354,"./sort":356,"./validate":366,"jquery":327,"underscore":335}],348:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -55437,7 +55570,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var $ = require('jquery');
+var _ = require('underscore');
 
+var Menu = require('./dropdown-menu');
 var convert = require('./convert');
 var funcs = require('./funcs');
 var errors = require('./errors');
@@ -55487,6 +55622,8 @@ var GUI = function () {
 
     _classCallCheck(this, GUI);
 
+    this.menu = new Menu(this);
+
     this.keys = KEYS;
 
     this.is_textarea_visible = true;
@@ -55512,6 +55649,13 @@ var GUI = function () {
     }
 
     this.toggle = {
+      dropdown: function dropdown(event) {
+        return _this.menu.toggle(event);
+      },
+      pin: function pin(event) {
+        return _this.menu.togglePinned(event);
+      },
+
       table: function table(event) {
         _this.is_table_view = !_this.is_table_view;
         _this.update();
@@ -55534,7 +55678,6 @@ var GUI = function () {
 
         $('#btnToggleTextarea i').toggleClass('fa-chevron-up').toggleClass('fa-chevron-down');
         _this.is_textarea_visible = !_this.is_textarea_visible;
-        _this.are_labels_visible = !_this.are_labels_visible;
 
         _this.update();
       },
@@ -55569,6 +55712,8 @@ var GUI = function () {
     key: 'update',
     value: function update() {
       if (!this.inBrowser) return;
+
+      this.menu.update();
 
       // textarea
       $('#text-data').val(manager.sentence);
@@ -55639,7 +55784,7 @@ var GUI = function () {
         $('#btnToggleTable').hide();
       }
 
-      $('#label-container').css('display', this.are_labels_visible ? 'flex' : 'none');
+      $('#label-container').css('display', this.are_labels_visible && this.is_textarea_visible ? 'flex' : 'none');
 
       try {
         // need this in case `cy` DNE
@@ -55689,14 +55834,18 @@ var GUI = function () {
         return manager.insertSentence();
       });
 
-      $('#btnUploadCorpus').click(function (e) {
-        return manager.upload();
+      $('[name="save-corpus"]').click(function (e) {
+        if (!$(e.target).is('.pin')) manager.save();
       });
-      $('#btnExportCorpus').click(function (e) {
-        return manager.export();
+      $('[name="upload-corpus"]').click(function (e) {
+        if (!$(e.target).is('.pin')) manager.upload();
       });
-      //$('#btnSaveServer').click(saveOnServer);
-      $('#btnDiscardCorpus').click(function (e) {
+      $('[name="download-corpus"]').click(function (e) {
+        if (!$(e.target).is('.pin')) manager.export();
+      });
+      $('[name="discard-corpus"]').click(function (e) {
+        if ($(e.target).is('.pin')) return;
+
         var conf = confirm('Do you want to clear the corpus (remove all sentences)?');
         if (!conf) {
           log.info('corpus::clear(): not clearing corpus');
@@ -55706,15 +55855,25 @@ var GUI = function () {
         storage.clear();
         manager.reset();
       });
-      $('#btnPrintCorpus').click(function (e) {
-        return manager.print();
+
+      $('[name="export-as-png"]').click(function (e) {
+        if (!$(e.target).is('.pin')) manager.export.png();
+      });
+      $('[name="export-as-latex"]').click(function (e) {
+        if (!$(e.target).is('.pin')) manager.export.latex();
       });
 
-      $('#btnHelp').click(function (e) {
-        return window.open('help.html', '_blank').focus();
+      $('[name="show-labels"]').click(function (e) {
+        if ($(e.target).is('.pin')) return;
+
+        _this2.are_labels_visible = !_this2.are_labels_visible;
+        _this2.update();
       });
-      $('#btnSettings').click(function (e) {
-        throw new errors.NotImplementedError('show settings not implemented');
+      $('[name="show-help"]').click(function (e) {
+        if (!$(e.target).is('.pin')) window.open('help.html', '_blank').focus();
+      });
+      $('[name="show-settings"]').click(function (e) {
+        if (!$(e.target).is('.pin')) window.open('settings.html', '_blank').focus();
       });
 
       $('#tabText').click(function (e) {
@@ -55729,14 +55888,14 @@ var GUI = function () {
         manager.parse(convert.to.cg3(_this2.read('text-data')));
       });
 
-      $('#btnToggleTable').click(function (e) {
-        return _this2.toggle.table(e);
-      });
-      $('#btnToggleTextarea').click(function (e) {
-        return _this2.toggle.textarea(e);
+      $('[name="show-table"]').click(function (e) {
+        if (!$(e.target).is('.pin')) _this2.toggle.table(e);
       });
       $('.thead-default th').click(function (e) {
         return _this2.toggle.tableColumn(e);
+      });
+      $('#btnToggleTextarea').click(function (e) {
+        return _this2.toggle.textarea(e);
       });
 
       $('#label-clear-filter').click(function (e) {
@@ -55800,6 +55959,7 @@ var GUI = function () {
     get: function get() {
       return {
 
+        menu: this.menu.state,
         is_textarea_visible: this.is_textarea_visible,
         are_labels_visible: this.are_labels_visible,
         is_vertical: this.is_vertical,
@@ -55812,6 +55972,9 @@ var GUI = function () {
       };
     },
     set: function set(state) {
+
+      this.menu.state = state.menu;
+
       this.is_textarea_visible = state.is_textarea_visible, this.are_labels_visible = state.are_labels_visible, this.is_vertical = state.is_vertical;
       this.is_ltr = state.is_ltr;
       this.is_enhanced = state.is_enhanced;
@@ -56206,7 +56369,7 @@ function mergeNodes(direction) {
 
 module.exports = GUI;
 
-},{"./convert":340,"./errors":344,"./funcs":345,"./local-storage":350,"./table":356,"./undo-manager":364,"jquery":327}],348:[function(require,module,exports){
+},{"./convert":340,"./dropdown-menu":344,"./errors":345,"./funcs":346,"./local-storage":351,"./table":357,"./undo-manager":365,"jquery":327,"underscore":335}],349:[function(require,module,exports){
 'use strict';
 
 require('babel-polyfill');
@@ -56227,7 +56390,7 @@ $(function () {
 
 module.exports = require('./test/data/index');
 
-},{"./browser-logger":338,"./funcs":345,"./manager":351,"./server":354,"./test/data/index":360,"babel-polyfill":1}],349:[function(require,module,exports){
+},{"./browser-logger":338,"./funcs":346,"./manager":352,"./server":355,"./test/data/index":361,"babel-polyfill":1}],350:[function(require,module,exports){
 'use strict';
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
@@ -56776,7 +56939,7 @@ function getTextColor(background) {
 
 module.exports = Labeler;
 
-},{"./errors":344,"jquery":327,"underscore":335}],350:[function(require,module,exports){
+},{"./errors":345,"jquery":327,"underscore":335}],351:[function(require,module,exports){
 'use strict';
 
 var KEY = require('./config').localStorageKey;
@@ -56911,7 +57074,7 @@ module.exports = {
   clear: clear
 };
 
-},{"./config":339}],351:[function(require,module,exports){
+},{"./config":339}],352:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -57452,7 +57615,7 @@ function updateSentence(oldSent, text) {
 
 module.exports = Manager;
 
-},{"./config":339,"./detect":343,"./errors":344,"./funcs":345,"./graph":346,"./gui":347,"./labels":349,"./local-storage":350,"jquery":327,"notatrix":330,"underscore":335}],352:[function(require,module,exports){
+},{"./config":339,"./detect":343,"./errors":345,"./funcs":346,"./graph":347,"./gui":348,"./labels":350,"./local-storage":351,"jquery":327,"notatrix":330,"underscore":335}],353:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -57481,7 +57644,7 @@ var ProgressBar = function () {
 
 module.exports = ProgressBar;
 
-},{}],353:[function(require,module,exports){
+},{}],354:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -58489,7 +58652,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     }
 });
 
-},{"jquery":327}],354:[function(require,module,exports){
+},{"jquery":327}],355:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -58618,7 +58781,7 @@ function getTreebankId() {
 
 module.exports = Server;
 
-},{"./local-storage":350,"jquery":327}],355:[function(require,module,exports){
+},{"./local-storage":351,"jquery":327}],356:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -58676,7 +58839,7 @@ module.exports = {
   rtl: rtl
 };
 
-},{"underscore":335}],356:[function(require,module,exports){
+},{"underscore":335}],357:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -58745,14 +58908,14 @@ module.exports = {
   edit: edit
 };
 
-},{"./validate":365,"jquery":327}],357:[function(require,module,exports){
+},{"./validate":366,"jquery":327}],358:[function(require,module,exports){
 'use strict';
 
 module.exports = {
   0: '[root [nsubj I] have [obj [amod [advmod too] many] commitments] [advmod right now] [punct .]]'
 };
 
-},{}],358:[function(require,module,exports){
+},{}],359:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -58796,7 +58959,7 @@ module.exports = {
 
 };
 
-},{}],359:[function(require,module,exports){
+},{}],360:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -58843,7 +59006,7 @@ module.exports = {
   ud_example_modified: '1\tThey\tthey\tPRON\tPRP\tCase=Nom|Number=Plur\t2\tnsubj\t2:nsubj|4:nsubj\t_\n2\tbuy\tbuy\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Presroot\t0:root\t_\t_\t_\n3\tand\tand\tCONJ\tCC\t_\t4\tcc\t4:cc\t_\n4\tsell\tsell\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Presconj\t0:root|2:conj\t_\t_\t_\n5\tbooks\tbook\tNOUN\tNNS\tNumber=Plur\t2\tobj\t2:obj|4:obj\t_\n6\t.\t.\tPUNCT\t.\t_\t2\tpunct\t2:punct\t_'
 };
 
-},{}],360:[function(require,module,exports){
+},{}],361:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -58855,7 +59018,7 @@ module.exports = {
   'Unknown': require('./unknown')
 };
 
-},{"./brackets":357,"./cg3":358,"./conllu":359,"./plain-text":361,"./sd":362,"./unknown":363}],361:[function(require,module,exports){
+},{"./brackets":358,"./cg3":359,"./conllu":360,"./plain-text":362,"./sd":363,"./unknown":364}],362:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -58868,7 +59031,7 @@ module.exports = {
   parens_and_numbers: '\u0414\u04D9\u04AF\u043B\u04D9\u0442\u043B\u04D9\u0440\u043D\u0435\u04A3, \u0448\u0443\u043B \u0438\u0441\u04D9\u043F\u0442\u04D9\u043D \u0420\u0443\u0441\u0438\u044F\u043D\u0435\u04A3 \u0434\u04D9, \u0434\u0438\u04A3\u0433\u0435\u0437 \u0447\u0438\u043A\u043B\u04D9\u0440\u0435 \u044F\u0440\u0434\u0430\u043D 12 \u043C\u0438\u043B\u044C (\u044F\u043A\u0438 22,2 \u043A\u043C) \u0435\u0440\u0430\u043A\u043B\u044B\u043A\u0442\u0430 \u0443\u0437\u0443\u044B \u043A\u0438\u043B\u0435\u0448\u0435\u043D\u0433\u04D9\u043D'
 };
 
-},{}],362:[function(require,module,exports){
+},{}],363:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -58892,7 +59055,7 @@ module.exports = {
   ccomp_6: 'The problem is that this has never been tried .\nccomp(is, tried)\nnsubj(is, problem)'
 };
 
-},{}],363:[function(require,module,exports){
+},{}],364:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -58904,7 +59067,7 @@ module.exports = {
   5: '    '
 };
 
-},{}],364:[function(require,module,exports){
+},{}],365:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -58921,7 +59084,7 @@ module.exports = function () {
 	});
 };
 
-},{"jquery":327,"undo-manager":336}],365:[function(require,module,exports){
+},{"jquery":327,"undo-manager":336}],366:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -59268,4 +59431,5 @@ module.exports = {
   is_relation_conflict: is_relation_conflict
 };
 
-},{"jquery":327}]},{},[348]);
+},{"jquery":327}]},{},[349])(349)
+});

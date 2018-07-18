@@ -196,6 +196,11 @@ def help_page():
     logger.info('help page')
     return app.send_static_file('html/help.html')
 
+@app.route('/annotatrix/settings.html')
+def settings_page():
+    logger.info('settings page')
+    return app.send_static_file('html/settings.html')
+
 
 def treebank_path(treebank_id, extension='.db'):
     '''
