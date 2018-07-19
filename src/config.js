@@ -9,5 +9,5 @@ module.exports = {
 	defaultEdgeCoeff: 1,
 
 	localStorageKey: 'ud-annotatrix',
-	saveInterval: 1000 // msecs
+	saveInterval: 100000 // msecs
 }
