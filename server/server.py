@@ -83,15 +83,16 @@ def load_sentence(treebank_id, num):
     try:
 
         if num is None:
-            sents, max_sents, filename, gui = db.get_sentences()
+            sents, max_sents, filename, gui, labeler = db.get_sentences()
         else:
-            sents, max_sents, filename, gui = db.get_sentence(num)
+            sents, max_sents, filename, gui, labeler = db.get_sentence(num)
 
         return jsonify({
             'sentences': sents,
             'max': max_sents,
             'filename': filename,
-            'gui': gui
+            'gui': gui,
+            'labeler': labeler
         })
 
     except ValueError as e:
