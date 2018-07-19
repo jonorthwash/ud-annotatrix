@@ -796,6 +796,7 @@ td .parse-error {
 
 li.label {
   display: inline;
+  white-space: nowrap;
 }
 
 li.label.filtering .label-text {
