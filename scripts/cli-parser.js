@@ -14,7 +14,9 @@ class CLIError extends Error {
   constructor(...args) {
     super(...args);
 
-    process.stderr.write(`CLIError: ${this.message}\n`);
+    process.stderr.write('> CLIError: ');
+    process.stdout.write(this.message);
+    process.stderr.write('\n');
     process.exit(1);
   }
 }
@@ -63,7 +65,11 @@ function parse(text) {
   if (!text)
     throw new CLIError(`cannot parse empty string`);
 
-  return manager.parse(text).save();
+  try {
+    return manager.parse(text).save();
+  } catch (e) {
+    throw new CLIError(e.message);
+  }
 }
 
 function write(params, text) {
