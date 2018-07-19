@@ -60,7 +60,7 @@ gulp.task('uglifyify', () => {
 */
 
 gulp.task('watch', () => {
-  gulp.watch('src/*.js', [/*'uglify', */'js']);
+  gulp.watch(['src/*.js', 'src/modals/*.js'], [/*'uglify', */'js']);
 });
 
 gulp.task('default', [/*'uglify', */'js']);
