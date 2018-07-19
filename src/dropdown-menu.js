@@ -114,6 +114,9 @@ class Menu {
   set state(state) {
 
     this.reset();
+    if (!state)
+      return;
+      
     if (state.is_visible !== undefined)
       this.is_visible = state.pinned;
     if (state.pinned !== undefined)
