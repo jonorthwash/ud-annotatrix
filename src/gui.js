@@ -184,7 +184,9 @@ class GUI {
     $('#text-data').val(manager.sentence);
 
     // navigation buttons
-    $('.btn').removeClass('disabled');
+    $('.btn, .dropdown-group-item')
+      .removeClass('disabled')
+      .prop('disabled', false);
 
     manager.updateFilter();
     $('#total-sentences').text(manager.totalSentences);
@@ -193,10 +195,18 @@ class GUI {
       $('#btnPrevSentence').addClass('disabled');
     if (manager.index === (manager._filtered.length || manager.length) - 1)
       $('#btnNextSentence').addClass('disabled');
+
     if (!server.is_running)
-      $('#btnUploadCorpus').addClass('disabled');
+      $('[name="upload-corpus"]')
+        .addClass('disabled')
+        .prop('disabled', true);
     if (manager.format !== 'CoNLL-U')
-      $('#btnToggleTable').addClass('disabled');
+      $('[name="show-table"]')
+        .addClass('disabled')
+        .prop('disabled', true);
+
+    // TODO: until SVG is fixed
+    $('[name="export-as-svg"]').addClass('disabled').prop('disabled', true);
 
     $('#btnUndo').prop('disabled', !undoManager.hasUndo());
     $('#btnRedo').prop('disabled', !undoManager.hasRedo());
@@ -301,7 +311,8 @@ class GUI {
         manager.save();
     });
     $('[name="upload-corpus"]').click(e => {
-      if (!$(e.target).is('.pin'))
+      const target = $(e.target);
+      if (!target.is('.pin') && !target.closest('a').hasClass('disabled'))
         this.modals.upload.show();
     });
     $('[name="download-corpus"]').click(e => {
@@ -331,7 +342,8 @@ class GUI {
         manager.export.png();
     });
     $('[name="export-as-svg"]').click(e => {
-      if (!$(e.target).is('.pin'))
+      const target = $(e.target);
+      if (!target.is('.pin') && !target.closest('a').hasClass('disabled'))
         manager.export.svg();
     });
 
@@ -364,7 +376,8 @@ class GUI {
     });
 
     $('[name="show-table"]').click(e => {
-      if (!$(e.target).is('.pin'))
+      const target = $(e.target);
+      if (!target.is('.pin') && !target.closest('a').hasClass('disabled'))
         this.toggle.table(e)
     });
     $('.thead-default th').click(e => this.toggle.tableColumn(e));

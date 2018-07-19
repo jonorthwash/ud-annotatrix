@@ -56923,15 +56923,19 @@ var GUI = function () {
       $('#text-data').val(manager.sentence);
 
       // navigation buttons
-      $('.btn').removeClass('disabled');
+      $('.btn, .dropdown-group-item').removeClass('disabled').prop('disabled', false);
 
       manager.updateFilter();
       $('#total-sentences').text(manager.totalSentences);
       $('#current-sentence').val(manager.currentSentence);
       if (!manager.index && (manager._filtered.length || manager.length)) $('#btnPrevSentence').addClass('disabled');
       if (manager.index === (manager._filtered.length || manager.length) - 1) $('#btnNextSentence').addClass('disabled');
-      if (!server.is_running) $('#btnUploadCorpus').addClass('disabled');
-      if (manager.format !== 'CoNLL-U') $('#btnToggleTable').addClass('disabled');
+
+      if (!server.is_running) $('[name="upload-corpus"]').addClass('disabled').prop('disabled', true);
+      if (manager.format !== 'CoNLL-U') $('[name="show-table"]').addClass('disabled').prop('disabled', true);
+
+      // TODO: until SVG is fixed
+      $('[name="export-as-svg"]').addClass('disabled').prop('disabled', true);
 
       $('#btnUndo').prop('disabled', !undoManager.hasUndo());
       $('#btnRedo').prop('disabled', !undoManager.hasRedo());
@@ -57042,7 +57046,8 @@ var GUI = function () {
         if (!$(e.target).is('.pin')) manager.save();
       });
       $('[name="upload-corpus"]').click(function (e) {
-        if (!$(e.target).is('.pin')) _this2.modals.upload.show();
+        var target = $(e.target);
+        if (!target.is('.pin') && !target.closest('a').hasClass('disabled')) _this2.modals.upload.show();
       });
       $('[name="download-corpus"]').click(function (e) {
         if (!$(e.target).is('.pin')) manager.download();
@@ -57067,7 +57072,8 @@ var GUI = function () {
         if (!$(e.target).is('.pin')) manager.export.png();
       });
       $('[name="export-as-svg"]').click(function (e) {
-        if (!$(e.target).is('.pin')) manager.export.svg();
+        var target = $(e.target);
+        if (!target.is('.pin') && !target.closest('a').hasClass('disabled')) manager.export.svg();
       });
 
       $('[name="show-labels"]').click(function (e) {
@@ -57096,7 +57102,8 @@ var GUI = function () {
       });
 
       $('[name="show-table"]').click(function (e) {
-        if (!$(e.target).is('.pin')) _this2.toggle.table(e);
+        var target = $(e.target);
+        if (!target.is('.pin') && !target.closest('a').hasClass('disabled')) _this2.toggle.table(e);
       });
       $('.thead-default th').click(function (e) {
         return _this2.toggle.tableColumn(e);
