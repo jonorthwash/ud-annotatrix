@@ -16,6 +16,11 @@ class Log {
     this._level = ['CRITICAL', 'ERROR', 'WARN', 'INFO', 'DEBUG']
       .indexOf(levelName);
 
+    if (levelName === 'SILENT') {
+      this.critical = this.error = this.warn = this.info = this.debug = this.out = () => {};
+      this._level = -Infinity;
+    }
+
     if (this._level === -1) {
       this.out(`Unrecognized Logger levelName "${levelName}", setting level to CRITICAL.`);
       this._levelName = 'CRITICAL';
