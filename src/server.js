@@ -23,6 +23,7 @@ class Server {
 					log.info(`checkServer AJAX response: ${JSON.stringify(data)}`);
 					this.is_running = true;
 					gui.update();
+					gui.modals.upload.enable();
 					this.load();
 				},
 				error: data => {
