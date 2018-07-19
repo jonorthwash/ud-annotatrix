@@ -382,12 +382,38 @@ class Manager {
   get graphable() {
     return this.format === 'CoNLL-U' || this.format === 'CG3';
   }
+  get corpus() {
+    return (cfg.downloadHasFileHeader
+      ? `# __ud_annotatrix_filename__ = "${this.filename}"
+# __ud_annotatrix_timestamp__ = "${new Date()}"
+# __ud_annotatrix_version__ = "${cfg.version}"
+`
+      : '')
+      + this.map((i, sent) => {
+        console.log(cfg.downloadHasSentenceHeader)
+        console.log((cfg.downloadHasSentenceHeader
+          ? `# __ud_annotatrix_id__ = "${i+1}"
+# __ud_annotatrix_format__ = "${this.format}"`
+          : '')
+          + this.format === 'Unknown'
+            ? ''
+            : this.sentence)
 
+        return (cfg.downloadHasSentenceHeader
+          ? `# __ud_annotatrix_id__ = "${i+1}"
+# __ud_annotatrix_format__ = "${this.format}"`
+          : '')
+          + this.format === 'Unknown'
+            ? ''
+            : this.sentence
+      }).join('\n\n');
+  }
 
 
 
   save() {
 
+    console.log('saving...');
     const state = JSON.stringify({
       filename: this.filename,
       index: this._index,
@@ -453,25 +479,16 @@ class Manager {
 
 
   download() {
-
-    if (!gui.inBrowser)
-      return null;
-
-    const link = $('<a>')
-      .attr('download', this.filename)
-      .attr('href', `data:text/plain; charset=utf-8,${this.encode()}`);
-    $('body').append(link);
-    link[0].click();
-
+    funcs.download(`${this.filename}.corpus`, 'text/plain', this.corpus);
   }
   encode() {
-    return encodeURIComponent(`# __ud_annotatrix_filename__ = "${this.filename}"
+    return `# __ud_annotatrix_filename__ = "${this.filename}"
 # __ud_annotatrix_timestamp__ = "${new Date()}"
 ` + this.map((i, sent) => {
       return `# __ud_annotatrix_id__ = "${i+1}"
 # __ud_annotatrix_format__ = "${this.format}"
 ${ (this.format === 'Unknown') ? '' : this.sentence }`;
-    }).join('\n\n'));
+    }).join('\n\n');
   }
   print() {
     throw new Error('print() not implemented');
