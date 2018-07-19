@@ -19,6 +19,7 @@ from env import Env
 from log import Logger
 import json
 from werkzeug.utils import secure_filename
+from subprocess import Popen, PIPE
 
 env = Env(filename='.env')
 
@@ -26,7 +27,8 @@ PATH_TO_CORPORA = env.get('PATH_TO_CORPORA', 'corpora')
 SECRET_KEY = env.get('SECRET_KEY', 'secret-key-123')
 HOST = env.get('HOST', '127.0.0.1')
 PORT = env.get('PORT', '5316')
-ALLOWED_EXTENSIONS = set(['db']) # file extensions the user can post to /upload
+PROTOCOL = env.get('PROTOCOL', 'http')
+ALLOWED_EXTENSIONS = set(['txt', 'conllu', 'cg3', 'sd', 'corpus']); # file extensions the user can post to /upload
 
 logger = Logger(env=env, name='SERVER')
 
@@ -132,12 +134,21 @@ def upload_new_corpus():
         try:
             logger.debug('/annotatrix/upload files: {}'.format(request.files))
             file, filename = validate_posted_file(request.files)
+            contents = str(file.read(), 'utf-8')
             corpus_name = filename
-            corpus = file.read().decode()
-            treebank_id = str(uuid.uuid4())
-            db_path = treebank_path(treebank_id)
-            db = CorpusDB(db_path)
-            db.write_corpus(corpus, corpus_name)
+            echo_process = Popen(['echo', contents], stdout=PIPE)
+            parse_process = Popen([
+                './scripts/cli-parser.js',
+                '--save',
+                '--host', HOST,
+                '--port', PORT,
+                '--protocol', PROTOCOL
+            ], stdin=echo_process.stdout, stdout=PIPE)
+            stdout, stderr = parse_process.communicate()
+            if parse_process.returncode != 0:
+                return jsonify({ 'error': stdout })
+
+            treebank_id = str(stdout, 'utf-8')
             return redirect(url_for('corpus_page', treebank_id=treebank_id))
         except Exception as e:
             logger.error('/annotatrix/upload error: {}'.format(e))
