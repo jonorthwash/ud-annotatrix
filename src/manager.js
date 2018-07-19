@@ -14,6 +14,7 @@ const errors = require('./errors');
 const detectFormat = require('./detect');
 const storage = require('./local-storage');
 const convert = require('./convert');
+const export_ = require('./export');
 
 class Manager {
 
@@ -27,6 +28,8 @@ class Manager {
 
     this.reset();
     this.load();
+
+    this.export = export_;
 
     // save once every ? msecs
     setInterval(() => this.save(), cfg.saveInterval);

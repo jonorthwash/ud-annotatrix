@@ -322,13 +322,17 @@ class GUI {
       manager.reset();
     });
 
+    $('[name="export-as-latex"]').click(e => {
+      if (!$(e.target).is('.pin'))
+        manager.export.latex();
+    });
     $('[name="export-as-png"]').click(e => {
       if (!$(e.target).is('.pin'))
         manager.export.png();
     });
-    $('[name="export-as-latex"]').click(e => {
+    $('[name="export-as-svg"]').click(e => {
       if (!$(e.target).is('.pin'))
-        manager.export.latex();
+        manager.export.svg();
     });
 
     $('[name="show-labels"]').click(e => {

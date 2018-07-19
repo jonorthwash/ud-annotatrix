@@ -22,8 +22,9 @@ class Menu {
       'download-corpus': false,
       'discard-corpus': false,
 
-      'export-as-png': false,
       'export-as-latex': false,
+      'export-as-png': false,
+      'export-as-svg': false,
 
       'show-help': true,
       'show-settings': false,
