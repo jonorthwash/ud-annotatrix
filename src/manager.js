@@ -449,6 +449,19 @@ class Manager {
 
 
   upload() {
+    // function handleUploadButtonPressed() {
+//     // Replaces current content
+//     CONTENTS = TEMPCONTENTS;
+//     localStorage.setItem("corpus", CONTENTS);
+//     getLocalStorageMaxSize()
+//     $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
+//     loadDataInIndex();
+//     $("#uploadFileButton").attr("disabled", "disabled");
+//     $("#uploadFileSizeError").hide();
+//     $('#fileModal').modal('hide');
+// }
+    console.log('upload');
+    return;
     return this.save();
   }
   export() {

@@ -23515,7 +23515,7 @@ module.exports = {
 	defaultEdgeCoeff: 1,
 
 	localStorageKey: 'ud-annotatrix',
-	saveInterval: 1000 // msecs
+	saveInterval: 100000 // msecs
 };
 
 },{}],340:[function(require,module,exports){
@@ -55560,7 +55560,7 @@ function removeHead(srcId, tarId) {
 
 module.exports = Graph;
 
-},{"./config":339,"./cy-style":341,"./cytoscape/cytoscape":342,"./errors":345,"./funcs":346,"./progress-bar":353,"./selfcomplete":354,"./sort":356,"./validate":366,"jquery":327,"underscore":335}],348:[function(require,module,exports){
+},{"./config":339,"./cy-style":341,"./cytoscape/cytoscape":342,"./errors":345,"./funcs":346,"./progress-bar":355,"./selfcomplete":356,"./sort":358,"./validate":368,"jquery":327,"underscore":335}],348:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -55646,6 +55646,8 @@ var GUI = function () {
       undoManager.setCallback(function () {
         return _this.update();
       });
+
+      this.modals = require('./modals/index');
     }
 
     this.toggle = {
@@ -55838,7 +55840,7 @@ var GUI = function () {
         if (!$(e.target).is('.pin')) manager.save();
       });
       $('[name="upload-corpus"]').click(function (e) {
-        if (!$(e.target).is('.pin')) manager.upload();
+        if (!$(e.target).is('.pin')) _this2.modals.upload.show();
       });
       $('[name="download-corpus"]').click(function (e) {
         if (!$(e.target).is('.pin')) manager.export();
@@ -56369,7 +56371,7 @@ function mergeNodes(direction) {
 
 module.exports = GUI;
 
-},{"./convert":340,"./dropdown-menu":344,"./errors":345,"./funcs":346,"./local-storage":351,"./table":357,"./undo-manager":365,"jquery":327,"underscore":335}],349:[function(require,module,exports){
+},{"./convert":340,"./dropdown-menu":344,"./errors":345,"./funcs":346,"./local-storage":351,"./modals/index":353,"./table":359,"./undo-manager":367,"jquery":327,"underscore":335}],349:[function(require,module,exports){
 'use strict';
 
 require('babel-polyfill');
@@ -56390,7 +56392,7 @@ $(function () {
 
 module.exports = require('./test/data/index');
 
-},{"./browser-logger":338,"./funcs":346,"./manager":352,"./server":355,"./test/data/index":361,"babel-polyfill":1}],350:[function(require,module,exports){
+},{"./browser-logger":338,"./funcs":346,"./manager":352,"./server":357,"./test/data/index":363,"babel-polyfill":1}],350:[function(require,module,exports){
 'use strict';
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
@@ -57413,6 +57415,19 @@ var Manager = function () {
   }, {
     key: 'upload',
     value: function upload() {
+      // function handleUploadButtonPressed() {
+      //     // Replaces current content
+      //     CONTENTS = TEMPCONTENTS;
+      //     localStorage.setItem("corpus", CONTENTS);
+      //     getLocalStorageMaxSize()
+      //     $("#localStorageAvailable").text(LOCALSTORAGE_AVAILABLE / 1024 + "k");
+      //     loadDataInIndex();
+      //     $("#uploadFileButton").attr("disabled", "disabled");
+      //     $("#uploadFileSizeError").hide();
+      //     $('#fileModal').modal('hide');
+      // }
+      console.log('upload');
+      return;
       return this.save();
     }
   }, {
@@ -57618,6 +57633,50 @@ module.exports = Manager;
 },{"./config":339,"./detect":343,"./errors":345,"./funcs":346,"./graph":347,"./gui":348,"./labels":350,"./local-storage":351,"jquery":327,"notatrix":330,"underscore":335}],353:[function(require,module,exports){
 'use strict';
 
+module.exports = {
+  upload: require('./upload')
+};
+
+},{"./upload":354}],354:[function(require,module,exports){
+'use strict';
+
+var _ = require('underscore');
+var $ = require('jquery');
+
+var modal = $('#upload-modal');
+
+function show() {
+  modal.show();
+}
+
+function hide() {
+  modal.hide();
+}
+
+/*function submit() {
+  const file = getFile();
+
+}*/
+
+function enable() {
+  modal.find('[type="submit"]').prop('disabled', false);
+}
+
+/*function getFile() {
+  return document.getElementById('upload-filename').files[0];
+}*/
+
+modal.find('[name="close"]').click(hide);
+
+module.exports = {
+  show: show,
+  hide: hide,
+  enable: enable
+};
+
+},{"jquery":327,"underscore":335}],355:[function(require,module,exports){
+'use strict';
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -57644,7 +57703,7 @@ var ProgressBar = function () {
 
 module.exports = ProgressBar;
 
-},{}],354:[function(require,module,exports){
+},{}],356:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -58652,7 +58711,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     }
 });
 
-},{"jquery":327}],355:[function(require,module,exports){
+},{"jquery":327}],357:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -58688,6 +58747,7 @@ var Server = function () {
 						log.info('checkServer AJAX response: ' + JSON.stringify(data));
 						_this.is_running = true;
 						gui.update();
+						gui.modals.upload.enable();
 						_this.load();
 					},
 					error: function error(data) {
@@ -58781,7 +58841,7 @@ function getTreebankId() {
 
 module.exports = Server;
 
-},{"./local-storage":351,"jquery":327}],356:[function(require,module,exports){
+},{"./local-storage":351,"jquery":327}],358:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -58839,7 +58899,7 @@ module.exports = {
   rtl: rtl
 };
 
-},{"underscore":335}],357:[function(require,module,exports){
+},{"underscore":335}],359:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -58908,14 +58968,14 @@ module.exports = {
   edit: edit
 };
 
-},{"./validate":366,"jquery":327}],358:[function(require,module,exports){
+},{"./validate":368,"jquery":327}],360:[function(require,module,exports){
 'use strict';
 
 module.exports = {
   0: '[root [nsubj I] have [obj [amod [advmod too] many] commitments] [advmod right now] [punct .]]'
 };
 
-},{}],359:[function(require,module,exports){
+},{}],361:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -58959,7 +59019,7 @@ module.exports = {
 
 };
 
-},{}],360:[function(require,module,exports){
+},{}],362:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -59006,7 +59066,7 @@ module.exports = {
   ud_example_modified: '1\tThey\tthey\tPRON\tPRP\tCase=Nom|Number=Plur\t2\tnsubj\t2:nsubj|4:nsubj\t_\n2\tbuy\tbuy\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Presroot\t0:root\t_\t_\t_\n3\tand\tand\tCONJ\tCC\t_\t4\tcc\t4:cc\t_\n4\tsell\tsell\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Presconj\t0:root|2:conj\t_\t_\t_\n5\tbooks\tbook\tNOUN\tNNS\tNumber=Plur\t2\tobj\t2:obj|4:obj\t_\n6\t.\t.\tPUNCT\t.\t_\t2\tpunct\t2:punct\t_'
 };
 
-},{}],361:[function(require,module,exports){
+},{}],363:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -59018,7 +59078,7 @@ module.exports = {
   'Unknown': require('./unknown')
 };
 
-},{"./brackets":358,"./cg3":359,"./conllu":360,"./plain-text":362,"./sd":363,"./unknown":364}],362:[function(require,module,exports){
+},{"./brackets":360,"./cg3":361,"./conllu":362,"./plain-text":364,"./sd":365,"./unknown":366}],364:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -59031,7 +59091,7 @@ module.exports = {
   parens_and_numbers: '\u0414\u04D9\u04AF\u043B\u04D9\u0442\u043B\u04D9\u0440\u043D\u0435\u04A3, \u0448\u0443\u043B \u0438\u0441\u04D9\u043F\u0442\u04D9\u043D \u0420\u0443\u0441\u0438\u044F\u043D\u0435\u04A3 \u0434\u04D9, \u0434\u0438\u04A3\u0433\u0435\u0437 \u0447\u0438\u043A\u043B\u04D9\u0440\u0435 \u044F\u0440\u0434\u0430\u043D 12 \u043C\u0438\u043B\u044C (\u044F\u043A\u0438 22,2 \u043A\u043C) \u0435\u0440\u0430\u043A\u043B\u044B\u043A\u0442\u0430 \u0443\u0437\u0443\u044B \u043A\u0438\u043B\u0435\u0448\u0435\u043D\u0433\u04D9\u043D'
 };
 
-},{}],363:[function(require,module,exports){
+},{}],365:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -59055,7 +59115,7 @@ module.exports = {
   ccomp_6: 'The problem is that this has never been tried .\nccomp(is, tried)\nnsubj(is, problem)'
 };
 
-},{}],364:[function(require,module,exports){
+},{}],366:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -59067,7 +59127,7 @@ module.exports = {
   5: '    '
 };
 
-},{}],365:[function(require,module,exports){
+},{}],367:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -59084,7 +59144,7 @@ module.exports = function () {
 	});
 };
 
-},{"jquery":327,"undo-manager":336}],366:[function(require,module,exports){
+},{"jquery":327,"undo-manager":336}],368:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
