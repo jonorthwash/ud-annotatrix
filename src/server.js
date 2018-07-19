@@ -84,6 +84,7 @@ class Server {
 							filename: data.filename,
 							gui: JSON.parse(data.gui),
 							sentences: data.sentences.map(JSON.parse),
+							labeler: JSON.parse(data.labeler),
 							index: 0
 						});
 					}
