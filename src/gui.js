@@ -306,7 +306,7 @@ class GUI {
     });
     $('[name="download-corpus"]').click(e => {
       if (!$(e.target).is('.pin'))
-        manager.export();
+        manager.download();
     });
     $('[name="discard-corpus"]').click(e => {
       if ($(e.target).is('.pin'))

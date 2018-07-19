@@ -465,28 +465,25 @@ class Manager {
     return;
     return this.save();
   }
-  export() {
+  download() {
 
     if (!gui.inBrowser)
       return null;
 
-    // export corpora to file
-    if (server.is_running) {
-      server.download();
-    } else {
+    const link = $('<a>')
+      .attr('download', this.filename)
+      .attr('href', `data:text/plain; charset=utf-8,${this.encode()}`);
+    $('body').append(link);
+    link[0].click();
 
-      const link = $('<a>')
-        .attr('download', this.filename)
-        .attr('href', `data:text/plain; charset=utf-8,${this.encode()}`);
-      $('body').append(link);
-      link[0].click();
-
-    }
   }
   encode() {
-    return encodeURIComponent(this.map((i, sent) => {
-      return `[UD-Annotatrix: id="${i+1}" format="${this.format}"]
-      ${ (this.format === 'Unknown') ? '' : this.sentence }`;
+    return encodeURIComponent(`# __ud_annotatrix_filename__ = "${this.filename}"
+# __ud_annotatrix_timestamp__ = "${new Date()}"
+` + this.map((i, sent) => {
+      return `# __ud_annotatrix_id__ = "${i+1}"
+# __ud_annotatrix_format__ = "${this.format}"
+${ (this.format === 'Unknown') ? '' : this.sentence }`;
     }).join('\n\n'));
   }
   print() {
@@ -539,7 +536,7 @@ function updateSentence(oldSent, text) {
     } else {
       sent = nx.Sentence.fromConllu(text);
     }
-    
+
   }
 
   sent.currentFormat = newFormat;

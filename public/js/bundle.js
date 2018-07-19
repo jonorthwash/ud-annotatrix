@@ -55844,7 +55844,7 @@ var GUI = function () {
         if (!$(e.target).is('.pin')) _this2.modals.upload.show();
       });
       $('[name="download-corpus"]').click(function (e) {
-        if (!$(e.target).is('.pin')) manager.export();
+        if (!$(e.target).is('.pin')) manager.download();
       });
       $('[name="discard-corpus"]').click(function (e) {
         if ($(e.target).is('.pin')) return;
@@ -57433,28 +57433,22 @@ var Manager = function () {
       return this.save();
     }
   }, {
-    key: 'export',
-    value: function _export() {
+    key: 'download',
+    value: function download() {
 
       if (!gui.inBrowser) return null;
 
-      // export corpora to file
-      if (server.is_running) {
-        server.download();
-      } else {
-
-        var link = $('<a>').attr('download', this.filename).attr('href', 'data:text/plain; charset=utf-8,' + this.encode());
-        $('body').append(link);
-        link[0].click();
-      }
+      var link = $('<a>').attr('download', this.filename).attr('href', 'data:text/plain; charset=utf-8,' + this.encode());
+      $('body').append(link);
+      link[0].click();
     }
   }, {
     key: 'encode',
     value: function encode() {
       var _this4 = this;
 
-      return encodeURIComponent(this.map(function (i, sent) {
-        return '[UD-Annotatrix: id="' + (i + 1) + '" format="' + _this4.format + '"]\n      ' + (_this4.format === 'Unknown' ? '' : _this4.sentence);
+      return encodeURIComponent('# __ud_annotatrix_filename__ = "' + this.filename + '"\n# __ud_annotatrix_timestamp__ = "' + new Date() + '"\n' + this.map(function (i, sent) {
+        return '# __ud_annotatrix_id__ = "' + (i + 1) + '"\n# __ud_annotatrix_format__ = "' + _this4.format + '"\n' + (_this4.format === 'Unknown' ? '' : _this4.sentence);
       }).join('\n\n'));
     }
   }, {
@@ -57662,18 +57656,9 @@ function hide() {
   modal.hide();
 }
 
-/*function submit() {
-  const file = getFile();
-
-}*/
-
 function enable() {
   modal.find('[type="submit"]').prop('disabled', false);
 }
-
-/*function getFile() {
-  return document.getElementById('upload-filename').files[0];
-}*/
 
 modal.find('[name="close"]').click(hide);
 
