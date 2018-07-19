@@ -18,6 +18,7 @@ from db import CorpusDB
 from env import Env
 from log import Logger
 import json
+from werkzeug.utils import secure_filename
 
 env = Env(filename='.env')
 
@@ -25,6 +26,7 @@ PATH_TO_CORPORA = env.get('PATH_TO_CORPORA', 'corpora')
 SECRET_KEY = env.get('SECRET_KEY', 'secret-key-123')
 HOST = env.get('HOST', '127.0.0.1')
 PORT = env.get('PORT', '5316')
+ALLOWED_EXTENSIONS = set(['db']) # file extensions the user can post to /upload
 
 logger = Logger(env=env, name='SERVER')
 
@@ -127,22 +129,21 @@ def download_corpus():
 def upload_new_corpus():
     logger.info('{} /annotatrix/upload'.format(request.method))
     if request.method == 'POST':
-        if 'file' in request.files:
-            try:
-                logger.debug('/annotatrix/upload files: {}'.format(request.files))
-                f = request.files['file']
-                corpus_name = f.filename
-                corpus = f.read().decode()
-                treebank_id = str(uuid.uuid4())
-                db_path = treebank_path(treebank_id)
-                db = CorpusDB(db_path)
-                db.write_corpus(corpus, corpus_name)
-                return redirect(url_for('corpus_page', treebank_id=treebank_id))
-            except Exception as e:
-                logger.error('/annotatrix/upload error: {}'.format(e))
-        else:
-            logger.warn('/annotatrix/upload no file received')
-    return jsonify({'something': 'went wrong'})
+        try:
+            logger.debug('/annotatrix/upload files: {}'.format(request.files))
+            file, filename = validate_posted_file(request.files)
+            corpus_name = filename
+            corpus = file.read().decode()
+            treebank_id = str(uuid.uuid4())
+            db_path = treebank_path(treebank_id)
+            db = CorpusDB(db_path)
+            db.write_corpus(corpus, corpus_name)
+            return redirect(url_for('corpus_page', treebank_id=treebank_id))
+        except Exception as e:
+            logger.error('/annotatrix/upload error: {}'.format(e))
+            return jsonify({'error': str(e)})
+    else:
+        return jsonify({'error': 'unable to GET /annotatrix/upload'})
 
 
 @app.route('/annotatrix/running', methods=['GET', 'POST'])
@@ -201,6 +202,22 @@ def help_page():
 def settings_page():
     logger.info('settings page')
     return app.send_static_file('html/settings.html')
+
+
+def validate_posted_file(files):
+    if 'file' not in files:
+        raise ValueError('no file received')
+
+    file = files['file']
+    if file.filename == '':
+        raise ValueError('no file received')
+
+    filename = secure_filename(file.filename)
+    extension = filename.rsplit('.', 1)[1].lower()
+    if extension not in ALLOWED_EXTENSIONS:
+        raise ValueError(f'unable to upload file with extension "{extension}"')
+
+    return file, filename
 
 
 def treebank_path(treebank_id, extension='.db'):
