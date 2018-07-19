@@ -50,8 +50,6 @@ var pressed = {}; // used for onCtrlKeyup
 class GUI {
   constructor() {
 
-    this.menu = new Menu(this);
-
     this.keys = KEYS;
 
     this.is_textarea_visible = true;
@@ -73,6 +71,7 @@ class GUI {
       setupUndos();
       undoManager.setCallback(() => this.update());
 
+      this.menu = new Menu(this);
       this.modals = require('./modals/index');
     }
 
@@ -146,7 +145,7 @@ class GUI {
   get state() {
     return {
 
-      menu:                this.menu.state,
+      menu:                this.menu ? this.menu.state : null,
       is_textarea_visible: this.is_textarea_visible,
       are_labels_visible:  this.are_labels_visible,
       is_vertical:         this.is_vertical,
