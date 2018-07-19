@@ -24631,6 +24631,8 @@ module.exports = Log;
 'use strict';
 
 module.exports = {
+	version: '0.0.0',
+
 	defaultFilename: 'ud-annotatrix-corpus',
 	defaultSentence: '',
 	defaultInsertedSentence: '',
@@ -24639,7 +24641,10 @@ module.exports = {
 	defaultEdgeCoeff: 1,
 
 	localStorageKey: 'ud-annotatrix',
-	saveInterval: 100000 // msecs
+	saveInterval: 100000, // msecs
+
+	downloadHasFileHeader: true,
+	downloadHasSentenceHeader: true
 };
 
 },{}],341:[function(require,module,exports){
@@ -56079,15 +56084,7 @@ module.exports = {
 var _ = require('underscore');
 var $ = require('jquery');
 var C2S = require('canvas2svg');
-
-function download(filename, mimetype, uriComponent) {
-  if (!gui.inBrowser) return false;
-
-  var link = $('<a>').attr('download', filename).attr('href', 'data:' + mimetype + ';charset=utf-8,' + encodeURIComponent(uriComponent));
-  $('body').append(link);
-  link[0].click();
-  return true;
-}
+var funcs = require('./funcs');
 
 function latex() {
 
@@ -56122,7 +56119,7 @@ function latex() {
     return '  \\' + line;
   }), '\\end{dependency} \\\\').join('\n');
 
-  download(manager.filename + '.tex', 'application/x-latex', latex);
+  funcs.download(manager.filename + '.tex', 'application/x-latex', latex);
 
   return latex;
 }
@@ -56140,7 +56137,7 @@ function svg() {
   var ctx = new C2S(cy.width(), cy.height());
   cy.renderer().renderTo(ctx); // DEBUG: this doesn't work
 
-  download(manager.filename + '.svg', 'image/svg+xml', ctx.getSerializedSvg());
+  funcs.download(manager.filename + '.svg', 'image/svg+xml', ctx.getSerializedSvg());
 }
 
 module.exports = {
@@ -56149,7 +56146,7 @@ module.exports = {
   svg: svg
 };
 
-},{"canvas2svg":3,"jquery":328,"underscore":336}],348:[function(require,module,exports){
+},{"./funcs":348,"canvas2svg":3,"jquery":328,"underscore":336}],348:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -56158,6 +56155,7 @@ module.exports = {
  */
 
 var _ = require('underscore');
+var $ = require('jquery');
 
 module.exports = {
 
@@ -56187,12 +56185,21 @@ module.exports = {
       // node
       return global;
     }
-  })
+  }),
+
+  download: function download(filename, mimetype, uriComponent) {
+    if (!gui.inBrowser) return false;
+
+    var link = $('<a>').attr('download', filename).attr('href', 'data:' + mimetype + '; charset=utf-8,' + encodeURIComponent(uriComponent));
+    $('body').append(link);
+    link[0].click();
+    return true;
+  }
 
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"underscore":336}],349:[function(require,module,exports){
+},{"jquery":328,"underscore":336}],349:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -58571,6 +58578,7 @@ var Manager = function () {
     key: 'save',
     value: function save() {
 
+      console.log('saving...');
       var state = JSON.stringify({
         filename: this.filename,
         index: this._index,
@@ -58631,21 +58639,16 @@ var Manager = function () {
   }, {
     key: 'download',
     value: function download() {
-
-      if (!gui.inBrowser) return null;
-
-      var link = $('<a>').attr('download', this.filename).attr('href', 'data:text/plain; charset=utf-8,' + this.encode());
-      $('body').append(link);
-      link[0].click();
+      funcs.download(this.filename + '.corpus', 'text/plain', this.corpus);
     }
   }, {
     key: 'encode',
     value: function encode() {
       var _this4 = this;
 
-      return encodeURIComponent('# __ud_annotatrix_filename__ = "' + this.filename + '"\n# __ud_annotatrix_timestamp__ = "' + new Date() + '"\n' + this.map(function (i, sent) {
+      return '# __ud_annotatrix_filename__ = "' + this.filename + '"\n# __ud_annotatrix_timestamp__ = "' + new Date() + '"\n' + this.map(function (i, sent) {
         return '# __ud_annotatrix_id__ = "' + (i + 1) + '"\n# __ud_annotatrix_format__ = "' + _this4.format + '"\n' + (_this4.format === 'Unknown' ? '' : _this4.sentence);
-      }).join('\n\n'));
+      }).join('\n\n');
     }
   }, {
     key: 'print',
@@ -58765,6 +58768,18 @@ var Manager = function () {
     key: 'graphable',
     get: function get() {
       return this.format === 'CoNLL-U' || this.format === 'CG3';
+    }
+  }, {
+    key: 'corpus',
+    get: function get() {
+      var _this5 = this;
+
+      return (cfg.downloadHasFileHeader ? '# __ud_annotatrix_filename__ = "' + this.filename + '"\n# __ud_annotatrix_timestamp__ = "' + new Date() + '"\n# __ud_annotatrix_version__ = "' + cfg.version + '"\n' : '') + this.map(function (i, sent) {
+        console.log(cfg.downloadHasSentenceHeader);
+        console.log((cfg.downloadHasSentenceHeader ? '# __ud_annotatrix_id__ = "' + (i + 1) + '"\n# __ud_annotatrix_format__ = "' + _this5.format + '"' : '') + _this5.format === 'Unknown' ? '' : _this5.sentence);
+
+        return (cfg.downloadHasSentenceHeader ? '# __ud_annotatrix_id__ = "' + (i + 1) + '"\n# __ud_annotatrix_format__ = "' + _this5.format + '"' : '') + _this5.format === 'Unknown' ? '' : _this5.sentence;
+      }).join('\n\n');
     }
   }]);
 
