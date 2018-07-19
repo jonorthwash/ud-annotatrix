@@ -72,6 +72,8 @@ class GUI {
     if (this.inBrowser) {
       setupUndos();
       undoManager.setCallback(() => this.update());
+
+      this.modals = require('./modals/index');
     }
 
     this.toggle = {
@@ -301,7 +303,7 @@ class GUI {
     });
     $('[name="upload-corpus"]').click(e => {
       if (!$(e.target).is('.pin'))
-        manager.upload();
+        this.modals.upload.show();
     });
     $('[name="download-corpus"]').click(e => {
       if (!$(e.target).is('.pin'))
