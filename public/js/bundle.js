@@ -54724,6 +54724,8 @@ var Menu = function () {
     set: function set(state) {
 
       this.reset();
+      if (!state) return;
+
       if (state.is_visible !== undefined) this.is_visible = state.pinned;
       if (state.pinned !== undefined) this.pinned = state.pinned;
     }
@@ -55622,8 +55624,6 @@ var GUI = function () {
 
     _classCallCheck(this, GUI);
 
-    this.menu = new Menu(this);
-
     this.keys = KEYS;
 
     this.is_textarea_visible = true;
@@ -55647,6 +55647,7 @@ var GUI = function () {
         return _this.update();
       });
 
+      this.menu = new Menu(this);
       this.modals = require('./modals/index');
     }
 
@@ -55961,7 +55962,7 @@ var GUI = function () {
     get: function get() {
       return {
 
-        menu: this.menu.state,
+        menu: this.menu ? this.menu.state : null,
         is_textarea_visible: this.is_textarea_visible,
         are_labels_visible: this.are_labels_visible,
         is_vertical: this.is_vertical,
@@ -57096,6 +57097,7 @@ var Labeler = require('./labels');
 var errors = require('./errors');
 var detectFormat = require('./detect');
 var storage = require('./local-storage');
+var convert = require('./convert');
 
 var Manager = function () {
   function Manager() {
@@ -57615,7 +57617,14 @@ function updateSentence(oldSent, text) {
 
     sent = nx.Sentence.fromText('');
   } else {
-    throw new Error('format not yet supported: ' + newFormat);
+
+    text = convert.to.conllu(text);
+    if (oldFormat === 'plain text') {
+      // don't overwrite stuff :)
+      sent = currentSent;
+    } else {
+      sent = nx.Sentence.fromConllu(text);
+    }
   }
 
   sent.currentFormat = newFormat;
@@ -57630,7 +57639,7 @@ function updateSentence(oldSent, text) {
 
 module.exports = Manager;
 
-},{"./config":339,"./detect":343,"./errors":345,"./funcs":346,"./graph":347,"./gui":348,"./labels":350,"./local-storage":351,"jquery":327,"notatrix":330,"underscore":335}],353:[function(require,module,exports){
+},{"./config":339,"./convert":340,"./detect":343,"./errors":345,"./funcs":346,"./graph":347,"./gui":348,"./labels":350,"./local-storage":351,"jquery":327,"notatrix":330,"underscore":335}],353:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -58808,6 +58817,7 @@ var Server = function () {
 								filename: data.filename,
 								gui: JSON.parse(data.gui),
 								sentences: data.sentences.map(JSON.parse),
+								labeler: JSON.parse(data.labeler),
 								index: 0
 							});
 						}
