@@ -3,18 +3,7 @@
 const _ = require('underscore');
 const $ = require('jquery');
 const C2S = require('canvas2svg');
-
-function download(filename, mimetype, uriComponent) {
-  if (!gui.inBrowser)
-    return false;
-
-  const link = $('<a>')
-    .attr('download', filename)
-    .attr('href', `data:${mimetype};charset=utf-8,${encodeURIComponent(uriComponent)}`);
-  $('body').append(link);
-  link[0].click();
-  return true;
-}
+const funcs = require('./funcs');
 
 function latex() {
 
@@ -56,7 +45,7 @@ function latex() {
         return `  \\${line}`;
     }), '\\end{dependency} \\\\').join('\n');
 
-  download(`${manager.filename}.tex`, 'application/x-latex', latex);
+  funcs.download(`${manager.filename}.tex`, 'application/x-latex', latex);
 
   return latex;
 }
@@ -76,7 +65,7 @@ function svg() {
   const ctx = new C2S(cy.width(), cy.height());
   cy.renderer().renderTo(ctx); // DEBUG: this doesn't work
 
-  download(`${manager.filename}.svg`, 'image/svg+xml', ctx.getSerializedSvg());
+  funcs.download(`${manager.filename}.svg`, 'image/svg+xml', ctx.getSerializedSvg());
 }
 
 module.exports = {
