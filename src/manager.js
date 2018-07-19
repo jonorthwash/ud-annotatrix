@@ -13,6 +13,7 @@ const Labeler = require('./labels');
 const errors = require('./errors');
 const detectFormat = require('./detect');
 const storage = require('./local-storage');
+const convert = require('./convert');
 
 class Manager {
 
@@ -531,7 +532,14 @@ function updateSentence(oldSent, text) {
     sent = nx.Sentence.fromText('');
 
   } else {
-    throw new Error(`format not yet supported: ${newFormat}`)
+
+    text = convert.to.conllu(text);
+    if (oldFormat === 'plain text') { // don't overwrite stuff :)
+      sent = currentSent;
+    } else {
+      sent = nx.Sentence.fromConllu(text);
+    }
+    
   }
 
   sent.currentFormat = newFormat;
