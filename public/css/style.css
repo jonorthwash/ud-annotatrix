@@ -975,3 +975,9 @@ span.dropdown-group-item-name i {
 .btn.pinnable.unpinned {
   display: none;
 }
+
+
+
+.custom-modal h5 {
+  text-decoration: none;
+}
