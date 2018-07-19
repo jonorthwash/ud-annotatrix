@@ -21,10 +21,11 @@ class CLIError extends Error {
 
 function usage() {
 
-  process.stderr.write(`usage: ${process.argv[1]}
-
+  process.stderr.write(`
 reads a corpus from a file-like source and posts the data to
   <protocol>://<host>:<port>/save or stdout
+
+usage: ${process.argv[1]} [OPTIONS]
 
 OPTIONS:
   -f, --file <file> (default: stdin)
@@ -68,7 +69,7 @@ function parse(text) {
 function write(params, text) {
 
   text = parse(text);
-  
+
   process.stderr.write(`> writing to stdout\n`);
   process.stdout.write(text);
   process.exit(0);
@@ -92,7 +93,8 @@ function save(params, text) {
       throw err;
 
     process.stderr.write('> response: ')
-    process.stdout.write(res.body);
+    process.stderr.write(res.body);
+    process.stdout.write(params.treebank)
     process.exit(0);
   });
 }
