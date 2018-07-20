@@ -1,6 +1,7 @@
 'use strict';
 
 const $ = require('jquery');
+const cfg = require('./config');
 
 const container = $('.status-container');
 
@@ -15,14 +16,16 @@ function normal(text) {
 
   const div = status(text, false);
   container.prepend(div);
-  div.fadeOut(3000);
+  div.fadeOut(cfg.statusNormalFadeout);
+  setTimeout(div.detach, cfg.statusNormalFadeout);
 }
 
 function error(text) {
 
   const div = status(text, true);
   container.prepend(div);
-  div.fadeOut(5000);
+  div.fadeOut(cfg.statusErrorFadeout);
+  setTimeout(div.detach, cfg.statusErrorFadeout);
 }
 
 

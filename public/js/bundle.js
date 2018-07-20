@@ -24649,7 +24649,10 @@ module.exports = {
 	saveInterval: 100000, // msecs
 
 	downloadHasFileHeader: true,
-	downloadHasSentenceHeader: true
+	downloadHasSentenceHeader: true,
+
+	statusNormalFadeout: 3000,
+	statusErrorFadeout: 5000
 };
 
 },{}],341:[function(require,module,exports){
@@ -60099,6 +60102,7 @@ module.exports = {
 'use strict';
 
 var $ = require('jquery');
+var cfg = require('./config');
 
 var container = $('.status-container');
 
@@ -60110,14 +60114,16 @@ function normal(text) {
 
   var div = status(text, false);
   container.prepend(div);
-  div.fadeOut(3000);
+  div.fadeOut(cfg.statusNormalFadeout);
+  setTimeout(div.detach, cfg.statusNormalFadeout);
 }
 
 function error(text) {
 
   var div = status(text, true);
   container.prepend(div);
-  div.fadeOut(5000);
+  div.fadeOut(cfg.statusErrorFadeout);
+  setTimeout(div.detach, cfg.statusErrorFadeout);
 }
 
 module.exports = {
@@ -60125,7 +60131,7 @@ module.exports = {
   error: error
 };
 
-},{"jquery":328}],362:[function(require,module,exports){
+},{"./config":340,"jquery":328}],362:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');

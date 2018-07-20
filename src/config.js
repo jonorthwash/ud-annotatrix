@@ -14,5 +14,8 @@ module.exports = {
 	saveInterval: 100000, // msecs
 
 	downloadHasFileHeader: true,
-	downloadHasSentenceHeader: true
+	downloadHasSentenceHeader: true,
+
+	statusNormalFadeout: 3000,
+	statusErrorFadeout: 5000
 }
