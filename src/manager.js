@@ -466,15 +466,6 @@ class Manager {
   download() {
     funcs.download(`${this.filename}.corpus`, 'text/plain', this.corpus);
   }
-  encode() {
-    return `# __ud_annotatrix_filename__ = "${this.filename}"
-# __ud_annotatrix_timestamp__ = "${new Date()}"
-` + this.map((i, sent) => {
-      return `# __ud_annotatrix_id__ = "${i+1}"
-# __ud_annotatrix_format__ = "${this.format}"
-${ (this.format === 'Unknown') ? '' : this.sentence }`;
-    }).join('\n\n');
-  }
   print() {
     throw new Error('print() not implemented');
   }
