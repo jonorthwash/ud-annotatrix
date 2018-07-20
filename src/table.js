@@ -45,7 +45,7 @@ function build() {
 
       inputSpan.text(value);
 
-      if (valid.err) {
+      if (!valid) {
         log.warn(`buildTable(): error parsing cell (err:"${valid.err}", value:"${value}")`);
         /*document.l10n.formatValue(valid.err, valid.data).then(title => {
           errorSpan.addClass('fa fa-exclamation-triangle')
