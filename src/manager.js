@@ -356,17 +356,6 @@ class Manager {
     if (this.current)
       return this.current.currentFormat;
   }
-  get comments() {
-    if (this.current)
-      return this.current.comments;
-  }
-  set comments(comments) {
-    if (!this.current)
-      return;
-
-    this.current.comments = comments;
-    gui.update();
-  }
   get tokens() {
     if (this.current)
       return this.current.tokens;
@@ -383,30 +372,27 @@ class Manager {
     return this.format === 'CoNLL-U' || this.format === 'CG3';
   }
   get corpus() {
-    return (cfg.downloadHasFileHeader
+    const fileHeader = cfg.downloadHasFileHeader
       ? `# __ud_annotatrix_filename__ = "${this.filename}"
 # __ud_annotatrix_timestamp__ = "${new Date()}"
 # __ud_annotatrix_version__ = "${cfg.version}"
 `
-      : '')
-      + this.map((i, sent) => {
-        console.log(cfg.downloadHasSentenceHeader)
-        console.log((cfg.downloadHasSentenceHeader
-          ? `# __ud_annotatrix_id__ = "${i+1}"
-# __ud_annotatrix_format__ = "${this.format}"`
-          : '')
-          + this.format === 'Unknown'
-            ? ''
-            : this.sentence)
+      : '';
 
-        return (cfg.downloadHasSentenceHeader
-          ? `# __ud_annotatrix_id__ = "${i+1}"
-# __ud_annotatrix_format__ = "${this.format}"`
-          : '')
-          + this.format === 'Unknown'
-            ? ''
-            : this.sentence
-      }).join('\n\n');
+    const sentences = this.map((i, sent) => {
+      const sentenceHeader = cfg.downloadHasSentenceHeader
+        ? `# __ud_annotatrix_id__ = "${i+1}"
+# __ud_annotatrix_format__ = "${this.format}"
+`
+        : '';
+      const content = this.format === 'Unknown'
+        ? ''
+        : this.sentence;
+
+      return `${sentenceHeader}${content}`;
+    }).join('\n\n');
+
+    return `${fileHeader}${sentences}`;
   }
 
 

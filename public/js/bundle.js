@@ -58743,17 +58743,6 @@ var Manager = function () {
       if (this.current) return this.current.currentFormat;
     }
   }, {
-    key: 'comments',
-    get: function get() {
-      if (this.current) return this.current.comments;
-    },
-    set: function set(comments) {
-      if (!this.current) return;
-
-      this.current.comments = comments;
-      gui.update();
-    }
-  }, {
     key: 'tokens',
     get: function get() {
       if (this.current) return this.current.tokens;
@@ -58778,12 +58767,16 @@ var Manager = function () {
     get: function get() {
       var _this5 = this;
 
-      return (cfg.downloadHasFileHeader ? '# __ud_annotatrix_filename__ = "' + this.filename + '"\n# __ud_annotatrix_timestamp__ = "' + new Date() + '"\n# __ud_annotatrix_version__ = "' + cfg.version + '"\n' : '') + this.map(function (i, sent) {
-        console.log(cfg.downloadHasSentenceHeader);
-        console.log((cfg.downloadHasSentenceHeader ? '# __ud_annotatrix_id__ = "' + (i + 1) + '"\n# __ud_annotatrix_format__ = "' + _this5.format + '"' : '') + _this5.format === 'Unknown' ? '' : _this5.sentence);
+      var fileHeader = cfg.downloadHasFileHeader ? '# __ud_annotatrix_filename__ = "' + this.filename + '"\n# __ud_annotatrix_timestamp__ = "' + new Date() + '"\n# __ud_annotatrix_version__ = "' + cfg.version + '"\n' : '';
 
-        return (cfg.downloadHasSentenceHeader ? '# __ud_annotatrix_id__ = "' + (i + 1) + '"\n# __ud_annotatrix_format__ = "' + _this5.format + '"' : '') + _this5.format === 'Unknown' ? '' : _this5.sentence;
+      var sentences = this.map(function (i, sent) {
+        var sentenceHeader = cfg.downloadHasSentenceHeader ? '# __ud_annotatrix_id__ = "' + (i + 1) + '"\n# __ud_annotatrix_format__ = "' + _this5.format + '"\n' : '';
+        var content = _this5.format === 'Unknown' ? '' : _this5.sentence;
+
+        return '' + sentenceHeader + content;
       }).join('\n\n');
+
+      return '' + fileHeader + sentences;
     }
   }]);
 
