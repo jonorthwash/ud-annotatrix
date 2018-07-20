@@ -19617,6 +19617,7 @@ class Analysis {
             clump: this.clump,
             name: `pos-node`,
             attr: `upostag`,
+            pos: this.pos,
             label: this.pos || '',
             length: `${(this.pos || '').length * 0.7 + 1}em`,
             analysis: this
@@ -19628,6 +19629,7 @@ class Analysis {
             num: this.num,
             clump: this.clump,
             name: `pos-edge`,
+            pos: this.pos,
             source: `form-${this.id}`,
             target: `pos-node-${this.id}`
           },
@@ -19645,6 +19647,7 @@ class Analysis {
               id: `dep_${this.id}_${head.id}`,
               name: `dependency`,
               attr: `deprel`,
+              deprel: deprel,
               source: `form-${this.id}`,
               sourceAnalysis: this,
               target: `form-${head.id}`,
@@ -25401,6 +25404,11 @@ var CY_STYLE = [{
     'edge-distances': 'node-position',
     'label': 'data(label)',
     'text-events': 'yes'
+  }
+}, {
+  'selector': 'node.pos.error',
+  'style': {
+    'border-color': '#d11'
   }
 }, {
   'selector': 'edge.enhanced',
@@ -56389,7 +56397,9 @@ var Graph = function () {
           ele.data.label = gui.is_ltr ? tar.num < src.num ? src.deprel + '\u22B3' : '\u22B2' + src.deprel : tar.num < src.num ? '\u22B2' + src.deprel : src.deprel + '\u22B3';
 
           ele.data.ctrl = new Array(4).fill(getEdgeHeight(src.num, tar.num));
-          ele.classes = validate.edgeClasses(manager.current.eles, ele);
+          ele.classes = validate.depEdgeClasses(manager.current.eles, ele);
+        } else if (ele.data.name === 'pos-node') {
+          ele.classes = validate.posNodeClasses(ele);
         }
 
         return ele;
@@ -60624,21 +60634,27 @@ function is_cycle(graph, src, tar) {
   // recursive DFS
   function is_cycle_util(graph, src, tar) {
 
+    // visit node
+    seen.add(tar);
+
     // iterate neighbors
     var is_cycle = false;
+    if (!tar.eachHead) debugger;
     tar.eachHead(function (head) {
 
       is_cycle = head === src ? true // got back to source
-      : is_cycle_util(graph, src, head); // recurse
+      : seen.has(head) ? false : is_cycle_util(graph, src, head); // recurse
     });
 
     return is_cycle;
   }
 
+  // keep track of visited nodes
+  var seen = new Set();
   return is_cycle_util(graph, src, tar);
 }
 
-function edgeClasses(graph, ele) {
+function depEdgeClasses(graph, ele) {
   var src = ele.data.sourceAnalysis,
       tar = ele.data.targetAnalysis;
 
@@ -60648,19 +60664,29 @@ function edgeClasses(graph, ele) {
 
   if (is_cycle(graph, src, tar)) classes.add('error');
 
-  src.eachHead(function (head, deprel) {
-    if (!is_deprel(deprel)) classes.add('error');
-  });
+  var deprel = ele.data.deprel || src.deprel;
+
+  if (!deprel || deprel === '_') {
+    classes.add('incomplete');
+  } else if (!is_udeprel(deprel)) {
+    classes.add('error');
+  }
 
   return Array.from(classes).join(' ');
 }
 
-function posNodeClasses(ele) {}
+function posNodeClasses(ele) {
+  if (is_upos(ele.data.pos)) {
+    return 'pos';
+  } else {
+    return 'pos error';
+  }
+}
 
 module.exports = {
   U_DEPRELS: U_DEPRELS,
   U_POS: U_POS,
-  edgeClasses: edgeClasses,
+  depEdgeClasses: depEdgeClasses,
   posNodeClasses: posNodeClasses,
   is_upos: is_upos,
   is_udeprel: is_udeprel

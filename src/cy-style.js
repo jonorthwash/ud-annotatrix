@@ -159,6 +159,11 @@ const CY_STYLE = [{
     'text-events': 'yes'
   }
 }, {
+  'selector': 'node.pos.error',
+  'style': {
+    'border-color': '#d11',
+  }
+}, {
   'selector': 'edge.enhanced',
   'style': {
     'target-arrow-shape': 'triangle',

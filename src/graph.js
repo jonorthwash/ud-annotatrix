@@ -182,7 +182,10 @@ class Graph {
               : `${src.deprel}⊳`;
 
           ele.data.ctrl = new Array(4).fill(getEdgeHeight(src.num, tar.num));
-          ele.classes = validate.edgeClasses(manager.current.eles, ele);
+          ele.classes = validate.depEdgeClasses(manager.current.eles, ele);
+
+        } else if (ele.data.name === 'pos-node') {
+          ele.classes = validate.posNodeClasses(ele);
         }
 
         return ele;

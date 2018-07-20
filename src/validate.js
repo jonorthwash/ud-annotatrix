@@ -254,23 +254,31 @@ function is_cycle(graph, src, tar) {
   // recursive DFS
   function is_cycle_util(graph, src, tar) {
 
+    // visit node
+    seen.add(tar);
+
     // iterate neighbors
     let is_cycle = false;
+    if (!tar.eachHead) debugger;
     tar.eachHead(head => {
 
       is_cycle = head === src
         ? true // got back to source
-        : is_cycle_util(graph, src, head); // recurse
+        : seen.has(head)
+          ? false
+          : is_cycle_util(graph, src, head); // recurse
 
     });
 
     return is_cycle;
   }
 
+  // keep track of visited nodes
+  var seen = new Set();
   return is_cycle_util(graph, src, tar);
 }
 
-function edgeClasses(graph, ele) {
+function depEdgeClasses(graph, ele) {
   const src = ele.data.sourceAnalysis,
     tar = ele.data.targetAnalysis;
 
@@ -282,21 +290,29 @@ function edgeClasses(graph, ele) {
   if (is_cycle(graph, src, tar))
     classes.add('error');
 
-  src.eachHead((head, deprel) => {
-    if (!is_deprel(deprel))
-      classes.add('error');
-  });
+  const deprel = ele.data.deprel || src.deprel;
+
+  if (!deprel || deprel === '_') {
+    classes.add('incomplete');
+  } else if (!is_udeprel(deprel)) {
+    classes.add('error');
+  }
 
   return Array.from(classes).join(' ');
 }
 
 function posNodeClasses(ele) {
+  if (is_upos(ele.data.pos)) {
+    return 'pos';
+  } else {
+    return 'pos error';
+  }
 }
-  
+
 module.exports = {
   U_DEPRELS,
   U_POS,
-  edgeClasses,
+  depEdgeClasses,
   posNodeClasses,
   is_upos,
   is_udeprel
