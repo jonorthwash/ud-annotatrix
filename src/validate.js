@@ -282,13 +282,22 @@ function edgeClasses(graph, ele) {
   if (is_cycle(graph, src, tar))
     classes.add('error');
 
+  src.eachHead((head, deprel) => {
+    if (!is_deprel(deprel))
+      classes.add('error');
+  });
+
   return Array.from(classes).join(' ');
 }
 
+function posNodeClasses(ele) {
+}
+  
 module.exports = {
   U_DEPRELS,
   U_POS,
   edgeClasses,
+  posNodeClasses,
   is_upos,
   is_udeprel
 };
