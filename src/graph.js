@@ -182,7 +182,7 @@ class Graph {
               : `${src.deprel}⊳`;
 
           ele.data.ctrl = new Array(4).fill(getEdgeHeight(src.num, tar.num));
-          ele.classes = 'dependency';
+          ele.classes = validate.edgeClasses(manager.current.eles, ele);
         }
 
         return ele;

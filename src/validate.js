@@ -1,6 +1,7 @@
 'use strict'
 
 const $ = require('jquery');
+const _ = require('underscore');
 
 const U_DEPRELS = ['acl', 'advcl', 'advmod', 'amod', 'appos', 'aux', 'case',
   'cc', 'ccomp', 'clf', 'compound', 'conj', 'cop', 'csubj', 'dep', 'det',
@@ -20,11 +21,15 @@ function is_upos(s) {
   // Checks if a relation is in the list of valid parts of speech
   // @s = the input relation
   // returns a bool
-  for (let i = 0, n = U_POS.length; i < n; i++) {
-    if (U_POS[i] === (s || '').toUpperCase())
-      return { err:null, data:{} };
-  }
-  return { err:'err_upos_invalid', data:{tag:s} };
+  s = s.toUpperCase();
+
+  let is_upos = false;
+  _.each(U_POS, u_pos => {
+    if (s === u_pos)
+      is_upos = true;
+  });
+
+  return is_upos;
 }
 
 
@@ -36,13 +41,15 @@ function is_udeprel(s) {
   // returns a bool
 
   // Language-specific relations are `${universal_relation}:${some_string}`
-  s = (s || '').split(':')[0];
+  s = (s || '').split(':')[0].toLowerCase();
 
-  for (let i = 0, n = U_DEPRELS.length; i < n; i++) {
-    if (U_DEPRELS[i] === s.toLowerCase())
-      return { err:null, data:{} };
-  }
-  return { err:'err_udeprel_invalid', data:{label:s} };
+  let is_deprel = false;
+  _.each(U_DEPRELS, u_deprel => {
+    if (s.toLowerCase() === u_deprel)
+      is_deprel = true;
+  });
+
+  return is_deprel;
 }
 
 function is_leaf(s) {
@@ -54,15 +61,18 @@ function is_leaf(s) {
 
   // http://universaldependencies.org/u/dep/punct.html
   // Tokens with the relation punct always attach to content words (except in cases of ellipsis) and can never have dependents.
+  s = s.toUpperCase();
 
-  for (let i = 0, n = U_POS_LEAF.length; i < n; i++) {
-    if (U_POS_LEAF[i] === (s || '').toUpperCase())
-      return { err:null, data:{} };
-  }
-  return { err:'err_udep_leaf_node', data:{tag:s} };
+  let is_leaf = false;
+  _.each(U_POS_LEAF, u_pos => {
+    if (s === u_pos)
+      is_leaf = true;
+  });
+
+  return is_leaf;
 }
 
-
+/*
 function is_projective_nodes(tree, nodeList) {
   log.debug(`called is_projective_nodes(tree: ${JSON.stringify(tree)}, nodeList: ${JSON.stringify(nodeList)})`);
 
@@ -106,7 +116,7 @@ function is_projective_nodes(tree, nodeList) {
   log.debug(`is_projective_nodes(): got true`);
   return true;
 }
-
+*/
 
 /*
 function is_projective(tree) {
@@ -176,133 +186,7 @@ function is_projective(tree) {
 }
 */
 
-function is_depend_cycles(tree) {
-  log.debug(`called is_depend_cycles(${JSON.stringify(tree)})`);
-
-  const _is_cyclic_util = (start_vertex) => {
-    log.debug(`called _is_cyclic_util(${start_vertex})`);
-
-    // Finds cycles starting at a vertex
-    let current_vertex = start_vertex,
-      visited = [current_vertex];
-
-    while (g.get(current_vertex) !== undefined
-      && g.get(current_vertex) !== start_vertex
-      && visited.indexOf(g.get(current_vertex)) === -1) {
-
-      current_vertex = g.get(current_vertex);
-      visited.push(current_vertex);
-    }
-
-    if (g.get(current_vertex) !== undefined && g.get(current_vertex)==start_vertex)
-      return visited;
-
-    return [];
-  };
-  const get_cycles = () => {
-    log.debug(`called get_cycles()`);
-
-	  // Finds all cycles
-    let cycles = [];
-    for (let node = 0; node < vertices; node++) {
-      let c_data = _is_cyclic_util(node);
-      if (c_data.length > 0) {
-        c_data = normalize_cycle(c_data);
-        let isEqual = false;
-        for (let j = 0, l = cycles.length; j < l; j++) {
-          if (checkIfEqual(cycles[j], c_data)) {
-            isEqual = true;
-            break;
-          }
-        }
-        if (!isEqual)
-          cycles.push(c_data);
-      }
-    }
-
-    log.debug(`cycles: ${JSON.stringify(cycles)}`);
-    return cycles;
-  };
-  const _is_cyclic = () => {
-    log.debug(`called _is_cyclic()`);
-
-    const cycles = get_cycles();
-    return (cycles.length ? cycles : null);
-  };
-  const normalize_cycle = (a) => {
-    log.debug(`called normalize_cycle(${JSON.stringify(a)})`);
-
-    //Normalizes cycles for easy comparisons
-    let b = a.slice().sort(),
-      loc = a.indexOf(b[0]),
-      c = new Array(a.length).fill(0);
-
-    for (let i = 0, l = a.length; i < l; i++) {
-      let index = i - loc;
-      if (index < 0)
-        index += a.length;
-
-      c[index] = a[i];
-    }
-
-    log.debug(`normalized cycle: ${JSON.stringify(c)}`);
-    return c;
-  };
-  const checkIfEqual = (a, b) => {
-    log.debug(`called checkIfEqual(a: ${JSON.stringify(a)}, b: ${JSON.stringify(b)})`);
-
-    //Checks if two cycles are equal
-    if (a.length !== b.length)
-      return false;
-
-    for (let i = 0, l = a.length; i < l; i++) {
-      if (a[i] !== b[i])
-        return false;
-    }
-    return true;
-  };
-  const parseId = (id) => {
-    log.debug(`called parseId(${id})`);
-    return parseInt(id.substr(2));
-  }
-
-  // Finds the cycles in the tree
-  let g = new Map(),
-    data = tree,
-    vertices = Object.keys(data).length + 1,
-    id_to_word = new Map();
-
-  $.each(data, (i, word) => {
-    const head = parseInt(word.head), id = parseId(word.id);
-    if (!isNaN(head) && !isNaN(id)) {
-      g.set(id, head);
-      id_to_word.set(id, word.form);
-    }
-  });
-
-  const is_cyclic = _is_cyclic();
-  log.debug(`is_depend_cycles(): has cycles: ${is_cyclic}`);
-
-  if (is_cyclic) {
-
-    const c_list = get_cycles();
-    log.debug(`is_depend_cycles(): cycle list: ${JSON.stringify(c_list)}`);
-
-    $.each(c_list, (i, cycle) => {
-      log.debug(`is_depend_cycles(): cycle: ${JSON.stringify(cycle)}`);
-
-      const output = cycle.map((element) => {
-        const form = id_to_word.get(element);
-        return String(form);
-      }).join('-->');
-
-      log.debug(`is_depend_cycles(): output: ${JSON.stringify(output)}`);
-    });
-  }
-
-  return is_cyclic;
-}
-
+/*
 function is_relation_conflict(tree) {
   log.debug(`called is_relation_conflict(${JSON.stringify(tree)})`);
 
@@ -363,15 +247,48 @@ function is_relation_conflict(tree) {
 
   return conflicts;
 }
+*/
 
+function is_cycle(graph, src, tar) {
+
+  // recursive DFS
+  function is_cycle_util(graph, src, tar) {
+
+    // iterate neighbors
+    let is_cycle = false;
+    tar.eachHead(head => {
+
+      is_cycle = head === src
+        ? true // got back to source
+        : is_cycle_util(graph, src, head); // recurse
+
+    });
+
+    return is_cycle;
+  }
+
+  return is_cycle_util(graph, src, tar);
+}
+
+function edgeClasses(graph, ele) {
+  const src = ele.data.sourceAnalysis,
+    tar = ele.data.targetAnalysis;
+
+  let classes = new Set([ 'dependency' ]);
+
+  if (is_leaf(tar.upostag))
+    classes.add('error');
+
+  if (is_cycle(graph, src, tar))
+    classes.add('error');
+
+  return Array.from(classes).join(' ');
+}
 
 module.exports = {
   U_DEPRELS,
   U_POS,
+  edgeClasses,
   is_upos,
-  is_udeprel,
-  is_leaf,
-  is_projective_nodes,
-  is_depend_cycles,
-  is_relation_conflict
+  is_udeprel
 };

@@ -56386,7 +56386,7 @@ var Graph = function () {
           ele.data.label = gui.is_ltr ? tar.num < src.num ? src.deprel + '\u22B3' : '\u22B2' + src.deprel : tar.num < src.num ? '\u22B2' + src.deprel : src.deprel + '\u22B3';
 
           ele.data.ctrl = new Array(4).fill(getEdgeHeight(src.num, tar.num));
-          ele.classes = 'dependency';
+          ele.classes = validate.edgeClasses(manager.current.eles, ele);
         }
 
         return ele;
@@ -58646,15 +58646,6 @@ var Manager = function () {
       funcs.download(this.filename + '.corpus', 'text/plain', this.corpus);
     }
   }, {
-    key: 'encode',
-    value: function encode() {
-      var _this4 = this;
-
-      return '# __ud_annotatrix_filename__ = "' + this.filename + '"\n# __ud_annotatrix_timestamp__ = "' + new Date() + '"\n' + this.map(function (i, sent) {
-        return '# __ud_annotatrix_id__ = "' + (i + 1) + '"\n# __ud_annotatrix_format__ = "' + _this4.format + '"\n' + (_this4.format === 'Unknown' ? '' : _this4.sentence);
-      }).join('\n\n');
-    }
-  }, {
     key: 'print',
     value: function print() {
       throw new Error('print() not implemented');
@@ -58765,13 +58756,13 @@ var Manager = function () {
   }, {
     key: 'corpus',
     get: function get() {
-      var _this5 = this;
+      var _this4 = this;
 
       var fileHeader = cfg.downloadHasFileHeader ? '# __ud_annotatrix_filename__ = "' + this.filename + '"\n# __ud_annotatrix_timestamp__ = "' + new Date() + '"\n# __ud_annotatrix_version__ = "' + cfg.version + '"\n' : '';
 
       var sentences = this.map(function (i, sent) {
-        var sentenceHeader = cfg.downloadHasSentenceHeader ? '# __ud_annotatrix_id__ = "' + (i + 1) + '"\n# __ud_annotatrix_format__ = "' + _this5.format + '"\n' : '';
-        var content = _this5.format === 'Unknown' ? '' : _this5.sentence;
+        var sentenceHeader = cfg.downloadHasSentenceHeader ? '# __ud_annotatrix_id__ = "' + (i + 1) + '"\n# __ud_annotatrix_format__ = "' + _this4.format + '"\n' : '';
+        var content = _this4.format === 'Unknown' ? '' : _this4.sentence;
 
         return '' + sentenceHeader + content;
       }).join('\n\n');
@@ -60138,7 +60129,7 @@ function build() {
 
       inputSpan.text(value);
 
-      if (valid.err) {
+      if (!valid) {
         log.warn('buildTable(): error parsing cell (err:"' + valid.err + '", value:"' + value + '")');
         /*document.l10n.formatValue(valid.err, valid.data).then(title => {
           errorSpan.addClass('fa fa-exclamation-triangle')
@@ -60351,6 +60342,7 @@ module.exports = function () {
 'use strict';
 
 var $ = require('jquery');
+var _ = require('underscore');
 
 var U_DEPRELS = ['acl', 'advcl', 'advmod', 'amod', 'appos', 'aux', 'case', 'cc', 'ccomp', 'clf', 'compound', 'conj', 'cop', 'csubj', 'dep', 'det', 'discourse', 'dislocated', 'expl', 'fixed', 'flat', 'goeswith', 'iobj', 'list', 'mark', 'nmod', 'nsubj', 'nummod', 'obj', 'obl', 'orphan', 'parataxis', 'punct', 'reparandum', 'root', 'vocative', 'xcomp'];
 var U_POS = ['ADJ', 'ADP', 'ADV', 'AUX', 'CCONJ', 'DET', 'INTJ', 'NOUN', 'NUM', 'PART', 'PRON', 'PROPN', 'PUNCT', 'SCONJ', 'SYM', 'VERB', 'X'];
@@ -60365,10 +60357,14 @@ function is_upos(s) {
   // Checks if a relation is in the list of valid parts of speech
   // @s = the input relation
   // returns a bool
-  for (var i = 0, n = U_POS.length; i < n; i++) {
-    if (U_POS[i] === (s || '').toUpperCase()) return { err: null, data: {} };
-  }
-  return { err: 'err_upos_invalid', data: { tag: s } };
+  s = s.toUpperCase();
+
+  var is_upos = false;
+  _.each(U_POS, function (u_pos) {
+    if (s === u_pos) is_upos = true;
+  });
+
+  return is_upos;
 }
 
 function is_udeprel(s) {
@@ -60379,12 +60375,14 @@ function is_udeprel(s) {
   // returns a bool
 
   // Language-specific relations are `${universal_relation}:${some_string}`
-  s = (s || '').split(':')[0];
+  s = (s || '').split(':')[0].toLowerCase();
 
-  for (var i = 0, n = U_DEPRELS.length; i < n; i++) {
-    if (U_DEPRELS[i] === s.toLowerCase()) return { err: null, data: {} };
-  }
-  return { err: 'err_udeprel_invalid', data: { label: s } };
+  var is_deprel = false;
+  _.each(U_DEPRELS, function (u_deprel) {
+    if (s.toLowerCase() === u_deprel) is_deprel = true;
+  });
+
+  return is_deprel;
 }
 
 function is_leaf(s) {
@@ -60396,48 +60394,61 @@ function is_leaf(s) {
 
   // http://universaldependencies.org/u/dep/punct.html
   // Tokens with the relation punct always attach to content words (except in cases of ellipsis) and can never have dependents.
+  s = s.toUpperCase();
 
-  for (var i = 0, n = U_POS_LEAF.length; i < n; i++) {
-    if (U_POS_LEAF[i] === (s || '').toUpperCase()) return { err: null, data: {} };
-  }
-  return { err: 'err_udep_leaf_node', data: { tag: s } };
-}
-
-function is_projective_nodes(tree, nodeList) {
-  log.debug('called is_projective_nodes(tree: ' + JSON.stringify(tree) + ', nodeList: ' + JSON.stringify(nodeList) + ')');
-
-  var heads = {};
-
-  $.each(tree, function (i, node) {
-    if (node) {
-      if (node.head && node.id) {
-        heads[id] = head;
-        nodes.push(id);
-      }
-    }
+  var is_leaf = false;
+  _.each(U_POS_LEAF, function (u_pos) {
+    if (s === u_pos) is_leaf = true;
   });
 
-  var nodes = Object.keys(heads);
-  log.debug('is_projective_nodes(): heads: ' + JSON.stringify(heads));
+  return is_leaf;
+}
 
-  $.each(nodeList, function (i, nodeIdFromList) {
-    var nodeToCheck = nodes[nodeIdFromList],
-        headToCheck = heads[nodeIdFromList];
+/*
+function is_projective_nodes(tree, nodeList) {
+  log.debug(`called is_projective_nodes(tree: ${JSON.stringify(tree)}, nodeList: ${JSON.stringify(nodeList)})`);
 
-    $.each(nodes, function (j, node) {
-      var head = heads[node];
+  let heads = {};
 
-      log.debug('is_projective_nodes(): checking (node: ' + nodeToCheck + ', head: ' + headToCheck + ') against (node: ' + node + ', head: ' + head + ')');
-      if (node > nodeToCheck && node < headToCheck && (head > headToCheck || head < nodeToCheck)) return false;
-      if (node > headToCheck && node < nodeToCheck && (head > nodeToCheck || head < headToCheck)) return false;
-      if (head > nodeToCheck && head < headToCheck && (node < nodeToCheck || node > headToCheck)) return false;
-      if (head > headToCheck && head < nodeToCheck && (node > nodeToCheck || node < headToCheck)) return false;
+  $.each(tree, (i, node) => {
+      if (node) {
+          if (node.head && node.id) {
+              heads[id] = head;
+              nodes.push(id);
+          }
+      }
+  });
+
+  const nodes = Object.keys(heads);
+  log.debug(`is_projective_nodes(): heads: ${JSON.stringify(heads)}`);
+
+  $.each(nodeList, (i, nodeIdFromList) => {
+    const nodeToCheck = nodes[nodeIdFromList],
+      headToCheck = heads[nodeIdFromList];
+
+    $.each(nodes, (j, node) => {
+      const head = heads[node];
+
+      log.debug(`is_projective_nodes(): checking (node: ${nodeToCheck}, head: ${headToCheck}) against (node: ${node}, head: ${head})`);
+      if (node > nodeToCheck && node < headToCheck
+        && (head > headToCheck || head < nodeToCheck))
+        return false;
+      if (node > headToCheck && node < nodeToCheck
+        && (head > nodeToCheck || head < headToCheck))
+        return false;
+      if (head > nodeToCheck && head < headToCheck
+        && (node < nodeToCheck || node > headToCheck))
+        return false;
+      if (head > headToCheck && head < nodeToCheck
+        && (node > nodeToCheck || node < headToCheck))
+        return false;
     });
   });
 
-  log.debug('is_projective_nodes(): got true');
+  log.debug(`is_projective_nodes(): got true`);
   return true;
 }
+*/
 
 /*
 function is_projective(tree) {
@@ -60507,192 +60518,108 @@ function is_projective(tree) {
 }
 */
 
-function is_depend_cycles(tree) {
-  log.debug('called is_depend_cycles(' + JSON.stringify(tree) + ')');
-
-  var _is_cyclic_util = function _is_cyclic_util(start_vertex) {
-    log.debug('called _is_cyclic_util(' + start_vertex + ')');
-
-    // Finds cycles starting at a vertex
-    var current_vertex = start_vertex,
-        visited = [current_vertex];
-
-    while (g.get(current_vertex) !== undefined && g.get(current_vertex) !== start_vertex && visited.indexOf(g.get(current_vertex)) === -1) {
-
-      current_vertex = g.get(current_vertex);
-      visited.push(current_vertex);
-    }
-
-    if (g.get(current_vertex) !== undefined && g.get(current_vertex) == start_vertex) return visited;
-
-    return [];
-  };
-  var get_cycles = function get_cycles() {
-    log.debug('called get_cycles()');
-
-    // Finds all cycles
-    var cycles = [];
-    for (var node = 0; node < vertices; node++) {
-      var c_data = _is_cyclic_util(node);
-      if (c_data.length > 0) {
-        c_data = normalize_cycle(c_data);
-        var isEqual = false;
-        for (var j = 0, l = cycles.length; j < l; j++) {
-          if (checkIfEqual(cycles[j], c_data)) {
-            isEqual = true;
-            break;
-          }
-        }
-        if (!isEqual) cycles.push(c_data);
-      }
-    }
-
-    log.debug('cycles: ' + JSON.stringify(cycles));
-    return cycles;
-  };
-  var _is_cyclic = function _is_cyclic() {
-    log.debug('called _is_cyclic()');
-
-    var cycles = get_cycles();
-    return cycles.length ? cycles : null;
-  };
-  var normalize_cycle = function normalize_cycle(a) {
-    log.debug('called normalize_cycle(' + JSON.stringify(a) + ')');
-
-    //Normalizes cycles for easy comparisons
-    var b = a.slice().sort(),
-        loc = a.indexOf(b[0]),
-        c = new Array(a.length).fill(0);
-
-    for (var i = 0, l = a.length; i < l; i++) {
-      var index = i - loc;
-      if (index < 0) index += a.length;
-
-      c[index] = a[i];
-    }
-
-    log.debug('normalized cycle: ' + JSON.stringify(c));
-    return c;
-  };
-  var checkIfEqual = function checkIfEqual(a, b) {
-    log.debug('called checkIfEqual(a: ' + JSON.stringify(a) + ', b: ' + JSON.stringify(b) + ')');
-
-    //Checks if two cycles are equal
-    if (a.length !== b.length) return false;
-
-    for (var i = 0, l = a.length; i < l; i++) {
-      if (a[i] !== b[i]) return false;
-    }
-    return true;
-  };
-  var parseId = function parseId(id) {
-    log.debug('called parseId(' + id + ')');
-    return parseInt(id.substr(2));
-  };
-
-  // Finds the cycles in the tree
-  var g = new Map(),
-      data = tree,
-      vertices = Object.keys(data).length + 1,
-      id_to_word = new Map();
-
-  $.each(data, function (i, word) {
-    var head = parseInt(word.head),
-        id = parseId(word.id);
-    if (!isNaN(head) && !isNaN(id)) {
-      g.set(id, head);
-      id_to_word.set(id, word.form);
-    }
-  });
-
-  var is_cyclic = _is_cyclic();
-  log.debug('is_depend_cycles(): has cycles: ' + is_cyclic);
-
-  if (is_cyclic) {
-
-    var c_list = get_cycles();
-    log.debug('is_depend_cycles(): cycle list: ' + JSON.stringify(c_list));
-
-    $.each(c_list, function (i, cycle) {
-      log.debug('is_depend_cycles(): cycle: ' + JSON.stringify(cycle));
-
-      var output = cycle.map(function (element) {
-        var form = id_to_word.get(element);
-        return String(form);
-      }).join('-->');
-
-      log.debug('is_depend_cycles(): output: ' + JSON.stringify(output));
-    });
-  }
-
-  return is_cyclic;
-}
-
+/*
 function is_relation_conflict(tree) {
-  log.debug('called is_relation_conflict(' + JSON.stringify(tree) + ')');
+  log.debug(`called is_relation_conflict(${JSON.stringify(tree)})`);
 
-  var count = new Map();
-  $.each(tree, function (i, word) {
+
+  let count = new Map();
+  $.each(tree, (i, word) => {
     if (word.deprel !== undefined) {
       list = (count.has(word.deprel) ? count.get(word.deprel) : []).concat(word.head);
       count.set(word.deprel, list);
     }
   });
-  log.debug('count: ' + JSON.stringify(count));
+  log.debug(`count: ${JSON.stringify(count)}`);
 
-  var totalSubjects = new Map();
+
+  let totalSubjects = new Map();
   if (count.has('nsubj')) {
-    $.each(count.get('nsubj'), function (i, nsubj) {
-      value = totalSubjects.has(nsubj) ? totalSubjects.get(nsubj) + 1 : 1;
+    $.each(count.get('nsubj'), (i, nsubj) => {
+      value = (totalSubjects.has(nsubj) ? totalSubjects.get(nsubj) + 1 : 1);
       totalSubjects.set(nsubj, value);
     });
   }
   if (count.has('csubj')) {
-    $.each(count.get('csubj'), function (i, csubj) {
-      value = totalSubjects.has(csubj) ? totalSubjects.get(csubj) + 1 : 1;
+    $.each(count.get('csubj'), (i, csubj) => {
+      value = (totalSubjects.has(csubj) ? totalSubjects.get(csubj) + 1 : 1);
       totalSubjects.set(nsubj, value);
     });
   }
-  log.debug('totalSubjects: ' + JSON.stringify(totalSubjects));
+  log.debug(`totalSubjects: ${JSON.stringify(totalSubjects)}`);
 
-  var totalObjects = new Map();
+
+  let totalObjects = new Map();
   if (count.has('obj')) {
-    $.each(count.get('obj'), function (i, obj) {
-      value = totalObjects.has(obj) ? totalObjects.get(obj) + 1 : 1;
+    $.each(count.get('obj'), (i, obj) => {
+      value = (totalObjects.has(obj) ? totalObjects.get(obj) + 1 : 1);
       totalObjects.set(obj, value);
     });
   }
-  log.debug('totalObjects: ' + JSON.stringify(totalObjects));
+  log.debug(`totalObjects: ${JSON.stringify(totalObjects)}`);
 
-  var conflicts = new Map();
-  totalSubjects.forEach(function (i, subj, map) {
+
+  let conflicts = new Map();
+  totalSubjects.forEach((i, subj, map) => {
     if (i > 1) {
       list = (conflicts.has(subj) ? conflicts.get(subj) : []).concat('subj');
       conflicts.set(subj, list);
     }
   });
-  totalObjects.forEach(function (i, obj, map) {
+  totalObjects.forEach((i, obj, map) => {
     if (i > 1) {
       list = (conflicts.has(obj) ? conflicts.get(obj) : []).concat('obj');
       conflicts.set(obj, list);
     }
   });
-  if (count.has('obj') && count.has('ccomp')) conflicts.set('objccomp', []);
-  log.debug('conflicts: ' + JSON.stringify(conflicts));
+  if (count.has('obj') && count.has('ccomp'))
+      conflicts.set('objccomp', []);
+  log.debug(`conflicts: ${JSON.stringify(conflicts)}`);
+
 
   return conflicts;
+}
+*/
+
+function is_cycle(graph, src, tar) {
+
+  // recursive DFS
+  function is_cycle_util(graph, src, tar) {
+
+    // iterate neighbors
+    var is_cycle = false;
+    tar.eachHead(function (head) {
+
+      is_cycle = head === src ? true // got back to source
+      : is_cycle_util(graph, src, head); // recurse
+    });
+
+    return is_cycle;
+  }
+
+  return is_cycle_util(graph, src, tar);
+}
+
+function edgeClasses(graph, ele) {
+  var src = ele.data.sourceAnalysis,
+      tar = ele.data.targetAnalysis;
+
+  var classes = new Set(['dependency']);
+
+  if (is_leaf(tar.upostag)) classes.add('error');
+
+  if (is_cycle(graph, src, tar)) classes.add('error');
+
+  return Array.from(classes).join(' ');
 }
 
 module.exports = {
   U_DEPRELS: U_DEPRELS,
   U_POS: U_POS,
+  edgeClasses: edgeClasses,
   is_upos: is_upos,
-  is_udeprel: is_udeprel,
-  is_leaf: is_leaf,
-  is_projective_nodes: is_projective_nodes,
-  is_depend_cycles: is_depend_cycles,
-  is_relation_conflict: is_relation_conflict
+  is_udeprel: is_udeprel
 };
 
-},{"jquery":328}]},{},[351])(351)
+},{"jquery":328,"underscore":336}]},{},[351])(351)
 });
