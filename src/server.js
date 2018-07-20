@@ -2,6 +2,7 @@
 
 const $ = require('jquery');
 const storage = require('./local-storage');
+const status = require('./status');
 
 class Server {
 	constructor() {
@@ -20,6 +21,7 @@ class Server {
 				},
 				dataType: 'json',
 				success: data => {
+					status.normal('connected to server');
 					log.info(`checkServer AJAX response: ${JSON.stringify(data)}`);
 					this.is_running = true;
 					gui.update();
@@ -27,10 +29,12 @@ class Server {
 					this.load();
 				},
 				error: data => {
+					status.error('unable to connect to server');
 					log.error('Unable to complete AJAX request for check()');
 				}
 			});
 		} catch (e) {
+			status.error('unable to connect to server');
 			log.error(`AJAX error in check(): ${e.message}`);
 		}
 	}

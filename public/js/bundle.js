@@ -24267,7 +24267,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             limit = 0,
             isExecuting = false,
             callback,
-            
+
             // functions
             execute;
 
@@ -24297,12 +24297,12 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
                 commands.splice(index + 1, commands.length - index);
 
                 commands.push(command);
-                
+
                 // if limit is set, remove items from the start
                 if (limit && commands.length > limit) {
                     removeFromTo(commands, 0, -(limit+1));
                 }
-                
+
                 // set the current index to the end
                 index = commands.length - 1;
                 if (callback) {
@@ -24379,7 +24379,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             getIndex: function() {
                 return index;
             },
-            
+
             setLimit: function (l) {
                 limit = l;
             }
@@ -56775,7 +56775,7 @@ function removeHead(srcId, tarId) {
 
 module.exports = Graph;
 
-},{"./config":340,"./cy-style":342,"./cytoscape/cytoscape":343,"./errors":346,"./funcs":348,"./progress-bar":357,"./selfcomplete":358,"./sort":360,"./validate":370,"jquery":328,"underscore":336}],350:[function(require,module,exports){
+},{"./config":340,"./cy-style":342,"./cytoscape/cytoscape":343,"./errors":346,"./funcs":348,"./progress-bar":357,"./selfcomplete":358,"./sort":360,"./validate":371,"jquery":328,"underscore":336}],350:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -57595,7 +57595,7 @@ function mergeNodes(direction) {
 
 module.exports = GUI;
 
-},{"./convert":341,"./dropdown-menu":345,"./errors":346,"./funcs":348,"./local-storage":353,"./modals/index":355,"./table":361,"./undo-manager":369,"jquery":328,"underscore":336}],351:[function(require,module,exports){
+},{"./convert":341,"./dropdown-menu":345,"./errors":346,"./funcs":348,"./local-storage":353,"./modals/index":355,"./table":362,"./undo-manager":370,"jquery":328,"underscore":336}],351:[function(require,module,exports){
 'use strict';
 
 require('babel-polyfill');
@@ -57616,7 +57616,7 @@ $(function () {
 
 module.exports = require('./test/data/index');
 
-},{"./browser-logger":339,"./funcs":348,"./manager":354,"./server":359,"./test/data/index":365,"babel-polyfill":1}],352:[function(require,module,exports){
+},{"./browser-logger":339,"./funcs":348,"./manager":354,"./server":359,"./test/data/index":366,"babel-polyfill":1}],352:[function(require,module,exports){
 'use strict';
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
@@ -58322,6 +58322,7 @@ var detectFormat = require('./detect');
 var storage = require('./local-storage');
 var convert = require('./convert');
 var export_ = require('./export');
+var status = require('./status');
 
 var Manager = function () {
   function Manager() {
@@ -58583,6 +58584,8 @@ var Manager = function () {
     key: 'save',
     value: function save() {
 
+      status.normal('saving...');
+
       var state = JSON.stringify({
         filename: this.filename,
         index: this._index,
@@ -58644,11 +58647,6 @@ var Manager = function () {
     key: 'download',
     value: function download() {
       funcs.download(this.filename + '.corpus', 'text/plain', this.corpus);
-    }
-  }, {
-    key: 'print',
-    value: function print() {
-      throw new Error('print() not implemented');
     }
   }, {
     key: 'length',
@@ -58832,7 +58830,7 @@ function updateSentence(oldSent, text) {
 
 module.exports = Manager;
 
-},{"./config":340,"./convert":341,"./detect":344,"./errors":346,"./export":347,"./funcs":348,"./graph":349,"./gui":350,"./labels":352,"./local-storage":353,"jquery":328,"notatrix":331,"underscore":336}],355:[function(require,module,exports){
+},{"./config":340,"./convert":341,"./detect":344,"./errors":346,"./export":347,"./funcs":348,"./graph":349,"./gui":350,"./labels":352,"./local-storage":353,"./status":361,"jquery":328,"notatrix":331,"underscore":336}],355:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -59913,6 +59911,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var $ = require('jquery');
 var storage = require('./local-storage');
+var status = require('./status');
 
 var Server = function () {
 	function Server() {
@@ -59937,6 +59936,7 @@ var Server = function () {
 					},
 					dataType: 'json',
 					success: function success(data) {
+						status.normal('connected to server');
 						log.info('checkServer AJAX response: ' + JSON.stringify(data));
 						_this.is_running = true;
 						gui.update();
@@ -59944,10 +59944,12 @@ var Server = function () {
 						_this.load();
 					},
 					error: function error(data) {
+						status.error('unable to connect to server');
 						log.error('Unable to complete AJAX request for check()');
 					}
 				});
 			} catch (e) {
+				status.error('unable to connect to server');
 				log.error('AJAX error in check(): ' + e.message);
 			}
 		}
@@ -60035,7 +60037,7 @@ function getTreebankId() {
 
 module.exports = Server;
 
-},{"./local-storage":353,"jquery":328}],360:[function(require,module,exports){
+},{"./local-storage":353,"./status":361,"jquery":328}],360:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -60094,6 +60096,36 @@ module.exports = {
 };
 
 },{"underscore":336}],361:[function(require,module,exports){
+'use strict';
+
+var $ = require('jquery');
+
+var container = $('.status-container');
+
+function status(text, isError) {
+  return $('<div>').addClass('status').addClass(isError ? 'error' : 'normal').text(text);
+}
+
+function normal(text) {
+
+  var div = status(text, false);
+  container.prepend(div);
+  div.fadeOut(3000);
+}
+
+function error(text) {
+
+  var div = status(text, true);
+  container.prepend(div);
+  div.fadeOut(5000);
+}
+
+module.exports = {
+  normal: normal,
+  error: error
+};
+
+},{"jquery":328}],362:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -60162,14 +60194,14 @@ module.exports = {
   edit: edit
 };
 
-},{"./validate":370,"jquery":328}],362:[function(require,module,exports){
+},{"./validate":371,"jquery":328}],363:[function(require,module,exports){
 'use strict';
 
 module.exports = {
   0: '[root [nsubj I] have [obj [amod [advmod too] many] commitments] [advmod right now] [punct .]]'
 };
 
-},{}],363:[function(require,module,exports){
+},{}],364:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -60213,7 +60245,7 @@ module.exports = {
 
 };
 
-},{}],364:[function(require,module,exports){
+},{}],365:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -60260,7 +60292,7 @@ module.exports = {
   ud_example_modified: '1\tThey\tthey\tPRON\tPRP\tCase=Nom|Number=Plur\t2\tnsubj\t2:nsubj|4:nsubj\t_\n2\tbuy\tbuy\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Presroot\t0:root\t_\t_\t_\n3\tand\tand\tCONJ\tCC\t_\t4\tcc\t4:cc\t_\n4\tsell\tsell\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Presconj\t0:root|2:conj\t_\t_\t_\n5\tbooks\tbook\tNOUN\tNNS\tNumber=Plur\t2\tobj\t2:obj|4:obj\t_\n6\t.\t.\tPUNCT\t.\t_\t2\tpunct\t2:punct\t_'
 };
 
-},{}],365:[function(require,module,exports){
+},{}],366:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -60272,7 +60304,7 @@ module.exports = {
   'Unknown': require('./unknown')
 };
 
-},{"./brackets":362,"./cg3":363,"./conllu":364,"./plain-text":366,"./sd":367,"./unknown":368}],366:[function(require,module,exports){
+},{"./brackets":363,"./cg3":364,"./conllu":365,"./plain-text":367,"./sd":368,"./unknown":369}],367:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -60285,7 +60317,7 @@ module.exports = {
   parens_and_numbers: '\u0414\u04D9\u04AF\u043B\u04D9\u0442\u043B\u04D9\u0440\u043D\u0435\u04A3, \u0448\u0443\u043B \u0438\u0441\u04D9\u043F\u0442\u04D9\u043D \u0420\u0443\u0441\u0438\u044F\u043D\u0435\u04A3 \u0434\u04D9, \u0434\u0438\u04A3\u0433\u0435\u0437 \u0447\u0438\u043A\u043B\u04D9\u0440\u0435 \u044F\u0440\u0434\u0430\u043D 12 \u043C\u0438\u043B\u044C (\u044F\u043A\u0438 22,2 \u043A\u043C) \u0435\u0440\u0430\u043A\u043B\u044B\u043A\u0442\u0430 \u0443\u0437\u0443\u044B \u043A\u0438\u043B\u0435\u0448\u0435\u043D\u0433\u04D9\u043D'
 };
 
-},{}],367:[function(require,module,exports){
+},{}],368:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -60309,7 +60341,7 @@ module.exports = {
   ccomp_6: 'The problem is that this has never been tried .\nccomp(is, tried)\nnsubj(is, problem)'
 };
 
-},{}],368:[function(require,module,exports){
+},{}],369:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -60321,7 +60353,7 @@ module.exports = {
   5: '    '
 };
 
-},{}],369:[function(require,module,exports){
+},{}],370:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -60338,7 +60370,7 @@ module.exports = function () {
 	});
 };
 
-},{"jquery":328,"undo-manager":337}],370:[function(require,module,exports){
+},{"jquery":328,"undo-manager":337}],371:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -60610,13 +60642,20 @@ function edgeClasses(graph, ele) {
 
   if (is_cycle(graph, src, tar)) classes.add('error');
 
+  src.eachHead(function (head, deprel) {
+    if (!is_deprel(deprel)) classes.add('error');
+  });
+
   return Array.from(classes).join(' ');
 }
+
+function posNodeClasses(ele) {}
 
 module.exports = {
   U_DEPRELS: U_DEPRELS,
   U_POS: U_POS,
   edgeClasses: edgeClasses,
+  posNodeClasses: posNodeClasses,
   is_upos: is_upos,
   is_udeprel: is_udeprel
 };

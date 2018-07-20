@@ -987,3 +987,24 @@ span.dropdown-group-item-name i {
 .custom-modal h5 {
   text-decoration: none;
 }
+
+.status-container {
+  display: flex;
+  max-width: 75ch;
+}
+
+.status {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+  margin-right: 0.5em;
+}
+
+.status.error {
+  color: #b22;
+}
+
+.status.normal {
+  color: #868e96;
+}

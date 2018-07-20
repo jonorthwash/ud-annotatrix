@@ -15,6 +15,7 @@ const detectFormat = require('./detect');
 const storage = require('./local-storage');
 const convert = require('./convert');
 const export_ = require('./export');
+const status = require('./status');
 
 class Manager {
 
@@ -207,6 +208,7 @@ class Manager {
       return this.current.text;
     }
   }
+
   set sentence(text) {
     return this.setSentence(text);
   }
@@ -399,6 +401,8 @@ class Manager {
 
   save() {
 
+    status.normal('saving...');
+
     const state = JSON.stringify({
       filename: this.filename,
       index: this._index,
@@ -466,10 +470,6 @@ class Manager {
   download() {
     funcs.download(`${this.filename}.corpus`, 'text/plain', this.corpus);
   }
-  print() {
-    throw new Error('print() not implemented');
-  }
-
 }
 
 function updateSentence(oldSent, text) {
