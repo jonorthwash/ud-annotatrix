@@ -413,7 +413,6 @@ class Manager {
 
   save() {
 
-    console.log('saving...');
     const state = JSON.stringify({
       filename: this.filename,
       index: this._index,

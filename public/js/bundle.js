@@ -20768,6 +20768,7 @@ class Sentence {
    */
   get progress() {
 
+    // amount work done, amount total work
     let done = 0,
       total = 0;
 
@@ -20775,14 +20776,17 @@ class Sentence {
 
       total += 2;
 
+      // if analysis is not set, can't compute other stuff
       if (!token.analysis)
         return;
 
+      // if these fields are filled out, increment work
       if (token.analysis.head && token.analysis.head !== fallback)
         done++;
       if (token.analysis.pos && token.analysis.head !== fallback)
         done++;
 
+      // each head increases amount of work to do
       token.analysis.eachHead(head => {
 
         total++;
@@ -20792,6 +20796,7 @@ class Sentence {
       });
     });
 
+    // return a float in [0,1] and avoid dividing by zero
     return total ? done / total : 1;
   }
 
@@ -21191,7 +21196,7 @@ class Sentence {
     this.index();
 
     let eles = [];
-    this.forEach(token => {
+    _.each(this.tokens, token => {
       eles = eles.concat(token.eles);
     });
 
@@ -24262,7 +24267,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             limit = 0,
             isExecuting = false,
             callback,
-
+            
             // functions
             execute;
 
@@ -24292,12 +24297,12 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
                 commands.splice(index + 1, commands.length - index);
 
                 commands.push(command);
-
+                
                 // if limit is set, remove items from the start
                 if (limit && commands.length > limit) {
                     removeFromTo(commands, 0, -(limit+1));
                 }
-
+                
                 // set the current index to the end
                 index = commands.length - 1;
                 if (callback) {
@@ -24374,7 +24379,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             getIndex: function() {
                 return index;
             },
-
+            
             setLimit: function (l) {
                 limit = l;
             }
@@ -58578,7 +58583,6 @@ var Manager = function () {
     key: 'save',
     value: function save() {
 
-      console.log('saving...');
       var state = JSON.stringify({
         filename: this.filename,
         index: this._index,
