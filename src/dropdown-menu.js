@@ -2,6 +2,8 @@
 
 const _ = require('underscore');
 const $ = require('jquery');
+const user = require('./user');
+const funcs = require('./funcs');
 
 class Menu {
   constructor(gui) {
@@ -91,6 +93,73 @@ class Menu {
           .css('border-bottom-right-radius', '5px');
     });
 
+    $('#dropdown-user').children().not(':first-child').detach();
+    if (user.get()) {
+      $('#dropdown-user').append(
+        $('<a>')
+          .addClass('dropdown-group-item login not-logged-in')
+          .attr('href', `#`)
+          .attr('name', 'logout')
+          .click(e => user.logout())
+          .append(
+            $('<span>')
+              .addClass('dropdown-group-item-name')
+              .text(`Logout (${user.get()})`)
+              .prepend(
+                $('<i>')
+                  .addClass('fa fa-github')
+              )
+          )
+      ).append(
+        $('<a>')
+          .addClass('dropdown-group-item permissions')
+          .attr('href', '#')
+          .attr('name', 'manage-permissions')
+          .append(
+            $('<span>')
+              .addClass('dropdown-group-item-name')
+              .text('Manage permissions')
+              .prepend(
+                $('<i>')
+                  .addClass('fa fa-users')
+              )
+          )
+      )
+    } else {
+      $('#dropdown-user').append(
+        $('<a>')
+          .addClass(`dropdown-group-item login not-logged-in ${server.is_running ? '' : 'disabled'}`)
+          .attr('href', '#')
+          .attr('name', 'login')
+          .prop('disabled', !server.is_running)
+          .click(e => user.login())
+          .append(
+            $('<span>')
+              .addClass('dropdown-group-item-name')
+              .text('Login to GitHub')
+              .prepend(
+                $('<i>')
+                  .addClass('fa fa-github')
+              )
+          )
+      )
+    }
+    /*
+    <a class="dropdown-group-item login not-logged-in" href="#" name="login">
+      <span class="dropdown-group-item-name">
+        <i class="fa fa-github"></i>
+        Login to GitHub
+      </span>
+      <i></i>
+    </a>
+    <a class="dropdown-group-item permissions" href="#" name="manage-permissions">
+      <span class="dropdown-group-item-name">
+        <i class="fa fa-users"></i>
+        Manage permissions
+      </span>
+      <i></i>
+    </a>
+    */
   }
 
   toggle(event) {
@@ -117,11 +186,9 @@ class Menu {
     this.reset();
     if (!state)
       return;
-      
-    if (state.is_visible !== undefined)
-      this.is_visible = state.pinned;
-    if (state.pinned !== undefined)
-      this.pinned = state.pinned;
+
+    if (state)
+      this.pinned = state.pinned || this.pinned;
 
   }
 }

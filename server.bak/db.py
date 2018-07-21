@@ -22,6 +22,7 @@ class CorpusDB():
         cur = db.cursor()
         cur.execute('CREATE TABLE corpus (num integer primary key, sent)')
         cur.execute('CREATE TABLE meta (num integer primary key, filename, gui, labeler)')
+        cur.execute('CREATE TABLE users (id integer primary key, username, token)')
         db.commit()
 
     def write_corpus(self, corpus, corpus_name):
@@ -130,3 +131,63 @@ class CorpusDB():
         corpus_name = cur.fetchone()[0]
         db.close()
         return corpus, corpus_name
+
+    def get_user(self, id=None, token=None):
+        if id is not None:
+            db = sqlite3.connect(self.path)
+            cur = db.cursor()
+
+            cur.execute('SELECT id, username, token FROM users WHERE id = (?)', (id,))
+            try:
+                id, username, token = cur.fetchone()
+            except TypeError as e:
+                print(f'cannot get user by id ({id}):', e)
+                return None, None, None
+
+            db.commit()
+            db.close()
+
+            return id, username, token
+
+        elif token is not None:
+            db = sqlite3.connect(self.path)
+            cur = db.cursor()
+
+            cur.execute('SELECT id, username, token FROM users WHERE token = (?)', (token,))
+            try:
+                id, username, token = cur.fetchone()
+            except TypeError as e:
+                print(f'cannot get user by token ({token}):', e)
+                return None, None, None
+
+            db.commit()
+            db.close()
+
+            return id, username, token
+
+        else:
+            return None, None, None
+
+    def add_user(self, token):
+        db = sqlite3.connect(self.path)
+        cur = db.cursor()
+
+        cur.execute('INSERT into users (token) VALUES (?)', (token,))
+
+        db.commit()
+        db.close()
+
+        return cur.lastrowid;
+
+    def modify_user(self, id, username=None, token=None):
+        db = sqlite3.connect(self.path)
+        cur = db.cursor()
+
+        if username is not None:
+            cur.execute('UPDATE users SET username = (?) where id = (?)', (username, id))
+
+        if token is not None:
+            cur.execute('UPDATE users SET token = (?) where id = (?)', (token, id))
+
+        db.commit()
+        db.close()

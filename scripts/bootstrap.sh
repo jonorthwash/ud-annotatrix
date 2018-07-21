@@ -39,7 +39,8 @@ PATH_TO_CORPORA=corpora
 SECRET_KEY=annotatrixareforkids
 HOST=127.0.0.1
 PORT=5316
-DEBUG=DEBUG" > $ENV
+DEBUG=DEBUG
+GITHUB_CLIENT_SECRET=" > $ENV
 fi
 
 # install js stuff

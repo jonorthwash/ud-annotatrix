@@ -3,10 +3,12 @@
 const $ = require('jquery');
 const storage = require('./local-storage');
 const status = require('./status');
+const user = require('./user');
+const funcs = require('./funcs');
 
 class Server {
 	constructor() {
-		this.treebank_id = getTreebankId();
+		this.treebank_id = funcs.getTreebankId();
 		this.check();
 	}
 
@@ -14,12 +16,8 @@ class Server {
 		this.is_running = false;
 		try {
 			$.ajax({
-				type: 'POST',
-				url: '/annotatrix/running',
-				data: {
-					content: 'check'
-				},
-				dataType: 'json',
+				type: 'GET',
+				url: '/running',
 				success: data => {
 					status.normal('connected to server');
 					log.info(`checkServer AJAX response: ${JSON.stringify(data)}`);
@@ -31,11 +29,13 @@ class Server {
 				error: data => {
 					status.error('unable to connect to server');
 					log.error('Unable to complete AJAX request for check()');
+					gui.menu.update();
 				}
 			});
 		} catch (e) {
 			status.error('unable to connect to server');
 			log.error(`AJAX error in check(): ${e.message}`);
+			gui.menu.update();
 		}
 	}
 
@@ -47,11 +47,8 @@ class Server {
 		try {
 			$.ajax({
 				type: 'POST',
-				url: '/save',
-				data: {
-					state: state,
-					treebank_id: this.treebank_id
-				},
+				url: `/save?treebank_id=${this.treebank_id}`,
+				data: state,
 				dataType: 'json',
 				success: data => {
 					if (data.status === 'failure') {
@@ -77,13 +74,13 @@ class Server {
 		try {
 			$.ajax({
 				type: 'GET',
-				url: `/load/${this.treebank_id}/`,
+				url: `/load?treebank_id=${this.treebank_id}`,
 				success: data => {
 					if (data.status === 'failure') {
 						log.error('Unable to load(): server error');
 					} else {
 						log.info('Successfully loaded from server');
-
+						console.log(data);
 						manager.load({
 							filename: data.filename,
 							gui: JSON.parse(data.gui),
@@ -91,6 +88,7 @@ class Server {
 							labeler: JSON.parse(data.labeler),
 							index: 0
 						});
+						user.set(data.username);
 					}
 				},
 				error: data => {
@@ -103,18 +101,6 @@ class Server {
 
 		return null; // want the loading to fail
 	}
-
-	download() {
-		if (!this.is_running)
-			return null;
-
-		const treebank_id = location.href.split('/')[4];
-		window.open(`./download?treebank_id=${treebank_id}`, '_blank');
-	}
-}
-
-function getTreebankId() {
-	return location.href.split('/')[4];
 }
 
 module.exports = Server;

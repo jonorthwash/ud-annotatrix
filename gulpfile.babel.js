@@ -18,7 +18,7 @@ gulp.task('js', () => {
     .bundle()
     .pipe(source('bundle.js'))
     .pipe(buffer())
-    .pipe(gulp.dest('public/js'));
+    .pipe(gulp.dest('server/public/js'));
 });
 
 /*

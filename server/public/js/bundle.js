@@ -55755,6 +55755,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var _ = require('underscore');
 var $ = require('jquery');
+var user = require('./user');
+var funcs = require('./funcs');
 
 var Menu = function () {
   function Menu(gui) {
@@ -55844,6 +55846,33 @@ var Menu = function () {
         if (first) first.css('border-top-left-radius', '5px').css('border-bottom-left-radius', '5px');
         if (last) last.css('border-top-right-radius', '5px').css('border-bottom-right-radius', '5px');
       });
+
+      $('#dropdown-user').children().not(':first-child').detach();
+      if (user.get()) {
+        $('#dropdown-user').append($('<a>').addClass('dropdown-group-item login not-logged-in').attr('href', '#').attr('name', 'logout').click(function (e) {
+          return user.logout();
+        }).append($('<span>').addClass('dropdown-group-item-name').text('Logout (' + user.get() + ')').prepend($('<i>').addClass('fa fa-github')))).append($('<a>').addClass('dropdown-group-item permissions').attr('href', '#').attr('name', 'manage-permissions').append($('<span>').addClass('dropdown-group-item-name').text('Manage permissions').prepend($('<i>').addClass('fa fa-users'))));
+      } else {
+        $('#dropdown-user').append($('<a>').addClass('dropdown-group-item login not-logged-in ' + (server.is_running ? '' : 'disabled')).attr('href', '#').attr('name', 'login').prop('disabled', !server.is_running).click(function (e) {
+          return user.login();
+        }).append($('<span>').addClass('dropdown-group-item-name').text('Login to GitHub').prepend($('<i>').addClass('fa fa-github'))));
+      }
+      /*
+      <a class="dropdown-group-item login not-logged-in" href="#" name="login">
+        <span class="dropdown-group-item-name">
+          <i class="fa fa-github"></i>
+          Login to GitHub
+        </span>
+        <i></i>
+      </a>
+      <a class="dropdown-group-item permissions" href="#" name="manage-permissions">
+        <span class="dropdown-group-item-name">
+          <i class="fa fa-users"></i>
+          Manage permissions
+        </span>
+        <i></i>
+      </a>
+      */
     }
   }, {
     key: 'toggle',
@@ -55872,8 +55901,7 @@ var Menu = function () {
       this.reset();
       if (!state) return;
 
-      if (state.is_visible !== undefined) this.is_visible = state.pinned;
-      if (state.pinned !== undefined) this.pinned = state.pinned;
+      if (state) this.pinned = state.pinned || this.pinned;
     }
   }]);
 
@@ -55882,7 +55910,7 @@ var Menu = function () {
 
 module.exports = Menu;
 
-},{"jquery":328,"underscore":336}],346:[function(require,module,exports){
+},{"./funcs":348,"./user":371,"jquery":328,"underscore":336}],346:[function(require,module,exports){
 'use strict';
 
 /**
@@ -56173,6 +56201,8 @@ module.exports = {
 var _ = require('underscore');
 var $ = require('jquery');
 
+var status = require('./status');
+
 module.exports = {
 
   inBrowser: function inBrowser() {
@@ -56210,12 +56240,23 @@ module.exports = {
     $('body').append(link);
     link[0].click();
     return true;
+  },
+
+  getTreebankId: function getTreebankId() {
+    var match = location.href.match(/treebank_id=([0-9a-f-]{36})(#|\/|$)/);
+    console.log(match);
+    if (!match) {
+      status.error('invalid treebank url, must be valid UUID4');
+      throw new Error('invalid treebank url, must be a valid UUID4');
+    }
+
+    return match[1];
   }
 
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"jquery":328,"underscore":336}],349:[function(require,module,exports){
+},{"./status":361,"jquery":328,"underscore":336}],349:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -56788,7 +56829,7 @@ function removeHead(srcId, tarId) {
 
 module.exports = Graph;
 
-},{"./config":340,"./cy-style":342,"./cytoscape/cytoscape":343,"./errors":346,"./funcs":348,"./progress-bar":357,"./selfcomplete":358,"./sort":360,"./validate":371,"jquery":328,"underscore":336}],350:[function(require,module,exports){
+},{"./config":340,"./cy-style":342,"./cytoscape/cytoscape":343,"./errors":346,"./funcs":348,"./progress-bar":357,"./selfcomplete":358,"./sort":360,"./validate":372,"jquery":328,"underscore":336}],350:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -58599,7 +58640,7 @@ var Manager = function () {
 
       status.normal('saving...');
 
-      var state = JSON.stringify({
+      var state = {
         filename: this.filename,
         index: this._index,
         sentences: this.map(function (i, sent) {
@@ -58613,9 +58654,9 @@ var Manager = function () {
         }),
         gui: gui.state,
         labeler: labeler.state
-      });
+      };
 
-      storage.save(state);
+      storage.save(JSON.stringify(state));
       if (server && server.is_running) server.save(state);
 
       return state;
@@ -59925,12 +59966,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var $ = require('jquery');
 var storage = require('./local-storage');
 var status = require('./status');
+var user = require('./user');
+var funcs = require('./funcs');
 
 var Server = function () {
 	function Server() {
 		_classCallCheck(this, Server);
 
-		this.treebank_id = getTreebankId();
+		this.treebank_id = funcs.getTreebankId();
 		this.check();
 	}
 
@@ -59942,12 +59985,8 @@ var Server = function () {
 			this.is_running = false;
 			try {
 				$.ajax({
-					type: 'POST',
-					url: '/annotatrix/running',
-					data: {
-						content: 'check'
-					},
-					dataType: 'json',
+					type: 'GET',
+					url: '/running',
 					success: function success(data) {
 						status.normal('connected to server');
 						log.info('checkServer AJAX response: ' + JSON.stringify(data));
@@ -59959,11 +59998,13 @@ var Server = function () {
 					error: function error(data) {
 						status.error('unable to connect to server');
 						log.error('Unable to complete AJAX request for check()');
+						gui.menu.update();
 					}
 				});
 			} catch (e) {
 				status.error('unable to connect to server');
 				log.error('AJAX error in check(): ' + e.message);
+				gui.menu.update();
 			}
 		}
 	}, {
@@ -59975,11 +60016,8 @@ var Server = function () {
 			try {
 				$.ajax({
 					type: 'POST',
-					url: '/save',
-					data: {
-						state: state,
-						treebank_id: this.treebank_id
-					},
+					url: '/save?treebank_id=' + this.treebank_id,
+					data: state,
 					dataType: 'json',
 					success: function success(data) {
 						if (data.status === 'failure') {
@@ -60005,13 +60043,13 @@ var Server = function () {
 			try {
 				$.ajax({
 					type: 'GET',
-					url: '/load/' + this.treebank_id + '/',
+					url: '/load?treebank_id=' + this.treebank_id,
 					success: function success(data) {
 						if (data.status === 'failure') {
 							log.error('Unable to load(): server error');
 						} else {
 							log.info('Successfully loaded from server');
-
+							console.log(data);
 							manager.load({
 								filename: data.filename,
 								gui: JSON.parse(data.gui),
@@ -60019,6 +60057,7 @@ var Server = function () {
 								labeler: JSON.parse(data.labeler),
 								index: 0
 							});
+							user.set(data.username);
 						}
 					},
 					error: function error(data) {
@@ -60031,26 +60070,14 @@ var Server = function () {
 
 			return null; // want the loading to fail
 		}
-	}, {
-		key: 'download',
-		value: function download() {
-			if (!this.is_running) return null;
-
-			var treebank_id = location.href.split('/')[4];
-			window.open('./download?treebank_id=' + treebank_id, '_blank');
-		}
 	}]);
 
 	return Server;
 }();
 
-function getTreebankId() {
-	return location.href.split('/')[4];
-}
-
 module.exports = Server;
 
-},{"./local-storage":353,"./status":361,"jquery":328}],360:[function(require,module,exports){
+},{"./funcs":348,"./local-storage":353,"./status":361,"./user":371,"jquery":328}],360:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -60210,7 +60237,7 @@ module.exports = {
   edit: edit
 };
 
-},{"./validate":371,"jquery":328}],363:[function(require,module,exports){
+},{"./validate":372,"jquery":328}],363:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -60387,6 +60414,72 @@ module.exports = function () {
 };
 
 },{"jquery":328,"undo-manager":337}],371:[function(require,module,exports){
+'use strict';
+
+var _ = require('underscore');
+
+var status = require('./status');
+var funcs = require('./funcs');
+
+var _username = null;
+
+function get() {
+  return _username;
+}
+
+function set(username) {
+  _username = username;
+
+  if (username) status.normal('logged in as ' + username);
+
+  gui.update();
+}
+
+function login() {
+  if (!server.is_running) return null;
+
+  try {
+    $.ajax({
+      type: 'POST',
+      url: '/oauth/login?treebank_id=' + funcs.getTreebankId(),
+      success: function success(data) {
+        console.log(data);
+
+        /*
+        if (data.status === 'failure') {
+          log.error('Unable to load(): server error');
+        } else {
+          log.info('Successfully loaded from server');
+          console.log(data);
+          manager.load({
+            filename: data.filename,
+            gui: JSON.parse(data.gui),
+            sentences: data.sentences.map(JSON.parse),
+            labeler: JSON.parse(data.labeler),
+            index: 0
+          });
+          user.set(data.username);
+        }*/
+      },
+      error: function error(data) {
+        log.critical('Unable to complete AJAX request for login()');
+      }
+    });
+  } catch (e) {
+    log.critical('AJAX error in login(): ' + e.message);
+  }
+}
+
+function logout() {}
+
+module.exports = {
+  get: get,
+  set: set,
+  login: login,
+  logout: logout
+};
+
+},{"./funcs":348,"./status":361,"underscore":336}],372:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');

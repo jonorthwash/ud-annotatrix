@@ -403,7 +403,7 @@ class Manager {
 
     status.normal('saving...');
 
-    const state = JSON.stringify({
+    const state = {
       filename: this.filename,
       index: this._index,
       sentences: this.map((i, sent) => {
@@ -417,9 +417,9 @@ class Manager {
       }),
       gui: gui.state,
       labeler: labeler.state
-    });
+    };
 
-    storage.save(state)
+    storage.save(JSON.stringify(state))
     if (server && server.is_running)
       server.save(state);
 

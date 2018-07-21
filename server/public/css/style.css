@@ -923,6 +923,10 @@ li.label input[name="label-color"] {
   border-radius: 3px;
 }
 
+.dropdown-content {
+  /*display: none;*/
+}
+
 .dropdown-content ul {
   list-style: none;
   margin: 0 0.5em;
