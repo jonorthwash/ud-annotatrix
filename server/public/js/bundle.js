@@ -24270,7 +24270,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             limit = 0,
             isExecuting = false,
             callback,
-
+            
             // functions
             execute;
 
@@ -24300,12 +24300,12 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
                 commands.splice(index + 1, commands.length - index);
 
                 commands.push(command);
-
+                
                 // if limit is set, remove items from the start
                 if (limit && commands.length > limit) {
                     removeFromTo(commands, 0, -(limit+1));
                 }
-
+                
                 // set the current index to the end
                 index = commands.length - 1;
                 if (callback) {
@@ -24382,7 +24382,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             getIndex: function() {
                 return index;
             },
-
+            
             setLimit: function (l) {
                 limit = l;
             }
@@ -55801,6 +55801,19 @@ var Menu = function () {
       $('.dropdown-group-item .pin').click(function (e) {
         return _this.togglePinned(e);
       });
+
+      $('.dropdown-group-item[name="logout"]').click(function (e) {
+        return user.logout();
+      });
+      $('.dropdown-group-item[name="login"]').click(function (e) {
+        return user.login();
+      });
+      $('.dropdown-group-item[name="manage-repos"]').click(function (e) {
+        return user.manage.repos();
+      });
+      $('.dropdown-group-item[name="manage-permissions"]').click(function (e) {
+        return user.manage.permissions();
+      });
     }
   }, {
     key: 'update',
@@ -55846,33 +55859,6 @@ var Menu = function () {
         if (first) first.css('border-top-left-radius', '5px').css('border-bottom-left-radius', '5px');
         if (last) last.css('border-top-right-radius', '5px').css('border-bottom-right-radius', '5px');
       });
-
-      $('#dropdown-user').children().not(':first-child').detach();
-      if (user.get()) {
-        $('#dropdown-user').append($('<a>').addClass('dropdown-group-item login not-logged-in').attr('href', '#').attr('name', 'logout').click(function (e) {
-          return user.logout();
-        }).append($('<span>').addClass('dropdown-group-item-name').text('Logout (' + user.get() + ')').prepend($('<i>').addClass('fa fa-github')))).append($('<a>').addClass('dropdown-group-item permissions').attr('href', '#').attr('name', 'manage-permissions').append($('<span>').addClass('dropdown-group-item-name').text('Manage permissions').prepend($('<i>').addClass('fa fa-users'))));
-      } else {
-        $('#dropdown-user').append($('<a>').addClass('dropdown-group-item login not-logged-in ' + (server.is_running ? '' : 'disabled')).attr('href', '#').attr('name', 'login').prop('disabled', !server.is_running).click(function (e) {
-          return user.login();
-        }).append($('<span>').addClass('dropdown-group-item-name').text('Login to GitHub').prepend($('<i>').addClass('fa fa-github'))));
-      }
-      /*
-      <a class="dropdown-group-item login not-logged-in" href="#" name="login">
-        <span class="dropdown-group-item-name">
-          <i class="fa fa-github"></i>
-          Login to GitHub
-        </span>
-        <i></i>
-      </a>
-      <a class="dropdown-group-item permissions" href="#" name="manage-permissions">
-        <span class="dropdown-group-item-name">
-          <i class="fa fa-users"></i>
-          Manage permissions
-        </span>
-        <i></i>
-      </a>
-      */
     }
   }, {
     key: 'toggle',
@@ -56243,14 +56229,21 @@ module.exports = {
   },
 
   getTreebankId: function getTreebankId() {
-    var match = location.href.match(/treebank_id=([0-9a-f-]{36})(#|\/|$)/);
-    console.log(match);
+    var match = location.href.match(/treebank_id=([0-9a-f-]{36})(#|\/|$|&)/);
     if (!match) {
       status.error('invalid treebank url, must be valid UUID4');
       throw new Error('invalid treebank url, must be a valid UUID4');
     }
 
     return match[1];
+  },
+
+  link: function link(href) {
+    var target = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '_blank';
+
+    var link = $('<a>').attr('href', href).attr('target', target);
+    $('body').append(link);
+    link[0].click();
   }
 
 };
@@ -60057,7 +60050,6 @@ var Server = function () {
 								labeler: JSON.parse(data.labeler),
 								index: 0
 							});
-							user.set(data.username);
 						}
 					},
 					error: function error(data) {
@@ -60421,62 +60413,33 @@ var _ = require('underscore');
 var status = require('./status');
 var funcs = require('./funcs');
 
-var _username = null;
-
-function get() {
-  return _username;
-}
-
-function set(username) {
-  _username = username;
-
-  if (username) status.normal('logged in as ' + username);
-
-  gui.update();
-}
-
 function login() {
   if (!server.is_running) return null;
 
-  try {
-    $.ajax({
-      type: 'POST',
-      url: '/oauth/login?treebank_id=' + funcs.getTreebankId(),
-      success: function success(data) {
-        console.log(data);
-
-        /*
-        if (data.status === 'failure') {
-          log.error('Unable to load(): server error');
-        } else {
-          log.info('Successfully loaded from server');
-          console.log(data);
-          manager.load({
-            filename: data.filename,
-            gui: JSON.parse(data.gui),
-            sentences: data.sentences.map(JSON.parse),
-            labeler: JSON.parse(data.labeler),
-            index: 0
-          });
-          user.set(data.username);
-        }*/
-      },
-      error: function error(data) {
-        log.critical('Unable to complete AJAX request for login()');
-      }
-    });
-  } catch (e) {
-    log.critical('AJAX error in login(): ' + e.message);
-  }
+  funcs.link('/oauth/login?treebank_id=' + funcs.getTreebankId(), '_self');
 }
 
-function logout() {}
+function logout() {
+  if (!server.is_running) return null;
+
+  funcs.link('/logout', '_self');
+}
+
+function repos() {
+  funcs.link('/repos');
+}
+
+function permissions() {
+  funcs.link('/permissions');
+}
 
 module.exports = {
-  get: get,
-  set: set,
   login: login,
-  logout: logout
+  logout: logout,
+  manage: {
+    permissions: permissions,
+    repos: repos
+  }
 };
 
 },{"./funcs":348,"./status":361,"underscore":336}],372:[function(require,module,exports){
