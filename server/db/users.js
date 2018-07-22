@@ -1,7 +1,6 @@
 'use strict';
 
 const sqlite3 = require('sqlite3');
-const path = require('path');
 const fs = require('fs');
 const DBError = require('../errors').DBError;
 
@@ -17,7 +16,7 @@ function open(filename, next) {
     const db = new sqlite3.Database(filename);
     db.run(`
       CREATE TABLE users (
-        id integer primary key,
+        id INTEGER PRIMARY KEY,
         username UNIQUE,
         token UNIQUE
       )`, err => next(err, db));
@@ -130,13 +129,12 @@ class UsersDB {
             token: values.token || params.token
           }, next);
         }
-      })
+      });
     });
   }
 
 
   remove(params, next) {
-    console.log(params)
     open(this.path, (err, db) => {
       if (err)
         return next(new DBError(err), null);
