@@ -54,7 +54,7 @@
     "build": "gulp",
     "build-watch": "gulp && gulp watch",
     "server": "node server/app.js",
-    "dev-server": "nodemon server/app.js"
+    "dev-server": "ANNOTATRIX_ENV=development nodemon server/app.js"
   },
   "repository": {
     "type": "git",
