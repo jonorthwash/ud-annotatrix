@@ -12,7 +12,15 @@ class ConfigError extends UDAnnotatrixError {
   }
 }
 
+class DBError extends UDAnnotatrixError {
+  constructor(...args) {
+    console.log('DBError:', ...args);
+    super(...args);
+  }
+}
+
 module.exports = {
   UDAnnotatrixError,
-  ConfigError
+  ConfigError,
+  DBError
 };
