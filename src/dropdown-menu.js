@@ -39,6 +39,11 @@ class Menu {
     $('#btnMenuDropdown').click(e => this.toggle(e));
     $('.dropdown-group-item .pin').click(e => this.togglePinned(e));
 
+    $('.dropdown-group-item[name="logout"]').click(e => user.logout());
+    $('.dropdown-group-item[name="login"]').click(e => user.login());
+    $('.dropdown-group-item[name="manage-repos"]').click(e => user.manage.repos());
+    $('.dropdown-group-item[name="manage-permissions"]').click(e => user.manage.permissions());
+
   }
 
   update() {
@@ -93,6 +98,7 @@ class Menu {
           .css('border-bottom-right-radius', '5px');
     });
 
+    /*
     $('#dropdown-user').children().not(':first-child').detach();
     if (user.get()) {
       $('#dropdown-user').append(
