@@ -88,7 +88,6 @@ class Server {
 							labeler: JSON.parse(data.labeler),
 							index: 0
 						});
-						user.set(data.username);
 					}
 				},
 				error: data => {
