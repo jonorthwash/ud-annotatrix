@@ -125,7 +125,10 @@ class UsersDB {
           );
 
         } else { // insert new
-          this.insert(values, next);
+          this.insert({
+            username: values.username || params.username,
+            token: values.token || params.token
+          }, next);
         }
       })
     });
@@ -133,6 +136,7 @@ class UsersDB {
 
 
   remove(params, next) {
+    console.log(params)
     open(this.path, (err, db) => {
       if (err)
         return next(new DBError(err), null);
