@@ -42,7 +42,7 @@ function github_get(req, path, callback) {
     url: `https://api.github.com${path}`,
     headers: {
       'Authorization': `token ${req.session.token}`,
-      'User-Agent': 'UD-Annotatrix'
+      'User-Agent': 'UD-Annotatrix/Express 4.0'
     }
   }, (err, _res, body) => {
 
@@ -58,7 +58,7 @@ function github_post(req, path, payload, callback) {
     json: payload,
     headers: {
       'Authorization': `token ${req.session.token}`,
-      'User-Agent': 'UD-Annotatrix'
+      'User-Agent': 'UD-Annotatrix/Express 4.0'
     }
   }, (err, _res, body) => {
 
@@ -98,15 +98,25 @@ module.exports = app => {
   app.get('/running', (req, res) => res.json({ status: 'running' }));
 
   app.post('/save', get_treebank, (req, res) => {
-    const state = req.body;
 
-    new CorpusDB(req.treebank);
-    res.json({ success: true });
+    CorpusDB(req.treebank).save(req.body, err => {
+      if (err)
+        throw err;
+
+      res.json({ success: true });
+    });
 
   });
 
   app.get('/load', get_treebank, (req, res) => {
-    res.json({ error: 'Not implemented' });
+
+    CorpusDB(req.treebank).load((err, data) => {
+      if (err)
+        throw err;
+
+      console.log(data);
+    });
+
   });
 
   app.post('/upload', get_treebank, (req, res) => {
