@@ -4,7 +4,6 @@
 const cfg = require('./config');
 const express = require('express');
 const app = express();
-const db = require('./db');
 const http = require('http');
 
 // express plugins
