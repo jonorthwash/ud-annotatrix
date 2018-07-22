@@ -168,9 +168,45 @@
 					<div class="dropdown-content">
 						<ul>
 							<li class="dropdown-group" id="dropdown-user">
-								<span class="dropdown-group-title">
-									User
-								</span>
+								<% if (username && username.length) { %>
+									<span class="dropdown-group-title">
+										User:
+										<span id="username" class="logged-in">
+											<%= username %>
+										</span>
+									</span>
+									<a class="dropdown-group-item logged-in" href="#" name="logout">
+										<span class="dropdown-group-item-name">
+											<i class="fa fa-github"></i>
+											Logout
+										</span>
+									</a>
+									<a class="dropdown-group-item" href="#" name="manage-repos">
+										<span class="dropdown-group-item-name">
+											<i class="fa fa-clone"></i>
+											Manage repositories
+										</span>
+									</a>
+									<a class="dropdown-group-item" href="#" name="manage-permissions">
+										<span class="dropdown-group-item-name">
+											<i class="fa fa-users"></i>
+											Manage permissions
+										</span>
+									</a>
+								<% } else { %>
+									<span class="dropdown-group-title">
+										User:
+										<span id="username" class="not-logged-in disabled">
+											none
+										</span>
+									</span>
+									<a class="dropdown-group-item not-logged-in" href="#" name="login">
+										<span class="dropdown-group-item-name">
+											<i class="fa fa-github"></i>
+											Login
+										</span>
+									</a>
+								<% } %>
 							</li>
 							<hr>
 							<li class="dropdown-group">
