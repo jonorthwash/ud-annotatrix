@@ -1012,3 +1012,11 @@ span.dropdown-group-item-name i {
 .status.normal {
   color: #868e96;
 }
+
+#username {
+  margin-left: 0.2em;
+}
+
+#username.not-logged-in {
+  opacity: 0.3;
+}
