@@ -55,7 +55,7 @@ class UsersDB {
           if (isNaN(parseInt(this.lastID)))
             return next(new DBError('Unable to insert'), null);
 
-          next(null, this.lastID);
+          next(null, { id: this.lastID, changes: this.changes });
         }
       );
     });
@@ -102,22 +102,33 @@ class UsersDB {
       if (!params || !values)
         return next(new DBError('Missing required arguments: params AND values'), null);
 
-      db.run(`
-        UPDATE users
-        SET username=IFNULL(?, username), token=IFNULL(?, username)
-        WHERE id=(?) OR username=(?) OR token=(?)`
-        , values.username
-        , values.token
-        , params.id
-        , params.username
-        , params.token
-        , function (err) {
-          if (err)
-            return next(new DBError(err), null);
+      this.query(params, (err, data) => {
+        if (err)
+          return next(new DBError(err), null);
 
-          next(null, this.changes);
+        if (data) { // it already exists, overwrite
+
+          db.run(`
+            UPDATE users
+            SET username=IFNULL(?, username), token=IFNULL(?, username)
+            WHERE id=(?) OR username=(?) OR token=(?)`
+            , values.username
+            , values.token
+            , params.id
+            , params.username
+            , params.token
+            , function (err) {
+              if (err)
+                return next(new DBError(err), null);
+
+              next(null, { id: this.lastID, changes: this.changes });
+            }
+          );
+
+        } else { // insert new
+          this.insert(values, next);
         }
-      );
+      })
     });
   }
 
@@ -140,7 +151,7 @@ class UsersDB {
           if (err)
             return next(new DBError(err), null);
 
-          next(null, this.changes);
+          next(null, { id: this.lastID, changes: this.changes });
         }
       );
     });
