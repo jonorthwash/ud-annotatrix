@@ -1,13 +1,13 @@
 'use strict';
 
 const cfg = require('./config');
-const errors = require('./errors');
 const uuidv4 = require('uuid/v4');
-const crypto = require('crypto');
 const CorpusDB = require('./db');
 const request = require('request');
+const querystring = require('querystring');
 
-// middleware for annotatrix
+// --------------------------------------------------------------------------
+// middleware
 function get_treebank(req, res, next) {
   const treebank = req.query.treebank_id;
   if (!treebank)
@@ -17,30 +17,85 @@ function get_treebank(req, res, next) {
   next();
 }
 
-/*
-// github oauth handling
-cfg.github.oauth.on('error', err => {
-  console.error('GitHub-OAuth error:', err);
-});
+function get_token(req, res, next) {
+  const token = req.query.token;
+  if (!token)
+    res.json({ error: 'Missing required argument: token' });
 
-cfg.github.oauth.on('token', (token, res) => {
-  console.log('token!', token);
-  res.end();
-})
-*/
+  req.session.token = token;
+  next();
+}
 
-// http endpoints
+function is_logged_in(req, res, next) {
+  if (!req.session.token || !req.session.username)
+    res.json({ error: 'You must be logged in to view this page' });
+
+  next();
+}
+
+
+
+// --------------------------------------------------------------------------
+// helper funcs
+function github_get(req, path, callback) {
+  request.get({
+    url: `https://api.github.com${path}`,
+    headers: {
+      'Authorization': `token ${req.session.token}`,
+      'User-Agent': 'UD-Annotatrix'
+    }
+  }, (err, _res, body) => {
+
+    body = JSON.parse(body);
+    callback(body);
+
+  });
+}
+
+function github_post(req, path, payload, callback) {
+  request.post({
+    url: `https://api.github.com${path}`,
+    json: payload,
+    headers: {
+      'Authorization': `token ${req.session.token}`,
+      'User-Agent': 'UD-Annotatrix'
+    }
+  }, (err, _res, body) => {
+
+    body = JSON.parse(body);
+    callback(body);
+
+  });
+}
+
+
+
+// --------------------------------------------------------------------------
+// urls
 module.exports = app => {
 
+  // ---------------------------
+  // core
+  app.get('/', (req, res) => res.render('index.ejs'));
   app.get('/annotatrix', (req, res) => {
     let treebank = req.query.treebank_id;
     if (!treebank) {
       treebank = uuidv4();
-      res.redirect(`/annotatrix?treebank_id=${treebank}`);
+      res.redirect('/annotatrix?' + querystring.stringify({
+        treebank_id: treebank,
+      }));
     } else {
-      res.render('annotatrix');
+      res.render('annotatrix', {
+        username: req.session.username
+      });
     }
   });
+
+
+
+  // ---------------------------
+  // AJAX
+  app.get('/running', (req, res) => res.json({ status: 'running' }));
 
   app.post('/save', get_treebank, (req, res) => {
     const state = req.body;
@@ -51,86 +106,93 @@ module.exports = app => {
   });
 
   app.get('/load', get_treebank, (req, res) => {
-
+    res.json({ error: 'Not implemented' });
   });
 
   app.post('/upload', get_treebank, (req, res) => {
-
-  });
-
-  app.post('/logout', get_treebank, (req, res) => {
-
-  });
-
-  app.get('/running', (req, res) => {
-    res.json({ status: 'running' });
+    res.json({ error: 'Not implemented' });
   });
 
 
-  app.post("/oauth/login", get_treebank, function(req, res){
-    console.log("started oauth");
 
-    const url = 'http://github.com/login/oauth/authorize'
-      + `?client_id=${cfg.github.client_id}`
-      + `&redirect_uri=${cfg.github.callback_uri}`
-      + `&state=${get_state()}`;
+  // ---------------------------
+  // user/account management
+  app.get('/login', get_token, (req, res) => {
+    github_get(req, '/user', body => {
 
-    request.get(url);
-    res.end();
+      req.session.username = body.login;
+      res.redirect('/annotatrix');
+
+    });
   });
 
-  app.get("/oauth/callback", function(req, res){
-    console.log("received callback");
-    console.log(req.body);
+  app.get('/logout', (req, res) => {
+
+    req.session.username = null;
+    req.session.token = null;
+    res.redirect('/annotatrix');
+
   });
 
-  app.get('/', (req, res) => {
-    res.render('index.ejs');
+  app.get('/repos', is_logged_in, (req, res) => {
+    github_get(req, '/user/repos', body => {
+
+      res.json(body);
+
+    });
+  });
+
+  app.get('/permissions', is_logged_in, (req, res) => {
+    res.json({ error: 'Not implemented' });
+  });
+
+  app.get('/settings', is_logged_in, (req, res) => {
+    res.json({ error: 'Not implemented' });
+  });
+
+
+
+  // ---------------------------
+  // GitHub OAuth
+  app.get("/oauth/login", get_treebank, (req, res) => {
+
+    const url = 'https://github.com/login/oauth/authorize?'
+      + querystring.stringify({
+        client_id:  cfg.github.client_id,
+        state:      cfg.github.state
+      });
+
+    res.redirect(url);
+  });
+
+  app.get("/oauth/callback", (req, res) => {
+
+    if (cfg.github.state !== req.query.state)
+      return res.json({ error: 'Unable to authenticate: state mismatch' });
+
+    if (!req.query.code)
+      return res.json({ error: 'Unable to authenticate: no code provided' });
+
+    const url = 'https://github.com/login/oauth/access_token?'
+      + querystring.stringify({
+        client_secret:  cfg.github.client_secret,
+        client_id:      cfg.github.client_id,
+        state:          cfg.github.state,
+        code:           req.query.code
+      });
+
+    request.post(url, (err, _res, body) => {
+      if (err)
+        return res.json({ error: `Unable to authenticate: invalid GitHub server response` });
+
+      const token = body.match(/access_token=([a-f0-9]{40})/);
+      if (!token)
+        return res.json({ error: `Unable to authenticate: invalid GitHub server response` });
+
+      res.redirect('/login?' + querystring.stringify({
+        token: token[1]
+      }));
+    });
   });
 
 };
-
-function get_state() {
-  return crypto.randomBytes(8).toString('hex');
-}
-
-/*
-function login(req, resp) {
-  var u = 'https://github.com/login/oauth/authorize'
-      + '?client_id=' + opts.githubClient
-      + (opts.scope ? '&scope=' + opts.scope : '')
-      + '&redirect_uri=' + redirectURI
-      + '&state=' + state
-      ;
-  resp.statusCode = 302
-  resp.setHeader('location', u)
-  resp.end()
-}
-
-function callback(req, resp, cb) {
-  var query = url.parse(req.url, true).query
-  var code = query.code
-  if (!code) return emitter.emit('error', {error: 'missing oauth code'}, resp)
-  var u = 'https://github.com/login/oauth/access_token'
-     + '?client_id=' + opts.githubClient
-     + '&client_secret=' + opts.githubSecret
-     + '&code=' + code
-     + '&state=' + state
-     ;
-  request.get({url:u, json: true}, function (err, tokenResp, body) {
-    if (err) {
-      if (cb) {
-        err.body = body
-        err.tokenResp = tokenResp
-        return cb(err)
-      }
-      return emitter.emit('error', body, err, resp, tokenResp, req)
-    }
-    if (cb) {
-      cb(null, body)
-    }
-    emitter.emit('token', body, resp, tokenResp, req)
-  })
-}
-
-*/
