@@ -1,6 +1,5 @@
 'use strict';
 
-const cfg = require('../config');
 const sqlite3 = require('sqlite3');
 const path = require('path');
 const fs = require('fs');
