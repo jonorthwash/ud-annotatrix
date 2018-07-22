@@ -24,45 +24,31 @@ function login() {
   if (!server.is_running)
     return null;
 
-  try {
-    $.ajax({
-      type: 'POST',
-      url: `/oauth/login?treebank_id=${funcs.getTreebankId()}`,
-      success: data => {
-        console.log(data);
-
-        /*
-        if (data.status === 'failure') {
-          log.error('Unable to load(): server error');
-        } else {
-          log.info('Successfully loaded from server');
-          console.log(data);
-          manager.load({
-            filename: data.filename,
-            gui: JSON.parse(data.gui),
-            sentences: data.sentences.map(JSON.parse),
-            labeler: JSON.parse(data.labeler),
-            index: 0
-          });
-          user.set(data.username);
-        }*/
-      },
-      error: data => {
-        log.critical('Unable to complete AJAX request for login()');
-      }
-    })
-  } catch (e) {
-    log.critical(`AJAX error in login(): ${e.message}`);
-  }
+  funcs.link(`/oauth/login?treebank_id=${funcs.getTreebankId()}`, '_self');
 }
 
 function logout() {
+  if (!server.is_running)
+    return null;
 
+  funcs.link(`/logout`, '_self');
+}
+
+function repos() {
+  funcs.link('/repos');
+}
+
+function permissions() {
+  funcs.link('/permissions');
 }
 
 module.exports = {
   get,
   set,
   login,
-  logout
+  logout,
+  manage: {
+    permissions,
+    repos
+  }
 };
