@@ -2,7 +2,7 @@
 
 const cfg = require('./config');
 const uuidv4 = require('uuid/v4');
-const CorpusDB = require('./db');
+const CorpusDB = require('./db/corpus');
 const request = require('request');
 const querystring = require('querystring');
 
@@ -120,18 +120,41 @@ module.exports = app => {
   app.get('/login', get_token, (req, res) => {
     github_get(req, '/user', body => {
 
-      req.session.username = body.login;
-      res.redirect('/annotatrix');
+      const username = body.login;
 
+      cfg.users.update({
+        username: username
+      }, {
+        token: req.session.token
+      }, (err, data) => {
+        if (err)
+          throw err;
+
+        console.log('/login changes to Users:', data.changes);
+        req.session.username = username;
+        res.redirect('/annotatrix');
+
+      });
     });
   });
 
   app.get('/logout', (req, res) => {
 
-    req.session.username = null;
-    req.session.token = null;
-    res.redirect('/annotatrix');
+    cfg.users.remove({
 
+      username: req.session.username,
+      token: req.session.token
+
+    }, (err, data) => {
+      if (err)
+        throw err;
+
+      console.log('/logout changes to Users:', data.changes);
+      req.session.username = null;
+      req.session.token = null;
+      res.redirect('/annotatrix');
+
+    });
   });
 
   app.get('/repos', is_logged_in, (req, res) => {
