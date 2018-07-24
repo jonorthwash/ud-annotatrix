@@ -78,6 +78,7 @@ module.exports = app => {
   // ---------------------------
   // core
   app.get('/', (req, res) => res.render('index.ejs'));
+  app.get('/help', (req, res) => res.render('help.ejs'));
   app.get('/annotatrix', (req, res) => {
     let treebank = req.query.treebank_id;
     if (!treebank) {
@@ -188,10 +189,21 @@ module.exports = app => {
     res.json({ error: 'Not implemented' });
   });
 
-  app.get('/settings', is_logged_in, (req, res) => {
-    res.json({ error: 'Not implemented' });
-  });
+  app.get('/settings', get_treebank, /*is_logged_in,*/ (req, res) => {
+    CorpusDB(req.treebank).load((err, data) => {
+      if (err)
+        throw err;
 
+      res.render('settings.ejs', {
+        treebank: req.treebank,
+        username: req.session.username,
+        meta: data.meta
+      });
+    });
+  });
+  app.post('/settings', get_treebank, /*is_logged_in,*/ (req, res) => {
+    res.json(req.body);
+  });
 
 
   // ---------------------------
