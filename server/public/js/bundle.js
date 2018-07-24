@@ -56221,7 +56221,7 @@ module.exports = {
     var match = location.href.match(/treebank_id=([0-9a-f-]{36})(#|\/|$|&)/);
     if (!match) {
       status.error('invalid treebank url, must be valid UUID4');
-      throw new Error('invalid treebank url, must be a valid UUID4');
+      return;
     }
 
     return match[1];
@@ -58208,6 +58208,7 @@ module.exports = Labeler;
 'use strict';
 
 var KEY = require('./config').localStorageKey;
+var getTreebankId = require('./funcs').getTreebankId;
 
 function isAvailable() {
 
@@ -58312,21 +58313,21 @@ function save(value) {
 
   if (!isAvailable()) return null;
 
-  return localStorage.setItem(KEY, value);
+  return localStorage.setItem(getTreebankId() || KEY, value);
 }
 
 function load() {
 
   if (!isAvailable()) return null;
 
-  return localStorage.getItem(KEY);
+  return localStorage.getItem(getTreebankId() || KEY);
 }
 
 function clear() {
 
   if (!isAvailable()) return null;
 
-  return localStorage.removeItem(KEY);
+  return localStorage.removeItem(getTreebankId() || KEY);
 }
 
 module.exports = {
@@ -58339,7 +58340,7 @@ module.exports = {
   clear: clear
 };
 
-},{"./config":340}],354:[function(require,module,exports){
+},{"./config":340,"./funcs":348}],354:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -59939,7 +59940,7 @@ var Sentence = function () {
           return this._nx.cg3;
 
         default:
-          return this._input;
+          return this._input || '';
       }
     }
   }, {
@@ -59986,6 +59987,7 @@ var Sentence = function () {
         updated.nx.comments = updated.nx.comments.length ? updated.nx.comments : this._nx.comments;
       }
 
+      this._input = serial;
       this._nx = updated.nx;
       this.format = updated.format;
       labeler.parse(this._nx.comments);
@@ -60036,13 +60038,13 @@ var Sentence = function () {
         column_visibilities: this.column_visibilities,
         format: this.format,
         is_table_view: this.is_table_view,
-        nx: this._nx.nx
+        nx: this._nx.nx,
+        input: this._input
       };
     },
     set: function set(state) {
 
-      this._input = state;
-
+      this._input = state.input;
       this.column_visibilities = state.column_visibilities;
       this.format = state.format;
       this.is_table_view = state.is_table_view;
@@ -60574,7 +60576,7 @@ function is_upos(s) {
   // Checks if a relation is in the list of valid parts of speech
   // @s = the input relation
   // returns a bool
-  s = s.toUpperCase();
+  s = (s || '').toUpperCase();
 
   var is_upos = false;
   _.each(U_POS, function (u_pos) {
@@ -60611,7 +60613,7 @@ function is_leaf(s) {
 
   // http://universaldependencies.org/u/dep/punct.html
   // Tokens with the relation punct always attach to content words (except in cases of ellipsis) and can never have dependents.
-  s = s.toUpperCase();
+  s = (s || '').toUpperCase();
 
   var is_leaf = false;
   _.each(U_POS_LEAF, function (u_pos) {
