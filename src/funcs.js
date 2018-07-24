@@ -57,6 +57,8 @@ module.exports = {
       .attr('target', target);
     $('body').append(link);
     link[0].click();
-  }
+  },
+
+  noop: arg => arg
 
 };
