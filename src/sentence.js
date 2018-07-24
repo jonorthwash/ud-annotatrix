@@ -60,7 +60,7 @@ class Sentence {
         return this._nx.cg3;
 
       default:
-        return this._input;
+        return this._input || '';
     }
   }
 
@@ -106,6 +106,7 @@ class Sentence {
         : this._nx.comments;
     }
 
+    this._input = serial;
     this._nx = updated.nx;
     this.format = updated.format;
     labeler.parse(this._nx.comments);
@@ -152,14 +153,14 @@ class Sentence {
       column_visibilities: this.column_visibilities,
       format: this.format,
       is_table_view: this.is_table_view,
-      nx: this._nx.nx
+      nx: this._nx.nx,
+      input: this._input
     };
   }
 
   set state(state) {
 
-    this._input = state;
-
+    this._input = state.input;
     this.column_visibilities = state.column_visibilities;
     this.format = state.format;
     this.is_table_view = state.is_table_view;
