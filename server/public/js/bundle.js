@@ -56232,6 +56232,7 @@ module.exports = {
 
     var link = $('<a>').attr('href', href).attr('target', target);
     $('body').append(link);
+    console.log(link);
     link[0].click();
   },
 
@@ -57127,10 +57128,10 @@ var GUI = function () {
         _this2.update();
       });
       $('[name="show-help"]').click(function (e) {
-        if (!$(e.target).is('.pin')) window.open('help.html', '_blank').focus();
+        if (!$(e.target).is('.pin')) funcs.link('/help', '_self');
       });
       $('[name="show-settings"]').click(function (e) {
-        if (!$(e.target).is('.pin')) window.open('settings.html', '_blank').focus();
+        if (!$(e.target).is('.pin')) funcs.link('/settings?treebank_id=' + funcs.getTreebankId(), '_self');
       });
 
       $('#tabText').click(function (e) {
