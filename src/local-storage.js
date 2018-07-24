@@ -1,6 +1,7 @@
 'use strict';
 
 const KEY = require('./config').localStorageKey;
+const getTreebankId = require('./funcs').getTreebankId;
 
 function isAvailable() {
 
@@ -114,7 +115,7 @@ function save(value) {
   if (!isAvailable())
     return null;
 
-  return localStorage.setItem(KEY, value);
+  return localStorage.setItem(getTreebankId() || KEY, value);
 }
 
 function load() {
@@ -122,7 +123,7 @@ function load() {
   if (!isAvailable())
     return null;
 
-  return localStorage.getItem(KEY);
+  return localStorage.getItem(getTreebankId() || KEY);
 }
 
 function clear() {
@@ -130,7 +131,7 @@ function clear() {
   if (!isAvailable())
     return null;
 
-  return localStorage.removeItem(KEY);
+  return localStorage.removeItem(getTreebankId() || KEY);
 }
 
 module.exports = {
