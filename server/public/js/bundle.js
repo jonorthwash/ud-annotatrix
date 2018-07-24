@@ -19066,7 +19066,8 @@ function toSubscript(str) {
  * @return {String}
  */
 function sanitize(str) {
-  return (str || '').replace(/\s/g, '');
+  if (str)
+    return str.replace(/\s/g, '');
 }
 
 /**
@@ -19113,6 +19114,9 @@ function parseEnhancedString(str) {
  * @return {undefined}
  */
 function evaluatePunctPos(ana, string) {
+  if (typeof string !== 'string')
+    return;
+
   if (puncts.test(string)) {
     if (ana.sentence.options.help.upostag && !ana.upostag)
       ana.upostag = 'PUNCT';
@@ -19435,15 +19439,10 @@ class Analysis {
   /**
    * deserialize an internal representation
    *
-   * @param {(String|Object)} nx JSON string or object
+   * @param {Object} nx
    * @return {undefined}
    */
   set nx(nx) {
-
-    // parse the JSON if it's a string
-    nx = (typeof nx === 'string')
-      ? JSON.parse(nx)
-      : nx;
 
     this.params = nx.params;
     _.each(nx.values, (value, key) => {
@@ -20339,7 +20338,6 @@ class Sentence {
         head: true,
         deps: true
       },
-      prettyOutput: true,
       showEnhanced: true,
       showEmptyDependencies: true,
       catchInvalid: true,
@@ -20819,25 +20817,20 @@ class Sentence {
     }
 
     // serialize other data
-    return JSON.stringify({
+    return {
       comments: this.comments,
       options: this.options,
       tokens: tokens
-    }, null, this.options.prettyOutput ? 2 : 0);
+    };
   }
 
   /**
    * deserialize an internal representation
    *
-   * @param {(String|Object)} nx JSON string or object
+   * @param {Object} nx
    * @return {String}
    */
   set nx(nx) {
-
-    // parse the JSON if it's a string
-    nx = (typeof nx === 'string')
-      ? JSON.parse(nx)
-      : nx;
 
     this.options = nx.options;
     this.comments = nx.comments;
@@ -21423,7 +21416,8 @@ function cg3StringGetTags(line) {
 
     // try to extract tags (and save to xpostag), track with an array (can be multiple)
     } else {
-      xpostag.push(chunks[j]);
+      if (chunks[j] !== '_')
+        xpostag.push(chunks[j]);
     }
   }
 
@@ -22001,15 +21995,10 @@ class Token {
   /**
    * deserialize an internal representation
    *
-   * @param {(String|Object)} nx JSON string or object
+   * @param {Object} nx
    * @return {undefined}
    */
   set nx(nx) {
-
-    // parse the JSON if it's a string
-    nx = (typeof nx === 'string')
-      ? JSON.parse(nx)
-      : nx;
 
     this.analyses = nx.analyses.map(analysisNx => {
 
@@ -24270,7 +24259,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             limit = 0,
             isExecuting = false,
             callback,
-            
+
             // functions
             execute;
 
@@ -24300,12 +24289,12 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
                 commands.splice(index + 1, commands.length - index);
 
                 commands.push(command);
-                
+
                 // if limit is set, remove items from the start
                 if (limit && commands.length > limit) {
                     removeFromTo(commands, 0, -(limit+1));
                 }
-                
+
                 // set the current index to the end
                 index = commands.length - 1;
                 if (callback) {
@@ -24382,7 +24371,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             getIndex: function() {
                 return index;
             },
-            
+
             setLimit: function (l) {
                 limit = l;
             }
@@ -55896,7 +55885,7 @@ var Menu = function () {
 
 module.exports = Menu;
 
-},{"./funcs":348,"./user":371,"jquery":328,"underscore":336}],346:[function(require,module,exports){
+},{"./funcs":348,"./user":372,"jquery":328,"underscore":336}],346:[function(require,module,exports){
 'use strict';
 
 /**
@@ -56244,12 +56233,14 @@ module.exports = {
     var link = $('<a>').attr('href', href).attr('target', target);
     $('body').append(link);
     link[0].click();
-  }
+  },
+
+  noop: function noop() {}
 
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./status":361,"jquery":328,"underscore":336}],349:[function(require,module,exports){
+},{"./status":362,"jquery":328,"underscore":336}],349:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -56701,7 +56692,7 @@ var Graph = function () {
       how to merge the nodes. In case of success, redraws the tree. */
       // const indices = findConlluId(toMerge);
 
-      var oldSentence = manager.sentence;
+      var oldSentence = manager.toString();
 
       // prefer traits on this one
       var major = cy.$('.merge').data('conllu');
@@ -56822,7 +56813,7 @@ function removeHead(srcId, tarId) {
 
 module.exports = Graph;
 
-},{"./config":340,"./cy-style":342,"./cytoscape/cytoscape":343,"./errors":346,"./funcs":348,"./progress-bar":357,"./selfcomplete":358,"./sort":360,"./validate":372,"jquery":328,"underscore":336}],350:[function(require,module,exports){
+},{"./config":340,"./cy-style":342,"./cytoscape/cytoscape":343,"./errors":346,"./funcs":348,"./progress-bar":357,"./selfcomplete":358,"./sort":361,"./validate":374,"jquery":328,"underscore":336}],350:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -56891,6 +56882,7 @@ var GUI = function () {
     this.is_vertical = false;
     this.is_ltr = true;
     this.is_enhanced = false;
+    this.readonly = false;
 
     this.pan = this.pan || null;
     this.zoom = this.zoom || null;
@@ -56979,7 +56971,7 @@ var GUI = function () {
       this.menu.update();
 
       // textarea
-      $('#text-data').val(manager.sentence);
+      $('#text-data').removeClass('readonly').val(manager.toString());
 
       // navigation buttons
       $('.btn, .dropdown-group-item').removeClass('disabled').prop('disabled', false);
@@ -56999,14 +56991,13 @@ var GUI = function () {
       $('#btnUndo').prop('disabled', !undoManager.hasUndo());
       $('#btnRedo').prop('disabled', !undoManager.hasRedo());
 
-      $('.nav-link').removeClass('active').show();
-      $('#text-data').prop('readonly', false);
-      $('.readonly').removeClass('readonly');
+      $('.nav-link').show().filter('.active').removeClass('active');
+      $('#tabOther').text(manager.format);
 
       switch (manager.format) {
         case 'Unknown':
           $('.nav-link').hide();
-          $('#tabOther').addClass('active').show().text(manager.format);
+          $('#tabOther').addClass('active').show();
           break;
         case 'CoNLL-U':
           $('#tabConllu').addClass('active');
@@ -57017,14 +57008,17 @@ var GUI = function () {
           $('#tabOther').hide();
           break;
         case 'plain text':
-          $('#tabText').hide(); // NOTE: no break here
-          if (manager.current.nx_initialized) {
-            $('#text-data').prop('readonly', true);
-            $('#tabOther').addClass('readonly');
-          }
+          $('#tabText').hide();
         default:
-          $('#tabOther').addClass('active').show().text(manager.format);
-          break;
+          $('#tabOther').addClass('active');
+      }
+
+      if (this.readonly) {
+
+        $('#text-data').addClass('readonly').prop('readonly', true).val(manager.current.text);
+
+        $('.nav-link.active').removeClass('active');
+        $('#tabText').show().addClass('active');
       }
 
       if (manager.format !== 'CoNLL-U') this.is_table_view = false;
@@ -57065,19 +57059,6 @@ var GUI = function () {
       graph.update();
     }
   }, {
-    key: 'read',
-    value: function read(id) {
-      if (!this.inBrowser) return;
-
-      switch (id) {
-        case 'text-data':
-        case 'current-sentence':
-          return $('#' + id).val();
-        default:
-          throw new TypeError('unable to read "' + id + '"');
-      }
-    }
-  }, {
     key: 'bind',
     value: function bind() {
       var _this2 = this;
@@ -57091,7 +57072,7 @@ var GUI = function () {
         return manager.next();
       });
       $('#current-sentence').blur(function (e) {
-        var index = parseInt(_this2.read('current-sentence')) - 1;
+        var index = parseInt($('current-sentence').val()) - 1;
         manager.index = index;
       });
       $('#btnRemoveSentence').click(function (e) {
@@ -57149,15 +57130,20 @@ var GUI = function () {
       });
 
       $('#tabText').click(function (e) {
-        manager.parse(convert.to.plainText(_this2.read('text-data')));
+        _this2.readonly = true;
+        _this2.update();
       });
       $('#tabConllu').click(function (e) {
-        manager.current.nx_initialized = true;
-        manager.parse(convert.to.conllu(_this2.read('text-data')));
+        _this2.readonly = false;
+        manager.toConllu($('#text-data').val());
       });
       $('#tabCG3').click(function (e) {
-        manager.current.nx_initialized = true;
-        manager.parse(convert.to.cg3(_this2.read('text-data')));
+        _this2.readonly = false;
+        manager.toCG3($('#text-data').val());
+      });
+      $('#tabOther').click(function (e) {
+        _this2.readonly = false;
+        _this2.update();
       });
 
       $('[name="show-table"]').click(function (e) {
@@ -57238,6 +57224,7 @@ var GUI = function () {
         is_vertical: this.is_vertical,
         is_ltr: this.is_ltr,
         is_enhanced: this.is_enhanced,
+        readonly: this.readonly,
 
         pan: this.pan,
         zoom: this.zoom
@@ -57251,6 +57238,7 @@ var GUI = function () {
       this.is_textarea_visible = state.is_textarea_visible, this.are_labels_visible = state.are_labels_visible, this.is_vertical = state.is_vertical;
       this.is_ltr = state.is_ltr;
       this.is_enhanced = state.is_enhanced;
+      this.readonly = state.readonly;
 
       this.pan = state.pan;
       this.zoom = state.zoom;
@@ -57442,7 +57430,7 @@ function onKeyupInCurrentSentence(event) {
 
   switch (event.which) {
     case KEYS.ENTER:
-      manager.index = parseInt(gui.read('current-sentence')) - 1;
+      manager.index = parseInt($('current-sentence').val()) - 1;
       break;
     case KEYS.LEFT:
     case KEYS.J:
@@ -57493,15 +57481,15 @@ function onEditTextData(event) {
       //   of whitespace and other annoying side effects), and avoid redundant
       //   parsing if we edit again w/in that 1-sec window
       clearTimeout(gui.parseTimer);
-      gui.parseTimer = setTimeout(function () {
-        manager.parse();
+      if (!$('#text-data').hasClass('readonly')) gui.parseTimer = setTimeout(function () {
+        manager.parse($('#text-data').val());
       }, 1000);
   }
 }
 function onEnter(event) {
   log.debug('called onEnter()');
 
-  var sentence = manager.sentence,
+  var sentence = $('#text-data').val(),
       cursor = $('#text-data').prop('selectionStart') - 1,
       lines = sentence.split(/\n/),
       lineId = null,
@@ -57642,7 +57630,7 @@ function mergeNodes(direction) {
 
 module.exports = GUI;
 
-},{"./convert":341,"./dropdown-menu":345,"./errors":346,"./funcs":348,"./local-storage":353,"./modals/index":355,"./table":362,"./undo-manager":370,"jquery":328,"underscore":336}],351:[function(require,module,exports){
+},{"./convert":341,"./dropdown-menu":345,"./errors":346,"./funcs":348,"./local-storage":353,"./modals/index":355,"./table":363,"./undo-manager":371,"jquery":328,"underscore":336}],351:[function(require,module,exports){
 'use strict';
 
 require('babel-polyfill');
@@ -57663,7 +57651,7 @@ $(function () {
 
 module.exports = require('./test/data/index');
 
-},{"./browser-logger":339,"./funcs":348,"./manager":354,"./server":359,"./test/data/index":366,"babel-polyfill":1}],352:[function(require,module,exports){
+},{"./browser-logger":339,"./funcs":348,"./manager":354,"./server":360,"./test/data/index":367,"babel-polyfill":1}],352:[function(require,module,exports){
 'use strict';
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
@@ -58357,7 +58345,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var $ = require('jquery');
 var _ = require('underscore');
 var nx = require('notatrix');
-nx.Sentence.prototype.currentFormat = null;
 
 var cfg = require('./config');
 var funcs = require('./funcs');
@@ -58370,6 +58357,8 @@ var storage = require('./local-storage');
 var convert = require('./convert');
 var export_ = require('./export');
 var status = require('./status');
+var Sentence = require('./sentence');
+var Users = require('./users');
 
 var Manager = function () {
   function Manager() {
@@ -58381,6 +58370,7 @@ var Manager = function () {
     funcs.global().gui = new GUI();
     funcs.global().graph = new Graph();
     funcs.global().labeler = new Labeler();
+    this.users = new Users();
     gui.bind();
 
     this.reset();
@@ -58499,6 +58489,11 @@ var Manager = function () {
       return this;
     }
   }, {
+    key: 'toString',
+    value: function toString() {
+      return this.current ? this.current.toString() : null;
+    }
+  }, {
     key: 'setSentence',
     value: function setSentence(index, text) {
 
@@ -58510,7 +58505,7 @@ var Manager = function () {
 
       if (0 > index || index > this.length - 1) return null;
 
-      this._sentences[index] = updateSentence(this._sentences[index], text);
+      this._sentences[index].update(text);
       gui.update();
 
       return this.getSentence(index);
@@ -58540,7 +58535,7 @@ var Manager = function () {
 
       index = index < 0 ? 0 : index > this.length ? this.length : parseInt(index);
 
-      var sent = updateSentence({}, text);
+      var sent = new Sentence(text);
       this._sentences = this._sentences.slice(0, index).concat(sent).concat(this._sentences.slice(index));
 
       this.index = index;
@@ -58608,20 +58603,60 @@ var Manager = function () {
     }
   }, {
     key: 'parse',
-    value: function parse(text) {
+    value: function parse(text, transform) {
       var _this3 = this;
 
-      // if not passed explicitly, read from the textarea
-      text = text || gui.read('text-data');
+      transform = transform || funcs.noop;
       var splitted = this.split(text);
 
       // set the first one at the current index
-      this._sentences[this.index] = new nx.Sentence(); // hack to get around updateSentence() behavior
-      this.setSentence(this.index, splitted[0]);
+      this.setSentence(this.index, transform(splitted[0]));
 
       // iterate over all elements except the first
       _.each(splitted, function (split, i) {
-        if (i) _this3.insertSentence(split);
+        if (i) _this3.insertSentence(transform(split));
+      });
+
+      gui.update();
+      return this; // chaining
+    }
+  }, {
+    key: 'toConllu',
+    value: function toConllu(text) {
+      var _this4 = this;
+
+      if (text === null || text === undefined) {
+        // if only passed 1 arg
+        text = index || '';
+        index = this.index;
+      }
+
+      var splitted = this.split(text);
+      this.setSentence(index, convert.to.conllu(splitted[0]));
+
+      _.each(splitted, function (split, i) {
+        if (i) _this4.insertSentence(index, convert.to.conllu(split));
+      });
+
+      gui.update();
+      return this; // chaining
+    }
+  }, {
+    key: 'toCG3',
+    value: function toCG3(text) {
+      var _this5 = this;
+
+      if (text === null || text === undefined) {
+        // if only passed 1 arg
+        text = index || '';
+        index = this.index;
+      }
+
+      var splitted = this.split(text);
+      this.setSentence(index, convert.to.cg3(splitted[0]));
+
+      _.each(splitted, function (split, i) {
+        if (i) _this5.insertSentence(index, convert.to.cg3(split));
       });
 
       gui.update();
@@ -58633,23 +58668,22 @@ var Manager = function () {
 
       status.normal('saving...');
 
-      var state = {
-        filename: this.filename,
-        index: this._index,
+      var state = JSON.stringify({
+        meta: {
+          current_index: this.index,
+          owner: this.users.owner,
+          github_url: this.users.github_url,
+          gui: gui.state,
+          labeler: labeler.state,
+          permissions: this.users.permissions,
+          editors: this.users.editors
+        },
         sentences: this.map(function (i, sent) {
-          return {
-            nx: sent.nx,
-            column_visibilities: sent.column_visibilities,
-            currentFormat: sent.currentFormat,
-            is_table_view: sent.is_table_view,
-            nx_initialized: sent.nx_initialized
-          };
-        }),
-        gui: gui.state,
-        labeler: labeler.state
-      };
+          return sent.state;
+        })
+      });
 
-      storage.save(JSON.stringify(state));
+      storage.save(state);
       if (server && server.is_running) server.save(state);
 
       return state;
@@ -58662,31 +58696,27 @@ var Manager = function () {
 
       if (!state) // unable to load
         return null;
+      console.log('loading state:', state);
 
       // parse it back from a string
       if (typeof state === 'string') state = JSON.parse(state);
 
-      this.filename = state.filename;
-      this._index = state.index;
+      this._index = state.meta.current_index;
+      this._sentences = state.sentences.map(function (state) {
 
-      this._sentences = state.sentences.map(function (sent) {
-
-        var sentence = nx.Sentence.fromNx(sent.nx);
-        sentence.column_visibilities = sent.column_visibilities;
-        sentence.currentFormat = sent.currentFormat;
-        sentence.is_table_view = sent.is_table_view;
-        sentence.nx_initialized = sent.nx_initialized;
-
-        labeler.parse(sentence.comments);
-
-        return sentence;
+        var sent = new Sentence();
+        sent.state = state;
+        return sent;
       });
 
-      labeler.state = state.labeler;
+      // update users stuff
+      this.users.state = _.pick(state.meta, ['owner', 'github_url', 'permissions', 'editors']);
+
+      labeler.state = state.meta.labeler;
       this.updateFilter(); // use the filters set in labeler
 
       // this triggers a gui refresh
-      gui.state = state.gui;
+      gui.state = state.meta.gui;
 
       return state;
     }
@@ -58748,40 +58778,17 @@ var Manager = function () {
       return this._sentences[this.index];
     },
     set: function set(sent) {
-      if (sent instanceof nx.Sentence) this._sentences[this.index] = sent;
+      if (sent instanceof Sentence) this._sentences[this.index] = sent;
     }
   }, {
     key: 'sentence',
-    get: function get() {
-      if (!this.current) return null;
-
-      if (this.format === 'CoNLL-U') {
-        return this.current.conllu;
-      } else if (this.format === 'CG3') {
-        return this.current.cg3;
-      } else {
-        return this.current.text;
-      }
-    },
     set: function set(text) {
       return this.setSentence(text);
     }
   }, {
-    key: 'sentences',
-    get: function get() {
-      return this.map(function (i, sent) {
-        return sent.text;
-      });
-    }
-  }, {
     key: 'format',
     get: function get() {
-      if (this.current) return this.current.currentFormat;
-    }
-  }, {
-    key: 'tokens',
-    get: function get() {
-      if (this.current) return this.current.tokens;
+      if (this.current) return this.current.format;
     }
   }, {
     key: 'conllu',
@@ -58801,13 +58808,13 @@ var Manager = function () {
   }, {
     key: 'corpus',
     get: function get() {
-      var _this4 = this;
+      var _this6 = this;
 
       var fileHeader = cfg.downloadHasFileHeader ? '# __ud_annotatrix_filename__ = "' + this.filename + '"\n# __ud_annotatrix_timestamp__ = "' + new Date() + '"\n# __ud_annotatrix_version__ = "' + cfg.version + '"\n' : '';
 
       var sentences = this.map(function (i, sent) {
-        var sentenceHeader = cfg.downloadHasSentenceHeader ? '# __ud_annotatrix_id__ = "' + (i + 1) + '"\n# __ud_annotatrix_format__ = "' + _this4.format + '"\n' : '';
-        var content = _this4.format === 'Unknown' ? '' : _this4.sentence;
+        var sentenceHeader = cfg.downloadHasSentenceHeader ? '# __ud_annotatrix_id__ = "' + (i + 1) + '"\n# __ud_annotatrix_format__ = "' + _this6.format + '"\n' : '';
+        var content = _this6.format === 'Unknown' ? '' : _this6.sentence;
 
         return '' + sentenceHeader + content;
       }).join('\n\n');
@@ -58819,65 +58826,9 @@ var Manager = function () {
   return Manager;
 }();
 
-function updateSentence(oldSent, text) {
-
-  var currentSent = manager.current,
-      oldFormat = manager.format,
-      newFormat = detectFormat(text);
-
-  var sent = void 0;
-
-  if (newFormat === 'CoNLL-U') {
-
-    if (oldFormat === 'plain text') {
-      // don't overwrite stuff :)
-      sent = currentSent;
-    } else {
-      sent = nx.Sentence.fromConllu(text);
-    }
-  } else if (newFormat === 'CG3') {
-
-    if (oldFormat === 'plain text') {
-      // don't overwrite stuff :)
-      sent = currentSent;
-    } else {
-      sent = nx.Sentence.fromCG3(text);
-    }
-  } else if (newFormat === 'plain text') {
-
-    if (oldSent.nx_initialized) {
-      // don't overwrite stuff :)
-      sent = oldSent;
-    } else {
-      sent = nx.Sentence.fromText(text);
-    }
-  } else if (newFormat === 'Unknown') {
-
-    sent = nx.Sentence.fromText('');
-  } else {
-
-    text = convert.to.conllu(text);
-    if (oldFormat === 'plain text') {
-      // don't overwrite stuff :)
-      sent = currentSent;
-    } else {
-      sent = nx.Sentence.fromConllu(text);
-    }
-  }
-
-  sent.currentFormat = newFormat;
-  sent.nx_initialized = oldSent.nx_initialized || false;
-  sent.is_table_view = oldSent.is_table_view || false;
-  sent.column_visibilities = oldSent.column_visibilities || new Array(10).fill(true);
-
-  labeler.parse(sent.comments);
-
-  return sent;
-}
-
 module.exports = Manager;
 
-},{"./config":340,"./convert":341,"./detect":344,"./errors":346,"./export":347,"./funcs":348,"./graph":349,"./gui":350,"./labels":352,"./local-storage":353,"./status":361,"jquery":328,"notatrix":331,"underscore":336}],355:[function(require,module,exports){
+},{"./config":340,"./convert":341,"./detect":344,"./errors":346,"./export":347,"./funcs":348,"./graph":349,"./gui":350,"./labels":352,"./local-storage":353,"./sentence":359,"./status":362,"./users":373,"jquery":328,"notatrix":331,"underscore":336}],355:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -59956,6 +59907,192 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var _ = require('underscore');
+var nx = require('notatrix');
+
+var errors = require('./errors');
+var detectFormat = require('./detect');
+var convert = require('./convert');
+
+function encode(serial) {
+  var format = detectFormat(serial);
+  switch (format) {
+
+    case 'Unknown':
+      return nx.Sentence.fromParams([]);
+
+    case 'plain text':
+      return nx.Sentence.fromText(serial);
+
+    case 'CoNLL-U':
+      return nx.Sentence.fromConllu(serial);
+
+    case 'CG3':
+      return nx.Sentence.fromCG3(serial);
+
+    default:
+      serial = convert.to.conllu(serial);
+      return nx.Sentence.fromConllu(serial);
+  }
+}
+
+var Sentence = function () {
+  function Sentence(serial) {
+    _classCallCheck(this, Sentence);
+
+    this._input = serial;
+
+    this.format = detectFormat(serial);
+    this._nx = encode(serial);
+
+    this.is_table_view = false;
+    this.column_visibilities = new Array(10).fill(true);
+
+    labeler.parse(this._nx.comments);
+  }
+
+  _createClass(Sentence, [{
+    key: 'toString',
+    value: function toString() {
+      switch (this.format) {
+        case 'Unknown':
+          return '';
+
+        case 'plain text':
+          return this._nx.text;
+
+        case 'CoNLL-U':
+          return this._nx.conllu;
+
+        case 'CG3':
+          return this._nx.cg3;
+
+        default:
+          return this._input;
+      }
+    }
+  }, {
+    key: 'update',
+    value: function update(serial) {
+
+      var updated = {
+        format: detectFormat(serial),
+        nx: encode(serial)
+      };
+
+      // if they're not the same format, check if they're the same text (i.e.,
+      //   different encodings of the same sentence)
+      if (updated.format !== this.format && updated.nx.text === this.text) {
+
+        var oldNx = this.nx,
+            newNx = updated.nx.nx;
+
+        for (var i = 0; i < newNx.tokens.length; i++) {
+          var oldToken = oldNx.tokens[i],
+              newToken = newNx.tokens[i];
+
+          if (!oldToken) continue;
+
+          var _loop = function _loop(j) {
+            var oldAnalysis = oldToken.analyses[j],
+                newAnalysis = newToken.analyses[j];
+
+            if (!oldAnalysis) return 'continue';
+
+            _.each(newAnalysis.values, function (value, key) {
+              newAnalysis.values[key] = !!value && value !== '_' ? value : oldAnalysis.values[key];
+            });
+          };
+
+          for (var j = 0; j < newToken.analyses.length; j++) {
+            var _ret = _loop(j);
+
+            if (_ret === 'continue') continue;
+          }
+        }
+
+        updated.nx.tokens = nx.Sentence.fromNx(newNx).tokens;
+        updated.nx.comments = updated.nx.comments.length ? updated.nx.comments : this._nx.comments;
+      }
+
+      this._nx = updated.nx;
+      this.format = updated.format;
+      labeler.parse(this._nx.comments);
+      return this;
+    }
+  }, {
+    key: 'clear',
+    value: function clear() {
+
+      this._input = null;
+      this.format = detectFormat(null);
+      this._nx = encode(null);
+      return this;
+    }
+  }, {
+    key: 'conllu',
+    get: function get() {
+      return this._nx.conllu;
+    }
+  }, {
+    key: 'cg3',
+    get: function get() {
+      return this._nx.cg3;
+    }
+  }, {
+    key: 'text',
+    get: function get() {
+      return this._nx.text;
+    }
+  }, {
+    key: 'nx',
+    get: function get() {
+      return this._nx.nx;
+    }
+  }, {
+    key: 'comments',
+    get: function get() {
+      return this._nx.comments;
+    },
+    set: function set(comments) {
+      this._nx.comments = comments;
+      return this;
+    }
+  }, {
+    key: 'state',
+    get: function get() {
+      return {
+        column_visibilities: this.column_visibilities,
+        format: this.format,
+        is_table_view: this.is_table_view,
+        nx: this._nx.nx
+      };
+    },
+    set: function set(state) {
+
+      this._input = state;
+
+      this.column_visibilities = state.column_visibilities;
+      this.format = state.format;
+      this.is_table_view = state.is_table_view;
+      this._nx = state.nx;
+
+      return this;
+    }
+  }]);
+
+  return Sentence;
+}();
+
+module.exports = Sentence;
+
+},{"./convert":341,"./detect":344,"./errors":346,"notatrix":331,"underscore":336}],360:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 var $ = require('jquery');
 var storage = require('./local-storage');
 var status = require('./status');
@@ -60010,6 +60147,7 @@ var Server = function () {
 				$.ajax({
 					type: 'POST',
 					url: '/save?treebank_id=' + this.treebank_id,
+					contentType: "application/json; charset=utf-8",
 					data: state,
 					dataType: 'json',
 					success: function success(data) {
@@ -60042,14 +60180,7 @@ var Server = function () {
 							log.error('Unable to load(): server error');
 						} else {
 							log.info('Successfully loaded from server');
-							console.log(data);
-							manager.load({
-								filename: data.filename,
-								gui: JSON.parse(data.gui),
-								sentences: data.sentences.map(JSON.parse),
-								labeler: JSON.parse(data.labeler),
-								index: 0
-							});
+							manager.load(data);
 						}
 					},
 					error: function error(data) {
@@ -60069,7 +60200,7 @@ var Server = function () {
 
 module.exports = Server;
 
-},{"./funcs":348,"./local-storage":353,"./status":361,"./user":371,"jquery":328}],360:[function(require,module,exports){
+},{"./funcs":348,"./local-storage":353,"./status":362,"./user":372,"jquery":328}],361:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -60127,30 +60258,28 @@ module.exports = {
   rtl: rtl
 };
 
-},{"underscore":336}],361:[function(require,module,exports){
+},{"underscore":336}],362:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
 var cfg = require('./config');
 
-var container = $('.status-container');
-
-function status(text, isError) {
+function Status(text, isError) {
   return $('<div>').addClass('status').addClass(isError ? 'error' : 'normal').text(text);
 }
 
 function normal(text) {
 
-  var div = status(text, false);
-  container.prepend(div);
+  var div = Status(text, false);
+  $('.status-container').prepend(div);
   div.fadeOut(cfg.statusNormalFadeout);
   setTimeout(div.detach, cfg.statusNormalFadeout);
 }
 
 function error(text) {
 
-  var div = status(text, true);
-  container.prepend(div);
+  var div = Status(text, true);
+  $('.status-container').prepend(div);
   div.fadeOut(cfg.statusErrorFadeout);
   setTimeout(div.detach, cfg.statusErrorFadeout);
 }
@@ -60160,7 +60289,7 @@ module.exports = {
   error: error
 };
 
-},{"./config":340,"jquery":328}],362:[function(require,module,exports){
+},{"./config":340,"jquery":328}],363:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -60229,14 +60358,14 @@ module.exports = {
   edit: edit
 };
 
-},{"./validate":372,"jquery":328}],363:[function(require,module,exports){
+},{"./validate":374,"jquery":328}],364:[function(require,module,exports){
 'use strict';
 
 module.exports = {
   0: '[root [nsubj I] have [obj [amod [advmod too] many] commitments] [advmod right now] [punct .]]'
 };
 
-},{}],364:[function(require,module,exports){
+},{}],365:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -60280,7 +60409,7 @@ module.exports = {
 
 };
 
-},{}],365:[function(require,module,exports){
+},{}],366:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -60327,7 +60456,7 @@ module.exports = {
   ud_example_modified: '1\tThey\tthey\tPRON\tPRP\tCase=Nom|Number=Plur\t2\tnsubj\t2:nsubj|4:nsubj\t_\n2\tbuy\tbuy\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Presroot\t0:root\t_\t_\t_\n3\tand\tand\tCONJ\tCC\t_\t4\tcc\t4:cc\t_\n4\tsell\tsell\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Presconj\t0:root|2:conj\t_\t_\t_\n5\tbooks\tbook\tNOUN\tNNS\tNumber=Plur\t2\tobj\t2:obj|4:obj\t_\n6\t.\t.\tPUNCT\t.\t_\t2\tpunct\t2:punct\t_'
 };
 
-},{}],366:[function(require,module,exports){
+},{}],367:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -60339,7 +60468,7 @@ module.exports = {
   'Unknown': require('./unknown')
 };
 
-},{"./brackets":363,"./cg3":364,"./conllu":365,"./plain-text":367,"./sd":368,"./unknown":369}],367:[function(require,module,exports){
+},{"./brackets":364,"./cg3":365,"./conllu":366,"./plain-text":368,"./sd":369,"./unknown":370}],368:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -60352,7 +60481,7 @@ module.exports = {
   parens_and_numbers: '\u0414\u04D9\u04AF\u043B\u04D9\u0442\u043B\u04D9\u0440\u043D\u0435\u04A3, \u0448\u0443\u043B \u0438\u0441\u04D9\u043F\u0442\u04D9\u043D \u0420\u0443\u0441\u0438\u044F\u043D\u0435\u04A3 \u0434\u04D9, \u0434\u0438\u04A3\u0433\u0435\u0437 \u0447\u0438\u043A\u043B\u04D9\u0440\u0435 \u044F\u0440\u0434\u0430\u043D 12 \u043C\u0438\u043B\u044C (\u044F\u043A\u0438 22,2 \u043A\u043C) \u0435\u0440\u0430\u043A\u043B\u044B\u043A\u0442\u0430 \u0443\u0437\u0443\u044B \u043A\u0438\u043B\u0435\u0448\u0435\u043D\u0433\u04D9\u043D'
 };
 
-},{}],368:[function(require,module,exports){
+},{}],369:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -60376,7 +60505,7 @@ module.exports = {
   ccomp_6: 'The problem is that this has never been tried .\nccomp(is, tried)\nnsubj(is, problem)'
 };
 
-},{}],369:[function(require,module,exports){
+},{}],370:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -60388,7 +60517,7 @@ module.exports = {
   5: '    '
 };
 
-},{}],370:[function(require,module,exports){
+},{}],371:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -60405,7 +60534,7 @@ module.exports = function () {
 	});
 };
 
-},{"jquery":328,"undo-manager":337}],371:[function(require,module,exports){
+},{"jquery":328,"undo-manager":337}],372:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -60442,7 +60571,20 @@ module.exports = {
   }
 };
 
-},{"./funcs":348,"./status":361,"underscore":336}],372:[function(require,module,exports){
+},{"./funcs":348,"./status":362,"underscore":336}],373:[function(require,module,exports){
+'use strict';
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var _ = require('underscore');
+
+var Users = function Users() {
+  _classCallCheck(this, Users);
+};
+
+module.exports = Users;
+
+},{"underscore":336}],374:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -60695,7 +60837,11 @@ function is_cycle(graph, src, tar) {
 
     // iterate neighbors
     var is_cycle = false;
-    if (!tar.eachHead) debugger;
+    if (!tar.eachHead) {
+      log.error('unable to read property eachHead of tar: ' + tar);
+      return;
+    }
+
     tar.eachHead(function (head) {
 
       is_cycle = head === src ? true // got back to source
