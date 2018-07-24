@@ -5,7 +5,7 @@
 # 5/30/18
 #
 # This script makes editing the "tree" layout extension for cytoscape
-# much simpler and easier.  Simply edit the version of "src/tree.js" in the
+# much simpler and easier.  Simply edit the version of "client/tree.js" in the
 # current repository, and run this script before viewing your changes
 # in the browser.  (It takes care of copying and building stuff.)
 #
@@ -40,7 +40,7 @@ elif [ ! -d $layout_dir ]; then
   exit 1
 fi
 
-tree_path=$this_dir/src/tree.js
+tree_path=$this_dir/client/tree.js
 
 if [ ! -f $tree_path ]; then
   echo "Error: unable to locate $tree_path (aborting)"
@@ -61,10 +61,10 @@ if [ ! -d node_modules ]; then
 fi
 
 npm run build
-cp build/cytoscape.* $this_dir/src/cytoscape
+cp build/cytoscape.* $this_dir/client/cytoscape
 cd $this_dir
 npm run build
 
-echo "successfully copied built files into src/cytoscape/"
+echo "successfully copied built files into client/cytoscape/"
 
 exit 0

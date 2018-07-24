@@ -107,9 +107,9 @@ function save(params, text) {
 
 (() => { // main
 
-  global.log = new (require('../src/node-logger'))('SILENT');
+  global.log = new (require('../client/node-logger'))('SILENT');
   global.server = null;
-  global.manager = new (require('../src/manager'))();
+  global.manager = new (require('../client/manager'))();
 
   const argv = minimist(process.argv.slice(2));
   let params = {
