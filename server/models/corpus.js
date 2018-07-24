@@ -39,12 +39,20 @@ class CorpusDB {
       if (err)
         return next(new DBError(err), null);
 
-      db.get('SELECT sentence FROM corpus WHERE rowid = (?)', id, (err, data) => {
-        if (err)
-          return next(new DBError(err), null);
+      db.get(`
+        SELECT
+          column_visibilities,
+          format,
+          is_table_view,
+          nx_initialized,
+          nx
+        FROM corpus WHERE rowid = (?)`, id, (err, data) => {
+          if (err)
+            return next(new DBError(err), null);
 
-        next(null, parse.sentence(data));
-      });
+          next(null, parse(data));
+        }
+      );
     });
   }
 
@@ -62,8 +70,22 @@ class CorpusDB {
 
           if (data) { // it already exists, overwrite
 
-            db.run(`UPDATE corpus SET sentence = (?) WHERE rowid = (?)`
-              , sentence, id, function (err) {
+            db.run(`
+              UPDATE corpus
+              SET
+                column_visibilities= (?),
+                format= (?),
+                is_table_view= (?),
+                nx_initialized= (?),
+                nx = (?)
+              WHERE rowid = (?)`
+              , sentence.column_visibilities
+              , sentence.format
+              , sentence.is_table_view
+              , sentence.nx_initialized
+              , sentence.nx
+              , id
+              , function (err) {
                 if (err)
                   return next(new DBError(err), null);
 
@@ -73,16 +95,29 @@ class CorpusDB {
 
           } else { // insert new
 
-            db.run('INSERT INTO corpus (sentence) VALUES (?)', sentence, function (err) {
-              if (err)
-                return next(new DBError(err), null);
+            db.run(`
+              INSERT INTO corpus (
+                column_visibilities,
+                format,
+                is_table_view,
+                nx_initialized,
+                nx
+              ) VALUES (?, ?, ?, ?, ?)`
+              , sentence.column_visibilities
+              , sentence.format
+              , sentence.is_table_view
+              , sentence.nx_initialized
+              , sentence.nx
+              , function (err) {
+                if (err)
+                  return next(new DBError(err), null);
 
-              if (isNaN(parseInt(this.lastID)))
-                return next(new DBError('Unable to insert'), null);
+                if (isNaN(parseInt(this.lastID)))
+                  return next(new DBError('Unable to insert'), null);
 
-              next(null, { id: this.lastID, changes: this.changes });
-            });
-
+                next(null, { id: this.lastID, changes: this.changes });
+              }
+            );
           }
         });
 
@@ -109,11 +144,18 @@ class CorpusDB {
       if (err)
         return next(new DBError(err), null);
 
-      db.all('SELECT sentence FROM corpus', (err, data) => {
+      db.all(`
+        SELECT
+          column_visibilities,
+          format,
+          is_table_view,
+          nx_initialized,
+          nx
+        FROM corpus`, (err, data) => {
         if (err)
           return next(new DBError(err), null);
 
-        next(null, parse.sentences(data));
+        next(null, data.map(sentence => parse(sentence)));
       });
     });
   }
@@ -126,8 +168,6 @@ class CorpusDB {
       db.run(`DELETE FROM corpus`, err => { // overwriting everything, so delete
         if (err)
           return next(new DBError(err), null);
-
-        sentences = sanitize.sentences(sentences);
 
         var counter = 0;
         const callback = (err, data) => {
@@ -143,7 +183,26 @@ class CorpusDB {
         };
 
         sentences.forEach(sentence => {
-          db.run('INSERT INTO corpus (sentence) VALUES (?)', sentence, callback);
+
+          //console.log('pre', sentence);
+          sentence = sanitize.sentence(sentence);
+          //console.log('post', sentence);
+          //console.log();
+
+          db.run(`
+            INSERT INTO corpus (
+              column_visibilities,
+              format,
+              is_table_view,
+              nx_initialized,
+              nx
+            ) VALUES (?, ?, ?, ?, ?)`
+            , sentence.column_visibilities
+            , sentence.format
+            , sentence.is_table_view
+            , sentence.nx_initialized
+            , sentence.nx
+            , callback);
         });
       });
     });
@@ -154,12 +213,20 @@ class CorpusDB {
       if (err)
         return next(new DBError(err), null);
 
-      db.get(`SELECT gui, labeler, owner, github_url, permissions, editors FROM meta`
-        , (err, data) => {
+      db.get(`
+        SELECT
+          current_index,
+          owner,
+          github_url,
+          gui,
+          labeler,
+          permissions,
+          editors
+        FROM meta`, (err, data) => {
           if (err)
             return next(new DBError(err), null);
 
-          next(null, parse.meta(data));
+          next(null, parse(data));
         }
       );
     });
@@ -175,16 +242,18 @@ class CorpusDB {
       db.run(`
         UPDATE meta
         SET
-          gui = IFNULL(?, gui),
-          labeler = IFNULL(?, labeler),
-          owner = IFNULL(?, owner),
-          github_url = IFNULL(?, github_url),
-          permissions = IFNULL(?, permissions),
-          editors = IFNULL(?, editors)`
+          current_index = (?),
+          owner = (?),
+          github_url = (?),
+          gui = (?),
+          labeler = (?),
+          permissions = (?),
+          editors = (?)`
+        , params.current_index
+        , params.owner
+        , params.github_url
         , params.gui
         , params.labeler
-        , params.owner
-        , params.gihub_url
         , params.permissions
         , params.editors
         , function (err) {
@@ -213,16 +282,7 @@ class CorpusDB {
 
   save(state, next) {
 
-    this.setMeta({
-      gui: state.gui,
-      menu: state.menu,
-      labeler: state.labeler,
-      current_index: state.index,
-      owner: state.owner,
-      github_url: state.github_url,
-      permissions: state.permissions,
-      editors: state.editors
-    }, err => {
+    this.setMeta(state.meta, err => {
       if (err)
         return next(new DBError(err), null);
 

@@ -1,14 +1,18 @@
 module.exports = `
 
 CREATE TABLE corpus (
-  sentence
+  column_visibilities,
+  format,
+  is_table_view,
+  nx_initialized,
+  nx
 );
 CREATE TABLE meta (
-  gui,
-  labeler,
-  current_index INTEGER,
+  current_index,
   owner,
   github_url,
+  gui,
+  labeler,
   permissions,
   editors
 );
