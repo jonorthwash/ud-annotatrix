@@ -57,6 +57,7 @@ class GUI {
     this.is_vertical = false;
     this.is_ltr = true;
     this.is_enhanced = false;
+    this.readonly = false;
 
     this.pan = this.pan || null;
     this.zoom = this.zoom || null;
@@ -151,6 +152,7 @@ class GUI {
       is_vertical:         this.is_vertical,
       is_ltr:              this.is_ltr,
       is_enhanced:         this.is_enhanced,
+      readonly:            this.readonly,
 
       pan:  this.pan,
       zoom: this.zoom
@@ -167,6 +169,7 @@ class GUI {
     this.is_vertical         = state.is_vertical;
     this.is_ltr              = state.is_ltr;
     this.is_enhanced         = state.is_enhanced;
+    this.readonly            = state.readonly;
 
     this.pan  = state.pan;
     this.zoom = state.zoom;
@@ -181,7 +184,9 @@ class GUI {
     this.menu.update();
 
     // textarea
-    $('#text-data').val(manager.sentence);
+    $('#text-data')
+      .removeClass('readonly')
+      .val(manager.toString());
 
     // navigation buttons
     $('.btn, .dropdown-group-item')
@@ -211,14 +216,13 @@ class GUI {
     $('#btnUndo').prop('disabled', !undoManager.hasUndo());
     $('#btnRedo').prop('disabled', !undoManager.hasRedo());
 
-    $('.nav-link').removeClass('active').show();
-    $('#text-data').prop('readonly', false);
-    $('.readonly').removeClass('readonly');
+    $('.nav-link').show().filter('.active').removeClass('active');
+    $('#tabOther').text(manager.format);
 
     switch (manager.format) {
       case ('Unknown'):
         $('.nav-link').hide();
-        $('#tabOther').addClass('active').show().text(manager.format);
+        $('#tabOther').addClass('active').show();
         break;
       case ('CoNLL-U'):
         $('#tabConllu').addClass('active');
@@ -229,14 +233,20 @@ class GUI {
         $('#tabOther').hide();
         break;
       case ('plain text'):
-        $('#tabText').hide(); // NOTE: no break here
-        if (manager.current.nx_initialized) {
-          $('#text-data').prop('readonly', true);
-          $('#tabOther').addClass('readonly');
-        }
+        $('#tabText').hide();
       default:
-        $('#tabOther').addClass('active').show().text(manager.format);
-        break;
+        $('#tabOther').addClass('active');
+    }
+
+    if (this.readonly) {
+
+      $('#text-data')
+        .addClass('readonly')
+        .prop('readonly', true)
+        .val(manager.current.text);
+
+      $('.nav-link.active').removeClass('active');
+      $('#tabText').show().addClass('active');
     }
 
     if (manager.format !== 'CoNLL-U')
@@ -280,19 +290,6 @@ class GUI {
     graph.update();
   }
 
-  read(id) {
-    if (!this.inBrowser)
-      return;
-
-    switch (id) {
-      case ('text-data'):
-      case ('current-sentence'):
-        return $(`#${id}`).val();
-      default:
-        throw new TypeError(`unable to read "${id}"`);
-    }
-  }
-
   bind() {
     if (!this.inBrowser)
       return;
@@ -300,7 +297,7 @@ class GUI {
     $('#btnPrevSentence').click(e => manager.prev());
     $('#btnNextSentence').click(e => manager.next());
     $('#current-sentence').blur(e => {
-      const index = parseInt(this.read('current-sentence')) - 1;
+      const index = parseInt($('current-sentence').val()) - 1;
       manager.index = index;
     });
     $('#btnRemoveSentence').click(e => manager.removeSentence());
@@ -364,15 +361,20 @@ class GUI {
     });
 
     $('#tabText').click(e => {
-      manager.parse(convert.to.plainText(this.read('text-data')));
+      this.readonly = true;
+      this.update();
     });
     $('#tabConllu').click(e => {
-      manager.current.nx_initialized = true;
-      manager.parse(convert.to.conllu(this.read('text-data')));
+      this.readonly = false;
+      manager.toConllu($('#text-data').val());
     });
     $('#tabCG3').click(e => {
-      manager.current.nx_initialized = true;
-      manager.parse(convert.to.cg3(this.read('text-data')));
+      this.readonly = false;
+      manager.toCG3($('#text-data').val());
+    });
+    $('#tabOther').click(e => {
+      this.readonly = false;
+      this.update();
     });
 
     $('[name="show-table"]').click(e => {
@@ -620,7 +622,7 @@ function onKeyupInCurrentSentence(event) {
 
   switch (event.which) {
     case (KEYS.ENTER):
-      manager.index = parseInt(gui.read('current-sentence')) - 1;
+      manager.index = parseInt($('current-sentence').val()) - 1;
       break;
     case (KEYS.LEFT):
     case (KEYS.J):
@@ -671,16 +673,17 @@ function onEditTextData(event) {
       //   of whitespace and other annoying side effects), and avoid redundant
       //   parsing if we edit again w/in that 1-sec window
       clearTimeout(gui.parseTimer);
-      gui.parseTimer = setTimeout(() => {
-        manager.parse();
-      }, 1000);
+      if (!$('#text-data').hasClass('readonly'))
+        gui.parseTimer = setTimeout(() => {
+          manager.parse($('#text-data').val());
+        }, 1000);
   }
 
 }
 function onEnter(event) {
   log.debug(`called onEnter()`);
 
-  let sentence = manager.sentence,
+  let sentence = $('#text-data').val(),
     cursor = $('#text-data').prop('selectionStart') - 1,
     lines = sentence.split(/\n/),
     lineId = null, before, during, after,
