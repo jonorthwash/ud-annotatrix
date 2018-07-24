@@ -51,7 +51,7 @@ INSERT INTO meta (current_index, gui, labeler, permissions, editors) VALUES (
   '{
     "labels": [],
     "filter": []
-  }'
+  }',
   '{
     "allow": null,
     "disallow": [],
