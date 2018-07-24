@@ -380,12 +380,8 @@ class Manager {
   }
 
 
-
-  save() {
-
-    status.normal('saving...');
-
-    const state = JSON.stringify({
+  get state() {
+    return {
       meta: {
         current_index: this.index,
         owner: this.users.owner,
@@ -396,7 +392,36 @@ class Manager {
         editors: this.users.editors
       },
       sentences: this.map((i, sent) => sent.state)
+    };
+  }
+
+  set state(state) {
+
+    this._index = state.meta.current_index;
+    this._sentences = state.sentences.map(state => {
+
+      let sent = new Sentence();
+      sent.state = state;
+      return sent;
+
     });
+
+    // update users stuff
+    this.users.state = _.pick(state.meta, ['owner', 'github_url', 'permissions', 'editors']);
+
+    labeler.state = state.meta.labeler;
+    this.updateFilter(); // use the filters set in labeler
+
+    // this triggers a gui refresh
+    gui.state = state.meta.gui;
+    
+  }
+
+  save() {
+
+    status.normal('saving...');
+
+    const state = JSON.stringify(this.state);
 
     storage.save(state);
     if (server && server.is_running)
@@ -418,23 +443,7 @@ class Manager {
     if (typeof state === 'string')
       state = JSON.parse(state);
 
-    this._index = state.meta.current_index;
-    this._sentences = state.sentences.map(state => {
-
-      let sent = new Sentence();
-      sent.state = state;
-      return sent;
-
-    });
-
-    // update users stuff
-    this.users.state = _.pick(state.meta, ['owner', 'github_url', 'permissions', 'editors']);
-
-    labeler.state = state.meta.labeler;
-    this.updateFilter(); // use the filters set in labeler
-
-    // this triggers a gui refresh
-    gui.state = state.meta.gui;
+    this.state = state;
 
     return state;
   }
