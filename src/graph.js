@@ -474,11 +474,18 @@ class Graph {
 }
 
 function getStyle(src, tar) {
-  return {
+  let style = {
     'control-point-weights': '0.1 0.5 1',
-    'source-endpoint': `${-10 * cfg.defaultEdgeCoeff}px -50%`,
     'target-endpoint': `0% -50%`
   };
+
+  if (tar.num < src.num) {
+    style['source-endpoint'] = `${-10 * cfg.defaultEdgeCoeff}px -50%`;
+  } else {
+    style['source-endpoint'] = `${10 * cfg.defaultEdgeCoeff}px -50%`;
+  }
+
+  return style;
 }
 
 function getCtrl(src, tar) {
