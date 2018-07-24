@@ -3,7 +3,6 @@
 const $ = require('jquery');
 const _ = require('underscore');
 const nx = require('notatrix');
-nx.Sentence.prototype.currentFormat = null;
 
 const cfg = require('./config');
 const funcs = require('./funcs');
@@ -16,6 +15,8 @@ const storage = require('./local-storage');
 const convert = require('./convert');
 const export_ = require('./export');
 const status = require('./status');
+const Sentence = require('./sentence');
+const Users = require('./users');
 
 class Manager {
 
@@ -25,6 +26,7 @@ class Manager {
     funcs.global().gui = new GUI();
     funcs.global().graph = new Graph();
     funcs.global().labeler = new Labeler();
+    this.users = new Users();
     gui.bind();
 
     this.reset();
@@ -193,29 +195,15 @@ class Manager {
     return this._sentences[this.index];
   }
   set current(sent) {
-    if (sent instanceof nx.Sentence)
+    if (sent instanceof Sentence)
       this._sentences[this.index] = sent;
   }
-  get sentence() {
-    if (!this.current)
-      return null;
-
-    if (this.format === 'CoNLL-U') {
-      return this.current.conllu;
-    } else if (this.format === 'CG3') {
-      return this.current.cg3;
-    } else {
-      return this.current.text;
-    }
+  toString() {
+    return this.current ? this.current.toString() : null;
   }
 
   set sentence(text) {
     return this.setSentence(text);
-  }
-  get sentences() {
-    return this.map((i, sent) => {
-      return sent.text;
-    });
   }
   setSentence(index, text) {
 
@@ -227,7 +215,7 @@ class Manager {
     if (0 > index || index > this.length - 1)
       return null;
 
-    this._sentences[index] = updateSentence(this._sentences[index], text);
+    this._sentences[index].update(text);
     gui.update();
 
     return this.getSentence(index);
@@ -257,7 +245,7 @@ class Manager {
       : index > this.length ? this.length
       : parseInt(index);
 
-    const sent = updateSentence({}, text);
+    const sent = new Sentence(text);
     this._sentences = this._sentences.slice(0, index)
       .concat(sent)
       .concat(this._sentences.slice(index));
@@ -332,19 +320,18 @@ class Manager {
     return splitted.length ? splitted : [ '' ]; // need a default if empty
 
   }
-  parse(text) {
+  parse(text, transform) {
 
-    // if not passed explicitly, read from the textarea
-    text = text || gui.read('text-data');
+    transform = transform || funcs.noop;
     let splitted = this.split(text);
 
     // set the first one at the current index
-    this._sentences[this.index] = new nx.Sentence; // hack to get around updateSentence() behavior
-    this.setSentence(this.index, splitted[0]);
+    this.setSentence(this.index, transform(splitted[0]));
 
     // iterate over all elements except the first
     _.each(splitted, (split, i) => {
-      if (i) this.insertSentence(split);
+      if (i)
+        this.insertSentence(transform(split));
     });
 
     gui.update();
@@ -353,14 +340,9 @@ class Manager {
 
 
 
-
   get format() {
     if (this.current)
-      return this.current.currentFormat;
-  }
-  get tokens() {
-    if (this.current)
-      return this.current.tokens;
+      return this.current.format;
   }
   get conllu() {
     if (this.current)
@@ -403,23 +385,20 @@ class Manager {
 
     status.normal('saving...');
 
-    const state = {
-      filename: this.filename,
-      index: this._index,
-      sentences: this.map((i, sent) => {
-        return {
-          nx: sent.nx,
-          column_visibilities: sent.column_visibilities,
-          currentFormat: sent.currentFormat,
-          is_table_view: sent.is_table_view,
-          nx_initialized: sent.nx_initialized
-        };
-      }),
-      gui: gui.state,
-      labeler: labeler.state
-    };
+    const state = JSON.stringify({
+      meta: {
+        current_index: this.index,
+        owner: this.users.owner,
+        github_url: this.users.github_url,
+        gui: gui.state,
+        labeler: labeler.state,
+        permissions: this.users.permissions,
+        editors: this.users.editors
+      },
+      sentences: this.map((i, sent) => sent.state)
+    });
 
-    storage.save(JSON.stringify(state))
+    storage.save(state);
     if (server && server.is_running)
       server.save(state);
 
@@ -433,33 +412,29 @@ class Manager {
 
     if (!state) // unable to load
       return null;
+    console.log('loading state:', state);
 
     // parse it back from a string
     if (typeof state === 'string')
       state = JSON.parse(state);
 
-    this.filename = state.filename;
-    this._index = state.index;
+    this._index = state.meta.current_index;
+    this._sentences = state.sentences.map(state => {
 
-    this._sentences = state.sentences.map(sent => {
-
-      let sentence = nx.Sentence.fromNx(sent.nx);
-      sentence.column_visibilities = sent.column_visibilities;
-      sentence.currentFormat = sent.currentFormat;
-      sentence.is_table_view = sent.is_table_view;
-      sentence.nx_initialized = sent.nx_initialized;
-
-      labeler.parse(sentence.comments);
-
-      return sentence;
+      let sent = new Sentence();
+      sent.state = state;
+      return sent;
 
     });
 
-    labeler.state = state.labeler;
+    // update users stuff
+    this.users.state = _.pick(state.meta, ['owner', 'github_url', 'permissions', 'editors']);
+
+    labeler.state = state.meta.labeler;
     this.updateFilter(); // use the filters set in labeler
 
     // this triggers a gui refresh
-    gui.state = state.gui;
+    gui.state = state.meta.gui;
 
     return state;
   }
@@ -472,61 +447,5 @@ class Manager {
   }
 }
 
-function updateSentence(oldSent, text) {
-
-  const currentSent = manager.current,
-    oldFormat = manager.format,
-    newFormat = detectFormat(text);
-
-  let sent;
-
-  if (newFormat === 'CoNLL-U') {
-
-    if (oldFormat === 'plain text') { // don't overwrite stuff :)
-      sent = currentSent;
-    } else {
-      sent = nx.Sentence.fromConllu(text);
-    }
-
-  } else if (newFormat === 'CG3') {
-
-    if (oldFormat === 'plain text') { // don't overwrite stuff :)
-      sent = currentSent;
-    } else {
-      sent = nx.Sentence.fromCG3(text);
-    }
-
-  } else if (newFormat === 'plain text') {
-
-    if (oldSent.nx_initialized) { // don't overwrite stuff :)
-      sent = oldSent;
-    } else {
-      sent = nx.Sentence.fromText(text);
-    }
-
-  } else if (newFormat === 'Unknown') {
-
-    sent = nx.Sentence.fromText('');
-
-  } else {
-
-    text = convert.to.conllu(text);
-    if (oldFormat === 'plain text') { // don't overwrite stuff :)
-      sent = currentSent;
-    } else {
-      sent = nx.Sentence.fromConllu(text);
-    }
-
-  }
-
-  sent.currentFormat = newFormat;
-  sent.nx_initialized = oldSent.nx_initialized || false;
-  sent.is_table_view = oldSent.is_table_view || false;
-  sent.column_visibilities = oldSent.column_visibilities || new Array(10).fill(true);
-
-  labeler.parse(sent.comments);
-
-  return sent;
-}
 
 module.exports = Manager;
