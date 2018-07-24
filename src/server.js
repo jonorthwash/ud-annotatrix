@@ -48,6 +48,7 @@ class Server {
 			$.ajax({
 				type: 'POST',
 				url: `/save?treebank_id=${this.treebank_id}`,
+  			contentType: "application/json; charset=utf-8",
 				data: state,
 				dataType: 'json',
 				success: data => {
@@ -80,14 +81,7 @@ class Server {
 						log.error('Unable to load(): server error');
 					} else {
 						log.info('Successfully loaded from server');
-						console.log(data);
-						manager.load({
-							filename: data.filename,
-							gui: JSON.parse(data.gui),
-							sentences: data.sentences.map(JSON.parse),
-							labeler: JSON.parse(data.labeler),
-							index: 0
-						});
+						manager.load(data);
 					}
 				},
 				error: data => {
