@@ -45,7 +45,7 @@ module.exports = {
     const match = location.href.match(/treebank_id=([0-9a-f-]{36})(#|\/|$|&)/);
     if (!match) {
       status.error('invalid treebank url, must be valid UUID4');
-      throw new Error('invalid treebank url, must be a valid UUID4');
+      return;
     }
 
     return match[1];
