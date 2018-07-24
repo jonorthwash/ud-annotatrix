@@ -181,7 +181,8 @@ class Graph {
               ? `⊲${src.deprel}`
               : `${src.deprel}⊳`;
 
-          ele.data.ctrl = new Array(4).fill(getEdgeHeight(src.num, tar.num));
+          ele.data.ctrl = getCtrl(src, tar);
+          ele.style = getStyle(src, tar);
           ele.classes = validate.depEdgeClasses(manager.current.eles, ele);
 
         } else if (ele.data.name === 'pos-node') {
@@ -472,9 +473,23 @@ class Graph {
   }
 }
 
-function getEdgeHeight(srcNum, tarNum) {
+function getStyle(src, tar) {
+  return {
+    'control-point-weights': '0.1 0.5 1',
+    'source-endpoint': `${-10 * cfg.defaultEdgeCoeff}px -50%`,
+    'target-endpoint': `0% -50%`
+  };
+}
 
-  let edgeHeight = cfg.defaultEdgeHeight * (tarNum - srcNum);
+function getCtrl(src, tar) {
+  return new Array(4).fill(getEdgeHeight(src, tar));
+}
+
+function getEdgeHeight(src, tar) {
+
+  const diff = tar.num - src.num;
+
+  let edgeHeight = cfg.defaultEdgeHeight * diff;
   if (gui.is_ltr)
     edgeHeight *= -1;
   if (Math.abs(edgeHeight) !== 1)
