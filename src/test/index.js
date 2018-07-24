@@ -7,3 +7,4 @@ require('./detect')();
 require('./convert')();
 require('./manager')();
 require('./labels')();
+require('./sentence')();
