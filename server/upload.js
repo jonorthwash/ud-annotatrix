@@ -11,6 +11,7 @@ const Manager = require('../src/manager');
 global.log = new Logger('SILENT');
 global.server = null;
 global.manager = new Manager();
+manager.save = () => {}; // avoid autosave garbage
 
 
 function upload(treebank, file, next) {
