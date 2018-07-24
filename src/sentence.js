@@ -163,7 +163,7 @@ class Sentence {
     this.column_visibilities = state.column_visibilities;
     this.format = state.format;
     this.is_table_view = state.is_table_view;
-    this._nx = state.nx;
+    this._nx = nx.Sentence.fromNx(state.nx);
 
     return this;
   }
