@@ -19,8 +19,16 @@ class DBError extends UDAnnotatrixError {
   }
 }
 
+class UploadError extends UDAnnotatrixError {
+  constructor(...args) {
+    console.log('UploadError:', ...args);
+    super(...args);
+  }
+}
+
 module.exports = {
   UDAnnotatrixError,
   ConfigError,
-  DBError
+  DBError,
+  UploadError
 };
