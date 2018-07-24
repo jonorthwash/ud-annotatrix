@@ -11,8 +11,8 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const fileUpload = require('express-fileupload');
-const session = require('express-session');
 const nocache = require('nocache');
+const session = require('express-session');
 app.use(morgan(cfg.environment === 'development' ? 'dev' : 'tiny'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -35,8 +35,13 @@ require('./routes')(app);
 app.use(express.static('server/public'));
 
 // run server
-http.createServer(app).listen(cfg.port, () => {
+const server = http.createServer(app).listen(cfg.port, () => {
   console.log(`Express server listening at ${cfg.protocol}://${cfg.host}:${cfg.port}`);
   if (cfg.environment === 'development')
     console.dir(cfg);
 });
+
+// set up sockets
+const SocketIO = require('socket.io');
+const sio = SocketIO.listen(server);
+require('./sockets')(sio);
