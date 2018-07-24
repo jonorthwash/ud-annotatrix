@@ -5,6 +5,7 @@ const uuidv4 = require('uuid/v4');
 const CorpusDB = require('./models/corpus');
 const request = require('request');
 const querystring = require('querystring');
+const upload = require('./upload');
 
 // --------------------------------------------------------------------------
 // middleware
@@ -119,8 +120,16 @@ module.exports = app => {
 
   });
 
-  app.post('/upload', get_treebank, (req, res) => {
-    res.json({ error: 'Not implemented' });
+  app.post('/upload', (req, res) => {
+    const treebank = uuidv4();
+    upload(treebank, req.files.corpus, err => {
+      if (err)
+        return res.json({ error: err.message });
+
+      res.redirect('/annotatrix?' + querystring.stringify({
+        treebank_id: treebank,
+      }));
+    });
   });
 
 
