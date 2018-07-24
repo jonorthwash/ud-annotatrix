@@ -2,7 +2,7 @@
 
 const cfg = require('./config');
 const uuidv4 = require('uuid/v4');
-const CorpusDB = require('./db/corpus');
+const CorpusDB = require('./models/corpus');
 const request = require('request');
 const querystring = require('querystring');
 
@@ -114,7 +114,7 @@ module.exports = app => {
       if (err)
         throw err;
 
-      console.log(data);
+      res.json(data);
     });
 
   });
