@@ -48,6 +48,6 @@ if (!cfg.github.client_secret)
 mkdirp(cfg.corpora_path);
 cfg.users_db_path = process.env.ANNOTATRIX_USERS_DB_PATH
   || '.users';
-cfg.users = require('./db/users')(cfg.users_db_path);
+cfg.users = require('./models/users')(cfg.users_db_path);
 
 module.exports = cfg;
