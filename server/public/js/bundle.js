@@ -56235,7 +56235,9 @@ module.exports = {
     link[0].click();
   },
 
-  noop: function noop() {}
+  noop: function noop(arg) {
+    return arg;
+  }
 
 };
 
@@ -56413,7 +56415,7 @@ var Graph = function () {
   _createClass(Graph, [{
     key: 'eles',
     value: function eles() {
-      if (manager.graphable) return _.map(manager.current.eles, function (ele) {
+      if (manager.graphable) return _.map(manager.current._nx.eles, function (ele) {
         if (ele.data.name === 'dependency') {
 
           var src = ele.data.sourceAnalysis,
@@ -56457,6 +56459,8 @@ var Graph = function () {
 
       this.bind();
       this.progressBar.update();
+
+      return this;
     }
   }, {
     key: 'bind',
@@ -57135,11 +57139,11 @@ var GUI = function () {
       });
       $('#tabConllu').click(function (e) {
         _this2.readonly = false;
-        manager.toConllu($('#text-data').val());
+        manager.parse($('#text-data').val(), convert.to.conllu);
       });
       $('#tabCG3').click(function (e) {
         _this2.readonly = false;
-        manager.toCG3($('#text-data').val());
+        manager.parse($('#text-data').val(), convert.to.cg3);
       });
       $('#tabOther').click(function (e) {
         _this2.readonly = false;
@@ -58621,67 +58625,12 @@ var Manager = function () {
       return this; // chaining
     }
   }, {
-    key: 'toConllu',
-    value: function toConllu(text) {
-      var _this4 = this;
-
-      if (text === null || text === undefined) {
-        // if only passed 1 arg
-        text = index || '';
-        index = this.index;
-      }
-
-      var splitted = this.split(text);
-      this.setSentence(index, convert.to.conllu(splitted[0]));
-
-      _.each(splitted, function (split, i) {
-        if (i) _this4.insertSentence(index, convert.to.conllu(split));
-      });
-
-      gui.update();
-      return this; // chaining
-    }
-  }, {
-    key: 'toCG3',
-    value: function toCG3(text) {
-      var _this5 = this;
-
-      if (text === null || text === undefined) {
-        // if only passed 1 arg
-        text = index || '';
-        index = this.index;
-      }
-
-      var splitted = this.split(text);
-      this.setSentence(index, convert.to.cg3(splitted[0]));
-
-      _.each(splitted, function (split, i) {
-        if (i) _this5.insertSentence(index, convert.to.cg3(split));
-      });
-
-      gui.update();
-      return this; // chaining
-    }
-  }, {
     key: 'save',
     value: function save() {
 
       status.normal('saving...');
 
-      var state = JSON.stringify({
-        meta: {
-          current_index: this.index,
-          owner: this.users.owner,
-          github_url: this.users.github_url,
-          gui: gui.state,
-          labeler: labeler.state,
-          permissions: this.users.permissions,
-          editors: this.users.editors
-        },
-        sentences: this.map(function (i, sent) {
-          return sent.state;
-        })
-      });
+      var state = JSON.stringify(this.state);
 
       storage.save(state);
       if (server && server.is_running) server.save(state);
@@ -58701,22 +58650,7 @@ var Manager = function () {
       // parse it back from a string
       if (typeof state === 'string') state = JSON.parse(state);
 
-      this._index = state.meta.current_index;
-      this._sentences = state.sentences.map(function (state) {
-
-        var sent = new Sentence();
-        sent.state = state;
-        return sent;
-      });
-
-      // update users stuff
-      this.users.state = _.pick(state.meta, ['owner', 'github_url', 'permissions', 'editors']);
-
-      labeler.state = state.meta.labeler;
-      this.updateFilter(); // use the filters set in labeler
-
-      // this triggers a gui refresh
-      gui.state = state.meta.gui;
+      this.state = state;
 
       return state;
     }
@@ -58808,18 +58742,55 @@ var Manager = function () {
   }, {
     key: 'corpus',
     get: function get() {
-      var _this6 = this;
+      var _this4 = this;
 
       var fileHeader = cfg.downloadHasFileHeader ? '# __ud_annotatrix_filename__ = "' + this.filename + '"\n# __ud_annotatrix_timestamp__ = "' + new Date() + '"\n# __ud_annotatrix_version__ = "' + cfg.version + '"\n' : '';
 
       var sentences = this.map(function (i, sent) {
-        var sentenceHeader = cfg.downloadHasSentenceHeader ? '# __ud_annotatrix_id__ = "' + (i + 1) + '"\n# __ud_annotatrix_format__ = "' + _this6.format + '"\n' : '';
-        var content = _this6.format === 'Unknown' ? '' : _this6.sentence;
+        var sentenceHeader = cfg.downloadHasSentenceHeader ? '# __ud_annotatrix_id__ = "' + (i + 1) + '"\n# __ud_annotatrix_format__ = "' + _this4.format + '"\n' : '';
+        var content = _this4.format === 'Unknown' ? '' : _this4.sentence;
 
         return '' + sentenceHeader + content;
       }).join('\n\n');
 
       return '' + fileHeader + sentences;
+    }
+  }, {
+    key: 'state',
+    get: function get() {
+      return {
+        meta: {
+          current_index: this.index,
+          owner: this.users.owner,
+          github_url: this.users.github_url,
+          gui: gui.state,
+          labeler: labeler.state,
+          permissions: this.users.permissions,
+          editors: this.users.editors
+        },
+        sentences: this.map(function (i, sent) {
+          return sent.state;
+        })
+      };
+    },
+    set: function set(state) {
+
+      this._index = state.meta.current_index;
+      this._sentences = state.sentences.map(function (state) {
+
+        var sent = new Sentence();
+        sent.state = state;
+        return sent;
+      });
+
+      // update users stuff
+      this.users.state = _.pick(state.meta, ['owner', 'github_url', 'permissions', 'editors']);
+
+      labeler.state = state.meta.labeler;
+      this.updateFilter(); // use the filters set in labeler
+
+      // this triggers a gui refresh
+      gui.state = state.meta.gui;
     }
   }]);
 
@@ -58882,7 +58853,7 @@ var ProgressBar = function () {
     value: function update() {
       if (!manager.current || !this.element) return;
 
-      var percentage = manager.current.progress * 100;
+      var percentage = manager.current._nx.progress * 100;
       this.element.css('width', percentage + '%');
     }
   }]);
@@ -60075,7 +60046,7 @@ var Sentence = function () {
       this.column_visibilities = state.column_visibilities;
       this.format = state.format;
       this.is_table_view = state.is_table_view;
-      this._nx = state.nx;
+      this._nx = nx.Sentence.fromNx(state.nx);
 
       return this;
     }
