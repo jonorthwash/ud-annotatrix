@@ -10,12 +10,14 @@ const http = require('http');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const fileUpload = require('express-fileupload');
 const session = require('express-session');
 const nocache = require('nocache');
 app.use(morgan(cfg.environment === 'development' ? 'dev' : 'tiny'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(fileUpload());
 app.use(session({
   store: new session.MemoryStore(),
   secret: cfg.secret,
