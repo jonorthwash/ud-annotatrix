@@ -1020,3 +1020,26 @@ span.dropdown-group-item-name i {
 #username.not-logged-in {
   opacity: 0.3;
 }
+
+.settings-group-name {
+  color: #868e96;
+}
+
+.settings-item {
+  margin: 1em;
+  max-width: 60ch;
+}
+
+.settings-item-title {
+  font-size: 1.5em;
+  margin-left: 0.5em;
+}
+
+.settings-table .username {
+  width: 42ch;
+}
+
+.settings-table .toggle {
+  width: 20ch;
+  text-align: center;
+}
