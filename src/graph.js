@@ -167,7 +167,7 @@ class Graph {
 
   eles() {
     if (manager.graphable)
-      return _.map(manager.current.eles, ele => {
+      return _.map(manager.current._nx.eles, ele => {
         if (ele.data.name === 'dependency') {
 
           const src = ele.data.sourceAnalysis,
@@ -227,6 +227,8 @@ class Graph {
 
     this.bind();
     this.progressBar.update();
+
+    return this;
   }
 
   bind() {

@@ -11,7 +11,7 @@ class ProgressBar {
     if (!manager.current || !this.element)
       return;
 
-    const percentage = manager.current.progress * 100;
+    const percentage = manager.current._nx.progress * 100;
     this.element.css('width', `${percentage}%`);
   }
 }
