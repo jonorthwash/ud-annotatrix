@@ -26,6 +26,8 @@ class Manager {
     funcs.global().gui = new GUI();
     funcs.global().graph = new Graph();
     funcs.global().labeler = new Labeler();
+    if (gui.inBrowser)
+      this.socket = require('./socket');
     this.users = new Users();
     gui.bind();
 
@@ -46,8 +48,6 @@ class Manager {
 
     this._filtered = [];
     this._filterIndex = null;
-
-    this.insertSentence(cfg.defaultSentence);
   }
   get length() {
     return this._sentences.length;
@@ -397,6 +397,7 @@ class Manager {
 
   set state(state) {
 
+    console.info('LOADING STATE', state);
     this._index = state.meta.current_index;
     this._sentences = state.sentences.map(state => {
 
@@ -405,6 +406,8 @@ class Manager {
       return sent;
 
     });
+    if (!this.current)
+      this.insertSentence(cfg.defaultSentence);
 
     // update users stuff
     this.users.state = _.pick(state.meta, ['owner', 'github_url', 'permissions', 'editors']);
@@ -414,7 +417,7 @@ class Manager {
 
     // this triggers a gui refresh
     gui.state = state.meta.gui;
-    
+
   }
 
   save() {
@@ -435,9 +438,12 @@ class Manager {
       ? server.load()
       : storage.load());
 
-    if (!state) // unable to load
+    if (!state) { // unable to load
+      if (!this.current)
+        this.insertSentence(cfg.defaultSentence);
+
       return null;
-    console.log('loading state:', state);
+    }
 
     // parse it back from a string
     if (typeof state === 'string')
