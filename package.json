@@ -9,6 +9,7 @@
     "dotenv": "^6.0.0",
     "ejs": "^2.6.1",
     "express": "^4.16.3",
+    "express-fileupload": "^0.4.0",
     "jquery": "^3.2.1",
     "jquery-autocomplete": "^1.2.8",
     "l20n": "^5.0.0",
