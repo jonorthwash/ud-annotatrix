@@ -353,11 +353,11 @@ class GUI {
     });
     $('[name="show-help"]').click(e => {
       if (!$(e.target).is('.pin'))
-        window.open('help.html', '_blank').focus()
+        funcs.link('/help', '_self');
     });
     $('[name="show-settings"]').click(e => {
       if (!$(e.target).is('.pin'))
-        window.open('settings.html', '_blank').focus()
+        funcs.link('/settings?treebank_id=' + funcs.getTreebankId(), '_self');
     });
 
     $('#tabText').click(e => {
