@@ -366,11 +366,11 @@ class GUI {
     });
     $('#tabConllu').click(e => {
       this.readonly = false;
-      manager.toConllu($('#text-data').val());
+      manager.parse($('#text-data').val(), convert.to.conllu);
     });
     $('#tabCG3').click(e => {
       this.readonly = false;
-      manager.toCG3($('#text-data').val());
+      manager.parse($('#text-data').val(), convert.to.cg3);
     });
     $('#tabOther').click(e => {
       this.readonly = false;
