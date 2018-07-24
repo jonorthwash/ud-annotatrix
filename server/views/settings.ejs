@@ -73,8 +73,9 @@
 
         <div class="settings-item" id="permissions">
           <div class="settings-item-title">
-            Permissions
+            Collaboration
           </div>
+					<!--
           <div class="settings-item-content">
             <div class="settings-sub-item" id="permissions-allow">
               <table class="settings-table table table-striped table-sm">
@@ -156,16 +157,24 @@
                 <% } %>
               </span>
             </div>
+						-->
+						<div class="settings-sub-item" id="permission-sharing">
+							<% if (!claimed) { %>
+                <input type="checkbox" name="permissions-sharing" title="Cannot set this property unless 'owner' is set" <%= meta.permissions.sharing ? 'checked' : '' %> disabled />
+              <% } else { %>
+                <input type="checkbox" name="permissions-sharing" <%= meta.permissions.sharing ? 'checked' : '' %> />
+              <% } %>
+              Enable collaborative editing
+            </div>
             <div class="settings-sub-item" id="permissions-require-login">
               <% if (!claimed) { %>
-                <input type="checkbox" name="permissions-require-login" title="Cannot set this property unless 'owner' is set" disabled />
-              <% } else if (meta.permissions && meta.permissions.require_login) { %>
-                <input type="checkbox" name="permissions-require-login" checked />
+                <input type="checkbox" name="permissions-require-login" title="Cannot set this property unless 'owner' is set" <%= meta.permissions.require_login ? 'checked' : '' %> disabled />
               <% } else { %>
-                <input type="checkbox" name="permissions-require-login" />
+                <input type="checkbox" name="permissions-require-login" <%= meta.permissions.require_login ? 'checked' : '' %> />
               <% } %>
               Require GitHub login to edit treebank
             </div>
+						<!--
             <div class="settings-sub-item" id="permissions-allow-all">
               <% if (is_owner) { %>
                 <input type="checkbox" name="permissions-allow-all" <%= allowed === null ? 'checked' : '' %> />
@@ -182,6 +191,7 @@
               <% } %>
               Block everyone not explicitly allowed
             </div>
+						-->
           </div>
         </div>
 
