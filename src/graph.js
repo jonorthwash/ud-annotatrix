@@ -444,7 +444,7 @@ class Graph {
     how to merge the nodes. In case of success, redraws the tree. */
     // const indices = findConlluId(toMerge);
 
-    const oldSentence = manager.sentence;
+    const oldSentence = manager.toString();
 
     // prefer traits on this one
     const major = cy.$('.merge').data('conllu');
