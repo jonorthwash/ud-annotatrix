@@ -6,8 +6,8 @@ const uuidv4 = require('uuid/v4');
 
 const UploadError = require('./errors').UploadError;
 const CorpusDB = require('./models/corpus');
-const Logger = require('../src/node-logger');
-const Manager = require('../src/manager');
+const Logger = require('../client/node-logger');
+const Manager = require('../client/manager');
 global.log = new Logger('SILENT');
 global.server = null;
 global.manager = new Manager();
