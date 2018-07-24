@@ -21,7 +21,7 @@ function is_upos(s) {
   // Checks if a relation is in the list of valid parts of speech
   // @s = the input relation
   // returns a bool
-  s = s.toUpperCase();
+  s = (s || '').toUpperCase();
 
   let is_upos = false;
   _.each(U_POS, u_pos => {
@@ -61,7 +61,7 @@ function is_leaf(s) {
 
   // http://universaldependencies.org/u/dep/punct.html
   // Tokens with the relation punct always attach to content words (except in cases of ellipsis) and can never have dependents.
-  s = s.toUpperCase();
+  s = (s || '').toUpperCase();
 
   let is_leaf = false;
   _.each(U_POS_LEAF, u_pos => {
@@ -263,7 +263,7 @@ function is_cycle(graph, src, tar) {
       log.error(`unable to read property eachHead of tar: ${tar}`);
       return;
     }
-    
+
     tar.eachHead(head => {
 
       is_cycle = head === src
