@@ -8,7 +8,7 @@ const uglify = require('gulp-uglify');
 const sourcemaps = require('gulp-sourcemaps');
 
 gulp.task('js', () => {
-  return browserify('src/index.js', {
+  return browserify('client/index.js', {
       standalone: 'data'
     })
     .transform('babelify', {
@@ -23,7 +23,7 @@ gulp.task('js', () => {
 
 /*
 gulp.task('uglify', () => {
-  return browserify('src/index.js')
+  return browserify('client/index.js')
     .transform('babelify', {
       presets: ['env'],
       compact: true
@@ -44,7 +44,7 @@ gulp.task('uglify', () => {
 });
 *//*
 gulp.task('uglifyify', () => {
-  return browserify('src/index.js')
+  return browserify('client/index.js')
     .transform('babelify', {
       presets: ['env'],
       compact: true
@@ -60,7 +60,7 @@ gulp.task('uglifyify', () => {
 */
 
 gulp.task('watch', () => {
-  gulp.watch(['src/*.js', 'src/modals/*.js'], [/*'uglify', */'js']);
+  gulp.watch(['client/*.js', 'client/modals/*.js'], [/*'uglify', */'js']);
 });
 
 gulp.task('default', [/*'uglify', */'js']);
