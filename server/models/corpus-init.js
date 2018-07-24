@@ -4,7 +4,7 @@ CREATE TABLE corpus (
   column_visibilities,
   format,
   is_table_view,
-  nx_initialized,
+  input,
   nx
 );
 CREATE TABLE meta (

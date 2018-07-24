@@ -44,7 +44,7 @@ class CorpusDB {
           column_visibilities,
           format,
           is_table_view,
-          nx_initialized,
+          input,
           nx
         FROM corpus WHERE rowid = (?)`, id, (err, data) => {
           if (err)
@@ -76,13 +76,13 @@ class CorpusDB {
                 column_visibilities= (?),
                 format= (?),
                 is_table_view= (?),
-                nx_initialized= (?),
+                input= (?),
                 nx = (?)
               WHERE rowid = (?)`
               , sentence.column_visibilities
               , sentence.format
               , sentence.is_table_view
-              , sentence.nx_initialized
+              , sentence.input
               , sentence.nx
               , id
               , function (err) {
@@ -100,13 +100,13 @@ class CorpusDB {
                 column_visibilities,
                 format,
                 is_table_view,
-                nx_initialized,
+                input,
                 nx
               ) VALUES (?, ?, ?, ?, ?)`
               , sentence.column_visibilities
               , sentence.format
               , sentence.is_table_view
-              , sentence.nx_initialized
+              , sentence.input
               , sentence.nx
               , function (err) {
                 if (err)
@@ -149,7 +149,7 @@ class CorpusDB {
           column_visibilities,
           format,
           is_table_view,
-          nx_initialized,
+          input,
           nx
         FROM corpus`, (err, data) => {
         if (err)
@@ -194,13 +194,13 @@ class CorpusDB {
               column_visibilities,
               format,
               is_table_view,
-              nx_initialized,
+              input,
               nx
             ) VALUES (?, ?, ?, ?, ?)`
             , sentence.column_visibilities
             , sentence.format
             , sentence.is_table_view
-            , sentence.nx_initialized
+            , sentence.input
             , sentence.nx
             , callback);
         });
