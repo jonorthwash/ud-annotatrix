@@ -3,9 +3,7 @@
 const $ = require('jquery');
 const cfg = require('./config');
 
-const container = $('.status-container');
-
-function status(text, isError) {
+function Status(text, isError) {
   return $('<div>')
     .addClass('status')
     .addClass(isError ? 'error' : 'normal')
@@ -14,16 +12,16 @@ function status(text, isError) {
 
 function normal(text) {
 
-  const div = status(text, false);
-  container.prepend(div);
+  const div = Status(text, false);
+  $('.status-container').prepend(div);
   div.fadeOut(cfg.statusNormalFadeout);
   setTimeout(div.detach, cfg.statusNormalFadeout);
 }
 
 function error(text) {
 
-  const div = status(text, true);
-  container.prepend(div);
+  const div = Status(text, true);
+  $('.status-container').prepend(div);
   div.fadeOut(cfg.statusErrorFadeout);
   setTimeout(div.detach, cfg.statusErrorFadeout);
 }
