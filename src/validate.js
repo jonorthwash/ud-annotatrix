@@ -259,7 +259,11 @@ function is_cycle(graph, src, tar) {
 
     // iterate neighbors
     let is_cycle = false;
-    if (!tar.eachHead) debugger;
+    if (!tar.eachHead) {
+      log.error(`unable to read property eachHead of tar: ${tar}`);
+      return;
+    }
+    
     tar.eachHead(head => {
 
       is_cycle = head === src
