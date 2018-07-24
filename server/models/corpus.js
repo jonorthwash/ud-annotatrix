@@ -242,13 +242,13 @@ class CorpusDB {
       db.run(`
         UPDATE meta
         SET
-          current_index = (?),
-          owner = (?),
-          github_url = (?),
-          gui = (?),
-          labeler = (?),
-          permissions = (?),
-          editors = (?)`
+          current_index = IFNULL(?, current_index),
+          owner = IFNULL(?, owner),
+          github_url = IFNULL(?, github_url),
+          gui = IFNULL(?, gui),
+          labeler = IFNULL(?, labeler),
+          permissions = IFNULL(?, permissions),
+          editors = IFNULL(?, editors)`
         , params.current_index
         , params.owner
         , params.github_url

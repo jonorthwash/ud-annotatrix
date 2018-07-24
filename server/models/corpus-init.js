@@ -53,6 +53,7 @@ INSERT INTO meta (current_index, gui, labeler, permissions, editors) VALUES (
     "filter": []
   }',
   '{
+    "sharing": true,
     "allow": null,
     "disallow": [],
     "require_login": false
