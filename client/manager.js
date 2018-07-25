@@ -222,6 +222,7 @@ class Manager {
     this.emit({
       type: 'modify',
       index: index,
+      format: sent.format,
       nx: sent.nx
     });
     gui.update();
@@ -261,8 +262,10 @@ class Manager {
     this.emit({
       type: 'insert',
       index: index,
+      format: sent.format,
       nx: sent.nx
     });
+
     this.index = index;
     gui.update();
 
@@ -292,6 +295,7 @@ class Manager {
     this.emit({
       type: 'remove',
       index: index,
+      format: sent.format,
       nx: null
     });
     gui.update();
@@ -338,18 +342,20 @@ class Manager {
     return splitted.length ? splitted : [ '' ]; // need a default if empty
 
   }
-  parse(text, transform) {
+  parse(text, options={}) {
 
-    transform = transform || funcs.noop;
+    const transform = options.transform || funcs.noop;
+    const index = options.index || this.index;
+
     let splitted = this.split(text).map(transform);
 
     // set the first one at the current index
-    this.setSentence(this.index, splitted[0]);
+    this.setSentence(index, splitted[0]);
 
     // iterate over all elements except the first
     _.each(splitted, (split, i) => {
       if (i)
-        this.insertSentence(split);
+        this.insertSentence(index + i, split);
     });
 
     gui.update();
@@ -472,7 +478,7 @@ class Manager {
     return state;
   }
   emit(data) {
-    if (this.socket)
+    if (this.socket && this.socket.initialized && this.socket.open)
       this.socket.emit('update', data);
   }
 
