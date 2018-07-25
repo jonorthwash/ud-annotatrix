@@ -12,6 +12,14 @@ function detectFormat(text) {
   log.debug(`called detectFormat(${text})`);
 
   let format = 'Unknown';
+
+  // catch Notatrix format here
+  if (typeof text === 'object') {
+    const objKeys = new Set(Object.keys(text))
+    const nxKeys = new Set(['options', 'comments', 'tokens']);
+    return _.isEqual(objKeys, nxKeys) ? 'nx' : format;
+  }
+
   text = (text || '').trim();
 
   if (text === '') {
