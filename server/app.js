@@ -13,13 +13,14 @@ const cookieParser = require('cookie-parser');
 const fileUpload = require('express-fileupload');
 const nocache = require('nocache');
 const session = require('express-session');
+const MemoryStore = new session.MemoryStore();
 app.use(morgan(cfg.environment === 'development' ? 'dev' : 'tiny'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(fileUpload());
 app.use(session({
-  store: new session.MemoryStore(),
+  store: MemoryStore,
   secret: cfg.secret,
   key: 'express.sid',
   saveUninitialized: true,
@@ -42,6 +43,8 @@ const server = http.createServer(app).listen(cfg.port, () => {
 });
 
 // set up sockets
-const SocketIO = require('socket.io');
-const sio = SocketIO.listen(server);
-require('./sockets')(sio);
+const socketIO = require('socket.io');
+const socketIOCookieParser = require('socket.io-cookie-parser');
+const sio = socketIO.listen(server);
+sio.use(socketIOCookieParser());
+require('./sockets')(sio, MemoryStore);
