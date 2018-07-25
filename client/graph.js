@@ -581,26 +581,26 @@ function modify(id, attr, value) {
     return;
   }
 
-  const ana = manager.current.getById(id);
+  const ana = manager.current.get(id);
 
   ana[attr] = value;
-  gui.update();
+  manager.parse(manager.toString());
 }
 
 function addHead(srcId, tarId, dep='') {
-  const src = manager.current.getById(srcId),
-    tar = manager.current.getById(tarId);
+  const src = manager.current.get(srcId),
+    tar = manager.current.get(tarId);
 
   src.addHead(tar, dep);
-  gui.update();
+  manager.parse(manager.toString());
 }
 
 function removeHead(srcId, tarId) {
-  const src = manager.current.getById(srcId),
-    tar = manager.current.getById(tarId);
+  const src = manager.current.get(srcId),
+    tar = manager.current.get(tarId);
 
   src.removeHead(tar);
-  gui.update();
+  manager.parse(manager.toString());
 }
 
 
