@@ -123,6 +123,10 @@ class Sentence {
 
   }
 
+  get(id) {
+    return this._nx.getById(id);
+  }
+
   get conllu() {
     return this._nx.conllu;
   }
