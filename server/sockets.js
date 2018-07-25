@@ -2,40 +2,39 @@
 
 const SocketError = require('./errors').SocketError;
 
+// scope this here so that all functions will have access to it
+//   once it's initialized in the module exports
 var MemoryStore = null;
 
 function onConnect(socket) {
-  console.log('onConnect');
-  let req = socket.request;
 
+  // join the room and keep track of the number of occupants
   const treebank = socket.request.treebank;
   socket.join(treebank)
   users[treebank] = users[treebank] + 1 || 1;
-  
-  /*
-  numUsersByPage[req.ref] = numUsersByPage[req.ref]+1 || 1;
-  console.log(`User ${req.session.user.name} connected to ${req.ref} (${numUsersByPage[req.ref]} total)`);
 
-  let response = {
-    user : req.session.user,
-    numUsers: numUsersByPage[req.ref]
+  // debugging stuff
+  console.log(`New connection (username: ${socket.request.username})`);
+  console.log('users:', users);
+
+  // broadcast the new connection to the rest of the room
+  //   and back to the original client
+  const response = {
+    username: socket.request.username,
+    present: users[treebank]
   };
-
-  // broadcast out (to other clients)
-  socket.broadcast.to('admin').emit('new connection', response);
-  socket.broadcast.to('lobby').emit('new connection', response);
-
-  // emit back (to original client)
-  socket.emit('on connection', response);
-  */
+  socket.broadcast.to(treebank).emit('new connection', response);
+  socket.emit('connection', response);
 }
 
 function authorize(request, next) {
+
   if (!request.headers.cookie)
     next(new SocketError(`AuthorizationError: unable to find cookie`), false);
 
   const sid = request.cookies['express.sid'].substring(2,34);
   MemoryStore.get(sid, (err, session) => {
+
     if (err)
       return next(new SocketError(`Authorization Error: ${err}`), false);
 
@@ -44,8 +43,8 @@ function authorize(request, next) {
         `Authorization Error: unable to find session with sid "${sid}"`), false);
 
     request.sid = sid;
-    request.token = session.token;
-    request.username = session.username;
+    request.token = session.token || null;
+    request.username = session.username || null;
     request.treebank = extractTreebank(request.headers.referer);
 
     next(null, true);
@@ -72,16 +71,28 @@ module.exports = (sio, MemoryStore_) => {
   sio.set('authorization', authorize);
 
   sio.sockets.on('connection', socket => {
-    //console.log('connection!');
 
     onConnect(socket);
 
     socket.on('disconnect', () => {
-      //console.log('disconnect!');
+
+      // decrease the number of users in this room
+      users[socket.request.treebank] -= 1;
+
+      // debugging stuff
+      console.log(`End connection (username: ${socket.request.username})`);
+      console.log('users:', users);
     });
 
     socket.on('update', data => {
-      //console.log('data!', data);
+
+      // forward the data along to anyone else in this room
+      const treebank = socket.request.treebank;
+      socket.broadcast.to(treebank).emit('update', data);
+
+      // debugging stuff
+      console.log(`Update treebank ${treebank}:`, data);
+      console.log('users:', users);
     });
 
   });
