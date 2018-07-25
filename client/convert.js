@@ -40,6 +40,8 @@ function convert2PlainText(text) {
 		case ('Unknown'):
 			log.warn(`convert2PlainText(): failed to convert: Unknown input type`);
 			return null;
+		case ('nx'):
+			return nx.Sentence.fromNx(text).text;
 		case ('plain text'):
 			log.info(`convert2PlainText(): received plain text`);
 			return text;
@@ -71,6 +73,8 @@ function convert2Conllu(text) {
 		case ('Unknown'):
 			log.warn(`convert2conllu(): failed to convert Unknown to plain text`);
 			return null;
+		case ('nx'):
+			return nx.Sentence.fromNx(text).conllu;
 		case ('plain text'):
 			return cleanConllu(plainText2Conllu(text));
 		case ('Brackets'):
@@ -102,6 +106,8 @@ function convert2CG3(text) {
 		case ('Unknown'):
 			log.warn(`convert2CG3(): failed to convert Unknown to plain text`);
 			return null;
+		case ('nx'):
+			return nx.Sentence.fromNx(text).cg3;
 		case ('plain text'):
 			return conllu2CG3(plainText2Conllu(text));
 		case ('Brackets'):

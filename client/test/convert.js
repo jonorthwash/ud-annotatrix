@@ -10,6 +10,7 @@ utils.setupLogger();
 const convert = require('../convert');
 const detectFormat = require('../detect');
 const alerts = require('../alerts');
+const nx = require('notatrix');
 
 // export the test suite
 module.exports = () => {
@@ -29,10 +30,10 @@ module.exports = () => {
       }[methodName];
 
       describe(`convert to ${expectedFormat}`, () => {
-        utils.forEachText((text, originalFormat, name) => {
+        utils.forEachText((originalText, originalFormat, name) => {
           it(`should convert ${originalFormat}:${name} to ${expectedFormat}`, () => {
 
-            const convertedText = convertToFormat(text);
+            const convertedText = convertToFormat(originalText);
 
             if (originalFormat === 'Unknown') {
 
@@ -53,8 +54,31 @@ module.exports = () => {
               const convertedFormat = detectFormat(convertedText);
               expect(convertedFormat).to.equal(expectedFormat);
 
-            }
 
+              // convert from nx format
+              if (originalFormat === 'CoNLL-U') {
+
+                const sent = nx.Sentence.fromConllu(originalText);
+                const convertedNx = convertToFormat(sent.nx);
+                const convertedFormat = detectFormat(convertedNx);
+                expect(convertedFormat).to.equal(expectedFormat);
+
+              } else if (originalFormat === 'CG3') {
+
+                const sent = nx.Sentence.fromCG3(originalText);
+                const convertedNx = convertToFormat(sent.nx);
+                const convertedFormat = detectFormat(convertedNx);
+                expect(convertedFormat).to.equal(expectedFormat);
+
+              } else if (originalFormat === 'plain text') {
+
+                const sent = nx.Sentence.fromText(originalText);
+                const convertedNx = convertToFormat(sent.nx);
+                const convertedFormat = detectFormat(convertedNx);
+                expect(convertedFormat).to.equal(expectedFormat);
+
+              }
+            }
           });
         });
       });
