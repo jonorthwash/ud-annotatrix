@@ -33993,6 +33993,7 @@ var export_ = require('./export');
 var status = require('./status');
 var Sentence = require('./sentence');
 var Users = require('./users');
+var Socket = require('./socket');
 
 var Manager = function () {
   function Manager() {
@@ -34004,7 +34005,7 @@ var Manager = function () {
     funcs.global().gui = new GUI();
     funcs.global().graph = new Graph();
     funcs.global().labeler = new Labeler();
-    if (gui.inBrowser) this.socket = require('./socket');
+    if (gui.inBrowser) this.socket = Socket(this);
     this.users = new Users();
     gui.bind();
 
@@ -34139,6 +34140,13 @@ var Manager = function () {
       if (0 > index || index > this.length - 1) return null;
 
       this._sentences[index].update(text);
+
+      var sent = this._sentences[index];
+      this.emit({
+        type: 'modify',
+        index: index,
+        nx: sent.nx
+      });
       gui.update();
 
       return this.getSentence(index);
@@ -34171,6 +34179,11 @@ var Manager = function () {
       var sent = new Sentence(text);
       this._sentences = this._sentences.slice(0, index).concat(sent).concat(this._sentences.slice(index));
 
+      this.emit({
+        type: 'insert',
+        index: index,
+        nx: sent.nx
+      });
       this.index = index;
       gui.update();
 
@@ -34194,6 +34207,11 @@ var Manager = function () {
       if (!this.length) this.insertSentence();
       this.index--;
 
+      this.emit({
+        type: 'remove',
+        index: index,
+        nx: null
+      });
       gui.update();
 
       return removed;
@@ -34240,14 +34258,14 @@ var Manager = function () {
       var _this3 = this;
 
       transform = transform || funcs.noop;
-      var splitted = this.split(text);
+      var splitted = this.split(text).map(transform);
 
       // set the first one at the current index
-      this.setSentence(this.index, transform(splitted[0]));
+      this.setSentence(this.index, splitted[0]);
 
       // iterate over all elements except the first
       _.each(splitted, function (split, i) {
-        if (i) _this3.insertSentence(transform(split));
+        if (i) _this3.insertSentence(split);
       });
 
       gui.update();
@@ -34285,6 +34303,11 @@ var Manager = function () {
       this.state = state;
 
       return state;
+    }
+  }, {
+    key: 'emit',
+    value: function emit(data) {
+      if (this.socket) this.socket.emit('update', data);
     }
   }, {
     key: 'download',
@@ -35810,47 +35833,48 @@ module.exports = Server;
 'use strict';
 
 var Socket = require('socket.io-client');
-var socket = Socket();
+var status = require('./status');
+var nx = require('notatrix');
 
-// global w/in this module
-//   allows us to avoid relying on a true global variable
-var manager = null;
-
-function update(type, body) {
-
-  socket.emit('update', {
-    type: type,
-    body: body
-  });
+function name(data) {
+  return data.username || '<Anonymous>';
 }
 
-socket.on('update', function (data) {
-  if (!manager) return;
+module.exports = function (manager) {
 
-  console.log(data);
-});
+  var socket = Socket();
 
-socket.on('connect', function (data) {
-  if (!manager) return;
+  socket.on('connection', function (data) {
+    console.log('connection', data);
+    status.normal('Currently online: ' + data.present);
+  });
 
-  console.log(data);
-});
+  socket.on('new connection', function (data) {
+    console.log('new connection', data);
+    status.normal(name(data) + ' has joined (' + data.present + ' online)');
+  });
 
-socket.on('disconnect', function (data) {
-  if (!manager) return;
+  socket.on('disconnection', function (data) {
+    console.log('disconnection', data);
+    status.normal(name(data) + ' has left (' + data.present + ' online)');
+  });
 
-  console.log(data);
-});
+  socket.on('update', function (data) {
+    console.log('update', data);
+    var verb = {
+      modify: 'modified',
+      remove: 'removed',
+      insert: 'inserted'
+    }[data.type];
 
-module.exports = function (mgr) {
+    status.normal(name(data) + ' ' + verb + ' sentence #' + (data.index + 1));
+    console.log(nx.Sentence.fromNx(data.nx).text);
+  });
 
-  // set the semi-global guy here
-  manager = mgr;
   return socket;
 };
-module.exports.emit = update;
 
-},{"socket.io-client":406}],25:[function(require,module,exports){
+},{"./status":26,"notatrix":400,"socket.io-client":406}],25:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
