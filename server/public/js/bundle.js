@@ -35812,26 +35812,43 @@ module.exports = Server;
 var Socket = require('socket.io-client');
 var socket = Socket();
 
-function update(data) {
-  socket.emit('update', data);
+// global w/in this module
+//   allows us to avoid relying on a true global variable
+var manager = null;
+
+function update(type, body) {
+
+  socket.emit('update', {
+    type: type,
+    body: body
+  });
 }
 
 socket.on('update', function (data) {
+  if (!manager) return;
+
   console.log(data);
 });
 
 socket.on('connect', function (data) {
+  if (!manager) return;
+
   console.log(data);
 });
 
 socket.on('disconnect', function (data) {
+  if (!manager) return;
+
   console.log(data);
 });
 
-module.exports = socket;
-module.exports.emit(function (data) {
-  return socket.emit('update', data);
-});
+module.exports = function (mgr) {
+
+  // set the semi-global guy here
+  manager = mgr;
+  return socket;
+};
+module.exports.emit = update;
 
 },{"socket.io-client":406}],25:[function(require,module,exports){
 'use strict';
@@ -68983,7 +69000,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             limit = 0,
             isExecuting = false,
             callback,
-            
+
             // functions
             execute;
 
@@ -69013,12 +69030,12 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
                 commands.splice(index + 1, commands.length - index);
 
                 commands.push(command);
-                
+
                 // if limit is set, remove items from the start
                 if (limit && commands.length > limit) {
                     removeFromTo(commands, 0, -(limit+1));
                 }
-                
+
                 // set the current index to the end
                 index = commands.length - 1;
                 if (callback) {
@@ -69095,7 +69112,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             getIndex: function() {
                 return index;
             },
-            
+
             setLimit: function (l) {
                 limit = l;
             }
