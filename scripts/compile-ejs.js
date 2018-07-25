@@ -28,12 +28,12 @@ function render(filename, args) {
   });
 }
 
+render('annotatrix', {
+  username: null
+});
+render('help', {});
 render('index', {
   base: null,
   error: null,
   treebanks: []
 });
-render('annotatrix', {
-  username: null
-});
-render('help', {});
