@@ -28,6 +28,31 @@
 				Help
 			</a>
 		</div>
+
+		<div id="treebanks">
+			<span>
+				Available treebanks:
+			</span>
+			<ul>
+				<% if (error) { %>
+
+				<% } else { %>
+					<% treebanks.forEach(treebank => { %>
+						<li id="<%= treebank.url %>">
+							<a href="<%= `${base}/annotatrix?treebank_id=${treebank.url}` %>">
+								<span class="treebank-info treebank-id">
+									<%= treebank.url.split('-')[0] %>
+								</span>
+								<span class="treebank-info treebank-modified">
+									<%= treebank.modified %>
+								</span>
+							</a>
+						</li>
+					<% });  %>
+				<% } %>
+			</ul>
+		</div>
+
 	</div>
 </body>
 </html>

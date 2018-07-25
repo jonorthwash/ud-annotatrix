@@ -6,6 +6,7 @@ const CorpusDB = require('./models/corpus');
 const request = require('request');
 const querystring = require('querystring');
 const upload = require('./upload');
+const getTreebanksList = require('./list-treebanks');
 
 // --------------------------------------------------------------------------
 // middleware
@@ -77,7 +78,15 @@ module.exports = app => {
 
   // ---------------------------
   // core
-  app.get('/', (req, res) => res.render('index.ejs'));
+  app.get('/', (req, res) => {
+    getTreebanksList((err, treebanks) => {
+      res.render('index.ejs', {
+        base: `${cfg.protocol}://${cfg.host}:${cfg.port}`,
+        error: err,
+        treebanks: treebanks
+      });
+    });
+  });
   app.get('/help', (req, res) => res.render('help.ejs'));
   app.get('/annotatrix', (req, res) => {
     let treebank = req.query.treebank_id;

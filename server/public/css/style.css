@@ -1043,3 +1043,30 @@ span.dropdown-group-item-name i {
   width: 20ch;
   text-align: center;
 }
+
+#treebanks ul {
+  list-style: none;
+}
+
+#treebanks a {
+  text-decoration: none;
+  color: #868e96;
+}
+
+#treebanks .treebank-info {
+  font-weight: bold;
+  font-family: monospace;
+  margin: 0 0.5em;
+}
+
+#treebanks .treebank-info::before {
+  font-weight: normal;
+}
+
+#treebanks .treebank-id::before {
+  content: 'id: ';
+}
+
+#treebanks .treebank-modified::before {
+  content: 'modified: ';
+}
