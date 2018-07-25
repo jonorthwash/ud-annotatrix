@@ -1,47 +1,43 @@
 'use strict';
 
 const Socket = require('socket.io-client');
-const socket = Socket();
+const status = require('./status');
+const nx = require('notatrix');
 
-// global w/in this module
-//   allows us to avoid relying on a true global variable
-var manager = null;
-
-function update(type, body) {
-
-  socket.emit('update', {
-    type: type,
-    body: body
-  });
-
+function name(data) {
+  return data.username || '<Anonymous>';
 }
 
-socket.on('update', data => {
-  if (!manager)
-    return;
+module.exports = manager => {
 
-  console.log(data);
-});
+  const socket = Socket();
 
-socket.on('connect', data => {
-  if (!manager)
-    return;
+  socket.on('connection', data => {
+    console.log('connection', data);
+    status.normal(`Currently online: ${data.present}`);
+  });
 
-  console.log(data);
-});
+  socket.on('new connection', data => {
+    console.log('new connection', data)
+    status.normal(`${name(data)} has joined (${data.present} online)`);
+  });
 
-socket.on('disconnect', data => {
-  if (!manager)
-    return;
+  socket.on('disconnection', data => {
+    console.log('disconnection', data)
+    status.normal(`${name(data)} has left (${data.present} online)`);
+  });
 
-  console.log(data);
-});
+  socket.on('update', data => {
+    console.log('update', data);
+    const verb = {
+      modify: 'modified',
+      remove: 'removed',
+      insert: 'inserted'
+    }[data.type];
 
+    status.normal(`${name(data)} ${verb} sentence #${data.index + 1}`);
+    console.log(nx.Sentence.fromNx(data.nx).text)
+  });
 
-module.exports = mgr => {
-
-  // set the semi-global guy here
-  manager = mgr;
   return socket;
 };
-module.exports.emit = update;
