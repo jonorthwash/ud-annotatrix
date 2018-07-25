@@ -26,9 +26,17 @@ class UploadError extends UDAnnotatrixError {
   }
 }
 
+class SocketError extends UDAnnotatrixError {
+  constructor(...args) {
+    console.log('SocketError', ...args);
+    super(...args);
+  }
+}
+
 module.exports = {
   UDAnnotatrixError,
   ConfigError,
   DBError,
-  UploadError
+  UploadError,
+  SocketError,
 };
