@@ -301,6 +301,8 @@ function convert2PlainText(text) {
     case 'Unknown':
       log.warn('convert2PlainText(): failed to convert: Unknown input type');
       return null;
+    case 'nx':
+      return nx.Sentence.fromNx(text).text;
     case 'plain text':
       log.info('convert2PlainText(): received plain text');
       return text;
@@ -332,6 +334,8 @@ function convert2Conllu(text) {
     case 'Unknown':
       log.warn('convert2conllu(): failed to convert Unknown to plain text');
       return null;
+    case 'nx':
+      return nx.Sentence.fromNx(text).conllu;
     case 'plain text':
       return cleanConllu(plainText2Conllu(text));
     case 'Brackets':
@@ -363,6 +367,8 @@ function convert2CG3(text) {
     case 'Unknown':
       log.warn('convert2CG3(): failed to convert Unknown to plain text');
       return null;
+    case 'nx':
+      return nx.Sentence.fromNx(text).cg3;
     case 'plain text':
       return conllu2CG3(plainText2Conllu(text));
     case 'Brackets':
@@ -31291,6 +31297,8 @@ var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbo
 },{"timers":419}],7:[function(require,module,exports){
 'use strict';
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _ = require('underscore');
 
 /**
@@ -31303,6 +31311,14 @@ function detectFormat(text) {
   log.debug('called detectFormat(' + text + ')');
 
   var format = 'Unknown';
+
+  // catch Notatrix format here
+  if ((typeof text === 'undefined' ? 'undefined' : _typeof(text)) === 'object') {
+    var objKeys = new Set(Object.keys(text));
+    var nxKeys = new Set(['options', 'comments', 'tokens']);
+    return _.isEqual(objKeys, nxKeys) ? 'nx' : format;
+  }
+
   text = (text || '').trim();
 
   if (text === '') {
@@ -32420,28 +32436,28 @@ function modify(id, attr, value) {
     return;
   }
 
-  var ana = manager.current.getById(id);
+  var ana = manager.current.get(id);
 
   ana[attr] = value;
-  gui.update();
+  manager.parse(manager.toString());
 }
 
 function addHead(srcId, tarId) {
   var dep = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
 
-  var src = manager.current.getById(srcId),
-      tar = manager.current.getById(tarId);
+  var src = manager.current.get(srcId),
+      tar = manager.current.get(tarId);
 
   src.addHead(tar, dep);
-  gui.update();
+  manager.parse(manager.toString());
 }
 
 function removeHead(srcId, tarId) {
-  var src = manager.current.getById(srcId),
-      tar = manager.current.getById(tarId);
+  var src = manager.current.get(srcId),
+      tar = manager.current.get(tarId);
 
   src.removeHead(tar);
-  gui.update();
+  manager.parse(manager.toString());
 }
 
 module.exports = Graph;
@@ -32768,11 +32784,15 @@ var GUI = function () {
       });
       $('#tabConllu').click(function (e) {
         _this2.readonly = false;
-        manager.parse($('#text-data').val(), convert.to.conllu);
+        manager.parse($('#text-data').val(), {
+          transform: convert.to.conllu
+        });
       });
       $('#tabCG3').click(function (e) {
         _this2.readonly = false;
-        manager.parse($('#text-data').val(), convert.to.cg3);
+        manager.parse($('#text-data').val(), {
+          transform: convert.to.cg3
+        });
       });
       $('#tabOther').click(function (e) {
         _this2.readonly = false;
@@ -34145,6 +34165,7 @@ var Manager = function () {
       this.emit({
         type: 'modify',
         index: index,
+        format: sent.format,
         nx: sent.nx
       });
       gui.update();
@@ -34182,8 +34203,10 @@ var Manager = function () {
       this.emit({
         type: 'insert',
         index: index,
+        format: sent.format,
         nx: sent.nx
       });
+
       this.index = index;
       gui.update();
 
@@ -34210,6 +34233,7 @@ var Manager = function () {
       this.emit({
         type: 'remove',
         index: index,
+        format: sent.format,
         nx: null
       });
       gui.update();
@@ -34254,18 +34278,23 @@ var Manager = function () {
     }
   }, {
     key: 'parse',
-    value: function parse(text, transform) {
+    value: function parse(text) {
       var _this3 = this;
 
-      transform = transform || funcs.noop;
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+
+      var transform = options.transform || funcs.noop;
+      var index = options.index || this.index;
+
       var splitted = this.split(text).map(transform);
 
       // set the first one at the current index
-      this.setSentence(this.index, splitted[0]);
+      this.setSentence(index, splitted[0]);
 
       // iterate over all elements except the first
       _.each(splitted, function (split, i) {
-        if (i) _this3.insertSentence(split);
+        if (i) _this3.insertSentence(index + i, split);
       });
 
       gui.update();
@@ -34307,7 +34336,7 @@ var Manager = function () {
   }, {
     key: 'emit',
     value: function emit(data) {
-      if (this.socket) this.socket.emit('update', data);
+      if (this.socket && this.socket.initialized && this.socket.open) this.socket.emit('update', data);
     }
   }, {
     key: 'download',
@@ -35659,6 +35688,11 @@ var Sentence = function () {
       return this;
     }
   }, {
+    key: 'get',
+    value: function get(id) {
+      return this._nx.getById(id);
+    }
+  }, {
     key: 'conllu',
     get: function get() {
       return this._nx.conllu;
@@ -35834,7 +35868,7 @@ module.exports = Server;
 
 var Socket = require('socket.io-client');
 var status = require('./status');
-var nx = require('notatrix');
+var convert = require('./convert');
 
 function name(data) {
   return data.username || '<Anonymous>';
@@ -35842,11 +35876,15 @@ function name(data) {
 
 module.exports = function (manager) {
 
+  // get a new socket.io client, but make sure we don't emit anything until
+  //   we've received confirmation from the server
   var socket = Socket();
+  socket.initialized = false;
 
   socket.on('connection', function (data) {
     console.log('connection', data);
-    status.normal('Currently online: ' + data.present);
+    socket.initialized = true;
+    status.normal('(' + data.present + ' online)');
   });
 
   socket.on('new connection', function (data) {
@@ -35867,14 +35905,37 @@ module.exports = function (manager) {
       insert: 'inserted'
     }[data.type];
 
+    socket.open = false;
     status.normal(name(data) + ' ' + verb + ' sentence #' + (data.index + 1));
-    console.log(nx.Sentence.fromNx(data.nx).text);
+
+    var text = void 0;
+    if (data.format === 'CoNLL-U') {
+      text = convert.to.conllu(data.nx);
+    } else if (data.format === 'CG3') {
+      text = convert.to.cg3(data.nx);
+    } else if (data.format === 'plain text') {
+      text = convert.to.plainText(data.nx);
+    } else {
+      status.normal('Cannot output to ' + data.format + ', converting to CoNLL-U');
+      text = convert.to.conllu(data.nx);
+    }
+
+    if (data.type === 'modify') {
+
+      manager.parse(text, { index: data.index });
+    } else if (data.type === 'insert') {
+      console.log('insert', text, 'at', data.index);
+    } else if (data.type === 'remove') {
+      console.log('remove', text, 'at', data.index);
+    }
+
+    socket.open = true;
   });
 
   return socket;
 };
 
-},{"./status":26,"notatrix":400,"socket.io-client":406}],25:[function(require,module,exports){
+},{"./convert":4,"./status":26,"socket.io-client":406}],25:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
