@@ -17,6 +17,7 @@ const export_ = require('./export');
 const status = require('./status');
 const Sentence = require('./sentence');
 const Users = require('./users');
+const Socket = require('./socket');
 
 class Manager {
 
@@ -27,7 +28,7 @@ class Manager {
     funcs.global().graph = new Graph();
     funcs.global().labeler = new Labeler();
     if (gui.inBrowser)
-      this.socket = require('./socket');
+      this.socket = Socket(this);
     this.users = new Users();
     gui.bind();
 
@@ -216,6 +217,13 @@ class Manager {
       return null;
 
     this._sentences[index].update(text);
+
+    const sent = this._sentences[index];
+    this.emit({
+      type: 'modify',
+      index: index,
+      nx: sent.nx
+    });
     gui.update();
 
     return this.getSentence(index);
@@ -250,6 +258,11 @@ class Manager {
       .concat(sent)
       .concat(this._sentences.slice(index));
 
+    this.emit({
+      type: 'insert',
+      index: index,
+      nx: sent.nx
+    });
     this.index = index;
     gui.update();
 
@@ -276,6 +289,11 @@ class Manager {
       this.insertSentence();
     this.index--;
 
+    this.emit({
+      type: 'remove',
+      index: index,
+      nx: null
+    });
     gui.update();
 
     return removed;
@@ -323,15 +341,15 @@ class Manager {
   parse(text, transform) {
 
     transform = transform || funcs.noop;
-    let splitted = this.split(text);
+    let splitted = this.split(text).map(transform);
 
     // set the first one at the current index
-    this.setSentence(this.index, transform(splitted[0]));
+    this.setSentence(this.index, splitted[0]);
 
     // iterate over all elements except the first
     _.each(splitted, (split, i) => {
       if (i)
-        this.insertSentence(transform(split));
+        this.insertSentence(split);
     });
 
     gui.update();
@@ -453,7 +471,10 @@ class Manager {
 
     return state;
   }
-
+  emit(data) {
+    if (this.socket)
+      this.socket.emit('update', data);
+  }
 
 
 
