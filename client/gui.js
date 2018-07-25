@@ -366,11 +366,15 @@ class GUI {
     });
     $('#tabConllu').click(e => {
       this.readonly = false;
-      manager.parse($('#text-data').val(), convert.to.conllu);
+      manager.parse($('#text-data').val(), {
+        transform: convert.to.conllu
+      });
     });
     $('#tabCG3').click(e => {
       this.readonly = false;
-      manager.parse($('#text-data').val(), convert.to.cg3);
+      manager.parse($('#text-data').val(), {
+        transform: convert.to.cg3
+      });
     });
     $('#tabOther').click(e => {
       this.readonly = false;
