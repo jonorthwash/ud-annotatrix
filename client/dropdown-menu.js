@@ -18,6 +18,7 @@ class Menu {
     this.pinned = {
       login: false,
       'manage-permissions': false,
+      collab: true,
 
       'save-corpus': false,
       'upload-corpus': false,
