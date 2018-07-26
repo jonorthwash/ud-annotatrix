@@ -29,8 +29,18 @@ module.exports = next => {
           modified: stat.mtime
         });
 
-        if (touched === dirs.length)
+        if (touched === dirs.length) {
+
+          corpora.sort((x, y) => {
+            if (x.modified < y.modified)
+              return 1;
+            if (x.modified > y.modified)
+              return -1;
+            return 0;
+          });
+
           next(null, corpora);
+        }
       });
     });
   });
