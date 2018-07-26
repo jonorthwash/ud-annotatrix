@@ -27,7 +27,7 @@ module.exports = manager => {
   socket.on('new connection', data => {
     console.log('new connection', data);
 
-    const name = funcs\.getUsername(data);
+    const name = funcs.getUsername(data);
     collab.update(selfid, data.room);
     status.normal(`${name} joined`);
   });
@@ -35,7 +35,7 @@ module.exports = manager => {
   socket.on('disconnection', data => {
     console.log('disconnection', data)
 
-    const name = funcs\.getUsername(data);
+    const name = funcs.getUsername(data);
     collab.update(selfid, data.room);
     status.normal(`${name} left`);
   });

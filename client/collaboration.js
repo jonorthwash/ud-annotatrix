@@ -24,7 +24,7 @@ function getTableRow(selfid, userid, username, address, index) {
     )
     .append($('<td>')
       .addClass('online-user-data view-index')
-      .text(index)
+      .text(isNaN(index) ? '?' : index)
     );
 }
 
@@ -40,7 +40,7 @@ function update(selfid, room) {
   const tbody = $('#currently-online-list tbody');
   tbody.children().detach();
   _.each(room.users, (user, userid) => {
-    const tr = getTableRow(selfid, userid, funcs\.getUsername(user), user.address, user.index);
+    const tr = getTableRow(selfid, userid, funcs.getUsername(user), user.address, user.index);
     tbody.append(tr);
   });
 }
