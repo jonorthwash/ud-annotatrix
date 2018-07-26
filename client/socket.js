@@ -3,10 +3,10 @@
 const Socket = require('socket.io-client');
 const status = require('./status');
 const convert = require('./convert');
+const collab = require('./collaboration');
+const funcs = require('./funcs');
 
-function name(data) {
-  return data.username || '<Anonymous>';
-}
+var selfid = null;
 
 module.exports = manager => {
 
@@ -18,29 +18,39 @@ module.exports = manager => {
   socket.on('connection', data => {
     console.log('connection', data);
     socket.initialized = true;
-    status.normal(`(${data.present} online)`);
+    selfid = data.id;
+
+    const num = funcs.getPresentUsers(data.room);
+    collab.update(selfid, data.room);
   });
 
   socket.on('new connection', data => {
-    console.log('new connection', data)
-    status.normal(`${name(data)} has joined (${data.present} online)`);
+    console.log('new connection', data);
+
+    const name = funcs\.getUsername(data);
+    collab.update(selfid, data.room);
+    status.normal(`${name} joined`);
   });
 
   socket.on('disconnection', data => {
     console.log('disconnection', data)
-    status.normal(`${name(data)} has left (${data.present} online)`);
+
+    const name = funcs\.getUsername(data);
+    collab.update(selfid, data.room);
+    status.normal(`${name} left`);
   });
 
   socket.on('update', data => {
     console.log('update', data);
+    const name = funcs.getUsername(data);
     const verb = {
       modify: 'modified',
       remove: 'removed',
       insert: 'inserted'
     }[data.type];
 
-    socket.open = false;
-    status.normal(`${name(data)} ${verb} sentence #${data.index + 1}`);
+    socket.isOpen = false;
+    status.normal(`${name} ${verb} sentence #${data.index + 1}`);
 
     let text;
     if (data.format === 'CoNLL-U') {
@@ -64,7 +74,7 @@ module.exports = manager => {
       console.log('remove', text, 'at', data.index );
     }
 
-    socket.open = true;
+    socket.isOpen = true;
   });
 
   return socket;
