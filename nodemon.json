@@ -1,0 +1,12 @@
+{
+  "verbose": true,
+  "ignore": [
+    "client",
+    "corpora",
+    "logs",
+    "node_modules",
+    "poster",
+    "scripts",
+    ".git"
+  ]
+}
