@@ -6,6 +6,7 @@ const babelify = require('babelify');
 const rename = require('gulp-rename');
 const uglify = require('gulp-uglify');
 const sourcemaps = require('gulp-sourcemaps');
+const compileEJS = require('./scripts/compile-ejs');
 
 gulp.task('js', () => {
   return browserify('client/index.js', {
@@ -19,6 +20,10 @@ gulp.task('js', () => {
     .pipe(source('bundle.js'))
     .pipe(buffer())
     .pipe(gulp.dest('server/public/js'));
+});
+
+gulp.task('html', () => {
+  return compileEJS();
 });
 
 /*
@@ -60,7 +65,7 @@ gulp.task('uglifyify', () => {
 */
 
 gulp.task('watch', () => {
-  gulp.watch(['client/*.js', 'client/modals/*.js'], [/*'uglify', */'js']);
+  gulp.watch(['client/*.js', 'client/modals/*.js'], [/*'uglify', */'js', 'html']);
 });
 
-gulp.task('default', [/*'uglify', */'js']);
+gulp.task('default', [/*'uglify', */'js', 'html']);
