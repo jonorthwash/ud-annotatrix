@@ -24,6 +24,7 @@ INSERT INTO meta (current_index, gui, labeler, permissions, editors) VALUES (
       "pinned": {
         "login": false,
         "manage-permissions": false,
+        "collab": true,
 				"save-corpus": false,
 				"upload-corpus": false,
 				"download-corpus": false,
