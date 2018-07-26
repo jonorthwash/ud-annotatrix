@@ -478,7 +478,7 @@ class Manager {
     return state;
   }
   emit(data) {
-    if (this.socket && this.socket.initialized && this.socket.open)
+    if (this.socket && this.socket.initialized && this.socket.isOpen)
       this.socket.emit('update', data);
   }
 
