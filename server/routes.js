@@ -91,14 +91,19 @@ module.exports = app => {
   app.get('/annotatrix', (req, res) => {
     let treebank = req.query.treebank_id;
     if (!treebank) {
+
       treebank = uuidv4();
       res.redirect('/annotatrix?' + querystring.stringify({
         treebank_id: treebank,
       }));
+
     } else {
+
+      req.session.treebank_id = treebank;
       res.render('annotatrix', {
         username: req.session.username
       });
+
     }
   });
 
@@ -146,7 +151,7 @@ module.exports = app => {
 
   // ---------------------------
   // user/account management
-  app.get('/login', get_token, (req, res) => {
+  app.get('/login', get_token, get_treebank, (req, res) => {
     github_get(req, '/user', body => {
 
       const username = body.login;
@@ -161,13 +166,15 @@ module.exports = app => {
 
         console.log('/login changes to Users:', data.changes);
         req.session.username = username;
-        res.redirect('/annotatrix');
+        res.redirect('/annotatrix?' + querystring.stringify({
+          treebank_id: req.treebank
+        }));
 
       });
     });
   });
 
-  app.get('/logout', (req, res) => {
+  app.get('/logout', get_treebank, (req, res) => {
 
     cfg.users.remove({
 
@@ -181,7 +188,9 @@ module.exports = app => {
       console.log('/logout changes to Users:', data.changes);
       req.session.username = null;
       req.session.token = null;
-      res.redirect('/annotatrix');
+      res.redirect('/annotatrix?' + querystring.stringify({
+        treebank_id: req.treebank
+      }));
 
     });
   });
@@ -219,6 +228,7 @@ module.exports = app => {
   // GitHub OAuth
   app.get("/oauth/login", get_treebank, (req, res) => {
 
+    req.session.treebank = req.treebank;
     const url = 'https://github.com/login/oauth/authorize?'
       + querystring.stringify({
         client_id:  cfg.github.client_id,
@@ -253,7 +263,8 @@ module.exports = app => {
         return res.json({ error: `Unable to authenticate: invalid GitHub server response` });
 
       res.redirect('/login?' + querystring.stringify({
-        token: token[1]
+        token: token[1],
+        treebank_id: req.session.treebank
       }));
     });
   });
