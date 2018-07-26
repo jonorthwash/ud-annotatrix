@@ -16,7 +16,7 @@ function logout() {
   if (!server.is_running)
     return null;
 
-  funcs.link(`/logout`, '_self');
+  funcs.link(`/logout?treebank_id=${funcs.getTreebankId()}`, '_self');
 }
 
 function repos() {
