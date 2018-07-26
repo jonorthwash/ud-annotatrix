@@ -59,6 +59,15 @@ module.exports = {
     link[0].click();
   },
 
-  noop: arg => arg
+  noop: arg => arg,
+
+  getUsername: data => {
+    return data.username || '<Anonymous>';
+  },
+
+  getPresentUsers: room => {
+    return Object.keys(room.users).length;
+  }
+
 
 };
