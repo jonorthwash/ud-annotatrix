@@ -5,9 +5,12 @@ const _ = require('underscore');
 const funcs = require('./funcs');
 
 
-function getTableRow(selfid, userid, username, address, index) {
+function getTableRow(selfid, userid, user) {
 
-  console.log(selfid, userid)
+  const name = funcs.getUsername(user);
+  const address = user.address;
+  const index = isNaN(parseInt(user.index)) ? '?' : user.index + 1;
+
   if (selfid === userid)
     username = '<me>';
 
@@ -24,7 +27,7 @@ function getTableRow(selfid, userid, username, address, index) {
     )
     .append($('<td>')
       .addClass('online-user-data view-index')
-      .text(isNaN(index) ? '?' : index)
+      .text(index)
     );
 }
 
@@ -40,7 +43,7 @@ function update(selfid, room) {
   const tbody = $('#currently-online-list tbody');
   tbody.children().detach();
   _.each(room.users, (user, userid) => {
-    const tr = getTableRow(selfid, userid, funcs.getUsername(user), user.address, user.index);
+    const tr = getTableRow(selfid, userid, user);
     tbody.append(tr);
   });
 }
