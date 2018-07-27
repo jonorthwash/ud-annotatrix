@@ -238,13 +238,15 @@ var $ = require('jquery');
 var _ = require('underscore');
 var funcs = require('./funcs');
 
-function getTableRow(selfid, userid, username, address, index) {
+function getTableRow(selfid, userid, user) {
 
-  console.log(selfid, userid);
+  var name = funcs.getUsername(user);
+  var address = user.address;
+  var index = isNaN(parseInt(user.index)) ? '?' : user.index + 1;
+
   if (selfid === userid) username = '<me>';
 
-  console.log(index, isNaN(index));
-  return $('<tr>').addClass('online-user').addClass(selfid === userid ? 'self' : 'other').append($('<td>').addClass('online-user-data username').text(username)).append($('<td>').addClass('online-user-data ip-address').text(address)).append($('<td>').addClass('online-user-data view-index').text(isNaN(parseInt(index)) ? '?' : index));
+  return $('<tr>').addClass('online-user').addClass(selfid === userid ? 'self' : 'other').append($('<td>').addClass('online-user-data username').text(username)).append($('<td>').addClass('online-user-data ip-address').text(address)).append($('<td>').addClass('online-user-data view-index').text(index));
 }
 
 function update(selfid, room) {
@@ -258,7 +260,7 @@ function update(selfid, room) {
   var tbody = $('#currently-online-list tbody');
   tbody.children().detach();
   _.each(room.users, function (user, userid) {
-    var tr = getTableRow(selfid, userid, funcs.getUsername(user), user.address, user.index);
+    var tr = getTableRow(selfid, userid, user);
     tbody.append(tr);
   });
 }
@@ -34207,7 +34209,7 @@ var Manager = function () {
       this._sentences[index].update(text);
 
       var sent = this._sentences[index];
-      this.emit({
+      this.emit('update', {
         type: 'modify',
         index: index,
         format: sent.format,
@@ -34245,7 +34247,7 @@ var Manager = function () {
       var sent = new Sentence(text);
       this._sentences = this._sentences.slice(0, index).concat(sent).concat(this._sentences.slice(index));
 
-      this.emit({
+      this.emit('update', {
         type: 'insert',
         index: index,
         format: sent.format,
@@ -34275,7 +34277,7 @@ var Manager = function () {
       if (!this.length) this.insertSentence();
       this.index--;
 
-      this.emit({
+      this.emit('update', {
         type: 'remove',
         index: index,
         format: sent.format,
@@ -34380,8 +34382,9 @@ var Manager = function () {
     }
   }, {
     key: 'emit',
-    value: function emit(data) {
-      if (this.socket && this.socket.initialized && this.socket.isOpen) this.socket.emit('update', data);
+    value: function emit(eventName, data) {
+      console.log('try emitting', eventName, data);
+      if (this.socket && this.socket.initialized && this.socket.isOpen) this.socket.emit(eventName, data);
     }
   }, {
     key: 'download',
@@ -34433,6 +34436,7 @@ var Manager = function () {
       }
 
       gui.update();
+      this.emit('pan', { index: this.index });
       return this.index;
     }
   }, {
@@ -35933,6 +35937,7 @@ module.exports = function (manager) {
 
     var num = funcs.getPresentUsers(data.room);
     collab.update(selfid, data.room);
+    socket.emit('pan', { index: manager.index });
   });
 
   socket.on('new connection', function (data) {
@@ -35985,6 +35990,11 @@ module.exports = function (manager) {
     }
 
     socket.isOpen = true;
+  });
+
+  socket.on('pan', function (data) {
+    console.log('pan', data);
+    collab.update(selfid, data.room);
   });
 
   return socket;
