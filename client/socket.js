@@ -22,6 +22,7 @@ module.exports = manager => {
 
     const num = funcs.getPresentUsers(data.room);
     collab.update(selfid, data.room);
+    socket.emit('pan', { index: manager.index });
   });
 
   socket.on('new connection', data => {
@@ -75,6 +76,11 @@ module.exports = manager => {
     }
 
     socket.isOpen = true;
+  });
+
+  socket.on('pan', data => {
+    console.log('pan', data);
+    collab.update(selfid, data.room);
   });
 
   return socket;
