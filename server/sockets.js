@@ -11,8 +11,6 @@ function extractTreebank(url) {
   return match[1];
 }
 
-const ipv4reg = /\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b/;
-
 // room metadata
 var rooms = {};
 
@@ -63,7 +61,7 @@ module.exports = (sio, MemoryStore) => {
       };
 
       // debugging stuff
-      console.log(`New connection (username: ${socket.request.username})`);
+      console.log(`New connection (id: ${id})`);
       console.log('rooms:', rooms);
 
       // broadcast the new connection to the rest of the room
@@ -88,7 +86,7 @@ module.exports = (sio, MemoryStore) => {
         delete rooms[treebank].users[id];
 
       // debugging stuff
-      console.log(`End connection (username: ${socket.request.username})`);
+      console.log(`End connection (id: ${id})`);
       console.log('rooms:', rooms);
 
       socket.broadcast.to(treebank).emit('disconnection', {
@@ -106,6 +104,31 @@ module.exports = (sio, MemoryStore) => {
       // debugging stuff
       console.log(`Update treebank ${treebank}:`, data);
       console.log('rooms:', rooms);
+    });
+
+    socket.on('pan', data => {
+      console.log(data)
+
+      const treebank = socket.request.treebank;
+      const id = socket.request.id;
+
+      rooms[treebank].users[id] = {
+        index: data.index,
+        address: socket.request.address,
+        username: socket.request.username
+      };
+
+      // debugging stuff
+      console.log(`pan to ${data.index + 1} (id: ${id})`);
+      console.log('rooms:', rooms);
+
+      // broadcast the new connection to the rest of the room
+      //   and back to the original client
+      const response = {
+        room: rooms[treebank]
+      };
+      socket.broadcast.to(treebank).emit('pan', response);
+      socket.emit('pan', response);
     });
 
   });
