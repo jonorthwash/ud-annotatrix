@@ -129,6 +129,7 @@ class Manager {
     }
 
     gui.update();
+    this.emit('pan', { index: this.index });
     return this.index;
   }
   first() {
@@ -219,7 +220,7 @@ class Manager {
     this._sentences[index].update(text);
 
     const sent = this._sentences[index];
-    this.emit({
+    this.emit('update', {
       type: 'modify',
       index: index,
       format: sent.format,
@@ -259,7 +260,7 @@ class Manager {
       .concat(sent)
       .concat(this._sentences.slice(index));
 
-    this.emit({
+    this.emit('update', {
       type: 'insert',
       index: index,
       format: sent.format,
@@ -292,7 +293,7 @@ class Manager {
       this.insertSentence();
     this.index--;
 
-    this.emit({
+    this.emit('update', {
       type: 'remove',
       index: index,
       format: sent.format,
@@ -477,9 +478,10 @@ class Manager {
 
     return state;
   }
-  emit(data) {
+  emit(eventName, data) {
+    console.log('try emitting', eventName, data)
     if (this.socket && this.socket.initialized && this.socket.isOpen)
-      this.socket.emit('update', data);
+      this.socket.emit(eventName, data);
   }
 
 
