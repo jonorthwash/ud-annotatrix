@@ -14,7 +14,7 @@ const cfg = require('../config');
 const errors = require('../errors');
 
 // export the test suite
-module.exports = () => {
+//module.exports = () => {
   describe('manager.js', () => {
 
   	sinon.stub(log, 'error');
@@ -252,4 +252,4 @@ module.exports = () => {
 			});
 		});
   });
-};
+//};

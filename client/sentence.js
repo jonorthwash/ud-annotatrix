@@ -2,41 +2,78 @@
 
 const _ = require('underscore');
 const nx = require('notatrix');
-
 const errors = require('./errors');
-const detectFormat = require('./detect');
-const convert = require('./convert');
+const status = require('./status');
 
-function encode(serial) {
-  const format = detectFormat(serial);
-  switch (format) {
+function encode(serial, options) {
 
-    case ('Unknown'):
-      return nx.Sentence.fromParams([]);
+  let format = null;
 
-    case ('plain text'):
-      return nx.Sentence.fromText(serial);
+  const formats = nx.detect(serial, {
+    suppressDetectorErrors: true,
+    returnAllMatches: true,
+    allowEmptyString: true,
+  });
 
-    case ('CoNLL-U'):
-      return nx.Sentence.fromConllu(serial);
+  if (formats.length === 0) {
 
-    case ('CG3'):
-      return nx.Sentence.fromCG3(serial);
+    status.error('Unable to interpret input');
+    serial = '';
+    format = 'plain text'
 
-    default:
-      serial = convert.to.conllu(serial);
-      return nx.Sentence.fromConllu(serial);
+  } else if (formats.indexOf('notatrix serial') > -1) {
+
+    is_notatrix_serial = true;
+    format = 'notatrix serial';
+
+  } else if (formats.length === 1) {
+
+    format = formats[0];
+    status.normal(`Interpreting as ${format}`);
+
+  } else {
+
+    const preferences = [
+      'CoNLL-U',
+      'CG3',
+      'plain text',
+    ];
+
+    for (let i=0; i<preferences.length; i++) {
+      const pref = preferences[i];
+      if (formats.indexOf(pref) > -1) {
+        format = pref;
+        status.normal(`Interpreting as ${format}`);
+        break;
+      }
+    }
+
+    // just choose one
+    format = formats[0];
+    status.normal(`Interpreting as ${format}`);
+
   }
 
+  if (format === 'notatrix serial')
+    format = 'CoNLL-U';
+
+  options = _.extend({
+    interpretAs: format,
+    allowEmptyString: true,
+  }, options);
+  return {
+    format: format,
+    sent: new nx.Sentence(serial, options),
+  }
 }
 
 class Sentence {
-  constructor(serial) {
+  constructor(serial, options) {
 
-    this._input = serial;
+    const encoded = encode(serial, options);
 
-    this.format = detectFormat(serial);
-    this._nx = encode(serial);
+    this.format = encoded.format;
+    this._nx = encoded.sent;
 
     this.is_table_view = false;
     this.column_visibilities = new Array(10).fill(true);
@@ -45,70 +82,46 @@ class Sentence {
 
   }
 
-  toString() {
-    switch (this.format) {
-      case ('Unknown'):
-        return '';
+  toString(format) {
 
-      case ('plain text'):
-        return this._nx.text;
+    format = format || this.format;
 
-      case ('CoNLL-U'):
-        return this._nx.conllu;
+    try {
 
-      case ('CG3'):
-        return this._nx.cg3;
+      return this._nx.to(format);
 
-      default:
-        return this._input || '';
-    }
-  }
+    } catch (e) {
 
-  update(serial) {
+      if (e instanceof nx.Loss) {
 
-    const updated = {
-      format: detectFormat(serial),
-      nx: encode(serial)
-    };
+        status.error(e.message);
+        return e.output;
 
-    // if they're not the same format, check if they're the same text (i.e.,
-    //   different encodings of the same sentence)
-    if (updated.format !== this.format && updated.nx.text === this.text) {
+      } else if (e instanceof nx.GeneratorError) {
 
-      const oldNx = this.nx,
-        newNx = updated.nx.nx;
+        status.error(e.message);
+        return null;
 
-      for (let i=0; i<newNx.tokens.length; i++) {
-        let oldToken = oldNx.tokens[i],
-          newToken = newNx.tokens[i];
-
-        if (!oldToken)
-          continue;
-
-        for (let j=0; j<newToken.analyses.length; j++) {
-          let oldAnalysis = oldToken.analyses[j],
-            newAnalysis = newToken.analyses[j];
-
-          if (!oldAnalysis)
-            continue;
-
-          _.each(newAnalysis.values, (value, key) => {
-            newAnalysis.values[key] = (!!value && value !== '_')
-              ? value
-              : oldAnalysis.values[key];
-          });
-        }
       }
 
-      updated.nx.tokens = nx.Sentence.fromNx(newNx).tokens;
-      updated.nx.comments = updated.nx.comments.length
-        ? updated.nx.comments
-        : this._nx.comments;
+      throw e;
     }
 
-    this._input = serial;
-    this._nx = updated.nx;
-    this.format = updated.format;
+  }
+
+  update(serial, options) {
+
+    try {
+
+      this._nx.update(serial, options);
+
+    } catch (e) {
+
+      const encoded = encode(serial, options);
+      this._nx = encoded.sent;
+
+    }
+
     labeler.parse(this._nx.comments);
     return this;
 
@@ -116,31 +129,30 @@ class Sentence {
 
   clear() {
 
-    this._input = null;
-    this.format = detectFormat(null);
-    this._nx = encode(null);
+    this.format = null;
+    this._nx = null;
     return this;
 
   }
 
   get(id) {
-    return this._nx.getById(id);
+    return this._nx.query(e => e.indices.absolute === id)[0];
   }
 
   get conllu() {
-    return this._nx.conllu;
+    return this.toString('CoNLL-U');
   }
 
   get cg3() {
-    return this._nx.cg3;
+    return this.toString('CG3');
   }
 
   get text() {
-    return this._nx.text;
+    return this.toString('plain text');
   }
 
   get nx() {
-    return this._nx.nx;
+    return this.toString('notatrix serial');
   }
 
   get comments() {
@@ -157,7 +169,7 @@ class Sentence {
       column_visibilities: this.column_visibilities,
       format: this.format,
       is_table_view: this.is_table_view,
-      nx: this._nx.nx,
+      nx: this._nx.to.notatrixSerial,
       input: this._input
     };
   }
@@ -168,7 +180,7 @@ class Sentence {
     this.column_visibilities = state.column_visibilities;
     this.format = state.format;
     this.is_table_view = state.is_table_view;
-    this._nx = nx.Sentence.fromNx(state.nx);
+    this._nx = new nx.Sentence(state.nx);
 
     return this;
   }

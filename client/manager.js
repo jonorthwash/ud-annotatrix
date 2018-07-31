@@ -10,9 +10,7 @@ const GUI = require('./gui');
 const Graph = require('./graph');
 const Labeler = require('./labels');
 const errors = require('./errors');
-const detectFormat = require('./detect');
 const storage = require('./local-storage');
-const convert = require('./convert');
 const export_ = require('./export');
 const status = require('./status');
 const Sentence = require('./sentence');
@@ -296,7 +294,7 @@ class Manager {
     this.emit('update', {
       type: 'remove',
       index: index,
-      format: sent.format,
+      format: removed.format,
       nx: null
     });
     gui.update();
@@ -313,42 +311,10 @@ class Manager {
 
 
 
-
-  split(text) {
-
-    // split into sentences
-    let splitted;
-    if (detectFormat(text) === 'plain text') {
-
-      // match non-punctuation (optionally) followed by punctuation
-      const matched = text.match(/[^.!?]+[.!?]*/g);
-      log.debug(`parse(): match group: ${matched}`);
-      splitted = matched === null
-        ? [ text.trim() ]
-        : matched;
-
-    } else {
-
-      // match between multiple newlines
-      splitted = text.split(/\n{2,}/g).map(chunk => {
-        return chunk.trim();
-      });
-    }
-
-    // removing extra whitespace in reverseorder
-    for (let i = splitted.length - 1; i >= 0; i--) {
-        if (splitted[i].trim() === '')
-            splitted.splice(i, 1);
-    }
-    return splitted.length ? splitted : [ '' ]; // need a default if empty
-
-  }
   parse(text, options={}) {
 
-    const transform = options.transform || funcs.noop;
     const index = options.index || this.index;
-
-    let splitted = this.split(text).map(transform);
+    const splitted = nx.split(text, options);//.map(transform);
 
     // set the first one at the current index
     this.setSentence(index, splitted[0]);
@@ -358,7 +324,6 @@ class Manager {
       if (i)
         this.insertSentence(index + i, split);
     });
-
     gui.update();
     return this; // chaining
   }
@@ -370,12 +335,14 @@ class Manager {
       return this.current.format;
   }
   get conllu() {
+    throw new Error('old method');
     if (this.current)
-      return this.current.conllu;
+      return this.current._nx.to('CoNLL-U');
   }
   get cg3() {
+    throw new Error('old method');
     if (this.current)
-      return this.current.cg3;
+      return this.current._nx.to('CG3');
   }
   get graphable() {
     return this.format === 'CoNLL-U' || this.format === 'CG3';
@@ -479,7 +446,7 @@ class Manager {
     return state;
   }
   emit(eventName, data) {
-    console.log('try emitting', eventName, data)
+    //console.log('try emitting', eventName, data)
     if (this.socket && this.socket.initialized && this.socket.isOpen)
       this.socket.emit(eventName, data);
   }

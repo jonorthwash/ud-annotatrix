@@ -185,9 +185,9 @@ kdt_tagged_3: `# https://github.com/apertium/apertium-kaz/blob/master/texts/kdt.
 		"an" det def sp @det #7->8
 "<gegin>"
 	"kegin" n f sg @obl #8->4
-	"kegin" n f pl @obl
+	"kegin" n f pl @obl #9->
 "<.>"
-	"." sent @punct #9->4`, // note: changed line `"kegin" n f pl @obl #8->4`
+	"." sent @punct #10->4`, // note: changed line `"kegin" n f pl @obl #8->4`
 
 with_semicolumn: `
 "<Siedzieliśmy>"

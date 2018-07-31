@@ -2,7 +2,6 @@
 
 const Socket = require('socket.io-client');
 const status = require('./status');
-const convert = require('./convert');
 const collab = require('./collaboration');
 const funcs = require('./funcs');
 

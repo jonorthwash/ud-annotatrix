@@ -4,7 +4,6 @@ const $ = require('jquery');
 const _ = require('underscore');
 
 const Menu = require('./dropdown-menu');
-const convert = require('./convert');
 const funcs = require('./funcs');
 const errors = require('./errors');
 const setupUndos = require('./undo-manager');

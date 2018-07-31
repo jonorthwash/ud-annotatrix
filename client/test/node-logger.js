@@ -44,7 +44,7 @@ const data = [
 
 
 // export the test suite
-module.exports = () => {
+//module.exports = () => {
   describe('node-logger.js', () => {
 
     const testMessage = 'This is the log test message';
@@ -90,4 +90,4 @@ module.exports = () => {
       });
     });
   });
-};
+//};

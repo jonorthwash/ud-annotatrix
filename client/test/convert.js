@@ -13,7 +13,7 @@ const alerts = require('../alerts');
 const nx = require('notatrix');
 
 // export the test suite
-module.exports = () => {
+//module.exports = () => {
   describe('convert.js', () => {
 
     // stubs
@@ -84,4 +84,4 @@ module.exports = () => {
       });
     });
   });
-};
+//};

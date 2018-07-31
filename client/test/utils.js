@@ -34,7 +34,7 @@ module.exports = {
   },
 
   reformatParsedText: (text) => {
-    return text.trim().replace(puncts, ' $1').replace(/(\s)+/g, ' ').trim();
+    return text.trim()//.replace(puncts, ' $1').replace(/(\s)+/g, ' ').trim();
   },
 
   randomInt: (min, max) => {

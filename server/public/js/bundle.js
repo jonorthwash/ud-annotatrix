@@ -1,15 +1,6 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.data = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 'use strict';
 
-module.exports = {
-  unableToConvertToConllu: function unableToConvertToConllu() {},
-
-  unableToConvertToCG3: function unableToConvertToCG3() {}
-};
-
-},{}],2:[function(require,module,exports){
-'use strict';
-
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -231,7 +222,7 @@ var Log = function () {
 
 module.exports = Log;
 
-},{"./config":4}],3:[function(require,module,exports){
+},{"./config":3}],2:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -269,7 +260,7 @@ module.exports = {
   update: update
 };
 
-},{"./funcs":12,"jquery":397,"underscore":422}],4:[function(require,module,exports){
+},{"./funcs":9,"jquery":394,"underscore":499}],3:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -292,600 +283,7 @@ module.exports = {
 	statusErrorFadeout: 5000
 };
 
-},{}],5:[function(require,module,exports){
-'use strict';
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var _ = require('underscore');
-var nx = require('notatrix');
-
-var detectFormat = require('./detect');
-var alerts = require('./alerts');
-var errors = require('./errors');
-
-/**
- *  convert2<FORMAT>() functions will try to detect the format of any input and
- *    then convert it into <FORMAT> ... they will all fail (return null) if they
- *    detect an Unknown input format
- *
- *    @param {String} text Arbitrary input text
- *    @return {String||null} in <FORMAT>, where <FORMAT> one of
- *      - plain text
- *      - CoNLL-U
- *      - CG3
- *
- *  these functions mostly rely on converting things into CoNLL-U and then reconverting
- *  if necessary ... these are the 'public' functions for the application (called
- *  when the user clicks on one of the converter tabs)
- */
-
-/**
- * Takes a string representing some format, returns the string in
- * plain text or NULL if there was an error
- * @param {String} text Input text
- * @return {String}     Sentence in plain text format
- */
-function convert2PlainText(text) {
-  log.debug('called convert2PlainText(' + text + ')');
-
-  text = text; // || a.sentence;
-  var format = detectFormat(text);
-
-  log.debug('convert2PlainText(): got format: ' + format);
-  switch (format) {
-    case 'Unknown':
-      log.warn('convert2PlainText(): failed to convert: Unknown input type');
-      return null;
-    case 'nx':
-      return nx.Sentence.fromNx(text).text;
-    case 'plain text':
-      log.info('convert2PlainText(): received plain text');
-      return text;
-    case 'Brackets':
-      return conllu2PlainText(brackets2Conllu(text));
-    case 'SD':
-      return conllu2PlainText(sd2Conllu(text));
-    case 'CoNLL-U':
-      return conllu2PlainText(text);
-    case 'CG3':
-      return conllu2PlainText(cg32Conllu(text));
-  }
-}
-
-/**
- * Takes a string representing some format, returns the string in
- * CoNLL-U or NULL if there was an error
- * @param {String} text Input text
- * @return {String}     Sentence in CoNLL-U format
- */
-function convert2Conllu(text) {
-  log.debug('called convert2conllu(' + text + ')');
-
-  text = text; // || a.sentence;
-  var format = detectFormat(text);
-
-  log.debug('convert2conllu(): got format: ' + format + ', text: ' + text);
-  switch (format) {
-    case 'Unknown':
-      log.warn('convert2conllu(): failed to convert Unknown to plain text');
-      return null;
-    case 'nx':
-      return nx.Sentence.fromNx(text).conllu;
-    case 'plain text':
-      return cleanConllu(plainText2Conllu(text));
-    case 'Brackets':
-      return cleanConllu(brackets2Conllu(text));
-    case 'SD':
-      return cleanConllu(sd2Conllu(text));
-    case 'CoNLL-U':
-      log.info('convert2conllu(): received CoNLL-U');
-      return cleanConllu(text);
-    case 'CG3':
-      return cg32Conllu(text);
-  }
-}
-
-/**
- * Takes a string representing some format, returns the string in
- * CG3 or NULL if there was an error
- * @param {String} text Input text
- * @return {String}     Sentence in CG3 format
- */
-function convert2CG3(text) {
-  log.debug('called convert2CG3(' + text + ')');
-
-  text = text; // || a.sentence;
-  var format = detectFormat(text);
-
-  log.debug('convert2CG3(): got format: ' + format);
-  switch (format) {
-    case 'Unknown':
-      log.warn('convert2CG3(): failed to convert Unknown to plain text');
-      return null;
-    case 'nx':
-      return nx.Sentence.fromNx(text).cg3;
-    case 'plain text':
-      return conllu2CG3(plainText2Conllu(text));
-    case 'Brackets':
-      return conllu2CG3(brackets2Conllu(text));
-    case 'SD':
-      return conllu2CG3(sd2Conllu(text));
-    case 'CoNLL-U':
-      return conllu2CG3(text);
-    case 'CG3':
-      log.info('convert2CG3(): received CG3');
-      return text;
-  }
-}
-
-/**
- *  Helper functions for the convert2<FORMAT> functions described above ... these
- *  handle the implementation of the conversions between specific formats
- */
-
-/**
- * Takes a plain text sentence, returns a sentence in CoNLL-U format.
- * @param {String} text Input text (sentence)
- * @return {String}     Sentence in CoNLL-U format
- */
-function plainText2Conllu(text) {
-  log.debug('called plainText2Conllu(' + text + ')');
-  log.debug('plainText2Conllu(): detected format: ' + detectFormat(text));
-
-  // TODO: if there's punctuation in the middle of a sentence,
-  // indices shift when drawing an arc
-  // punctuation
-  text = text.replace(/([^ ])([.?!;:,])/g, '$1 $2');
-
-  /* get it into this form:
-   *
-   * # sent_id = _
-   * # text = $text
-   * 1    $textLine0
-   * 2    $textLine1 [...]
-   *
-   */
-  var sent = new nx.Sentence();
-  sent.conllu = text.split(' ').map(function (token, i) {
-    return i + 1 + '\t' + token; // enumerating tokens
-  }).join('\n');
-
-  return sent.conllu;
-}
-
-/**
- * Takes a string in CG, converts it to CoNLL-U format.
- * @param {String} text Input string(CG format)
- */
-function sd2Conllu(text) {
-  log.debug('called sd2Conllu(' + text + ')');
-
-  /* Takes a string in CG, returns a string in conllu. */
-  var inputLines = text.split('\n');
-  var tokenId = 1,
-      tokenToId = {},
-      // convert from a token to an index
-  heads = [],
-      // e.g. heads[1] = 3
-  deprels = []; // e.g. deprels[1] = nsubj
-
-  // first enumerate the tokens
-  _.each(inputLines[0].split(' '), function (token, i) {
-    tokenToId[token] = tokenId;
-    tokenId += 1;
-  });
-
-  // When there are two surface forms that are the same, you have to specify the one you
-  // are referring to.
-  //
-  // e.g.
-  // the bear eats the crisps.
-  // det(bear, the-1)
-  // det(crisps, the-4)
-  // nsubj(eats, bear)
-  //
-  // In fact, these numbers are optional for all, so det(bear-2, the-1) would also be valid
-
-  // now process the dependency relations
-  _.each(inputLines, function (line, i) {
-    if (line.indexOf(',') > -1) {
-      // not root node
-      var deprel = '',
-          headToken = '',
-          depToken = '',
-          reading = 'deprel'; // reading \elem [ 'deprel', 'head', 'dep' ]
-
-      for (var j = 0, l = line.length; j < l; j++) {
-        var word = line[j];
-
-        switch (reading) {
-          case 'deprel':
-            if (word === '(') {
-              reading = 'head';
-            } else {
-              deprel += word;
-            }
-            break;
-          case 'head':
-            if (word === ',') {
-              reading = 'dep';
-            } else {
-              headToken += word;
-            }
-            break;
-          case 'dep':
-            if (!(line[j - 1] === ',' && word === ' ' || word === ')')) depToken += word;
-            break;
-        }
-      }
-
-      var depId = void 0,
-          headId = void 0;
-      if (depToken.search(/-[0-9]+/) > 0) depId = parseInt(depToken.split('-')[1]);
-      if (headToken.search(/-[0-9]+/) > 0) headId = parseInt(headToken.split('-')[1]);
-
-      log.debug('sd2Conllu(): ' + depToken + ' \u2192 ' + headToken + ' @' + deprel + ' | ' + tokenToId[depToken] + ' : tokenToId[headToken] // ' + depId + ' \u2192 ' + headId);
-      heads[depId] = headId;
-      deprels[depId] = deprel;
-    }
-  });
-
-  tokenId = 0;
-  var sent = new nx.Sentence();
-  sent.params = inputLines[0].split(' ').map(function (token) {
-    tokenId++;
-
-    return {
-      form: token,
-      head: heads[tokenId],
-      deprel: deprels[tokenId]
-    };
-  });
-
-  return sent.conllu;
-}
-
-/**
- * Takes a string in CoNLL-U, converts it to plain text.
- * @param {String} text Input string
- * @return {String}     Plain text
- */
-function conllu2PlainText(text) {
-  log.debug('called conllu2PlainText(' + text + ')');
-
-  if (!text) return null;
-
-  var sent = new nx.Sentence();
-  sent.conllu = text;
-  return sent.text;
-}
-
-/**
- * Takes a string in Brackets, converts it to CoNLL-U.
- * @param {String} text Input string
- * @return {String}     CoNLL-U
- */
-function brackets2Conllu(text) {
-
-  /**
-   * first parse the sentence into a tree
-   */
-  function parse(text) {
-    var Token = function () {
-      function Token(parent) {
-        _classCallCheck(this, Token);
-
-        this.parent = parent;
-
-        this.deprel = null;
-        this.before = [];
-        this.words = [];
-        this.after = [];
-      }
-
-      _createClass(Token, [{
-        key: 'eachBefore',
-        value: function eachBefore(callback) {
-          for (var i = 0; i < this.before.length; i++) {
-            callback(this.before[i], i);
-          }
-        }
-      }, {
-        key: 'eachAfter',
-        value: function eachAfter(callback) {
-          for (var i = 0; i < this.after.length; i++) {
-            callback(this.after[i], i);
-          }
-        }
-      }, {
-        key: 'tokenize',
-        value: function tokenize(sent) {
-
-          this.eachBefore(function (before) {
-            sent = before.tokenize(sent);
-          });
-
-          var token = nx.Token.fromParams(sent, {
-            form: this.words.join('-'),
-            deprel: this.deprel
-          });
-          sent.insertTokenAt(Infinity, token);
-
-          this.eachAfter(function (after) {
-            sent = after.tokenize(sent);
-          });
-
-          this.analysis = token.analysis;
-
-          return sent;
-        }
-      }, {
-        key: 'dependize',
-        value: function dependize(sent, id) {
-          var _this = this;
-
-          this.eachBefore(function (before) {
-            sent = before.dependize(sent, _this.analysis.id);
-          });
-
-          var head = sent.getById(id);
-          if (head) this.analysis.addHead(head, this.deprel);
-
-          this.eachAfter(function (after) {
-            sent = after.dependize(sent, _this.analysis.id);
-          });
-
-          return sent;
-        }
-      }, {
-        key: 'toString',
-        value: function toString() {
-          return '[' + this.deprel + (this.before.length ? ' ' + this.before.map(function (token) {
-            return token.toString();
-          }).join(' ') : '') + ' ' + this.words.join(' ') + (this.after.length ? ' ' + this.after.map(function (token) {
-            return token.toString();
-          }).join(' ') : '') + ']';
-        }
-      }, {
-        key: 'push',
-        value: function push(token) {
-          if (this.words.length) {
-            this.after.push(token);
-          } else {
-            this.before.push(token);
-          }
-        }
-      }, {
-        key: 'addWord',
-        value: function addWord(word) {
-          if (!word) return;
-
-          if (this.deprel) {
-            this.words.push(word);
-          } else {
-            this.deprel = word;
-          }
-        }
-      }]);
-
-      return Token;
-    }();
-
-    var Sentence = function () {
-      function Sentence() {
-        _classCallCheck(this, Sentence);
-
-        this.parent = null;
-        this.root = [];
-        this.comments = [];
-      }
-
-      _createClass(Sentence, [{
-        key: 'encode',
-        value: function encode() {
-          var sent = new nx.Sentence();
-
-          sent = this.root.tokenize(sent);
-          sent.index();
-          sent = this.root.dependize(sent, 0);
-          sent.comments = this.comments;
-
-          return sent;
-        }
-      }, {
-        key: 'toString',
-        value: function toString() {
-          return '' + this.root.toString();
-        }
-      }, {
-        key: 'push',
-        value: function push(token) {
-          this.root = token;
-        }
-      }]);
-
-      return Sentence;
-    }();
-
-    var sent = new Sentence(),
-        parsing = sent,
-        parent = null,
-        word = '';
-
-    try {
-      _.each(text, function (char) {
-        switch (char) {
-          case '[':
-            parent = parsing;
-            parsing = new Token(parent);
-            if (parent && parent.push) parent.push(parsing);
-            word = '';
-            break;
-
-          case ']':
-            if (parsing.addWord) parsing.addWord(word);
-            parsing = parsing.parent;
-            parent = parsing.parent;
-            word = '';
-            break;
-
-          case ' ':
-            if (parsing.addWord) parsing.addWord(word);
-            word = '';
-            break;
-
-          default:
-            word += char;
-            break;
-        }
-      });
-
-      return sent;
-    } catch (e) {
-
-      if (!(e instanceof errors.ParseError)) throw e;
-
-      return null;
-    }
-  }
-
-  var parsed = parse(text);
-  var encoded = parsed.encode();
-
-  return encoded.conllu;
-}
-
-/**
- * Takes a string in CG3, converts it to CoNLL-U.
- * @param {String} CGtext CG3 string
- * @return {String}     CoNLL-U
- */
-function cg32Conllu(CGtext) {
-  log.debug('called cg32Conllu(' + CGtext + ')');
-
-  if (!CGtext) return null;
-
-  /* Takes a string in CG3, returns a string in CoNLL-U. */
-
-  // remove extra spaces before newline before processing text
-  var sent = new nx.Sentence({ catchInvalid: false });
-  sent.cg3 = CGtext.replace(/ +\n/, '\n');
-
-  try {
-    return sent.conllu;
-  } catch (e) {
-
-    if (e instanceof nx.Error.InvalidCoNLLUError) {
-      alerts.unableToConvertToConllu();
-      return null;
-    }
-
-    throw e;
-  }
-}
-
-/**
- * Takes a string in CoNLL-U, converts it to CG3.
- * @param {String} conlluText CoNLL-U string
- * @param {String} indent     indentation unit (default:'\t')
- * @return {String}     CG3
- */
-function conllu2CG3(conlluText) {
-  log.debug('called conllu2CG3(' + conlluText);
-
-  if (!conlluText) return null;
-
-  var sent = new nx.Sentence({ catchInvalid: false });
-  sent.conllu = conlluText;
-
-  try {
-    return sent.cg3;
-  } catch (e) {
-
-    if (e instanceof nx.Error.InvalidCG3Error) {
-      alerts.unableToConvertToCG3();
-      return null;
-    }
-
-    throw e;
-  }
-}
-
-/**
- * return a CG3 analysis for a token
- *  - helper function for conllu2CG3() and onEnter()
- */
-function getCG3Analysis(i, token) {
-  log.debug('called conllu2CG3:getCG3Analysis(i: ' + i + ', token: ' + JSON.stringify(token) + ')');
-
-  var lemma = token.lemma ? '"' + token.lemma + '"' : '""',
-      // lemma should have "" if blank (#228)
-  pos = token.upostag || token.xpostag || '_',
-      feats = token.feats ? ' ' + token.feats.replace(/\|/g, ' ') : '',
-      deprel = token.deprel ? ' @' + token.deprel : ' @x',
-      // is it really what we want by default?
-  head = token.head || '',
-      cgToken = lemma + ' ' + pos + feats + deprel + ' #' + token.id + '->' + head;
-
-  log.debug('got cgToken: ' + cgToken);
-  return cgToken;
-};
-
-/**
- * Cleans up CoNNL-U content.
- * @param {String} content Content of input area
- * @return {String}     Cleaned up content
- */
-function cleanConllu(content) {
-  log.debug('called cleanConllu(' + content + ')');
-
-  if (!content) return null;
-
-  // if we don't find any tabs, then convert >1 space to tabs
-  // TODO: this should probably go somewhere else, and be more
-  // robust, think about vietnamese D:
-  var res = content.search('\n');
-  if (res < 0) return content;
-
-  /*
-  // maybe someone is just trying to type conllu directly...
-  res = (content.match(/_/g) || []).length;
-  if (res <= 2)
-      return content; */
-
-  // If we don't find any tabs, then we want to replace multiple spaces with tabs
-  var spaceToTab = true; //(content.search('\t') < 0);
-  var newContent = content.trim().split('\n').map(function (line) {
-    line = line.trim();
-
-    // If there are no spaces and the line isn't a comment,
-    // then replace more than one space with a tab
-    if (line[0] !== '#' && spaceToTab) line = line.replace(/[ \t]+/g, '\t');
-
-    return line;
-  }).join('\n');
-
-  // If there are >1 CoNLL-U format sentences is in the input, treat them as such
-  // conlluMultiInput(newContent); // TODO: move this one also inside of this func, and make a separate func for calling them all at the same time
-
-  //if (newContent !== content)
-  //$('#text-data').val(newContent);
-
-  return newContent;
-}
-
-module.exports = {
-  to: {
-    plainText: convert2PlainText,
-    conllu: convert2Conllu,
-    cg3: convert2CG3
-  }
-};
-
-},{"./alerts":1,"./detect":8,"./errors":10,"notatrix":401,"underscore":422}],6:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 'use strict';
 
 // is defined in a js file, because fetch doesn't work offline in chrome
@@ -1114,7 +512,7 @@ var CY_STYLE = [{
 
 module.exports = CY_STYLE;
 
-},{}],7:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 (function (global,setImmediate){
 'use strict';
 
@@ -31332,71 +30730,7 @@ var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbo
 });
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("timers").setImmediate)
-},{"timers":420}],8:[function(require,module,exports){
-'use strict';
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-var _ = require('underscore');
-
-/**
- * detect and return the format on passed text
- *
- * @param {String} text
- * @return {String}
- */
-function detectFormat(text) {
-  log.debug('called detectFormat(' + text + ')');
-
-  var format = 'Unknown';
-
-  // catch Notatrix format here
-  if ((typeof text === 'undefined' ? 'undefined' : _typeof(text)) === 'object') {
-    var objKeys = new Set(Object.keys(text));
-    var nxKeys = new Set(['options', 'comments', 'tokens']);
-    return _.isEqual(objKeys, nxKeys) ? 'nx' : format;
-  }
-
-  text = (text || '').trim();
-
-  if (text === '') {
-    log.info('detectFormat() received empty text');
-    return format;
-  }
-
-  // get `word` to point to the first non-comment word
-  var lines = text.split('\n');
-  var wordIndex = 0,
-      word = lines[wordIndex];
-
-  while (word.startsWith('#')) {
-    log.debug('detectFormat(): detected a comment: ' + word);
-    wordIndex++;
-    if (wordIndex === lines.length) break;
-    word = lines[wordIndex];
-  }
-
-  if (word.match(/^\W*[\'|\"]</)) {
-    format = 'CG3';
-  } else if (word.match(/^\s*1/)) {
-    format = 'CoNLL-U'; // UNSAFE: the first token in the string should start with "1"
-  } else if (text.includes('(') && text.includes('\n') // SD needs to be at least two lines
-  && (text.includes(')\n') || text[text.length - 1] === ')')) {
-
-    format = 'SD'; // UNSAFE
-  } else if (word.match(/\[/)) {
-    format = 'Brackets'; // UNSAFE: this will catch any plain text string starting with "[" :/
-  } else if (text[text.length - 1] !== ')') {
-    format = 'plain text'; // UNSAFE
-  }
-
-  log.debug('detectFormat(): detected ' + format);
-  return format;
-}
-
-module.exports = detectFormat;
-
-},{"underscore":422}],9:[function(require,module,exports){
+},{"timers":497}],6:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -31547,7 +30881,7 @@ var Menu = function () {
 
 module.exports = Menu;
 
-},{"./funcs":12,"./user":37,"jquery":397,"underscore":422}],10:[function(require,module,exports){
+},{"./funcs":9,"./user":34,"jquery":394,"underscore":499}],7:[function(require,module,exports){
 'use strict';
 
 /**
@@ -31759,7 +31093,7 @@ module.exports = {
   DeserializationError: DeserializationError
 };
 
-},{}],11:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -31827,7 +31161,7 @@ module.exports = {
   svg: svg
 };
 
-},{"./funcs":12,"canvas2svg":50,"jquery":397,"underscore":422}],12:[function(require,module,exports){
+},{"./funcs":9,"canvas2svg":47,"jquery":394,"underscore":499}],9:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -31912,7 +31246,7 @@ module.exports = {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./status":27,"jquery":397,"underscore":422}],13:[function(require,module,exports){
+},{"./status":24,"jquery":394,"underscore":499}],10:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -32509,7 +31843,7 @@ function removeHead(srcId, tarId) {
 
 module.exports = Graph;
 
-},{"./config":4,"./cy-style":6,"./cytoscape/cytoscape":7,"./errors":10,"./funcs":12,"./progress-bar":21,"./selfcomplete":22,"./sort":26,"./validate":39,"jquery":397,"underscore":422}],14:[function(require,module,exports){
+},{"./config":3,"./cy-style":4,"./cytoscape/cytoscape":5,"./errors":7,"./funcs":9,"./progress-bar":18,"./selfcomplete":19,"./sort":23,"./validate":36,"jquery":394,"underscore":499}],11:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -32522,7 +31856,6 @@ var $ = require('jquery');
 var _ = require('underscore');
 
 var Menu = require('./dropdown-menu');
-var convert = require('./convert');
 var funcs = require('./funcs');
 var errors = require('./errors');
 var setupUndos = require('./undo-manager');
@@ -33330,7 +32663,7 @@ function mergeNodes(direction) {
 
 module.exports = GUI;
 
-},{"./convert":5,"./dropdown-menu":9,"./errors":10,"./funcs":12,"./local-storage":17,"./modals/index":19,"./table":28,"./undo-manager":36,"jquery":397,"underscore":422}],15:[function(require,module,exports){
+},{"./dropdown-menu":6,"./errors":7,"./funcs":9,"./local-storage":14,"./modals/index":16,"./table":25,"./undo-manager":33,"jquery":394,"underscore":499}],12:[function(require,module,exports){
 'use strict';
 
 require('babel-polyfill');
@@ -33351,7 +32684,7 @@ $(function () {
 
 module.exports = require('./test/data/index');
 
-},{"./browser-logger":2,"./funcs":12,"./manager":18,"./server":24,"./test/data/index":32,"babel-polyfill":42}],16:[function(require,module,exports){
+},{"./browser-logger":1,"./funcs":9,"./manager":15,"./server":21,"./test/data/index":29,"babel-polyfill":39}],13:[function(require,module,exports){
 'use strict';
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
@@ -33363,6 +32696,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var _ = require('underscore');
 var $ = require('jquery');
 var DeserializationError = require('./errors').DeserializationError;
+var nx = require('notatrix');
 
 var regex = {
   labelComment: /(labels|tags)\s*=\s+(.*)$/,
@@ -33634,7 +32968,6 @@ var Labeler = function () {
   }, {
     key: 'add',
     value: function add(name) {
-
       var found = false;
       _.each(this._labels, function (label) {
         if (label.name === name) found = true;
@@ -33698,15 +33031,15 @@ var Labeler = function () {
       var done = false;
       manager.getSentence(index).comments = manager.getSentence(index).comments.map(function (comment) {
 
-        if (comment.match(regex.labelComment) && !done) {
-          comment = comment + ' ' + name;
+        if (comment.body.match(regex.labelComment) && !done) {
+          comment.body = comment.body + ' ' + name;
           done = true;
         }
 
         return comment;
       });
 
-      if (!done) manager.getSentence(index).comments = manager.getSentence(index).comments.concat(['labels = ' + name]);
+      if (!done) manager.getSentence(index).push(new nx.Comment('labels = ' + name));
     }
   }, {
     key: 'removeInComments',
@@ -33718,7 +33051,8 @@ var Labeler = function () {
       }
 
       manager.getSentence(index).comments = manager.getSentence(index).comments.map(function (comment) {
-        return comment.replace(regex.labelByName(name), '$1');
+        comment.body = comment.body.replace(regex.labelByName(name), '$1');
+        return comment;
       });
     }
   }, {
@@ -33732,7 +33066,8 @@ var Labeler = function () {
       }
 
       manager.getSentence(index).comments = manager.getSentence(index).comments.map(function (comment) {
-        return comment.replace(regex.labelByName(name), '$1' + newName + '$2');
+        comment.body = comment.body.replace(regex.labelByName(name), '$1');
+        return comment;
       });
     }
   }, {
@@ -33813,7 +33148,7 @@ var Labeler = function () {
     key: 'parseComment',
     value: function parseComment(comment) {
       var labels = [];
-      var labelString = comment.match(regex.labelComment);
+      var labelString = comment.body.match(regex.labelComment);
 
       if (labelString) labelString[2].split(/\s/).forEach(function (label) {
 
@@ -33900,7 +33235,7 @@ function getTextColor(background) {
 
 module.exports = Labeler;
 
-},{"./errors":10,"jquery":397,"underscore":422}],17:[function(require,module,exports){
+},{"./errors":7,"jquery":394,"notatrix":461,"underscore":499}],14:[function(require,module,exports){
 'use strict';
 
 var KEY = require('./config').localStorageKey;
@@ -34036,7 +33371,7 @@ module.exports = {
   clear: clear
 };
 
-},{"./config":4,"./funcs":12}],18:[function(require,module,exports){
+},{"./config":3,"./funcs":9}],15:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -34053,9 +33388,7 @@ var GUI = require('./gui');
 var Graph = require('./graph');
 var Labeler = require('./labels');
 var errors = require('./errors');
-var detectFormat = require('./detect');
 var storage = require('./local-storage');
-var convert = require('./convert');
 var export_ = require('./export');
 var status = require('./status');
 var Sentence = require('./sentence');
@@ -34280,7 +33613,7 @@ var Manager = function () {
       this.emit('update', {
         type: 'remove',
         index: index,
-        format: sent.format,
+        format: removed.format,
         nx: null
       });
       gui.update();
@@ -34298,32 +33631,6 @@ var Manager = function () {
       return this.removeSentence(Infinity);
     }
   }, {
-    key: 'split',
-    value: function split(text) {
-
-      // split into sentences
-      var splitted = void 0;
-      if (detectFormat(text) === 'plain text') {
-
-        // match non-punctuation (optionally) followed by punctuation
-        var matched = text.match(/[^.!?]+[.!?]*/g);
-        log.debug('parse(): match group: ' + matched);
-        splitted = matched === null ? [text.trim()] : matched;
-      } else {
-
-        // match between multiple newlines
-        splitted = text.split(/\n{2,}/g).map(function (chunk) {
-          return chunk.trim();
-        });
-      }
-
-      // removing extra whitespace in reverseorder
-      for (var i = splitted.length - 1; i >= 0; i--) {
-        if (splitted[i].trim() === '') splitted.splice(i, 1);
-      }
-      return splitted.length ? splitted : ['']; // need a default if empty
-    }
-  }, {
     key: 'parse',
     value: function parse(text) {
       var _this3 = this;
@@ -34331,10 +33638,8 @@ var Manager = function () {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
 
-      var transform = options.transform || funcs.noop;
       var index = options.index || this.index;
-
-      var splitted = this.split(text).map(transform);
+      var splitted = nx.split(text, options); //.map(transform);
 
       // set the first one at the current index
       this.setSentence(index, splitted[0]);
@@ -34343,7 +33648,6 @@ var Manager = function () {
       _.each(splitted, function (split, i) {
         if (i) _this3.insertSentence(index + i, split);
       });
-
       gui.update();
       return this; // chaining
     }
@@ -34383,7 +33687,7 @@ var Manager = function () {
   }, {
     key: 'emit',
     value: function emit(eventName, data) {
-      console.log('try emitting', eventName, data);
+      //console.log('try emitting', eventName, data)
       if (this.socket && this.socket.initialized && this.socket.isOpen) this.socket.emit(eventName, data);
     }
   }, {
@@ -34460,12 +33764,14 @@ var Manager = function () {
   }, {
     key: 'conllu',
     get: function get() {
-      if (this.current) return this.current.conllu;
+      throw new Error('old method');
+      if (this.current) return this.current._nx.to('CoNLL-U');
     }
   }, {
     key: 'cg3',
     get: function get() {
-      if (this.current) return this.current.cg3;
+      throw new Error('old method');
+      if (this.current) return this.current._nx.to('CG3');
     }
   }, {
     key: 'graphable',
@@ -34534,14 +33840,14 @@ var Manager = function () {
 
 module.exports = Manager;
 
-},{"./config":4,"./convert":5,"./detect":8,"./errors":10,"./export":11,"./funcs":12,"./graph":13,"./gui":14,"./labels":16,"./local-storage":17,"./sentence":23,"./socket":25,"./status":27,"./users":38,"jquery":397,"notatrix":401,"underscore":422}],19:[function(require,module,exports){
+},{"./config":3,"./errors":7,"./export":8,"./funcs":9,"./graph":10,"./gui":11,"./labels":13,"./local-storage":14,"./sentence":20,"./socket":22,"./status":24,"./users":35,"jquery":394,"notatrix":461,"underscore":499}],16:[function(require,module,exports){
 'use strict';
 
 module.exports = {
   upload: require('./upload')
 };
 
-},{"./upload":20}],20:[function(require,module,exports){
+},{"./upload":17}],17:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -34569,7 +33875,7 @@ module.exports = {
   enable: enable
 };
 
-},{"jquery":397,"underscore":422}],21:[function(require,module,exports){
+},{"jquery":394,"underscore":499}],18:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -34598,7 +33904,7 @@ var ProgressBar = function () {
 
 module.exports = ProgressBar;
 
-},{}],22:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -35606,7 +34912,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     }
 });
 
-},{"jquery":397}],23:[function(require,module,exports){
+},{"jquery":394}],20:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -35615,41 +34921,70 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var _ = require('underscore');
 var nx = require('notatrix');
-
 var errors = require('./errors');
-var detectFormat = require('./detect');
-var convert = require('./convert');
+var status = require('./status');
 
-function encode(serial) {
-  var format = detectFormat(serial);
-  switch (format) {
+function encode(serial, options) {
 
-    case 'Unknown':
-      return nx.Sentence.fromParams([]);
+  var format = null;
 
-    case 'plain text':
-      return nx.Sentence.fromText(serial);
+  var formats = nx.detect(serial, {
+    suppressDetectorErrors: true,
+    returnAllMatches: true,
+    allowEmptyString: true
+  });
 
-    case 'CoNLL-U':
-      return nx.Sentence.fromConllu(serial);
+  if (formats.length === 0) {
 
-    case 'CG3':
-      return nx.Sentence.fromCG3(serial);
+    status.error('Unable to interpret input');
+    serial = '';
+    format = 'plain text';
+  } else if (formats.indexOf('notatrix serial') > -1) {
 
-    default:
-      serial = convert.to.conllu(serial);
-      return nx.Sentence.fromConllu(serial);
+    is_notatrix_serial = true;
+    format = 'notatrix serial';
+  } else if (formats.length === 1) {
+
+    format = formats[0];
+    status.normal('Interpreting as ' + format);
+  } else {
+
+    var preferences = ['CoNLL-U', 'CG3', 'plain text'];
+
+    for (var i = 0; i < preferences.length; i++) {
+      var pref = preferences[i];
+      if (formats.indexOf(pref) > -1) {
+        format = pref;
+        status.normal('Interpreting as ' + format);
+        break;
+      }
+    }
+
+    // just choose one
+    format = formats[0];
+    status.normal('Interpreting as ' + format);
   }
+
+  if (format === 'notatrix serial') format = 'CoNLL-U';
+
+  options = _.extend({
+    interpretAs: format,
+    allowEmptyString: true
+  }, options);
+  return {
+    format: format,
+    sent: new nx.Sentence(serial, options)
+  };
 }
 
 var Sentence = function () {
-  function Sentence(serial) {
+  function Sentence(serial, options) {
     _classCallCheck(this, Sentence);
 
-    this._input = serial;
+    var encoded = encode(serial, options);
 
-    this.format = detectFormat(serial);
-    this._nx = encode(serial);
+    this.format = encoded.format;
+    this._nx = encoded.sent;
 
     this.is_table_view = false;
     this.column_visibilities = new Array(10).fill(true);
@@ -35659,71 +34994,41 @@ var Sentence = function () {
 
   _createClass(Sentence, [{
     key: 'toString',
-    value: function toString() {
-      switch (this.format) {
-        case 'Unknown':
-          return '';
+    value: function toString(format) {
 
-        case 'plain text':
-          return this._nx.text;
+      format = format || this.format;
 
-        case 'CoNLL-U':
-          return this._nx.conllu;
+      try {
 
-        case 'CG3':
-          return this._nx.cg3;
+        return this._nx.to(format);
+      } catch (e) {
 
-        default:
-          return this._input || '';
+        if (e instanceof nx.Loss) {
+
+          status.error(e.message);
+          return e.output;
+        } else if (e instanceof nx.GeneratorError) {
+
+          status.error(e.message);
+          return null;
+        }
+
+        throw e;
       }
     }
   }, {
     key: 'update',
-    value: function update(serial) {
+    value: function update(serial, options) {
 
-      var updated = {
-        format: detectFormat(serial),
-        nx: encode(serial)
-      };
+      try {
 
-      // if they're not the same format, check if they're the same text (i.e.,
-      //   different encodings of the same sentence)
-      if (updated.format !== this.format && updated.nx.text === this.text) {
+        this._nx.update(serial, options);
+      } catch (e) {
 
-        var oldNx = this.nx,
-            newNx = updated.nx.nx;
-
-        for (var i = 0; i < newNx.tokens.length; i++) {
-          var oldToken = oldNx.tokens[i],
-              newToken = newNx.tokens[i];
-
-          if (!oldToken) continue;
-
-          var _loop = function _loop(j) {
-            var oldAnalysis = oldToken.analyses[j],
-                newAnalysis = newToken.analyses[j];
-
-            if (!oldAnalysis) return 'continue';
-
-            _.each(newAnalysis.values, function (value, key) {
-              newAnalysis.values[key] = !!value && value !== '_' ? value : oldAnalysis.values[key];
-            });
-          };
-
-          for (var j = 0; j < newToken.analyses.length; j++) {
-            var _ret = _loop(j);
-
-            if (_ret === 'continue') continue;
-          }
-        }
-
-        updated.nx.tokens = nx.Sentence.fromNx(newNx).tokens;
-        updated.nx.comments = updated.nx.comments.length ? updated.nx.comments : this._nx.comments;
+        var encoded = encode(serial, options);
+        this._nx = encoded.sent;
       }
 
-      this._input = serial;
-      this._nx = updated.nx;
-      this.format = updated.format;
       labeler.parse(this._nx.comments);
       return this;
     }
@@ -35731,35 +35036,36 @@ var Sentence = function () {
     key: 'clear',
     value: function clear() {
 
-      this._input = null;
-      this.format = detectFormat(null);
-      this._nx = encode(null);
+      this.format = null;
+      this._nx = null;
       return this;
     }
   }, {
     key: 'get',
     value: function get(id) {
-      return this._nx.getById(id);
+      return this._nx.query(function (e) {
+        return e.indices.absolute === id;
+      })[0];
     }
   }, {
     key: 'conllu',
     get: function get() {
-      return this._nx.conllu;
+      return this.toString('CoNLL-U');
     }
   }, {
     key: 'cg3',
     get: function get() {
-      return this._nx.cg3;
+      return this.toString('CG3');
     }
   }, {
     key: 'text',
     get: function get() {
-      return this._nx.text;
+      return this.toString('plain text');
     }
   }, {
     key: 'nx',
     get: function get() {
-      return this._nx.nx;
+      return this.toString('notatrix serial');
     }
   }, {
     key: 'comments',
@@ -35777,7 +35083,7 @@ var Sentence = function () {
         column_visibilities: this.column_visibilities,
         format: this.format,
         is_table_view: this.is_table_view,
-        nx: this._nx.nx,
+        nx: this._nx.to.notatrixSerial,
         input: this._input
       };
     },
@@ -35787,7 +35093,7 @@ var Sentence = function () {
       this.column_visibilities = state.column_visibilities;
       this.format = state.format;
       this.is_table_view = state.is_table_view;
-      this._nx = nx.Sentence.fromNx(state.nx);
+      this._nx = new nx.Sentence(state.nx);
 
       return this;
     }
@@ -35798,7 +35104,7 @@ var Sentence = function () {
 
 module.exports = Sentence;
 
-},{"./convert":5,"./detect":8,"./errors":10,"notatrix":401,"underscore":422}],24:[function(require,module,exports){
+},{"./errors":7,"./status":24,"notatrix":461,"underscore":499}],21:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -35912,12 +35218,11 @@ var Server = function () {
 
 module.exports = Server;
 
-},{"./funcs":12,"./local-storage":17,"./status":27,"./user":37,"jquery":397}],25:[function(require,module,exports){
+},{"./funcs":9,"./local-storage":14,"./status":24,"./user":34,"jquery":394}],22:[function(require,module,exports){
 'use strict';
 
 var Socket = require('socket.io-client');
 var status = require('./status');
-var convert = require('./convert');
 var collab = require('./collaboration');
 var funcs = require('./funcs');
 
@@ -36000,7 +35305,7 @@ module.exports = function (manager) {
   return socket;
 };
 
-},{"./collaboration":3,"./convert":5,"./funcs":12,"./status":27,"socket.io-client":407}],26:[function(require,module,exports){
+},{"./collaboration":2,"./funcs":9,"./status":24,"socket.io-client":484}],23:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -36058,7 +35363,7 @@ module.exports = {
   rtl: rtl
 };
 
-},{"underscore":422}],27:[function(require,module,exports){
+},{"underscore":499}],24:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -36070,6 +35375,8 @@ function Status(text, isError) {
 
 function normal(text) {
 
+  if (!gui.inBrowser) return null;
+
   var div = Status(text, false);
   $('.status-container').prepend(div);
   div.fadeOut(cfg.statusNormalFadeout);
@@ -36077,6 +35384,8 @@ function normal(text) {
 }
 
 function error(text) {
+
+  if (!gui.inBrowser) return null;
 
   var div = Status(text, true);
   $('.status-container').prepend(div);
@@ -36089,7 +35398,7 @@ module.exports = {
   error: error
 };
 
-},{"./config":4,"jquery":397}],28:[function(require,module,exports){
+},{"./config":3,"jquery":394}],25:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -36158,14 +35467,14 @@ module.exports = {
   edit: edit
 };
 
-},{"./validate":39,"jquery":397}],29:[function(require,module,exports){
+},{"./validate":36,"jquery":394}],26:[function(require,module,exports){
 'use strict';
 
 module.exports = {
   0: '[root [nsubj I] have [obj [amod [advmod too] many] commitments] [advmod right now] [punct .]]'
 };
 
-},{}],30:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -36193,7 +35502,7 @@ module.exports = {
 
 	1: '# text = He boued e tebr Mona er gegin.\n# text[eng] = Mona eats her food here in the kitchen.\n# labels = press_1986 ch_syntax p_197 to_check\n"<He>"\n\t"he" det pos f sp @det #1->2\n"<boued>"\n\t"boued" n m sg @obj #2->4\n"<e>"\n\t"e" vpart obj @aux #3->4\n"<tebr>"\n\t"debri\xF1" vblex pri p3 sg @root #4->0\n"<Mona>"\n\t"Mona" np ant f sg @nsubj #5->4\n"<er>"\n\t"e" pr @case #6->8\n\t\t"an" det def sp @det #7->8\n"<gegin>"\n\t"kegin" n f sg @obl #8->4\n"<.>"\n\t"." sent @punct #9->4',
 
-	2: '# text = He boued e tebr Mona er gegin.\n# text[eng] = Mona eats her food here in the kitchen.\n# labels = press_1986 ch_syntax p_197 to_check\n"<He>"\n\t"he" det pos f sp @det #1->2\n"<boued>"\n\t"boued" n m sg @obj #2->4\n"<e>"\n\t"e" vpart obj @aux #3->4\n"<tebr>"\n\t"debri\xF1" vblex pri p3 sg @root #4->0\n"<Mona>"\n\t"Mona" np ant f sg @nsubj #5->4\n"<er>"\n\t"e" pr @case #6->8\n\t\t"an" det def sp @det #7->8\n"<gegin>"\n\t"kegin" n f sg @obl #8->4\n\t"kegin" n f pl @obl\n"<.>"\n\t"." sent @punct #9->4', // note: changed line `"kegin" n f pl @obl #8->4`
+	2: '# text = He boued e tebr Mona er gegin.\n# text[eng] = Mona eats her food here in the kitchen.\n# labels = press_1986 ch_syntax p_197 to_check\n"<He>"\n\t"he" det pos f sp @det #1->2\n"<boued>"\n\t"boued" n m sg @obj #2->4\n"<e>"\n\t"e" vpart obj @aux #3->4\n"<tebr>"\n\t"debri\xF1" vblex pri p3 sg @root #4->0\n"<Mona>"\n\t"Mona" np ant f sg @nsubj #5->4\n"<er>"\n\t"e" pr @case #6->8\n\t\t"an" det def sp @det #7->8\n"<gegin>"\n\t"kegin" n f sg @obl #8->4\n\t"kegin" n f pl @obl #9->\n"<.>"\n\t"." sent @punct #10->4', // note: changed line `"kegin" n f pl @obl #8->4`
 
 	with_semicolumn: '\n"<Siedzieli\u015Bmy>"\n\t"siedzie\u0107" vblex impf past p1 m pl\n"<w>"\n\t"w" pr\n"<moim>"\n;   "m\xF3j" prn pos mi sg loc\n"<pokoju>"\n\t"pok\xF3j" n mi sg loc\n"<,>"\n\t"," cm\n"<pal\u0105c>"\n\t"pali\u0107" vblex impf pprs adv\n"<i>"\n\t"i" cnjcoo\n"<rozmawiaj\u0105c>"\n\t"rozmawia\u0107" vblex impf pprs adv\n"<o>"\n\t"o" pr\n"<tem>"\n\t"to" prn dem mi sg loc\n"<,>"\n\t"," cm\n"<jak>"\n\t"jak" rel adv\n"<marni>"\n\t"marny" adj sint mp pl nom\n"<jeste\u015Bmy>"\n\t"by\u0107" vbser pres p1 pl\n"<,>"\n\t"," cm\n"<marni>"\n\t"marny" adj sint mp pl nom\n"<z>"\n\t"z" pr\n"<lekarskiego>"\n\t"lekarski" adj mi sg gen\n"<punktu>"\n\t"punkt" n mi sg gen\n"<widzenia>"\n;   "widzie\u0107" vblex impf ger nt sg gen\n"<chc\u0119>"\n\t"chcie\u0107" vblex impf pres p1 sg\n"<powiedzie\u0107>"\n\t"powiedzie\u0107" vblex perf inf\n"<,>"\n\t"," cm\n"<naturalnie>"\n\t"naturalnie" adv sint\n"<.>"\n\t"." sent',
 
@@ -36209,54 +35518,54 @@ module.exports = {
 
 };
 
-},{}],31:[function(require,module,exports){
-'use strict';
+},{}],28:[function(require,module,exports){
+"use strict";
 
 module.exports = {
-  labels_1: '# text = "This is a simple sentence."\n# labels = label1 another_label a-third-label\n1\tThis\tThis\t_\t_\t_\t_\t_\t_\t_\n2\tis\tis\t_\t_\t_\t_\t_\t_\t_\n3\ta\ta\t_\t_\t_\t_\t_\t_\t_\n4\tsimple\tsimple\t_\t_\t_\t_\t_\t_\t_\n5\tsentence\tsentence\t_\t_\t_\t_\t_\t_\t_\n6\t.\t.\tPUNCT\tPUNCT\t_\t_\t_\t_\t_',
+  labels_1: "# text = \"This is a simple sentence.\"\n# labels = label1 another_label a-third-label\n1\tThis\tThis\t_\t_\t_\t_\t_\t_\t_\n2\tis\tis\t_\t_\t_\t_\t_\t_\t_\n3\ta\ta\t_\t_\t_\t_\t_\t_\t_\n4\tsimple\tsimple\t_\t_\t_\t_\t_\t_\t_\n5\tsentence\tsentence\t_\t_\t_\t_\t_\t_\t_\n6\t.\t.\tPUNCT\tPUNCT\t_\t_\t_\t_\t_",
 
-  labels_2: '# labels = one_label second third-label\n# labels = row_2 again:here this, that\n1\tThis\tThis\t_\t_\t_\t_\t_\t_\t_',
+  labels_2: "# labels = one_label second third-label\n# labels = row_2 again:here this, that\n1\tThis\tThis\t_\t_\t_\t_\t_\t_\t_",
 
-  labels_3: '# tags = this-is-a-tag test testing test\n1\tThis\tThis\t_\t_\t_\t_\t_\t_\t_',
+  labels_3: "# tags = this-is-a-tag test testing test\n1\tThis\tThis\t_\t_\t_\t_\t_\t_\t_",
 
-  labels_4: '# labels = new label1 one_label this-is-a-tag\n1\tHullo\thello\t_\t_\t_\t_\t_\t_\t_',
+  labels_4: "# labels = new label1 one_label this-is-a-tag\n1\tHullo\thello\t_\t_\t_\t_\t_\t_\t_",
 
-  nested_2: '# text = ab cde f h\n1-2\tab\t_\t_\t_\t_\t_\t_\t_\t_\n1\ta\tA\t_\t_\t_\t_\t_\t_\t_\n2\tb\tB\t_\t_\t_\t_\t_\t_\t_\n3-5\tcde\t_\t_\t_\t_\t_\t_\t_\t_\n3\tc\tC\t_\t_\t_\t_\t_\t_\t_\n4\td\tD\t_\t_\t_\t_\t_\t_\t_\n5\te\tE\t_\t_\t_\t_\t_\t_\t_\n6\tf\tF\t_\t_\t_\t_\t_\t_\t_\n6.1\tsilent_g\tG\t_\t_\t_\t_\t_\t_\t_\n7\th\tH\t_\t_\t_\t_\t_\t_\t_',
+  nested_2: "# text = ab cde f h\n1-2\tab\t_\t_\t_\t_\t_\t_\t_\t_\n1\ta\tA\t_\t_\t_\t_\t_\t_\t_\n2\tb\tB\t_\t_\t_\t_\t_\t_\t_\n3-5\tcde\t_\t_\t_\t_\t_\t_\t_\t_\n3\tc\tC\t_\t_\t_\t_\t_\t_\t_\n4\td\tD\t_\t_\t_\t_\t_\t_\t_\n5\te\tE\t_\t_\t_\t_\t_\t_\t_\n6\tf\tF\t_\t_\t_\t_\t_\t_\t_\n6.1\tsilent_g\tG\t_\t_\t_\t_\t_\t_\t_\n7\th\tH\t_\t_\t_\t_\t_\t_\t_",
 
-  t: '# testing :)\n1-3\tHe\the\tdet\t_\tpos|f|sp\t_\tdet\t_\t_\n1\tboued\tboued\tn\t_\tm|sg\t4\tobj\t_\t_\n2\te\te\tvpart\t_\tobj\t4\taux\t_\t_\n3\ttebr\tdebri\xF1\tvblex\t_\tpri|p3|sg\t0\troot\t_\t_\n4\tdoob\tdoobie\tnp\t_\t_\t3\t_\t_\t_\n5\tMona\tMona\tnp\t_\tant|f|sg\t4\tnsubj\t_\t_',
+  t: "# testing :)\n1-3\tHe\t_\t_\t_\t_\t_\t_\t_\t_\n1\tboued\tboued\tn\t_\tm|sg\t4\tobj\t_\t_\n2\te\te\tvpart\t_\tobj\t4\taux\t_\t_\n3\ttebr\tdebri\xF1\tvblex\t_\tpri|p3|sg\t0\troot\t_\t_\n4\tdoob\tdoobie\tnp\t_\t_\t3\t_\t_\t_\n5\tMona\tMona\tnp\t_\tant|f|sg\t4\tnsubj\t_\t_",
 
-  empty: '1      Sue       Sue       _       _       _       _       _       _       _\n2      likes     like       _       _       _       _       _       _       _\n3      coffee    coffee       _       _       _       _       _       _       _\n4      and       and       _       _       _       _       _       _       _\n5      Bill      Bill       _       _       _       _       _       _       _\n5.1    likes     like       _       _       _       _       _       _       _\n6      tea       tea       _       _       _       _       _       _       _',
+  empty: "1      Sue       Sue       _       _       _       _       _       _       _\n2      likes     like       _       _       _       _       _       _       _\n3      coffee    coffee       _       _       _       _       _       _       _\n4      and       and       _       _       _       _       _       _       _\n5      Bill      Bill       _       _       _       _       _       _       _\n5.1    likes     like       _       _       _       _       _       _       _\n6      tea       tea       _       _       _       _       _       _       _",
 
-  0: '# sent_id = _\n# text = this is a test\n1\tthis\t_\t_\t_\t_\t_\t_\t_\t_\n2\tis\t_\t_\t_\t_\t_\t_\t_\t_\n3\ta\t_\t_\t_\t_\t_\t_\t_\t_\n4\ttest\t_\t_\t_\t_\t_\t_\t_\t_',
+  0: "# sent_id = _\n# text = this is a test\n1\tthis\t_\t_\t_\t_\t_\t_\t_\t_\n2\tis\t_\t_\t_\t_\t_\t_\t_\t_\n3\ta\t_\t_\t_\t_\t_\t_\t_\t_\n4\ttest\t_\t_\t_\t_\t_\t_\t_\t_",
 
-  1: '1\tthis\t_\t_\t_\t_\t_\t_\t_\t_\n2\tis\t_\t_\t_\t_\t_\t_\t_\t_\n3\ta\t_\t_\t_\t_\t_\t_\t_\t_\n4\ttest\t_\t_\t_\t_\t_\t_\t_\t_',
+  1: "1\tthis\t_\t_\t_\t_\t_\t_\t_\t_\n2\tis\t_\t_\t_\t_\t_\t_\t_\t_\n3\ta\t_\t_\t_\t_\t_\t_\t_\t_\n4\ttest\t_\t_\t_\t_\t_\t_\t_\t_",
 
-  cat_ancora: '# url = https://raw.githubusercontent.com/UniversalDependencies/UD_Catalan-AnCora/dev/ca_ancora-ud-test.conllu\n# sent_id = test-s1\n# text = El darrer n\xFAmero de l\'Observatori del Mercat de Treball d\'Osona inclou un informe especial sobre la contractaci\xF3 a trav\xE9s de les empreses de treball temporal, les ETT.\n# orig_file_sentence 001#1\n1\tEl\tel\tDET\tDET\tDefinite=Def|Gender=Masc|Number=Sing|PronType=Art\t3\tdet\t_\t_\n2\tdarrer\tdarrer\tADJ\tADJ\tGender=Masc|Number=Sing|NumType=Ord\t3\tamod\t_\t_\n3\tn\xFAmero\tn\xFAmero\tNOUN\tNOUN\tGender=Masc|Number=Sing\t13\tnsubj\t_\t_\n4\tde\tde\tADP\tADP\tAdpType=Prep\t6\tcase\t_\t_\n5\tl\'\tel\tDET\tDET\tDefinite=Def|Number=Sing|PronType=Art\t6\tdet\t_\tSpaceAfter=No\n6\tObservatori\tObservatori\tPROPN\tPROPN\t_\t3\tnmod\t_\tMWE=Observatori_del_Mercat_de_Treball_d\'_Osona|MWEPOS=PROPN\n7\tdel\tdel\tADP\tADP\tAdpType=Preppron|Gender=Masc|Number=Sing\t8\tcase\t_\t_\n8\tMercat\tMercat\tPROPN\tPROPN\t_\t6\tflat\t_\t_\n9\tde\tde\tADP\tADP\tAdpType=Prep\t10\tcase\t_\t_\n10\tTreball\tTreball\tPROPN\tPROPN\t_\t6\tflat\t_\t_\n11\td\'\td\'\tADP\tADP\tAdpType=Prep\t12\tcase\t_\tSpaceAfter=No\n12\tOsona\tOsona\tPROPN\tPROPN\t_\t6\tflat\t_\t_\n13\tinclou\tincloure\tVERB\tVERB\tMood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin\t0\troot\t_\t_\n14\tun\tun\tNUM\tNUM\tGender=Masc|Number=Sing|NumType=Card\t15\tnummod\t_\t_\n15\tinforme\tinforme\tNOUN\tNOUN\tGender=Masc|Number=Sing\t13\tobj\t_\t_\n16\tespecial\tespecial\tADJ\tADJ\tNumber=Sing\t15\tamod\t_\t_\n17\tsobre\tsobre\tADP\tADP\tAdpType=Prep\t19\tcase\t_\t_\n18\tla\tel\tDET\tDET\tDefinite=Def|Gender=Fem|Number=Sing|PronType=Art\t19\tdet\t_\t_\n19\tcontractaci\xF3\tcontractaci\xF3\tNOUN\tNOUN\tGender=Fem|Number=Sing\t15\tnmod\t_\t_\n20\ta\ta\tADP\tADP\tAdpType=Prep\t24\tcase\t_\tMWE=a_trav\xE9s_de|MWEPOS=ADP\n21\ttrav\xE9s\ttrav\xE9s\tNOUN\tNOUN\t_\t20\tfixed\t_\t_\n22\tde\tde\tADP\tADP\tAdpType=Prep\t20\tfixed\t_\t_\n23\tles\tel\tDET\tDET\tDefinite=Def|Gender=Fem|Number=Plur|PronType=Art\t24\tdet\t_\t_\n24\tempreses\tempresa\tNOUN\tNOUN\tGender=Fem|Number=Plur\t19\tnmod\t_\t_\n25\tde\tde\tADP\tADP\tAdpType=Prep\t26\tcase\t_\t_\n26\ttreball\ttreball\tNOUN\tNOUN\tGender=Masc|Number=Sing\t24\tnmod\t_\t_\n27\ttemporal\ttemporal\tADJ\tADJ\tNumber=Sing\t26\tamod\t_\tSpaceAfter=No\n28\t,\t,\tPUNCT\tPUNCT\tPunctType=Comm\t30\tpunct\t_\t_\n29\tles\tel\tDET\tDET\tDefinite=Def|Gender=Fem|Number=Plur|PronType=Art\t30\tdet\t_\t_\n30\tETT\tETT\tPROPN\tPROPN\t_\t24\tappos\t_\tSpaceAfter=No\n31\t.\t.\tPUNCT\tPUNCT\tPunctType=Peri\t13\tpunct\t_\t_',
+  cat_ancora: "# url = https://raw.githubusercontent.com/UniversalDependencies/UD_Catalan-AnCora/dev/ca_ancora-ud-test.conllu\n# sent_id = test-s1\n# text = El darrer n\xFAmero de l'Observatori del Mercat de Treball d'Osona inclou un informe especial sobre la contractaci\xF3 a trav\xE9s de les empreses de treball temporal, les ETT.\n# orig_file_sentence 001#1\n1\tEl\tel\tDET\tDET\tDefinite=Def|Gender=Masc|Number=Sing|PronType=Art\t3\tdet\t_\t_\n2\tdarrer\tdarrer\tADJ\tADJ\tGender=Masc|Number=Sing|NumType=Ord\t3\tamod\t_\t_\n3\tn\xFAmero\tn\xFAmero\tNOUN\tNOUN\tGender=Masc|Number=Sing\t13\tnsubj\t_\t_\n4\tde\tde\tADP\tADP\tAdpType=Prep\t6\tcase\t_\t_\n5\tl'\tel\tDET\tDET\tDefinite=Def|Number=Sing|PronType=Art\t6\tdet\t_\tSpaceAfter=No\n6\tObservatori\tObservatori\tPROPN\tPROPN\t_\t3\tnmod\t_\tMWE=Observatori_del_Mercat_de_Treball_d'_Osona|MWEPOS=PROPN\n7\tdel\tdel\tADP\tADP\tAdpType=Preppron|Gender=Masc|Number=Sing\t8\tcase\t_\t_\n8\tMercat\tMercat\tPROPN\tPROPN\t_\t6\tflat\t_\t_\n9\tde\tde\tADP\tADP\tAdpType=Prep\t10\tcase\t_\t_\n10\tTreball\tTreball\tPROPN\tPROPN\t_\t6\tflat\t_\t_\n11\td'\td'\tADP\tADP\tAdpType=Prep\t12\tcase\t_\tSpaceAfter=No\n12\tOsona\tOsona\tPROPN\tPROPN\t_\t6\tflat\t_\t_\n13\tinclou\tincloure\tVERB\tVERB\tMood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin\t0\troot\t_\t_\n14\tun\tun\tNUM\tNUM\tGender=Masc|Number=Sing|NumType=Card\t15\tnummod\t_\t_\n15\tinforme\tinforme\tNOUN\tNOUN\tGender=Masc|Number=Sing\t13\tobj\t_\t_\n16\tespecial\tespecial\tADJ\tADJ\tNumber=Sing\t15\tamod\t_\t_\n17\tsobre\tsobre\tADP\tADP\tAdpType=Prep\t19\tcase\t_\t_\n18\tla\tel\tDET\tDET\tDefinite=Def|Gender=Fem|Number=Sing|PronType=Art\t19\tdet\t_\t_\n19\tcontractaci\xF3\tcontractaci\xF3\tNOUN\tNOUN\tGender=Fem|Number=Sing\t15\tnmod\t_\t_\n20\ta\ta\tADP\tADP\tAdpType=Prep\t24\tcase\t_\tMWE=a_trav\xE9s_de|MWEPOS=ADP\n21\ttrav\xE9s\ttrav\xE9s\tNOUN\tNOUN\t_\t20\tfixed\t_\t_\n22\tde\tde\tADP\tADP\tAdpType=Prep\t20\tfixed\t_\t_\n23\tles\tel\tDET\tDET\tDefinite=Def|Gender=Fem|Number=Plur|PronType=Art\t24\tdet\t_\t_\n24\tempreses\tempresa\tNOUN\tNOUN\tGender=Fem|Number=Plur\t19\tnmod\t_\t_\n25\tde\tde\tADP\tADP\tAdpType=Prep\t26\tcase\t_\t_\n26\ttreball\ttreball\tNOUN\tNOUN\tGender=Masc|Number=Sing\t24\tnmod\t_\t_\n27\ttemporal\ttemporal\tADJ\tADJ\tNumber=Sing\t26\tamod\t_\tSpaceAfter=No\n28\t,\t,\tPUNCT\tPUNCT\tPunctType=Comm\t30\tpunct\t_\t_\n29\tles\tel\tDET\tDET\tDefinite=Def|Gender=Fem|Number=Plur|PronType=Art\t30\tdet\t_\t_\n30\tETT\tETT\tPROPN\tPROPN\t_\t24\tappos\t_\tSpaceAfter=No\n31\t.\t.\tPUNCT\tPUNCT\tPunctType=Peri\t13\tpunct\t_\t_",
 
-  with_tabs: '# sent_id = chapID01:paragID1:sentID1\n# text = \u041A\u0435\u0447\u0430\u0435\u043D\u044C \u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C \u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F \u043A\u0430\u0440\u0432\u043E\u0442 .\n# text[eng] = Kechai was awoken by annoying flies.\n1\t\u041A\u0435\u0447\u0430\u0435\u043D\u044C\t\u041A\u0435\u0447\u0430\u0439\tN\tN\tSem/Ant_Mal|Prop|SP|Gen|Indef\t2\tobj\t_\t\u041A\u0435\u0447\u0430\u0435\u043D\u044C\n2\t\u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C\t\u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0435\u043C\u0441\tV\tV\tTV|Ind|Prt1|ScPl3|OcSg3\t0\troot\t_\t\u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C\n3\t\u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F\t\u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u043E\u043C\u0441\tPRC\tPrc\tV|TV|PrcPrsL|Sg|Nom|Indef\t4\tamod\t\u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F\t_\n4\t\u043A\u0430\u0440\u0432\u043E\u0442\t\u043A\u0430\u0440\u0432\u043E\tN\tN\tSem/Ani|N|Pl|Nom|Indef\t2\tnsubj\t_\t\u043A\u0430\u0440\u0432\u043E\u0442\n5\t.\t.\tCLB\tCLB\tCLB\t2\tpunct\t_\t.',
+  with_tabs: "# sent_id = chapID01:paragID1:sentID1\n# text = \u041A\u0435\u0447\u0430\u0435\u043D\u044C \u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C \u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F \u043A\u0430\u0440\u0432\u043E\u0442 .\n# text[eng] = Kechai was awoken by annoying flies.\n1\t\u041A\u0435\u0447\u0430\u0435\u043D\u044C\t\u041A\u0435\u0447\u0430\u0439\tN\tN\tSem/Ant_Mal|Prop|SP|Gen|Indef\t2\tobj\t_\t\u041A\u0435\u0447\u0430\u0435\u043D\u044C\n2\t\u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C\t\u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0435\u043C\u0441\tV\tV\tTV|Ind|Prt1|ScPl3|OcSg3\t0\troot\t_\t\u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C\n3\t\u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F\t\u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u043E\u043C\u0441\tPRC\tPrc\tV|TV|PrcPrsL|Sg|Nom|Indef\t4\tamod\t_\t\u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F\n4\t\u043A\u0430\u0440\u0432\u043E\u0442\t\u043A\u0430\u0440\u0432\u043E\tN\tN\tSem/Ani|N|Pl|Nom|Indef\t2\tnsubj\t_\t\u043A\u0430\u0440\u0432\u043E\u0442\n5\t.\t.\tCLB\tCLB\tCLB\t2\tpunct\t_\t.",
 
-  without_tabs: '# sent_id = chapID01:paragID1:sentID1\n# text = \u041A\u0435\u0447\u0430\u0435\u043D\u044C \u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C \u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F \u043A\u0430\u0440\u0432\u043E\u0442 .\n# text[eng] = Kechai was awoken by annoying flies.\n1 \u041A\u0435\u0447\u0430\u0435\u043D\u044C \u041A\u0435\u0447\u0430\u0439 N N Sem/Ant_Mal|Prop|SP|Gen|Indef 2 obj _ \u041A\u0435\u0447\u0430\u0435\u043D\u044C\n2 \u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C \u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0435\u043C\u0441 V V TV|Ind|Prt1|ScPl3|OcSg3 0 root _ \u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C\n3 \u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F \u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u043E\u043C\u0441 PRC Prc V|TV|PrcPrsL|Sg|Nom|Indef 4 amod \u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F\t_\n4 \u043A\u0430\u0440\u0432\u043E\u0442 \u043A\u0430\u0440\u0432\u043E N N Sem/Ani|N|Pl|Nom|Indef 2 nsubj _ \u043A\u0430\u0440\u0432\u043E\u0442\n5 . . CLB CLB CLB 2 punct _ .',
+  without_tabs: "# sent_id = chapID01:paragID1:sentID1\n# text = \u041A\u0435\u0447\u0430\u0435\u043D\u044C \u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C \u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F \u043A\u0430\u0440\u0432\u043E\u0442 .\n# text[eng] = Kechai was awoken by annoying flies.\n1 \u041A\u0435\u0447\u0430\u0435\u043D\u044C \u041A\u0435\u0447\u0430\u0439 N N Sem/Ant_Mal|Prop|SP|Gen|Indef 2 obj _ \u041A\u0435\u0447\u0430\u0435\u043D\u044C\n2 \u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C \u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0435\u043C\u0441 V V TV|Ind|Prt1|ScPl3|OcSg3 0 root _ \u0441\u044B\u0440\u0433\u043E\u0437\u0442\u0438\u0437\u044C\n3 \u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F \u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u043E\u043C\u0441 PRC Prc V|TV|PrcPrsL|Sg|Nom|Indef 4 amod _ \u043D\u0430\u043B\u043A\u0441\u0442\u0430\u0432\u0442\u044B\u0446\u044F\n4 \u043A\u0430\u0440\u0432\u043E\u0442 \u043A\u0430\u0440\u0432\u043E N N Sem/Ani|N|Pl|Nom|Indef 2 nsubj _ \u043A\u0430\u0440\u0432\u043E\u0442\n5 . . CLB CLB CLB 2 punct _ .",
 
-  from_cg3_with_semicolumn: '1\tSiedzieli\u015Bmy\tsiedzie\u0107\tvblex\t_\timpf|past|p1|m|pl\t_\t_\t_\t_\n2\tw\tw\tpr\t_\t_\t_\t_\t_\t_\n3\tmoim\tm\xF3j\tprn\t_\tpos|mi|sg|loc\t_\t_\t_\t_\n4\tpokoju\tpok\xF3j\tn\t_\tmi|sg|loc\t_\t_\t_\t_\n5\t,\t,\tcm\t_\t_\t_\t_\t_\t_\n6\tpal\u0105c\tpali\u0107\tvblex\t_\timpf|pprs|adv\t_\t_\t_\t_\n7\ti\ti\tcnjcoo\t_\t_\t_\t_\t_\t_\n8\trozmawiaj\u0105c\trozmawia\u0107\tvblex\t_\timpf|pprs|adv\t_\t_\t_\t_\n9\to\to\tpr\t_\t_\t_\t_\t_\t_\n10\ttem\tto\tprn\t_\tdem|mi|sg|loc\t_\t_\t_\t_\n11\t,\t,\tcm\t_\t_\t_\t_\t_\t_\n12\tjak\tjak\trel\t_\tadv\t_\t_\t_\t_\n13\tmarni\tmarny\tadj\t_\tsint|mp|pl|nom\t_\t_\t_\t_\n14\tjeste\u015Bmy\tby\u0107\tvbser\t_\tpres|p1|pl\t_\t_\t_\t_\n15\t,\t,\tcm\t_\t_\t_\t_\t_\t_\n16\tmarni\tmarny\tadj\t_\tsint|mp|pl|nom\t_\t_\t_\t_\n17\tz\tz\tpr\t_\t_\t_\t_\t_\t_\n18\tlekarskiego\tlekarski\tadj\t_\tmi|sg|gen\t_\t_\t_\t_\n19\tpunktu\tpunkt\tn\t_\tmi|sg|gen\t_\t_\t_\t_\n20\twidzenia\twidzie\u0107\tvblex\t_\timpf|ger|nt|sg|gen\t_\t_\t_\t_\n21\tchc\u0119\tchcie\u0107\tvblex\t_\timpf|pres|p1|sg\t_\t_\t_\t_\n22\tpowiedzie\u0107\tpowiedzie\u0107\tvblex\t_\tperf|inf\t_\t_\t_\t_\n23\t,\t,\tcm\t_\t_\t_\t_\t_\t_\n24\tnaturalnie\tnaturalnie\tadv\t_\tsint\t_\t_\t_\t_\n25\t.\t.\tsent\t_\t_\t_\t_\t_\t_',
+  from_cg3_with_semicolumn: "1\tSiedzieli\u015Bmy\tsiedzie\u0107\tvblex\t_\timpf|past|p1|m|pl\t_\t_\t_\t_\n2\tw\tw\tpr\t_\t_\t_\t_\t_\t_\n3\tmoim\tm\xF3j\tprn\t_\tpos|mi|sg|loc\t_\t_\t_\t_\n4\tpokoju\tpok\xF3j\tn\t_\tmi|sg|loc\t_\t_\t_\t_\n5\t,\t,\tcm\t_\t_\t_\t_\t_\t_\n6\tpal\u0105c\tpali\u0107\tvblex\t_\timpf|pprs|adv\t_\t_\t_\t_\n7\ti\ti\tcnjcoo\t_\t_\t_\t_\t_\t_\n8\trozmawiaj\u0105c\trozmawia\u0107\tvblex\t_\timpf|pprs|adv\t_\t_\t_\t_\n9\to\to\tpr\t_\t_\t_\t_\t_\t_\n10\ttem\tto\tprn\t_\tdem|mi|sg|loc\t_\t_\t_\t_\n11\t,\t,\tcm\t_\t_\t_\t_\t_\t_\n12\tjak\tjak\trel\t_\tadv\t_\t_\t_\t_\n13\tmarni\tmarny\tadj\t_\tsint|mp|pl|nom\t_\t_\t_\t_\n14\tjeste\u015Bmy\tby\u0107\tvbser\t_\tpres|p1|pl\t_\t_\t_\t_\n15\t,\t,\tcm\t_\t_\t_\t_\t_\t_\n16\tmarni\tmarny\tadj\t_\tsint|mp|pl|nom\t_\t_\t_\t_\n17\tz\tz\tpr\t_\t_\t_\t_\t_\t_\n18\tlekarskiego\tlekarski\tadj\t_\tmi|sg|gen\t_\t_\t_\t_\n19\tpunktu\tpunkt\tn\t_\tmi|sg|gen\t_\t_\t_\t_\n20\twidzenia\twidzie\u0107\tvblex\t_\timpf|ger|nt|sg|gen\t_\t_\t_\t_\n21\tchc\u0119\tchcie\u0107\tvblex\t_\timpf|pres|p1|sg\t_\t_\t_\t_\n22\tpowiedzie\u0107\tpowiedzie\u0107\tvblex\t_\tperf|inf\t_\t_\t_\t_\n23\t,\t,\tcm\t_\t_\t_\t_\t_\t_\n24\tnaturalnie\tnaturalnie\tadv\t_\tsint\t_\t_\t_\t_\n25\t.\t.\tsent\t_\t_\t_\t_\t_\t_",
 
-  from_cg3_simple: '1\t\u041F\u0430\u0442\u0448\u0430\u043C\u0435\u043D\t\u043F\u0430\u0442\u0448\u0430\tn\t_\tins\t3\tnmod\t_\t_\n2\t\u0441\u043E\u0493\u044B\u0441\t\u0441\u043E\u0493\u044B\u0441\tn\t_\tnom\t3\tobj\t_\t_\n3\t\u0430\u0448\u049B\u0430\u043D\u0434\u0430\t\u0430\u0448\tv\t_\ttv|ger_past|loc\t12\tadvcl\t_\t_\n4\t,\t,\tcm\t_\t_\t12\tpunct\t_\t_\n5\t\u0435\u043B-\u0436\u04B1\u0440\u0442\t\u0435\u043B-\u0436\u04B1\u0440\u0442\tn\t_\tnom\t7\tconj\t_\t_\n6\t,\t,\tcm\t_\t_\t7\tpunct\t_\t_\n7\t\u043E\u0442\u0430\u043D\u044B\u043C\u0434\u044B\t\u043E\u0442\u0430\u043D\tn\t_\tpx1sg|acc\t8\tobj\t_\t_\n8\t\u049B\u043E\u0440\u0493\u0430\u0443\u0493\u0430\t\u049B\u043E\u0440\u0493\u0430\tv\t_\ttv|ger|dat\t12\tadvcl\t_\t_\n9\t,\t,\tcm\t_\t_\t12\tpunct\t_\t_\n10\t\u0431\u0456\u0437\t\u0431\u0456\u0437\tprn\t_\tpers|p1|pl|nom\t12\tnsubj\t_\t_\n11\t\u0441\u043E\u0493\u044B\u0441\u049B\u0430\t\u0441\u043E\u0493\u044B\u0441\tn\t_\tdat\t12\tnmod\t_\t_\n12\t\u0431\u0430\u0440\u0434\u044B\u049B\t\u0431\u0430\u0440\tv\t_\tiv|ifi|p1|pl\t0\troot\t_\t_\n13\t.\t.\tsent\t_\t_\t12\tpunct\t_\t_\n',
+  from_cg3_simple: "1\t\u041F\u0430\u0442\u0448\u0430\u043C\u0435\u043D\t\u043F\u0430\u0442\u0448\u0430\tn\t_\tins\t3\tnmod\t_\t_\n2\t\u0441\u043E\u0493\u044B\u0441\t\u0441\u043E\u0493\u044B\u0441\tn\t_\tnom\t3\tobj\t_\t_\n3\t\u0430\u0448\u049B\u0430\u043D\u0434\u0430\t\u0430\u0448\tv\t_\ttv|ger_past|loc\t12\tadvcl\t_\t_\n4\t,\t,\tcm\t_\t_\t12\tpunct\t_\t_\n5\t\u0435\u043B-\u0436\u04B1\u0440\u0442\t\u0435\u043B-\u0436\u04B1\u0440\u0442\tn\t_\tnom\t7\tconj\t_\t_\n6\t,\t,\tcm\t_\t_\t7\tpunct\t_\t_\n7\t\u043E\u0442\u0430\u043D\u044B\u043C\u0434\u044B\t\u043E\u0442\u0430\u043D\tn\t_\tpx1sg|acc\t8\tobj\t_\t_\n8\t\u049B\u043E\u0440\u0493\u0430\u0443\u0493\u0430\t\u049B\u043E\u0440\u0493\u0430\tv\t_\ttv|ger|dat\t12\tadvcl\t_\t_\n9\t,\t,\tcm\t_\t_\t12\tpunct\t_\t_\n10\t\u0431\u0456\u0437\t\u0431\u0456\u0437\tprn\t_\tpers|p1|pl|nom\t12\tnsubj\t_\t_\n11\t\u0441\u043E\u0493\u044B\u0441\u049B\u0430\t\u0441\u043E\u0493\u044B\u0441\tn\t_\tdat\t12\tnmod\t_\t_\n12\t\u0431\u0430\u0440\u0434\u044B\u049B\t\u0431\u0430\u0440\tv\t_\tiv|ifi|p1|pl\t0\troot\t_\t_\n13\t.\t.\tsent\t_\t_\t12\tpunct\t_\t_\n",
 
-  from_cg3_with_spans: '# text = He boued e tebr Mona er gegin.\n# text[eng] = Mona eats her food here in the kitchen.\n# labels = press_1986 ch_syntax p_197 to_check\n1\tHe\the\tdet\t_\tpos|f|sp\t2\tdet\t_\t_\n2\tboued\tboued\tn\t_\tm|sg\t4\tobj\t_\t_\n3\te\te\tvpart\t_\tobj\t4\taux\t_\t_\n4\ttebr\tdebri\xF1\tvblex\t_\tpri|p3|sg\t0\troot\t_\t_\n5\tMona\tMona\tnp\t_\tant|f|sg\t4\tnsubj\t_\t_\n6-7\ter\t_\t_\t_\t_\t_\t_\t_\t_\n6\t_\te\tpr\t_\t_\t8\tcase\t_\t_\n7\t_\tan\tdet\t_\tdef|sp\t8\tdet\t_\t_\n8\tgegin\tkegin\tn\t_\tf|sg\t4\tobl\t_\t_\n9\t.\t.\tsent\t_\t_\t4\tpunct\t_\t_\n',
+  from_cg3_with_spans: "# text = He boued e tebr Mona er gegin.\n# text[eng] = Mona eats her food here in the kitchen.\n# labels = press_1986 ch_syntax p_197 to_check\n1\tHe\the\tdet\t_\tpos|f|sp\t2\tdet\t_\t_\n2\tboued\tboued\tn\t_\tm|sg\t4\tobj\t_\t_\n3\te\te\tvpart\t_\tobj\t4\taux\t_\t_\n4\ttebr\tdebri\xF1\tvblex\t_\tpri|p3|sg\t0\troot\t_\t_\n5\tMona\tMona\tnp\t_\tant|f|sg\t4\tnsubj\t_\t_\n6-7\ter\t_\t_\t_\t_\t_\t_\t_\t_\n6\t_\te\tpr\t_\t_\t8\tcase\t_\t_\n7\t_\tan\tdet\t_\tdef|sp\t8\tdet\t_\t_\n8\tgegin\tkegin\tn\t_\tf|sg\t4\tobl\t_\t_\n9\t.\t.\tsent\t_\t_\t4\tpunct\t_\t_\n",
 
-  rueter_long: '# sent_id = BryzhinskijMixail_Kirdazht_manu:3859\n# text = \u041D\u043E \u0437\u044F\u0440\u0441 \u0432\u0430\u043B\u0433\u0441\u044C , \u0437\u044F\u0440\u0441 \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u0441\u044C \u0434\u044B \u043C\u0435\u043A\u0435\u0432 \u043F\u0430\u0440\u0441\u0442\u0435 \u043F\u0435\u043A\u0441\u0442\u043D\u0435\u0441\u044C \u0432\u0435\u043B\u0435 \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C , \u043A\u0443\u0436\u043E \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C , \u043A\u0443\u0440\u043E \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u0434\u044B \u044D\u0441\u0435\u0441\u0442 \u044E\u0440\u0442\u0441 \u0441\u043E\u0432\u0430\u043C\u043E \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u044D\u0440\u044C\u0432\u0430 \u043B\u0438\u0441\u0438\u0446\u044F\u043D\u0442\u0435\u043D\u044C \u0441\u043E\u0432\u0438\u0446\u044F\u043D\u0442\u0435\u043D\u044C \u0442\u0435 \u0441\u0432\u0430\u043B \u0442\u0435\u0439\u043D\u0435\u043C\u0430 , \u043A\u0435\u043D\u043A\u0448\u0442\u043D\u0435 \u0441\u0432\u0430\u043B \u043F\u0435\u043A\u0441\u0442\u0430\u0437\u044C \u0443\u043B\u0435\u0437\u0442 ; \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u0441\u044B\u0437\u044C \u043A\u0435\u043B\u0435\u0441 \u0430\u043D\u0441\u044F\u043A \u0432\u0430\u043B\u0441\u043A\u0435 \u043C\u0430\u0440\u0442\u043E \u0434\u044B \u0447\u043E\u043F\u043E\u043D\u044C\u0431\u0435\u043B\u0435\u0432 \u2014 \u0440\u0430\u043A\u0448\u0430\u043D\u044C \u043B\u0438\u0432\u0442\u0435\u043C\u0430 \u0441\u043E\u0432\u0430\u0432\u0442\u043E\u043C\u0430 \u0448\u043A\u0430\u043D\u0435 , \u043A\u0443\u0439\u043C\u0435\u0441\u044C \u0442\u0430\u0433\u043E \u0441\u0442\u0430\u043A\u0430\u043B\u0433\u0430\u0434\u0441\u044C .\n# text_en = But by the time he got down the hill, opened and closed the village gate, the lane gate, the cluster gate and the one to their own home (something everyone coming or going had to do, so the gates would always be closed; they were only opened in the morning and at dusk for taking out and letting in the cattle), the wicker of clay had grown heavy again.\n# text_fi = Kun Ket\u0161ai tuli m\xE4elt\xE4 alas, avasi ja sulki huolellisesti kyl\xE4ver\xE4j\xE4ns\xE4, ??aukio/kentt\xE4ver\xE4j\xE4n, kujaver\xE4j\xE4n ja oman kotiver\xE4j\xE4n, savikontti ehti taas alkaa painaa h\xE4nen selk\xE4\xE4ns\xE4. (Kaikkien k\xE4vij\xF6iden tulee tehd\xE4 n\xE4in, jotta ver\xE4j\xE4t olisivat aina kiinni, ver\xE4j\xE4th\xE4n pidet\xE4\xE4n selkosen sel\xE4ll\xE4\xE4n vain aamulla ja illansuussa, kun karjaa ajetaan laitumelle tai kotiin.)\n1 \u041D\u043E \u043D\u043E CCONJ CC _ 3 cc _ _\n2 \u0437\u044F\u0440\u0441 \u0437\u044F\u0440\u0441 ADV Adv|Der/Ill|Adv|Sem/Time Derivation=Ill|AdvType=Tim 3 mark _ _\n3 \u0432\u0430\u043B\u0433\u0441\u044C \u0432\u0430\u043B\u0433\u043E\u043C\u0441 VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 51 advcl _ SpaceAfter=No\n4 , , PUNCT CLB _ 6 punct _ _\n5 \u0437\u044F\u0440\u0441 \u0437\u044F\u0440\u0441 ADV Adv|Der/Ill|Adv|Sem/Time Derivation=Ill|AdvType=Tim 6 mark _ _\n6 \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u0441\u044C \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u043C\u0441 VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 3 conj _ _\n7 \u0434\u044B \u0434\u044B CCONJ CC _ 10 cc _ _\n8 \u043C\u0435\u043A\u0435\u0432 \u043C\u0435\u043A\u0435\u0432 ADV Adv|Lat|Sg|Nom|Indef Case=Lat|Case=Nom|Definite=Ind|Number=Sing 10 advmod _ _\n9 \u043F\u0430\u0440\u0441\u0442\u0435 \u043F\u0430\u0440\u0441\u0442\u0435 ADV Adv|Manner AdvType=Man 10 advmod _ _\n10 \u043F\u0435\u043A\u0441\u0442\u043D\u0435\u0441\u044C \u043F\u0435\u043A\u0441\u0442\u043D\u0435\u043C\u0441 VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 3 conj _ _\n11 \u0432\u0435\u043B\u0435 \u0432\u0435\u043B\u0435 NOUN N|Sem/Inanim_Cnt|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 10 obj _ _\n12 \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u043A\u0435\u043D\u043A\u0448 NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 11 goeswith _ SpaceAfter=No\n13 , , PUNCT CLB _ 15 punct _ _\n14 \u043A\u0443\u0436\u043E \u043A\u0443\u0436\u043E NOUN N|Sem/Inanim_Cnt|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 12 conj _ _\n15 \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u043A\u0435\u043D\u043A\u0448 NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 14 goeswith _ SpaceAfter=No\n16 , , PUNCT CLB _ 18 punct _ _\n17 \u043A\u0443\u0440\u043E \u043A\u0443\u0440\u043E NOUN N|Sem/Inanim_Cnt|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 12 conj _ _\n18 \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u043A\u0435\u043D\u043A\u0448 NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 17 goeswith _ _\n19 \u0434\u044B \u0434\u044B CCONJ CC _ 23 cc _ _\n20 \u044D\u0441\u0435\u0441\u0442 \u044D\u0441\u044C PRON Pron|Refl|Pl3|Gen|Variant=Short Case=Gen|Number=Plur|Person=3|PronType=Refl|Variant=Short 22 nmod _ _\n21 \u044E\u0440\u0442\u0441 \u044E\u0440\u0442 NOUN N|Sem/Inanim_Cnt|SP|Ill|Indef Case=Ill|Definite=Ind|Number=Plur,Sing 20 case _ _\n22 \u0441\u043E\u0432\u0430\u043C\u043E \u0441\u043E\u0432\u0430\u043C\u043E NOUN N|IV|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing|Valency=1 23 compound _ _\n23 \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u043A\u0435\u043D\u043A\u0448 NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 12 conj _ _\n24 ( ( PUNCT PUNCT _ 29 punct _ SpaceAfter=No\n25 \u044D\u0440\u044C\u0432\u0430 \u044D\u0440\u044C\u0432\u0430 DET Det|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 26 det _ _\n26 \u043B\u0438\u0441\u0438\u0446\u044F\u043D\u0442\u0435\u043D\u044C-\u0441\u043E\u0432\u0438\u0446\u044F\u043D\u0442\u0435\u043D\u044C \u043B\u0438\u0441\u0438\u0446\u044F\u0442-\u0441\u043E\u0432\u0438\u0446\u044F\u0442 NOUN N|V|NomAg|Sg|Dat|Def Case=Dat|Definite=Def|Derivation=NomAg|Number=Sing 29 obl _ _\n27 \u0442\u0435 \u0442\u0435 PRON Pron|Dem|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing|PronType=Dem 29 nsubj _ _\n28 \u0441\u0432\u0430\u043B \u0441\u0432\u0430\u043B ADV Adv|Tot|Sem/Time_dur PronType=Tot|PronType=Tot 29 advmod _ _\n29 \u0442\u0435\u0439\u043D\u0435\u043C\u0430 \u0442\u0435\u0439\u043D\u0435\u043Cc VERB V|TV|Oblig|Clitic=Cop|Prs|ScSg3 Valency=2|VerbForm=Oblig|Clitic=Cop|Number[subj]=Sing|Person[subj]=3|Tense=Pres 3 parataxis _ SpaceAfter=No\n30 , , PUNCT CLB _ 33 punct _ _\n31 \u043A\u0435\u043D\u043A\u0448\u0442\u043D\u0435 \u043A\u0435\u043D\u043A\u0448 NOUN N|Sem/Inanim_Cnt|Pl|Nom|Def Case=Nom|Definite=Def|Number=Plur 34 nsubj _ _\n32 \u0441\u0432\u0430\u043B \u0441\u0432\u0430\u043B ADV Adv|Tot|Sem/Time_dur PronType=Tot|PronType=Tot 33 advmod _ _\n33 \u043F\u0435\u043A\u0441\u0442\u0430\u0437\u044C \u043F\u0435\u043A\u0441\u0442\u0430\u043C\u0441 VERB V|Der/\u041E\u0437\u044C|Ger Derivation=Ozj|VerbForm=Conv 29 ccomp _ _\n34 \u0443\u043B\u0435\u0437\u0442 \u0443\u043B\u0435\u043C\u0441 AUX V|IV|Opt|ScPl3 Mood=Opt|Number[subj]=Plur|Person[subj]=3|Valency=1 33 cop _ SpaceAfter=No\n35 ; ; PUNCT CLB _ 29 punct _ _\n36 \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u0441\u044B\u0437\u044C \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u043C\u0441 VERB V|Ind|Prs|ScPl3|Obj3 Mood=Ind|Number[subj]=Plur|Person[subj]=3|Tense=Pres|Obj3 29 conj _ _\n37 \u043A\u0435\u043B\u0435\u0441 \u043A\u0435\u043B\u0435\u0441 ADV Adv Adv 36 advmod _ _\n38 \u0430\u043D\u0441\u044F\u043A \u0430\u043D\u0441\u044F\u043A ADV Adv Adv 39 advmod _ _\n39 \u0432\u0430\u043B\u0441\u043A\u0435 \u0432\u0430\u043B\u0441\u043A\u0435 NOUN N|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 36 obl _ _\n40 \u043C\u0430\u0440\u0442\u043E \u043C\u0430\u0440\u0442\u043E ADP Adp|Po AdpType=Post 39 case _ _\n41 \u0434\u044B \u0434\u044B CCONJ CC _ 42 cc _ _\n42 \u0447\u043E\u043F\u043E\u043D\u044C\u0431\u0435\u043B\u0435\u0432 \u0447\u043E\u043F\u043E\u043D\u044C\u0431\u0435\u043B\u0435\u0432 ADV Adv|Lat Case=Lat 39 conj _ _\n43 \u2014 \u2014 PUNCT CLB _ 46 punct _ _\n44 \u0440\u0430\u043A\u0448\u0430\u043D\u044C \u0440\u0430\u043A\u0448\u0430 NOUN N|Sem/Anim_Cnt|SP|Gen|Indef Case=Gen|Definite=Ind|Number=Plur,Sing 45 nmod:gobj _ _\n45 \u043B\u0438\u0432\u0442\u0435\u043C\u0430-\u0441\u043E\u0432\u0430\u0432\u0442\u043E\u043C\u0430 \u043B\u0438\u0432\u0442\u0435\u043C\u0430-\u0441\u043E\u0432\u0430\u0432\u0442\u043E\u043C\u0430 NOUN N|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 36 nmod _ _\n46 \u0448\u043A\u0430\u043D\u0435 \u0448\u043A\u0430 NOUN N|Sem/Time|SP|Temp|Indef Case=Temp|Definite=Ind|Number=Plur,Sing 39 conj _ SpaceAfter=No\n47 ) ) PUNCT PUNCT _ 29 punct _ SpaceAfter=No\n48 , , PUNCT CLB _ 29 punct _ _\n49 \u043A\u0443\u0439\u043C\u0435\u0441\u044C \u043A\u0443\u0439\u043C\u0435 NOUN N|Sem/Inanim_Cnt|Sg|Nom|Def Case=Nom|Definite=Def|Number=Sing 51 nsubj _ _\n50 \u0442\u0430\u0433\u043E \u0442\u0430\u0433\u043E ADV Adv|Sem/Time AdvType=Tim 51 advmod _ _\n51 \u0441\u0442\u0430\u043A\u0430\u043B\u0433\u0430\u0434\u0441\u044C \u0441\u0442\u0430\u043A\u0430\u043B\u0433\u0430\u0434\u043E\u043C\u0441 VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 0 root _ SpaceAfter=No\n52 . . PUNCT CLB _ 51 punct _ _',
+  rueter_long: "# sent_id = BryzhinskijMixail_Kirdazht_manu:3859\n# text = \u041D\u043E \u0437\u044F\u0440\u0441 \u0432\u0430\u043B\u0433\u0441\u044C , \u0437\u044F\u0440\u0441 \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u0441\u044C \u0434\u044B \u043C\u0435\u043A\u0435\u0432 \u043F\u0430\u0440\u0441\u0442\u0435 \u043F\u0435\u043A\u0441\u0442\u043D\u0435\u0441\u044C \u0432\u0435\u043B\u0435 \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C , \u043A\u0443\u0436\u043E \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C , \u043A\u0443\u0440\u043E \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u0434\u044B \u044D\u0441\u0435\u0441\u0442 \u044E\u0440\u0442\u0441 \u0441\u043E\u0432\u0430\u043C\u043E \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u044D\u0440\u044C\u0432\u0430 \u043B\u0438\u0441\u0438\u0446\u044F\u043D\u0442\u0435\u043D\u044C \u0441\u043E\u0432\u0438\u0446\u044F\u043D\u0442\u0435\u043D\u044C \u0442\u0435 \u0441\u0432\u0430\u043B \u0442\u0435\u0439\u043D\u0435\u043C\u0430 , \u043A\u0435\u043D\u043A\u0448\u0442\u043D\u0435 \u0441\u0432\u0430\u043B \u043F\u0435\u043A\u0441\u0442\u0430\u0437\u044C \u0443\u043B\u0435\u0437\u0442 ; \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u0441\u044B\u0437\u044C \u043A\u0435\u043B\u0435\u0441 \u0430\u043D\u0441\u044F\u043A \u0432\u0430\u043B\u0441\u043A\u0435 \u043C\u0430\u0440\u0442\u043E \u0434\u044B \u0447\u043E\u043F\u043E\u043D\u044C\u0431\u0435\u043B\u0435\u0432 \u2014 \u0440\u0430\u043A\u0448\u0430\u043D\u044C \u043B\u0438\u0432\u0442\u0435\u043C\u0430 \u0441\u043E\u0432\u0430\u0432\u0442\u043E\u043C\u0430 \u0448\u043A\u0430\u043D\u0435 , \u043A\u0443\u0439\u043C\u0435\u0441\u044C \u0442\u0430\u0433\u043E \u0441\u0442\u0430\u043A\u0430\u043B\u0433\u0430\u0434\u0441\u044C .\n# text_en = But by the time he got down the hill, opened and closed the village gate, the lane gate, the cluster gate and the one to their own home (something everyone coming or going had to do, so the gates would always be closed; they were only opened in the morning and at dusk for taking out and letting in the cattle), the wicker of clay had grown heavy again.\n# text_fi = Kun Ket\u0161ai tuli m\xE4elt\xE4 alas, avasi ja sulki huolellisesti kyl\xE4ver\xE4j\xE4ns\xE4, ??aukio/kentt\xE4ver\xE4j\xE4n, kujaver\xE4j\xE4n ja oman kotiver\xE4j\xE4n, savikontti ehti taas alkaa painaa h\xE4nen selk\xE4\xE4ns\xE4. (Kaikkien k\xE4vij\xF6iden tulee tehd\xE4 n\xE4in, jotta ver\xE4j\xE4t olisivat aina kiinni, ver\xE4j\xE4th\xE4n pidet\xE4\xE4n selkosen sel\xE4ll\xE4\xE4n vain aamulla ja illansuussa, kun karjaa ajetaan laitumelle tai kotiin.)\n1 \u041D\u043E \u043D\u043E CCONJ CC _ 3 cc _ _\n2 \u0437\u044F\u0440\u0441 \u0437\u044F\u0440\u0441 ADV Adv|Der/Ill|Adv|Sem/Time Derivation=Ill|AdvType=Tim 3 mark _ _\n3 \u0432\u0430\u043B\u0433\u0441\u044C \u0432\u0430\u043B\u0433\u043E\u043C\u0441 VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 51 advcl _ SpaceAfter=No\n4 , , PUNCT CLB _ 6 punct _ _\n5 \u0437\u044F\u0440\u0441 \u0437\u044F\u0440\u0441 ADV Adv|Der/Ill|Adv|Sem/Time Derivation=Ill|AdvType=Tim 6 mark _ _\n6 \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u0441\u044C \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u043C\u0441 VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 3 conj _ _\n7 \u0434\u044B \u0434\u044B CCONJ CC _ 10 cc _ _\n8 \u043C\u0435\u043A\u0435\u0432 \u043C\u0435\u043A\u0435\u0432 ADV Adv|Lat|Sg|Nom|Indef Case=Lat|Case=Nom|Definite=Ind|Number=Sing 10 advmod _ _\n9 \u043F\u0430\u0440\u0441\u0442\u0435 \u043F\u0430\u0440\u0441\u0442\u0435 ADV Adv|Manner AdvType=Man 10 advmod _ _\n10 \u043F\u0435\u043A\u0441\u0442\u043D\u0435\u0441\u044C \u043F\u0435\u043A\u0441\u0442\u043D\u0435\u043C\u0441 VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 3 conj _ _\n11 \u0432\u0435\u043B\u0435 \u0432\u0435\u043B\u0435 NOUN N|Sem/Inanim_Cnt|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 10 obj _ _\n12 \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u043A\u0435\u043D\u043A\u0448 NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 11 goeswith _ SpaceAfter=No\n13 , , PUNCT CLB _ 15 punct _ _\n14 \u043A\u0443\u0436\u043E \u043A\u0443\u0436\u043E NOUN N|Sem/Inanim_Cnt|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 12 conj _ _\n15 \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u043A\u0435\u043D\u043A\u0448 NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 14 goeswith _ SpaceAfter=No\n16 , , PUNCT CLB _ 18 punct _ _\n17 \u043A\u0443\u0440\u043E \u043A\u0443\u0440\u043E NOUN N|Sem/Inanim_Cnt|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 12 conj _ _\n18 \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u043A\u0435\u043D\u043A\u0448 NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 17 goeswith _ _\n19 \u0434\u044B \u0434\u044B CCONJ CC _ 23 cc _ _\n20 \u044D\u0441\u0435\u0441\u0442 \u044D\u0441\u044C PRON Pron|Refl|Pl3|Gen|Variant=Short Case=Gen|Number=Plur|Person=3|PronType=Refl|Variant=Short 22 nmod _ _\n21 \u044E\u0440\u0442\u0441 \u044E\u0440\u0442 NOUN N|Sem/Inanim_Cnt|SP|Ill|Indef Case=Ill|Definite=Ind|Number=Plur,Sing 20 case _ _\n22 \u0441\u043E\u0432\u0430\u043C\u043E \u0441\u043E\u0432\u0430\u043C\u043E NOUN N|IV|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing|Valency=1 23 compound _ _\n23 \u043A\u0435\u043D\u043A\u0448\u0435\u043D\u0442\u044C \u043A\u0435\u043D\u043A\u0448 NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 12 conj _ _\n24 ( ( PUNCT PUNCT _ 29 punct _ SpaceAfter=No\n25 \u044D\u0440\u044C\u0432\u0430 \u044D\u0440\u044C\u0432\u0430 DET Det|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 26 det _ _\n26 \u043B\u0438\u0441\u0438\u0446\u044F\u043D\u0442\u0435\u043D\u044C-\u0441\u043E\u0432\u0438\u0446\u044F\u043D\u0442\u0435\u043D\u044C \u043B\u0438\u0441\u0438\u0446\u044F\u0442-\u0441\u043E\u0432\u0438\u0446\u044F\u0442 NOUN N|V|NomAg|Sg|Dat|Def Case=Dat|Definite=Def|Derivation=NomAg|Number=Sing 29 obl _ _\n27 \u0442\u0435 \u0442\u0435 PRON Pron|Dem|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing|PronType=Dem 29 nsubj _ _\n28 \u0441\u0432\u0430\u043B \u0441\u0432\u0430\u043B ADV Adv|Tot|Sem/Time_dur PronType=Tot|PronType=Tot 29 advmod _ _\n29 \u0442\u0435\u0439\u043D\u0435\u043C\u0430 \u0442\u0435\u0439\u043D\u0435\u043Cc VERB V|TV|Oblig|Clitic=Cop|Prs|ScSg3 Valency=2|VerbForm=Oblig|Clitic=Cop|Number[subj]=Sing|Person[subj]=3|Tense=Pres 3 parataxis _ SpaceAfter=No\n30 , , PUNCT CLB _ 33 punct _ _\n31 \u043A\u0435\u043D\u043A\u0448\u0442\u043D\u0435 \u043A\u0435\u043D\u043A\u0448 NOUN N|Sem/Inanim_Cnt|Pl|Nom|Def Case=Nom|Definite=Def|Number=Plur 34 nsubj _ _\n32 \u0441\u0432\u0430\u043B \u0441\u0432\u0430\u043B ADV Adv|Tot|Sem/Time_dur PronType=Tot|PronType=Tot 33 advmod _ _\n33 \u043F\u0435\u043A\u0441\u0442\u0430\u0437\u044C \u043F\u0435\u043A\u0441\u0442\u0430\u043C\u0441 VERB V|Der/\u041E\u0437\u044C|Ger Derivation=Ozj|VerbForm=Conv 29 ccomp _ _\n34 \u0443\u043B\u0435\u0437\u0442 \u0443\u043B\u0435\u043C\u0441 AUX V|IV|Opt|ScPl3 Mood=Opt|Number[subj]=Plur|Person[subj]=3|Valency=1 33 cop _ SpaceAfter=No\n35 ; ; PUNCT CLB _ 29 punct _ _\n36 \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u0441\u044B\u0437\u044C \u043F\u0430\u043D\u0436\u0442\u043D\u0435\u043C\u0441 VERB V|Ind|Prs|ScPl3|Obj3 Mood=Ind|Number[subj]=Plur|Person[subj]=3|Tense=Pres|Obj3 29 conj _ _\n37 \u043A\u0435\u043B\u0435\u0441 \u043A\u0435\u043B\u0435\u0441 ADV Adv Adv 36 advmod _ _\n38 \u0430\u043D\u0441\u044F\u043A \u0430\u043D\u0441\u044F\u043A ADV Adv Adv 39 advmod _ _\n39 \u0432\u0430\u043B\u0441\u043A\u0435 \u0432\u0430\u043B\u0441\u043A\u0435 NOUN N|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 36 obl _ _\n40 \u043C\u0430\u0440\u0442\u043E \u043C\u0430\u0440\u0442\u043E ADP Adp|Po AdpType=Post 39 case _ _\n41 \u0434\u044B \u0434\u044B CCONJ CC _ 42 cc _ _\n42 \u0447\u043E\u043F\u043E\u043D\u044C\u0431\u0435\u043B\u0435\u0432 \u0447\u043E\u043F\u043E\u043D\u044C\u0431\u0435\u043B\u0435\u0432 ADV Adv|Lat Case=Lat 39 conj _ _\n43 \u2014 \u2014 PUNCT CLB _ 46 punct _ _\n44 \u0440\u0430\u043A\u0448\u0430\u043D\u044C \u0440\u0430\u043A\u0448\u0430 NOUN N|Sem/Anim_Cnt|SP|Gen|Indef Case=Gen|Definite=Ind|Number=Plur,Sing 45 nmod:gobj _ _\n45 \u043B\u0438\u0432\u0442\u0435\u043C\u0430-\u0441\u043E\u0432\u0430\u0432\u0442\u043E\u043C\u0430 \u043B\u0438\u0432\u0442\u0435\u043C\u0430-\u0441\u043E\u0432\u0430\u0432\u0442\u043E\u043C\u0430 NOUN N|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 36 nmod _ _\n46 \u0448\u043A\u0430\u043D\u0435 \u0448\u043A\u0430 NOUN N|Sem/Time|SP|Temp|Indef Case=Temp|Definite=Ind|Number=Plur,Sing 39 conj _ SpaceAfter=No\n47 ) ) PUNCT PUNCT _ 29 punct _ SpaceAfter=No\n48 , , PUNCT CLB _ 29 punct _ _\n49 \u043A\u0443\u0439\u043C\u0435\u0441\u044C \u043A\u0443\u0439\u043C\u0435 NOUN N|Sem/Inanim_Cnt|Sg|Nom|Def Case=Nom|Definite=Def|Number=Sing 51 nsubj _ _\n50 \u0442\u0430\u0433\u043E \u0442\u0430\u0433\u043E ADV Adv|Sem/Time AdvType=Tim 51 advmod _ _\n51 \u0441\u0442\u0430\u043A\u0430\u043B\u0433\u0430\u0434\u0441\u044C \u0441\u0442\u0430\u043A\u0430\u043B\u0433\u0430\u0434\u043E\u043C\u0441 VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 0 root _ SpaceAfter=No\n52 . . PUNCT CLB _ 51 punct _ _",
 
-  katya_aplonova_large_arrows: '# sent_id = html/meyer_gorog-contes_bambara_10amadu_tara.dis.html:16\n# text = ko ni i sera ka jiri nin bulu s\xF2r\xF2 ka na ni a ye, ko c\xE8k\xF2r\xF2ba b\xE8 se ka furak\xE8 o la.\n1\tko\tk\xF3\tPART\tcop\t_\t4\tdiscourse\t_\tGloss=QUOT\n2\tni\tn\xED\tSCONJ\tconj\t_\t4\tmark\t_\tGloss=si\n3\ti\t\xED\tPRON\tpers\tPronType=Prs\t4\tnsubj\t_\tGloss=2.SG\n4\tsera\tsera\tVERB\tv\tAspect=Perf|Valency=1|Polarity=Pos\t19\tadvcl\t_\tGloss=arriver|Morf=arriver,PFV.INTR\n5\tka\tk\xE0\tAUX\tpm\t_\t9\taux\t_\tGloss=INF\n6\tjiri\tj\xEDri\tNOUN\tn\t_\t8\tnmod:poss\t_\tGloss=arbre\n7\tnin\tn\xECn\tDET\tprn/dtm\tPronType=Dem|Definite-Def\t6\tdet\t_\tGloss=DEM\n8\tbulu\tb\xFAlu\tNOUN\tn\t_\t9\tobj\t_\tGloss=feuille\n9\ts\xF2r\xF2\ts\u0254\u0300r\u0254\tVERB\tv\t_\t4\txcomp\t_\tGloss=obtenir\n10\tka\tk\xE0\tAUX\tpm\t_\t11\taux\t_\tGloss=INF\n11\tna\tn\xE0\tVERB\tv\t_\t9\txcomp\t_\tGloss=venir\n12\tni\tn\xED\tADP\tconj/prep\t_\t13\tcase\t_\tGloss=et\n13\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t11\tobl\t_\tGloss=3SG\n14\tye\ty\xE9\tADP\tpp\t_\t13\tcase\t_\tGloss=PP\n15\t,\t,\tPUNCT\t_\t_\t4\tpunct\t_\tGloss=,\n16\tko\tk\xF3\tPART\tcop\t_\t19\tdiscourse\t_\tGloss=QUOT\n17\tc\xE8k\xF2r\xF2ba\tc\u025B\u0300.k\u0254r\u0254.ba\tNOUN\tn\t_\t19\tnsubj\t_\tGloss=vieillard|Morf=vieillard,m\xE2le,vieux,AUGM\n18\tb\xE8\tb\u025B\u0301\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t19\taux\t_\tGloss=IPFV.AFF\n19\tse\ts\xE9\tVERB\tv\t_\t0\troot\t_\tGloss=arriver\n20\tka\tk\xE0\tAUX\tpm\t_\t21\taux\t_\tGloss=INF\n21\tfurak\xE8\tf\xFAra.k\u025B\tVERB\tv\t_\t19\txcomp\t_\tGloss=soigner|Morf=soigner,feuille,faire\n22\to\t\xF2\tPRON\tprn\t_\t21\tobl\t_\tGloss=ce\n23\tla\tl\xE1\tADP\tpp\t_\t22\tcase\t_\tGloss=dans\n24\t.\t.\tPUNCT\t_\t_\t19\tpunct\t_\tGloss=.\n',
+  katya_aplonova_large_arrows: "# sent_id = html/meyer_gorog-contes_bambara_10amadu_tara.dis.html:16\n# text = ko ni i sera ka jiri nin bulu s\xF2r\xF2 ka na ni a ye, ko c\xE8k\xF2r\xF2ba b\xE8 se ka furak\xE8 o la.\n1\tko\tk\xF3\tPART\tcop\t_\t4\tdiscourse\t_\tGloss=QUOT\n2\tni\tn\xED\tSCONJ\tconj\t_\t4\tmark\t_\tGloss=si\n3\ti\t\xED\tPRON\tpers\tPronType=Prs\t4\tnsubj\t_\tGloss=2.SG\n4\tsera\tsera\tVERB\tv\tAspect=Perf|Valency=1|Polarity=Pos\t19\tadvcl\t_\tGloss=arriver|Morf=arriver,PFV.INTR\n5\tka\tk\xE0\tAUX\tpm\t_\t9\taux\t_\tGloss=INF\n6\tjiri\tj\xEDri\tNOUN\tn\t_\t8\tnmod:poss\t_\tGloss=arbre\n7\tnin\tn\xECn\tDET\tprn/dtm\tPronType=Dem|Definite-Def\t6\tdet\t_\tGloss=DEM\n8\tbulu\tb\xFAlu\tNOUN\tn\t_\t9\tobj\t_\tGloss=feuille\n9\ts\xF2r\xF2\ts\u0254\u0300r\u0254\tVERB\tv\t_\t4\txcomp\t_\tGloss=obtenir\n10\tka\tk\xE0\tAUX\tpm\t_\t11\taux\t_\tGloss=INF\n11\tna\tn\xE0\tVERB\tv\t_\t9\txcomp\t_\tGloss=venir\n12\tni\tn\xED\tADP\tconj/prep\t_\t13\tcase\t_\tGloss=et\n13\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t11\tobl\t_\tGloss=3SG\n14\tye\ty\xE9\tADP\tpp\t_\t13\tcase\t_\tGloss=PP\n15\t,\t,\tPUNCT\t_\t_\t4\tpunct\t_\tGloss=,\n16\tko\tk\xF3\tPART\tcop\t_\t19\tdiscourse\t_\tGloss=QUOT\n17\tc\xE8k\xF2r\xF2ba\tc\u025B\u0300.k\u0254r\u0254.ba\tNOUN\tn\t_\t19\tnsubj\t_\tGloss=vieillard|Morf=vieillard,m\xE2le,vieux,AUGM\n18\tb\xE8\tb\u025B\u0301\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t19\taux\t_\tGloss=IPFV.AFF\n19\tse\ts\xE9\tVERB\tv\t_\t0\troot\t_\tGloss=arriver\n20\tka\tk\xE0\tAUX\tpm\t_\t21\taux\t_\tGloss=INF\n21\tfurak\xE8\tf\xFAra.k\u025B\tVERB\tv\t_\t19\txcomp\t_\tGloss=soigner|Morf=soigner,feuille,faire\n22\to\t\xF2\tPRON\tprn\t_\t21\tobl\t_\tGloss=ce\n23\tla\tl\xE1\tADP\tpp\t_\t22\tcase\t_\tGloss=dans\n24\t.\t.\tPUNCT\t_\t_\t19\tpunct\t_\tGloss=.\n",
 
-  katya_aplonova_long: '# sent_id = html/meyer_gorog-contes_bambara_10amadu_tara.dis.html:19\n# text = ko u ye m\xF2g\xF2 nyini a ye, min b\xE8 a furak\xE8 sisan ko c\xE8 ye furak\xE8li cogoya b\xE8\xE8 f\xF2, ko fura nin s\xF2r\xF2 ka g\xE8l\xE8n ko epi ko ni o ye a s\xF2r\xF2 u ye ale den de ye, ni min b\xE8 sa de furanyini f\xE8 a ka sa nin min b\xE8 balo o ka balo ko u k\xF2n\xF2nt\xF2 b\xE8\xE8 ka taga fura nin nyini, ko u k\xF2n\xF2nt\xF2 b\xE8\xE8 ka taga ko nin min seginna ka a s\xF2r\xF2 fura ma na, ko a b\xE8 o den nin haramuya ka o g\xE8n, ka a b\xE8 a ba fana g\xE8n ko u ka a fil\xE8 u y\xE8r\xE8 ni min ma s\xF2n fana ko a b\xE8 o g\xE8n, o ni a ba b\xE8\xE8.\n# label = too_long_to_cut\n1\tko\tk\xF3\tPART\tcop\t_\t5\tdiscourse\t_\tGloss=QUOT\n2\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t5\tnsubj\t_\tGloss=3PL\n3\tye\ty\xE9\tAUX\tpm\tAspect=Perf|Valency=2|Polarity=Pos\t5\taux\t_\tGloss=PFV.TR\n4\tm\xF2g\xF2\tm\u0254\u0300g\u0254\tNOUN\tn\t_\t5\tobj\t_\tGloss=homme\n5\tnyini\t\u0272\xEDni\tVERB\tv\t_\t0\troot\t_\tGloss=chercher\n6\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t5\tobl\t_\tGloss=3SG\n7\tye\ty\xE9\tADP\tpp\t_\t6\tcase\t_\tGloss=PP\n8\t,\t,\tPUNCT\t_\t_\t5\tpunct\t_\tGloss=,\n9\tmin\tm\xEDn\tPRON\tprn\tPronType=Rel\t_\t_\t_\tGloss=REL\n10\tb\xE8\tb\u025B\u0301\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t_\t_\t_\tGloss=IPFV.AFF\n11\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n12\tfurak\xE8\tf\xFAra.k\u025B\tVERB\tv\t_\t_\t_\t_\tGloss=soigner|Morf=soigner,feuille,faire\n13\tsisan\ts\xEDsan\tADV\tadv/n\t_\t_\t_\t_\tGloss=maintenant\n14\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n15\tc\xE8\tc\u025B\u0300\tNOUN\tn\t_\t_\t_\t_\tGloss=m\xE2le\n16\tye\tye\tAUX\tpm\tAspect=Perf|Valency=2|Polarity=Pos\t_\t_\t_\tGloss=PFV.TR\n17\tfurak\xE8li\tf\xFArak\u025Bli\tNOUN\tn\tVerbalForm=Vnoun\t_\t_\t_\tGloss=traitement|Morf=traitement,feuille,faire,NMLZ\n18\tcogoya\tc\xF3goya\tNOUN\tn\t_\t_\t_\t_\tGloss=mani\xE8re|Morf=mani\xE8re,mani\xE8re,ABSTR\n19\tb\xE8\xE8\tb\u025B\u0301\u025B\tDET\tdtm\t_\t_\t_\t_\tGloss=tout\n20\tf\xF2\tf\u0254\u0301\tVERB\tv\t_\t_\t_\t_\tGloss=dire\n21\t,\t,\tPUNCT\t_\t_\t_\t_\t_\tGloss=,\n22\tko\tk\xF3\tPART\tcop\t_\t27\tdiscourse\t_\tGloss=QUOT\n23\tfura\tf\xFAra\tNOUN\tn\t_\t25\tnmod:poss\t_\tGloss=feuille\n24\tnin\tn\xECn\tDET\tdtm\tPronType=Dem|Definite-Def\t23\tdet\t_\tGloss=DEM\n25\ts\xF2r\xF2\ts\u0254\u0300r\u0254\tNOUN\tv\t_\t27\tnsubj\t_\tGloss=obtenir\n26\tka\tka\tAUX\tpm\tPolarity=Pos\t27\taux\t_\tGloss=QUAL.AFF\n27\tg\xE8l\xE8n\tg\u025B\u0300l\u025Bn\tVERB\tvq\t_\t_\t_\t_\tGloss=dur\n28\tko\tk\xF3\tPART\tcop\t_\t29\tdiscourse\t_\tGloss=QUOT\n29\tepi\tepi\tCCONJ\tconj\t_\t27\tcc\t_\tGloss=ETRG.FRA\n30\tko\tk\xF3\tVERB\tcop\t_\t37\tdiscourse\t_\tGloss=QUOT\n31\tni\tn\xED\tSCONJ\tconj\t_\t35\tmark\t_\tGloss=si\n32\to\t\xF2\tPRON\tprn\t_\t35\tnsubj\t_\tGloss=ce\n33\tye\tye\tAUX\tpm\tAspect=Perf|Valency=2|Polarity=Pos\t35\taux\t_\tGloss=PFV.TR\n34\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t35\tobj\t_\tGloss=3SG\n35\ts\xF2r\xF2\ts\u0254\u0300r\u0254\tVERB\tv\t_\t37\tadvcl\t_\tGloss=obtenir\n36\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t37\tnsubj\t_\tGloss=3PL\n37\tye\ty\xE9\tVERB\tcop\tPolarity=Pos\t27\tparataxis\t_\tGloss=EQU\n38\tale\t\xE0l\xEA\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3|PronType=Emp\t39\tnmod:poss\t_\tGloss=3SG.EMPH\n39\tden\td\xE9n\tNOUN\tn\t_\t37\tobl\t_\tGloss=enfant\n40\tde\td\xE8\tPART\tprt\t_\t39\tdiscourse\t_\tGloss=FOC\n41\tye\ty\xE9\tADP\tpp\t_\t39\tcase\t_\tGloss=PP\n42\t,\t,\tPUNCT\t_\t_\t37\tpunct\t_\tGloss=,\n43\tni\tn\xED\tSCONJ\tconj\t_\t46\tmark\t_\tGloss=si\n44\tmin\tm\xEEn\tPRON\tprn\tPronType=Rel\t46\t_\t_\tGloss=REL\n45\tb\xE8\tb\u025B\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t46\t_\t_\tGloss=IPFV.AFF\n46\tsa\ts\xE0\tVERB\tv\t_\t52\t_\t_\tGloss=mourir\n47\tde\td\xE8\tPART\tprt\t_\t46\t_\t_\tGloss=FOC\n48\tfuranyini\tfura\u0272ini\tNOUN\tn\t_\t46\t_\t_\tGloss=feuille|Morf=feuille,chercher\n49\tf\xE8\tf\u025B\u0300\tADP\tpp\t_\t48\t_\t_\tGloss=par\n50\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t52\t_\t_\tGloss=3SG\n51\tka\tka\tAUX\tpm\tMood=Subj|Polarity=Aff\t52\t_\t_\tGloss=SBJV\n52\tsa\ts\xE0\tVERB\tv\t_\t37\t_\t_\tGloss=mourir\n53\tnin\tn\xED\tSCONJ\tconj\t_\t56\tmark\t_\tGloss=quand\n54\tmin\tm\xEEn\tPRON\tprn\tPronType=Rel\t56\t_\t_\tGloss=REL\n55\tb\xE8\tb\u025B\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t56\t_\t_\tGloss=IPFV.AFF\n56\tbalo\tb\xE1lo\tVERB\tv\t_\t59\t_\t_\tGloss=vivre\n57\to\t\xF2\tPRON\tprn\t_\t59\t_\t_\tGloss=ce\n58\tka\tka\tAUX\tpm\tMood=Subj|Polarity=Aff\t59\t_\t_\tGloss=SBJV\n59\tbalo\tb\xE1lo\tVERB\tv\t_\t52\t_\t_\tGloss=vivre\n60\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n61\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t_\t_\t_\tGloss=3PL\n62\tk\xF2n\xF2nt\xF2\tk\u0254\u0300n\u0254nt\u0254n\tNUM\tnum\t_\t_\t_\t_\tGloss=neuf\n63\tb\xE8\xE8\tb\u025B\u0301\u025B\tDET\tdtm\t_\t_\t_\t_\tGloss=tout\n64\tka\tka\tAUX\tpm\tMood=Subj|Polarity=Aff\t_\t_\t_\tGloss=SBJV\n65\ttaga\tt\xE1ga\tVERB\tv\t_\t59\t_\t_\tGloss=aller\n66\tfura\tf\xFAra\tNOUN\tn\t_\t_\t_\t_\tGloss=feuille\n67\tnin\tn\xECn\tDET\tdtm\tPronType=Dem|Definite-Def\t_\t_\t_\tGloss=DEM\n68\tnyini\t\u0272\xEDni\tVERB\tv\t_\t_\t_\t_\tGloss=chercher\n69\t,\t,\tPUNCT\t_\t_\t_\t_\t_\tGloss=,\n70\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n71\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t_\t_\t_\tGloss=3PL\n72\tk\xF2n\xF2nt\xF2\tk\u0254\u0300n\u0254nt\u0254n\tNUM\tnum\t_\t_\t_\t_\tGloss=neuf\n73\tb\xE8\xE8\tb\u025B\u0301\u025B\tDET\tdtm\t_\t_\t_\t_\tGloss=tout\n74\tka\tka\tAUX\tpm\tMood=Subj|Polarity=Aff\t_\t_\t_\tGloss=SBJV\n75\ttaga\tt\xE1ga\tVERB\tv\t_\t65\t_\t_\tGloss=aller\n76\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n77\tnin\tn\xED\tSCONJ\tconj\t_\t_\t_\t_\tGloss=quand\n78\tmin\tm\xEEn\tPRON\tprn\tPronType=Rel\t_\t_\t_\tGloss=REL\n79\tseginna\tseginna\tVERB\tv\tAspect=Perf|Valency=1|Polarity=Pos\t85\t_\t_\tGloss=revenir|Morf=revenir,PFV.INTR\n80\tka\tk\xE0\tAUX\tpm\t_\t_\t_\t_\tGloss=INF\n81\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n82\ts\xF2r\xF2\ts\u0254\u0300r\u0254\tVERB\tv\t_\t_\t_\t_\tGloss=obtenir\n83\tfura\tf\xFAra\tNOUN\tn\t_\t_\t_\t_\tGloss=feuille\n84\tma\tma\tAUX\tpm\tPolarity=Neg|Aspect=Perf\t_\t_\t_\tGloss=PFV.NEG\n85\tna\tn\xE0\tVERB\tv\t_\t75\t_\t_\tGloss=venir\n86\t,\t,\tPUNCT\t_\t_\t_\t_\t_\tGloss=,\n87\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n88\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n89\tb\xE8\tb\u025B\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t_\t_\t_\tGloss=IPFV.AFF\n90\to\t\xF2\tPRON\tprn\t_\t_\t_\t_\tGloss=ce\n91\tden\td\xE9n\tNOUN\tn\t_\t_\t_\t_\tGloss=enfant\n92\tnin\tn\xECn\tDET\tdtm\tPronType=Dem|Definite-Def\t_\t_\t_\tGloss=DEM\n93\tharamuya\th\xE0ramuya\tVERB\tv\t_\t85\t_\t_\tGloss=interdire|Morf=interdire,interdire,ABSTR\n94\tka\tk\xE0\tAUX\tpm\t_\t_\t_\t_\tGloss=INF\n95\to\t\xF2\tPRON\tprn\t_\t_\t_\t_\tGloss=ce\n96\tg\xE8n\tg\u025B\u0301n\tVERB\tv\t_\t_\t_\t_\tGloss=chasser\n97\t,\t,\tPUNCT\t_\t_\t_\t_\t_\tGloss=,\n98\tka\tk\xE0\tAUX\tpm\t_\t_\t_\t_\tGloss=INF\n99\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n100\tb\xE8\tb\u025B\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t_\t_\t_\tGloss=IPFV.AFF\n101\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n102\tba\tb\xE1\tNOUN\tn\t_\t_\t_\t_\tGloss=m\xE8re\n103\tfana\tf\xE1na\tPART\tprt\t_\t_\t_\t_\tGloss=aussi\n104\tg\xE8n\tg\u025B\u0301n\tVERB\tv\t_\t_\t_\t_\tGloss=chasser\n105\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n106\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t_\t_\t_\tGloss=3PL\n107\tka\tka\tAUX\tpm\tMood=Subj|Polarity=Aff\t_\t_\t_\tGloss=SBJV\n108\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n109\tfil\xE8\tf\xEDl\u025B\tVERB\tv\t_\t_\t_\t_\tGloss=regarder\n110\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t_\t_\t_\tGloss=3PL\n111\ty\xE8r\xE8\ty\u025B\u0300r\u025B\u0302\tDET\tdtm\t_\t_\t_\t_\tGloss=m\xEAme\n112\tni\tn\xED\tSCONJ\tconj\t_\t_\t_\t_\tGloss=si\n113\tmin\tm\xEEn\tPRON\tprn\tPronType=Rel\t_\t_\t_\tGloss=REL\n114\tma\tma\tAUX\tpm\tPolarity=Neg|Aspect=Perf\t_\t_\t_\tGloss=PFV.NEG\n115\ts\xF2n\ts\u0254\u0300n\tVERB\tv\t_\t_\t_\t_\tGloss=accepter\n116\tfana\tf\xE1na\tPART\tprt\t_\t_\t_\t_\tGloss=aussi\n117\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n118\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n119\tb\xE8\tb\u025B\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t_\t_\t_\tGloss=IPFV.AFF\n120\to\t\xF2\tPRON\tprn\t_\t_\t_\t_\tGloss=ce\n121\tg\xE8n\tg\u025B\u0301n\tVERB\tv\t_\t_\t_\t_\tGloss=chasser\n122\t,\t,\tPUNCT\t_\t_\t_\t_\t_\tGloss=,\n123\to\t\xF2\tPRON\tprn\t_\t_\t_\t_\tGloss=ce\n124\tni\tni\tCCONJ\tconj\t_\t_\t_\t_\tGloss=et\n125\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n126\tba\tb\xE1\tNOUN\tn\t_\t_\t_\t_\tGloss=m\xE8re\n127\tb\xE8\xE8\tb\u025B\u0301\u025B\tDET\tdtm\t_\t_\t_\t_\tGloss=tout\n128\t.\t.\tPUNCT\t_\t_\t_\t_\t_\tGloss=.',
+  katya_aplonova_long: "# sent_id = html/meyer_gorog-contes_bambara_10amadu_tara.dis.html:19\n# text = ko u ye m\xF2g\xF2 nyini a ye, min b\xE8 a furak\xE8 sisan ko c\xE8 ye furak\xE8li cogoya b\xE8\xE8 f\xF2, ko fura nin s\xF2r\xF2 ka g\xE8l\xE8n ko epi ko ni o ye a s\xF2r\xF2 u ye ale den de ye, ni min b\xE8 sa de furanyini f\xE8 a ka sa nin min b\xE8 balo o ka balo ko u k\xF2n\xF2nt\xF2 b\xE8\xE8 ka taga fura nin nyini, ko u k\xF2n\xF2nt\xF2 b\xE8\xE8 ka taga ko nin min seginna ka a s\xF2r\xF2 fura ma na, ko a b\xE8 o den nin haramuya ka o g\xE8n, ka a b\xE8 a ba fana g\xE8n ko u ka a fil\xE8 u y\xE8r\xE8 ni min ma s\xF2n fana ko a b\xE8 o g\xE8n, o ni a ba b\xE8\xE8.\n# label = too_long_to_cut\n1\tko\tk\xF3\tPART\tcop\t_\t5\tdiscourse\t_\tGloss=QUOT\n2\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t5\tnsubj\t_\tGloss=3PL\n3\tye\ty\xE9\tAUX\tpm\tAspect=Perf|Valency=2|Polarity=Pos\t5\taux\t_\tGloss=PFV.TR\n4\tm\xF2g\xF2\tm\u0254\u0300g\u0254\tNOUN\tn\t_\t5\tobj\t_\tGloss=homme\n5\tnyini\t\u0272\xEDni\tVERB\tv\t_\t0\troot\t_\tGloss=chercher\n6\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t5\tobl\t_\tGloss=3SG\n7\tye\ty\xE9\tADP\tpp\t_\t6\tcase\t_\tGloss=PP\n8\t,\t,\tPUNCT\t_\t_\t5\tpunct\t_\tGloss=,\n9\tmin\tm\xEDn\tPRON\tprn\tPronType=Rel\t_\t_\t_\tGloss=REL\n10\tb\xE8\tb\u025B\u0301\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t_\t_\t_\tGloss=IPFV.AFF\n11\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n12\tfurak\xE8\tf\xFAra.k\u025B\tVERB\tv\t_\t_\t_\t_\tGloss=soigner|Morf=soigner,feuille,faire\n13\tsisan\ts\xEDsan\tADV\tadv/n\t_\t_\t_\t_\tGloss=maintenant\n14\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n15\tc\xE8\tc\u025B\u0300\tNOUN\tn\t_\t_\t_\t_\tGloss=m\xE2le\n16\tye\tye\tAUX\tpm\tAspect=Perf|Valency=2|Polarity=Pos\t_\t_\t_\tGloss=PFV.TR\n17\tfurak\xE8li\tf\xFArak\u025Bli\tNOUN\tn\tVerbalForm=Vnoun\t_\t_\t_\tGloss=traitement|Morf=traitement,feuille,faire,NMLZ\n18\tcogoya\tc\xF3goya\tNOUN\tn\t_\t_\t_\t_\tGloss=mani\xE8re|Morf=mani\xE8re,mani\xE8re,ABSTR\n19\tb\xE8\xE8\tb\u025B\u0301\u025B\tDET\tdtm\t_\t_\t_\t_\tGloss=tout\n20\tf\xF2\tf\u0254\u0301\tVERB\tv\t_\t_\t_\t_\tGloss=dire\n21\t,\t,\tPUNCT\t_\t_\t_\t_\t_\tGloss=,\n22\tko\tk\xF3\tPART\tcop\t_\t27\tdiscourse\t_\tGloss=QUOT\n23\tfura\tf\xFAra\tNOUN\tn\t_\t25\tnmod:poss\t_\tGloss=feuille\n24\tnin\tn\xECn\tDET\tdtm\tPronType=Dem|Definite-Def\t23\tdet\t_\tGloss=DEM\n25\ts\xF2r\xF2\ts\u0254\u0300r\u0254\tNOUN\tv\t_\t27\tnsubj\t_\tGloss=obtenir\n26\tka\tka\tAUX\tpm\tPolarity=Pos\t27\taux\t_\tGloss=QUAL.AFF\n27\tg\xE8l\xE8n\tg\u025B\u0300l\u025Bn\tVERB\tvq\t_\t_\t_\t_\tGloss=dur\n28\tko\tk\xF3\tPART\tcop\t_\t29\tdiscourse\t_\tGloss=QUOT\n29\tepi\tepi\tCCONJ\tconj\t_\t27\tcc\t_\tGloss=ETRG.FRA\n30\tko\tk\xF3\tVERB\tcop\t_\t37\tdiscourse\t_\tGloss=QUOT\n31\tni\tn\xED\tSCONJ\tconj\t_\t35\tmark\t_\tGloss=si\n32\to\t\xF2\tPRON\tprn\t_\t35\tnsubj\t_\tGloss=ce\n33\tye\tye\tAUX\tpm\tAspect=Perf|Valency=2|Polarity=Pos\t35\taux\t_\tGloss=PFV.TR\n34\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t35\tobj\t_\tGloss=3SG\n35\ts\xF2r\xF2\ts\u0254\u0300r\u0254\tVERB\tv\t_\t37\tadvcl\t_\tGloss=obtenir\n36\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t37\tnsubj\t_\tGloss=3PL\n37\tye\ty\xE9\tVERB\tcop\tPolarity=Pos\t27\tparataxis\t_\tGloss=EQU\n38\tale\t\xE0l\xEA\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3|PronType=Emp\t39\tnmod:poss\t_\tGloss=3SG.EMPH\n39\tden\td\xE9n\tNOUN\tn\t_\t37\tobl\t_\tGloss=enfant\n40\tde\td\xE8\tPART\tprt\t_\t39\tdiscourse\t_\tGloss=FOC\n41\tye\ty\xE9\tADP\tpp\t_\t39\tcase\t_\tGloss=PP\n42\t,\t,\tPUNCT\t_\t_\t37\tpunct\t_\tGloss=,\n43\tni\tn\xED\tSCONJ\tconj\t_\t46\tmark\t_\tGloss=si\n44\tmin\tm\xEEn\tPRON\tprn\tPronType=Rel\t46\t_\t_\tGloss=REL\n45\tb\xE8\tb\u025B\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t46\t_\t_\tGloss=IPFV.AFF\n46\tsa\ts\xE0\tVERB\tv\t_\t52\t_\t_\tGloss=mourir\n47\tde\td\xE8\tPART\tprt\t_\t46\t_\t_\tGloss=FOC\n48\tfuranyini\tfura\u0272ini\tNOUN\tn\t_\t46\t_\t_\tGloss=feuille|Morf=feuille,chercher\n49\tf\xE8\tf\u025B\u0300\tADP\tpp\t_\t48\t_\t_\tGloss=par\n50\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t52\t_\t_\tGloss=3SG\n51\tka\tka\tAUX\tpm\tMood=Subj|Polarity=Aff\t52\t_\t_\tGloss=SBJV\n52\tsa\ts\xE0\tVERB\tv\t_\t37\t_\t_\tGloss=mourir\n53\tnin\tn\xED\tSCONJ\tconj\t_\t56\tmark\t_\tGloss=quand\n54\tmin\tm\xEEn\tPRON\tprn\tPronType=Rel\t56\t_\t_\tGloss=REL\n55\tb\xE8\tb\u025B\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t56\t_\t_\tGloss=IPFV.AFF\n56\tbalo\tb\xE1lo\tVERB\tv\t_\t59\t_\t_\tGloss=vivre\n57\to\t\xF2\tPRON\tprn\t_\t59\t_\t_\tGloss=ce\n58\tka\tka\tAUX\tpm\tMood=Subj|Polarity=Aff\t59\t_\t_\tGloss=SBJV\n59\tbalo\tb\xE1lo\tVERB\tv\t_\t52\t_\t_\tGloss=vivre\n60\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n61\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t_\t_\t_\tGloss=3PL\n62\tk\xF2n\xF2nt\xF2\tk\u0254\u0300n\u0254nt\u0254n\tNUM\tnum\t_\t_\t_\t_\tGloss=neuf\n63\tb\xE8\xE8\tb\u025B\u0301\u025B\tDET\tdtm\t_\t_\t_\t_\tGloss=tout\n64\tka\tka\tAUX\tpm\tMood=Subj|Polarity=Aff\t_\t_\t_\tGloss=SBJV\n65\ttaga\tt\xE1ga\tVERB\tv\t_\t59\t_\t_\tGloss=aller\n66\tfura\tf\xFAra\tNOUN\tn\t_\t_\t_\t_\tGloss=feuille\n67\tnin\tn\xECn\tDET\tdtm\tPronType=Dem|Definite-Def\t_\t_\t_\tGloss=DEM\n68\tnyini\t\u0272\xEDni\tVERB\tv\t_\t_\t_\t_\tGloss=chercher\n69\t,\t,\tPUNCT\t_\t_\t_\t_\t_\tGloss=,\n70\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n71\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t_\t_\t_\tGloss=3PL\n72\tk\xF2n\xF2nt\xF2\tk\u0254\u0300n\u0254nt\u0254n\tNUM\tnum\t_\t_\t_\t_\tGloss=neuf\n73\tb\xE8\xE8\tb\u025B\u0301\u025B\tDET\tdtm\t_\t_\t_\t_\tGloss=tout\n74\tka\tka\tAUX\tpm\tMood=Subj|Polarity=Aff\t_\t_\t_\tGloss=SBJV\n75\ttaga\tt\xE1ga\tVERB\tv\t_\t65\t_\t_\tGloss=aller\n76\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n77\tnin\tn\xED\tSCONJ\tconj\t_\t_\t_\t_\tGloss=quand\n78\tmin\tm\xEEn\tPRON\tprn\tPronType=Rel\t_\t_\t_\tGloss=REL\n79\tseginna\tseginna\tVERB\tv\tAspect=Perf|Valency=1|Polarity=Pos\t85\t_\t_\tGloss=revenir|Morf=revenir,PFV.INTR\n80\tka\tk\xE0\tAUX\tpm\t_\t_\t_\t_\tGloss=INF\n81\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n82\ts\xF2r\xF2\ts\u0254\u0300r\u0254\tVERB\tv\t_\t_\t_\t_\tGloss=obtenir\n83\tfura\tf\xFAra\tNOUN\tn\t_\t_\t_\t_\tGloss=feuille\n84\tma\tma\tAUX\tpm\tPolarity=Neg|Aspect=Perf\t_\t_\t_\tGloss=PFV.NEG\n85\tna\tn\xE0\tVERB\tv\t_\t75\t_\t_\tGloss=venir\n86\t,\t,\tPUNCT\t_\t_\t_\t_\t_\tGloss=,\n87\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n88\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n89\tb\xE8\tb\u025B\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t_\t_\t_\tGloss=IPFV.AFF\n90\to\t\xF2\tPRON\tprn\t_\t_\t_\t_\tGloss=ce\n91\tden\td\xE9n\tNOUN\tn\t_\t_\t_\t_\tGloss=enfant\n92\tnin\tn\xECn\tDET\tdtm\tPronType=Dem|Definite-Def\t_\t_\t_\tGloss=DEM\n93\tharamuya\th\xE0ramuya\tVERB\tv\t_\t85\t_\t_\tGloss=interdire|Morf=interdire,interdire,ABSTR\n94\tka\tk\xE0\tAUX\tpm\t_\t_\t_\t_\tGloss=INF\n95\to\t\xF2\tPRON\tprn\t_\t_\t_\t_\tGloss=ce\n96\tg\xE8n\tg\u025B\u0301n\tVERB\tv\t_\t_\t_\t_\tGloss=chasser\n97\t,\t,\tPUNCT\t_\t_\t_\t_\t_\tGloss=,\n98\tka\tk\xE0\tAUX\tpm\t_\t_\t_\t_\tGloss=INF\n99\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n100\tb\xE8\tb\u025B\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t_\t_\t_\tGloss=IPFV.AFF\n101\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n102\tba\tb\xE1\tNOUN\tn\t_\t_\t_\t_\tGloss=m\xE8re\n103\tfana\tf\xE1na\tPART\tprt\t_\t_\t_\t_\tGloss=aussi\n104\tg\xE8n\tg\u025B\u0301n\tVERB\tv\t_\t_\t_\t_\tGloss=chasser\n105\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n106\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t_\t_\t_\tGloss=3PL\n107\tka\tka\tAUX\tpm\tMood=Subj|Polarity=Aff\t_\t_\t_\tGloss=SBJV\n108\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n109\tfil\xE8\tf\xEDl\u025B\tVERB\tv\t_\t_\t_\t_\tGloss=regarder\n110\tu\t\xF9\tPRON\tpers\tPronType=Prs|Number=Plur|Person=3\t_\t_\t_\tGloss=3PL\n111\ty\xE8r\xE8\ty\u025B\u0300r\u025B\u0302\tDET\tdtm\t_\t_\t_\t_\tGloss=m\xEAme\n112\tni\tn\xED\tSCONJ\tconj\t_\t_\t_\t_\tGloss=si\n113\tmin\tm\xEEn\tPRON\tprn\tPronType=Rel\t_\t_\t_\tGloss=REL\n114\tma\tma\tAUX\tpm\tPolarity=Neg|Aspect=Perf\t_\t_\t_\tGloss=PFV.NEG\n115\ts\xF2n\ts\u0254\u0300n\tVERB\tv\t_\t_\t_\t_\tGloss=accepter\n116\tfana\tf\xE1na\tPART\tprt\t_\t_\t_\t_\tGloss=aussi\n117\tko\tk\xF3\tPART\tcop\t_\t_\t_\t_\tGloss=QUOT\n118\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n119\tb\xE8\tb\u025B\tAUX\tpm\tPolarity=Pos|Aspect=Imp\t_\t_\t_\tGloss=IPFV.AFF\n120\to\t\xF2\tPRON\tprn\t_\t_\t_\t_\tGloss=ce\n121\tg\xE8n\tg\u025B\u0301n\tVERB\tv\t_\t_\t_\t_\tGloss=chasser\n122\t,\t,\tPUNCT\t_\t_\t_\t_\t_\tGloss=,\n123\to\t\xF2\tPRON\tprn\t_\t_\t_\t_\tGloss=ce\n124\tni\tni\tCCONJ\tconj\t_\t_\t_\t_\tGloss=et\n125\ta\t\xE0\tPRON\tpers\tPronType=Prs|Number=Sing|Person=3\t_\t_\t_\tGloss=3SG\n126\tba\tb\xE1\tNOUN\tn\t_\t_\t_\t_\tGloss=m\xE8re\n127\tb\xE8\xE8\tb\u025B\u0301\u025B\tDET\tdtm\t_\t_\t_\t_\tGloss=tout\n128\t.\t.\tPUNCT\t_\t_\t_\t_\t_\tGloss=.",
 
-  ud_example_tabs: '1\tThey\tthey\tPRON\tPRP\tCase=Nom|Number=Plur\t2\tnsubj\t2:nsubj|4:nsubj\t_\n2\tbuy\tbuy\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Pres\t0\troot\t0:root\t_\n3\tand\tand\tCONJ\tCC\t_\t4\tcc\t4:cc\t_\n4\tsell\tsell\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Pres\t2\tconj\t0:root|2:conj\t_\n5\tbooks\tbook\tNOUN\tNNS\tNumber=Plur\t2\tobj\t2:obj|4:obj\t_\n6\t.\t.\tPUNCT\t.\t_\t2\tpunct\t2:punct\t_',
+  ud_example_tabs: "1\tThey\tthey\tPRON\tPRP\tCase=Nom|Number=Plur\t2\tnsubj\t2:nsubj|4:nsubj\t_\n2\tbuy\tbuy\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Pres\t0\troot\t_\t_\n3\tand\tand\tCONJ\tCC\t_\t4\tcc\t4:cc\t_\n4\tsell\tsell\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Pres\t2\tconj\t2:conj\t_\n5\tbooks\tbook\tNOUN\tNNS\tNumber=Plur\t2\tobj\t2:obj|4:obj\t_\n6\t.\t.\tPUNCT\t.\t_\t2\tpunct\t2:punct\t_",
 
-  ud_example_spaces: '1    They     they    PRON    PRP    Case=Nom|Number=Plur               2    nsubj    2:nsubj|4:nsubj _\n2    buy      buy     VERB    VBP    Number=Plur|Person=3|Tense=Pres    0    root     0:root          _\n3    and      and     CONJ    CC     _                                  4    cc       4:cc            _\n4    sell     sell    VERB    VBP    Number=Plur|Person=3|Tense=Pres    2    conj     0:root|2:conj   _\n5    books    book    NOUN    NNS    Number=Plur                        2    obj      2:obj|4:obj     _\n6    .        .       PUNCT   .      _                                  2    punct    2:punct         _',
+  ud_example_spaces: "1    They     they    PRON    PRP    Case=Nom|Number=Plur               2    nsubj    2:nsubj|4:nsubj _\n2    buy      buy     VERB    VBP    Number=Plur|Person=3|Tense=Pres    0    root     _          _\n3    and      and     CONJ    CC     _                                  4    cc       4:cc            _\n4    sell     sell    VERB    VBP    Number=Plur|Person=3|Tense=Pres    2    conj     2:conj   _\n5    books    book    NOUN    NNS    Number=Plur                        2    obj      2:obj|4:obj     _\n6    .        .       PUNCT   .      _                                  2    punct    2:punct         _",
 
-  ud_example_modified: '1\tThey\tthey\tPRON\tPRP\tCase=Nom|Number=Plur\t2\tnsubj\t2:nsubj|4:nsubj\t_\n2\tbuy\tbuy\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Presroot\t0:root\t_\t_\t_\n3\tand\tand\tCONJ\tCC\t_\t4\tcc\t4:cc\t_\n4\tsell\tsell\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Presconj\t0:root|2:conj\t_\t_\t_\n5\tbooks\tbook\tNOUN\tNNS\tNumber=Plur\t2\tobj\t2:obj|4:obj\t_\n6\t.\t.\tPUNCT\t.\t_\t2\tpunct\t2:punct\t_'
+  ud_example_modified: "1\tThey\tthey\tPRON\tPRP\tCase=Nom|Number=Plur\t2\tnsubj\t2:nsubj|4:nsubj\t_\n2\tbuy\tbuy\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Presroot\t0:root\t_\t_\t_\n3\tand\tand\tCONJ\tCC\t_\t4\tcc\t4:cc\t_\n4\tsell\tsell\tVERB\tVBP\tNumber=Plur|Person=3|Tense=Presconj\t0:root|2:conj\t_\t_\t_\n5\tbooks\tbook\tNOUN\tNNS\tNumber=Plur\t2\tobj\t2:obj|4:obj\t_\n6\t.\t.\tPUNCT\t.\t_\t2\tpunct\t2:punct\t_"
 };
 
-},{}],32:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -36268,7 +35577,7 @@ module.exports = {
   'Unknown': require('./unknown')
 };
 
-},{"./brackets":29,"./cg3":30,"./conllu":31,"./plain-text":33,"./sd":34,"./unknown":35}],33:[function(require,module,exports){
+},{"./brackets":26,"./cg3":27,"./conllu":28,"./plain-text":30,"./sd":31,"./unknown":32}],30:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -36281,7 +35590,7 @@ module.exports = {
   parens_and_numbers: '\u0414\u04D9\u04AF\u043B\u04D9\u0442\u043B\u04D9\u0440\u043D\u0435\u04A3, \u0448\u0443\u043B \u0438\u0441\u04D9\u043F\u0442\u04D9\u043D \u0420\u0443\u0441\u0438\u044F\u043D\u0435\u04A3 \u0434\u04D9, \u0434\u0438\u04A3\u0433\u0435\u0437 \u0447\u0438\u043A\u043B\u04D9\u0440\u0435 \u044F\u0440\u0434\u0430\u043D 12 \u043C\u0438\u043B\u044C (\u044F\u043A\u0438 22,2 \u043A\u043C) \u0435\u0440\u0430\u043A\u043B\u044B\u043A\u0442\u0430 \u0443\u0437\u0443\u044B \u043A\u0438\u043B\u0435\u0448\u0435\u043D\u0433\u04D9\u043D'
 };
 
-},{}],34:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -36305,7 +35614,7 @@ module.exports = {
   ccomp_6: 'The problem is that this has never been tried .\nccomp(is, tried)\nnsubj(is, problem)'
 };
 
-},{}],35:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -36317,7 +35626,7 @@ module.exports = {
   5: '    '
 };
 
-},{}],36:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -36334,7 +35643,7 @@ module.exports = function () {
 	});
 };
 
-},{"jquery":397,"undo-manager":423}],37:[function(require,module,exports){
+},{"jquery":394,"undo-manager":500}],34:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -36371,7 +35680,7 @@ module.exports = {
   }
 };
 
-},{"./funcs":12,"./status":27,"underscore":422}],38:[function(require,module,exports){
+},{"./funcs":9,"./status":24,"underscore":499}],35:[function(require,module,exports){
 'use strict';
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -36384,7 +35693,7 @@ var Users = function Users() {
 
 module.exports = Users;
 
-},{"underscore":422}],39:[function(require,module,exports){
+},{"underscore":499}],36:[function(require,module,exports){
 'use strict';
 
 var $ = require('jquery');
@@ -36694,7 +36003,7 @@ module.exports = {
   is_udeprel: is_udeprel
 };
 
-},{"jquery":397,"underscore":422}],40:[function(require,module,exports){
+},{"jquery":394,"underscore":499}],37:[function(require,module,exports){
 module.exports = after
 
 function after(count, callback, err_cb) {
@@ -36724,7 +36033,7 @@ function after(count, callback, err_cb) {
 
 function noop() {}
 
-},{}],41:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 /**
  * An abstraction for slicing an arraybuffer even when
  * ArrayBuffer.prototype.slice is not supported
@@ -36755,7 +36064,7 @@ module.exports = function(arraybuffer, start, end) {
   return result.buffer;
 };
 
-},{}],42:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -36786,7 +36095,7 @@ define(String.prototype, "padRight", "".padEnd);
   [][key] && define(Array, key, Function.call.bind([][key]));
 });
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"core-js/fn/regexp/escape":54,"core-js/shim":377,"regenerator-runtime/runtime":43}],43:[function(require,module,exports){
+},{"core-js/fn/regexp/escape":51,"core-js/shim":374,"regenerator-runtime/runtime":40}],40:[function(require,module,exports){
 (function (global){
 /**
  * Copyright (c) 2014, Facebook, Inc.
@@ -37526,7 +36835,7 @@ define(String.prototype, "padRight", "".padEnd);
 );
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],44:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 
 /**
  * Expose `Backoff`.
@@ -37613,7 +36922,7 @@ Backoff.prototype.setJitter = function(jitter){
 };
 
 
-},{}],45:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 /*
  * base64-arraybuffer
  * https://github.com/niklasvh/base64-arraybuffer
@@ -37682,7 +36991,7 @@ Backoff.prototype.setJitter = function(jitter){
   };
 })();
 
-},{}],46:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 (function (global){
 /**
  * Create a blob builder even when vendor prefixes exist
@@ -37782,9 +37091,9 @@ module.exports = (function() {
 })();
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],47:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
 
-},{}],48:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -37937,7 +37246,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],49:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -39675,7 +38984,7 @@ function numberIsNaN (obj) {
   return obj !== obj // eslint-disable-line no-self-compare
 }
 
-},{"base64-js":48,"ieee754":395}],50:[function(require,module,exports){
+},{"base64-js":45,"ieee754":392}],47:[function(require,module,exports){
 /*!!
  *  Canvas 2 Svg v1.0.15
  *  A low level canvas to SVG converter. Uses a mock canvas context to build an SVG document.
@@ -40799,7 +40108,7 @@ function numberIsNaN (obj) {
 
 }());
 
-},{}],51:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 /**
  * Slice reference.
  */
@@ -40824,7 +40133,7 @@ module.exports = function(obj, fn){
   }
 };
 
-},{}],52:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 
 /**
  * Expose `Emitter`.
@@ -40989,7 +40298,7 @@ Emitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
 
-},{}],53:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 
 module.exports = function(a, b){
   var fn = function(){};
@@ -40997,24 +40306,24 @@ module.exports = function(a, b){
   a.prototype = new fn;
   a.prototype.constructor = a;
 };
-},{}],54:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 require('../../modules/core.regexp.escape');
 module.exports = require('../../modules/_core').RegExp.escape;
 
-},{"../../modules/_core":75,"../../modules/core.regexp.escape":180}],55:[function(require,module,exports){
+},{"../../modules/_core":72,"../../modules/core.regexp.escape":177}],52:[function(require,module,exports){
 module.exports = function (it) {
   if (typeof it != 'function') throw TypeError(it + ' is not a function!');
   return it;
 };
 
-},{}],56:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 var cof = require('./_cof');
 module.exports = function (it, msg) {
   if (typeof it != 'number' && cof(it) != 'Number') throw TypeError(msg);
   return +it;
 };
 
-},{"./_cof":70}],57:[function(require,module,exports){
+},{"./_cof":67}],54:[function(require,module,exports){
 // 22.1.3.31 Array.prototype[@@unscopables]
 var UNSCOPABLES = require('./_wks')('unscopables');
 var ArrayProto = Array.prototype;
@@ -41023,21 +40332,21 @@ module.exports = function (key) {
   ArrayProto[UNSCOPABLES][key] = true;
 };
 
-},{"./_hide":94,"./_wks":178}],58:[function(require,module,exports){
+},{"./_hide":91,"./_wks":175}],55:[function(require,module,exports){
 module.exports = function (it, Constructor, name, forbiddenField) {
   if (!(it instanceof Constructor) || (forbiddenField !== undefined && forbiddenField in it)) {
     throw TypeError(name + ': incorrect invocation!');
   } return it;
 };
 
-},{}],59:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 var isObject = require('./_is-object');
 module.exports = function (it) {
   if (!isObject(it)) throw TypeError(it + ' is not an object!');
   return it;
 };
 
-},{"./_is-object":103}],60:[function(require,module,exports){
+},{"./_is-object":100}],57:[function(require,module,exports){
 // 22.1.3.3 Array.prototype.copyWithin(target, start, end = this.length)
 'use strict';
 var toObject = require('./_to-object');
@@ -41065,7 +40374,7 @@ module.exports = [].copyWithin || function copyWithin(target /* = 0 */, start /*
   } return O;
 };
 
-},{"./_to-absolute-index":163,"./_to-length":167,"./_to-object":168}],61:[function(require,module,exports){
+},{"./_to-absolute-index":160,"./_to-length":164,"./_to-object":165}],58:[function(require,module,exports){
 // 22.1.3.6 Array.prototype.fill(value, start = 0, end = this.length)
 'use strict';
 var toObject = require('./_to-object');
@@ -41082,7 +40391,7 @@ module.exports = function fill(value /* , start = 0, end = @length */) {
   return O;
 };
 
-},{"./_to-absolute-index":163,"./_to-length":167,"./_to-object":168}],62:[function(require,module,exports){
+},{"./_to-absolute-index":160,"./_to-length":164,"./_to-object":165}],59:[function(require,module,exports){
 var forOf = require('./_for-of');
 
 module.exports = function (iter, ITERATOR) {
@@ -41091,7 +40400,7 @@ module.exports = function (iter, ITERATOR) {
   return result;
 };
 
-},{"./_for-of":91}],63:[function(require,module,exports){
+},{"./_for-of":88}],60:[function(require,module,exports){
 // false -> Array#indexOf
 // true  -> Array#includes
 var toIObject = require('./_to-iobject');
@@ -41116,7 +40425,7 @@ module.exports = function (IS_INCLUDES) {
   };
 };
 
-},{"./_to-absolute-index":163,"./_to-iobject":166,"./_to-length":167}],64:[function(require,module,exports){
+},{"./_to-absolute-index":160,"./_to-iobject":163,"./_to-length":164}],61:[function(require,module,exports){
 // 0 -> Array#forEach
 // 1 -> Array#map
 // 2 -> Array#filter
@@ -41162,7 +40471,7 @@ module.exports = function (TYPE, $create) {
   };
 };
 
-},{"./_array-species-create":67,"./_ctx":77,"./_iobject":99,"./_to-length":167,"./_to-object":168}],65:[function(require,module,exports){
+},{"./_array-species-create":64,"./_ctx":74,"./_iobject":96,"./_to-length":164,"./_to-object":165}],62:[function(require,module,exports){
 var aFunction = require('./_a-function');
 var toObject = require('./_to-object');
 var IObject = require('./_iobject');
@@ -41192,7 +40501,7 @@ module.exports = function (that, callbackfn, aLen, memo, isRight) {
   return memo;
 };
 
-},{"./_a-function":55,"./_iobject":99,"./_to-length":167,"./_to-object":168}],66:[function(require,module,exports){
+},{"./_a-function":52,"./_iobject":96,"./_to-length":164,"./_to-object":165}],63:[function(require,module,exports){
 var isObject = require('./_is-object');
 var isArray = require('./_is-array');
 var SPECIES = require('./_wks')('species');
@@ -41210,7 +40519,7 @@ module.exports = function (original) {
   } return C === undefined ? Array : C;
 };
 
-},{"./_is-array":101,"./_is-object":103,"./_wks":178}],67:[function(require,module,exports){
+},{"./_is-array":98,"./_is-object":100,"./_wks":175}],64:[function(require,module,exports){
 // 9.4.2.3 ArraySpeciesCreate(originalArray, length)
 var speciesConstructor = require('./_array-species-constructor');
 
@@ -41218,7 +40527,7 @@ module.exports = function (original, length) {
   return new (speciesConstructor(original))(length);
 };
 
-},{"./_array-species-constructor":66}],68:[function(require,module,exports){
+},{"./_array-species-constructor":63}],65:[function(require,module,exports){
 'use strict';
 var aFunction = require('./_a-function');
 var isObject = require('./_is-object');
@@ -41245,7 +40554,7 @@ module.exports = Function.bind || function bind(that /* , ...args */) {
   return bound;
 };
 
-},{"./_a-function":55,"./_invoke":98,"./_is-object":103}],69:[function(require,module,exports){
+},{"./_a-function":52,"./_invoke":95,"./_is-object":100}],66:[function(require,module,exports){
 // getting tag from 19.1.3.6 Object.prototype.toString()
 var cof = require('./_cof');
 var TAG = require('./_wks')('toStringTag');
@@ -41270,14 +40579,14 @@ module.exports = function (it) {
     : (B = cof(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
 };
 
-},{"./_cof":70,"./_wks":178}],70:[function(require,module,exports){
+},{"./_cof":67,"./_wks":175}],67:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = function (it) {
   return toString.call(it).slice(8, -1);
 };
 
-},{}],71:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 'use strict';
 var dP = require('./_object-dp').f;
 var create = require('./_object-create');
@@ -41423,7 +40732,7 @@ module.exports = {
   }
 };
 
-},{"./_an-instance":58,"./_ctx":77,"./_descriptors":81,"./_for-of":91,"./_iter-define":107,"./_iter-step":109,"./_meta":117,"./_object-create":122,"./_object-dp":123,"./_redefine-all":142,"./_set-species":149,"./_validate-collection":175}],72:[function(require,module,exports){
+},{"./_an-instance":55,"./_ctx":74,"./_descriptors":78,"./_for-of":88,"./_iter-define":104,"./_iter-step":106,"./_meta":114,"./_object-create":119,"./_object-dp":120,"./_redefine-all":139,"./_set-species":146,"./_validate-collection":172}],69:[function(require,module,exports){
 // https://github.com/DavidBruant/Map-Set.prototype.toJSON
 var classof = require('./_classof');
 var from = require('./_array-from-iterable');
@@ -41434,7 +40743,7 @@ module.exports = function (NAME) {
   };
 };
 
-},{"./_array-from-iterable":62,"./_classof":69}],73:[function(require,module,exports){
+},{"./_array-from-iterable":59,"./_classof":66}],70:[function(require,module,exports){
 'use strict';
 var redefineAll = require('./_redefine-all');
 var getWeak = require('./_meta').getWeak;
@@ -41521,7 +40830,7 @@ module.exports = {
   ufstore: uncaughtFrozenStore
 };
 
-},{"./_an-instance":58,"./_an-object":59,"./_array-methods":64,"./_for-of":91,"./_has":93,"./_is-object":103,"./_meta":117,"./_redefine-all":142,"./_validate-collection":175}],74:[function(require,module,exports){
+},{"./_an-instance":55,"./_an-object":56,"./_array-methods":61,"./_for-of":88,"./_has":90,"./_is-object":100,"./_meta":114,"./_redefine-all":139,"./_validate-collection":172}],71:[function(require,module,exports){
 'use strict';
 var global = require('./_global');
 var $export = require('./_export');
@@ -41608,11 +40917,11 @@ module.exports = function (NAME, wrapper, methods, common, IS_MAP, IS_WEAK) {
   return C;
 };
 
-},{"./_an-instance":58,"./_export":85,"./_fails":87,"./_for-of":91,"./_global":92,"./_inherit-if-required":97,"./_is-object":103,"./_iter-detect":108,"./_meta":117,"./_redefine":143,"./_redefine-all":142,"./_set-to-string-tag":150}],75:[function(require,module,exports){
+},{"./_an-instance":55,"./_export":82,"./_fails":84,"./_for-of":88,"./_global":89,"./_inherit-if-required":94,"./_is-object":100,"./_iter-detect":105,"./_meta":114,"./_redefine":140,"./_redefine-all":139,"./_set-to-string-tag":147}],72:[function(require,module,exports){
 var core = module.exports = { version: '2.5.7' };
 if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 
-},{}],76:[function(require,module,exports){
+},{}],73:[function(require,module,exports){
 'use strict';
 var $defineProperty = require('./_object-dp');
 var createDesc = require('./_property-desc');
@@ -41622,7 +40931,7 @@ module.exports = function (object, index, value) {
   else object[index] = value;
 };
 
-},{"./_object-dp":123,"./_property-desc":141}],77:[function(require,module,exports){
+},{"./_object-dp":120,"./_property-desc":138}],74:[function(require,module,exports){
 // optional / simple context binding
 var aFunction = require('./_a-function');
 module.exports = function (fn, that, length) {
@@ -41644,7 +40953,7 @@ module.exports = function (fn, that, length) {
   };
 };
 
-},{"./_a-function":55}],78:[function(require,module,exports){
+},{"./_a-function":52}],75:[function(require,module,exports){
 'use strict';
 // 20.3.4.36 / 15.9.5.43 Date.prototype.toISOString()
 var fails = require('./_fails');
@@ -41672,7 +40981,7 @@ module.exports = (fails(function () {
     ':' + lz(d.getUTCSeconds()) + '.' + (m > 99 ? m : '0' + lz(m)) + 'Z';
 } : $toISOString;
 
-},{"./_fails":87}],79:[function(require,module,exports){
+},{"./_fails":84}],76:[function(require,module,exports){
 'use strict';
 var anObject = require('./_an-object');
 var toPrimitive = require('./_to-primitive');
@@ -41683,20 +40992,20 @@ module.exports = function (hint) {
   return toPrimitive(anObject(this), hint != NUMBER);
 };
 
-},{"./_an-object":59,"./_to-primitive":169}],80:[function(require,module,exports){
+},{"./_an-object":56,"./_to-primitive":166}],77:[function(require,module,exports){
 // 7.2.1 RequireObjectCoercible(argument)
 module.exports = function (it) {
   if (it == undefined) throw TypeError("Can't call method on  " + it);
   return it;
 };
 
-},{}],81:[function(require,module,exports){
+},{}],78:[function(require,module,exports){
 // Thank's IE8 for his funny defineProperty
 module.exports = !require('./_fails')(function () {
   return Object.defineProperty({}, 'a', { get: function () { return 7; } }).a != 7;
 });
 
-},{"./_fails":87}],82:[function(require,module,exports){
+},{"./_fails":84}],79:[function(require,module,exports){
 var isObject = require('./_is-object');
 var document = require('./_global').document;
 // typeof document.createElement is 'object' in old IE
@@ -41705,13 +41014,13 @@ module.exports = function (it) {
   return is ? document.createElement(it) : {};
 };
 
-},{"./_global":92,"./_is-object":103}],83:[function(require,module,exports){
+},{"./_global":89,"./_is-object":100}],80:[function(require,module,exports){
 // IE 8- don't enum bug keys
 module.exports = (
   'constructor,hasOwnProperty,isPrototypeOf,propertyIsEnumerable,toLocaleString,toString,valueOf'
 ).split(',');
 
-},{}],84:[function(require,module,exports){
+},{}],81:[function(require,module,exports){
 // all enumerable object keys, includes symbols
 var getKeys = require('./_object-keys');
 var gOPS = require('./_object-gops');
@@ -41728,7 +41037,7 @@ module.exports = function (it) {
   } return result;
 };
 
-},{"./_object-gops":129,"./_object-keys":132,"./_object-pie":133}],85:[function(require,module,exports){
+},{"./_object-gops":126,"./_object-keys":129,"./_object-pie":130}],82:[function(require,module,exports){
 var global = require('./_global');
 var core = require('./_core');
 var hide = require('./_hide');
@@ -41773,7 +41082,7 @@ $export.U = 64;  // safe
 $export.R = 128; // real proto method for `library`
 module.exports = $export;
 
-},{"./_core":75,"./_ctx":77,"./_global":92,"./_hide":94,"./_redefine":143}],86:[function(require,module,exports){
+},{"./_core":72,"./_ctx":74,"./_global":89,"./_hide":91,"./_redefine":140}],83:[function(require,module,exports){
 var MATCH = require('./_wks')('match');
 module.exports = function (KEY) {
   var re = /./;
@@ -41787,7 +41096,7 @@ module.exports = function (KEY) {
   } return true;
 };
 
-},{"./_wks":178}],87:[function(require,module,exports){
+},{"./_wks":175}],84:[function(require,module,exports){
 module.exports = function (exec) {
   try {
     return !!exec();
@@ -41796,7 +41105,7 @@ module.exports = function (exec) {
   }
 };
 
-},{}],88:[function(require,module,exports){
+},{}],85:[function(require,module,exports){
 'use strict';
 var hide = require('./_hide');
 var redefine = require('./_redefine');
@@ -41826,7 +41135,7 @@ module.exports = function (KEY, length, exec) {
   }
 };
 
-},{"./_defined":80,"./_fails":87,"./_hide":94,"./_redefine":143,"./_wks":178}],89:[function(require,module,exports){
+},{"./_defined":77,"./_fails":84,"./_hide":91,"./_redefine":140,"./_wks":175}],86:[function(require,module,exports){
 'use strict';
 // 21.2.5.3 get RegExp.prototype.flags
 var anObject = require('./_an-object');
@@ -41841,7 +41150,7 @@ module.exports = function () {
   return result;
 };
 
-},{"./_an-object":59}],90:[function(require,module,exports){
+},{"./_an-object":56}],87:[function(require,module,exports){
 'use strict';
 // https://tc39.github.io/proposal-flatMap/#sec-FlattenIntoArray
 var isArray = require('./_is-array');
@@ -41882,7 +41191,7 @@ function flattenIntoArray(target, original, source, sourceLen, start, depth, map
 
 module.exports = flattenIntoArray;
 
-},{"./_ctx":77,"./_is-array":101,"./_is-object":103,"./_to-length":167,"./_wks":178}],91:[function(require,module,exports){
+},{"./_ctx":74,"./_is-array":98,"./_is-object":100,"./_to-length":164,"./_wks":175}],88:[function(require,module,exports){
 var ctx = require('./_ctx');
 var call = require('./_iter-call');
 var isArrayIter = require('./_is-array-iter');
@@ -41909,7 +41218,7 @@ var exports = module.exports = function (iterable, entries, fn, that, ITERATOR) 
 exports.BREAK = BREAK;
 exports.RETURN = RETURN;
 
-},{"./_an-object":59,"./_ctx":77,"./_is-array-iter":100,"./_iter-call":105,"./_to-length":167,"./core.get-iterator-method":179}],92:[function(require,module,exports){
+},{"./_an-object":56,"./_ctx":74,"./_is-array-iter":97,"./_iter-call":102,"./_to-length":164,"./core.get-iterator-method":176}],89:[function(require,module,exports){
 // https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
 var global = module.exports = typeof window != 'undefined' && window.Math == Math
   ? window : typeof self != 'undefined' && self.Math == Math ? self
@@ -41917,13 +41226,13 @@ var global = module.exports = typeof window != 'undefined' && window.Math == Mat
   : Function('return this')();
 if (typeof __g == 'number') __g = global; // eslint-disable-line no-undef
 
-},{}],93:[function(require,module,exports){
+},{}],90:[function(require,module,exports){
 var hasOwnProperty = {}.hasOwnProperty;
 module.exports = function (it, key) {
   return hasOwnProperty.call(it, key);
 };
 
-},{}],94:[function(require,module,exports){
+},{}],91:[function(require,module,exports){
 var dP = require('./_object-dp');
 var createDesc = require('./_property-desc');
 module.exports = require('./_descriptors') ? function (object, key, value) {
@@ -41933,16 +41242,16 @@ module.exports = require('./_descriptors') ? function (object, key, value) {
   return object;
 };
 
-},{"./_descriptors":81,"./_object-dp":123,"./_property-desc":141}],95:[function(require,module,exports){
+},{"./_descriptors":78,"./_object-dp":120,"./_property-desc":138}],92:[function(require,module,exports){
 var document = require('./_global').document;
 module.exports = document && document.documentElement;
 
-},{"./_global":92}],96:[function(require,module,exports){
+},{"./_global":89}],93:[function(require,module,exports){
 module.exports = !require('./_descriptors') && !require('./_fails')(function () {
   return Object.defineProperty(require('./_dom-create')('div'), 'a', { get: function () { return 7; } }).a != 7;
 });
 
-},{"./_descriptors":81,"./_dom-create":82,"./_fails":87}],97:[function(require,module,exports){
+},{"./_descriptors":78,"./_dom-create":79,"./_fails":84}],94:[function(require,module,exports){
 var isObject = require('./_is-object');
 var setPrototypeOf = require('./_set-proto').set;
 module.exports = function (that, target, C) {
@@ -41953,7 +41262,7 @@ module.exports = function (that, target, C) {
   } return that;
 };
 
-},{"./_is-object":103,"./_set-proto":148}],98:[function(require,module,exports){
+},{"./_is-object":100,"./_set-proto":145}],95:[function(require,module,exports){
 // fast apply, http://jsperf.lnkit.com/fast-apply/5
 module.exports = function (fn, args, that) {
   var un = that === undefined;
@@ -41971,7 +41280,7 @@ module.exports = function (fn, args, that) {
   } return fn.apply(that, args);
 };
 
-},{}],99:[function(require,module,exports){
+},{}],96:[function(require,module,exports){
 // fallback for non-array-like ES3 and non-enumerable old V8 strings
 var cof = require('./_cof');
 // eslint-disable-next-line no-prototype-builtins
@@ -41979,7 +41288,7 @@ module.exports = Object('z').propertyIsEnumerable(0) ? Object : function (it) {
   return cof(it) == 'String' ? it.split('') : Object(it);
 };
 
-},{"./_cof":70}],100:[function(require,module,exports){
+},{"./_cof":67}],97:[function(require,module,exports){
 // check on default Array iterator
 var Iterators = require('./_iterators');
 var ITERATOR = require('./_wks')('iterator');
@@ -41989,14 +41298,14 @@ module.exports = function (it) {
   return it !== undefined && (Iterators.Array === it || ArrayProto[ITERATOR] === it);
 };
 
-},{"./_iterators":110,"./_wks":178}],101:[function(require,module,exports){
+},{"./_iterators":107,"./_wks":175}],98:[function(require,module,exports){
 // 7.2.2 IsArray(argument)
 var cof = require('./_cof');
 module.exports = Array.isArray || function isArray(arg) {
   return cof(arg) == 'Array';
 };
 
-},{"./_cof":70}],102:[function(require,module,exports){
+},{"./_cof":67}],99:[function(require,module,exports){
 // 20.1.2.3 Number.isInteger(number)
 var isObject = require('./_is-object');
 var floor = Math.floor;
@@ -42004,12 +41313,12 @@ module.exports = function isInteger(it) {
   return !isObject(it) && isFinite(it) && floor(it) === it;
 };
 
-},{"./_is-object":103}],103:[function(require,module,exports){
+},{"./_is-object":100}],100:[function(require,module,exports){
 module.exports = function (it) {
   return typeof it === 'object' ? it !== null : typeof it === 'function';
 };
 
-},{}],104:[function(require,module,exports){
+},{}],101:[function(require,module,exports){
 // 7.2.8 IsRegExp(argument)
 var isObject = require('./_is-object');
 var cof = require('./_cof');
@@ -42019,7 +41328,7 @@ module.exports = function (it) {
   return isObject(it) && ((isRegExp = it[MATCH]) !== undefined ? !!isRegExp : cof(it) == 'RegExp');
 };
 
-},{"./_cof":70,"./_is-object":103,"./_wks":178}],105:[function(require,module,exports){
+},{"./_cof":67,"./_is-object":100,"./_wks":175}],102:[function(require,module,exports){
 // call something on iterator step with safe closing on error
 var anObject = require('./_an-object');
 module.exports = function (iterator, fn, value, entries) {
@@ -42033,7 +41342,7 @@ module.exports = function (iterator, fn, value, entries) {
   }
 };
 
-},{"./_an-object":59}],106:[function(require,module,exports){
+},{"./_an-object":56}],103:[function(require,module,exports){
 'use strict';
 var create = require('./_object-create');
 var descriptor = require('./_property-desc');
@@ -42048,7 +41357,7 @@ module.exports = function (Constructor, NAME, next) {
   setToStringTag(Constructor, NAME + ' Iterator');
 };
 
-},{"./_hide":94,"./_object-create":122,"./_property-desc":141,"./_set-to-string-tag":150,"./_wks":178}],107:[function(require,module,exports){
+},{"./_hide":91,"./_object-create":119,"./_property-desc":138,"./_set-to-string-tag":147,"./_wks":175}],104:[function(require,module,exports){
 'use strict';
 var LIBRARY = require('./_library');
 var $export = require('./_export');
@@ -42119,7 +41428,7 @@ module.exports = function (Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCE
   return methods;
 };
 
-},{"./_export":85,"./_hide":94,"./_iter-create":106,"./_iterators":110,"./_library":111,"./_object-gpo":130,"./_redefine":143,"./_set-to-string-tag":150,"./_wks":178}],108:[function(require,module,exports){
+},{"./_export":82,"./_hide":91,"./_iter-create":103,"./_iterators":107,"./_library":108,"./_object-gpo":127,"./_redefine":140,"./_set-to-string-tag":147,"./_wks":175}],105:[function(require,module,exports){
 var ITERATOR = require('./_wks')('iterator');
 var SAFE_CLOSING = false;
 
@@ -42143,18 +41452,18 @@ module.exports = function (exec, skipClosing) {
   return safe;
 };
 
-},{"./_wks":178}],109:[function(require,module,exports){
+},{"./_wks":175}],106:[function(require,module,exports){
 module.exports = function (done, value) {
   return { value: value, done: !!done };
 };
 
-},{}],110:[function(require,module,exports){
+},{}],107:[function(require,module,exports){
 module.exports = {};
 
-},{}],111:[function(require,module,exports){
+},{}],108:[function(require,module,exports){
 module.exports = false;
 
-},{}],112:[function(require,module,exports){
+},{}],109:[function(require,module,exports){
 // 20.2.2.14 Math.expm1(x)
 var $expm1 = Math.expm1;
 module.exports = (!$expm1
@@ -42166,7 +41475,7 @@ module.exports = (!$expm1
   return (x = +x) == 0 ? x : x > -1e-6 && x < 1e-6 ? x + x * x / 2 : Math.exp(x) - 1;
 } : $expm1;
 
-},{}],113:[function(require,module,exports){
+},{}],110:[function(require,module,exports){
 // 20.2.2.16 Math.fround(x)
 var sign = require('./_math-sign');
 var pow = Math.pow;
@@ -42191,13 +41500,13 @@ module.exports = Math.fround || function fround(x) {
   return $sign * result;
 };
 
-},{"./_math-sign":116}],114:[function(require,module,exports){
+},{"./_math-sign":113}],111:[function(require,module,exports){
 // 20.2.2.20 Math.log1p(x)
 module.exports = Math.log1p || function log1p(x) {
   return (x = +x) > -1e-8 && x < 1e-8 ? x - x * x / 2 : Math.log(1 + x);
 };
 
-},{}],115:[function(require,module,exports){
+},{}],112:[function(require,module,exports){
 // https://rwaldron.github.io/proposal-math-extensions/
 module.exports = Math.scale || function scale(x, inLow, inHigh, outLow, outHigh) {
   if (
@@ -42217,14 +41526,14 @@ module.exports = Math.scale || function scale(x, inLow, inHigh, outLow, outHigh)
   return (x - inLow) * (outHigh - outLow) / (inHigh - inLow) + outLow;
 };
 
-},{}],116:[function(require,module,exports){
+},{}],113:[function(require,module,exports){
 // 20.2.2.28 Math.sign(x)
 module.exports = Math.sign || function sign(x) {
   // eslint-disable-next-line no-self-compare
   return (x = +x) == 0 || x != x ? x : x < 0 ? -1 : 1;
 };
 
-},{}],117:[function(require,module,exports){
+},{}],114:[function(require,module,exports){
 var META = require('./_uid')('meta');
 var isObject = require('./_is-object');
 var has = require('./_has');
@@ -42279,7 +41588,7 @@ var meta = module.exports = {
   onFreeze: onFreeze
 };
 
-},{"./_fails":87,"./_has":93,"./_is-object":103,"./_object-dp":123,"./_uid":173}],118:[function(require,module,exports){
+},{"./_fails":84,"./_has":90,"./_is-object":100,"./_object-dp":120,"./_uid":170}],115:[function(require,module,exports){
 var Map = require('./es6.map');
 var $export = require('./_export');
 var shared = require('./_shared')('metadata');
@@ -42332,7 +41641,7 @@ module.exports = {
   exp: exp
 };
 
-},{"./_export":85,"./_shared":152,"./es6.map":210,"./es6.weak-map":316}],119:[function(require,module,exports){
+},{"./_export":82,"./_shared":149,"./es6.map":207,"./es6.weak-map":313}],116:[function(require,module,exports){
 var global = require('./_global');
 var macrotask = require('./_task').set;
 var Observer = global.MutationObserver || global.WebKitMutationObserver;
@@ -42403,7 +41712,7 @@ module.exports = function () {
   };
 };
 
-},{"./_cof":70,"./_global":92,"./_task":162}],120:[function(require,module,exports){
+},{"./_cof":67,"./_global":89,"./_task":159}],117:[function(require,module,exports){
 'use strict';
 // 25.4.1.5 NewPromiseCapability(C)
 var aFunction = require('./_a-function');
@@ -42423,7 +41732,7 @@ module.exports.f = function (C) {
   return new PromiseCapability(C);
 };
 
-},{"./_a-function":55}],121:[function(require,module,exports){
+},{"./_a-function":52}],118:[function(require,module,exports){
 'use strict';
 // 19.1.2.1 Object.assign(target, source, ...)
 var getKeys = require('./_object-keys');
@@ -42459,7 +41768,7 @@ module.exports = !$assign || require('./_fails')(function () {
   } return T;
 } : $assign;
 
-},{"./_fails":87,"./_iobject":99,"./_object-gops":129,"./_object-keys":132,"./_object-pie":133,"./_to-object":168}],122:[function(require,module,exports){
+},{"./_fails":84,"./_iobject":96,"./_object-gops":126,"./_object-keys":129,"./_object-pie":130,"./_to-object":165}],119:[function(require,module,exports){
 // 19.1.2.2 / 15.2.3.5 Object.create(O [, Properties])
 var anObject = require('./_an-object');
 var dPs = require('./_object-dps');
@@ -42502,7 +41811,7 @@ module.exports = Object.create || function create(O, Properties) {
   return Properties === undefined ? result : dPs(result, Properties);
 };
 
-},{"./_an-object":59,"./_dom-create":82,"./_enum-bug-keys":83,"./_html":95,"./_object-dps":124,"./_shared-key":151}],123:[function(require,module,exports){
+},{"./_an-object":56,"./_dom-create":79,"./_enum-bug-keys":80,"./_html":92,"./_object-dps":121,"./_shared-key":148}],120:[function(require,module,exports){
 var anObject = require('./_an-object');
 var IE8_DOM_DEFINE = require('./_ie8-dom-define');
 var toPrimitive = require('./_to-primitive');
@@ -42520,7 +41829,7 @@ exports.f = require('./_descriptors') ? Object.defineProperty : function defineP
   return O;
 };
 
-},{"./_an-object":59,"./_descriptors":81,"./_ie8-dom-define":96,"./_to-primitive":169}],124:[function(require,module,exports){
+},{"./_an-object":56,"./_descriptors":78,"./_ie8-dom-define":93,"./_to-primitive":166}],121:[function(require,module,exports){
 var dP = require('./_object-dp');
 var anObject = require('./_an-object');
 var getKeys = require('./_object-keys');
@@ -42535,7 +41844,7 @@ module.exports = require('./_descriptors') ? Object.defineProperties : function 
   return O;
 };
 
-},{"./_an-object":59,"./_descriptors":81,"./_object-dp":123,"./_object-keys":132}],125:[function(require,module,exports){
+},{"./_an-object":56,"./_descriptors":78,"./_object-dp":120,"./_object-keys":129}],122:[function(require,module,exports){
 'use strict';
 // Forced replacement prototype accessors methods
 module.exports = require('./_library') || !require('./_fails')(function () {
@@ -42546,7 +41855,7 @@ module.exports = require('./_library') || !require('./_fails')(function () {
   delete require('./_global')[K];
 });
 
-},{"./_fails":87,"./_global":92,"./_library":111}],126:[function(require,module,exports){
+},{"./_fails":84,"./_global":89,"./_library":108}],123:[function(require,module,exports){
 var pIE = require('./_object-pie');
 var createDesc = require('./_property-desc');
 var toIObject = require('./_to-iobject');
@@ -42564,7 +41873,7 @@ exports.f = require('./_descriptors') ? gOPD : function getOwnPropertyDescriptor
   if (has(O, P)) return createDesc(!pIE.f.call(O, P), O[P]);
 };
 
-},{"./_descriptors":81,"./_has":93,"./_ie8-dom-define":96,"./_object-pie":133,"./_property-desc":141,"./_to-iobject":166,"./_to-primitive":169}],127:[function(require,module,exports){
+},{"./_descriptors":78,"./_has":90,"./_ie8-dom-define":93,"./_object-pie":130,"./_property-desc":138,"./_to-iobject":163,"./_to-primitive":166}],124:[function(require,module,exports){
 // fallback for IE11 buggy Object.getOwnPropertyNames with iframe and window
 var toIObject = require('./_to-iobject');
 var gOPN = require('./_object-gopn').f;
@@ -42585,7 +41894,7 @@ module.exports.f = function getOwnPropertyNames(it) {
   return windowNames && toString.call(it) == '[object Window]' ? getWindowNames(it) : gOPN(toIObject(it));
 };
 
-},{"./_object-gopn":128,"./_to-iobject":166}],128:[function(require,module,exports){
+},{"./_object-gopn":125,"./_to-iobject":163}],125:[function(require,module,exports){
 // 19.1.2.7 / 15.2.3.4 Object.getOwnPropertyNames(O)
 var $keys = require('./_object-keys-internal');
 var hiddenKeys = require('./_enum-bug-keys').concat('length', 'prototype');
@@ -42594,10 +41903,10 @@ exports.f = Object.getOwnPropertyNames || function getOwnPropertyNames(O) {
   return $keys(O, hiddenKeys);
 };
 
-},{"./_enum-bug-keys":83,"./_object-keys-internal":131}],129:[function(require,module,exports){
+},{"./_enum-bug-keys":80,"./_object-keys-internal":128}],126:[function(require,module,exports){
 exports.f = Object.getOwnPropertySymbols;
 
-},{}],130:[function(require,module,exports){
+},{}],127:[function(require,module,exports){
 // 19.1.2.9 / 15.2.3.2 Object.getPrototypeOf(O)
 var has = require('./_has');
 var toObject = require('./_to-object');
@@ -42612,7 +41921,7 @@ module.exports = Object.getPrototypeOf || function (O) {
   } return O instanceof Object ? ObjectProto : null;
 };
 
-},{"./_has":93,"./_shared-key":151,"./_to-object":168}],131:[function(require,module,exports){
+},{"./_has":90,"./_shared-key":148,"./_to-object":165}],128:[function(require,module,exports){
 var has = require('./_has');
 var toIObject = require('./_to-iobject');
 var arrayIndexOf = require('./_array-includes')(false);
@@ -42631,7 +41940,7 @@ module.exports = function (object, names) {
   return result;
 };
 
-},{"./_array-includes":63,"./_has":93,"./_shared-key":151,"./_to-iobject":166}],132:[function(require,module,exports){
+},{"./_array-includes":60,"./_has":90,"./_shared-key":148,"./_to-iobject":163}],129:[function(require,module,exports){
 // 19.1.2.14 / 15.2.3.14 Object.keys(O)
 var $keys = require('./_object-keys-internal');
 var enumBugKeys = require('./_enum-bug-keys');
@@ -42640,10 +41949,10 @@ module.exports = Object.keys || function keys(O) {
   return $keys(O, enumBugKeys);
 };
 
-},{"./_enum-bug-keys":83,"./_object-keys-internal":131}],133:[function(require,module,exports){
+},{"./_enum-bug-keys":80,"./_object-keys-internal":128}],130:[function(require,module,exports){
 exports.f = {}.propertyIsEnumerable;
 
-},{}],134:[function(require,module,exports){
+},{}],131:[function(require,module,exports){
 // most Object methods by ES6 should accept primitives
 var $export = require('./_export');
 var core = require('./_core');
@@ -42655,7 +41964,7 @@ module.exports = function (KEY, exec) {
   $export($export.S + $export.F * fails(function () { fn(1); }), 'Object', exp);
 };
 
-},{"./_core":75,"./_export":85,"./_fails":87}],135:[function(require,module,exports){
+},{"./_core":72,"./_export":82,"./_fails":84}],132:[function(require,module,exports){
 var getKeys = require('./_object-keys');
 var toIObject = require('./_to-iobject');
 var isEnum = require('./_object-pie').f;
@@ -42673,7 +41982,7 @@ module.exports = function (isEntries) {
   };
 };
 
-},{"./_object-keys":132,"./_object-pie":133,"./_to-iobject":166}],136:[function(require,module,exports){
+},{"./_object-keys":129,"./_object-pie":130,"./_to-iobject":163}],133:[function(require,module,exports){
 // all object keys, includes non-enumerable and symbols
 var gOPN = require('./_object-gopn');
 var gOPS = require('./_object-gops');
@@ -42685,7 +41994,7 @@ module.exports = Reflect && Reflect.ownKeys || function ownKeys(it) {
   return getSymbols ? keys.concat(getSymbols(it)) : keys;
 };
 
-},{"./_an-object":59,"./_global":92,"./_object-gopn":128,"./_object-gops":129}],137:[function(require,module,exports){
+},{"./_an-object":56,"./_global":89,"./_object-gopn":125,"./_object-gops":126}],134:[function(require,module,exports){
 var $parseFloat = require('./_global').parseFloat;
 var $trim = require('./_string-trim').trim;
 
@@ -42695,7 +42004,7 @@ module.exports = 1 / $parseFloat(require('./_string-ws') + '-0') !== -Infinity ?
   return result === 0 && string.charAt(0) == '-' ? -0 : result;
 } : $parseFloat;
 
-},{"./_global":92,"./_string-trim":160,"./_string-ws":161}],138:[function(require,module,exports){
+},{"./_global":89,"./_string-trim":157,"./_string-ws":158}],135:[function(require,module,exports){
 var $parseInt = require('./_global').parseInt;
 var $trim = require('./_string-trim').trim;
 var ws = require('./_string-ws');
@@ -42706,7 +42015,7 @@ module.exports = $parseInt(ws + '08') !== 8 || $parseInt(ws + '0x16') !== 22 ? f
   return $parseInt(string, (radix >>> 0) || (hex.test(string) ? 16 : 10));
 } : $parseInt;
 
-},{"./_global":92,"./_string-trim":160,"./_string-ws":161}],139:[function(require,module,exports){
+},{"./_global":89,"./_string-trim":157,"./_string-ws":158}],136:[function(require,module,exports){
 module.exports = function (exec) {
   try {
     return { e: false, v: exec() };
@@ -42715,7 +42024,7 @@ module.exports = function (exec) {
   }
 };
 
-},{}],140:[function(require,module,exports){
+},{}],137:[function(require,module,exports){
 var anObject = require('./_an-object');
 var isObject = require('./_is-object');
 var newPromiseCapability = require('./_new-promise-capability');
@@ -42729,7 +42038,7 @@ module.exports = function (C, x) {
   return promiseCapability.promise;
 };
 
-},{"./_an-object":59,"./_is-object":103,"./_new-promise-capability":120}],141:[function(require,module,exports){
+},{"./_an-object":56,"./_is-object":100,"./_new-promise-capability":117}],138:[function(require,module,exports){
 module.exports = function (bitmap, value) {
   return {
     enumerable: !(bitmap & 1),
@@ -42739,14 +42048,14 @@ module.exports = function (bitmap, value) {
   };
 };
 
-},{}],142:[function(require,module,exports){
+},{}],139:[function(require,module,exports){
 var redefine = require('./_redefine');
 module.exports = function (target, src, safe) {
   for (var key in src) redefine(target, key, src[key], safe);
   return target;
 };
 
-},{"./_redefine":143}],143:[function(require,module,exports){
+},{"./_redefine":140}],140:[function(require,module,exports){
 var global = require('./_global');
 var hide = require('./_hide');
 var has = require('./_has');
@@ -42779,7 +42088,7 @@ require('./_core').inspectSource = function (it) {
   return typeof this == 'function' && this[SRC] || $toString.call(this);
 });
 
-},{"./_core":75,"./_global":92,"./_has":93,"./_hide":94,"./_uid":173}],144:[function(require,module,exports){
+},{"./_core":72,"./_global":89,"./_has":90,"./_hide":91,"./_uid":170}],141:[function(require,module,exports){
 module.exports = function (regExp, replace) {
   var replacer = replace === Object(replace) ? function (part) {
     return replace[part];
@@ -42789,14 +42098,14 @@ module.exports = function (regExp, replace) {
   };
 };
 
-},{}],145:[function(require,module,exports){
+},{}],142:[function(require,module,exports){
 // 7.2.9 SameValue(x, y)
 module.exports = Object.is || function is(x, y) {
   // eslint-disable-next-line no-self-compare
   return x === y ? x !== 0 || 1 / x === 1 / y : x != x && y != y;
 };
 
-},{}],146:[function(require,module,exports){
+},{}],143:[function(require,module,exports){
 'use strict';
 // https://tc39.github.io/proposal-setmap-offrom/
 var $export = require('./_export');
@@ -42826,7 +42135,7 @@ module.exports = function (COLLECTION) {
   } });
 };
 
-},{"./_a-function":55,"./_ctx":77,"./_export":85,"./_for-of":91}],147:[function(require,module,exports){
+},{"./_a-function":52,"./_ctx":74,"./_export":82,"./_for-of":88}],144:[function(require,module,exports){
 'use strict';
 // https://tc39.github.io/proposal-setmap-offrom/
 var $export = require('./_export');
@@ -42840,7 +42149,7 @@ module.exports = function (COLLECTION) {
   } });
 };
 
-},{"./_export":85}],148:[function(require,module,exports){
+},{"./_export":82}],145:[function(require,module,exports){
 // Works with __proto__ only. Old v8 can't work with null proto objects.
 /* eslint-disable no-proto */
 var isObject = require('./_is-object');
@@ -42867,7 +42176,7 @@ module.exports = {
   check: check
 };
 
-},{"./_an-object":59,"./_ctx":77,"./_is-object":103,"./_object-gopd":126}],149:[function(require,module,exports){
+},{"./_an-object":56,"./_ctx":74,"./_is-object":100,"./_object-gopd":123}],146:[function(require,module,exports){
 'use strict';
 var global = require('./_global');
 var dP = require('./_object-dp');
@@ -42882,7 +42191,7 @@ module.exports = function (KEY) {
   });
 };
 
-},{"./_descriptors":81,"./_global":92,"./_object-dp":123,"./_wks":178}],150:[function(require,module,exports){
+},{"./_descriptors":78,"./_global":89,"./_object-dp":120,"./_wks":175}],147:[function(require,module,exports){
 var def = require('./_object-dp').f;
 var has = require('./_has');
 var TAG = require('./_wks')('toStringTag');
@@ -42891,14 +42200,14 @@ module.exports = function (it, tag, stat) {
   if (it && !has(it = stat ? it : it.prototype, TAG)) def(it, TAG, { configurable: true, value: tag });
 };
 
-},{"./_has":93,"./_object-dp":123,"./_wks":178}],151:[function(require,module,exports){
+},{"./_has":90,"./_object-dp":120,"./_wks":175}],148:[function(require,module,exports){
 var shared = require('./_shared')('keys');
 var uid = require('./_uid');
 module.exports = function (key) {
   return shared[key] || (shared[key] = uid(key));
 };
 
-},{"./_shared":152,"./_uid":173}],152:[function(require,module,exports){
+},{"./_shared":149,"./_uid":170}],149:[function(require,module,exports){
 var core = require('./_core');
 var global = require('./_global');
 var SHARED = '__core-js_shared__';
@@ -42912,7 +42221,7 @@ var store = global[SHARED] || (global[SHARED] = {});
   copyright: '© 2018 Denis Pushkarev (zloirock.ru)'
 });
 
-},{"./_core":75,"./_global":92,"./_library":111}],153:[function(require,module,exports){
+},{"./_core":72,"./_global":89,"./_library":108}],150:[function(require,module,exports){
 // 7.3.20 SpeciesConstructor(O, defaultConstructor)
 var anObject = require('./_an-object');
 var aFunction = require('./_a-function');
@@ -42923,7 +42232,7 @@ module.exports = function (O, D) {
   return C === undefined || (S = anObject(C)[SPECIES]) == undefined ? D : aFunction(S);
 };
 
-},{"./_a-function":55,"./_an-object":59,"./_wks":178}],154:[function(require,module,exports){
+},{"./_a-function":52,"./_an-object":56,"./_wks":175}],151:[function(require,module,exports){
 'use strict';
 var fails = require('./_fails');
 
@@ -42934,7 +42243,7 @@ module.exports = function (method, arg) {
   });
 };
 
-},{"./_fails":87}],155:[function(require,module,exports){
+},{"./_fails":84}],152:[function(require,module,exports){
 var toInteger = require('./_to-integer');
 var defined = require('./_defined');
 // true  -> String#at
@@ -42953,7 +42262,7 @@ module.exports = function (TO_STRING) {
   };
 };
 
-},{"./_defined":80,"./_to-integer":165}],156:[function(require,module,exports){
+},{"./_defined":77,"./_to-integer":162}],153:[function(require,module,exports){
 // helper for String#{startsWith, endsWith, includes}
 var isRegExp = require('./_is-regexp');
 var defined = require('./_defined');
@@ -42963,7 +42272,7 @@ module.exports = function (that, searchString, NAME) {
   return String(defined(that));
 };
 
-},{"./_defined":80,"./_is-regexp":104}],157:[function(require,module,exports){
+},{"./_defined":77,"./_is-regexp":101}],154:[function(require,module,exports){
 var $export = require('./_export');
 var fails = require('./_fails');
 var defined = require('./_defined');
@@ -42984,7 +42293,7 @@ module.exports = function (NAME, exec) {
   }), 'String', O);
 };
 
-},{"./_defined":80,"./_export":85,"./_fails":87}],158:[function(require,module,exports){
+},{"./_defined":77,"./_export":82,"./_fails":84}],155:[function(require,module,exports){
 // https://github.com/tc39/proposal-string-pad-start-end
 var toLength = require('./_to-length');
 var repeat = require('./_string-repeat');
@@ -43002,7 +42311,7 @@ module.exports = function (that, maxLength, fillString, left) {
   return left ? stringFiller + S : S + stringFiller;
 };
 
-},{"./_defined":80,"./_string-repeat":159,"./_to-length":167}],159:[function(require,module,exports){
+},{"./_defined":77,"./_string-repeat":156,"./_to-length":164}],156:[function(require,module,exports){
 'use strict';
 var toInteger = require('./_to-integer');
 var defined = require('./_defined');
@@ -43016,7 +42325,7 @@ module.exports = function repeat(count) {
   return res;
 };
 
-},{"./_defined":80,"./_to-integer":165}],160:[function(require,module,exports){
+},{"./_defined":77,"./_to-integer":162}],157:[function(require,module,exports){
 var $export = require('./_export');
 var defined = require('./_defined');
 var fails = require('./_fails');
@@ -43048,11 +42357,11 @@ var trim = exporter.trim = function (string, TYPE) {
 
 module.exports = exporter;
 
-},{"./_defined":80,"./_export":85,"./_fails":87,"./_string-ws":161}],161:[function(require,module,exports){
+},{"./_defined":77,"./_export":82,"./_fails":84,"./_string-ws":158}],158:[function(require,module,exports){
 module.exports = '\x09\x0A\x0B\x0C\x0D\x20\xA0\u1680\u180E\u2000\u2001\u2002\u2003' +
   '\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF';
 
-},{}],162:[function(require,module,exports){
+},{}],159:[function(require,module,exports){
 var ctx = require('./_ctx');
 var invoke = require('./_invoke');
 var html = require('./_html');
@@ -43138,7 +42447,7 @@ module.exports = {
   clear: clearTask
 };
 
-},{"./_cof":70,"./_ctx":77,"./_dom-create":82,"./_global":92,"./_html":95,"./_invoke":98}],163:[function(require,module,exports){
+},{"./_cof":67,"./_ctx":74,"./_dom-create":79,"./_global":89,"./_html":92,"./_invoke":95}],160:[function(require,module,exports){
 var toInteger = require('./_to-integer');
 var max = Math.max;
 var min = Math.min;
@@ -43147,7 +42456,7 @@ module.exports = function (index, length) {
   return index < 0 ? max(index + length, 0) : min(index, length);
 };
 
-},{"./_to-integer":165}],164:[function(require,module,exports){
+},{"./_to-integer":162}],161:[function(require,module,exports){
 // https://tc39.github.io/ecma262/#sec-toindex
 var toInteger = require('./_to-integer');
 var toLength = require('./_to-length');
@@ -43159,7 +42468,7 @@ module.exports = function (it) {
   return length;
 };
 
-},{"./_to-integer":165,"./_to-length":167}],165:[function(require,module,exports){
+},{"./_to-integer":162,"./_to-length":164}],162:[function(require,module,exports){
 // 7.1.4 ToInteger
 var ceil = Math.ceil;
 var floor = Math.floor;
@@ -43167,7 +42476,7 @@ module.exports = function (it) {
   return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
 };
 
-},{}],166:[function(require,module,exports){
+},{}],163:[function(require,module,exports){
 // to indexed object, toObject with fallback for non-array-like ES3 strings
 var IObject = require('./_iobject');
 var defined = require('./_defined');
@@ -43175,7 +42484,7 @@ module.exports = function (it) {
   return IObject(defined(it));
 };
 
-},{"./_defined":80,"./_iobject":99}],167:[function(require,module,exports){
+},{"./_defined":77,"./_iobject":96}],164:[function(require,module,exports){
 // 7.1.15 ToLength
 var toInteger = require('./_to-integer');
 var min = Math.min;
@@ -43183,14 +42492,14 @@ module.exports = function (it) {
   return it > 0 ? min(toInteger(it), 0x1fffffffffffff) : 0; // pow(2, 53) - 1 == 9007199254740991
 };
 
-},{"./_to-integer":165}],168:[function(require,module,exports){
+},{"./_to-integer":162}],165:[function(require,module,exports){
 // 7.1.13 ToObject(argument)
 var defined = require('./_defined');
 module.exports = function (it) {
   return Object(defined(it));
 };
 
-},{"./_defined":80}],169:[function(require,module,exports){
+},{"./_defined":77}],166:[function(require,module,exports){
 // 7.1.1 ToPrimitive(input [, PreferredType])
 var isObject = require('./_is-object');
 // instead of the ES6 spec version, we didn't implement @@toPrimitive case
@@ -43204,7 +42513,7 @@ module.exports = function (it, S) {
   throw TypeError("Can't convert object to primitive value");
 };
 
-},{"./_is-object":103}],170:[function(require,module,exports){
+},{"./_is-object":100}],167:[function(require,module,exports){
 'use strict';
 if (require('./_descriptors')) {
   var LIBRARY = require('./_library');
@@ -43686,7 +42995,7 @@ if (require('./_descriptors')) {
   };
 } else module.exports = function () { /* empty */ };
 
-},{"./_an-instance":58,"./_array-copy-within":60,"./_array-fill":61,"./_array-includes":63,"./_array-methods":64,"./_classof":69,"./_ctx":77,"./_descriptors":81,"./_export":85,"./_fails":87,"./_global":92,"./_has":93,"./_hide":94,"./_is-array-iter":100,"./_is-object":103,"./_iter-detect":108,"./_iterators":110,"./_library":111,"./_object-create":122,"./_object-dp":123,"./_object-gopd":126,"./_object-gopn":128,"./_object-gpo":130,"./_property-desc":141,"./_redefine-all":142,"./_set-species":149,"./_species-constructor":153,"./_to-absolute-index":163,"./_to-index":164,"./_to-integer":165,"./_to-length":167,"./_to-object":168,"./_to-primitive":169,"./_typed":172,"./_typed-buffer":171,"./_uid":173,"./_wks":178,"./core.get-iterator-method":179,"./es6.array.iterator":191}],171:[function(require,module,exports){
+},{"./_an-instance":55,"./_array-copy-within":57,"./_array-fill":58,"./_array-includes":60,"./_array-methods":61,"./_classof":66,"./_ctx":74,"./_descriptors":78,"./_export":82,"./_fails":84,"./_global":89,"./_has":90,"./_hide":91,"./_is-array-iter":97,"./_is-object":100,"./_iter-detect":105,"./_iterators":107,"./_library":108,"./_object-create":119,"./_object-dp":120,"./_object-gopd":123,"./_object-gopn":125,"./_object-gpo":127,"./_property-desc":138,"./_redefine-all":139,"./_set-species":146,"./_species-constructor":150,"./_to-absolute-index":160,"./_to-index":161,"./_to-integer":162,"./_to-length":164,"./_to-object":165,"./_to-primitive":166,"./_typed":169,"./_typed-buffer":168,"./_uid":170,"./_wks":175,"./core.get-iterator-method":176,"./es6.array.iterator":188}],168:[function(require,module,exports){
 'use strict';
 var global = require('./_global');
 var DESCRIPTORS = require('./_descriptors');
@@ -43964,7 +43273,7 @@ hide($DataView[PROTOTYPE], $typed.VIEW, true);
 exports[ARRAY_BUFFER] = $ArrayBuffer;
 exports[DATA_VIEW] = $DataView;
 
-},{"./_an-instance":58,"./_array-fill":61,"./_descriptors":81,"./_fails":87,"./_global":92,"./_hide":94,"./_library":111,"./_object-dp":123,"./_object-gopn":128,"./_redefine-all":142,"./_set-to-string-tag":150,"./_to-index":164,"./_to-integer":165,"./_to-length":167,"./_typed":172}],172:[function(require,module,exports){
+},{"./_an-instance":55,"./_array-fill":58,"./_descriptors":78,"./_fails":84,"./_global":89,"./_hide":91,"./_library":108,"./_object-dp":120,"./_object-gopn":125,"./_redefine-all":139,"./_set-to-string-tag":147,"./_to-index":161,"./_to-integer":162,"./_to-length":164,"./_typed":169}],169:[function(require,module,exports){
 var global = require('./_global');
 var hide = require('./_hide');
 var uid = require('./_uid');
@@ -43994,27 +43303,27 @@ module.exports = {
   VIEW: VIEW
 };
 
-},{"./_global":92,"./_hide":94,"./_uid":173}],173:[function(require,module,exports){
+},{"./_global":89,"./_hide":91,"./_uid":170}],170:[function(require,module,exports){
 var id = 0;
 var px = Math.random();
 module.exports = function (key) {
   return 'Symbol('.concat(key === undefined ? '' : key, ')_', (++id + px).toString(36));
 };
 
-},{}],174:[function(require,module,exports){
+},{}],171:[function(require,module,exports){
 var global = require('./_global');
 var navigator = global.navigator;
 
 module.exports = navigator && navigator.userAgent || '';
 
-},{"./_global":92}],175:[function(require,module,exports){
+},{"./_global":89}],172:[function(require,module,exports){
 var isObject = require('./_is-object');
 module.exports = function (it, TYPE) {
   if (!isObject(it) || it._t !== TYPE) throw TypeError('Incompatible receiver, ' + TYPE + ' required!');
   return it;
 };
 
-},{"./_is-object":103}],176:[function(require,module,exports){
+},{"./_is-object":100}],173:[function(require,module,exports){
 var global = require('./_global');
 var core = require('./_core');
 var LIBRARY = require('./_library');
@@ -44025,10 +43334,10 @@ module.exports = function (name) {
   if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty($Symbol, name, { value: wksExt.f(name) });
 };
 
-},{"./_core":75,"./_global":92,"./_library":111,"./_object-dp":123,"./_wks-ext":177}],177:[function(require,module,exports){
+},{"./_core":72,"./_global":89,"./_library":108,"./_object-dp":120,"./_wks-ext":174}],174:[function(require,module,exports){
 exports.f = require('./_wks');
 
-},{"./_wks":178}],178:[function(require,module,exports){
+},{"./_wks":175}],175:[function(require,module,exports){
 var store = require('./_shared')('wks');
 var uid = require('./_uid');
 var Symbol = require('./_global').Symbol;
@@ -44041,7 +43350,7 @@ var $exports = module.exports = function (name) {
 
 $exports.store = store;
 
-},{"./_global":92,"./_shared":152,"./_uid":173}],179:[function(require,module,exports){
+},{"./_global":89,"./_shared":149,"./_uid":170}],176:[function(require,module,exports){
 var classof = require('./_classof');
 var ITERATOR = require('./_wks')('iterator');
 var Iterators = require('./_iterators');
@@ -44051,14 +43360,14 @@ module.exports = require('./_core').getIteratorMethod = function (it) {
     || Iterators[classof(it)];
 };
 
-},{"./_classof":69,"./_core":75,"./_iterators":110,"./_wks":178}],180:[function(require,module,exports){
+},{"./_classof":66,"./_core":72,"./_iterators":107,"./_wks":175}],177:[function(require,module,exports){
 // https://github.com/benjamingr/RexExp.escape
 var $export = require('./_export');
 var $re = require('./_replacer')(/[\\^$*+?.()|[\]{}]/g, '\\$&');
 
 $export($export.S, 'RegExp', { escape: function escape(it) { return $re(it); } });
 
-},{"./_export":85,"./_replacer":144}],181:[function(require,module,exports){
+},{"./_export":82,"./_replacer":141}],178:[function(require,module,exports){
 // 22.1.3.3 Array.prototype.copyWithin(target, start, end = this.length)
 var $export = require('./_export');
 
@@ -44066,7 +43375,7 @@ $export($export.P, 'Array', { copyWithin: require('./_array-copy-within') });
 
 require('./_add-to-unscopables')('copyWithin');
 
-},{"./_add-to-unscopables":57,"./_array-copy-within":60,"./_export":85}],182:[function(require,module,exports){
+},{"./_add-to-unscopables":54,"./_array-copy-within":57,"./_export":82}],179:[function(require,module,exports){
 'use strict';
 var $export = require('./_export');
 var $every = require('./_array-methods')(4);
@@ -44078,7 +43387,7 @@ $export($export.P + $export.F * !require('./_strict-method')([].every, true), 'A
   }
 });
 
-},{"./_array-methods":64,"./_export":85,"./_strict-method":154}],183:[function(require,module,exports){
+},{"./_array-methods":61,"./_export":82,"./_strict-method":151}],180:[function(require,module,exports){
 // 22.1.3.6 Array.prototype.fill(value, start = 0, end = this.length)
 var $export = require('./_export');
 
@@ -44086,7 +43395,7 @@ $export($export.P, 'Array', { fill: require('./_array-fill') });
 
 require('./_add-to-unscopables')('fill');
 
-},{"./_add-to-unscopables":57,"./_array-fill":61,"./_export":85}],184:[function(require,module,exports){
+},{"./_add-to-unscopables":54,"./_array-fill":58,"./_export":82}],181:[function(require,module,exports){
 'use strict';
 var $export = require('./_export');
 var $filter = require('./_array-methods')(2);
@@ -44098,7 +43407,7 @@ $export($export.P + $export.F * !require('./_strict-method')([].filter, true), '
   }
 });
 
-},{"./_array-methods":64,"./_export":85,"./_strict-method":154}],185:[function(require,module,exports){
+},{"./_array-methods":61,"./_export":82,"./_strict-method":151}],182:[function(require,module,exports){
 'use strict';
 // 22.1.3.9 Array.prototype.findIndex(predicate, thisArg = undefined)
 var $export = require('./_export');
@@ -44114,7 +43423,7 @@ $export($export.P + $export.F * forced, 'Array', {
 });
 require('./_add-to-unscopables')(KEY);
 
-},{"./_add-to-unscopables":57,"./_array-methods":64,"./_export":85}],186:[function(require,module,exports){
+},{"./_add-to-unscopables":54,"./_array-methods":61,"./_export":82}],183:[function(require,module,exports){
 'use strict';
 // 22.1.3.8 Array.prototype.find(predicate, thisArg = undefined)
 var $export = require('./_export');
@@ -44130,7 +43439,7 @@ $export($export.P + $export.F * forced, 'Array', {
 });
 require('./_add-to-unscopables')(KEY);
 
-},{"./_add-to-unscopables":57,"./_array-methods":64,"./_export":85}],187:[function(require,module,exports){
+},{"./_add-to-unscopables":54,"./_array-methods":61,"./_export":82}],184:[function(require,module,exports){
 'use strict';
 var $export = require('./_export');
 var $forEach = require('./_array-methods')(0);
@@ -44143,7 +43452,7 @@ $export($export.P + $export.F * !STRICT, 'Array', {
   }
 });
 
-},{"./_array-methods":64,"./_export":85,"./_strict-method":154}],188:[function(require,module,exports){
+},{"./_array-methods":61,"./_export":82,"./_strict-method":151}],185:[function(require,module,exports){
 'use strict';
 var ctx = require('./_ctx');
 var $export = require('./_export');
@@ -44182,7 +43491,7 @@ $export($export.S + $export.F * !require('./_iter-detect')(function (iter) { Arr
   }
 });
 
-},{"./_create-property":76,"./_ctx":77,"./_export":85,"./_is-array-iter":100,"./_iter-call":105,"./_iter-detect":108,"./_to-length":167,"./_to-object":168,"./core.get-iterator-method":179}],189:[function(require,module,exports){
+},{"./_create-property":73,"./_ctx":74,"./_export":82,"./_is-array-iter":97,"./_iter-call":102,"./_iter-detect":105,"./_to-length":164,"./_to-object":165,"./core.get-iterator-method":176}],186:[function(require,module,exports){
 'use strict';
 var $export = require('./_export');
 var $indexOf = require('./_array-includes')(false);
@@ -44199,13 +43508,13 @@ $export($export.P + $export.F * (NEGATIVE_ZERO || !require('./_strict-method')($
   }
 });
 
-},{"./_array-includes":63,"./_export":85,"./_strict-method":154}],190:[function(require,module,exports){
+},{"./_array-includes":60,"./_export":82,"./_strict-method":151}],187:[function(require,module,exports){
 // 22.1.2.2 / 15.4.3.2 Array.isArray(arg)
 var $export = require('./_export');
 
 $export($export.S, 'Array', { isArray: require('./_is-array') });
 
-},{"./_export":85,"./_is-array":101}],191:[function(require,module,exports){
+},{"./_export":82,"./_is-array":98}],188:[function(require,module,exports){
 'use strict';
 var addToUnscopables = require('./_add-to-unscopables');
 var step = require('./_iter-step');
@@ -44241,7 +43550,7 @@ addToUnscopables('keys');
 addToUnscopables('values');
 addToUnscopables('entries');
 
-},{"./_add-to-unscopables":57,"./_iter-define":107,"./_iter-step":109,"./_iterators":110,"./_to-iobject":166}],192:[function(require,module,exports){
+},{"./_add-to-unscopables":54,"./_iter-define":104,"./_iter-step":106,"./_iterators":107,"./_to-iobject":163}],189:[function(require,module,exports){
 'use strict';
 // 22.1.3.13 Array.prototype.join(separator)
 var $export = require('./_export');
@@ -44255,7 +43564,7 @@ $export($export.P + $export.F * (require('./_iobject') != Object || !require('./
   }
 });
 
-},{"./_export":85,"./_iobject":99,"./_strict-method":154,"./_to-iobject":166}],193:[function(require,module,exports){
+},{"./_export":82,"./_iobject":96,"./_strict-method":151,"./_to-iobject":163}],190:[function(require,module,exports){
 'use strict';
 var $export = require('./_export');
 var toIObject = require('./_to-iobject');
@@ -44279,7 +43588,7 @@ $export($export.P + $export.F * (NEGATIVE_ZERO || !require('./_strict-method')($
   }
 });
 
-},{"./_export":85,"./_strict-method":154,"./_to-integer":165,"./_to-iobject":166,"./_to-length":167}],194:[function(require,module,exports){
+},{"./_export":82,"./_strict-method":151,"./_to-integer":162,"./_to-iobject":163,"./_to-length":164}],191:[function(require,module,exports){
 'use strict';
 var $export = require('./_export');
 var $map = require('./_array-methods')(1);
@@ -44291,7 +43600,7 @@ $export($export.P + $export.F * !require('./_strict-method')([].map, true), 'Arr
   }
 });
 
-},{"./_array-methods":64,"./_export":85,"./_strict-method":154}],195:[function(require,module,exports){
+},{"./_array-methods":61,"./_export":82,"./_strict-method":151}],192:[function(require,module,exports){
 'use strict';
 var $export = require('./_export');
 var createProperty = require('./_create-property');
@@ -44312,7 +43621,7 @@ $export($export.S + $export.F * require('./_fails')(function () {
   }
 });
 
-},{"./_create-property":76,"./_export":85,"./_fails":87}],196:[function(require,module,exports){
+},{"./_create-property":73,"./_export":82,"./_fails":84}],193:[function(require,module,exports){
 'use strict';
 var $export = require('./_export');
 var $reduce = require('./_array-reduce');
@@ -44324,7 +43633,7 @@ $export($export.P + $export.F * !require('./_strict-method')([].reduceRight, tru
   }
 });
 
-},{"./_array-reduce":65,"./_export":85,"./_strict-method":154}],197:[function(require,module,exports){
+},{"./_array-reduce":62,"./_export":82,"./_strict-method":151}],194:[function(require,module,exports){
 'use strict';
 var $export = require('./_export');
 var $reduce = require('./_array-reduce');
@@ -44336,7 +43645,7 @@ $export($export.P + $export.F * !require('./_strict-method')([].reduce, true), '
   }
 });
 
-},{"./_array-reduce":65,"./_export":85,"./_strict-method":154}],198:[function(require,module,exports){
+},{"./_array-reduce":62,"./_export":82,"./_strict-method":151}],195:[function(require,module,exports){
 'use strict';
 var $export = require('./_export');
 var html = require('./_html');
@@ -44366,7 +43675,7 @@ $export($export.P + $export.F * require('./_fails')(function () {
   }
 });
 
-},{"./_cof":70,"./_export":85,"./_fails":87,"./_html":95,"./_to-absolute-index":163,"./_to-length":167}],199:[function(require,module,exports){
+},{"./_cof":67,"./_export":82,"./_fails":84,"./_html":92,"./_to-absolute-index":160,"./_to-length":164}],196:[function(require,module,exports){
 'use strict';
 var $export = require('./_export');
 var $some = require('./_array-methods')(3);
@@ -44378,7 +43687,7 @@ $export($export.P + $export.F * !require('./_strict-method')([].some, true), 'Ar
   }
 });
 
-},{"./_array-methods":64,"./_export":85,"./_strict-method":154}],200:[function(require,module,exports){
+},{"./_array-methods":61,"./_export":82,"./_strict-method":151}],197:[function(require,module,exports){
 'use strict';
 var $export = require('./_export');
 var aFunction = require('./_a-function');
@@ -44403,16 +43712,16 @@ $export($export.P + $export.F * (fails(function () {
   }
 });
 
-},{"./_a-function":55,"./_export":85,"./_fails":87,"./_strict-method":154,"./_to-object":168}],201:[function(require,module,exports){
+},{"./_a-function":52,"./_export":82,"./_fails":84,"./_strict-method":151,"./_to-object":165}],198:[function(require,module,exports){
 require('./_set-species')('Array');
 
-},{"./_set-species":149}],202:[function(require,module,exports){
+},{"./_set-species":146}],199:[function(require,module,exports){
 // 20.3.3.1 / 15.9.4.4 Date.now()
 var $export = require('./_export');
 
 $export($export.S, 'Date', { now: function () { return new Date().getTime(); } });
 
-},{"./_export":85}],203:[function(require,module,exports){
+},{"./_export":82}],200:[function(require,module,exports){
 // 20.3.4.36 / 15.9.5.43 Date.prototype.toISOString()
 var $export = require('./_export');
 var toISOString = require('./_date-to-iso-string');
@@ -44422,7 +43731,7 @@ $export($export.P + $export.F * (Date.prototype.toISOString !== toISOString), 'D
   toISOString: toISOString
 });
 
-},{"./_date-to-iso-string":78,"./_export":85}],204:[function(require,module,exports){
+},{"./_date-to-iso-string":75,"./_export":82}],201:[function(require,module,exports){
 'use strict';
 var $export = require('./_export');
 var toObject = require('./_to-object');
@@ -44440,13 +43749,13 @@ $export($export.P + $export.F * require('./_fails')(function () {
   }
 });
 
-},{"./_export":85,"./_fails":87,"./_to-object":168,"./_to-primitive":169}],205:[function(require,module,exports){
+},{"./_export":82,"./_fails":84,"./_to-object":165,"./_to-primitive":166}],202:[function(require,module,exports){
 var TO_PRIMITIVE = require('./_wks')('toPrimitive');
 var proto = Date.prototype;
 
 if (!(TO_PRIMITIVE in proto)) require('./_hide')(proto, TO_PRIMITIVE, require('./_date-to-primitive'));
 
-},{"./_date-to-primitive":79,"./_hide":94,"./_wks":178}],206:[function(require,module,exports){
+},{"./_date-to-primitive":76,"./_hide":91,"./_wks":175}],203:[function(require,module,exports){
 var DateProto = Date.prototype;
 var INVALID_DATE = 'Invalid Date';
 var TO_STRING = 'toString';
@@ -44460,13 +43769,13 @@ if (new Date(NaN) + '' != INVALID_DATE) {
   });
 }
 
-},{"./_redefine":143}],207:[function(require,module,exports){
+},{"./_redefine":140}],204:[function(require,module,exports){
 // 19.2.3.2 / 15.3.4.5 Function.prototype.bind(thisArg, args...)
 var $export = require('./_export');
 
 $export($export.P, 'Function', { bind: require('./_bind') });
 
-},{"./_bind":68,"./_export":85}],208:[function(require,module,exports){
+},{"./_bind":65,"./_export":82}],205:[function(require,module,exports){
 'use strict';
 var isObject = require('./_is-object');
 var getPrototypeOf = require('./_object-gpo');
@@ -44481,7 +43790,7 @@ if (!(HAS_INSTANCE in FunctionProto)) require('./_object-dp').f(FunctionProto, H
   return false;
 } });
 
-},{"./_is-object":103,"./_object-dp":123,"./_object-gpo":130,"./_wks":178}],209:[function(require,module,exports){
+},{"./_is-object":100,"./_object-dp":120,"./_object-gpo":127,"./_wks":175}],206:[function(require,module,exports){
 var dP = require('./_object-dp').f;
 var FProto = Function.prototype;
 var nameRE = /^\s*function ([^ (]*)/;
@@ -44499,7 +43808,7 @@ NAME in FProto || require('./_descriptors') && dP(FProto, NAME, {
   }
 });
 
-},{"./_descriptors":81,"./_object-dp":123}],210:[function(require,module,exports){
+},{"./_descriptors":78,"./_object-dp":120}],207:[function(require,module,exports){
 'use strict';
 var strong = require('./_collection-strong');
 var validate = require('./_validate-collection');
@@ -44520,7 +43829,7 @@ module.exports = require('./_collection')(MAP, function (get) {
   }
 }, strong, true);
 
-},{"./_collection":74,"./_collection-strong":71,"./_validate-collection":175}],211:[function(require,module,exports){
+},{"./_collection":71,"./_collection-strong":68,"./_validate-collection":172}],208:[function(require,module,exports){
 // 20.2.2.3 Math.acosh(x)
 var $export = require('./_export');
 var log1p = require('./_math-log1p');
@@ -44540,7 +43849,7 @@ $export($export.S + $export.F * !($acosh
   }
 });
 
-},{"./_export":85,"./_math-log1p":114}],212:[function(require,module,exports){
+},{"./_export":82,"./_math-log1p":111}],209:[function(require,module,exports){
 // 20.2.2.5 Math.asinh(x)
 var $export = require('./_export');
 var $asinh = Math.asinh;
@@ -44552,7 +43861,7 @@ function asinh(x) {
 // Tor Browser bug: Math.asinh(0) -> -0
 $export($export.S + $export.F * !($asinh && 1 / $asinh(0) > 0), 'Math', { asinh: asinh });
 
-},{"./_export":85}],213:[function(require,module,exports){
+},{"./_export":82}],210:[function(require,module,exports){
 // 20.2.2.7 Math.atanh(x)
 var $export = require('./_export');
 var $atanh = Math.atanh;
@@ -44564,7 +43873,7 @@ $export($export.S + $export.F * !($atanh && 1 / $atanh(-0) < 0), 'Math', {
   }
 });
 
-},{"./_export":85}],214:[function(require,module,exports){
+},{"./_export":82}],211:[function(require,module,exports){
 // 20.2.2.9 Math.cbrt(x)
 var $export = require('./_export');
 var sign = require('./_math-sign');
@@ -44575,7 +43884,7 @@ $export($export.S, 'Math', {
   }
 });
 
-},{"./_export":85,"./_math-sign":116}],215:[function(require,module,exports){
+},{"./_export":82,"./_math-sign":113}],212:[function(require,module,exports){
 // 20.2.2.11 Math.clz32(x)
 var $export = require('./_export');
 
@@ -44585,7 +43894,7 @@ $export($export.S, 'Math', {
   }
 });
 
-},{"./_export":85}],216:[function(require,module,exports){
+},{"./_export":82}],213:[function(require,module,exports){
 // 20.2.2.12 Math.cosh(x)
 var $export = require('./_export');
 var exp = Math.exp;
@@ -44596,20 +43905,20 @@ $export($export.S, 'Math', {
   }
 });
 
-},{"./_export":85}],217:[function(require,module,exports){
+},{"./_export":82}],214:[function(require,module,exports){
 // 20.2.2.14 Math.expm1(x)
 var $export = require('./_export');
 var $expm1 = require('./_math-expm1');
 
 $export($export.S + $export.F * ($expm1 != Math.expm1), 'Math', { expm1: $expm1 });
 
-},{"./_export":85,"./_math-expm1":112}],218:[function(require,module,exports){
+},{"./_export":82,"./_math-expm1":109}],215:[function(require,module,exports){
 // 20.2.2.16 Math.fround(x)
 var $export = require('./_export');
 
 $export($export.S, 'Math', { fround: require('./_math-fround') });
 
-},{"./_export":85,"./_math-fround":113}],219:[function(require,module,exports){
+},{"./_export":82,"./_math-fround":110}],216:[function(require,module,exports){
 // 20.2.2.17 Math.hypot([value1[, value2[, … ]]])
 var $export = require('./_export');
 var abs = Math.abs;
@@ -44636,7 +43945,7 @@ $export($export.S, 'Math', {
   }
 });
 
-},{"./_export":85}],220:[function(require,module,exports){
+},{"./_export":82}],217:[function(require,module,exports){
 // 20.2.2.18 Math.imul(x, y)
 var $export = require('./_export');
 var $imul = Math.imul;
@@ -44655,7 +43964,7 @@ $export($export.S + $export.F * require('./_fails')(function () {
   }
 });
 
-},{"./_export":85,"./_fails":87}],221:[function(require,module,exports){
+},{"./_export":82,"./_fails":84}],218:[function(require,module,exports){
 // 20.2.2.21 Math.log10(x)
 var $export = require('./_export');
 
@@ -44665,13 +43974,13 @@ $export($export.S, 'Math', {
   }
 });
 
-},{"./_export":85}],222:[function(require,module,exports){
+},{"./_export":82}],219:[function(require,module,exports){
 // 20.2.2.20 Math.log1p(x)
 var $export = require('./_export');
 
 $export($export.S, 'Math', { log1p: require('./_math-log1p') });
 
-},{"./_export":85,"./_math-log1p":114}],223:[function(require,module,exports){
+},{"./_export":82,"./_math-log1p":111}],220:[function(require,module,exports){
 // 20.2.2.22 Math.log2(x)
 var $export = require('./_export');
 
@@ -44681,13 +43990,13 @@ $export($export.S, 'Math', {
   }
 });
 
-},{"./_export":85}],224:[function(require,module,exports){
+},{"./_export":82}],221:[function(require,module,exports){
 // 20.2.2.28 Math.sign(x)
 var $export = require('./_export');
 
 $export($export.S, 'Math', { sign: require('./_math-sign') });
 
-},{"./_export":85,"./_math-sign":116}],225:[function(require,module,exports){
+},{"./_export":82,"./_math-sign":113}],222:[function(require,module,exports){
 // 20.2.2.30 Math.sinh(x)
 var $export = require('./_export');
 var expm1 = require('./_math-expm1');
@@ -44704,7 +44013,7 @@ $export($export.S + $export.F * require('./_fails')(function () {
   }
 });
 
-},{"./_export":85,"./_fails":87,"./_math-expm1":112}],226:[function(require,module,exports){
+},{"./_export":82,"./_fails":84,"./_math-expm1":109}],223:[function(require,module,exports){
 // 20.2.2.33 Math.tanh(x)
 var $export = require('./_export');
 var expm1 = require('./_math-expm1');
@@ -44718,7 +44027,7 @@ $export($export.S, 'Math', {
   }
 });
 
-},{"./_export":85,"./_math-expm1":112}],227:[function(require,module,exports){
+},{"./_export":82,"./_math-expm1":109}],224:[function(require,module,exports){
 // 20.2.2.34 Math.trunc(x)
 var $export = require('./_export');
 
@@ -44728,7 +44037,7 @@ $export($export.S, 'Math', {
   }
 });
 
-},{"./_export":85}],228:[function(require,module,exports){
+},{"./_export":82}],225:[function(require,module,exports){
 'use strict';
 var global = require('./_global');
 var has = require('./_has');
@@ -44799,13 +44108,13 @@ if (!$Number(' 0o1') || !$Number('0b1') || $Number('+0x1')) {
   require('./_redefine')(global, NUMBER, $Number);
 }
 
-},{"./_cof":70,"./_descriptors":81,"./_fails":87,"./_global":92,"./_has":93,"./_inherit-if-required":97,"./_object-create":122,"./_object-dp":123,"./_object-gopd":126,"./_object-gopn":128,"./_redefine":143,"./_string-trim":160,"./_to-primitive":169}],229:[function(require,module,exports){
+},{"./_cof":67,"./_descriptors":78,"./_fails":84,"./_global":89,"./_has":90,"./_inherit-if-required":94,"./_object-create":119,"./_object-dp":120,"./_object-gopd":123,"./_object-gopn":125,"./_redefine":140,"./_string-trim":157,"./_to-primitive":166}],226:[function(require,module,exports){
 // 20.1.2.1 Number.EPSILON
 var $export = require('./_export');
 
 $export($export.S, 'Number', { EPSILON: Math.pow(2, -52) });
 
-},{"./_export":85}],230:[function(require,module,exports){
+},{"./_export":82}],227:[function(require,module,exports){
 // 20.1.2.2 Number.isFinite(number)
 var $export = require('./_export');
 var _isFinite = require('./_global').isFinite;
@@ -44816,13 +44125,13 @@ $export($export.S, 'Number', {
   }
 });
 
-},{"./_export":85,"./_global":92}],231:[function(require,module,exports){
+},{"./_export":82,"./_global":89}],228:[function(require,module,exports){
 // 20.1.2.3 Number.isInteger(number)
 var $export = require('./_export');
 
 $export($export.S, 'Number', { isInteger: require('./_is-integer') });
 
-},{"./_export":85,"./_is-integer":102}],232:[function(require,module,exports){
+},{"./_export":82,"./_is-integer":99}],229:[function(require,module,exports){
 // 20.1.2.4 Number.isNaN(number)
 var $export = require('./_export');
 
@@ -44833,7 +44142,7 @@ $export($export.S, 'Number', {
   }
 });
 
-},{"./_export":85}],233:[function(require,module,exports){
+},{"./_export":82}],230:[function(require,module,exports){
 // 20.1.2.5 Number.isSafeInteger(number)
 var $export = require('./_export');
 var isInteger = require('./_is-integer');
@@ -44845,31 +44154,31 @@ $export($export.S, 'Number', {
   }
 });
 
-},{"./_export":85,"./_is-integer":102}],234:[function(require,module,exports){
+},{"./_export":82,"./_is-integer":99}],231:[function(require,module,exports){
 // 20.1.2.6 Number.MAX_SAFE_INTEGER
 var $export = require('./_export');
 
 $export($export.S, 'Number', { MAX_SAFE_INTEGER: 0x1fffffffffffff });
 
-},{"./_export":85}],235:[function(require,module,exports){
+},{"./_export":82}],232:[function(require,module,exports){
 // 20.1.2.10 Number.MIN_SAFE_INTEGER
 var $export = require('./_export');
 
 $export($export.S, 'Number', { MIN_SAFE_INTEGER: -0x1fffffffffffff });
 
-},{"./_export":85}],236:[function(require,module,exports){
+},{"./_export":82}],233:[function(require,module,exports){
 var $export = require('./_export');
 var $parseFloat = require('./_parse-float');
 // 20.1.2.12 Number.parseFloat(string)
 $export($export.S + $export.F * (Number.parseFloat != $parseFloat), 'Number', { parseFloat: $parseFloat });
 
-},{"./_export":85,"./_parse-float":137}],237:[function(require,module,exports){
+},{"./_export":82,"./_parse-float":134}],234:[function(require,module,exports){
 var $export = require('./_export');
 var $parseInt = require('./_parse-int');
 // 20.1.2.13 Number.parseInt(string, radix)
 $export($export.S + $export.F * (Number.parseInt != $parseInt), 'Number', { parseInt: $parseInt });
 
-},{"./_export":85,"./_parse-int":138}],238:[function(require,module,exports){
+},{"./_export":82,"./_parse-int":135}],235:[function(require,module,exports){
 'use strict';
 var $export = require('./_export');
 var toInteger = require('./_to-integer');
@@ -44985,7 +44294,7 @@ $export($export.P + $export.F * (!!$toFixed && (
   }
 });
 
-},{"./_a-number-value":56,"./_export":85,"./_fails":87,"./_string-repeat":159,"./_to-integer":165}],239:[function(require,module,exports){
+},{"./_a-number-value":53,"./_export":82,"./_fails":84,"./_string-repeat":156,"./_to-integer":162}],236:[function(require,module,exports){
 'use strict';
 var $export = require('./_export');
 var $fails = require('./_fails');
@@ -45005,28 +44314,28 @@ $export($export.P + $export.F * ($fails(function () {
   }
 });
 
-},{"./_a-number-value":56,"./_export":85,"./_fails":87}],240:[function(require,module,exports){
+},{"./_a-number-value":53,"./_export":82,"./_fails":84}],237:[function(require,module,exports){
 // 19.1.3.1 Object.assign(target, source)
 var $export = require('./_export');
 
 $export($export.S + $export.F, 'Object', { assign: require('./_object-assign') });
 
-},{"./_export":85,"./_object-assign":121}],241:[function(require,module,exports){
+},{"./_export":82,"./_object-assign":118}],238:[function(require,module,exports){
 var $export = require('./_export');
 // 19.1.2.2 / 15.2.3.5 Object.create(O [, Properties])
 $export($export.S, 'Object', { create: require('./_object-create') });
 
-},{"./_export":85,"./_object-create":122}],242:[function(require,module,exports){
+},{"./_export":82,"./_object-create":119}],239:[function(require,module,exports){
 var $export = require('./_export');
 // 19.1.2.3 / 15.2.3.7 Object.defineProperties(O, Properties)
 $export($export.S + $export.F * !require('./_descriptors'), 'Object', { defineProperties: require('./_object-dps') });
 
-},{"./_descriptors":81,"./_export":85,"./_object-dps":124}],243:[function(require,module,exports){
+},{"./_descriptors":78,"./_export":82,"./_object-dps":121}],240:[function(require,module,exports){
 var $export = require('./_export');
 // 19.1.2.4 / 15.2.3.6 Object.defineProperty(O, P, Attributes)
 $export($export.S + $export.F * !require('./_descriptors'), 'Object', { defineProperty: require('./_object-dp').f });
 
-},{"./_descriptors":81,"./_export":85,"./_object-dp":123}],244:[function(require,module,exports){
+},{"./_descriptors":78,"./_export":82,"./_object-dp":120}],241:[function(require,module,exports){
 // 19.1.2.5 Object.freeze(O)
 var isObject = require('./_is-object');
 var meta = require('./_meta').onFreeze;
@@ -45037,7 +44346,7 @@ require('./_object-sap')('freeze', function ($freeze) {
   };
 });
 
-},{"./_is-object":103,"./_meta":117,"./_object-sap":134}],245:[function(require,module,exports){
+},{"./_is-object":100,"./_meta":114,"./_object-sap":131}],242:[function(require,module,exports){
 // 19.1.2.6 Object.getOwnPropertyDescriptor(O, P)
 var toIObject = require('./_to-iobject');
 var $getOwnPropertyDescriptor = require('./_object-gopd').f;
@@ -45048,13 +44357,13 @@ require('./_object-sap')('getOwnPropertyDescriptor', function () {
   };
 });
 
-},{"./_object-gopd":126,"./_object-sap":134,"./_to-iobject":166}],246:[function(require,module,exports){
+},{"./_object-gopd":123,"./_object-sap":131,"./_to-iobject":163}],243:[function(require,module,exports){
 // 19.1.2.7 Object.getOwnPropertyNames(O)
 require('./_object-sap')('getOwnPropertyNames', function () {
   return require('./_object-gopn-ext').f;
 });
 
-},{"./_object-gopn-ext":127,"./_object-sap":134}],247:[function(require,module,exports){
+},{"./_object-gopn-ext":124,"./_object-sap":131}],244:[function(require,module,exports){
 // 19.1.2.9 Object.getPrototypeOf(O)
 var toObject = require('./_to-object');
 var $getPrototypeOf = require('./_object-gpo');
@@ -45065,7 +44374,7 @@ require('./_object-sap')('getPrototypeOf', function () {
   };
 });
 
-},{"./_object-gpo":130,"./_object-sap":134,"./_to-object":168}],248:[function(require,module,exports){
+},{"./_object-gpo":127,"./_object-sap":131,"./_to-object":165}],245:[function(require,module,exports){
 // 19.1.2.11 Object.isExtensible(O)
 var isObject = require('./_is-object');
 
@@ -45075,7 +44384,7 @@ require('./_object-sap')('isExtensible', function ($isExtensible) {
   };
 });
 
-},{"./_is-object":103,"./_object-sap":134}],249:[function(require,module,exports){
+},{"./_is-object":100,"./_object-sap":131}],246:[function(require,module,exports){
 // 19.1.2.12 Object.isFrozen(O)
 var isObject = require('./_is-object');
 
@@ -45085,7 +44394,7 @@ require('./_object-sap')('isFrozen', function ($isFrozen) {
   };
 });
 
-},{"./_is-object":103,"./_object-sap":134}],250:[function(require,module,exports){
+},{"./_is-object":100,"./_object-sap":131}],247:[function(require,module,exports){
 // 19.1.2.13 Object.isSealed(O)
 var isObject = require('./_is-object');
 
@@ -45095,12 +44404,12 @@ require('./_object-sap')('isSealed', function ($isSealed) {
   };
 });
 
-},{"./_is-object":103,"./_object-sap":134}],251:[function(require,module,exports){
+},{"./_is-object":100,"./_object-sap":131}],248:[function(require,module,exports){
 // 19.1.3.10 Object.is(value1, value2)
 var $export = require('./_export');
 $export($export.S, 'Object', { is: require('./_same-value') });
 
-},{"./_export":85,"./_same-value":145}],252:[function(require,module,exports){
+},{"./_export":82,"./_same-value":142}],249:[function(require,module,exports){
 // 19.1.2.14 Object.keys(O)
 var toObject = require('./_to-object');
 var $keys = require('./_object-keys');
@@ -45111,7 +44420,7 @@ require('./_object-sap')('keys', function () {
   };
 });
 
-},{"./_object-keys":132,"./_object-sap":134,"./_to-object":168}],253:[function(require,module,exports){
+},{"./_object-keys":129,"./_object-sap":131,"./_to-object":165}],250:[function(require,module,exports){
 // 19.1.2.15 Object.preventExtensions(O)
 var isObject = require('./_is-object');
 var meta = require('./_meta').onFreeze;
@@ -45122,7 +44431,7 @@ require('./_object-sap')('preventExtensions', function ($preventExtensions) {
   };
 });
 
-},{"./_is-object":103,"./_meta":117,"./_object-sap":134}],254:[function(require,module,exports){
+},{"./_is-object":100,"./_meta":114,"./_object-sap":131}],251:[function(require,module,exports){
 // 19.1.2.17 Object.seal(O)
 var isObject = require('./_is-object');
 var meta = require('./_meta').onFreeze;
@@ -45133,12 +44442,12 @@ require('./_object-sap')('seal', function ($seal) {
   };
 });
 
-},{"./_is-object":103,"./_meta":117,"./_object-sap":134}],255:[function(require,module,exports){
+},{"./_is-object":100,"./_meta":114,"./_object-sap":131}],252:[function(require,module,exports){
 // 19.1.3.19 Object.setPrototypeOf(O, proto)
 var $export = require('./_export');
 $export($export.S, 'Object', { setPrototypeOf: require('./_set-proto').set });
 
-},{"./_export":85,"./_set-proto":148}],256:[function(require,module,exports){
+},{"./_export":82,"./_set-proto":145}],253:[function(require,module,exports){
 'use strict';
 // 19.1.3.6 Object.prototype.toString()
 var classof = require('./_classof');
@@ -45150,19 +44459,19 @@ if (test + '' != '[object z]') {
   }, true);
 }
 
-},{"./_classof":69,"./_redefine":143,"./_wks":178}],257:[function(require,module,exports){
+},{"./_classof":66,"./_redefine":140,"./_wks":175}],254:[function(require,module,exports){
 var $export = require('./_export');
 var $parseFloat = require('./_parse-float');
 // 18.2.4 parseFloat(string)
 $export($export.G + $export.F * (parseFloat != $parseFloat), { parseFloat: $parseFloat });
 
-},{"./_export":85,"./_parse-float":137}],258:[function(require,module,exports){
+},{"./_export":82,"./_parse-float":134}],255:[function(require,module,exports){
 var $export = require('./_export');
 var $parseInt = require('./_parse-int');
 // 18.2.5 parseInt(string, radix)
 $export($export.G + $export.F * (parseInt != $parseInt), { parseInt: $parseInt });
 
-},{"./_export":85,"./_parse-int":138}],259:[function(require,module,exports){
+},{"./_export":82,"./_parse-int":135}],256:[function(require,module,exports){
 'use strict';
 var LIBRARY = require('./_library');
 var global = require('./_global');
@@ -45450,7 +44759,7 @@ $export($export.S + $export.F * !(USE_NATIVE && require('./_iter-detect')(functi
   }
 });
 
-},{"./_a-function":55,"./_an-instance":58,"./_classof":69,"./_core":75,"./_ctx":77,"./_export":85,"./_for-of":91,"./_global":92,"./_is-object":103,"./_iter-detect":108,"./_library":111,"./_microtask":119,"./_new-promise-capability":120,"./_perform":139,"./_promise-resolve":140,"./_redefine-all":142,"./_set-species":149,"./_set-to-string-tag":150,"./_species-constructor":153,"./_task":162,"./_user-agent":174,"./_wks":178}],260:[function(require,module,exports){
+},{"./_a-function":52,"./_an-instance":55,"./_classof":66,"./_core":72,"./_ctx":74,"./_export":82,"./_for-of":88,"./_global":89,"./_is-object":100,"./_iter-detect":105,"./_library":108,"./_microtask":116,"./_new-promise-capability":117,"./_perform":136,"./_promise-resolve":137,"./_redefine-all":139,"./_set-species":146,"./_set-to-string-tag":147,"./_species-constructor":150,"./_task":159,"./_user-agent":171,"./_wks":175}],257:[function(require,module,exports){
 // 26.1.1 Reflect.apply(target, thisArgument, argumentsList)
 var $export = require('./_export');
 var aFunction = require('./_a-function');
@@ -45468,7 +44777,7 @@ $export($export.S + $export.F * !require('./_fails')(function () {
   }
 });
 
-},{"./_a-function":55,"./_an-object":59,"./_export":85,"./_fails":87,"./_global":92}],261:[function(require,module,exports){
+},{"./_a-function":52,"./_an-object":56,"./_export":82,"./_fails":84,"./_global":89}],258:[function(require,module,exports){
 // 26.1.2 Reflect.construct(target, argumentsList [, newTarget])
 var $export = require('./_export');
 var create = require('./_object-create');
@@ -45517,7 +44826,7 @@ $export($export.S + $export.F * (NEW_TARGET_BUG || ARGS_BUG), 'Reflect', {
   }
 });
 
-},{"./_a-function":55,"./_an-object":59,"./_bind":68,"./_export":85,"./_fails":87,"./_global":92,"./_is-object":103,"./_object-create":122}],262:[function(require,module,exports){
+},{"./_a-function":52,"./_an-object":56,"./_bind":65,"./_export":82,"./_fails":84,"./_global":89,"./_is-object":100,"./_object-create":119}],259:[function(require,module,exports){
 // 26.1.3 Reflect.defineProperty(target, propertyKey, attributes)
 var dP = require('./_object-dp');
 var $export = require('./_export');
@@ -45542,7 +44851,7 @@ $export($export.S + $export.F * require('./_fails')(function () {
   }
 });
 
-},{"./_an-object":59,"./_export":85,"./_fails":87,"./_object-dp":123,"./_to-primitive":169}],263:[function(require,module,exports){
+},{"./_an-object":56,"./_export":82,"./_fails":84,"./_object-dp":120,"./_to-primitive":166}],260:[function(require,module,exports){
 // 26.1.4 Reflect.deleteProperty(target, propertyKey)
 var $export = require('./_export');
 var gOPD = require('./_object-gopd').f;
@@ -45555,7 +44864,7 @@ $export($export.S, 'Reflect', {
   }
 });
 
-},{"./_an-object":59,"./_export":85,"./_object-gopd":126}],264:[function(require,module,exports){
+},{"./_an-object":56,"./_export":82,"./_object-gopd":123}],261:[function(require,module,exports){
 'use strict';
 // 26.1.5 Reflect.enumerate(target)
 var $export = require('./_export');
@@ -45583,7 +44892,7 @@ $export($export.S, 'Reflect', {
   }
 });
 
-},{"./_an-object":59,"./_export":85,"./_iter-create":106}],265:[function(require,module,exports){
+},{"./_an-object":56,"./_export":82,"./_iter-create":103}],262:[function(require,module,exports){
 // 26.1.7 Reflect.getOwnPropertyDescriptor(target, propertyKey)
 var gOPD = require('./_object-gopd');
 var $export = require('./_export');
@@ -45595,7 +44904,7 @@ $export($export.S, 'Reflect', {
   }
 });
 
-},{"./_an-object":59,"./_export":85,"./_object-gopd":126}],266:[function(require,module,exports){
+},{"./_an-object":56,"./_export":82,"./_object-gopd":123}],263:[function(require,module,exports){
 // 26.1.8 Reflect.getPrototypeOf(target)
 var $export = require('./_export');
 var getProto = require('./_object-gpo');
@@ -45607,7 +44916,7 @@ $export($export.S, 'Reflect', {
   }
 });
 
-},{"./_an-object":59,"./_export":85,"./_object-gpo":130}],267:[function(require,module,exports){
+},{"./_an-object":56,"./_export":82,"./_object-gpo":127}],264:[function(require,module,exports){
 // 26.1.6 Reflect.get(target, propertyKey [, receiver])
 var gOPD = require('./_object-gopd');
 var getPrototypeOf = require('./_object-gpo');
@@ -45630,7 +44939,7 @@ function get(target, propertyKey /* , receiver */) {
 
 $export($export.S, 'Reflect', { get: get });
 
-},{"./_an-object":59,"./_export":85,"./_has":93,"./_is-object":103,"./_object-gopd":126,"./_object-gpo":130}],268:[function(require,module,exports){
+},{"./_an-object":56,"./_export":82,"./_has":90,"./_is-object":100,"./_object-gopd":123,"./_object-gpo":127}],265:[function(require,module,exports){
 // 26.1.9 Reflect.has(target, propertyKey)
 var $export = require('./_export');
 
@@ -45640,7 +44949,7 @@ $export($export.S, 'Reflect', {
   }
 });
 
-},{"./_export":85}],269:[function(require,module,exports){
+},{"./_export":82}],266:[function(require,module,exports){
 // 26.1.10 Reflect.isExtensible(target)
 var $export = require('./_export');
 var anObject = require('./_an-object');
@@ -45653,13 +44962,13 @@ $export($export.S, 'Reflect', {
   }
 });
 
-},{"./_an-object":59,"./_export":85}],270:[function(require,module,exports){
+},{"./_an-object":56,"./_export":82}],267:[function(require,module,exports){
 // 26.1.11 Reflect.ownKeys(target)
 var $export = require('./_export');
 
 $export($export.S, 'Reflect', { ownKeys: require('./_own-keys') });
 
-},{"./_export":85,"./_own-keys":136}],271:[function(require,module,exports){
+},{"./_export":82,"./_own-keys":133}],268:[function(require,module,exports){
 // 26.1.12 Reflect.preventExtensions(target)
 var $export = require('./_export');
 var anObject = require('./_an-object');
@@ -45677,7 +44986,7 @@ $export($export.S, 'Reflect', {
   }
 });
 
-},{"./_an-object":59,"./_export":85}],272:[function(require,module,exports){
+},{"./_an-object":56,"./_export":82}],269:[function(require,module,exports){
 // 26.1.14 Reflect.setPrototypeOf(target, proto)
 var $export = require('./_export');
 var setProto = require('./_set-proto');
@@ -45694,7 +45003,7 @@ if (setProto) $export($export.S, 'Reflect', {
   }
 });
 
-},{"./_export":85,"./_set-proto":148}],273:[function(require,module,exports){
+},{"./_export":82,"./_set-proto":145}],270:[function(require,module,exports){
 // 26.1.13 Reflect.set(target, propertyKey, V [, receiver])
 var dP = require('./_object-dp');
 var gOPD = require('./_object-gopd');
@@ -45729,7 +45038,7 @@ function set(target, propertyKey, V /* , receiver */) {
 
 $export($export.S, 'Reflect', { set: set });
 
-},{"./_an-object":59,"./_export":85,"./_has":93,"./_is-object":103,"./_object-dp":123,"./_object-gopd":126,"./_object-gpo":130,"./_property-desc":141}],274:[function(require,module,exports){
+},{"./_an-object":56,"./_export":82,"./_has":90,"./_is-object":100,"./_object-dp":120,"./_object-gopd":123,"./_object-gpo":127,"./_property-desc":138}],271:[function(require,module,exports){
 var global = require('./_global');
 var inheritIfRequired = require('./_inherit-if-required');
 var dP = require('./_object-dp').f;
@@ -45774,14 +45083,14 @@ if (require('./_descriptors') && (!CORRECT_NEW || require('./_fails')(function (
 
 require('./_set-species')('RegExp');
 
-},{"./_descriptors":81,"./_fails":87,"./_flags":89,"./_global":92,"./_inherit-if-required":97,"./_is-regexp":104,"./_object-dp":123,"./_object-gopn":128,"./_redefine":143,"./_set-species":149,"./_wks":178}],275:[function(require,module,exports){
+},{"./_descriptors":78,"./_fails":84,"./_flags":86,"./_global":89,"./_inherit-if-required":94,"./_is-regexp":101,"./_object-dp":120,"./_object-gopn":125,"./_redefine":140,"./_set-species":146,"./_wks":175}],272:[function(require,module,exports){
 // 21.2.5.3 get RegExp.prototype.flags()
 if (require('./_descriptors') && /./g.flags != 'g') require('./_object-dp').f(RegExp.prototype, 'flags', {
   configurable: true,
   get: require('./_flags')
 });
 
-},{"./_descriptors":81,"./_flags":89,"./_object-dp":123}],276:[function(require,module,exports){
+},{"./_descriptors":78,"./_flags":86,"./_object-dp":120}],273:[function(require,module,exports){
 // @@match logic
 require('./_fix-re-wks')('match', 1, function (defined, MATCH, $match) {
   // 21.1.3.11 String.prototype.match(regexp)
@@ -45793,7 +45102,7 @@ require('./_fix-re-wks')('match', 1, function (defined, MATCH, $match) {
   }, $match];
 });
 
-},{"./_fix-re-wks":88}],277:[function(require,module,exports){
+},{"./_fix-re-wks":85}],274:[function(require,module,exports){
 // @@replace logic
 require('./_fix-re-wks')('replace', 2, function (defined, REPLACE, $replace) {
   // 21.1.3.14 String.prototype.replace(searchValue, replaceValue)
@@ -45807,7 +45116,7 @@ require('./_fix-re-wks')('replace', 2, function (defined, REPLACE, $replace) {
   }, $replace];
 });
 
-},{"./_fix-re-wks":88}],278:[function(require,module,exports){
+},{"./_fix-re-wks":85}],275:[function(require,module,exports){
 // @@search logic
 require('./_fix-re-wks')('search', 1, function (defined, SEARCH, $search) {
   // 21.1.3.15 String.prototype.search(regexp)
@@ -45819,7 +45128,7 @@ require('./_fix-re-wks')('search', 1, function (defined, SEARCH, $search) {
   }, $search];
 });
 
-},{"./_fix-re-wks":88}],279:[function(require,module,exports){
+},{"./_fix-re-wks":85}],276:[function(require,module,exports){
 // @@split logic
 require('./_fix-re-wks')('split', 2, function (defined, SPLIT, $split) {
   'use strict';
@@ -45892,7 +45201,7 @@ require('./_fix-re-wks')('split', 2, function (defined, SPLIT, $split) {
   }, $split];
 });
 
-},{"./_fix-re-wks":88,"./_is-regexp":104}],280:[function(require,module,exports){
+},{"./_fix-re-wks":85,"./_is-regexp":101}],277:[function(require,module,exports){
 'use strict';
 require('./es6.regexp.flags');
 var anObject = require('./_an-object');
@@ -45919,7 +45228,7 @@ if (require('./_fails')(function () { return $toString.call({ source: 'a', flags
   });
 }
 
-},{"./_an-object":59,"./_descriptors":81,"./_fails":87,"./_flags":89,"./_redefine":143,"./es6.regexp.flags":275}],281:[function(require,module,exports){
+},{"./_an-object":56,"./_descriptors":78,"./_fails":84,"./_flags":86,"./_redefine":140,"./es6.regexp.flags":272}],278:[function(require,module,exports){
 'use strict';
 var strong = require('./_collection-strong');
 var validate = require('./_validate-collection');
@@ -45935,7 +45244,7 @@ module.exports = require('./_collection')(SET, function (get) {
   }
 }, strong);
 
-},{"./_collection":74,"./_collection-strong":71,"./_validate-collection":175}],282:[function(require,module,exports){
+},{"./_collection":71,"./_collection-strong":68,"./_validate-collection":172}],279:[function(require,module,exports){
 'use strict';
 // B.2.3.2 String.prototype.anchor(name)
 require('./_string-html')('anchor', function (createHTML) {
@@ -45944,7 +45253,7 @@ require('./_string-html')('anchor', function (createHTML) {
   };
 });
 
-},{"./_string-html":157}],283:[function(require,module,exports){
+},{"./_string-html":154}],280:[function(require,module,exports){
 'use strict';
 // B.2.3.3 String.prototype.big()
 require('./_string-html')('big', function (createHTML) {
@@ -45953,7 +45262,7 @@ require('./_string-html')('big', function (createHTML) {
   };
 });
 
-},{"./_string-html":157}],284:[function(require,module,exports){
+},{"./_string-html":154}],281:[function(require,module,exports){
 'use strict';
 // B.2.3.4 String.prototype.blink()
 require('./_string-html')('blink', function (createHTML) {
@@ -45962,7 +45271,7 @@ require('./_string-html')('blink', function (createHTML) {
   };
 });
 
-},{"./_string-html":157}],285:[function(require,module,exports){
+},{"./_string-html":154}],282:[function(require,module,exports){
 'use strict';
 // B.2.3.5 String.prototype.bold()
 require('./_string-html')('bold', function (createHTML) {
@@ -45971,7 +45280,7 @@ require('./_string-html')('bold', function (createHTML) {
   };
 });
 
-},{"./_string-html":157}],286:[function(require,module,exports){
+},{"./_string-html":154}],283:[function(require,module,exports){
 'use strict';
 var $export = require('./_export');
 var $at = require('./_string-at')(false);
@@ -45982,7 +45291,7 @@ $export($export.P, 'String', {
   }
 });
 
-},{"./_export":85,"./_string-at":155}],287:[function(require,module,exports){
+},{"./_export":82,"./_string-at":152}],284:[function(require,module,exports){
 // 21.1.3.6 String.prototype.endsWith(searchString [, endPosition])
 'use strict';
 var $export = require('./_export');
@@ -46004,7 +45313,7 @@ $export($export.P + $export.F * require('./_fails-is-regexp')(ENDS_WITH), 'Strin
   }
 });
 
-},{"./_export":85,"./_fails-is-regexp":86,"./_string-context":156,"./_to-length":167}],288:[function(require,module,exports){
+},{"./_export":82,"./_fails-is-regexp":83,"./_string-context":153,"./_to-length":164}],285:[function(require,module,exports){
 'use strict';
 // B.2.3.6 String.prototype.fixed()
 require('./_string-html')('fixed', function (createHTML) {
@@ -46013,7 +45322,7 @@ require('./_string-html')('fixed', function (createHTML) {
   };
 });
 
-},{"./_string-html":157}],289:[function(require,module,exports){
+},{"./_string-html":154}],286:[function(require,module,exports){
 'use strict';
 // B.2.3.7 String.prototype.fontcolor(color)
 require('./_string-html')('fontcolor', function (createHTML) {
@@ -46022,7 +45331,7 @@ require('./_string-html')('fontcolor', function (createHTML) {
   };
 });
 
-},{"./_string-html":157}],290:[function(require,module,exports){
+},{"./_string-html":154}],287:[function(require,module,exports){
 'use strict';
 // B.2.3.8 String.prototype.fontsize(size)
 require('./_string-html')('fontsize', function (createHTML) {
@@ -46031,7 +45340,7 @@ require('./_string-html')('fontsize', function (createHTML) {
   };
 });
 
-},{"./_string-html":157}],291:[function(require,module,exports){
+},{"./_string-html":154}],288:[function(require,module,exports){
 var $export = require('./_export');
 var toAbsoluteIndex = require('./_to-absolute-index');
 var fromCharCode = String.fromCharCode;
@@ -46056,7 +45365,7 @@ $export($export.S + $export.F * (!!$fromCodePoint && $fromCodePoint.length != 1)
   }
 });
 
-},{"./_export":85,"./_to-absolute-index":163}],292:[function(require,module,exports){
+},{"./_export":82,"./_to-absolute-index":160}],289:[function(require,module,exports){
 // 21.1.3.7 String.prototype.includes(searchString, position = 0)
 'use strict';
 var $export = require('./_export');
@@ -46070,7 +45379,7 @@ $export($export.P + $export.F * require('./_fails-is-regexp')(INCLUDES), 'String
   }
 });
 
-},{"./_export":85,"./_fails-is-regexp":86,"./_string-context":156}],293:[function(require,module,exports){
+},{"./_export":82,"./_fails-is-regexp":83,"./_string-context":153}],290:[function(require,module,exports){
 'use strict';
 // B.2.3.9 String.prototype.italics()
 require('./_string-html')('italics', function (createHTML) {
@@ -46079,7 +45388,7 @@ require('./_string-html')('italics', function (createHTML) {
   };
 });
 
-},{"./_string-html":157}],294:[function(require,module,exports){
+},{"./_string-html":154}],291:[function(require,module,exports){
 'use strict';
 var $at = require('./_string-at')(true);
 
@@ -46098,7 +45407,7 @@ require('./_iter-define')(String, 'String', function (iterated) {
   return { value: point, done: false };
 });
 
-},{"./_iter-define":107,"./_string-at":155}],295:[function(require,module,exports){
+},{"./_iter-define":104,"./_string-at":152}],292:[function(require,module,exports){
 'use strict';
 // B.2.3.10 String.prototype.link(url)
 require('./_string-html')('link', function (createHTML) {
@@ -46107,7 +45416,7 @@ require('./_string-html')('link', function (createHTML) {
   };
 });
 
-},{"./_string-html":157}],296:[function(require,module,exports){
+},{"./_string-html":154}],293:[function(require,module,exports){
 var $export = require('./_export');
 var toIObject = require('./_to-iobject');
 var toLength = require('./_to-length');
@@ -46127,7 +45436,7 @@ $export($export.S, 'String', {
   }
 });
 
-},{"./_export":85,"./_to-iobject":166,"./_to-length":167}],297:[function(require,module,exports){
+},{"./_export":82,"./_to-iobject":163,"./_to-length":164}],294:[function(require,module,exports){
 var $export = require('./_export');
 
 $export($export.P, 'String', {
@@ -46135,7 +45444,7 @@ $export($export.P, 'String', {
   repeat: require('./_string-repeat')
 });
 
-},{"./_export":85,"./_string-repeat":159}],298:[function(require,module,exports){
+},{"./_export":82,"./_string-repeat":156}],295:[function(require,module,exports){
 'use strict';
 // B.2.3.11 String.prototype.small()
 require('./_string-html')('small', function (createHTML) {
@@ -46144,7 +45453,7 @@ require('./_string-html')('small', function (createHTML) {
   };
 });
 
-},{"./_string-html":157}],299:[function(require,module,exports){
+},{"./_string-html":154}],296:[function(require,module,exports){
 // 21.1.3.18 String.prototype.startsWith(searchString [, position ])
 'use strict';
 var $export = require('./_export');
@@ -46164,7 +45473,7 @@ $export($export.P + $export.F * require('./_fails-is-regexp')(STARTS_WITH), 'Str
   }
 });
 
-},{"./_export":85,"./_fails-is-regexp":86,"./_string-context":156,"./_to-length":167}],300:[function(require,module,exports){
+},{"./_export":82,"./_fails-is-regexp":83,"./_string-context":153,"./_to-length":164}],297:[function(require,module,exports){
 'use strict';
 // B.2.3.12 String.prototype.strike()
 require('./_string-html')('strike', function (createHTML) {
@@ -46173,7 +45482,7 @@ require('./_string-html')('strike', function (createHTML) {
   };
 });
 
-},{"./_string-html":157}],301:[function(require,module,exports){
+},{"./_string-html":154}],298:[function(require,module,exports){
 'use strict';
 // B.2.3.13 String.prototype.sub()
 require('./_string-html')('sub', function (createHTML) {
@@ -46182,7 +45491,7 @@ require('./_string-html')('sub', function (createHTML) {
   };
 });
 
-},{"./_string-html":157}],302:[function(require,module,exports){
+},{"./_string-html":154}],299:[function(require,module,exports){
 'use strict';
 // B.2.3.14 String.prototype.sup()
 require('./_string-html')('sup', function (createHTML) {
@@ -46191,7 +45500,7 @@ require('./_string-html')('sup', function (createHTML) {
   };
 });
 
-},{"./_string-html":157}],303:[function(require,module,exports){
+},{"./_string-html":154}],300:[function(require,module,exports){
 'use strict';
 // 21.1.3.25 String.prototype.trim()
 require('./_string-trim')('trim', function ($trim) {
@@ -46200,7 +45509,7 @@ require('./_string-trim')('trim', function ($trim) {
   };
 });
 
-},{"./_string-trim":160}],304:[function(require,module,exports){
+},{"./_string-trim":157}],301:[function(require,module,exports){
 'use strict';
 // ECMAScript 6 symbols shim
 var global = require('./_global');
@@ -46436,7 +45745,7 @@ setToStringTag(Math, 'Math', true);
 // 24.3.3 JSON[@@toStringTag]
 setToStringTag(global.JSON, 'JSON', true);
 
-},{"./_an-object":59,"./_descriptors":81,"./_enum-keys":84,"./_export":85,"./_fails":87,"./_global":92,"./_has":93,"./_hide":94,"./_is-array":101,"./_is-object":103,"./_library":111,"./_meta":117,"./_object-create":122,"./_object-dp":123,"./_object-gopd":126,"./_object-gopn":128,"./_object-gopn-ext":127,"./_object-gops":129,"./_object-keys":132,"./_object-pie":133,"./_property-desc":141,"./_redefine":143,"./_set-to-string-tag":150,"./_shared":152,"./_to-iobject":166,"./_to-primitive":169,"./_uid":173,"./_wks":178,"./_wks-define":176,"./_wks-ext":177}],305:[function(require,module,exports){
+},{"./_an-object":56,"./_descriptors":78,"./_enum-keys":81,"./_export":82,"./_fails":84,"./_global":89,"./_has":90,"./_hide":91,"./_is-array":98,"./_is-object":100,"./_library":108,"./_meta":114,"./_object-create":119,"./_object-dp":120,"./_object-gopd":123,"./_object-gopn":125,"./_object-gopn-ext":124,"./_object-gops":126,"./_object-keys":129,"./_object-pie":130,"./_property-desc":138,"./_redefine":140,"./_set-to-string-tag":147,"./_shared":149,"./_to-iobject":163,"./_to-primitive":166,"./_uid":170,"./_wks":175,"./_wks-define":173,"./_wks-ext":174}],302:[function(require,module,exports){
 'use strict';
 var $export = require('./_export');
 var $typed = require('./_typed');
@@ -46484,76 +45793,76 @@ $export($export.P + $export.U + $export.F * require('./_fails')(function () {
 
 require('./_set-species')(ARRAY_BUFFER);
 
-},{"./_an-object":59,"./_export":85,"./_fails":87,"./_global":92,"./_is-object":103,"./_set-species":149,"./_species-constructor":153,"./_to-absolute-index":163,"./_to-length":167,"./_typed":172,"./_typed-buffer":171}],306:[function(require,module,exports){
+},{"./_an-object":56,"./_export":82,"./_fails":84,"./_global":89,"./_is-object":100,"./_set-species":146,"./_species-constructor":150,"./_to-absolute-index":160,"./_to-length":164,"./_typed":169,"./_typed-buffer":168}],303:[function(require,module,exports){
 var $export = require('./_export');
 $export($export.G + $export.W + $export.F * !require('./_typed').ABV, {
   DataView: require('./_typed-buffer').DataView
 });
 
-},{"./_export":85,"./_typed":172,"./_typed-buffer":171}],307:[function(require,module,exports){
+},{"./_export":82,"./_typed":169,"./_typed-buffer":168}],304:[function(require,module,exports){
 require('./_typed-array')('Float32', 4, function (init) {
   return function Float32Array(data, byteOffset, length) {
     return init(this, data, byteOffset, length);
   };
 });
 
-},{"./_typed-array":170}],308:[function(require,module,exports){
+},{"./_typed-array":167}],305:[function(require,module,exports){
 require('./_typed-array')('Float64', 8, function (init) {
   return function Float64Array(data, byteOffset, length) {
     return init(this, data, byteOffset, length);
   };
 });
 
-},{"./_typed-array":170}],309:[function(require,module,exports){
+},{"./_typed-array":167}],306:[function(require,module,exports){
 require('./_typed-array')('Int16', 2, function (init) {
   return function Int16Array(data, byteOffset, length) {
     return init(this, data, byteOffset, length);
   };
 });
 
-},{"./_typed-array":170}],310:[function(require,module,exports){
+},{"./_typed-array":167}],307:[function(require,module,exports){
 require('./_typed-array')('Int32', 4, function (init) {
   return function Int32Array(data, byteOffset, length) {
     return init(this, data, byteOffset, length);
   };
 });
 
-},{"./_typed-array":170}],311:[function(require,module,exports){
+},{"./_typed-array":167}],308:[function(require,module,exports){
 require('./_typed-array')('Int8', 1, function (init) {
   return function Int8Array(data, byteOffset, length) {
     return init(this, data, byteOffset, length);
   };
 });
 
-},{"./_typed-array":170}],312:[function(require,module,exports){
+},{"./_typed-array":167}],309:[function(require,module,exports){
 require('./_typed-array')('Uint16', 2, function (init) {
   return function Uint16Array(data, byteOffset, length) {
     return init(this, data, byteOffset, length);
   };
 });
 
-},{"./_typed-array":170}],313:[function(require,module,exports){
+},{"./_typed-array":167}],310:[function(require,module,exports){
 require('./_typed-array')('Uint32', 4, function (init) {
   return function Uint32Array(data, byteOffset, length) {
     return init(this, data, byteOffset, length);
   };
 });
 
-},{"./_typed-array":170}],314:[function(require,module,exports){
+},{"./_typed-array":167}],311:[function(require,module,exports){
 require('./_typed-array')('Uint8', 1, function (init) {
   return function Uint8Array(data, byteOffset, length) {
     return init(this, data, byteOffset, length);
   };
 });
 
-},{"./_typed-array":170}],315:[function(require,module,exports){
+},{"./_typed-array":167}],312:[function(require,module,exports){
 require('./_typed-array')('Uint8', 1, function (init) {
   return function Uint8ClampedArray(data, byteOffset, length) {
     return init(this, data, byteOffset, length);
   };
 }, true);
 
-},{"./_typed-array":170}],316:[function(require,module,exports){
+},{"./_typed-array":167}],313:[function(require,module,exports){
 'use strict';
 var each = require('./_array-methods')(0);
 var redefine = require('./_redefine');
@@ -46614,7 +45923,7 @@ if (fails(function () { return new $WeakMap().set((Object.freeze || Object)(tmp)
   });
 }
 
-},{"./_array-methods":64,"./_collection":74,"./_collection-weak":73,"./_fails":87,"./_is-object":103,"./_meta":117,"./_object-assign":121,"./_redefine":143,"./_validate-collection":175}],317:[function(require,module,exports){
+},{"./_array-methods":61,"./_collection":71,"./_collection-weak":70,"./_fails":84,"./_is-object":100,"./_meta":114,"./_object-assign":118,"./_redefine":140,"./_validate-collection":172}],314:[function(require,module,exports){
 'use strict';
 var weak = require('./_collection-weak');
 var validate = require('./_validate-collection');
@@ -46630,7 +45939,7 @@ require('./_collection')(WEAK_SET, function (get) {
   }
 }, weak, false, true);
 
-},{"./_collection":74,"./_collection-weak":73,"./_validate-collection":175}],318:[function(require,module,exports){
+},{"./_collection":71,"./_collection-weak":70,"./_validate-collection":172}],315:[function(require,module,exports){
 'use strict';
 // https://tc39.github.io/proposal-flatMap/#sec-Array.prototype.flatMap
 var $export = require('./_export');
@@ -46654,7 +45963,7 @@ $export($export.P, 'Array', {
 
 require('./_add-to-unscopables')('flatMap');
 
-},{"./_a-function":55,"./_add-to-unscopables":57,"./_array-species-create":67,"./_export":85,"./_flatten-into-array":90,"./_to-length":167,"./_to-object":168}],319:[function(require,module,exports){
+},{"./_a-function":52,"./_add-to-unscopables":54,"./_array-species-create":64,"./_export":82,"./_flatten-into-array":87,"./_to-length":164,"./_to-object":165}],316:[function(require,module,exports){
 'use strict';
 // https://tc39.github.io/proposal-flatMap/#sec-Array.prototype.flatten
 var $export = require('./_export');
@@ -46677,7 +45986,7 @@ $export($export.P, 'Array', {
 
 require('./_add-to-unscopables')('flatten');
 
-},{"./_add-to-unscopables":57,"./_array-species-create":67,"./_export":85,"./_flatten-into-array":90,"./_to-integer":165,"./_to-length":167,"./_to-object":168}],320:[function(require,module,exports){
+},{"./_add-to-unscopables":54,"./_array-species-create":64,"./_export":82,"./_flatten-into-array":87,"./_to-integer":162,"./_to-length":164,"./_to-object":165}],317:[function(require,module,exports){
 'use strict';
 // https://github.com/tc39/Array.prototype.includes
 var $export = require('./_export');
@@ -46691,7 +46000,7 @@ $export($export.P, 'Array', {
 
 require('./_add-to-unscopables')('includes');
 
-},{"./_add-to-unscopables":57,"./_array-includes":63,"./_export":85}],321:[function(require,module,exports){
+},{"./_add-to-unscopables":54,"./_array-includes":60,"./_export":82}],318:[function(require,module,exports){
 // https://github.com/rwaldron/tc39-notes/blob/master/es6/2014-09/sept-25.md#510-globalasap-for-enqueuing-a-microtask
 var $export = require('./_export');
 var microtask = require('./_microtask')();
@@ -46705,7 +46014,7 @@ $export($export.G, {
   }
 });
 
-},{"./_cof":70,"./_export":85,"./_global":92,"./_microtask":119}],322:[function(require,module,exports){
+},{"./_cof":67,"./_export":82,"./_global":89,"./_microtask":116}],319:[function(require,module,exports){
 // https://github.com/ljharb/proposal-is-error
 var $export = require('./_export');
 var cof = require('./_cof');
@@ -46716,27 +46025,27 @@ $export($export.S, 'Error', {
   }
 });
 
-},{"./_cof":70,"./_export":85}],323:[function(require,module,exports){
+},{"./_cof":67,"./_export":82}],320:[function(require,module,exports){
 // https://github.com/tc39/proposal-global
 var $export = require('./_export');
 
 $export($export.G, { global: require('./_global') });
 
-},{"./_export":85,"./_global":92}],324:[function(require,module,exports){
+},{"./_export":82,"./_global":89}],321:[function(require,module,exports){
 // https://tc39.github.io/proposal-setmap-offrom/#sec-map.from
 require('./_set-collection-from')('Map');
 
-},{"./_set-collection-from":146}],325:[function(require,module,exports){
+},{"./_set-collection-from":143}],322:[function(require,module,exports){
 // https://tc39.github.io/proposal-setmap-offrom/#sec-map.of
 require('./_set-collection-of')('Map');
 
-},{"./_set-collection-of":147}],326:[function(require,module,exports){
+},{"./_set-collection-of":144}],323:[function(require,module,exports){
 // https://github.com/DavidBruant/Map-Set.prototype.toJSON
 var $export = require('./_export');
 
 $export($export.P + $export.R, 'Map', { toJSON: require('./_collection-to-json')('Map') });
 
-},{"./_collection-to-json":72,"./_export":85}],327:[function(require,module,exports){
+},{"./_collection-to-json":69,"./_export":82}],324:[function(require,module,exports){
 // https://rwaldron.github.io/proposal-math-extensions/
 var $export = require('./_export');
 
@@ -46746,13 +46055,13 @@ $export($export.S, 'Math', {
   }
 });
 
-},{"./_export":85}],328:[function(require,module,exports){
+},{"./_export":82}],325:[function(require,module,exports){
 // https://rwaldron.github.io/proposal-math-extensions/
 var $export = require('./_export');
 
 $export($export.S, 'Math', { DEG_PER_RAD: Math.PI / 180 });
 
-},{"./_export":85}],329:[function(require,module,exports){
+},{"./_export":82}],326:[function(require,module,exports){
 // https://rwaldron.github.io/proposal-math-extensions/
 var $export = require('./_export');
 var RAD_PER_DEG = 180 / Math.PI;
@@ -46763,7 +46072,7 @@ $export($export.S, 'Math', {
   }
 });
 
-},{"./_export":85}],330:[function(require,module,exports){
+},{"./_export":82}],327:[function(require,module,exports){
 // https://rwaldron.github.io/proposal-math-extensions/
 var $export = require('./_export');
 var scale = require('./_math-scale');
@@ -46775,7 +46084,7 @@ $export($export.S, 'Math', {
   }
 });
 
-},{"./_export":85,"./_math-fround":113,"./_math-scale":115}],331:[function(require,module,exports){
+},{"./_export":82,"./_math-fround":110,"./_math-scale":112}],328:[function(require,module,exports){
 // https://gist.github.com/BrendanEich/4294d5c212a6d2254703
 var $export = require('./_export');
 
@@ -46788,7 +46097,7 @@ $export($export.S, 'Math', {
   }
 });
 
-},{"./_export":85}],332:[function(require,module,exports){
+},{"./_export":82}],329:[function(require,module,exports){
 // https://gist.github.com/BrendanEich/4294d5c212a6d2254703
 var $export = require('./_export');
 
@@ -46806,7 +46115,7 @@ $export($export.S, 'Math', {
   }
 });
 
-},{"./_export":85}],333:[function(require,module,exports){
+},{"./_export":82}],330:[function(require,module,exports){
 // https://gist.github.com/BrendanEich/4294d5c212a6d2254703
 var $export = require('./_export');
 
@@ -46819,13 +46128,13 @@ $export($export.S, 'Math', {
   }
 });
 
-},{"./_export":85}],334:[function(require,module,exports){
+},{"./_export":82}],331:[function(require,module,exports){
 // https://rwaldron.github.io/proposal-math-extensions/
 var $export = require('./_export');
 
 $export($export.S, 'Math', { RAD_PER_DEG: 180 / Math.PI });
 
-},{"./_export":85}],335:[function(require,module,exports){
+},{"./_export":82}],332:[function(require,module,exports){
 // https://rwaldron.github.io/proposal-math-extensions/
 var $export = require('./_export');
 var DEG_PER_RAD = Math.PI / 180;
@@ -46836,13 +46145,13 @@ $export($export.S, 'Math', {
   }
 });
 
-},{"./_export":85}],336:[function(require,module,exports){
+},{"./_export":82}],333:[function(require,module,exports){
 // https://rwaldron.github.io/proposal-math-extensions/
 var $export = require('./_export');
 
 $export($export.S, 'Math', { scale: require('./_math-scale') });
 
-},{"./_export":85,"./_math-scale":115}],337:[function(require,module,exports){
+},{"./_export":82,"./_math-scale":112}],334:[function(require,module,exports){
 // http://jfbastien.github.io/papers/Math.signbit.html
 var $export = require('./_export');
 
@@ -46851,7 +46160,7 @@ $export($export.S, 'Math', { signbit: function signbit(x) {
   return (x = +x) != x ? x : x == 0 ? 1 / x == Infinity : x > 0;
 } });
 
-},{"./_export":85}],338:[function(require,module,exports){
+},{"./_export":82}],335:[function(require,module,exports){
 // https://gist.github.com/BrendanEich/4294d5c212a6d2254703
 var $export = require('./_export');
 
@@ -46869,7 +46178,7 @@ $export($export.S, 'Math', {
   }
 });
 
-},{"./_export":85}],339:[function(require,module,exports){
+},{"./_export":82}],336:[function(require,module,exports){
 'use strict';
 var $export = require('./_export');
 var toObject = require('./_to-object');
@@ -46883,7 +46192,7 @@ require('./_descriptors') && $export($export.P + require('./_object-forced-pam')
   }
 });
 
-},{"./_a-function":55,"./_descriptors":81,"./_export":85,"./_object-dp":123,"./_object-forced-pam":125,"./_to-object":168}],340:[function(require,module,exports){
+},{"./_a-function":52,"./_descriptors":78,"./_export":82,"./_object-dp":120,"./_object-forced-pam":122,"./_to-object":165}],337:[function(require,module,exports){
 'use strict';
 var $export = require('./_export');
 var toObject = require('./_to-object');
@@ -46897,7 +46206,7 @@ require('./_descriptors') && $export($export.P + require('./_object-forced-pam')
   }
 });
 
-},{"./_a-function":55,"./_descriptors":81,"./_export":85,"./_object-dp":123,"./_object-forced-pam":125,"./_to-object":168}],341:[function(require,module,exports){
+},{"./_a-function":52,"./_descriptors":78,"./_export":82,"./_object-dp":120,"./_object-forced-pam":122,"./_to-object":165}],338:[function(require,module,exports){
 // https://github.com/tc39/proposal-object-values-entries
 var $export = require('./_export');
 var $entries = require('./_object-to-array')(true);
@@ -46908,7 +46217,7 @@ $export($export.S, 'Object', {
   }
 });
 
-},{"./_export":85,"./_object-to-array":135}],342:[function(require,module,exports){
+},{"./_export":82,"./_object-to-array":132}],339:[function(require,module,exports){
 // https://github.com/tc39/proposal-object-getownpropertydescriptors
 var $export = require('./_export');
 var ownKeys = require('./_own-keys');
@@ -46932,7 +46241,7 @@ $export($export.S, 'Object', {
   }
 });
 
-},{"./_create-property":76,"./_export":85,"./_object-gopd":126,"./_own-keys":136,"./_to-iobject":166}],343:[function(require,module,exports){
+},{"./_create-property":73,"./_export":82,"./_object-gopd":123,"./_own-keys":133,"./_to-iobject":163}],340:[function(require,module,exports){
 'use strict';
 var $export = require('./_export');
 var toObject = require('./_to-object');
@@ -46952,7 +46261,7 @@ require('./_descriptors') && $export($export.P + require('./_object-forced-pam')
   }
 });
 
-},{"./_descriptors":81,"./_export":85,"./_object-forced-pam":125,"./_object-gopd":126,"./_object-gpo":130,"./_to-object":168,"./_to-primitive":169}],344:[function(require,module,exports){
+},{"./_descriptors":78,"./_export":82,"./_object-forced-pam":122,"./_object-gopd":123,"./_object-gpo":127,"./_to-object":165,"./_to-primitive":166}],341:[function(require,module,exports){
 'use strict';
 var $export = require('./_export');
 var toObject = require('./_to-object');
@@ -46972,7 +46281,7 @@ require('./_descriptors') && $export($export.P + require('./_object-forced-pam')
   }
 });
 
-},{"./_descriptors":81,"./_export":85,"./_object-forced-pam":125,"./_object-gopd":126,"./_object-gpo":130,"./_to-object":168,"./_to-primitive":169}],345:[function(require,module,exports){
+},{"./_descriptors":78,"./_export":82,"./_object-forced-pam":122,"./_object-gopd":123,"./_object-gpo":127,"./_to-object":165,"./_to-primitive":166}],342:[function(require,module,exports){
 // https://github.com/tc39/proposal-object-values-entries
 var $export = require('./_export');
 var $values = require('./_object-to-array')(false);
@@ -46983,7 +46292,7 @@ $export($export.S, 'Object', {
   }
 });
 
-},{"./_export":85,"./_object-to-array":135}],346:[function(require,module,exports){
+},{"./_export":82,"./_object-to-array":132}],343:[function(require,module,exports){
 'use strict';
 // https://github.com/zenparsing/es-observable
 var $export = require('./_export');
@@ -47184,7 +46493,7 @@ $export($export.G, { Observable: $Observable });
 
 require('./_set-species')('Observable');
 
-},{"./_a-function":55,"./_an-instance":58,"./_an-object":59,"./_core":75,"./_export":85,"./_for-of":91,"./_global":92,"./_hide":94,"./_microtask":119,"./_redefine-all":142,"./_set-species":149,"./_wks":178}],347:[function(require,module,exports){
+},{"./_a-function":52,"./_an-instance":55,"./_an-object":56,"./_core":72,"./_export":82,"./_for-of":88,"./_global":89,"./_hide":91,"./_microtask":116,"./_redefine-all":139,"./_set-species":146,"./_wks":175}],344:[function(require,module,exports){
 // https://github.com/tc39/proposal-promise-finally
 'use strict';
 var $export = require('./_export');
@@ -47206,7 +46515,7 @@ $export($export.P + $export.R, 'Promise', { 'finally': function (onFinally) {
   );
 } });
 
-},{"./_core":75,"./_export":85,"./_global":92,"./_promise-resolve":140,"./_species-constructor":153}],348:[function(require,module,exports){
+},{"./_core":72,"./_export":82,"./_global":89,"./_promise-resolve":137,"./_species-constructor":150}],345:[function(require,module,exports){
 'use strict';
 // https://github.com/tc39/proposal-promise-try
 var $export = require('./_export');
@@ -47220,7 +46529,7 @@ $export($export.S, 'Promise', { 'try': function (callbackfn) {
   return promiseCapability.promise;
 } });
 
-},{"./_export":85,"./_new-promise-capability":120,"./_perform":139}],349:[function(require,module,exports){
+},{"./_export":82,"./_new-promise-capability":117,"./_perform":136}],346:[function(require,module,exports){
 var metadata = require('./_metadata');
 var anObject = require('./_an-object');
 var toMetaKey = metadata.key;
@@ -47230,7 +46539,7 @@ metadata.exp({ defineMetadata: function defineMetadata(metadataKey, metadataValu
   ordinaryDefineOwnMetadata(metadataKey, metadataValue, anObject(target), toMetaKey(targetKey));
 } });
 
-},{"./_an-object":59,"./_metadata":118}],350:[function(require,module,exports){
+},{"./_an-object":56,"./_metadata":115}],347:[function(require,module,exports){
 var metadata = require('./_metadata');
 var anObject = require('./_an-object');
 var toMetaKey = metadata.key;
@@ -47247,7 +46556,7 @@ metadata.exp({ deleteMetadata: function deleteMetadata(metadataKey, target /* , 
   return !!targetMetadata.size || store['delete'](target);
 } });
 
-},{"./_an-object":59,"./_metadata":118}],351:[function(require,module,exports){
+},{"./_an-object":56,"./_metadata":115}],348:[function(require,module,exports){
 var Set = require('./es6.set');
 var from = require('./_array-from-iterable');
 var metadata = require('./_metadata');
@@ -47268,7 +46577,7 @@ metadata.exp({ getMetadataKeys: function getMetadataKeys(target /* , targetKey *
   return ordinaryMetadataKeys(anObject(target), arguments.length < 2 ? undefined : toMetaKey(arguments[1]));
 } });
 
-},{"./_an-object":59,"./_array-from-iterable":62,"./_metadata":118,"./_object-gpo":130,"./es6.set":281}],352:[function(require,module,exports){
+},{"./_an-object":56,"./_array-from-iterable":59,"./_metadata":115,"./_object-gpo":127,"./es6.set":278}],349:[function(require,module,exports){
 var metadata = require('./_metadata');
 var anObject = require('./_an-object');
 var getPrototypeOf = require('./_object-gpo');
@@ -47287,7 +46596,7 @@ metadata.exp({ getMetadata: function getMetadata(metadataKey, target /* , target
   return ordinaryGetMetadata(metadataKey, anObject(target), arguments.length < 3 ? undefined : toMetaKey(arguments[2]));
 } });
 
-},{"./_an-object":59,"./_metadata":118,"./_object-gpo":130}],353:[function(require,module,exports){
+},{"./_an-object":56,"./_metadata":115,"./_object-gpo":127}],350:[function(require,module,exports){
 var metadata = require('./_metadata');
 var anObject = require('./_an-object');
 var ordinaryOwnMetadataKeys = metadata.keys;
@@ -47297,7 +46606,7 @@ metadata.exp({ getOwnMetadataKeys: function getOwnMetadataKeys(target /* , targe
   return ordinaryOwnMetadataKeys(anObject(target), arguments.length < 2 ? undefined : toMetaKey(arguments[1]));
 } });
 
-},{"./_an-object":59,"./_metadata":118}],354:[function(require,module,exports){
+},{"./_an-object":56,"./_metadata":115}],351:[function(require,module,exports){
 var metadata = require('./_metadata');
 var anObject = require('./_an-object');
 var ordinaryGetOwnMetadata = metadata.get;
@@ -47308,7 +46617,7 @@ metadata.exp({ getOwnMetadata: function getOwnMetadata(metadataKey, target /* , 
     , arguments.length < 3 ? undefined : toMetaKey(arguments[2]));
 } });
 
-},{"./_an-object":59,"./_metadata":118}],355:[function(require,module,exports){
+},{"./_an-object":56,"./_metadata":115}],352:[function(require,module,exports){
 var metadata = require('./_metadata');
 var anObject = require('./_an-object');
 var getPrototypeOf = require('./_object-gpo');
@@ -47326,7 +46635,7 @@ metadata.exp({ hasMetadata: function hasMetadata(metadataKey, target /* , target
   return ordinaryHasMetadata(metadataKey, anObject(target), arguments.length < 3 ? undefined : toMetaKey(arguments[2]));
 } });
 
-},{"./_an-object":59,"./_metadata":118,"./_object-gpo":130}],356:[function(require,module,exports){
+},{"./_an-object":56,"./_metadata":115,"./_object-gpo":127}],353:[function(require,module,exports){
 var metadata = require('./_metadata');
 var anObject = require('./_an-object');
 var ordinaryHasOwnMetadata = metadata.has;
@@ -47337,7 +46646,7 @@ metadata.exp({ hasOwnMetadata: function hasOwnMetadata(metadataKey, target /* , 
     , arguments.length < 3 ? undefined : toMetaKey(arguments[2]));
 } });
 
-},{"./_an-object":59,"./_metadata":118}],357:[function(require,module,exports){
+},{"./_an-object":56,"./_metadata":115}],354:[function(require,module,exports){
 var $metadata = require('./_metadata');
 var anObject = require('./_an-object');
 var aFunction = require('./_a-function');
@@ -47354,21 +46663,21 @@ $metadata.exp({ metadata: function metadata(metadataKey, metadataValue) {
   };
 } });
 
-},{"./_a-function":55,"./_an-object":59,"./_metadata":118}],358:[function(require,module,exports){
+},{"./_a-function":52,"./_an-object":56,"./_metadata":115}],355:[function(require,module,exports){
 // https://tc39.github.io/proposal-setmap-offrom/#sec-set.from
 require('./_set-collection-from')('Set');
 
-},{"./_set-collection-from":146}],359:[function(require,module,exports){
+},{"./_set-collection-from":143}],356:[function(require,module,exports){
 // https://tc39.github.io/proposal-setmap-offrom/#sec-set.of
 require('./_set-collection-of')('Set');
 
-},{"./_set-collection-of":147}],360:[function(require,module,exports){
+},{"./_set-collection-of":144}],357:[function(require,module,exports){
 // https://github.com/DavidBruant/Map-Set.prototype.toJSON
 var $export = require('./_export');
 
 $export($export.P + $export.R, 'Set', { toJSON: require('./_collection-to-json')('Set') });
 
-},{"./_collection-to-json":72,"./_export":85}],361:[function(require,module,exports){
+},{"./_collection-to-json":69,"./_export":82}],358:[function(require,module,exports){
 'use strict';
 // https://github.com/mathiasbynens/String.prototype.at
 var $export = require('./_export');
@@ -47380,7 +46689,7 @@ $export($export.P, 'String', {
   }
 });
 
-},{"./_export":85,"./_string-at":155}],362:[function(require,module,exports){
+},{"./_export":82,"./_string-at":152}],359:[function(require,module,exports){
 'use strict';
 // https://tc39.github.io/String.prototype.matchAll/
 var $export = require('./_export');
@@ -47412,7 +46721,7 @@ $export($export.P, 'String', {
   }
 });
 
-},{"./_defined":80,"./_export":85,"./_flags":89,"./_is-regexp":104,"./_iter-create":106,"./_to-length":167}],363:[function(require,module,exports){
+},{"./_defined":77,"./_export":82,"./_flags":86,"./_is-regexp":101,"./_iter-create":103,"./_to-length":164}],360:[function(require,module,exports){
 'use strict';
 // https://github.com/tc39/proposal-string-pad-start-end
 var $export = require('./_export');
@@ -47426,7 +46735,7 @@ $export($export.P + $export.F * /Version\/10\.\d+(\.\d+)? Safari\//.test(userAge
   }
 });
 
-},{"./_export":85,"./_string-pad":158,"./_user-agent":174}],364:[function(require,module,exports){
+},{"./_export":82,"./_string-pad":155,"./_user-agent":171}],361:[function(require,module,exports){
 'use strict';
 // https://github.com/tc39/proposal-string-pad-start-end
 var $export = require('./_export');
@@ -47440,7 +46749,7 @@ $export($export.P + $export.F * /Version\/10\.\d+(\.\d+)? Safari\//.test(userAge
   }
 });
 
-},{"./_export":85,"./_string-pad":158,"./_user-agent":174}],365:[function(require,module,exports){
+},{"./_export":82,"./_string-pad":155,"./_user-agent":171}],362:[function(require,module,exports){
 'use strict';
 // https://github.com/sebmarkbage/ecmascript-string-left-right-trim
 require('./_string-trim')('trimLeft', function ($trim) {
@@ -47449,7 +46758,7 @@ require('./_string-trim')('trimLeft', function ($trim) {
   };
 }, 'trimStart');
 
-},{"./_string-trim":160}],366:[function(require,module,exports){
+},{"./_string-trim":157}],363:[function(require,module,exports){
 'use strict';
 // https://github.com/sebmarkbage/ecmascript-string-left-right-trim
 require('./_string-trim')('trimRight', function ($trim) {
@@ -47458,35 +46767,35 @@ require('./_string-trim')('trimRight', function ($trim) {
   };
 }, 'trimEnd');
 
-},{"./_string-trim":160}],367:[function(require,module,exports){
+},{"./_string-trim":157}],364:[function(require,module,exports){
 require('./_wks-define')('asyncIterator');
 
-},{"./_wks-define":176}],368:[function(require,module,exports){
+},{"./_wks-define":173}],365:[function(require,module,exports){
 require('./_wks-define')('observable');
 
-},{"./_wks-define":176}],369:[function(require,module,exports){
+},{"./_wks-define":173}],366:[function(require,module,exports){
 // https://github.com/tc39/proposal-global
 var $export = require('./_export');
 
 $export($export.S, 'System', { global: require('./_global') });
 
-},{"./_export":85,"./_global":92}],370:[function(require,module,exports){
+},{"./_export":82,"./_global":89}],367:[function(require,module,exports){
 // https://tc39.github.io/proposal-setmap-offrom/#sec-weakmap.from
 require('./_set-collection-from')('WeakMap');
 
-},{"./_set-collection-from":146}],371:[function(require,module,exports){
+},{"./_set-collection-from":143}],368:[function(require,module,exports){
 // https://tc39.github.io/proposal-setmap-offrom/#sec-weakmap.of
 require('./_set-collection-of')('WeakMap');
 
-},{"./_set-collection-of":147}],372:[function(require,module,exports){
+},{"./_set-collection-of":144}],369:[function(require,module,exports){
 // https://tc39.github.io/proposal-setmap-offrom/#sec-weakset.from
 require('./_set-collection-from')('WeakSet');
 
-},{"./_set-collection-from":146}],373:[function(require,module,exports){
+},{"./_set-collection-from":143}],370:[function(require,module,exports){
 // https://tc39.github.io/proposal-setmap-offrom/#sec-weakset.of
 require('./_set-collection-of')('WeakSet');
 
-},{"./_set-collection-of":147}],374:[function(require,module,exports){
+},{"./_set-collection-of":144}],371:[function(require,module,exports){
 var $iterators = require('./es6.array.iterator');
 var getKeys = require('./_object-keys');
 var redefine = require('./_redefine');
@@ -47546,7 +46855,7 @@ for (var collections = getKeys(DOMIterables), i = 0; i < collections.length; i++
   }
 }
 
-},{"./_global":92,"./_hide":94,"./_iterators":110,"./_object-keys":132,"./_redefine":143,"./_wks":178,"./es6.array.iterator":191}],375:[function(require,module,exports){
+},{"./_global":89,"./_hide":91,"./_iterators":107,"./_object-keys":129,"./_redefine":140,"./_wks":175,"./es6.array.iterator":188}],372:[function(require,module,exports){
 var $export = require('./_export');
 var $task = require('./_task');
 $export($export.G + $export.B, {
@@ -47554,7 +46863,7 @@ $export($export.G + $export.B, {
   clearImmediate: $task.clear
 });
 
-},{"./_export":85,"./_task":162}],376:[function(require,module,exports){
+},{"./_export":82,"./_task":159}],373:[function(require,module,exports){
 // ie9- setTimeout & setInterval additional parameters fix
 var global = require('./_global');
 var $export = require('./_export');
@@ -47576,7 +46885,7 @@ $export($export.G + $export.B + $export.F * MSIE, {
   setInterval: wrap(global.setInterval)
 });
 
-},{"./_export":85,"./_global":92,"./_user-agent":174}],377:[function(require,module,exports){
+},{"./_export":82,"./_global":89,"./_user-agent":171}],374:[function(require,module,exports){
 require('./modules/es6.symbol');
 require('./modules/es6.object.create');
 require('./modules/es6.object.define-property');
@@ -47775,7 +47084,7 @@ require('./modules/web.immediate');
 require('./modules/web.dom.iterable');
 module.exports = require('./modules/_core');
 
-},{"./modules/_core":75,"./modules/es6.array.copy-within":181,"./modules/es6.array.every":182,"./modules/es6.array.fill":183,"./modules/es6.array.filter":184,"./modules/es6.array.find":186,"./modules/es6.array.find-index":185,"./modules/es6.array.for-each":187,"./modules/es6.array.from":188,"./modules/es6.array.index-of":189,"./modules/es6.array.is-array":190,"./modules/es6.array.iterator":191,"./modules/es6.array.join":192,"./modules/es6.array.last-index-of":193,"./modules/es6.array.map":194,"./modules/es6.array.of":195,"./modules/es6.array.reduce":197,"./modules/es6.array.reduce-right":196,"./modules/es6.array.slice":198,"./modules/es6.array.some":199,"./modules/es6.array.sort":200,"./modules/es6.array.species":201,"./modules/es6.date.now":202,"./modules/es6.date.to-iso-string":203,"./modules/es6.date.to-json":204,"./modules/es6.date.to-primitive":205,"./modules/es6.date.to-string":206,"./modules/es6.function.bind":207,"./modules/es6.function.has-instance":208,"./modules/es6.function.name":209,"./modules/es6.map":210,"./modules/es6.math.acosh":211,"./modules/es6.math.asinh":212,"./modules/es6.math.atanh":213,"./modules/es6.math.cbrt":214,"./modules/es6.math.clz32":215,"./modules/es6.math.cosh":216,"./modules/es6.math.expm1":217,"./modules/es6.math.fround":218,"./modules/es6.math.hypot":219,"./modules/es6.math.imul":220,"./modules/es6.math.log10":221,"./modules/es6.math.log1p":222,"./modules/es6.math.log2":223,"./modules/es6.math.sign":224,"./modules/es6.math.sinh":225,"./modules/es6.math.tanh":226,"./modules/es6.math.trunc":227,"./modules/es6.number.constructor":228,"./modules/es6.number.epsilon":229,"./modules/es6.number.is-finite":230,"./modules/es6.number.is-integer":231,"./modules/es6.number.is-nan":232,"./modules/es6.number.is-safe-integer":233,"./modules/es6.number.max-safe-integer":234,"./modules/es6.number.min-safe-integer":235,"./modules/es6.number.parse-float":236,"./modules/es6.number.parse-int":237,"./modules/es6.number.to-fixed":238,"./modules/es6.number.to-precision":239,"./modules/es6.object.assign":240,"./modules/es6.object.create":241,"./modules/es6.object.define-properties":242,"./modules/es6.object.define-property":243,"./modules/es6.object.freeze":244,"./modules/es6.object.get-own-property-descriptor":245,"./modules/es6.object.get-own-property-names":246,"./modules/es6.object.get-prototype-of":247,"./modules/es6.object.is":251,"./modules/es6.object.is-extensible":248,"./modules/es6.object.is-frozen":249,"./modules/es6.object.is-sealed":250,"./modules/es6.object.keys":252,"./modules/es6.object.prevent-extensions":253,"./modules/es6.object.seal":254,"./modules/es6.object.set-prototype-of":255,"./modules/es6.object.to-string":256,"./modules/es6.parse-float":257,"./modules/es6.parse-int":258,"./modules/es6.promise":259,"./modules/es6.reflect.apply":260,"./modules/es6.reflect.construct":261,"./modules/es6.reflect.define-property":262,"./modules/es6.reflect.delete-property":263,"./modules/es6.reflect.enumerate":264,"./modules/es6.reflect.get":267,"./modules/es6.reflect.get-own-property-descriptor":265,"./modules/es6.reflect.get-prototype-of":266,"./modules/es6.reflect.has":268,"./modules/es6.reflect.is-extensible":269,"./modules/es6.reflect.own-keys":270,"./modules/es6.reflect.prevent-extensions":271,"./modules/es6.reflect.set":273,"./modules/es6.reflect.set-prototype-of":272,"./modules/es6.regexp.constructor":274,"./modules/es6.regexp.flags":275,"./modules/es6.regexp.match":276,"./modules/es6.regexp.replace":277,"./modules/es6.regexp.search":278,"./modules/es6.regexp.split":279,"./modules/es6.regexp.to-string":280,"./modules/es6.set":281,"./modules/es6.string.anchor":282,"./modules/es6.string.big":283,"./modules/es6.string.blink":284,"./modules/es6.string.bold":285,"./modules/es6.string.code-point-at":286,"./modules/es6.string.ends-with":287,"./modules/es6.string.fixed":288,"./modules/es6.string.fontcolor":289,"./modules/es6.string.fontsize":290,"./modules/es6.string.from-code-point":291,"./modules/es6.string.includes":292,"./modules/es6.string.italics":293,"./modules/es6.string.iterator":294,"./modules/es6.string.link":295,"./modules/es6.string.raw":296,"./modules/es6.string.repeat":297,"./modules/es6.string.small":298,"./modules/es6.string.starts-with":299,"./modules/es6.string.strike":300,"./modules/es6.string.sub":301,"./modules/es6.string.sup":302,"./modules/es6.string.trim":303,"./modules/es6.symbol":304,"./modules/es6.typed.array-buffer":305,"./modules/es6.typed.data-view":306,"./modules/es6.typed.float32-array":307,"./modules/es6.typed.float64-array":308,"./modules/es6.typed.int16-array":309,"./modules/es6.typed.int32-array":310,"./modules/es6.typed.int8-array":311,"./modules/es6.typed.uint16-array":312,"./modules/es6.typed.uint32-array":313,"./modules/es6.typed.uint8-array":314,"./modules/es6.typed.uint8-clamped-array":315,"./modules/es6.weak-map":316,"./modules/es6.weak-set":317,"./modules/es7.array.flat-map":318,"./modules/es7.array.flatten":319,"./modules/es7.array.includes":320,"./modules/es7.asap":321,"./modules/es7.error.is-error":322,"./modules/es7.global":323,"./modules/es7.map.from":324,"./modules/es7.map.of":325,"./modules/es7.map.to-json":326,"./modules/es7.math.clamp":327,"./modules/es7.math.deg-per-rad":328,"./modules/es7.math.degrees":329,"./modules/es7.math.fscale":330,"./modules/es7.math.iaddh":331,"./modules/es7.math.imulh":332,"./modules/es7.math.isubh":333,"./modules/es7.math.rad-per-deg":334,"./modules/es7.math.radians":335,"./modules/es7.math.scale":336,"./modules/es7.math.signbit":337,"./modules/es7.math.umulh":338,"./modules/es7.object.define-getter":339,"./modules/es7.object.define-setter":340,"./modules/es7.object.entries":341,"./modules/es7.object.get-own-property-descriptors":342,"./modules/es7.object.lookup-getter":343,"./modules/es7.object.lookup-setter":344,"./modules/es7.object.values":345,"./modules/es7.observable":346,"./modules/es7.promise.finally":347,"./modules/es7.promise.try":348,"./modules/es7.reflect.define-metadata":349,"./modules/es7.reflect.delete-metadata":350,"./modules/es7.reflect.get-metadata":352,"./modules/es7.reflect.get-metadata-keys":351,"./modules/es7.reflect.get-own-metadata":354,"./modules/es7.reflect.get-own-metadata-keys":353,"./modules/es7.reflect.has-metadata":355,"./modules/es7.reflect.has-own-metadata":356,"./modules/es7.reflect.metadata":357,"./modules/es7.set.from":358,"./modules/es7.set.of":359,"./modules/es7.set.to-json":360,"./modules/es7.string.at":361,"./modules/es7.string.match-all":362,"./modules/es7.string.pad-end":363,"./modules/es7.string.pad-start":364,"./modules/es7.string.trim-left":365,"./modules/es7.string.trim-right":366,"./modules/es7.symbol.async-iterator":367,"./modules/es7.symbol.observable":368,"./modules/es7.system.global":369,"./modules/es7.weak-map.from":370,"./modules/es7.weak-map.of":371,"./modules/es7.weak-set.from":372,"./modules/es7.weak-set.of":373,"./modules/web.dom.iterable":374,"./modules/web.immediate":375,"./modules/web.timers":376}],378:[function(require,module,exports){
+},{"./modules/_core":72,"./modules/es6.array.copy-within":178,"./modules/es6.array.every":179,"./modules/es6.array.fill":180,"./modules/es6.array.filter":181,"./modules/es6.array.find":183,"./modules/es6.array.find-index":182,"./modules/es6.array.for-each":184,"./modules/es6.array.from":185,"./modules/es6.array.index-of":186,"./modules/es6.array.is-array":187,"./modules/es6.array.iterator":188,"./modules/es6.array.join":189,"./modules/es6.array.last-index-of":190,"./modules/es6.array.map":191,"./modules/es6.array.of":192,"./modules/es6.array.reduce":194,"./modules/es6.array.reduce-right":193,"./modules/es6.array.slice":195,"./modules/es6.array.some":196,"./modules/es6.array.sort":197,"./modules/es6.array.species":198,"./modules/es6.date.now":199,"./modules/es6.date.to-iso-string":200,"./modules/es6.date.to-json":201,"./modules/es6.date.to-primitive":202,"./modules/es6.date.to-string":203,"./modules/es6.function.bind":204,"./modules/es6.function.has-instance":205,"./modules/es6.function.name":206,"./modules/es6.map":207,"./modules/es6.math.acosh":208,"./modules/es6.math.asinh":209,"./modules/es6.math.atanh":210,"./modules/es6.math.cbrt":211,"./modules/es6.math.clz32":212,"./modules/es6.math.cosh":213,"./modules/es6.math.expm1":214,"./modules/es6.math.fround":215,"./modules/es6.math.hypot":216,"./modules/es6.math.imul":217,"./modules/es6.math.log10":218,"./modules/es6.math.log1p":219,"./modules/es6.math.log2":220,"./modules/es6.math.sign":221,"./modules/es6.math.sinh":222,"./modules/es6.math.tanh":223,"./modules/es6.math.trunc":224,"./modules/es6.number.constructor":225,"./modules/es6.number.epsilon":226,"./modules/es6.number.is-finite":227,"./modules/es6.number.is-integer":228,"./modules/es6.number.is-nan":229,"./modules/es6.number.is-safe-integer":230,"./modules/es6.number.max-safe-integer":231,"./modules/es6.number.min-safe-integer":232,"./modules/es6.number.parse-float":233,"./modules/es6.number.parse-int":234,"./modules/es6.number.to-fixed":235,"./modules/es6.number.to-precision":236,"./modules/es6.object.assign":237,"./modules/es6.object.create":238,"./modules/es6.object.define-properties":239,"./modules/es6.object.define-property":240,"./modules/es6.object.freeze":241,"./modules/es6.object.get-own-property-descriptor":242,"./modules/es6.object.get-own-property-names":243,"./modules/es6.object.get-prototype-of":244,"./modules/es6.object.is":248,"./modules/es6.object.is-extensible":245,"./modules/es6.object.is-frozen":246,"./modules/es6.object.is-sealed":247,"./modules/es6.object.keys":249,"./modules/es6.object.prevent-extensions":250,"./modules/es6.object.seal":251,"./modules/es6.object.set-prototype-of":252,"./modules/es6.object.to-string":253,"./modules/es6.parse-float":254,"./modules/es6.parse-int":255,"./modules/es6.promise":256,"./modules/es6.reflect.apply":257,"./modules/es6.reflect.construct":258,"./modules/es6.reflect.define-property":259,"./modules/es6.reflect.delete-property":260,"./modules/es6.reflect.enumerate":261,"./modules/es6.reflect.get":264,"./modules/es6.reflect.get-own-property-descriptor":262,"./modules/es6.reflect.get-prototype-of":263,"./modules/es6.reflect.has":265,"./modules/es6.reflect.is-extensible":266,"./modules/es6.reflect.own-keys":267,"./modules/es6.reflect.prevent-extensions":268,"./modules/es6.reflect.set":270,"./modules/es6.reflect.set-prototype-of":269,"./modules/es6.regexp.constructor":271,"./modules/es6.regexp.flags":272,"./modules/es6.regexp.match":273,"./modules/es6.regexp.replace":274,"./modules/es6.regexp.search":275,"./modules/es6.regexp.split":276,"./modules/es6.regexp.to-string":277,"./modules/es6.set":278,"./modules/es6.string.anchor":279,"./modules/es6.string.big":280,"./modules/es6.string.blink":281,"./modules/es6.string.bold":282,"./modules/es6.string.code-point-at":283,"./modules/es6.string.ends-with":284,"./modules/es6.string.fixed":285,"./modules/es6.string.fontcolor":286,"./modules/es6.string.fontsize":287,"./modules/es6.string.from-code-point":288,"./modules/es6.string.includes":289,"./modules/es6.string.italics":290,"./modules/es6.string.iterator":291,"./modules/es6.string.link":292,"./modules/es6.string.raw":293,"./modules/es6.string.repeat":294,"./modules/es6.string.small":295,"./modules/es6.string.starts-with":296,"./modules/es6.string.strike":297,"./modules/es6.string.sub":298,"./modules/es6.string.sup":299,"./modules/es6.string.trim":300,"./modules/es6.symbol":301,"./modules/es6.typed.array-buffer":302,"./modules/es6.typed.data-view":303,"./modules/es6.typed.float32-array":304,"./modules/es6.typed.float64-array":305,"./modules/es6.typed.int16-array":306,"./modules/es6.typed.int32-array":307,"./modules/es6.typed.int8-array":308,"./modules/es6.typed.uint16-array":309,"./modules/es6.typed.uint32-array":310,"./modules/es6.typed.uint8-array":311,"./modules/es6.typed.uint8-clamped-array":312,"./modules/es6.weak-map":313,"./modules/es6.weak-set":314,"./modules/es7.array.flat-map":315,"./modules/es7.array.flatten":316,"./modules/es7.array.includes":317,"./modules/es7.asap":318,"./modules/es7.error.is-error":319,"./modules/es7.global":320,"./modules/es7.map.from":321,"./modules/es7.map.of":322,"./modules/es7.map.to-json":323,"./modules/es7.math.clamp":324,"./modules/es7.math.deg-per-rad":325,"./modules/es7.math.degrees":326,"./modules/es7.math.fscale":327,"./modules/es7.math.iaddh":328,"./modules/es7.math.imulh":329,"./modules/es7.math.isubh":330,"./modules/es7.math.rad-per-deg":331,"./modules/es7.math.radians":332,"./modules/es7.math.scale":333,"./modules/es7.math.signbit":334,"./modules/es7.math.umulh":335,"./modules/es7.object.define-getter":336,"./modules/es7.object.define-setter":337,"./modules/es7.object.entries":338,"./modules/es7.object.get-own-property-descriptors":339,"./modules/es7.object.lookup-getter":340,"./modules/es7.object.lookup-setter":341,"./modules/es7.object.values":342,"./modules/es7.observable":343,"./modules/es7.promise.finally":344,"./modules/es7.promise.try":345,"./modules/es7.reflect.define-metadata":346,"./modules/es7.reflect.delete-metadata":347,"./modules/es7.reflect.get-metadata":349,"./modules/es7.reflect.get-metadata-keys":348,"./modules/es7.reflect.get-own-metadata":351,"./modules/es7.reflect.get-own-metadata-keys":350,"./modules/es7.reflect.has-metadata":352,"./modules/es7.reflect.has-own-metadata":353,"./modules/es7.reflect.metadata":354,"./modules/es7.set.from":355,"./modules/es7.set.of":356,"./modules/es7.set.to-json":357,"./modules/es7.string.at":358,"./modules/es7.string.match-all":359,"./modules/es7.string.pad-end":360,"./modules/es7.string.pad-start":361,"./modules/es7.string.trim-left":362,"./modules/es7.string.trim-right":363,"./modules/es7.symbol.async-iterator":364,"./modules/es7.symbol.observable":365,"./modules/es7.system.global":366,"./modules/es7.weak-map.from":367,"./modules/es7.weak-map.of":368,"./modules/es7.weak-set.from":369,"./modules/es7.weak-set.of":370,"./modules/web.dom.iterable":371,"./modules/web.immediate":372,"./modules/web.timers":373}],375:[function(require,module,exports){
 
 module.exports = require('./socket');
 
@@ -47787,7 +47096,7 @@ module.exports = require('./socket');
  */
 module.exports.parser = require('engine.io-parser');
 
-},{"./socket":379,"engine.io-parser":389}],379:[function(require,module,exports){
+},{"./socket":376,"engine.io-parser":386}],376:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies.
@@ -48534,7 +47843,7 @@ Socket.prototype.filterUpgrades = function (upgrades) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./transport":380,"./transports/index":381,"component-emitter":52,"debug":387,"engine.io-parser":389,"indexof":396,"parseqs":404,"parseuri":405}],380:[function(require,module,exports){
+},{"./transport":377,"./transports/index":378,"component-emitter":49,"debug":384,"engine.io-parser":386,"indexof":393,"parseqs":481,"parseuri":482}],377:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -48693,7 +48002,7 @@ Transport.prototype.onClose = function () {
   this.emit('close');
 };
 
-},{"component-emitter":52,"engine.io-parser":389}],381:[function(require,module,exports){
+},{"component-emitter":49,"engine.io-parser":386}],378:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies
@@ -48750,7 +48059,7 @@ function polling (opts) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./polling-jsonp":382,"./polling-xhr":383,"./websocket":385,"xmlhttprequest-ssl":386}],382:[function(require,module,exports){
+},{"./polling-jsonp":379,"./polling-xhr":380,"./websocket":382,"xmlhttprequest-ssl":383}],379:[function(require,module,exports){
 (function (global){
 
 /**
@@ -48985,7 +48294,7 @@ JSONPPolling.prototype.doWrite = function (data, fn) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./polling":384,"component-inherit":53}],383:[function(require,module,exports){
+},{"./polling":381,"component-inherit":50}],380:[function(require,module,exports){
 (function (global){
 /**
  * Module requirements.
@@ -49401,7 +48710,7 @@ function unloadHandler () {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./polling":384,"component-emitter":52,"component-inherit":53,"debug":387,"xmlhttprequest-ssl":386}],384:[function(require,module,exports){
+},{"./polling":381,"component-emitter":49,"component-inherit":50,"debug":384,"xmlhttprequest-ssl":383}],381:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -49648,7 +48957,7 @@ Polling.prototype.uri = function () {
   return schema + '://' + (ipv6 ? '[' + this.hostname + ']' : this.hostname) + port + this.path + query;
 };
 
-},{"../transport":380,"component-inherit":53,"debug":387,"engine.io-parser":389,"parseqs":404,"xmlhttprequest-ssl":386,"yeast":424}],385:[function(require,module,exports){
+},{"../transport":377,"component-inherit":50,"debug":384,"engine.io-parser":386,"parseqs":481,"xmlhttprequest-ssl":383,"yeast":504}],382:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies.
@@ -49938,7 +49247,7 @@ WS.prototype.check = function () {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../transport":380,"component-inherit":53,"debug":387,"engine.io-parser":389,"parseqs":404,"ws":47,"yeast":424}],386:[function(require,module,exports){
+},{"../transport":377,"component-inherit":50,"debug":384,"engine.io-parser":386,"parseqs":481,"ws":44,"yeast":504}],383:[function(require,module,exports){
 (function (global){
 // browser shim for xmlhttprequest module
 
@@ -49979,7 +49288,7 @@ module.exports = function (opts) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"has-cors":394}],387:[function(require,module,exports){
+},{"has-cors":391}],384:[function(require,module,exports){
 (function (process){
 /**
  * This is the web browser implementation of `debug()`.
@@ -50178,7 +49487,7 @@ function localstorage() {
 }
 
 }).call(this,require('_process'))
-},{"./debug":388,"_process":406}],388:[function(require,module,exports){
+},{"./debug":385,"_process":483}],385:[function(require,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -50405,7 +49714,7 @@ function coerce(val) {
   return val;
 }
 
-},{"ms":398}],389:[function(require,module,exports){
+},{"ms":395}],386:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies.
@@ -51015,7 +50324,7 @@ exports.decodePayloadAsBinary = function (data, binaryType, callback) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./keys":390,"./utf8":391,"after":40,"arraybuffer.slice":41,"base64-arraybuffer":45,"blob":46,"has-binary2":392}],390:[function(require,module,exports){
+},{"./keys":387,"./utf8":388,"after":37,"arraybuffer.slice":38,"base64-arraybuffer":42,"blob":43,"has-binary2":389}],387:[function(require,module,exports){
 
 /**
  * Gets the keys for an object.
@@ -51036,7 +50345,7 @@ module.exports = Object.keys || function keys (obj){
   return arr;
 };
 
-},{}],391:[function(require,module,exports){
+},{}],388:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/utf8js v2.1.2 by @mathias */
 ;(function(root) {
@@ -51295,7 +50604,7 @@ module.exports = Object.keys || function keys (obj){
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],392:[function(require,module,exports){
+},{}],389:[function(require,module,exports){
 (function (Buffer){
 /* global Blob File */
 
@@ -51363,14 +50672,14 @@ function hasBinary (obj) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":49,"isarray":393}],393:[function(require,module,exports){
+},{"buffer":46,"isarray":390}],390:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],394:[function(require,module,exports){
+},{}],391:[function(require,module,exports){
 
 /**
  * Module exports.
@@ -51389,7 +50698,7 @@ try {
   module.exports = false;
 }
 
-},{}],395:[function(require,module,exports){
+},{}],392:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = (nBytes * 8) - mLen - 1
@@ -51475,7 +50784,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],396:[function(require,module,exports){
+},{}],393:[function(require,module,exports){
 
 var indexOf = [].indexOf;
 
@@ -51486,7 +50795,7 @@ module.exports = function(arr, obj){
   }
   return -1;
 };
-},{}],397:[function(require,module,exports){
+},{}],394:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v3.3.1
  * https://jquery.com/
@@ -61852,7 +61161,7 @@ if ( !noGlobal ) {
 return jQuery;
 } );
 
-},{}],398:[function(require,module,exports){
+},{}],395:[function(require,module,exports){
 /**
  * Helpers.
  */
@@ -62006,124 +61315,2176 @@ function plural(ms, n, name) {
   return Math.ceil(ms / n) + ' ' + name + 's';
 }
 
+},{}],396:[function(require,module,exports){
+arguments[4][107][0].apply(exports,arguments)
+},{"dup":107}],397:[function(require,module,exports){
+module.exports = {
+0: `[root [nsubj I] have [obj [amod [advmod too] many] commitments] [advmod right now] [punct .]]`
+};
+
+},{}],398:[function(require,module,exports){
+module.exports = {
+nested: `# sent_id = wikipedia:Poyvi_Paraguái:11
+# text = Poyvi peteĩha ñane retãmegua niko ojepuru’ypýkuri 15 jasypo guive 16 jasypoteĩ meve ary 1811-pe.
+# text[spa] = Bandera uno nosotros de-de _ él-se-utilizó-_ 15 maio desde 16 junio hasta año 1811-en.
+"<Poyvi>"
+	"poyvi" n
+"<peteĩha>"
+	"pete" n incp
+		"ĩ" v tv pres
+			"ha" subs
+	"peteĩha" num
+"<ñane>"
+	"ñandé" prn pers p1 incl pl
+"<retãmegua>"
+	"*retãmegua"
+"<niko>"
+	"*niko"
+"<ojepuruʼypýkuri>"
+	"*ojepuruʼypýkuri"
+"<15>"
+	"15" num @amod
+"<jasypo>"
+	"ja" n incp
+		"sy" n incp
+			"po" n
+	"ja" n incp
+		"sy" n incp
+			"po" v iv pres
+	"ja" n incp
+		"sy" n incp
+			"po" v tv pres
+	"ja" prn p1 pl
+		"sy" n incp
+			"po" n
+	"ja" prn p1 pl
+		"sy" n incp
+			"po" v iv pres
+	"ja" prn p1 pl
+		"sy" n incp
+			"po" v tv pres
+	"jasy" n incp
+		"po" n
+	"jasy" n incp
+		"po" v iv pres
+	"jasy" n incp
+		"po" v tv pres
+	"jasypo" n
+"<guive>"
+	"guive" post @case
+"<16>"
+	"16" num @amod
+"<jasypoteĩ>"
+	"jasypoteĩ" n
+"<meve>"
+	"peve" post @case
+"<ary>"
+	"ary" n
+"<1811-pe>"
+	"1811" num
+		"pe" post @case`,
+
+/*nested_2: `"<ab>"
+	"A" #1->
+		"B" #2->
+"<cde>"
+	"C" #3->
+		"D" #4->
+			"E" #5->
+"<f>"
+	"F" #6->
+"<h>"
+	"H" #7->`,*/
+
+kdt_tagged_1: `# https://github.com/apertium/apertium-kaz/blob/master/texts/kdt.tagged.txt
+"<Өскеменнің>"
+	"Өскемен" np top gen @nmod:poss #1->3
+"<ар>"
+	"ар" adj @amod #2->3
+"<жағында>"
+	"жақ" n px3sp loc @conj #3->7
+"<,>"
+	"," cm @punct #4->7
+"<Бұқтырманың>"
+	"Бұқтырма" np top gen @nmod:poss #5->7
+"<оң>"
+	"оң" adj @amod #6->7
+"<жағында>"
+	"жақ" n px3sp loc @nmod #7->11
+"<әлемге>"
+	"әлем" n dat @nmod #8->9
+"<аян>"
+	"аян" adj @acl #9->10
+"<Алтай>"
+	"Алтай" np top nom @nsubj #10->11
+"<бар>"
+	"бар" adj @root #11->0
+		"е" cop aor p3 sg @cop #12->11
+"<.>"
+	"." sent @punct #13->11`,
+
+kdt_tagged_2: `# https://github.com/apertium/apertium-kaz/blob/master/texts/kdt.tagged.txt
+"<Аттан>"
+	"аттан" v iv imp p2 sg @root #1->0
+"<!>"
+	"!" sent @punct #2->1`,
+
+kdt_tagged_3: `# https://github.com/apertium/apertium-kaz/blob/master/texts/kdt.tagged.txt
+"<Манағы>"
+	"манағы" det dem @det #1->3
+"<ала>"
+	"ала" adj @amod #2->3
+"<атты>"
+	"атты" adj subst nom @nsubj #3->4
+"<кім>"
+	"кім" prn itg nom @root #4->0
+		"е" cop aor p3 sg @cop #5->4
+"<?>"
+	"?" sent @punct #6->4`,
+
+0: `"<Патшамен>"
+	"патша" n ins @nmod #1->3
+"<соғыс>"
+	"соғыс" n nom @obj #2->3
+"<ашқанда>"
+	"аш" v tv ger_past loc @advcl #3->12
+"<,>"
+	"," cm @punct #4->12
+"<ел-жұрт>"
+	"ел-жұрт" n nom @conj #5->7
+"<,>"
+	"," cm @punct #6->7
+"<отанымды>"
+	"отан" n px1sg acc @obj #7->8
+"<қорғауға>"
+	"қорға" v tv ger dat @advcl #8->12
+"<,>"
+	"," cm @punct #9->12
+"<біз>"
+	"біз" prn pers p1 pl nom @nsubj #10->12
+"<соғысқа>"
+	"соғыс" n dat @nmod #11->12
+"<бардық>"
+	"бар" v iv ifi p1 pl @root #12->0
+"<.>"
+	"." sent @punct #13->12`,
+
+1: `# text = He boued e tebr Mona er gegin.
+# text[eng] = Mona eats her food here in the kitchen.
+# labels = press_1986 ch_syntax p_197 to_check
+"<He>"
+	"he" det pos f sp @det #1->2
+"<boued>"
+	"boued" n m sg @obj #2->4
+"<e>"
+	"e" vpart obj @aux #3->4
+"<tebr>"
+	"debriñ" vblex pri p3 sg @root #4->0
+"<Mona>"
+	"Mona" np ant f sg @nsubj #5->4
+"<er>"
+	"e" pr @case #6->8
+		"an" det def sp @det #7->8
+"<gegin>"
+	"kegin" n f sg @obl #8->4
+"<.>"
+	"." sent @punct #9->4`,
+
+2: `# text = He boued e tebr Mona er gegin.
+# text[eng] = Mona eats her food here in the kitchen.
+# labels = press_1986 ch_syntax p_197 to_check
+"<He>"
+	"he" det pos f sp @det #1->2
+"<boued>"
+	"boued" n m sg @obj #2->4
+"<e>"
+	"e" vpart obj @aux #3->4
+"<tebr>"
+	"debriñ" vblex pri p3 sg @root #4->0
+"<Mona>"
+	"Mona" np ant f sg @nsubj #5->4
+"<er>"
+	"e" pr @case #6->8
+		"an" det def sp @det #7->8
+"<gegin>"
+	"kegin" n f sg @obl #8->4
+	"kegin" n f pl @obl #9->
+"<.>"
+	"." sent @punct #10->4`, // note: changed line `"kegin" n f pl @obl #8->4`
+
+with_semicolumn: `
+"<Siedzieliśmy>"
+	"siedzieć" vblex impf past p1 m pl
+"<w>"
+	"w" pr
+"<moim>"
+;   "mój" prn pos mi sg loc
+"<pokoju>"
+	"pokój" n mi sg loc
+"<,>"
+	"," cm
+"<paląc>"
+	"palić" vblex impf pprs adv
+"<i>"
+	"i" cnjcoo
+"<rozmawiając>"
+	"rozmawiać" vblex impf pprs adv
+"<o>"
+	"o" pr
+"<tem>"
+	"to" prn dem mi sg loc
+"<,>"
+	"," cm
+"<jak>"
+	"jak" rel adv
+"<marni>"
+	"marny" adj sint mp pl nom
+"<jesteśmy>"
+	"być" vbser pres p1 pl
+"<,>"
+	"," cm
+"<marni>"
+	"marny" adj sint mp pl nom
+"<z>"
+	"z" pr
+"<lekarskiego>"
+	"lekarski" adj mi sg gen
+"<punktu>"
+	"punkt" n mi sg gen
+"<widzenia>"
+;   "widzieć" vblex impf ger nt sg gen
+"<chcę>"
+	"chcieć" vblex impf pres p1 sg
+"<powiedzieć>"
+	"powiedzieć" vblex perf inf
+"<,>"
+	"," cm
+"<naturalnie>"
+	"naturalnie" adv sint
+"<.>"
+	"." sent`,
+
+simple: `"<Патшамен>"
+	"патша" n ins @nmod #1->3
+"<соғыс>"
+	"соғыс" n nom @obj #2->3
+"<ашқанда>"
+	"аш" v tv ger_past loc @advcl #3->12
+"<,>"
+	"," cm @punct #4->12
+"<ел-жұрт>"
+	"ел-жұрт" n nom @conj #5->7
+"<,>"
+	"," cm @punct #6->7
+"<отанымды>"
+	"отан" n px1sg acc @obj #7->8
+"<қорғауға>"
+	"қорға" v tv ger dat @advcl #8->12
+"<,>"
+	"," cm @punct #9->12
+"<біз>"
+	"біз" prn pers p1 pl nom @nsubj #10->12
+"<соғысқа>"
+	"соғыс" n dat @nmod #11->12
+"<бардық>"
+	"бар" v iv ifi p1 pl @root #12->0
+"<.>"
+	"." sent @punct #13->12`,
+
+simple_with_comments: `# comment #1
+# comment #2
+"<Патшамен>"
+	"патша" n ins @nmod #1->3
+"<соғыс>"
+	"соғыс" n nom @obj #2->3
+"<ашқанда>"
+	"аш" v tv ger_past loc @advcl #3->12
+"<,>"
+	"," cm @punct #4->12
+"<ел-жұрт>"
+	"ел-жұрт" n nom @conj #5->7
+"<,>"
+	"," cm @punct #6->7
+"<отанымды>"
+	"отан" n px1sg acc @obj #7->8
+"<қорғауға>"
+	"қорға" v tv ger dat @advcl #8->12
+"<,>"
+	"," cm @punct #9->12
+"<біз>"
+	"біз" prn pers p1 pl nom @nsubj #10->12
+"<соғысқа>"
+	"соғыс" n dat @nmod #11->12
+"<бардық>"
+	"бар" v iv ifi p1 pl @root #12->0
+"<.>"
+	"." sent @punct #13->12`,
+
+with_spans: `# text = He boued e tebr Mona er gegin.
+# text[eng] = Mona eats her food here in the kitchen.
+# labels = press_1986 ch_syntax p_197 to_check
+"<He>"
+	"he" det pos f sp @det #1->2
+"<boued>"
+	"boued" n m sg @obj #2->4
+"<e>"
+	"e" vpart obj @aux #3->4
+"<tebr>"
+	"debriñ" vblex pri p3 sg @root #4->0
+"<Mona>"
+	"Mona" np ant f sg @nsubj #5->4
+"<er>"
+	"e" pr @case #6->8
+		"an" det def sp @det #7->8
+"<gegin>"
+	"kegin" n f sg @obl #8->4
+"<.>"
+	"." sent @punct #9->4`,
+
+apertium_kaz_1: `# https://bpaste.net/show/be7c03e6213e
+"<Чау>"
+	"*Чау"
+"<->"
+	"х" guio
+	"-" guio
+"<чау>"
+	"*чау"
+"<шығу>"
+	"шығу" n attr
+	"шық" v tv ger nom
+	"шық" v iv ger nom
+	"шығу" n nom
+;	"шығу" n nom
+;		"е" cop aor p3 pl REMOVE:294
+;	"шығу" n nom
+;		"е" cop aor p3 sg REMOVE:294
+;	"шық" vaux ger nom REMOVE:766
+"<тегінен>"
+	"тек" n px3sp abl
+;	"тек" n px3sp abl
+;		"е" cop aor p3 pl REMOVE:294
+;	"тек" n px3sp abl
+;		"е" cop aor p3 sg REMOVE:294
+"<шпицтер>"
+	"*шпицтер"
+"<тобына>"
+	"топ" n px3sp dat
+"<жатады>"
+	"жат" v iv aor p3 sg
+;	"жат" vaux aor p3 pl REMOVE:766
+;	"жат" vaux aor p3 sg REMOVE:766
+;	"жат" v iv aor p3 pl REMOVE:846
+"<.>"
+	"." sent`,
+
+apertium_kaz_2: `# https://bpaste.net/show/be7c03e6213e
+"<Қанында>"
+	"қан" n px3sp loc
+;	"қан" n px3sp loc
+;		"е" cop aor p3 pl REMOVE:294
+;	"қан" n px3sp loc
+;		"е" cop aor p3 sg REMOVE:294
+"<тибет>"
+	"*тибет"
+"<итінің>"
+	"ит" n px3sp gen
+"<(>"
+	"(" lpar
+"<мастиф>"
+	"*мастиф"
+"<)>"
+	")" rpar
+"<қаны>"
+	"қан" n px3sp nom
+;	"қан" n px3sp nom
+;		"е" cop aor p3 pl REMOVE:294
+;	"қан" n px3sp nom
+;		"е" cop aor p3 sg REMOVE:294
+"<бар>"
+	"бар" adj SELECT:1118
+	"бар" adj subst nom SELECT:1118
+		"е" cop aor p3 sg
+	"бар" adj subst nom SELECT:1118
+	"бар" adj SELECT:1118
+		"е" cop aor p3 sg
+;	"бар" n attr REMOVE:567
+;	"бар" adj
+;		"е" cop aor p3 pl REMOVE:853
+;	"бар" n nom
+;		"е" cop aor p3 pl REMOVE:853
+;	"бар" adj subst nom
+;		"е" cop aor p3 pl REMOVE:853
+;	"бар" n nom SELECT:1118
+;	"бар" det qnt SELECT:1118
+;	"бар" v iv imp p2 sg SELECT:1118
+;	"бар" n nom SELECT:1118
+;		"е" cop aor p3 sg
+"<деген>"
+	"де" v tv gpr_past SELECT:813
+	"де" v tv gpr_past subst nom SELECT:813
+;	"де" v tv ger_past nom SELECT:813
+;	"де" v tv past p3 pl SELECT:813
+;	"де" v tv past p3 sg SELECT:813
+"<тұжырым>"
+	"тұжырым" n nom
+	"тұжырым" n attr
+;	"тұжырым" n nom
+;		"е" cop aor p3 pl REMOVE:294
+;	"тұжырым" n nom
+;		"е" cop aor p3 sg REMOVE:294
+"<бар>"
+	"бар" adj
+	"бар" n nom
+	"бар" adj
+		"е" cop aor p3 sg
+	"бар" adj subst nom
+		"е" cop aor p3 sg
+	"бар" adj subst nom
+	"бар" v iv imp p2 sg
+	"бар" n nom
+		"е" cop aor p3 sg
+;	"бар" det qnt REMOVE:551
+;	"бар" n attr REMOVE:567
+;	"бар" adj subst nom
+;		"е" cop aor p3 pl REMOVE:853
+;	"бар" adj
+;		"е" cop aor p3 pl REMOVE:853
+;	"бар" n nom
+;		"е" cop aor p3 pl REMOVE:853
+"<.>"
+	"." sent`
+
+};
+
 },{}],399:[function(require,module,exports){
+module.exports = {
+labels_1: `# text = "This is a simple sentence."
+# labels = label1 another_label a-third-label
+1	This	This	_	_	_	_	_	_	_
+2	is	is	_	_	_	_	_	_	_
+3	a	a	_	_	_	_	_	_	_
+4	simple	simple	_	_	_	_	_	_	_
+5	sentence	sentence	_	_	_	_	_	_	_
+6	.	.	PUNCT	PUNCT	_	_	_	_	_`,
+
+labels_2: `# labels = one_label second third-label
+# labels = row_2 again:here this, that
+1	This	This	_	_	_	_	_	_	_`,
+
+labels_3: `# tags = this-is-a-tag test testing test
+1	This	This	_	_	_	_	_	_	_`,
+
+labels_4: `# labels = new label1 one_label this-is-a-tag
+1	Hullo	hello	_	_	_	_	_	_	_`,
+
+nested_2: `# text = ab cde f h
+1-2	ab	_	_	_	_	_	_	_	_
+1	a	A	_	_	_	_	_	_	_
+2	b	B	_	_	_	_	_	_	_
+3-5	cde	_	_	_	_	_	_	_	_
+3	c	C	_	_	_	_	_	_	_
+4	d	D	_	_	_	_	_	_	_
+5	e	E	_	_	_	_	_	_	_
+6	f	F	_	_	_	_	_	_	_
+6.1	silent_g	G	_	_	_	_	_	_	_
+7	h	H	_	_	_	_	_	_	_`,
+
+t: `# testing :)
+1-3	He	_	_	_	_	_	_	_	_
+1	boued	boued	n	_	m|sg	4	obj	_	_
+2	e	e	vpart	_	obj	4	aux	_	_
+3	tebr	debriñ	vblex	_	pri|p3|sg	0	root	_	_
+4	doob	doobie	np	_	_	3	_	_	_
+5	Mona	Mona	np	_	ant|f|sg	4	nsubj	_	_`,
+
+empty: `1      Sue       Sue       _       _       _       _       _       _       _
+2      likes     like       _       _       _       _       _       _       _
+3      coffee    coffee       _       _       _       _       _       _       _
+4      and       and       _       _       _       _       _       _       _
+5      Bill      Bill       _       _       _       _       _       _       _
+5.1    likes     like       _       _       _       _       _       _       _
+6      tea       tea       _       _       _       _       _       _       _`,
+
+0: `# sent_id = _
+# text = this is a test
+1	this	_	_	_	_	_	_	_	_
+2	is	_	_	_	_	_	_	_	_
+3	a	_	_	_	_	_	_	_	_
+4	test	_	_	_	_	_	_	_	_`,
+
+1: `1	this	_	_	_	_	_	_	_	_
+2	is	_	_	_	_	_	_	_	_
+3	a	_	_	_	_	_	_	_	_
+4	test	_	_	_	_	_	_	_	_`,
+
+cat_ancora: `# url = https://raw.githubusercontent.com/UniversalDependencies/UD_Catalan-AnCora/dev/ca_ancora-ud-test.conllu
+# sent_id = test-s1
+# text = El darrer número de l'Observatori del Mercat de Treball d'Osona inclou un informe especial sobre la contractació a través de les empreses de treball temporal, les ETT.
+# orig_file_sentence 001#1
+1	El	el	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	3	det	_	_
+2	darrer	darrer	ADJ	ADJ	Gender=Masc|Number=Sing|NumType=Ord	3	amod	_	_
+3	número	número	NOUN	NOUN	Gender=Masc|Number=Sing	13	nsubj	_	_
+4	de	de	ADP	ADP	AdpType=Prep	6	case	_	_
+5	l'	el	DET	DET	Definite=Def|Number=Sing|PronType=Art	6	det	_	SpaceAfter=No
+6	Observatori	Observatori	PROPN	PROPN	_	3	nmod	_	MWE=Observatori_del_Mercat_de_Treball_d'_Osona|MWEPOS=PROPN
+7	del	del	ADP	ADP	AdpType=Preppron|Gender=Masc|Number=Sing	8	case	_	_
+8	Mercat	Mercat	PROPN	PROPN	_	6	flat	_	_
+9	de	de	ADP	ADP	AdpType=Prep	10	case	_	_
+10	Treball	Treball	PROPN	PROPN	_	6	flat	_	_
+11	d'	d'	ADP	ADP	AdpType=Prep	12	case	_	SpaceAfter=No
+12	Osona	Osona	PROPN	PROPN	_	6	flat	_	_
+13	inclou	incloure	VERB	VERB	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+14	un	un	NUM	NUM	Gender=Masc|Number=Sing|NumType=Card	15	nummod	_	_
+15	informe	informe	NOUN	NOUN	Gender=Masc|Number=Sing	13	obj	_	_
+16	especial	especial	ADJ	ADJ	Number=Sing	15	amod	_	_
+17	sobre	sobre	ADP	ADP	AdpType=Prep	19	case	_	_
+18	la	el	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	19	det	_	_
+19	contractació	contractació	NOUN	NOUN	Gender=Fem|Number=Sing	15	nmod	_	_
+20	a	a	ADP	ADP	AdpType=Prep	24	case	_	MWE=a_través_de|MWEPOS=ADP
+21	través	través	NOUN	NOUN	_	20	fixed	_	_
+22	de	de	ADP	ADP	AdpType=Prep	20	fixed	_	_
+23	les	el	DET	DET	Definite=Def|Gender=Fem|Number=Plur|PronType=Art	24	det	_	_
+24	empreses	empresa	NOUN	NOUN	Gender=Fem|Number=Plur	19	nmod	_	_
+25	de	de	ADP	ADP	AdpType=Prep	26	case	_	_
+26	treball	treball	NOUN	NOUN	Gender=Masc|Number=Sing	24	nmod	_	_
+27	temporal	temporal	ADJ	ADJ	Number=Sing	26	amod	_	SpaceAfter=No
+28	,	,	PUNCT	PUNCT	PunctType=Comm	30	punct	_	_
+29	les	el	DET	DET	Definite=Def|Gender=Fem|Number=Plur|PronType=Art	30	det	_	_
+30	ETT	ETT	PROPN	PROPN	_	24	appos	_	SpaceAfter=No
+31	.	.	PUNCT	PUNCT	PunctType=Peri	13	punct	_	_`,
+
+with_tabs: `# sent_id = chapID01:paragID1:sentID1
+# text = Кечаень сыргозтизь налкставтыця карвот .
+# text[eng] = Kechai was awoken by annoying flies.
+1	Кечаень	Кечай	N	N	Sem/Ant_Mal|Prop|SP|Gen|Indef	2	obj	_	Кечаень
+2	сыргозтизь	сыргозтемс	V	V	TV|Ind|Prt1|ScPl3|OcSg3	0	root	_	сыргозтизь
+3	налкставтыця	налкставтомс	PRC	Prc	V|TV|PrcPrsL|Sg|Nom|Indef	4	amod	_	налкставтыця
+4	карвот	карво	N	N	Sem/Ani|N|Pl|Nom|Indef	2	nsubj	_	карвот
+5	.	.	CLB	CLB	CLB	2	punct	_	.`,
+
+without_tabs: `# sent_id = chapID01:paragID1:sentID1
+# text = Кечаень сыргозтизь налкставтыця карвот .
+# text[eng] = Kechai was awoken by annoying flies.
+1 Кечаень Кечай N N Sem/Ant_Mal|Prop|SP|Gen|Indef 2 obj _ Кечаень
+2 сыргозтизь сыргозтемс V V TV|Ind|Prt1|ScPl3|OcSg3 0 root _ сыргозтизь
+3 налкставтыця налкставтомс PRC Prc V|TV|PrcPrsL|Sg|Nom|Indef 4 amod _ налкставтыця
+4 карвот карво N N Sem/Ani|N|Pl|Nom|Indef 2 nsubj _ карвот
+5 . . CLB CLB CLB 2 punct _ .`,
+
+from_cg3_with_semicolumn: `1	Siedzieliśmy	siedzieć	vblex	_	impf|past|p1|m|pl	_	_	_	_
+2	w	w	pr	_	_	_	_	_	_
+3	moim	mój	prn	_	pos|mi|sg|loc	_	_	_	_
+4	pokoju	pokój	n	_	mi|sg|loc	_	_	_	_
+5	,	,	cm	_	_	_	_	_	_
+6	paląc	palić	vblex	_	impf|pprs|adv	_	_	_	_
+7	i	i	cnjcoo	_	_	_	_	_	_
+8	rozmawiając	rozmawiać	vblex	_	impf|pprs|adv	_	_	_	_
+9	o	o	pr	_	_	_	_	_	_
+10	tem	to	prn	_	dem|mi|sg|loc	_	_	_	_
+11	,	,	cm	_	_	_	_	_	_
+12	jak	jak	rel	_	adv	_	_	_	_
+13	marni	marny	adj	_	sint|mp|pl|nom	_	_	_	_
+14	jesteśmy	być	vbser	_	pres|p1|pl	_	_	_	_
+15	,	,	cm	_	_	_	_	_	_
+16	marni	marny	adj	_	sint|mp|pl|nom	_	_	_	_
+17	z	z	pr	_	_	_	_	_	_
+18	lekarskiego	lekarski	adj	_	mi|sg|gen	_	_	_	_
+19	punktu	punkt	n	_	mi|sg|gen	_	_	_	_
+20	widzenia	widzieć	vblex	_	impf|ger|nt|sg|gen	_	_	_	_
+21	chcę	chcieć	vblex	_	impf|pres|p1|sg	_	_	_	_
+22	powiedzieć	powiedzieć	vblex	_	perf|inf	_	_	_	_
+23	,	,	cm	_	_	_	_	_	_
+24	naturalnie	naturalnie	adv	_	sint	_	_	_	_
+25	.	.	sent	_	_	_	_	_	_`,
+
+from_cg3_simple: `1	Патшамен	патша	n	_	ins	3	nmod	_	_
+2	соғыс	соғыс	n	_	nom	3	obj	_	_
+3	ашқанда	аш	v	_	tv|ger_past|loc	12	advcl	_	_
+4	,	,	cm	_	_	12	punct	_	_
+5	ел-жұрт	ел-жұрт	n	_	nom	7	conj	_	_
+6	,	,	cm	_	_	7	punct	_	_
+7	отанымды	отан	n	_	px1sg|acc	8	obj	_	_
+8	қорғауға	қорға	v	_	tv|ger|dat	12	advcl	_	_
+9	,	,	cm	_	_	12	punct	_	_
+10	біз	біз	prn	_	pers|p1|pl|nom	12	nsubj	_	_
+11	соғысқа	соғыс	n	_	dat	12	nmod	_	_
+12	бардық	бар	v	_	iv|ifi|p1|pl	0	root	_	_
+13	.	.	sent	_	_	12	punct	_	_
+`,
+
+from_cg3_with_spans: `# text = He boued e tebr Mona er gegin.
+# text[eng] = Mona eats her food here in the kitchen.
+# labels = press_1986 ch_syntax p_197 to_check
+1	He	he	det	_	pos|f|sp	2	det	_	_
+2	boued	boued	n	_	m|sg	4	obj	_	_
+3	e	e	vpart	_	obj	4	aux	_	_
+4	tebr	debriñ	vblex	_	pri|p3|sg	0	root	_	_
+5	Mona	Mona	np	_	ant|f|sg	4	nsubj	_	_
+6-7	er	_	_	_	_	_	_	_	_
+6	_	e	pr	_	_	8	case	_	_
+7	_	an	det	_	def|sp	8	det	_	_
+8	gegin	kegin	n	_	f|sg	4	obl	_	_
+9	.	.	sent	_	_	4	punct	_	_
+`,
+
+rueter_long: `# sent_id = BryzhinskijMixail_Kirdazht_manu:3859
+# text = Но зярс валгсь , зярс панжтнесь ды мекев парсте пекстнесь веле кенкшенть , кужо кенкшенть , куро кенкшенть ды эсест юртс совамо кенкшенть эрьва лисицянтень совицянтень те свал тейнема , кенкштне свал пекстазь улезт ; панжтнесызь келес ансяк валске марто ды чопоньбелев — ракшань ливтема совавтома шкане , куймесь таго стакалгадсь .
+# text_en = But by the time he got down the hill, opened and closed the village gate, the lane gate, the cluster gate and the one to their own home (something everyone coming or going had to do, so the gates would always be closed; they were only opened in the morning and at dusk for taking out and letting in the cattle), the wicker of clay had grown heavy again.
+# text_fi = Kun Ketšai tuli mäeltä alas, avasi ja sulki huolellisesti kyläveräjänsä, ??aukio/kenttäveräjän, kujaveräjän ja oman kotiveräjän, savikontti ehti taas alkaa painaa hänen selkäänsä. (Kaikkien kävijöiden tulee tehdä näin, jotta veräjät olisivat aina kiinni, veräjäthän pidetään selkosen selällään vain aamulla ja illansuussa, kun karjaa ajetaan laitumelle tai kotiin.)
+1 Но но CCONJ CC _ 3 cc _ _
+2 зярс зярс ADV Adv|Der/Ill|Adv|Sem/Time Derivation=Ill|AdvType=Tim 3 mark _ _
+3 валгсь валгомс VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 51 advcl _ SpaceAfter=No
+4 , , PUNCT CLB _ 6 punct _ _
+5 зярс зярс ADV Adv|Der/Ill|Adv|Sem/Time Derivation=Ill|AdvType=Tim 6 mark _ _
+6 панжтнесь панжтнемс VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 3 conj _ _
+7 ды ды CCONJ CC _ 10 cc _ _
+8 мекев мекев ADV Adv|Lat|Sg|Nom|Indef Case=Lat|Case=Nom|Definite=Ind|Number=Sing 10 advmod _ _
+9 парсте парсте ADV Adv|Manner AdvType=Man 10 advmod _ _
+10 пекстнесь пекстнемс VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 3 conj _ _
+11 веле веле NOUN N|Sem/Inanim_Cnt|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 10 obj _ _
+12 кенкшенть кенкш NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 11 goeswith _ SpaceAfter=No
+13 , , PUNCT CLB _ 15 punct _ _
+14 кужо кужо NOUN N|Sem/Inanim_Cnt|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 12 conj _ _
+15 кенкшенть кенкш NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 14 goeswith _ SpaceAfter=No
+16 , , PUNCT CLB _ 18 punct _ _
+17 куро куро NOUN N|Sem/Inanim_Cnt|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 12 conj _ _
+18 кенкшенть кенкш NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 17 goeswith _ _
+19 ды ды CCONJ CC _ 23 cc _ _
+20 эсест эсь PRON Pron|Refl|Pl3|Gen|Variant=Short Case=Gen|Number=Plur|Person=3|PronType=Refl|Variant=Short 22 nmod _ _
+21 юртс юрт NOUN N|Sem/Inanim_Cnt|SP|Ill|Indef Case=Ill|Definite=Ind|Number=Plur,Sing 20 case _ _
+22 совамо совамо NOUN N|IV|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing|Valency=1 23 compound _ _
+23 кенкшенть кенкш NOUN N|Sem/Inanim_Cnt|Sg|Gen|Def Case=Gen|Definite=Def|Number=Sing 12 conj _ _
+24 ( ( PUNCT PUNCT _ 29 punct _ SpaceAfter=No
+25 эрьва эрьва DET Det|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 26 det _ _
+26 лисицянтень-совицянтень лисицят-совицят NOUN N|V|NomAg|Sg|Dat|Def Case=Dat|Definite=Def|Derivation=NomAg|Number=Sing 29 obl _ _
+27 те те PRON Pron|Dem|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing|PronType=Dem 29 nsubj _ _
+28 свал свал ADV Adv|Tot|Sem/Time_dur PronType=Tot|PronType=Tot 29 advmod _ _
+29 тейнема тейнемc VERB V|TV|Oblig|Clitic=Cop|Prs|ScSg3 Valency=2|VerbForm=Oblig|Clitic=Cop|Number[subj]=Sing|Person[subj]=3|Tense=Pres 3 parataxis _ SpaceAfter=No
+30 , , PUNCT CLB _ 33 punct _ _
+31 кенкштне кенкш NOUN N|Sem/Inanim_Cnt|Pl|Nom|Def Case=Nom|Definite=Def|Number=Plur 34 nsubj _ _
+32 свал свал ADV Adv|Tot|Sem/Time_dur PronType=Tot|PronType=Tot 33 advmod _ _
+33 пекстазь пекстамс VERB V|Der/Озь|Ger Derivation=Ozj|VerbForm=Conv 29 ccomp _ _
+34 улезт улемс AUX V|IV|Opt|ScPl3 Mood=Opt|Number[subj]=Plur|Person[subj]=3|Valency=1 33 cop _ SpaceAfter=No
+35 ; ; PUNCT CLB _ 29 punct _ _
+36 панжтнесызь панжтнемс VERB V|Ind|Prs|ScPl3|Obj3 Mood=Ind|Number[subj]=Plur|Person[subj]=3|Tense=Pres|Obj3 29 conj _ _
+37 келес келес ADV Adv Adv 36 advmod _ _
+38 ансяк ансяк ADV Adv Adv 39 advmod _ _
+39 валске валске NOUN N|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 36 obl _ _
+40 марто марто ADP Adp|Po AdpType=Post 39 case _ _
+41 ды ды CCONJ CC _ 42 cc _ _
+42 чопоньбелев чопоньбелев ADV Adv|Lat Case=Lat 39 conj _ _
+43 — — PUNCT CLB _ 46 punct _ _
+44 ракшань ракша NOUN N|Sem/Anim_Cnt|SP|Gen|Indef Case=Gen|Definite=Ind|Number=Plur,Sing 45 nmod:gobj _ _
+45 ливтема-совавтома ливтема-совавтома NOUN N|Sg|Nom|Indef Case=Nom|Definite=Ind|Number=Sing 36 nmod _ _
+46 шкане шка NOUN N|Sem/Time|SP|Temp|Indef Case=Temp|Definite=Ind|Number=Plur,Sing 39 conj _ SpaceAfter=No
+47 ) ) PUNCT PUNCT _ 29 punct _ SpaceAfter=No
+48 , , PUNCT CLB _ 29 punct _ _
+49 куймесь куйме NOUN N|Sem/Inanim_Cnt|Sg|Nom|Def Case=Nom|Definite=Def|Number=Sing 51 nsubj _ _
+50 таго таго ADV Adv|Sem/Time AdvType=Tim 51 advmod _ _
+51 стакалгадсь стакалгадомс VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 0 root _ SpaceAfter=No
+52 . . PUNCT CLB _ 51 punct _ _`,
+
+katya_aplonova_large_arrows: `# sent_id = html/meyer_gorog-contes_bambara_10amadu_tara.dis.html:16
+# text = ko ni i sera ka jiri nin bulu sòrò ka na ni a ye, ko cèkòròba bè se ka furakè o la.
+1	ko	kó	PART	cop	_	4	discourse	_	Gloss=QUOT
+2	ni	ní	SCONJ	conj	_	4	mark	_	Gloss=si
+3	i	í	PRON	pers	PronType=Prs	4	nsubj	_	Gloss=2.SG
+4	sera	sera	VERB	v	Aspect=Perf|Valency=1|Polarity=Pos	19	advcl	_	Gloss=arriver|Morf=arriver,PFV.INTR
+5	ka	kà	AUX	pm	_	9	aux	_	Gloss=INF
+6	jiri	jíri	NOUN	n	_	8	nmod:poss	_	Gloss=arbre
+7	nin	nìn	DET	prn/dtm	PronType=Dem|Definite-Def	6	det	_	Gloss=DEM
+8	bulu	búlu	NOUN	n	_	9	obj	_	Gloss=feuille
+9	sòrò	sɔ̀rɔ	VERB	v	_	4	xcomp	_	Gloss=obtenir
+10	ka	kà	AUX	pm	_	11	aux	_	Gloss=INF
+11	na	nà	VERB	v	_	9	xcomp	_	Gloss=venir
+12	ni	ní	ADP	conj/prep	_	13	case	_	Gloss=et
+13	a	à	PRON	pers	PronType=Prs|Number=Sing|Person=3	11	obl	_	Gloss=3SG
+14	ye	yé	ADP	pp	_	13	case	_	Gloss=PP
+15	,	,	PUNCT	_	_	4	punct	_	Gloss=,
+16	ko	kó	PART	cop	_	19	discourse	_	Gloss=QUOT
+17	cèkòròba	cɛ̀.kɔrɔ.ba	NOUN	n	_	19	nsubj	_	Gloss=vieillard|Morf=vieillard,mâle,vieux,AUGM
+18	bè	bɛ́	AUX	pm	Polarity=Pos|Aspect=Imp	19	aux	_	Gloss=IPFV.AFF
+19	se	sé	VERB	v	_	0	root	_	Gloss=arriver
+20	ka	kà	AUX	pm	_	21	aux	_	Gloss=INF
+21	furakè	fúra.kɛ	VERB	v	_	19	xcomp	_	Gloss=soigner|Morf=soigner,feuille,faire
+22	o	ò	PRON	prn	_	21	obl	_	Gloss=ce
+23	la	lá	ADP	pp	_	22	case	_	Gloss=dans
+24	.	.	PUNCT	_	_	19	punct	_	Gloss=.
+`,
+
+katya_aplonova_long: `# sent_id = html/meyer_gorog-contes_bambara_10amadu_tara.dis.html:19
+# text = ko u ye mògò nyini a ye, min bè a furakè sisan ko cè ye furakèli cogoya bèè fò, ko fura nin sòrò ka gèlèn ko epi ko ni o ye a sòrò u ye ale den de ye, ni min bè sa de furanyini fè a ka sa nin min bè balo o ka balo ko u kònòntò bèè ka taga fura nin nyini, ko u kònòntò bèè ka taga ko nin min seginna ka a sòrò fura ma na, ko a bè o den nin haramuya ka o gèn, ka a bè a ba fana gèn ko u ka a filè u yèrè ni min ma sòn fana ko a bè o gèn, o ni a ba bèè.
+# label = too_long_to_cut
+1	ko	kó	PART	cop	_	5	discourse	_	Gloss=QUOT
+2	u	ù	PRON	pers	PronType=Prs|Number=Plur|Person=3	5	nsubj	_	Gloss=3PL
+3	ye	yé	AUX	pm	Aspect=Perf|Valency=2|Polarity=Pos	5	aux	_	Gloss=PFV.TR
+4	mògò	mɔ̀gɔ	NOUN	n	_	5	obj	_	Gloss=homme
+5	nyini	ɲíni	VERB	v	_	0	root	_	Gloss=chercher
+6	a	à	PRON	pers	PronType=Prs|Number=Sing|Person=3	5	obl	_	Gloss=3SG
+7	ye	yé	ADP	pp	_	6	case	_	Gloss=PP
+8	,	,	PUNCT	_	_	5	punct	_	Gloss=,
+9	min	mín	PRON	prn	PronType=Rel	_	_	_	Gloss=REL
+10	bè	bɛ́	AUX	pm	Polarity=Pos|Aspect=Imp	_	_	_	Gloss=IPFV.AFF
+11	a	à	PRON	pers	PronType=Prs|Number=Sing|Person=3	_	_	_	Gloss=3SG
+12	furakè	fúra.kɛ	VERB	v	_	_	_	_	Gloss=soigner|Morf=soigner,feuille,faire
+13	sisan	sísan	ADV	adv/n	_	_	_	_	Gloss=maintenant
+14	ko	kó	PART	cop	_	_	_	_	Gloss=QUOT
+15	cè	cɛ̀	NOUN	n	_	_	_	_	Gloss=mâle
+16	ye	ye	AUX	pm	Aspect=Perf|Valency=2|Polarity=Pos	_	_	_	Gloss=PFV.TR
+17	furakèli	fúrakɛli	NOUN	n	VerbalForm=Vnoun	_	_	_	Gloss=traitement|Morf=traitement,feuille,faire,NMLZ
+18	cogoya	cógoya	NOUN	n	_	_	_	_	Gloss=manière|Morf=manière,manière,ABSTR
+19	bèè	bɛ́ɛ	DET	dtm	_	_	_	_	Gloss=tout
+20	fò	fɔ́	VERB	v	_	_	_	_	Gloss=dire
+21	,	,	PUNCT	_	_	_	_	_	Gloss=,
+22	ko	kó	PART	cop	_	27	discourse	_	Gloss=QUOT
+23	fura	fúra	NOUN	n	_	25	nmod:poss	_	Gloss=feuille
+24	nin	nìn	DET	dtm	PronType=Dem|Definite-Def	23	det	_	Gloss=DEM
+25	sòrò	sɔ̀rɔ	NOUN	v	_	27	nsubj	_	Gloss=obtenir
+26	ka	ka	AUX	pm	Polarity=Pos	27	aux	_	Gloss=QUAL.AFF
+27	gèlèn	gɛ̀lɛn	VERB	vq	_	_	_	_	Gloss=dur
+28	ko	kó	PART	cop	_	29	discourse	_	Gloss=QUOT
+29	epi	epi	CCONJ	conj	_	27	cc	_	Gloss=ETRG.FRA
+30	ko	kó	VERB	cop	_	37	discourse	_	Gloss=QUOT
+31	ni	ní	SCONJ	conj	_	35	mark	_	Gloss=si
+32	o	ò	PRON	prn	_	35	nsubj	_	Gloss=ce
+33	ye	ye	AUX	pm	Aspect=Perf|Valency=2|Polarity=Pos	35	aux	_	Gloss=PFV.TR
+34	a	à	PRON	pers	PronType=Prs|Number=Sing|Person=3	35	obj	_	Gloss=3SG
+35	sòrò	sɔ̀rɔ	VERB	v	_	37	advcl	_	Gloss=obtenir
+36	u	ù	PRON	pers	PronType=Prs|Number=Plur|Person=3	37	nsubj	_	Gloss=3PL
+37	ye	yé	VERB	cop	Polarity=Pos	27	parataxis	_	Gloss=EQU
+38	ale	àlê	PRON	pers	PronType=Prs|Number=Sing|Person=3|PronType=Emp	39	nmod:poss	_	Gloss=3SG.EMPH
+39	den	dén	NOUN	n	_	37	obl	_	Gloss=enfant
+40	de	dè	PART	prt	_	39	discourse	_	Gloss=FOC
+41	ye	yé	ADP	pp	_	39	case	_	Gloss=PP
+42	,	,	PUNCT	_	_	37	punct	_	Gloss=,
+43	ni	ní	SCONJ	conj	_	46	mark	_	Gloss=si
+44	min	mîn	PRON	prn	PronType=Rel	46	_	_	Gloss=REL
+45	bè	bɛ	AUX	pm	Polarity=Pos|Aspect=Imp	46	_	_	Gloss=IPFV.AFF
+46	sa	sà	VERB	v	_	52	_	_	Gloss=mourir
+47	de	dè	PART	prt	_	46	_	_	Gloss=FOC
+48	furanyini	furaɲini	NOUN	n	_	46	_	_	Gloss=feuille|Morf=feuille,chercher
+49	fè	fɛ̀	ADP	pp	_	48	_	_	Gloss=par
+50	a	à	PRON	pers	PronType=Prs|Number=Sing|Person=3	52	_	_	Gloss=3SG
+51	ka	ka	AUX	pm	Mood=Subj|Polarity=Aff	52	_	_	Gloss=SBJV
+52	sa	sà	VERB	v	_	37	_	_	Gloss=mourir
+53	nin	ní	SCONJ	conj	_	56	mark	_	Gloss=quand
+54	min	mîn	PRON	prn	PronType=Rel	56	_	_	Gloss=REL
+55	bè	bɛ	AUX	pm	Polarity=Pos|Aspect=Imp	56	_	_	Gloss=IPFV.AFF
+56	balo	bálo	VERB	v	_	59	_	_	Gloss=vivre
+57	o	ò	PRON	prn	_	59	_	_	Gloss=ce
+58	ka	ka	AUX	pm	Mood=Subj|Polarity=Aff	59	_	_	Gloss=SBJV
+59	balo	bálo	VERB	v	_	52	_	_	Gloss=vivre
+60	ko	kó	PART	cop	_	_	_	_	Gloss=QUOT
+61	u	ù	PRON	pers	PronType=Prs|Number=Plur|Person=3	_	_	_	Gloss=3PL
+62	kònòntò	kɔ̀nɔntɔn	NUM	num	_	_	_	_	Gloss=neuf
+63	bèè	bɛ́ɛ	DET	dtm	_	_	_	_	Gloss=tout
+64	ka	ka	AUX	pm	Mood=Subj|Polarity=Aff	_	_	_	Gloss=SBJV
+65	taga	tága	VERB	v	_	59	_	_	Gloss=aller
+66	fura	fúra	NOUN	n	_	_	_	_	Gloss=feuille
+67	nin	nìn	DET	dtm	PronType=Dem|Definite-Def	_	_	_	Gloss=DEM
+68	nyini	ɲíni	VERB	v	_	_	_	_	Gloss=chercher
+69	,	,	PUNCT	_	_	_	_	_	Gloss=,
+70	ko	kó	PART	cop	_	_	_	_	Gloss=QUOT
+71	u	ù	PRON	pers	PronType=Prs|Number=Plur|Person=3	_	_	_	Gloss=3PL
+72	kònòntò	kɔ̀nɔntɔn	NUM	num	_	_	_	_	Gloss=neuf
+73	bèè	bɛ́ɛ	DET	dtm	_	_	_	_	Gloss=tout
+74	ka	ka	AUX	pm	Mood=Subj|Polarity=Aff	_	_	_	Gloss=SBJV
+75	taga	tága	VERB	v	_	65	_	_	Gloss=aller
+76	ko	kó	PART	cop	_	_	_	_	Gloss=QUOT
+77	nin	ní	SCONJ	conj	_	_	_	_	Gloss=quand
+78	min	mîn	PRON	prn	PronType=Rel	_	_	_	Gloss=REL
+79	seginna	seginna	VERB	v	Aspect=Perf|Valency=1|Polarity=Pos	85	_	_	Gloss=revenir|Morf=revenir,PFV.INTR
+80	ka	kà	AUX	pm	_	_	_	_	Gloss=INF
+81	a	à	PRON	pers	PronType=Prs|Number=Sing|Person=3	_	_	_	Gloss=3SG
+82	sòrò	sɔ̀rɔ	VERB	v	_	_	_	_	Gloss=obtenir
+83	fura	fúra	NOUN	n	_	_	_	_	Gloss=feuille
+84	ma	ma	AUX	pm	Polarity=Neg|Aspect=Perf	_	_	_	Gloss=PFV.NEG
+85	na	nà	VERB	v	_	75	_	_	Gloss=venir
+86	,	,	PUNCT	_	_	_	_	_	Gloss=,
+87	ko	kó	PART	cop	_	_	_	_	Gloss=QUOT
+88	a	à	PRON	pers	PronType=Prs|Number=Sing|Person=3	_	_	_	Gloss=3SG
+89	bè	bɛ	AUX	pm	Polarity=Pos|Aspect=Imp	_	_	_	Gloss=IPFV.AFF
+90	o	ò	PRON	prn	_	_	_	_	Gloss=ce
+91	den	dén	NOUN	n	_	_	_	_	Gloss=enfant
+92	nin	nìn	DET	dtm	PronType=Dem|Definite-Def	_	_	_	Gloss=DEM
+93	haramuya	hàramuya	VERB	v	_	85	_	_	Gloss=interdire|Morf=interdire,interdire,ABSTR
+94	ka	kà	AUX	pm	_	_	_	_	Gloss=INF
+95	o	ò	PRON	prn	_	_	_	_	Gloss=ce
+96	gèn	gɛ́n	VERB	v	_	_	_	_	Gloss=chasser
+97	,	,	PUNCT	_	_	_	_	_	Gloss=,
+98	ka	kà	AUX	pm	_	_	_	_	Gloss=INF
+99	a	à	PRON	pers	PronType=Prs|Number=Sing|Person=3	_	_	_	Gloss=3SG
+100	bè	bɛ	AUX	pm	Polarity=Pos|Aspect=Imp	_	_	_	Gloss=IPFV.AFF
+101	a	à	PRON	pers	PronType=Prs|Number=Sing|Person=3	_	_	_	Gloss=3SG
+102	ba	bá	NOUN	n	_	_	_	_	Gloss=mère
+103	fana	fána	PART	prt	_	_	_	_	Gloss=aussi
+104	gèn	gɛ́n	VERB	v	_	_	_	_	Gloss=chasser
+105	ko	kó	PART	cop	_	_	_	_	Gloss=QUOT
+106	u	ù	PRON	pers	PronType=Prs|Number=Plur|Person=3	_	_	_	Gloss=3PL
+107	ka	ka	AUX	pm	Mood=Subj|Polarity=Aff	_	_	_	Gloss=SBJV
+108	a	à	PRON	pers	PronType=Prs|Number=Sing|Person=3	_	_	_	Gloss=3SG
+109	filè	fílɛ	VERB	v	_	_	_	_	Gloss=regarder
+110	u	ù	PRON	pers	PronType=Prs|Number=Plur|Person=3	_	_	_	Gloss=3PL
+111	yèrè	yɛ̀rɛ̂	DET	dtm	_	_	_	_	Gloss=même
+112	ni	ní	SCONJ	conj	_	_	_	_	Gloss=si
+113	min	mîn	PRON	prn	PronType=Rel	_	_	_	Gloss=REL
+114	ma	ma	AUX	pm	Polarity=Neg|Aspect=Perf	_	_	_	Gloss=PFV.NEG
+115	sòn	sɔ̀n	VERB	v	_	_	_	_	Gloss=accepter
+116	fana	fána	PART	prt	_	_	_	_	Gloss=aussi
+117	ko	kó	PART	cop	_	_	_	_	Gloss=QUOT
+118	a	à	PRON	pers	PronType=Prs|Number=Sing|Person=3	_	_	_	Gloss=3SG
+119	bè	bɛ	AUX	pm	Polarity=Pos|Aspect=Imp	_	_	_	Gloss=IPFV.AFF
+120	o	ò	PRON	prn	_	_	_	_	Gloss=ce
+121	gèn	gɛ́n	VERB	v	_	_	_	_	Gloss=chasser
+122	,	,	PUNCT	_	_	_	_	_	Gloss=,
+123	o	ò	PRON	prn	_	_	_	_	Gloss=ce
+124	ni	ni	CCONJ	conj	_	_	_	_	Gloss=et
+125	a	à	PRON	pers	PronType=Prs|Number=Sing|Person=3	_	_	_	Gloss=3SG
+126	ba	bá	NOUN	n	_	_	_	_	Gloss=mère
+127	bèè	bɛ́ɛ	DET	dtm	_	_	_	_	Gloss=tout
+128	.	.	PUNCT	_	_	_	_	_	Gloss=.`,
+
+ud_example_tabs: `1	They	they	PRON	PRP	Case=Nom|Number=Plur	2	nsubj	2:nsubj|4:nsubj	_
+2	buy	buy	VERB	VBP	Number=Plur|Person=3|Tense=Pres	0	root	_	_
+3	and	and	CONJ	CC	_	4	cc	4:cc	_
+4	sell	sell	VERB	VBP	Number=Plur|Person=3|Tense=Pres	2	conj	2:conj	_
+5	books	book	NOUN	NNS	Number=Plur	2	obj	2:obj|4:obj	_
+6	.	.	PUNCT	.	_	2	punct	2:punct	_`,
+
+ud_example_spaces: `1    They     they    PRON    PRP    Case=Nom|Number=Plur               2    nsubj    2:nsubj|4:nsubj _
+2    buy      buy     VERB    VBP    Number=Plur|Person=3|Tense=Pres    0    root     _          _
+3    and      and     CONJ    CC     _                                  4    cc       4:cc            _
+4    sell     sell    VERB    VBP    Number=Plur|Person=3|Tense=Pres    2    conj     2:conj   _
+5    books    book    NOUN    NNS    Number=Plur                        2    obj      2:obj|4:obj     _
+6    .        .       PUNCT   .      _                                  2    punct    2:punct         _`,
+
+ud_example_modified: `1	They	they	PRON	PRP	Case=Nom|Number=Plur	2	nsubj	2:nsubj|4:nsubj	_
+2	buy	buy	VERB	VBP	Number=Plur|Person=3|Tense=Presroot	0:root	_	_	_
+3	and	and	CONJ	CC	_	4	cc	4:cc	_
+4	sell	sell	VERB	VBP	Number=Plur|Person=3|Tense=Presconj	0:root|2:conj	_	_	_
+5	books	book	NOUN	NNS	Number=Plur	2	obj	2:obj|4:obj	_
+6	.	.	PUNCT	.	_	2	punct	2:punct	_`,
+};
+
+},{}],400:[function(require,module,exports){
+module.exports = {
+
+  'apertium stream': require('./apertium-stream'),
+  apertiumStream: require('./apertium-stream'),
+  Brackets: require('./brackets'),
+  brackets: require('./brackets'),
+  CG3: require('./cg3'),
+  cg3: require('./cg3'),
+  'CoNLL-U': require('./conllu'),
+  conllu: require('./conllu'),
+  'notatrix serial': require('./notatrix-serial'),
+  notatrixSerial: require('./notatrix-serial'),
+  Params: require('./params'),
+  params: require('./params'),
+  'plain text': require('./plain-text'),
+  plainText: require('./plain-text'),
+  SD: require('./sd'),
+  sd: require('./sd'),
+
+};
+
+},{"./apertium-stream":396,"./brackets":397,"./cg3":398,"./conllu":399,"./notatrix-serial":401,"./params":402,"./plain-text":403,"./sd":404}],401:[function(require,module,exports){
+arguments[4][107][0].apply(exports,arguments)
+},{"dup":107}],402:[function(require,module,exports){
+module.exports = {
+	0: [
+		{ form: 'hello' },
+		{ form: 'world' }
+	]
+};
+
+},{}],403:[function(require,module,exports){
+module.exports = {
+0: 'this is a test',
+1: 'this is a test.',
+2: 'this is a test...',
+3: 'this is a test?',
+4: '\tthis is a test',
+5: 'More sentences = more data; ipso facto, yes.',
+parens_and_numbers: `Дәүләтләрнең, шул исәптән Русиянең дә, диңгез чикләре ярдан 12 миль (яки 22,2 км) ераклыкта узуы килешенгән`,
+};
+
+},{}],404:[function(require,module,exports){
+module.exports = {
+0: `And Robert the fourth place .
+cc(Robert, And)
+orphan(Robert, place)
+punct(Robert, .)
+amod(place, fourth)
+det(place, the)`,
+
+1: `ROOT And Robert the fourth place .
+root(ROOT, Robert)
+cc(Robert, And)
+orphan(Robert, place)
+punct(Robert, .)
+amod(place, fourth)
+det(place, the)`,
+
+2: `ROOT I love French fries .
+root(ROOT, love)`,
+
+// https://github.com/UniversalDependencies/docs/blob/pages-source/_u-dep/ccomp.md
+ccomp_1: `He says that you like to swim
+ccomp(says, like)
+mark(like, that)`,
+
+ccomp_2: `He says you like to swim
+ccomp(says, like)`,
+
+ccomp_3: `The boss said to start digging
+ccomp(said, start)
+mark(start, to)`,
+
+ccomp_4: `We started digging
+xcomp(started, digging)`,
+
+ccomp_5: `The important thing is to keep calm.
+ccomp(is, keep)
+nsubj(is, thing)`,
+
+ccomp_6: `The problem is that this has never been tried .
+ccomp(is, tried)
+nsubj(is, problem)`
+};
+
+},{}],405:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
 
-const NotatrixError = require('./errors').NotatrixError;
+const utils = require('./utils');
+const ConverterError = utils.ConverterError;
+const nx = require('./nx');
 
-/**
- * convert a string to subscripts (for ele labels)
- *
- * @param {String} str string to be subscripted
- * @return {String}
- */
-function toSubscript(str) {
-  const subscripts = { 0:'₀', 1:'₁', 2:'₂', 3:'₃', 4:'₄', 5:'₅',
-    6:'₆', 7:'₇', 8:'₈', 9:'₉', '-':'₋', '(':'₍', ')':'₎' };
+module.exports = (input, options) => {
+  try {
 
-  return str.split('').map((char) => {
-    return (subscripts[char] || char);
-  }).join('');
-}
+    var sent = new nx.Sentence(input, options);
+    sent.from = format => convert(sent.input, _.extend({
+      interpretAs: format
+    }, options));
 
-/**
- * strip whitespace from a string
- *
- * @param {String} str
- * @return {String}
- */
-function sanitize(str) {
-  if (str)
-    return str.replace(/\s/g, '');
-}
+    return sent;
 
-/**
- * take a string possibly given in enhanced notation and extract the head
- *   and deprel
- *
- * e.g. `2:ccomp|3:nsubj` => `[
- *   { token: 2, deprel: 'ccomp' },
- *   { token: 3, deprel: 'nsubj' } ]`
- *
- * @param {String} str
- * @return {Array} [[Object]]
- */
-function parseEnhancedString(str) {
+  } catch (e) {
 
-  // strip whitespace in input
-  str = sanitize(str);
+    if (e instanceof utils.ToolError || e instanceof utils.NxError)
+      throw new ConverterError('FATAL: unable to convert: ' + e.message);
 
-  // keep our heads here
-  let heads = [];
-
-  // iterate over "|"-delimited chunks
-  _.each(str.split('|'), head => {
-    head = head.split(':');
-
-    // ignore it if we don't parse a head
-    if (head[0])
-      heads.push({
-        token: head[0],
-        deprel: head[1]
-      });
-  });
-  return heads;
-}
-
-/**
- * automatically add PUNCT pos tags to strings that consist of only punctuation
- *
- * NOTE: only has an effect if sentence-level options help.upostag|help.xpostag
- *   are set to true (default: true)
- *
- * @param {Analysis} ana the analysis to evaluate for
- * @param {String} string
- * @return {undefined}
- */
-function evaluatePunctPos(ana, string) {
-  if (typeof string !== 'string')
-    return;
-
-  if (puncts.test(string)) {
-    if (ana.sentence.options.help.upostag && !ana.upostag)
-      ana.upostag = 'PUNCT';
-
-    if (ana.sentence.options.help.xpostag && !ana.xpostag)
-      ana.xpostag = 'PUNCT';
+    throw e;
   }
-}
+};
 
-/**
- * helper function for Analysis::cg3 [get] ... actually does the work of
- *   deciding how we want to display the information contained in an analysis
- *
- * @param {Analysis} ana
- * @param {Number} tabs current indent level
- * @return {String}
- */
-function cg3FormatOutput(analysis, tabs) {
+},{"./nx":468,"./utils":479,"underscore":499}],406:[function(require,module,exports){
+'use strict';
 
-  let indent = new Array(tabs).fill('\t').join('');
-  let tags = analysis.xpostag ? ` ${analysis.xpostag.replace(/;/g, ' ')}` : '';
-  let misc = analysis.misc ? ` ${analysis.misc.replace(/;/g, ' ')}` : '';
-  let deprel = analysis.deprel ? ` @${analysis.deprel}` : '';
-  let id = analysis.id ? ` #${analysis.id}->` : '';
-  let head = (id && analysis.head) ? `${analysis.head}` : ``;
-  let dependency = analysis.sentence.options.showEmptyDependencies || analysis.head
-    ? `${id}${head}`
-    : ``;
+const _ = require('underscore');
 
-  return `${indent}"${analysis.lemma}"${tags}${misc}${deprel}${dependency}`;
-}
+const utils = require('./utils');
+const DetectorError = utils.DetectorError;
+
+let as = {
+
+	'apertium stream': require('./formats/apertium-stream').detect,
+  apertiumStream: require('./formats/apertium-stream').detect,
+  Brackets: require('./formats/brackets').detect,
+  brackets: require('./formats/brackets').detect,
+  CG3: require('./formats/cg3').detect,
+  cg3: require('./formats/cg3').detect,
+  'CoNLL-U': require('./formats/conllu').detect,
+  conllu: require('./formats/conllu').detect,
+  'notatrix serial': require('./formats/notatrix-serial').detect,
+  notatrixSerial: require('./formats/notatrix-serial').detect,
+  Params: require('./formats/params').detect,
+  params: require('./formats/params').detect,
+  'plain text': require('./formats/plain-text').detect,
+  plainText: require('./formats/plain-text').detect,
+	SD: require('./formats/sd').detect,
+  sd: require('./formats/sd').detect,
+
+};
+
+module.exports = (text, options) => {
+
+  options = _.defaults(options, {
+    suppressDetectorErrors: true,
+		returnAllMatches: true,
+		requireOneMatch: false,
+  });
+
+	const matches = utils.formats.map(format => {
+
+		try {
+			return as[format](text, options);
+		} catch (e) {
+
+			if (e instanceof DetectorError)
+				return;
+
+			throw e;
+		}
+
+	}).filter(utils.thin);
+
+	if (!matches.length && !options.suppressDetectorErrors)
+		throw new DetectorError('Unable to detect format', text, options);
+
+	if (matches.length > 1 && !options.suppressDetectorErrors && options.requireOneMatch)
+		throw new DetectorError('Detected multiple formats', text, options);
+
+	return options.returnAllMatches ? matches : matches[0];
+};
+module.exports.as = as;
+
+},{"./formats/apertium-stream":410,"./formats/brackets":417,"./formats/cg3":423,"./formats/conllu":429,"./formats/notatrix-serial":437,"./formats/params":444,"./formats/plain-text":451,"./formats/sd":458,"./utils":479,"underscore":499}],407:[function(require,module,exports){
+'use strict';
+
+const utils = require('../../utils');
+const DetectorError = utils.DetectorError;
+
+module.exports = (text, options) => {
+  throw new DetectorError('not implemented');
+};
+
+},{"../../utils":479}],408:[function(require,module,exports){
+module.exports = null;
+
+},{}],409:[function(require,module,exports){
+'use strict';
+
+const utils = require('../../utils');
+const GeneratorError = utils.GeneratorError;
+
+module.exports = (text, options) => {
+  //throw new GeneratorError('not implemented');
+};
+
+},{"../../utils":479}],410:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+
+  name: 'apertium stream',
+  fields: require('./fields'),
+  split: require('./splitter'),
+  detect: require('./detector'),
+  parse: require('./parser'),
+  generate: require('./generator'),
+
+};
+
+},{"./detector":407,"./fields":408,"./generator":409,"./parser":411,"./splitter":412}],411:[function(require,module,exports){
+'use strict';
+
+const utils = require('../../utils');
+const ParserError = utils.ParserError;
+
+module.exports = (text, options) => {
+  //throw new ParserError('not implemented');
+};
+
+},{"../../utils":479}],412:[function(require,module,exports){
+'use strict';
+
+const utils = require('../../utils');
+const SplitterError = utils.SplitterError;
+
+module.exports = (text, options) => {
+  //throw new SplitterError('not implemented', text, options);
+};
+
+},{"../../utils":479}],413:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const Loss = utils.Loss;
+const fields = require('./fields');
+
+module.exports = (sent, output) => {
+
+  const serial = sent.serialize();
+  let losses = new Set();
+
+  if (!fields.hasComments && serial.comments.length)
+    losses.add('comments');
+
+  serial.tokens.forEach(token => {
+    Object.keys(_.omit(token, fields)).forEach(field => {
+      switch (field) {
+        case ('uuid'):
+        case ('index'):
+        case ('deps'):
+          break;
+
+        default:
+          losses.add(field);
+      }
+    })
+
+    if (losses.size)
+      throw new Loss(Array.from(losses), output);
+  });
+};
+
+},{"../../utils":479,"./fields":415,"underscore":499}],414:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const DetectorError = utils.DetectorError;
+
+module.exports = (text, options) => {
+
+  options = _.defaults(options, {
+    allowEmptyString: false,
+    allowTrailingWhitespace: true,
+    allowLeadingWhitespace: true,
+    allowNoDependencies: false,
+    allowNewlines: false,
+  });
+
+  if (!text && !options.allowEmptyString)
+    throw new DetectorError('Illegal Brackets: empty string', text, options);
+
+  if (utils.isJSONSerializable(text))
+    throw new DetectorError('Illegal Brackets: JSON object', text, options);
+
+  if (/\n/.test(text) && !options.allowNewlines)
+    throw new DetectorError('Illegal Brackets: contains newlines', text, options);
+
+  // internal stuff
+  let parsing = null;
+  let depth = 0;
+  let sawBracket = false;
+
+  text.split('').forEach((char, i) => {
+
+    switch (char) {
+
+      case ('['):
+        if (parsing === ']')
+          throw new DetectorError('Illegal Brackets: invalid sequence "]["', text, options);
+
+        sawBracket = true;
+        depth += 1;
+        break;
+
+      case (']'):
+        if (parsing === '[')
+          throw new DetectorError('Illegal Brackets: invalid sequence "[]"', text, options);
+
+        sawBracket = true;
+        depth -= 1;
+        break;
+
+      case (' '):
+      case ('\t'):
+      case ('\n'):
+
+        if (!options.allowLeadingWhitespace) {
+          if (parsing !== null && !utils.re.whitespace.test(parsing))
+            throw new DetectorError('Illegal Brackets: contains leading whitespace', text, options);
+        }
+        break;
+    }
+
+    parsing = char;
+  });
+
+  if (!sawBracket && !options.allowNoDependencies)
+    throw new DetectorError('Illegal Brackets: contains no dependencies', text, options);
+
+  if (depth !== 0)
+    throw new DetectorError('Illegal Brackets: bracket mismatch', text, options);
+
+  if (utils.re.whitespace.test(parsing) && !options.allowTrailingWhitespace)
+    throw new DetectorError('Illegal Brackets: contains trailing whitespace', text, options);
+
+  return 'Brackets';
+};
+
+},{"../../utils":479,"underscore":499}],415:[function(require,module,exports){
+module.exports = [
+  'form',
+  'head',
+  'deprel',
+];
+module.exports.hasComments = false;
+
+},{}],416:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const GeneratorError = utils.GeneratorError;
+const checkLoss = require('./check-loss')
+
+module.exports = (sent, options) => {
+
+  if (!sent || sent.name !== 'Sentence')
+    throw new GeneratorError(`Unable to generate, input not a Sentence`, sent, options);
+
+  options = _.defaults(options, sent.options, {
+    checkLoss: true,
+  });
+
+  sent.index();
+
+  // get the root of the tree;
+  let root = null;
+  sent.tokens.forEach(token => {
+    token.mapHeads(head => {
+      if (head.token.name === 'RootToken')
+        root = token;
+    });
+  });
+
+  if (root == null)
+    throw new GeneratorError('Unable to generate, could not find root');
+
+  // build the tree structure
+  let seen = new Set([ root ]);
+  root = {
+    token: root,
+    deprel: 'root',
+    deps: [],
+  };
+
+  const visit = node => {
+
+    node.token.mapDeps(dep => {
+
+      if (seen.has(dep.token))
+        throw new GeneratorError('Unable to generate, dependency structure non-linear');
+
+      node.deps.push({
+        token: dep.token,
+        deprel: dep.deprel,
+        deps: [],
+      });
+      seen.add(dep.token);
+
+      const next = node.deps.slice(-1)[0];
+      if (next)
+        visit(next);
+    });
+  }
+  visit(root);
+
+  //console.log(root);
+
+  if (seen.size < sent.size)
+    throw new GeneratorError('Unable to generate, sentence not fully connected');
+
+  // parse the tree into a string
+  let output = '';
+  const walk = node => {
+    output += '[' + (node.deprel || '') + ' ';
+
+    node.deps.forEach(dep => {
+      if (dep.token.indices.absolute < node.token.indices.absolute)
+        walk(dep);
+    });
+
+    output += ' ' + node.token.form + ' ';
+
+    node.deps.forEach(dep => {
+      if (dep.token.indices.absolute > node.token.indices.absolute)
+        walk(dep);
+    });
+
+    output += ' ] ';
+  }
+  walk(root);
+
+  // clean up the output
+  output = output
+    .replace(/\s+/g, ' ')
+    .replace(/ \]/g, ']')
+    .replace(/(\w)_(\w)/, '$1 $2')
+    .trim();
+
+  // console.log(output);
+
+  if (options.checkLoss)
+    checkLoss(sent, output);
+
+  return output;
+};
+
+},{"../../utils":479,"./check-loss":413,"underscore":499}],417:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+
+  name: 'Brackets',
+  fields: require('./fields'),
+  split: require('../default-splitter'),
+  detect: require('./detector'),
+  parse: require('./parser'),
+  generate: require('./generator'),
+
+};
+
+},{"../default-splitter":431,"./detector":414,"./fields":415,"./generator":416,"./parser":418}],418:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const ParserError = utils.ParserError;
+const detect = require('./detector');
+
+module.exports = (text, options) => {
+
+  //console.log();
+  //console.log(text);
+
+  options = _.defaults(options, {
+    allowEmptyString: false,
+  });
+
+  try {
+    detect(text, options);
+  } catch (e) {
+    if (e instanceof utils.DetectorError)
+      throw new ParserError(e.message);
+
+    throw e;
+  }
+
+  class Sentence {
+    constructor(text, options) {
+      this.input = text;
+      this.options = options;
+      this.parent = null;
+      this.root = [];
+      this.comments = [];
+    }
+
+    serialize() {
+
+      this.root.index(0);
+
+      return {
+        input: this.input,
+        options: this.options,
+        comments: this.comments,
+        tokens: this.root.serialize([])
+      };
+    }
+
+    push(token) {
+      this.root = token;
+    }
+  }
+
+  class Token {
+    constructor(parent) {
+      this.parent = parent;
+
+      this.deprel = null;
+      this.before = [];
+      this.words  = [];
+      this.after  = [];
+    }
+
+    eachBefore(callback) {
+      for (let i=0; i<this.before.length; i++) {
+        callback(this.before[i], i);
+      }
+    }
+
+    eachAfter(callback) {
+      for (let i=0; i<this.after.length; i++) {
+        callback(this.after[i], i);
+      }
+    }
+
+    index(num) {
+      this.eachBefore(before => {
+        num = before.index(num);
+      });
+      this.num = ++num;
+      this.eachAfter(after => {
+        num = after.index(num)
+      });
+
+      return num;
+    }
+
+    serialize(tokens) {
+
+      this.eachBefore(before => {
+        before.serialize(tokens);
+      });
+
+      tokens.push({
+        form: this.form,
+        head: `${this.parent.num || 0}`,
+        index: `${this.num}`,
+        deprel: this.deprel,
+      });
+
+      this.eachAfter(after => {
+        after.serialize(tokens);
+      });
+
+      return tokens;
+    }
+
+    get form() {
+      return this.words.join('_');
+    }
+
+    push(token) {
+      if (this.words.length) {
+        this.after.push(token);
+      } else {
+        this.before.push(token);
+      }
+    }
+
+    addWord(word) {
+      if (!word)
+        return;
+
+      if (this.deprel) {
+        this.words.push(word);
+      } else {
+        this.deprel = word;
+      }
+    }
+  }
+
+  let sent = new Sentence(text, options),
+    parsing = sent,
+    parent = null,
+    word = '';
+
+  _.each(text, char => {
+    switch (char) {
+      case ('['):
+        parent = parsing;
+        parsing = new Token(parent);
+        if (parent && parent.push)
+          parent.push(parsing)
+        word = '';
+        break;
+
+      case (']'):
+        if (parsing.addWord)
+          parsing.addWord(word);
+        parsing = parsing.parent;
+        parent = parsing.parent;
+        word = '';
+        break;
+
+      case (' '):
+        if (parsing.addWord)
+          parsing.addWord(word);
+        word = '';
+        break;
+
+      default:
+        word += char;
+        break;
+    }
+  });
+
+  //console.log(sent.serialize())
+  return sent.serialize();
+};
+
+},{"../../utils":479,"./detector":414,"underscore":499}],419:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const Loss = utils.Loss;
+const fields = require('./fields');
+
+module.exports = (sent, output) => {
+
+  const serial = sent.serialize();
+  let losses = new Set();
+
+  if (!fields.hasComments && serial.comments.length)
+    losses.add('comments');
+
+  const tokenCalcLoss = token => {
+    Object.keys(_.omit(token, fields)).forEach(field => {
+      switch (field) {
+        case ('uuid'):
+        case ('index'):
+        case ('deps'):
+          break;
+
+        case ('misc'):
+          if (token.misc !== token.other)
+            losses.add(field);
+          break;
+
+        default:
+          losses.add(field);
+      }
+    });
+  };
+
+  serial.tokens.map(token => {
+
+    tokenCalcLoss(token);
+
+    (token.analyses || []).forEach(analysis => {
+
+      const analysisKeys = Object.keys(analysis);
+      if (analysisKeys.length > 1 || analysisKeys[0] !== 'subTokens') {
+        losses.add('analyses');
+      } else {
+        analysis.subTokens.map(subToken => {
+
+          tokenCalcLoss(subToken);
+
+          if (subToken.form != undefined)
+            losses.add('form');
+
+        });
+      }
+
+    });
+  });
+
+  if (losses.size)
+    throw new Loss(Array.from(losses), output);
+};
+
+},{"../../utils":479,"./fields":421,"underscore":499}],420:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const DetectorError = utils.DetectorError;
+
+module.exports = (text, options) => {
+
+  options = _.defaults(options, {
+    allowEmptyString: false,
+    allowTrailingWhitespace: true,
+    allowLeadingWhitespace: true
+  });
+
+  if (!text && !options.allowEmptyString)
+    throw new DetectorError('Illegal CG3: empty string', text, options);
+
+  if (utils.isJSONSerializable(text))
+    throw new DetectorError('Illegal CG3: JSON object', text, options);
+
+  // internal stuff
+  let parsing = null;
+
+  // iterate over the lines and check each one
+  text.split(/\n/).forEach(line => {
+
+    if (utils.re.whiteline.test(line)) {
+
+      if (parsing === null) {
+
+        if (!options.allowLeadingWhitespace)
+          throw new DetectorError('Illegal CG3: contains leading whitespace', text, options);
+
+      } else {
+
+        if (parsing !== 'token-body' || !options.allowTrailingWhitespace)
+          throw new DetectorError('Illegal CG3: contains trailing whitespace', text, options);
+
+      }
+
+      parsing = 'whitespace';
+
+    } else if (utils.re.comment.test(line)) {
+
+      if ( parsing === 'token-start'
+        || parsing === 'token-body')
+        throw new DetectorError(`Illegal CG3: invalid sequence ${parsing}=>comment`, text, options);
+
+      parsing = 'comment';
+
+    } else if (utils.re.cg3TokenStart.test(line)) {
+
+      if (parsing === 'token-start')
+        throw new DetectorError(`Illegal CG3: invalid sequence ${parsing}=>token-start`, text, options);
+
+      parsing = 'token-start';
+
+    } else if (utils.re.cg3TokenContent.test(line)) {
+
+      if ( parsing === 'comment'
+        || parsing === 'whitespace')
+        throw new DetectorError(`Illegal CG3: invalid sequence ${parsing}=>token-body`, text, options);
+
+      parsing = 'token-body';
+
+    } else {
+
+      throw new DetectorError(`Illegal CG3: unmatched line`, text, options);
+
+    }
+  });
+
+  return 'CG3';
+};
+
+},{"../../utils":479,"underscore":499}],421:[function(require,module,exports){
+module.exports = [
+  'semicolon',
+  'index',
+  'form',
+  'lemma',
+  'head',
+  'deprel',
+  'xpostag',
+  'other',
+  'analyses',
+];
+module.exports.hasComments = true;
+
+},{}],422:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const GeneratorError = utils.GeneratorError;
+const checkLoss = require('./check-loss')
+
+module.exports = (sent, options) => {
+
+  if (!sent || sent.name !== 'Sentence')
+    throw new GeneratorError(`Unable to generate, input not a Sentence`, sent, options);
+
+  options = _.defaults(options, sent.options, {
+    checkLoss: true,
+    omitIndices: false,
+  });
+
+  sent.index();
+
+  let lines = [];
+  sent.comments.forEach(comment => lines.push('# ' + comment.body));
+  sent.tokens.forEach(token => {
+
+    const push = (token, indent) => {
+
+      if (!token.lemma)
+        throw new GeneratorError(`Unable to generate, token has no lemma`, sent, options);
+
+      indent = (token.semicolon ? ';' : '') + '\t'.repeat(indent);
+
+      const head = token.getHead();
+      const dependency = options.omitIndices
+        ? null
+        : '#' + token.indices.cg3 + '->' + (head == undefined ? '' : head);
+
+      let line = [ `"${token.lemma}"` ]
+        .concat(token.xpostag)
+        .concat(token._misc)
+        .concat(token.deprel ? '@' + token.deprel : null)
+        .concat(dependency);
+
+      line = indent + line.filter(utils.thin).join(' ');
+      lines.push(line);
+    };
+
+    lines.push(`"<${token.form || utils.fallback}>"`);
+
+    if (token._analyses && token._analyses.length) {
+
+      token._analyses.forEach(analysis => {
+        analysis.subTokens.forEach((subToken, i) => {
+
+          push(subToken, i+1);
+
+        });
+      });
+
+    } else {
+
+      push(token, 1);
+
+    }
+
+  });
+
+  const output = lines.join('\n');
+  if (options.checkLoss)
+    checkLoss(sent, output);
+
+  return output;
+};
+
+},{"../../utils":479,"./check-loss":419,"underscore":499}],423:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+
+  name: 'CG3',
+  fields: require('./fields'),
+  split: require('../default-splitter'),
+  detect: require('./detector'),
+  parse: require('./parser'),
+  generate: require('./generator'),
+
+};
+
+},{"../default-splitter":431,"./detector":420,"./fields":421,"./generator":422,"./parser":424}],424:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const ParserError = utils.ParserError;
+const detect = require('./detector');
+
+module.exports = (text, options) => {
+
+  function getIndentNum(str, options) {
+
+    const count = (str, reg) => str.match(reg).length;
+
+    if (options.indentString) {
+
+      const regex = options.indentString instanceof RegExp
+        ? options.indentString
+        : new RegExp(options.indentString, 'g');
+
+      return count(str, regex);
+
+    } else if (options.useTabIndent) {
+
+      return count(str, /\t/g);
+
+    } else if (options.spacesPerTab) {
+
+      const regex = new RegExp(` {${options.spacesPerTab}}`, 'g');
+      return count(str, regex);
+
+    } else if (options.equalizeWhitespace) {
+
+      return count(str, /\s/g);
+
+    } else {
+      throw new ParserError('can\'t get the indent number, insufficient options set', text, options);
+
+    }
+  }
+
+  options = _.defaults(options, {
+    allowEmptyString: false,
+    indentString: null,
+    useTabIndent: false,
+    spacesPerTab: null,
+    equalizeWhitespace: true,
+    coerceMultipleSpacesAfterSemicolonToTab: true,
+    allowMissingIndices: true,
+  });
+
+  try {
+    detect(text, options);
+  } catch (e) {
+    if (e instanceof utils.DetectorError)
+      throw new ParserError(e.message);
+
+    throw e;
+  }
+
+  //console.log();
+  //console.log(text);
+
+  // "tokenize" into chunks
+  let i = 0, chunks = [];
+  while (i < text.length) {
+
+    const remains = text.slice(i),
+      whiteline = remains.match(utils.re.whiteline),
+      comment = remains.match(utils.re.comment),
+      tokenStart = remains.match(utils.re.cg3TokenStart),
+      tokenContent = remains.match(utils.re.cg3TokenContent);
+
+    if (whiteline) {
+
+      i += whiteline[0].length;
+
+    } else if (comment) {
+
+      chunks.push({
+        type: 'comment',
+        body: comment[2]
+      });
+      i += comment[1].length;
+
+    } else if (tokenStart) {
+
+      chunks.push({
+        type: 'form',
+        form: tokenStart[1]
+      });
+      i += tokenStart[0].length;
+
+      while (utils.re.whitespace.test(text[i]) && text[i] !== '\n')
+        i++;
+      i++;
+
+    } else if (tokenContent) {
+
+      // some real BS right here, overfitting my data hard
+      const indent = options.coerceMultipleSpacesAfterSemicolonToTab
+        ? !!tokenContent[1]
+          ? tokenContent[2].replace(/ +/, '\t')
+          : tokenContent[2]
+        : tokenContent[2];
+
+      let chunk = {
+        type: 'content',
+        semicolon: !!tokenContent[1],
+        indent: getIndentNum(indent, options),
+        lemma: tokenContent[3],
+        other: [],
+      };
+      tokenContent[5].split(/\s+/).filter(utils.thin).forEach(subChunk => {
+
+        const dependency = subChunk.match(utils.re.cg3Dependency),
+          head = subChunk.match(utils.re.cg3Head),
+          index = subChunk.match(utils.re.cg3Index),
+          deprel = subChunk.match(utils.re.cg3Deprel),
+          other = subChunk.match(utils.re.cg3Other);
+
+        if (dependency && (head || index)) {
+
+          if (head) {
+            if (chunk.head)
+              throw new ParserError('unexpected subChunk, head already set', text, options);
+
+            chunk.head = head[1];
+          }
+
+          if (index) {
+            if (chunk.index)
+              throw new ParserError('unexpected subChunk, index already set', text, options);
+
+            chunk.index = index[1];
+          }
+
+        } else if (deprel) {
+
+          if (chunk.deprel)
+            throw new ParserError('unexpected subChunk, deprel already set', text, options);
+
+          chunk.deprel = deprel[1];
+
+        } else if (other) {
+
+          chunk.other.push(other[0]);
+
+        }
+      });
+
+      chunks.push(chunk);
+      i += tokenContent[0].length;
+
+    } else {
+      throw new ParserError(`unable to match remains: ${remains}`, text, options);
+
+    }
+  }
+
+  //console.log(chunks);
+
+  // turn the chunks into tokens and comments
+  let tokens = [];
+  let comments = [];
+  let expecting = ['comment', 'form'];
+  let token = null;
+  let analysis = null;
+  let missingIndices = false;
+
+  chunks.forEach(chunk => {
+
+    if (expecting.indexOf(chunk.type) === -1)
+      throw new ParserError(`expecting ${expecting.join('|')}, got ${chunk.type}`, text, options);
+
+    if (chunk.type === 'comment') {
+
+      comments.push(chunk.body);
+      expecting = ['comment', 'form'];
+      token = null;
+      analysis = null;
+
+    } else if (chunk.type === 'form') {
+
+      if (analysis)
+        token.analyses.push(analysis);
+
+      if (token) {
+        if (token.analyses.length === 1 && token.analyses[0].subTokens.length === 1)
+          token = _.omit(_.extend(token, token.analyses[0].subTokens[0]), 'analyses');
+
+        tokens.push(_.omit(token, 'currentIndent'));
+      }
+
+      token = {
+        form: chunk.form,
+        currentIndent: 0,
+        analyses: [],
+      };
+      analysis = null;
+
+      expecting = ['content'];
+
+    } else if (chunk.type === 'content') {
+
+      if (!token)
+        throw new ParserError('cannot parse content chunk without a token', text, options);
+
+      if (chunk.indent > token.currentIndent + 1)
+        throw new ParserError(`invalid indent change (${token.currentIndent}=>${chunk.indent})`, text, options)
+
+      if (chunk.indent === 1) {
+        if (analysis)
+          token.analyses.push(analysis);
+
+        if (chunk.index === undefined) {
+          if (!options.allowMissingIndices)
+            throw new ParserError('cannot parse token without index', text, options);
+
+          missingIndices = true;
+
+        } else {
+          if (missingIndices)
+            throw new ParserError('cannot parse partially indexed CG3', text, options);
+        }
+
+        analysis = {
+          subTokens: [
+            {
+              semicolon: chunk.semicolon,
+              lemma: chunk.lemma || null,
+              head: chunk.head || null,
+              index: chunk.index || null,
+              deprel: chunk.deprel || null,
+              xpostag: chunk.other.shift() || null,
+              other: chunk.other || null,
+            }
+          ]
+        };
+      } else {
+        if (!analysis)
+          throw new ParserError('cannot parse content chunk without an analysis', text, options);
+
+        if (chunk.index === undefined && !options.allowMissingIndices)
+          throw new ParserError('cannot parse token without index', text, options);
+
+        analysis.subTokens.push({
+          semicolon: chunk.semicolon,
+          lemma: chunk.lemma || null,
+          head: chunk.head || null,
+          index: chunk.index || null,
+          deprel: chunk.deprel || null,
+          xpostag: chunk.other.shift() || null,
+          other: chunk.other || null,
+        });
+
+      }
+
+      token.currentIndent = chunk.indent;
+      expecting = ['content', 'form'];
+
+    } else {
+      throw new ParserError(`unrecognized chunk type: ${chunk.type}`, text, options);
+
+    }
+
+  });
+
+  if (analysis)
+    token.analyses.push(analysis);
+
+  if (token) {
+    if (token.analyses.length === 1 && token.analyses[0].subTokens.length === 1)
+      token = _.omit(_.extend(token, token.analyses[0].subTokens[0]), 'analyses');
+
+    tokens.push(_.omit(token, 'currentIndent'));
+  }
+
+  if (missingIndices) {
+
+    let index = 0;
+    tokens.forEach(token => {
+      if (token.analyses) {
+        token.analyses.forEach(analysis => {
+          analysis.subTokens.forEach(subToken => {
+            subToken.index = `${++index}`;
+          });
+        });
+      } else {
+        token.index = `${++index}`;
+      }
+    });
+
+  }
+
+  //console.log(comments);
+  //console.log(tokens);
+
+  return {
+    input: text,
+    options: options,
+    comments: comments,
+    tokens: tokens,
+  };
+};
+
+},{"../../utils":479,"./detector":420,"underscore":499}],425:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const Loss = utils.Loss;
+const fields = require('./fields');
+
+module.exports = (sent, output) => {
+
+  const serial = sent.serialize();
+  let losses = new Set();
+
+  if (!fields.hasComments && serial.comments.length)
+    losses.add('comments');
+
+  const tokenCalcLoss = token => {
+    Object.keys(_.omit(token, fields)).forEach(field => {
+      switch (field) {
+        case ('uuid'):
+        case ('index'):
+          break;
+
+        case ('other'):
+          if (token.misc !== token.other)
+            losses.add(field);
+          break;
+
+        case ('analyses'):
+          if (token.analyses.length > 1) {
+            losses.add('analyses');
+          } else {
+
+            const analysis = token.analyses[0],
+              analysisKeys = Object.keys(analysis);
+
+            if (analysisKeys.length > 1 || analysisKeys[0] !== 'subTokens') {
+              losses.add('analyses');
+            } else {
+              analysis.subTokens.map(tokenCalcLoss);
+            }
+          }
+          break;
+
+        default:
+          losses.add(field);
+      }
+    });
+  };
+
+  serial.tokens.map(tokenCalcLoss);
+
+  if (losses.size)
+    throw new Loss(Array.from(losses), output);
+};
+
+},{"../../utils":479,"./fields":427,"underscore":499}],426:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const DetectorError = utils.DetectorError;
 
 
-// placeholder for CoNLL-U export in `undefined` fields
-const fallback = '_';
-// setteable fields
-const fields = [
-  // NB: 'id' is not kept here
+module.exports = (text, options) => {
+
+  options = _.defaults(options, {
+    allowEmptyString: false,
+    requireTenParams: false,
+    allowTrailingWhitespace: true,
+  });
+
+  if (!text && !options.allowEmptyString)
+    throw new DetectorError(`Illegal CoNLL-U: empty string`, text, options);
+
+  if (utils.isJSONSerializable(text))
+    throw new DetectorError(`Illegal CoNLL-U: JSON object`, text, options);
+
+  // be more or less strict about the fields we require being set
+  const tokenLine = options.requireTenParams
+    ? utils.re.conlluTokenLineTenParams
+    : utils.re.conlluTokenLine;
+
+  // internal stuff
+  let doneComments = false;
+  let doneContent = false;
+
+  // iterate over the lines and check each one
+  const lines = text.split(/\n/);
+  lines.forEach((line, i) => {
+
+    if (utils.re.comment.test(line)) {
+
+      // can only have comments at the beginning
+      if (doneComments)
+        throw new DetectorError(`Illegal CoNLL-U: misplaced comment`, text, options);
+
+    } else {
+
+      // done parsing comments
+      doneComments = true;
+
+      if (line) {
+        if (!tokenLine.test(line))
+          throw new DetectorError(`Illegal CoNLL-U: unmatched line`, text, options);
+
+        if (doneContent)
+          throw new DetectorError(`Illegal CoNLL-U: misplaced whitespace`, text, options);
+
+      } else {
+
+        // only allow empty lines after we've looked at all the content
+        if (!options.allowTrailingWhitespace)
+          throw new DetectorError(`Illegal CoNLL-U: contains trailing whitespace`, text, options);
+
+        doneContent = true;
+      }
+
+    }
+  });
+
+  return 'CoNLL-U';
+};
+
+},{"../../utils":479,"underscore":499}],427:[function(require,module,exports){
+module.exports = [
+  'isEmpty',
+  'index',
   'form',
   'lemma',
   'upostag',
@@ -62132,495 +63493,2252 @@ const fields = [
   'head',
   'deprel',
   'deps',
-  'misc'
+  'misc',
+  'subTokens',
 ];
-// supported punctuation characters
-const puncts = /[.,!?]/;
+module.exports.hasComments = true;
 
-/**
- * this class contains all the information associated with an analysis, including
- *   a value for each of form, lemma, upostag, xpostag, feats, head, deprel,
- *   deps, & misc ... also keeps an array of subTokens and an index
- */
-class Analysis {
-  constructor(token, params) {
+},{}],428:[function(require,module,exports){
+'use strict';
 
-    // require token param
-    if (!token)
-      throw new NotatrixError('missing required arg: Token');
+const _ = require('underscore');
 
-    // used to make sure we only add the head/deps strings on first pass, since
-    //   we'll eventually call attach() whenever we're constructing like this
-    this.initializing = true;
+const utils = require('../../utils');
+const GeneratorError = utils.GeneratorError;
+const checkLoss = require('./check-loss')
 
-    // pointers to parents
-    this.token = token;
-    this.sentence = token.sentence;
 
-    // internal arrays of Analyses
-    this._heads = [];
-    this._deps = [];
+module.exports = (sent, options) => {
 
-    // internal index (see Sentence::index and Token::index), don't change this!
-    this.id = null;
+  if (!sent || sent.name !== 'Sentence')
+    throw new GeneratorError(`Unable to generate, input not a Sentence`, sent, options);
 
-    // array of Tokens
-    this.subTokens = [];
+  options = _.defaults(options, sent.options, {
+    checkLoss: true,
+  });
 
-    // iterate over passed params
-    _.each(params, (value, key) => {
-      if (value === undefined || fields.indexOf(key) === -1) {
-        // delete invalid parameters
-        delete params[key];
+  sent.index();
+
+  let lines = [];
+  sent.comments.forEach(comment => {
+    lines.push('# ' + comment.body);
+  });
+  sent.tokens.forEach(token => {
+
+    const toString = token => {
+      return [
+
+        token.indices.conllu,
+        token.form || utils.fallback,
+        token.lemma || utils.fallback,
+        token.upostag || utils.fallback,
+        token.xpostag || utils.fallback,
+        token.feats || utils.fallback,
+        token.getHead('CoNLL-U') || utils.fallback,
+        token.deprel || utils.fallback,
+        token.getDeps('CoNLL-U') || utils.fallback,
+        token.misc || utils.fallback,
+
+      ].join('\t');
+    };
+
+    lines.push(toString(token));
+    token.subTokens.forEach(subToken => {
+      lines.push(toString(subToken));
+    });
+  });
+
+  const output = lines.join('\n');
+  if (options.checkLoss)
+    checkLoss(sent, output);
+
+  return output;
+};
+
+},{"../../utils":479,"./check-loss":425,"underscore":499}],429:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+
+  name: 'CoNLL-U',
+  fields: require('./fields'),
+  split: require('../default-splitter'),
+  detect: require('./detector'),
+  parse: require('./parser'),
+  generate: require('./generator'),
+
+};
+
+/*
+{
+  semicolon: Boolean || undefined,
+  isEmpty: Boolean || undefined,
+  index: String || undefined,
+  form: String || null || undefined,
+  lemma: String || null || undefined,
+  upostag: String || null || undefined,
+  xpostag: String || null || undefined,
+  feats: String || null || undefined,
+  head: String || null || undefined,
+  deprel: String || null || undefined,
+  deps: String || null || undefined,
+  other: Array || undefined,
+  analyses: [
+    subTokens: [
+      semicolon: Boolean || undefined,
+      isEmpty: Boolean || undefined,
+      index: String || undefined,
+      form: String || null || undefined,
+      lemma: String || null || undefined,
+      upostag: String || null || undefined,
+      xpostag: String || null || undefined,
+      feats: String || null || undefined,
+      head: String || null || undefined,
+      deprel: String || null || undefined,
+      deps: String || null || undefined,
+      other: Array || undefined,
+    ]
+  ]
+}
+*/
+
+},{"../default-splitter":431,"./detector":426,"./fields":427,"./generator":428,"./parser":430}],430:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const ParserError = utils.ParserError;
+const detect = require('./detector');
+
+module.exports = (text, options) => {
+
+  function assertNext(supStr, subStr) {
+
+    const parseIndex = str => {
+      const match = str.match(utils.re.conlluEmptyIndex);
+      return match[2]
+        ? {
+            major: parseInt(match[1]),
+            minor: parseInt(match[2]),
+          }
+        : {
+            major: parseInt(match[1]),
+            minor: null,
+          };
+    }
+
+    if (supStr === null)
+      return;
+
+    const sup = parseIndex(supStr),
+      sub = parseIndex(subStr);
+
+    if (sub.minor === null) {
+      if (sub.major - sup.major !== 1)
+        throw new ParserError(`unexpected token index (at: ${sup.major}${sup.minor === null ? '' : '.' + sup.minor}, got: ${sup.major}${sup.minor === null ? '' : '.' + sup.minor})`);
+
+    } else if (sup.minor === null) {
+      if (sub.minor !== 1)
+        throw new ParserError(`unexpected token index (at: ${sup.major}${sup.minor === null ? '' : '.' + sup.minor}, got: ${sup.major}${sup.minor === null ? '' : '.' + sup.minor})`);
+
+    } else {
+      if (sub.minor - sup.minor !== 1)
+        throw new ParserError(`unexpected token index (at: ${sup.major}${sup.minor === null ? '' : '.' + sup.minor}, got: ${sup.major}${sup.minor === null ? '' : '.' + sup.minor})`);
+
+    }
+  }
+
+  options = _.defaults(options, {
+    allowEmptyString: false,
+    requireTenParams: false,
+    allowWhiteLines: true,
+  });
+
+  try {
+    detect(text, options);
+  } catch (e) {
+    if (e instanceof utils.DetectorError)
+      throw new ParserError(e.message);
+
+    throw e;
+  }
+
+  //console.log();
+  //console.log(text);
+
+  // "tokenize" into chunks
+  let i = 0, chunks = [];
+  const lines = text.split('\n');
+  const tokenRegex = options.requireTenParams
+    ? utils.re.conlluTokenLineTenParams
+    : utils.re.conlluTokenLine;
+
+  lines.forEach(line => {
+    const whiteline = line.match(utils.re.whiteline),
+      comment = line.match(utils.re.comment),
+      tokenLine = line.match(tokenRegex);
+
+    if (whiteline) {
+
+    } else if (comment) {
+
+      chunks.push({
+        type: 'comment',
+        body: comment[2]
+      });
+
+    } else if (tokenLine) {
+
+      let token;
+      const fields = tokenLine[7].split(/\s/).filter(utils.thin);
+
+      if (tokenLine[4]) {
+
+        token = {
+        	type: 'super-token',
+          index: tokenLine[1],
+        	startIndex: tokenLine[2],
+        	stopIndex: tokenLine[5],
+        	form: utils.re.fallback.test(fields[0]) ? null : fields[0],
+        	misc: utils.re.fallback.test(fields[8]) ? null : fields[8],
+        };
+
       } else {
-        // save valid ones (using our setters defined below)
-        this[key] = value;
+
+        token = {
+        	type: 'token',
+          index: tokenLine[1],
+        	isEmpty: !!tokenLine[3],
+        	form: utils.re.fallback.test(fields[0]) ? null : fields[0],
+        	lemma: utils.re.fallback.test(fields[1]) ? null : fields[1],
+        	upostag: utils.re.fallback.test(fields[2]) ? null : fields[2],
+        	xpostag: utils.re.fallback.test(fields[3]) ? null : fields[3],
+        	feats: utils.re.fallback.test(fields[4]) ? null : fields[4],
+        	head: utils.re.fallback.test(fields[5]) ? null : fields[5],
+        	deprel: utils.re.fallback.test(fields[6]) ? null : fields[6],
+        	deps: utils.re.fallback.test(fields[7]) ? null : fields[7],
+        	misc: utils.re.fallback.test(fields[8]) ? null : fields[8],
+        };
+
+      }
+      chunks.push(token);
+
+    } else {
+      throw new ParserError(`unable to match line: ${line}`, text, options);
+
+    }
+
+  });
+
+  //console.log(chunks);
+
+  let tokens = [];
+  let comments = [];
+  let expecting = ['comment', 'super-token', 'token'];
+  let superToken = null;
+
+  chunks.filter(utils.thin).forEach(chunk => {
+
+    if (expecting.indexOf(chunk.type) === -1)
+      throw new ParserError(`expecting ${expecting.join('|')}, got ${chunk.type}`, text, options);
+
+    if (chunk.type === 'comment') {
+
+      comments.push(chunk.body);
+      expecting = ['comment', 'super-token', 'token'];
+
+    } else if (chunk.type === 'super-token') {
+
+      superToken = {
+        form: chunk.form,
+        misc: chunk.misc,
+        analyses: [{
+          subTokens: []
+        }],
+        index: chunk.index,
+        currentIndex: null,
+        stopIndex: chunk.stopIndex
+      };
+
+      expecting = ['token'];
+
+    } else if (chunk.type === 'token') {
+
+      if (superToken) {
+
+        assertNext(superToken.currentIndex, chunk.index);
+        superToken.currentIndex = chunk.index;
+
+        superToken.analyses[0].subTokens.push(_.omit(chunk, ['type']));
+
+        if (superToken.currentIndex === superToken.stopIndex) {
+
+          tokens.push(_.omit(superToken, ['currentIndex', 'stopIndex']));
+          superToken = null;
+          expecting = ['super-token', 'token'];
+
+        } else {
+          expecting = ['token'];
+        }
+
+      } else {
+
+        tokens.push(_.omit(chunk, ['type']));
+        expecting = ['super-token', 'token'];
+
+      }
+
+    } else {
+      throw new ParserError(`unrecognized chunk type: ${chunk.type}`, text, options);
+
+    }
+  });
+
+  //console.log(comments);
+  //console.log(tokens);
+
+  return {
+    input: text,
+    options: options,
+    comments: comments,
+    tokens: tokens,
+  };
+};
+
+},{"../../utils":479,"./detector":426,"underscore":499}],431:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+const utils = require('../utils');
+
+module.exports = (text, options={}) => {
+
+  options = _.defaults(options, {
+    trimChunks: true
+  });
+
+  return text.split(utils.re.multiNewlines).map(chunk => {
+    if (options.trimChunks) {
+      return chunk.trim();
+    } else {
+      return chunk;
+    }
+  }).filter(utils.thin);
+};
+
+},{"../utils":479,"underscore":499}],432:[function(require,module,exports){
+arguments[4][400][0].apply(exports,arguments)
+},{"./apertium-stream":410,"./brackets":417,"./cg3":423,"./conllu":429,"./notatrix-serial":437,"./params":444,"./plain-text":451,"./sd":458,"dup":400}],433:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const Loss = utils.Loss;
+const fields = require('./fields');
+
+module.exports = (sent, output) => {
+  // do nothing, can't lose info on this one
+};
+
+},{"../../utils":479,"./fields":435,"underscore":499}],434:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const DetectorError = utils.DetectorError;
+
+module.exports = (obj, options) => {
+
+  function restrict(obj, fields, allowUndefined=false) {
+    if (obj === undefined)
+      throw new DetectorError(`Illegal notatrix serial: missing field`, obj, options);
+
+    if (_.omit(obj, Object.keys(fields)).length)
+      throw new DetectorError(`Illegal notatrix serial: unexpected field`, obj, options);
+
+    _.each(fields, (fieldType, fieldName) => {
+
+      const value = obj[fieldName];
+
+      switch (fieldType) {
+        case ('number'):
+          if (value !== undefined || !allowUndefined)
+            if (isNaN(parseFloat(value)))
+              throw new DetectorError(`Illegal notatrix serial: could not parse ${value} as float`, obj, options);
+          break;
+
+        case ('string'):
+          if (value !== undefined || !allowUndefined)
+            if (typeof value !== 'string')
+              throw new DetectorError(`Illegal notatrix serial: expected 'string', got ${typeof value}`, obj, options);
+          break;
+
+        case ('string*'):
+          if (value !== undefined || !allowUndefined)
+            if (value !== null && typeof value !== 'string')
+              throw new DetectorError(`Illegal notatrix serial: expected 'string', got ${typeof value}`, obj, options);
+          break;
+
+        case ('object'):
+          // pass
+          break;
+
+        case ('array'):
+          if (value !== undefined || !allowUndefined)
+            if (!Array.isArray(value))
+              throw new DetectorError(`Illegal notatrix serial: expected Array, got ${typeof value}`, obj, options);
+          break;
+      }
+    });
+  }
+
+  options = _.defaults(options, {
+    allowZeroTokens: false,
+    allowZeroFields: false,
+  });
+
+  if (!utils.isJSONSerializable(obj))
+    throw new DetectorError(`Illegal notatrix serial: not JSON object`, obj, options);
+
+  obj = typeof obj === 'string' ? JSON.parse(obj) : obj;
+
+  restrict(obj, utils.nxSentenceFields);
+  _.each(obj.comments, comment => {
+    if (typeof comment !== 'string')
+      throw new DetectorError(`Illegal notatrix serial: comments should be strings`, obj, options);
+  });
+  _.each(obj.tokens, token => {
+    restrict(token, utils.nxSentenceTokensFields, true);
+  });
+  if (obj.tokens.length === 0 && !options.allowZeroTokens)
+    throw new DetectorError(`Illegal notatrix serial: cannot have empty token list`, obj, options);
+
+  _.each(obj.tokens, token => {
+    if (Object.keys(token).length === 0 && !options.allowZeroFields)
+      throw new DetectorError(`Illegal notatrix serial: cannot have token without fields`, obj, options);
+
+    if (token.analyses)
+      _.each(token.analyses, analysis => {
+
+        const analysisKeys = Object.keys(analysis);
+        if (analysisKeys.length !== 1 || analysisKeys[0] !== 'subTokens')
+          throw new DetectorError(`Illegal notatrix serial: got unexpected analyses field`, obj, options);
+
+        _.each(analysis.subTokens, subToken => {
+          restrict(subToken, utils.nxSentenceTokensFields, true);
+          if (subToken.analyses !== undefined)
+            throw new DetectorError(`Illegal notatrix serial: subTokens can only have one analysis`, obj, options);
+        });
+      });
+  })
+};
+
+},{"../../utils":479,"underscore":499}],435:[function(require,module,exports){
+module.exports = [];
+module.exports.hasComments = true;
+
+},{}],436:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const GeneratorError = utils.GeneratorError;
+const checkLoss = require('./check-loss')
+
+
+module.exports = (sent, options) => {
+
+  if (!sent || sent.name !== 'Sentence')
+    throw new GeneratorError(`Unable to generate, input not a Sentence`, sent, options);
+
+  options = _.defaults(options, sent.options, {
+    checkLoss: true,
+  });
+
+  sent.index();
+
+  if (options.checkLoss)
+    checkLoss(sent, sent);
+
+  return sent.serialize();
+};
+
+},{"../../utils":479,"./check-loss":433,"underscore":499}],437:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+
+  name: 'notatrix serial',
+  fields: require('./fields'),
+  split: require('./splitter'),
+  detect: require('./detector'),
+  parse: require('./parser'),
+  generate: require('./generator'),
+
+};
+
+/*
+INPUT:
+{
+  input: String,
+  options: Object,
+  comments: [
+    String
+  ],
+  tokens: [
+    (
+      // #1 (default)
+      {
+        isEmpty: Boolean || undefined,
+        index: String || undefined,
+        form: String || null || undefined,
+        lemma: String || null || undefined,
+        upostag: String || null || undefined,
+        xpostag: String || null || undefined,
+        feats: String || null || undefined,
+        head: (
+          String
+          ||
+          null
+          ||
+          undefined
+          ||
+          {
+            index: String,
+            type: String || null,
+          }
+        ),
+        deprel: String || null || undefined,
+        deps: (
+          String
+          ||
+          null
+          ||
+          undefined
+          ||
+          {
+            index: String,
+            type: String || null,
+          }
+        ),
+        misc: String || null || undefined,
+      }
+      ||
+      // #2 (CoNLL-U superToken)
+      {
+        index: String,
+        form: String || null,
+        misc: String || null,
+        subTokens: [
+          <#1>
+        ]
+      }
+      ||
+      // #3 (CG3)
+      {
+        form: String || null,
+        analyses: [
+          [
+            semicolon: Boolean,
+            lemma: String || null,
+            head: String || null,
+            index: String || null,
+            deprel: String || null,
+            xpostag: String || null,
+            other: [
+              String
+            ]
+          ]
+        ]
+      }
+      ||
+      // #4 (notatrix serial)
+      {
+
+      }
+    )
+  ]
+}
+
+
+OUTPUT:
+{
+  input: String,
+  options: 'plain object',
+  comments: [
+    {
+      type: String,
+      body: String,
+      value: <any>
+    }
+  ],
+*/
+
+},{"./detector":434,"./fields":435,"./generator":436,"./parser":438,"./splitter":439}],438:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const ParserError = utils.ParserError;
+const detect = require('./detector');
+
+module.exports = (obj, options) => {
+
+  try {
+    detect(obj, options);
+  } catch (e) {
+    if (e instanceof utils.DetectorError)
+      throw new ParserError(e.message);
+
+    throw e;
+  }
+
+  return obj;
+};
+
+},{"../../utils":479,"./detector":434,"underscore":499}],439:[function(require,module,exports){
+'use strict';
+
+const utils = require('../../utils');
+const SplitterError = utils.SplitterError;
+
+module.exports = (text, options) => {
+  throw new SplitterError('Can\'t split notatrix serial', text, options);
+};
+
+},{"../../utils":479}],440:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const Loss = utils.Loss;
+const fields = require('./fields');
+
+module.exports = (sent, output) => {
+
+  const serial = sent.serialize();
+  let losses = new Set();
+
+  if (!fields.hasComments && serial.comments.length)
+    losses.add('comments');
+
+  serial.tokens.forEach(token => {
+    Object.keys(_.omit(token, fields)).forEach(field => {
+      switch (field) {
+        case ('uuid'):
+        case ('index'):
+          break;
+
+        default:
+          losses.add(field);
+      }
+    })
+
+    if (losses.size)
+      throw new Loss(Array.from(losses), output);
+  });
+};
+
+},{"../../utils":479,"./fields":442,"underscore":499}],441:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const DetectorError = utils.DetectorError;
+
+module.exports = (obj, options) => {
+
+  options = _.defaults(options, {
+    allowEmptyList: false,
+    allowTrailingWhitespace: true,
+    allowLeadingWhitespace: true
+  });
+
+  if (!utils.isJSONSerializable(obj))
+    throw new DetectorError(`Illegal Params: not JSON object`, obj, options);
+
+  obj = typeof obj === 'string' ? JSON.parse(obj) : obj;
+
+  if (Array.isArray(obj)) {
+
+    if (!obj.length && !options.allowEmptyList)
+      throw new DetectorError(`Illegal Params: contains no tokens`, obj, options);
+
+    obj.forEach(obj => {
+
+      const omitted = Object.keys(_.omit(obj, utils.fields));
+      if (omitted.length)
+        throw new DetectorError(`Illegal Params: contains illegal keys (${omitted.join(', ')})`, obj, options);
+
+      const picked = Object.keys(_.pick(obj, utils.fields));
+      if (!picked.length)
+        throw new DetectorError(`Illegal Params: missing required keys`, obj, options);
+
+    });
+
+  } else {
+
+    throw new DetectorError(`Illegal Params: expected array of parameters, got ${typeof obj}`, obj, options)
+
+  }
+
+  return 'Params';
+};
+
+},{"../../utils":479,"underscore":499}],442:[function(require,module,exports){
+module.exports = [
+  'isEmpty',
+  'index',
+  'form',
+  'lemma',
+  'upostag',
+  'xpostag',
+  'feats',
+  'head',
+  'deprel',
+  'deps',
+  'misc',
+];
+module.exports.hasComments = false;
+
+},{}],443:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const GeneratorError = utils.GeneratorError;
+const checkLoss = require('./check-loss')
+
+
+module.exports = (sent, options) => {
+
+  if (!sent || sent.name !== 'Sentence')
+    throw new GeneratorError(`Unable to generate, input not a Sentence`, sent, options);
+
+  options = _.defaults(options, sent.options, {
+    checkLoss: true,
+  });
+
+  sent.index();
+
+  const output = sent.tokens.map(token => {
+
+    if (token.analysis)
+      throw new GeneratorError('Unable to generate, contains ambiguous analyses or multiword tokens');
+
+    let params = _.pick(token, utils.fields);
+    params.head = token.getHead();
+    params.deps = token.getDeps();
+
+    return _.pick(params, value => value != undefined);
+  });
+
+  if (options.checkLoss)
+    checkLoss(sent, output);
+
+  return output;
+};
+
+},{"../../utils":479,"./check-loss":440,"underscore":499}],444:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+
+  name: 'Params',
+  fields: require('./fields'),
+  split: require('./splitter'),
+  detect: require('./detector'),
+  parse: require('./parser'),
+  generate: require('./generator'),
+
+};
+
+},{"./detector":441,"./fields":442,"./generator":443,"./parser":445,"./splitter":446}],445:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const ParserError = utils.ParserError;
+const detect = require('./detector');
+
+module.exports = (obj, options) => {
+
+  try {
+    detect(obj, options);
+  } catch (e) {
+    if (e instanceof utils.DetectorError)
+      throw new ParserError(e.message);
+
+    throw e;
+  }
+
+  return {
+    input: JSON.stringify(obj),
+    options: options,
+    comments: [],
+    tokens: obj.map((token, i) => {
+      token.index = `${i}`;
+      return token;
+    }),
+  };
+};
+
+},{"../../utils":479,"./detector":441,"underscore":499}],446:[function(require,module,exports){
+'use strict';
+
+const utils = require('../../utils');
+const SplitterError = utils.SplitterError;
+
+module.exports = (text, options) => {
+  throw new SplitterError('Can\'t split Params', text, options);
+};
+
+},{"../../utils":479}],447:[function(require,module,exports){
+arguments[4][440][0].apply(exports,arguments)
+},{"../../utils":479,"./fields":449,"dup":440,"underscore":499}],448:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const DetectorError = utils.DetectorError;
+
+module.exports = (text, options) => {
+
+  options = _.defaults(options, {
+    allowEmptyString: true,
+    allowNewlines: false,
+    bracketsAllowanceTreshold: 0.2, // set to <0 or >1 to avoid
+  });
+
+  /*
+  if (!text && !options.allowEmptyString)
+    throw new DetectorError(`Illegal plain text: empty string`, text, options);
+    */
+
+  if (utils.isJSONSerializable(text))
+    throw new DetectorError(`Illegal plain text: JSON object`, text, options);
+
+  if (/\n/.test(text) && !options.allowNewlines)
+    throw new DetectorError(`Illegal plain text: contains newlines`, text, options);
+
+  if (options.bracketsAllowanceTreshold >= 0) {
+
+    const numWords = text.split(utils.re.whitespace).length;
+    const numBrackets = (text.match(/[\[\]]/g) || []).length;
+    const ratio = numBrackets / numWords;
+
+    if (ratio > options.bracketsAllowanceTreshold)
+      throw new DetectorError(`Illegal plain text: contains too many brackets (${ratio})`, text, options);
+  }
+
+  return 'plain text';
+};
+
+},{"../../utils":479,"underscore":499}],449:[function(require,module,exports){
+module.exports = [
+  'form',
+];
+module.exports.hasComments = false;
+
+},{}],450:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const GeneratorError = utils.GeneratorError;
+const checkLoss = require('./check-loss')
+
+
+module.exports = (sent, options) => {
+
+  if (!sent || sent.name !== 'Sentence')
+    throw new GeneratorError(`Unable to generate, input not a Sentence`, sent, options);
+
+  options = _.defaults(options, sent.options, {
+    checkLoss: true,
+  });
+
+  sent.index();
+
+  const output = sent.tokens.map(token => {
+
+    return token.isSuperToken
+      ? token.subTokens.map(subToken => subToken.value).join(' ')
+      : token.form;
+
+  }).join(' ').replace(utils.re.spaceBeforePunctuation, '$1');
+
+  if (options.checkLoss)
+    checkLoss(sent, output);
+
+  return output;
+};
+
+},{"../../utils":479,"./check-loss":447,"underscore":499}],451:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+
+  name: 'plain text',
+  fields: require('./fields'),
+  split: require('./splitter'),
+  detect: require('./detector'),
+  parse: require('./parser'),
+  generate: require('./generator'),
+
+};
+
+},{"./detector":448,"./fields":449,"./generator":450,"./parser":452,"./splitter":453}],452:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const ParserError = utils.ParserError;
+const detect = require('./detector');
+
+module.exports = (text, options) => {
+
+  options = _.defaults(options, {
+    allowEmptyString: true,
+  });
+
+  text = text || '';
+
+  try {
+    detect(text, options);
+  } catch (e) {
+    if (e instanceof utils.DetectorError)
+      throw new ParserError(e.message);
+
+    throw e;
+  }
+
+  //console.log();
+  //console.log(text);
+
+  let chunks = [];
+  let word = '';
+
+  _.each(text, (char, i) => {
+
+    if (utils.re.whitespace.test(char)) {
+
+      chunks.push(word);
+      word = '';
+
+    } else if (utils.re.punctuation.test(char)) {
+
+      if (!utils.re.allPunctuation.test(word)) {
+        chunks.push(word);
+        word = '';
+      }
+      word += char;
+
+    } else {
+      word += char;
+
+    }
+  });
+
+  chunks.push(word);
+
+  //console.log(chunks);
+
+  let tokens = chunks.filter(utils.thin).map((chunk, i) => {
+    return {
+      form: chunk,
+      index: `${i}`,
+    };
+  });
+
+  //console.log(comments);
+  //console.log(tokens);
+
+  return {
+    input: text,
+    options: options,
+    comments: [],
+    tokens: tokens,
+  };
+};
+
+},{"../../utils":479,"./detector":448,"underscore":499}],453:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+const utils = require('../../utils');
+
+module.exports = (text, options={}) => {
+
+  options = _.defaults(options, {
+    trimChunks: true
+  });
+
+  return text.split(utils.re.sentenceThenPunctuation).map(chunk => {
+    if (options.trimChunks) {
+      return chunk.trim();
+    } else {
+      return chunk;
+    }
+  }).filter(utils.thin);
+};
+
+},{"../../utils":479,"underscore":499}],454:[function(require,module,exports){
+arguments[4][413][0].apply(exports,arguments)
+},{"../../utils":479,"./fields":456,"dup":413,"underscore":499}],455:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const DetectorError = utils.DetectorError;
+
+module.exports = (text, options) => {
+
+  options = _.defaults(options, {
+    allowEmptyString: false,
+    allowLeadingWhitespace: true,
+    allowBookendWhitespace: true,
+    allowTrailingWhitespace: true,
+    allowNoDependencies: false,
+  });
+
+  if (!text && !options.allowEmptyString)
+    throw new DetectorError(`Illegal SD: empty string`, text, options);
+
+  if (utils.isJSONSerializable(text))
+    throw new DetectorError(`Illegal SD: JSON object`, text, options);
+
+  // be more or less strict about whitespace
+  const dependencyRegex = options.allowBookendWhitespace
+    ? utils.re.sdDependency
+    : utils.re.sdDependencyNoWhitespace;
+
+  // internal stuff
+  let parsingDeps = false;
+  let parsingWhitespace = false;
+  let parsedDeps = 0;
+
+  const lines = text.split(/\n/);
+  lines.forEach((line, i) => {
+
+    if (utils.re.whiteline.test(line)) {
+      if (parsingDeps) {
+        if (!options.allowTrailingWhitespace)
+          throw new DetectorError(`Illegal SD: contains trailing whitespace`, text, options);
+
+      } else {
+        if (!options.allowLeadingWhitespace)
+          throw new DetectorError(`Illegal SD: contains leading whitespace`, text, options);
+
+      }
+    }
+
+    if (utils.re.comment.test(line)) {
+
+    } else if (!parsingDeps) {
+
+      if (dependencyRegex.test(line))
+        throw new DetectorError(`Illegal SD: missing text line`, text, options);
+
+      parsingDeps = true;
+
+    } else if (!dependencyRegex.test(line)) {
+
+      throw new DetectorError(`Illegal SD: expected dependency line`, text, options);
+
+    } else {
+
+      parsedDeps += 1;
+
+    }
+  });
+
+  if (parsedDeps === 0 && !options.allowNoDependencies)
+    throw new DetectorError(`Illegal SD: contains no dependencies`, text, options);
+
+  return 'SD';
+};
+
+},{"../../utils":479,"underscore":499}],456:[function(require,module,exports){
+module.exports = [
+  'form',
+  'head',
+  'deprel',
+];
+module.exports.hasComments = true;
+
+},{}],457:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const GeneratorError = utils.GeneratorError;
+const generateText = require('../plain-text').generate;
+const checkLoss = require('./check-loss')
+
+module.exports = (sent, options) => {
+
+  if (!sent || sent.name !== 'Sentence')
+    throw new GeneratorError(`Unable to generate, input not a Sentence`, sent, options);
+
+  options = _.defaults(options, sent.options, {
+    checkLoss: true,
+  });
+
+  sent.index();
+
+  let lines = [];
+  sent.comments.forEach(comment => {
+    lines.push('# ' + comment.body);
+  });
+
+  lines.push(generateText(sent, { checkLoss: false }));
+
+  sent.tokens.forEach(token => {
+
+    token.mapHeads(head => {
+      if (head.token.name === 'RootToken')
+        lines.push(`root(ROOT, ${token.form})`);
+    });
+  });
+  sent.tokens.forEach(token => {
+    let deps = [];
+    token.mapDeps(dep => {
+      if (dep.deprel)
+        deps.push(`${dep.deprel}(${token.form}, ${dep.token.form})`);
+    });
+    while (deps.length)
+      lines.push(deps.pop());
+  });
+
+  const output = lines.join('\n');
+  if (options.checkLoss)
+    checkLoss(sent, output);
+
+  return output;
+};
+
+},{"../../utils":479,"../plain-text":451,"./check-loss":454,"underscore":499}],458:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+
+  name: 'SD',
+  fields: require('./fields'),
+  split: require('../default-splitter'),
+  detect: require('./detector'),
+  parse: require('./parser'),
+  generate: require('./generator'),
+
+};
+
+},{"../default-splitter":431,"./detector":455,"./fields":456,"./generator":457,"./parser":459}],459:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const ParserError = utils.ParserError;
+const detect = require('./detector');
+const parseText = require('../plain-text').parse;
+
+module.exports = (text, options) => {
+
+  function getTokenIndexFromString(tokens, token) {
+    for (let i=0; i<tokens.length; i++) {
+      if (tokens[i].form.toLowerCase() === token.toLowerCase())
+        return i;
+    }
+
+    return null;
+  }
+
+  //console.log();
+  //console.log(text);
+
+  options = _.defaults(options, {
+    allowEmptyString: false,
+    allowBookendWhitespace: true,
+    allowWhiteLines: true,
+  });
+
+  try {
+    detect(text, options);
+  } catch (e) {
+    if (e instanceof utils.DetectorError)
+      throw new ParserError(e.message);
+
+    throw e;
+  }
+
+  const lines = text.split('\n');
+  const depRegex = options.allowBookendWhitespace
+    ? utils.re.sdDependencyNoWhitespace
+    : utils.re.sdDependency;
+
+  let chunks = [];
+  lines.forEach(line => {
+
+    const whiteline = line.match(utils.re.whiteline),
+      comment = line.match(utils.re.comment),
+      dep = line.match(depRegex);
+
+    if (whiteline) {
+
+    } else if (comment) {
+
+      chunks.push({
+        type: 'comment',
+        body: comment[2]
+      });
+
+    } else if (dep) {
+
+      chunks.push({
+        type: 'dependency',
+        deprel: dep[1],
+        head: dep[2],
+        dep: dep[3]
+      });
+
+    } else {
+
+      chunks.push({
+        type: 'text',
+        body: line,
+      });
+
+    }
+
+  });
+
+  //console.log(chunks);
+
+  let tokens;
+  let comments = [];
+  let expecting = ['comment', 'text'];
+
+  chunks.forEach(chunk => {
+
+    if (expecting.indexOf(chunk.type) === -1)
+      throw new ParserError(`expecting ${expecting.join('|')}, got ${chunk.type}`, text, options);
+
+    if (chunk.type === 'comment') {
+
+      comments.push(chunk.body);
+      expecting = ['comment', 'text'];
+
+    } else if (chunk.type === 'text') {
+
+      tokens = parseText(chunk.body).tokens;
+      expecting = ['dependency'];
+
+    } else if (chunk.type === 'dependency') {
+
+      let index = getTokenIndexFromString(tokens, chunk.dep);
+      if (index === null)
+        throw new ParserError(`unable to find token with form ${chunk.dep}`, text, options);
+
+      tokens[index].head = '' + getTokenIndexFromString(tokens, chunk.head); // get the index, cast to str
+      tokens[index].deprel = chunk.deprel;
+      expecting = ['dependency'];
+
+    } else {
+      throw new ParserError(`unrecognized chunk type: ${chunk.type}`, text, options);
+
+    }
+  });
+
+  //console.log(comments);
+  //console.log(tokens);
+
+  return {
+    input: text,
+    options: options,
+    comments: comments,
+    tokens: tokens,
+  };
+};
+
+},{"../../utils":479,"../plain-text":451,"./detector":455,"underscore":499}],460:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('./utils');
+const GeneratorError = utils.GeneratorError;
+
+let as = {
+
+	'apertium stream': require('./formats/apertium-stream').generate,
+  apertiumStream: require('./formats/apertium-stream').generate,
+  Brackets: require('./formats/brackets').generate,
+  brackets: require('./formats/brackets').generate,
+  CG3: require('./formats/cg3').generate,
+  cg3: require('./formats/cg3').generate,
+  'CoNLL-U': require('./formats/conllu').generate,
+  conllu: require('./formats/conllu').generate,
+  'notatrix serial': require('./formats/notatrix-serial').generate,
+  notatrixSerial: require('./formats/notatrix-serial').generate,
+  Params: require('./formats/params').generate,
+  params: require('./formats/params').generate,
+  'plain text': require('./formats/plain-text').generate,
+  plainText: require('./formats/plain-text').generate,
+	SD: require('./formats/sd').generate,
+  sd: require('./formats/sd').generate,
+
+};
+
+module.exports = as;
+
+},{"./formats/apertium-stream":410,"./formats/brackets":417,"./formats/cg3":423,"./formats/conllu":429,"./formats/notatrix-serial":437,"./formats/params":444,"./formats/plain-text":451,"./formats/sd":458,"./utils":479,"underscore":499}],461:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+const nx = require('./nx');
+const utils = require('./utils');
+const errors = require('./utils/errors');
+
+module.exports = _.extend({
+
+  constants: utils.constants,
+  formats: require('./formats'),
+  regex: utils.regex,
+  data: require('../data'),
+
+  detect: require('./detector'),
+  generate: require('./generator'),
+  parse: require('./parser'),
+  split: require('./splitter'),
+  convert: require('./converter'),
+
+}, nx, errors);
+
+},{"../data":400,"./converter":405,"./detector":406,"./formats":432,"./generator":460,"./nx":468,"./parser":474,"./splitter":475,"./utils":479,"./utils/errors":477,"underscore":499}],462:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../utils');
+const AnalysisError = utils.AnalysisError;
+
+const NxBaseClass = require('./base-class');
+const SubToken = require('./sub-token');
+
+class Analysis extends NxBaseClass {
+  constructor(serial, options) {
+
+    super('Analysis');
+    this._subTokens = (serial.subTokens || []).map(sub => new SubToken(sub, options));
+
+  }
+
+  get subTokens() {
+    return this._subTokens;
+  }
+
+}
+
+module.exports = Analysis;
+
+},{"../utils":479,"./base-class":463,"./sub-token":471,"underscore":499}],463:[function(require,module,exports){
+class NxBaseClass {
+  constructor(name) {
+    this.name = name;
+  }
+};
+
+module.exports = NxBaseClass;
+
+},{}],464:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+const uuid = require('uuid/v4');
+
+const utils = require('../utils');
+const BaseTokenError = utils.BaseTokenError;
+
+const NxBaseClass = require('./base-class');
+const DependencySet = require('./dep-set');
+
+class BaseToken extends NxBaseClass {
+  constructor(name, options) {
+
+    super(name);
+
+    this.uuid = uuid();
+    this.options = options;
+
+    this._feats_init = false;
+    this._misc_init = false;
+
+    this._heads = new DependencySet(options);
+    this._deps = new DependencySet(options);
+
+    this.indices = {
+      conllu: null,
+      cg3: null,
+      cytoscape: null,
+    };
+  }
+
+  walk(callback) {
+    let i = 0;
+    if (this._analyses)
+      return this._analyses.map(analysis => {
+        return analysis._subTokens.map(subToken => {
+          return callback(subToken, ++i);
+        });
+      });
+
+    return null;
+  }
+
+  hashFields(...fields) {
+
+    fields = _.flatten(fields);
+
+    let hash = _.intersection(fields, [
+      'form',
+      'lemma',
+      'upostag',
+      'xpostag',
+      'feats',
+      'deprel',
+      'misc',
+      'isEmpty',
+      'semicolon',
+    ]).map(field => `<${this[field] || field}>`).join('|');
+
+    if (fields.indexOf('indices') > -1)
+      hash += `|${_.map(this.indices, index => `{${index}}`).join('')}`;
+
+    if (fields.indexOf('head') > -1)
+      hash += `|(h:${this.mapHeads(h => `${h.token.indices.absolute}:${h.deprel}`).join('|') || ''})`;
+
+    if (fields.indexOf('deps') > -1)
+      hash += `|(d:${this.mapDeps(d => `${d.token.indices.absolute}:${d.deprel}`).join('|') || ''})`;
+
+    if (fields.indexOf('analyses') > -1 || fields.indexOf('subTokens') > -1)
+      hash += `|[s:${this.walk(t => t.hashFields(fields)) || ''}]`;
+
+    return hash;
+  }
+
+  serialize() {
+    let serial = {
+
+      uuid: this.uuid,
+      form: this.form,
+      index: this.indices.absolute,
+
+      semicolon: this.semicolon,
+      isEmpty: this.isEmpty,
+      lemma: this.lemma,
+      upostag: this.upostag,
+      xpostag: this.xpostag,
+      feats: this.feats,
+      deprel: this.deprel,
+      misc: this.misc,
+      other: this.misc,
+
+      head: this.getHead('serial'),
+      deps: this.getDeps('serial'),
+
+    };
+
+    if (this._analyses && this._analyses.length)
+      serial.analyses = this._analyses.map(analysis => {
+        return {
+          subTokens: analysis._subTokens.map(subToken => subToken.serialize()),
+        };
+      });
+
+    serial = _.pick(serial, value => value !== undefined);
+
+    return serial;
+  }
+
+  get isSuperToken() {
+    return !!(this._analyses || []).reduce((total, analysis) => {
+      return total += analysis._subTokens.length;
+    }, 0);
+  }
+
+  get value() {
+    return this.form || this.lemma;
+  }
+  
+  get feats() {
+    return this._feats_init
+      ? this._feats.length
+        ? this._feats.join('|')
+        : null
+      : undefined;
+  }
+
+  set feats(feats) {
+    if (feats === undefined)
+      return;
+
+    this._feats_init = true;
+    this._feats = (feats || '').split('|').filter(utils.thin);
+  }
+
+  get misc() {
+    return this._misc_init
+      ? this._misc.length
+        ? this._misc.join('|')
+        : null
+      : undefined;
+  }
+
+  set misc(misc) { // [(serial.misc || ''), (serial.other || []).join('|')].join('|');
+    if (misc === undefined)
+      return;
+
+    this._misc_init = true;
+    this._misc = (misc || '').split('|').filter(utils.thin);
+  }
+
+  set other(other) {
+    if (other === undefined)
+      return;
+
+    this._misc_init = true;
+    this._misc = (other || []).filter(utils.thin);
+  }
+
+  getHead(format) {
+    return this._heads.toString(format, 'head');
+  }
+
+  getDeps(format) {
+    return this._deps.toString(format, 'deps');
+  }
+
+  addHead(token, deprel) {
+
+    if (!(token instanceof BaseToken))
+      throw new BaseTokenError('cannot add head unless it is a token');
+
+    if (token === this)
+      throw new BaseTokenError('token cannot be its own head');
+
+    if (this.options.useTokenDeprel)
+      deprel = deprel || this.deprel;
+
+    this._heads.add(token, deprel);
+
+    if (this.options.addDepsWhenAddingHeads)
+      token._deps.add(this, deprel);
+  }
+
+  removeHead(token) {
+
+    if (!(token instanceof BaseToken))
+      throw new BaseTokenError('cannot remove head unless it is a token');
+
+    if (token === this)
+      throw new BaseTokenError('token cannot remove its own head');
+
+    this._heads.remove(token);
+    token._deps.remove(this);
+  }
+
+  modifyHead(token, deprel) {
+    const done = this._heads.modify(token, deprel);
+
+    if (done) {
+      token.modifyDep(this, deprel);
+      return true;
+    }
+
+    if (this.options.addHeadOnModifyFailure)
+      return this.addHead(token, deprel);
+
+    return false;
+  }
+
+  mapHeads(callback) {
+    return this._heads.map(callback);
+  }
+
+  addDep(token, deprel) {
+
+    if (!(token instanceof BaseToken))
+      throw new BaseTokenError('cannot add dep unless it is a token');
+
+    if (token === this)
+      throw new BaseTokenError('token cannot be its own dep');
+
+    if (this.options.useTokenDeprel)
+      deprel = deprel || this.deprel;
+
+    this._deps.add(token, deprel);
+
+    if (this.options.addHeadsWhenAddingDeps)
+      token._heads.add(this, deprel);
+  }
+
+  removeDep(token) {
+
+    if (!(token instanceof BaseToken))
+      throw new BaseTokenError('cannot remove dep unless it is a token');
+
+    if (token === this)
+      throw new BaseTokenError('token cannot remove its own dep');
+
+    this._deps.remove(token);
+    token._heads.remove(this);
+  }
+
+  modifyDep(token, deprel) {
+    const done = this._deps.modify(token, deprel);
+
+    if (done) {
+      token.modifyHead(this, deprel);
+      return true;
+    }
+
+    if (this.options.addDepOnModifyFailure)
+      return this.addDep(token, deprel);
+
+    return false;
+  }
+
+  mapDeps(callback) {
+    return this._deps.map(callback);
+  }
+}
+
+module.exports = BaseToken;
+
+},{"../utils":479,"./base-class":463,"./dep-set":467,"underscore":499,"uuid/v4":503}],465:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../utils');
+const NxBaseClass = require('./base-class');
+
+class Comment extends NxBaseClass {
+  constructor(body) {
+    super('Comment');
+
+    this.type = 'normal';
+    this.body = body;
+
+    const label = body.match(utils.re.commentLabel),
+      sentId = body.match(utils.re.commentSentId);
+
+    if (label) {
+
+      let labels = [];
+      label[3].split(/\s/).forEach(label => {
+        if (label && labels.indexOf(label) === -1)
+          labels.push(label)
+      });
+
+      this.type = 'label';
+      this.labels = labels;
+
+    } else if (sentId) {
+
+      this.type = 'sent-id';
+      this.id = sentId[2];
+
+    }
+  }
+
+  serialize() {
+    return this.body;
+  }
+}
+
+module.exports = Comment;
+
+},{"../utils":479,"./base-class":463,"underscore":499}],466:[function(require,module,exports){
+arguments[4][44][0].apply(exports,arguments)
+},{"dup":44}],467:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../utils');
+const DependencyError = utils.DependencyError;
+const NxBaseClass = require('./base-class');
+
+
+class DependencySet extends NxBaseClass {
+  constructor(options) {
+    super('DependencySet');
+
+    this.options = options;
+    this.items = new Array();
+  }
+
+  get length() {
+    return this.items.length;
+  }
+
+  map(callback) {
+    return this.items.map(callback);
+  }
+
+  add(token, deprel=null) {
+
+    if (token.isSuperToken)
+      throw new DependencyError('superTokens cannot have dependency relations');
+
+    let found = false;
+    for (let i=0; i<this.length; i++) {
+      const item = this.items[i];
+      if (item.token === token)
+        found = true;
+    }
+
+    if (!found)
+      this.items.push({
+        token: token,
+        deprel: deprel,
+      });
+
+    return found;
+  }
+
+  remove(token) {
+
+    for (let i=0; i<this.length; i++) {
+      const item = this.items[i];
+      if (item.token === token)
+        return this.items.splice(i, 1);
+    }
+
+    return null;
+  }
+
+  modify(token, deprel=null) {
+
+    for (let i=0; i<this.length; i++) {
+      const item = this.items[i];
+      if (item.token === token) {
+        let change = item.deprel !== deprel;
+        item.deprel = deprel;
+        return change;
+      }
+    }
+
+    return false;
+  }
+
+  toString(format, type) {
+
+    const standard = index => {
+
+      const items = type === 'head' && !this.options.showEnhancedDependencies
+        ? this.items.slice(0)
+        : this.items;
+
+      const showDeprel = type === 'head'
+          ? this.options.headsShowDeprel
+          : type === 'deps'
+            ? this.options.depsShowDeprel
+            : true;
+
+      const print = item => item.token.indices.conllu == undefined
+        ? null
+        : showDeprel && item.deprel && (item.deprel !== 'root' || this.options.showRootDeprel)
+          ? `${ item.token.indices[index] }:${ item.deprel }`
+          : `${ item.token.indices[index] }`;
+
+      return items.map(print).filter(utils.thin).join('|');
+    };
+
+    if (format === 'CoNLL-U') {
+
+      return standard('conllu') || null;
+
+    } else if (format === 'cytoscape') {
+
+      throw new Error('not implemented');
+
+    } else if (format === 'serial') {
+
+      return standard('absolute') || undefined;
+
+    } else {
+
+      const item = this.items.slice(0)[0];
+      if (item == undefined)
+        return null;
+
+      return item.token.indices.cg3;
+
+    }
+  }
+}
+
+module.exports = DependencySet;
+
+},{"../utils":479,"./base-class":463,"underscore":499}],468:[function(require,module,exports){
+module.exports = {
+
+  NxBaseClass: require('./base-class'),
+  Corpus: require('./corpus'),
+  Sentence: require('./sentence'),
+  Comment: require('./comment'),
+  BaseToken: require('./base-token'),
+  RootToken: require('./root'),
+  Token: require('./token'),
+  Analysis: require('./analysis'),
+  SubToken: require('./sub-token'),
+  DependencySet: require('./dep-set'),
+
+};
+
+},{"./analysis":462,"./base-class":463,"./base-token":464,"./comment":465,"./corpus":466,"./dep-set":467,"./root":469,"./sentence":470,"./sub-token":471,"./token":472}],469:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../utils');
+const BaseToken = require('./base-token');
+
+class RootToken extends BaseToken {
+  constructor() {
+
+    super('RootToken', {});
+
+    this.indices = {
+      conllu: 0,
+      cg3: 0,
+      cytoscape: 0,
+    };
+  }
+}
+
+module.exports = RootToken;
+
+},{"../utils":479,"./base-token":464,"underscore":499}],470:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../utils');
+const SentenceError = utils.SentenceError;
+const parse = require('../parser');
+const generate = require('../generator');
+
+const NxBaseClass = require('./base-class');
+const Comment = require('./comment');
+const Token = require('./token');
+const RootToken = require('./root');
+const update = require('./update');
+
+class Sentence extends NxBaseClass {
+  constructor(serial, options) {
+
+    super('Sentence');
+
+    this.to = (format, options) => generate[format](this, options);
+
+    serial = serial || '';
+    options = options || {};
+    options = _.defaults(options, {
+      interpretAs: null,
+      addHeadOnModifyFailure: true,
+      addHeadsWhenAddingDeps: true,
+      headsShowDeprel: true,
+      addDepOnModifyFailure: true,
+      addDepsWhenAddingHeads: true,
+      depsShowDeprel: true,
+      showRootDeprel: true,
+      showEnhancedDependencies: true,
+      useTokenDeprel: true,
+      debugUpdates: false,
+    });
+
+    if (options.interpretAs) {
+
+      // interpret as a particular format if passed option
+      serial = parse.as[options.interpretAs](serial, options);
+
+    } else {
+
+      // otherwise, get an array of possible interpretations
+      serial = parse(serial, options);
+
+      // choose one of them if possible
+      if (serial.length === 0) {
+        throw new SentenceError('Unable to parse input', this);
+      } else if (serial.length === 1) {
+        serial = serial[0];
+      } else {
+        throw new SentenceError(
+          `Unable to disambiguate input interpretations (${serial.length})`, this);
+      }
+
+    }
+
+    this.input = serial.input;
+    this.options = serial.options;
+    this.comments = serial.comments.map(com => new Comment(com, options));
+    this.tokens = serial.tokens.map(tok => new Token(tok, options));
+
+    this.attach();
+  }
+
+  serialize() {
+    return {
+      input: this.input,
+      options: this.options,
+      comments: this.comments.map(com => com.serialize()),
+      tokens: this.tokens.map(token => token.serialize()),
+    };
+  }
+
+  iterate(callback) {
+    for (let i=0; i<this.tokens.length; i++) {
+
+      const token = this.tokens[i];
+      callback(token, i, null, null);
+
+      for (let j=0; j<token._analyses.length; j++) {
+        for (let k=0; k<token._analyses[j]._subTokens.length; k++) {
+
+          const subToken = token._analyses[j]._subTokens[k];
+          callback(subToken, i, j, k);
+
+        }
+      }
+    }
+  }
+
+  query(predicate) {
+
+    let matches = [];
+    this.iterate(token => {
+      if (predicate(token))
+        matches.push(token);
+    });
+
+    return matches;
+  }
+
+  getByIndices(tokenId, analysisId=null, subTokenId=null) {
+
+    if (!this.tokens[tokenId])
+      return null;
+
+    if (analysisId === null)
+      return this.tokens[tokenId];
+
+    if (!this.tokens[tokenId]._analyses[analysisId])
+      return null;
+
+    if (subTokenId === null)
+      return this.tokens[tokenId]._analyses[analysisId];
+
+    return this.tokens[tokenId]._analyses[analysisId]._subTokens[subTokenId] || null;
+  }
+
+  index() {
+
+    let absolute = 0,
+      majorToken = null,
+      superToken = null,
+      empty = 0,
+      conllu = 0,
+      cg3 = 0,
+      cytoscape = -1;
+
+    this.iterate((token, i, j, k) => {
+
+      token.indices.absolute = ++absolute;
+
+      if (!token._analyses || !token._analyses.length)
+        token.indices.cg3 = ++cg3;
+
+      if (!token.isSuperToken && superToken && superToken.analysis === j)
+        token.indices.cytoscape = ++cytoscape;
+
+      if (token.subTokens && token.subTokens.length === 0)
+        token.indices.cytoscape = ++cytoscape;
+
+      if (j === null || k === null) {
+
+        majorToken = token;
+
+        if (superToken) {
+          superToken.token.indices.conllu = superToken.start + '-' + superToken.stop;
+          superToken = null;
+        }
+
+        if (token.subTokens.length) {
+          superToken = {
+            token: token,
+            start: null,
+            stop: null,
+            analysis: token._i,
+          };
+        } else {
+
+          if (token.isEmpty) {
+            empty += 1;
+          } else {
+            empty = 0;
+            conllu += 1;
+          }
+
+          token.indices.conllu = empty ? conllu + '.' + empty : conllu;
+        }
+
+      } else {
+
+        if (majorToken._i === j) {
+
+          if (token.isEmpty) {
+            empty += 1;
+          } else {
+            empty = 0;
+            conllu += 1;
+          }
+
+          token.indices.conllu = empty ? conllu + '.' + empty : conllu;
+        }
+
+        if (superToken) {
+          if (superToken.start === null) {
+            superToken.start = empty ? conllu + '.' + empty : conllu;
+          } else {
+            superToken.stop = empty ? conllu + '.' + empty : conllu;
+          }
+        }
       }
     });
 
-    // save updated params (mostly for debugging purposes)
-    this.params = params || {};
-
-    // safe to unset this now
-    this.initializing = false;
-
-  }
-
-  /**
-   * @return {Number} total number of subTokens for this analysis
-   */
-  get length() {
-    return this.subTokens.length;
-  }
-
-  // manipulate subTokens array
-
-  /**
-   * get subToken at the given index or null
-   *
-   * @param {Number} index
-   * @return {(null|Token)}
-   */
-  getSubToken(index) {
-    return this.subTokens[index] || null;
-  }
-
-  /**
-   * insert a subToken BEFORE the given index
-   *
-   * NOTE: if the index is out of bounds (<0 or >length), then it will be adjusted
-   *   to fit the bounds. this means that you can call this with `index=-Infinity`
-   *   to push to the front of the subTokens array or with `index=Infinity` to push
-   *   to the end
-   *
-   * @param {Number} index
-   * @param {Token} token
-   * @return {Analysis}
-   *
-   * @throws {NotatrixError} if given invalid index or analysis (see below)
-   */
-  insertSubTokenAt(index, token) {
-
-    // enforce only indices that can be cast as Numbers
-    index = parseFloat(index); // catch Infinity
-    if (isNaN(index))
-      throw new NotatrixError('unable to insert subToken: unable to cast index to int');
-
-    // enforce token is a Token
-    if (!token)
-      throw new NotatrixError('unable to insert subToken: no subToken provided');
-
-    // enforce token is a Token
-    if (token.__proto__ !== this.token.__proto__) // hacky, but don't have access to Token class
-      throw new NotatrixError('unable to insert subToken: not instance of Token');
-
-    // enforce not trying to add a superToken as a subToken
-    if (token.isSuperToken)
-      throw new NotatrixError('unable to insert subToken: token has subTokens');
-
-    // enforce not trying to add a subToken of some other token
-    if (token.isSubToken)
-      throw new NotatrixError('unable to insert subToken: token is already a subToken')
-
-    // enforce not trying to add a subToken to a subToken
-    if (this.isSubToken)
-      throw new NotatrixError('unable to insert subToken: this is already a subToken');
-
-    // bounds checking
-    index = index < 0 ? 0
-      : index > this.length ? this.length
-      : parseInt(index);
-
-    // set the superToken pointer on the token
-    token.superToken = this;
-
-    // array insertion
-    this.subTokens = this.subTokens.slice(0, index)
-      .concat(token)
-      .concat(this.subTokens.slice(index));
-
-    // chaining
-    return this;
-  }
-
-  /**
-   * remove a subToken at the given index
-   *
-   * NOTE: if the index is out of bounds (<0 or >length - 1), then it will be
-   *   adjusted to fit the bounds. this means that you can call this with
-   *   `index=-Infinity` to remove the first element of the subTokens array or
-   *   with `index=Infinity` to remove the last
-   *
-   * @param {Number} index
-   * @return {(null|Token)}
-   *
-   * @throws {NotatrixError} if given invalid index
-   */
-  removeSubTokenAt(index) {
-
-    // can't remove if we have an empty array
-    if (!this.length)
-      return null;
-
-    index = parseFloat(index); // catch Infinity
-    if (isNaN(index))
-      throw new NotatrixError('unable to remove subToken: unable to cast index to int');
-
-    // bounds checking
-    index = index < 0 ? 0
-      : index > this.length - 1 ? this.length - 1
-      : parseInt(index);
-
-    // unlink heads and deps from the token to be removed
-    this.sentence.forEach(token => {
-      token.analysis
-        .eachHead(head => {
-          if (head === this[index])
-            token.analysis.removeHead(head);
-        })
-        .eachDep(dep => {
-          if (dep === this[index])
-            token.analysis.removeDep(dep);
-        });
-    });
-
-    // remove the superToken pointer from the removed token
-    this.subTokens[index].superToken = null;
-
-    // array splicing, return spliced element
-    return this.subTokens.splice(index, 1)[0];
-  }
-
-  /**
-   * move a subToken from sourceIndex to targetIndex
-   *
-   * NOTE: if either index is out of bounds (<0 or >length - 1), then it will
-   *   be adjusted to fit the bounds. this means that you can call this with
-   *   `sourceIndex=-Infinity` to select the first element of the subTokens array
-   *   or with `sourceIndex=Infinity` to select the last
-   *
-   * @param {Number} sourceIndex
-   * @param {Number} targetIndex
-   * @return {Analysis}
-   *
-   * @throws {NotatrixError} if given invalid sourceIndex or targetIndex
-   */
-  moveSubTokenAt(sourceIndex, targetIndex) {
-
-    sourceIndex = parseFloat(sourceIndex);
-    targetIndex = parseFloat(targetIndex);
-    if (isNaN(sourceIndex) || isNaN(targetIndex))
-      throw new NotatrixError('unable to move subToken: unable to cast indices to ints');
-
-    // bounds checking
-    sourceIndex = sourceIndex < 0 ? 0
-      : sourceIndex > this.length - 1 ? this.length - 1
-      : parseInt(sourceIndex);
-    targetIndex = targetIndex < 0 ? 0
-      : targetIndex > this.length - 1 ? this.length - 1
-      : parseInt(targetIndex);
-
-    if (sourceIndex === targetIndex) {
-      // do nothing
-    } else {
-
-      // array splice and insert
-      let subToken = this.subTokens.splice(sourceIndex, 1);
-      this.subTokens = this.subTokens.slice(0, targetIndex)
-        .concat(subToken)
-        .concat(this.subTokens.slice(targetIndex));
-
+    if (superToken) {
+      superToken.token.indices.conllu = `${superToken.start}-${superToken.stop}`;
+      superToken = null;
     }
 
-    // chaining
-    return this;
+    this.size = absolute;
   }
 
-  /**
-   * push a subToken to the end of the subTokens array ... sugar for
-   *   Analysis::insertSubTokenAt(Infinity, analysis)
-   *
-   * @param {Token} token
-   * @return {Analysis}
-   */
-  pushSubToken(token) {
-    return this.insertSubTokenAt(Infinity, token);
-  }
+  attach() {
+    this.iterate((token, i, j, k) => {
 
-  /**
-   * pop a subToken from the end of the subTokens array ... sugar for
-   *   Analysis::removeSubTokenAt(Infinity)
-   *
-   * @return {(null|Analysis)}
-   */
-  popSubToken() {
-    return this.removeSubTokenAt(Infinity);
-  }
+      (token.serial.head || '').split('|').forEach(fullHead => {
 
-  // external formats
+        fullHead = fullHead.split(':');
+        const head = fullHead[0];
+        const deprel = fullHead[1] || null;
 
-  /**
-   * get a serial version of the internal analysis representation
-   *
-   * @return {Object}
-   */
-  get nx() {
+        if (head === '0') {
 
-    // serialize "values" (getter/setter version of fields)
-    let values = {};
-    _.each(fields, field => {
-      values[field] = this[field];
+          token.addHead(new RootToken(), 'root');
+
+        } else if (head) {
+
+          const query = this.query(token => token.serial.index === head);
+          if (query.length !== 1) {
+            console.log(token.serial)
+            throw new SentenceError(`cannot locate token with serial index "${head}"`);
+          }
+
+          token.addHead(query[0], deprel);
+        }
+      });
+
+      (token.serial.deps || '').split('|').forEach(fullDep => {
+
+        fullDep = fullDep.split(':');
+        const dep = fullDep[0];
+        const deprel = fullDep[1] || null;
+
+        if (dep === '0') {
+
+        } else if (dep) {
+
+          const query = this.query(token => token.serial.index === dep);
+          if (query.length !== 1)
+            throw new SentenceError(`cannot locate token with serial index "${dep}"`);
+
+          token.addDep(query[0], deprel);
+        }
+      });
+
     });
 
-    // serialize other data
-    return {
-      id: this.id,
-      num: this.num,
-      params: this.params,
-      values: values,
-      subTokens: this.subTokens.map(subToken => {
-        return subToken.nx;
-      })
-    };
+    this.iterate(token => { delete token.serial });
 
+    this.index();
   }
 
-  /**
-   * deserialize an internal representation
-   *
-   * @param {Object} nx
-   * @return {undefined}
-   */
-  set nx(nx) {
+  update(serial, options) {
+    try {
 
-    this.params = nx.params;
-    _.each(nx.values, (value, key) => {
-      this[key] = value;
-    });
+      const sent = new Sentence(serial, options);
+      update(this, sent, options);
 
-  }
+    } catch(e) {
 
-  /**
-   * static method allowing us to construct a new Analysis directly from an
-   *   Nx string and bind it to a token
-   *
-   * @param {Token} token
-   * @param {String} serial
-   * @return {Analysis}
-   */
-  static fromNx(token, serial) {
-    let analysis = new Analysis(token);
-    analysis.nx = serial;
-    return analysis;
-  }
+      if (e instanceof utils.ToolError || utils.NxError)
+        throw new SentenceError('Unable to update: ' + e.message);
 
-
-  /**
-   * get a plain-text formatted string of the analysis
-   *
-   * @return {String}
-   */
-  get text() {
-
-    // first check if we have a form
-    if (this.form && this.form !== fallback)
-      return this.form;
-
-    // fall back to using lemma
-    if (this.lemma && this.lemma !== fallback)
-      return this.lemma;
-
-    // if set, fall back to our fallback (defined above)
-    if (this.sentence.fallbackOnText)
-      return fallback;
-
-    // otherwise just give an empty string
-    return '';
-  }
-
-  /**
-   * get a CoNLL-U formatted string representing the analysis
-   *
-   * @return {String}
-   *
-   * @throws {NotatrixError} if id has not been set
-   */
-  get conllu() {
-
-    // reindex just in case since this is crucial
-    this.sentence.index();
-
-    // we can't output CoNLL-U for analyses that aren't indexed, since that
-    //   means they're not in the current analysis
-    if (this.id === null || this.id === undefined)
-      throw new NotatrixError('analysis is not currently indexed');
-
-    // return a tab-delimited string with the information contained in each field
-    //   and the index out front
-    return `${this.id}\t${
-      _.map(fields, field => {
-
-        // if we have no data for a field, use our fallback to maintain
-        //   the correct matrix structure
-        return this[field] || fallback;
-
-      }).join('\t')
-    }`;
-  }
-
-  /**
-   * get a CG3 formatted string representing the analysis
-   *
-   * @return {String}
-   */
-  get cg3() {
-
-    // reindex just in case since this is crucial
-    this.sentence.index();
-
-    // either output this analysis or its subTokens
-    if (this.isSuperToken) {
-      return this.subTokens.map((subToken, i) => {
-
-        // recall subTokens get hanging indents
-        return cg3FormatOutput(subToken.analysis, i + 1);
-
-      }).join('\n');
-    } else {
-
-      // regular tokens get an index of 1
-      return cg3FormatOutput(this, 1);
-
+      throw e;
     }
   }
 
-  /**
-   * get an array of nodes relating to this analysis for export to an external
-   *   graphing library (e.g. Cytoscape, D3)
-   *
-   * @return {Array}
-   */
-  get eles() {
+  getCytoscapeEles(format) {
+    this.index();
+
+    function toSubscript(str) {
+      const subscripts = { 0:'₀', 1:'₁', 2:'₂', 3:'₃', 4:'₄', 5:'₅',
+        6:'₆', 7:'₇', 8:'₈', 9:'₉', '-':'₋', '(':'₍', ')':'₎' };
+
+      if (str == null)
+        return '';
+
+      return str.split('').map((char) => {
+        return (subscripts[char] || char);
+      }).join('');
+    }
+
     let eles = [];
 
-    if (this.isCurrent) {
+    this.iterate(token => {
 
-      if (this.isSuperToken) {
+      if (token.indices.cytoscape == null && !token.isSuperToken)
+        return;
+
+      let id = format === 'CoNLL-U'
+        ? token.indices.conllu
+        : format === 'CG3'
+          ? token.indices.cg3
+          : token.indices.absolute;
+      let num = token.indices.absolute - 1;
+      let clump = token.indices.cytoscape;
+      let pos = format === 'CG3'
+        ? token.xpostag || token.upostag
+        : token.upostag || token.xpostag;
+      let isRoot = false;
+      token.mapHeads(head => {
+        if (head.token.name === 'RootToken')
+          isRoot = true;
+      });
+
+      if (token.isSuperToken) {
 
         eles.push({ // multiword label
           data: {
-            id: `multiword-${this.id}`,
-            num: this.num,
-            clump: this.clump,
+            id: `multiword-${id}`,
+            num: num,
+            clump: clump,
             name: `multiword`,
-            label: `${this.form} ${toSubscript(this.id)}`,
-            /*length: `${this.form.length > 3
-              ? this.form.length * 0.7
-              : this.form.length}em`*/
+            label: `${token.form} ${toSubscript(id)}`,
+            /*length: `${token.form.length > 3
+              ? token.form.length * 0.7
+              : token.form.length}em`*/
           },
           classes: 'multiword'
-        }/*, {
-
-        } */);
-
-        _.each(this.subTokens, subToken => {
-          eles = eles.concat(subToken.eles);
         });
 
       } else {
 
         eles.push({ // "number" node
           data: {
-            id: `num-${this.id}`,
-            num: this.num,
-            clump: this.clump,
+            id: `num-${id}`,
+            num: num,
+            clump: clump,
             name: 'number',
-            label: this.id,
-            pos: this.pos,
-            parent: this.superToken ? `multiword-${this.superToken.id}` : undefined,
-            analysis: this
+            label: id,
+            pos: pos,
+            parent: token.name === 'SubToken' ? `multiword-${id}` : undefined,
+            token: token,
           },
           classes: 'number'
         }, { // "form" node
           data: {
-            id: `form-${this.id}`,
-            num: this.num,
-            clump: this.clump,
-            name: `form`,
-            attr: `form`,
-            form: this.form,
-            label: this.form,
-            length: `${this.form.length > 3
-              ? this.form.length * 0.7
-              : this.form.length}em`,
+            id: `form-${id}`,
+            num: num,
+            clump: clump,
+            name: 'form',
+            attr: 'form',
+            form: token.form,
+            label: token.form,
+            length: `${(token.form || '').length > 3
+              ? (token.form || '').length * 0.7
+              : (token.form || '').length}em`,
             state: `normal`,
-            parent: `num-${this.id}`,
-            analysis: this
+            parent: `num-${id}`,
+            token: token,
           },
-          classes: `form${this.head == 0 ? ' root' : ''}`
+          classes: `form${isRoot ? ' root' : ''}`,
         }, { // "pos" node
           data: {
-            id: `pos-node-${this.id}`,
-            num: this.num,
-            clump: this.clump,
+            id: `pos-node-${id}`,
+            num: num,
+            clump: clump,
             name: `pos-node`,
-            attr: `upostag`,
-            pos: this.pos,
-            label: this.pos || '',
-            length: `${(this.pos || '').length * 0.7 + 1}em`,
-            analysis: this
+            attr: format === 'CG3' ? `xpostag` : `upostag`,
+            pos: pos,
+            label: pos || '',
+            length: `${(pos || '').length * 0.7 + 1}em`,
+            token: token,
           },
           classes: 'pos'
         }, { // "pos" edge
           data: {
-            id: `pos-edge-${this.id}`,
-            num: this.num,
-            clump: this.clump,
+            id: `pos-edge-${id}`,
+            num: num,
+            clump: clump,
             name: `pos-edge`,
-            pos: this.pos,
-            source: `form-${this.id}`,
-            target: `pos-node-${this.id}`
+            pos: pos,
+            source: `form-${id}`,
+            target: `pos-node-${id}`
           },
           classes: 'pos'
         });
 
-        this.eachHead((head, deprel) => {
-          deprel = deprel || '';
+        token.mapHeads(head => {
 
-          if (!head || !head.id) // ROOT
+          if (head.token.name === 'RootToken')
             return;
+
+          let headId = format === 'CoNLL-U'
+            ? head.token.indices.conllu
+            : format === 'CG3'
+              ? head.token.indices.cg3
+              : head.token.indices.absolute;
 
           eles.push({
             data: {
-              id: `dep_${this.id}_${head.id}`,
+              id: `dep_${id}_${headId}`,
               name: `dependency`,
               attr: `deprel`,
-              deprel: deprel,
-              source: `form-${this.id}`,
-              sourceAnalysis: this,
-              target: `form-${head.id}`,
-              targetAnalysis: head,
-              length: `${deprel.length / 3}em`,
+              deprel: (head.deprel || ''),
+              source: `form-${id}`,
+              sourceToken: token,
+              target: `form-${headId}`,
+              targetToken: head.token,
+              length: `${(head.deprel || '').length / 3}em`,
               label: null, // NB overwrite this before use
               ctrl: null   // NB overwrite this before use
             },
@@ -62629,591 +65747,878 @@ class Analysis {
 
         });
       }
-    }
+    });
 
     return eles;
   }
-
-  // array-field (heads & deps) manipulators
-
-  /**
-   * iterate over the `head`s for this analysis and apply a callback to each
-   *
-   * @param {Function} callback
-   * @return {Analysis}
-   */
-  eachHead(callback) {
-    _.each(this._heads, (head, i) => {
-      callback(head.token, head.deprel, i);
-    });
-
-    // chaining
-    return this;
-  }
-
-  /**
-   * add a head on the given token with a dependency relation
-   *
-   * @param {Analysis} head pointer directly to the analysis
-   * @param {String} deprel
-   * @return {Analysis}
-   */
-  addHead(head, deprel) {
-    if (!(head instanceof Analysis))
-      throw new NotatrixError('can\'t add head: not Analysis instance');
-
-    // first try to change an existing one (don't want duplicate heads)
-    if (this.changeHead(head, deprel))
-      return this;
-
-    // get rid of "empty" value
-    if (this._heads.length === 1 && this._heads[0].token === '_')
-      this._heads = [];
-
-    // otherwise push a new one
-    this._heads.push({
-      token: head,
-      deprel: deprel
-    });
-
-    // if applicable, add to the head's deps field too
-    if (this.sentence.options.help.head)
-      head._deps.push({
-        token: this,
-        deprel: deprel
-      });
-
-    // chaining
-    return this;
-  }
-
-  /**
-   * remove a head from the given analysis if it exists
-   *
-   * @param {Analysis} head
-   * @return {Analysis}
-   */
-  removeHead(head) {
-    if (!(head instanceof Analysis))
-      throw new NotatrixError('can\'t remove head: not Analysis instance');
-
-    // remove from _heads
-    let removing = -1;
-    this.eachHead((token, deprel, i) => {
-      if (token === head)
-        removing = i;
-    });
-    if (removing > -1)
-      this._heads.splice(removing, 1);
-
-    // if applicable, also remove from head's _deps
-    removing = -1
-    if (this.sentence.options.help.head)
-      head.eachDep((token, deprel, i) => {
-        if (token === this)
-          removing = i;
-      });
-    if (removing > -1)
-      head._deps.splice(removing, 1);
-
-    // chaining
-    return this;
-  }
-
-  /**
-   * change the dependency relation for a given head ... returns null if unable
-   *   to make the change
-   *
-   * @param {Analysis} head
-   * @param {String} deprel
-   * @return {(Analysis|null)}
-   */
-  changeHead(head, deprel) {
-    if (!(head instanceof Analysis))
-      throw new NotatrixError('can\'t change head: not Analysis instance');
-
-    // change for this head
-    let done = false;
-    this.eachHead((token, _deprel, i) => {
-      if (token === head) {
-        this._heads[i].deprel = deprel || _deprel;
-        done = true;
-      }
-    });
-
-    // if applicable, change for the head's dep too
-    if (this.sentence.options.help.head)
-      head.eachDep((token, _deprel, i) => {
-        if (token === this)
-          head._deps[i].deprel = deprel || _deprel;
-      });
-
-    return done ? this : null;
-  }
-
-  /**
-   * iterate over the `deps`s for this analysis and apply a callback to each
-   *
-   * @param {Function} callback
-   * @return {Analysis}
-   */
-  eachDep(callback) {
-    _.each(this._deps, (dep, i) => {
-      callback(dep.token, dep.deprel, i);
-    });
-
-    // chaining
-    return this;
-  }
-
-  /**
-   * add a dep on the given token with a dependency relation
-   *
-   * @param {Analysis} dep pointer directly to the analysis
-   * @param {String} deprel
-   * @return {Analysis}
-   */
-  addDep(dep, deprel) {
-    if (!(dep instanceof Analysis))
-      throw new NotatrixError('can\'t add dep: not Analysis instance');
-
-    // first try to change an existing one (don't want duplicate deps)
-    if (this.changeDep(dep, deprel))
-      return this;
-
-    // get rid of "empty" value
-    if (this._deps.length === 1 && this._deps[0].token === '_')
-      this._deps = [];
-
-    // otherwise push a new one
-    this._deps.push({
-      token: dep,
-      deprel: deprel
-    });
-
-    // if applicable, add to the dep's head field too
-    if (this.sentence.options.help.deps)
-      dep._heads.push({
-        token: this,
-        deprel: deprel
-      });
-
-    // chaining
-    return this;
-  }
-
-  /**
-   * remove a dep from the given analysis if it exists
-   *
-   * @param {Analysis} dep
-   * @return {Analysis}
-   */
-  removeDep(dep) {
-    if (!(dep instanceof Analysis))
-      throw new NotatrixError('can\'t remove dep: not Analysis instance');
-
-    // remove from _deps
-    let removing = -1;
-    this.eachDep((token, deprel, i) => {
-      if (token === dep)
-        removing = i;
-    });
-    if (removing > -1)
-      this._deps.splice(removing, 1);
-
-    // if applicable, also remove from dep's _heads
-    removing = -1
-    if (this.sentence.options.help.deps)
-      dep.eachHead((token, deprel, i) => {
-        if (token === this)
-          removing = i;
-      });
-    if (removing > -1)
-      dep._heads.splice(removing, 1);
-
-    // chaining
-    return this;
-  }
-
-  /**
-   * change the dependency relation for a given dep ... returns null if unable
-   *   to make the change
-   *
-   * @param {Analysis} dep
-   * @param {String} deprel
-   * @return {(Analysis|null)}
-   */
-  changeDep(dep, deprel) {
-    if (!(dep instanceof Analysis))
-      throw new NotatrixError('can\'t change dep: not Analysis instance');
-
-    // change for this dep
-    let done = false;
-    this.eachDep((token, _deprel, i) => {
-      if (token === dep) {
-        this._deps[i].deprel = deprel || _deprel;
-        done = true;
-      }
-    });
-
-    // if applicable, change for the dep's head too
-    if (this.sentence.options.help.deps)
-      dep.eachHead((token, _deprel, i) => {
-        if (token === this)
-          dep._heads[i].deprel = deprel || _deprel;
-      });
-
-    return done ? this : null;
-  }
-
-  // field getters and setters
-
-  /**
-   * get the `form` ... if none defined, `help.form` setting `= true` (default:
-   *   `true`), and `lemma` is set, return `lemma` instead
-   *
-   * @return {(String|undefined)}
-   */
-  get form() {
-    return this.sentence.options.help.form
-      ? this._form || this._lemma
-      : this._form;
-  }
-
-  /**
-   * set the `form` ... if the form is just punctuation, possibly set the pos tags
-   *   to `PUNCT` (see {@link evaluatePunctPos})
-   *
-   * @return {undefined}
-   */
-  set form(form) {
-    form = sanitize(form);
-    evaluatePunctPos(this, form);
-    this._form = form;
-  }
-
-  /**
-   * get the `lemma` ... if none defined, `help.lemma` setting `= true` (default:
-   *   `true`), and `form` is set, return `form` instead
-   *
-   * @return {(String|undefined)}
-   */
-  get lemma() {
-    return this.isSuperToken
-      ? null
-      : this.sentence.options.help.lemma
-        ? this._lemma || this._form
-        : this._lemma;
-  }
-
-  /**
-   * set the `lemma` ... if the lemma is just punctuation, possibly set the pos tags
-   *   to `PUNCT` (see {@link evaluatePunctPos})
-   *
-   * @return {undefined}
-   */
-  set lemma(lemma) {
-    lemma = sanitize(lemma);
-    evaluatePunctPos(this, lemma);
-    this._lemma = lemma;
-  }
-
-  /**
-   * get the `pos`, which is just `upostag || xpostag`
-   *
-   * @return {(String|undefined)}
-   */
-  get pos() {
-    return this.upostag || this.xpostag;
-  }
-
-  /**
-   * get the `upostag`
-   *
-   * @return {(String|undefined)}
-   */
-   get upostag() {
-     return this.isSuperToken
-       ? null
-       : this._upostag === fallback
-         ? null
-         : this._upostag;
-   }
-
-   /**
-    * set the `upostag`
-    *
-    * @return {undefined}
-    */
-   set upostag(upostag) {
-     this._upostag = sanitize(upostag);
-   }
-
-   /**
-    * get the `xpostag`
-    *
-    * @return {(String|undefined)}
-    */
-   get xpostag() {
-     return this.isSuperToken
-       ? null
-       : this._xpostag === fallback
-         ? null
-         : this._xpostag;
-   }
-
-  /**
-   * set the `xpostag`
-   *
-   * @return {undefined}
-   */
-  set xpostag(xpostag) {
-    this._xpostag = sanitize(xpostag);
-  }
-
-  /**
-   * get the `feats`
-   *
-   * @return {(String|undefined)}
-   */
-  get feats() {
-    return this.isSuperToken
-      ? null
-      : this._feats;
-  }
-
-  /**
-   * set the `feats`
-   *
-   * @return {undefined}
-   */
-  set feats(feats) {
-    this._feats = sanitize(feats);
-  }
-
-  /**
-   * get the `head` ... if the `showEnhanced` setting `= true` (default: `true`)
-   *   will return a `|`-delimited list of `index`:`deprel` pairs
-   *
-   * @return {(String)}
-   */
-  get head() {
-    if (this.isSuperToken)
-      return null;
-
-    if (this.sentence.options.showEnhanced) {
-      let heads = [];
-      this.eachHead((token, deprel) => {
-        if (token === this.sentence.getById(token.id) || !this.sentence.options.help.head) {
-          heads.push(`${token.id || token}${deprel ? `:${deprel}` : ''}`);
-        } else {
-          heads.push(`${token}${deprel ? `:${deprel}` : ''}`);
-        }
-      });
-      return heads.join('|') || null;
-
-    } else {
-      return this._heads.length
-        ? this._heads[0].id || this._heads[0]
-        : null;
-    }
-  }
-
-  /**
-   * set the `head` ... if the `Analysis` is `initializing`, just save a plain
-   *   string, otherwise try to get the head by index (see {@link Sentence#getById})
-   *
-   * @return {undefined}
-   */
-  set head(heads) {
-
-    heads = heads || [];
-    if (typeof heads === 'string')
-      heads = parseEnhancedString(heads);
-
-    this._heads = heads.map(head => {
-      return this.initializing
-        ? {
-            token: head.token,
-            deprel: head.deprel
-          }
-        : {
-            token: this.sentence.getById(head.token) || head.token,
-            deprel: head.deprel
-          };
-    }).filter(head => {
-      if (head.token !== fallback)
-        return head;
-    });
-  }
-
-  /**
-   * get the `deprel`
-   *
-   * @return {(String|undefined)}
-   */
-  get deprel() {
-    return this.isSuperToken
-      ? null
-      : this._deprel;
-  }
-
-  /**
-   * set the `deprel`
-   *
-   * @return {undefined}
-   */
-  set deprel(deprel) {
-    this._deprel = sanitize(deprel);
-  }
-
-  /**
-   * get the `deps` returns a `|`-delimited list of `index`:`deprel` pairs
-   *
-   * @return {(String)}
-   */
-  get deps() {
-    if (this.isSuperToken)
-      return null;
-
-    // don't worry about enhanced stuff for deps (always can be multiple)
-    let deps = [];
-    this.eachDep((token, deprel) => {
-      if (token === this.sentence.getById(token.id) || !this.sentence.options.help.deps) {
-        deps.push(`${token.id || token}${deprel ? `:${deprel}` : ''}`);
-      } else {
-        deps.push(`${token}${deprel ? `:${deprel}` : ''}`);
-      }
-    });
-    return deps.join('|') || null;
-  }
-
-  /**
-   * set the `deps` ... if the `Analysis` is `initializing`, just save a plain
-   *   string, otherwise try to get the dep by index (see {@link Sentence#getById})
-   *
-   * @return {undefined}
-   */
-  set deps(deps) {
-
-    deps = deps || [];
-    if (typeof deps === 'string')
-      deps = parseEnhancedString(deps);
-
-    this._deps = deps.map(dep => {
-      return this.initializing
-        ? {
-            token: dep.token,
-            deprel: dep.deprel
-          }
-        : {
-            token: this.sentence.getById(dep.token) || dep.token,
-            deprel: dep.deprel
-          };
-    }).filter(dep => {
-      if (dep.token !== fallback)
-        return dep;
-    });
-  }
-
-  /**
-   * get the `misc`
-   *
-   * @return {(String|undefined)}
-   */
-  get misc() {
-    // superTokens can have "misc" field
-    return this._misc;
-  }
-
-  /**
-   * set the `misc`
-   *
-   * @return {undefined}
-   */
-  set misc(misc) {
-    this._misc = sanitize(misc);
-  }
-
-  // bool stuff
-
-  /**
-   * returns this analysis's superToken if it exists
-   *
-   * @return {(Token|null)}
-   */
-  get superToken() {
-    return this.token.superToken;
-  }
-
-  /**
-   * returns true iff this analysis is a subToken of some other token
-   *
-   * @return {Boolean}
-   */
-  get isSubToken() {
-    return this.superToken !== null;
-  }
-
-  /**
-   * returns true iff this analysis has subTokens
-   *
-   * @return {Boolean}
-   */
-  get isSuperToken() {
-    return this.subTokens.length > 0;
-  }
-
-  /**
-   * returns true iff this analysis is the current analysis
-   *
-   * @return {Boolean}
-   */
-  get isCurrent() {
-    return this.token.analysis === this;
+}
+
+module.exports = Sentence;
+
+},{"../generator":460,"../parser":474,"../utils":479,"./base-class":463,"./comment":465,"./root":469,"./token":472,"./update":473,"underscore":499}],471:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../utils');
+const SubTokenError = utils.SubTokenError;
+
+const BaseToken = require('./base-token');
+const DependencySet = require('./dep-set');
+const RootToken = require('./root');
+
+class SubToken extends BaseToken {
+  constructor(serial, options) {
+
+    super('SubToken', options);
+    this.uuid = serial.uuid || this.uuid;
+
+    this.semicolon = serial.semicolon;
+    this.isEmpty = serial.isEmpty;
+    this.form = serial.form;
+    this.lemma = serial.lemma;
+    this.upostag = serial.upostag;
+    this.xpostag = serial.xpostag;
+    this.feats = serial.feats;
+    this.deprel = serial.deprel;
+    this.misc = serial.misc;
+    this.other = serial.other;
+
+    this.serial = {
+      index: serial.index,
+      head: serial.head,
+      deps: serial.deps
+    };
   }
 }
 
-/**
- * Proxy so that we can get subTokens using Array-like syntax
- *
- * NOTE: usage: `ana[8]` would return the analysis of the subToken at index 8
- * NOTE: if `name` is not a Number, fall through to normal object
- *
- * @return {Mixed}
- * @name Analysis#get
- */
-Analysis.prototype.__proto__ = new Proxy(Analysis.prototype.__proto__, {
+module.exports = SubToken;
 
-  // default getter, called any time we use Analysis.name or Analysis[name]
-  get(target, name, receiver) {
+},{"../utils":479,"./base-token":464,"./dep-set":467,"./root":469,"underscore":499}],472:[function(require,module,exports){
+'use strict';
 
-    // Symbols can't be cast to floats, so check here to avoid errors
-    if (typeof name === 'symbol')
-      return this[name];
+const _ = require('underscore');
 
-    // cast, catch Infinity
-    let id = parseFloat(name);
-    if (!isNaN(id)) {
+const utils = require('../utils');
+const TokenError = utils.TokenError;
 
-      // if we got a number, return analysis of subToken at that index
-      id = parseInt(id);
-      let token = receiver.subTokens[id];
-      return token ? token.analysis : null;
+const BaseToken = require('./base-token');
+const Analysis = require('./analysis');
+const DependencySet = require('./dep-set');
+const RootToken = require('./root');
 
-    } else {
+class Token extends BaseToken {
+  constructor(serial, options) {
 
-      // fall through to normal getting
-      return this[name];
+    super('Token', options);
+    this.uuid = serial.uuid || this.uuid;
+
+    this.semicolon = serial.semicolon;
+    this.isEmpty = serial.isEmpty;
+    this.form = serial.form;
+    this.lemma = serial.lemma;
+    this.upostag = serial.upostag;
+    this.xpostag = serial.xpostag;
+    this.feats = serial.feats;
+    this.deprel = serial.deprel;
+    this.misc = serial.misc;
+    this.other = serial.other;
+
+    this._analyses = (serial.analyses || []).map(ana => new Analysis(ana, options));
+    this._i = (this._analyses.length ? 0 : null);
+
+    this.serial = {
+      index: serial.index,
+      head: serial.head,
+      deps: serial.deps
+    };
+  }
+
+  get analysis() {
+    if (this._i === null)
+      return null;
+
+    return this._analyses[this._i];
+  }
+
+  get subTokens() {
+    return this.analysis ? this.analysis.subTokens : [];
+  }
+}
+
+module.exports = Token;
+
+},{"../utils":479,"./analysis":462,"./base-token":464,"./dep-set":467,"./root":469,"underscore":499}],473:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../utils');
+const SentenceError = utils.SentenceError;
+const formats = require('../formats');
+const detect = require('../detector');
+
+function debug(show, ...args) {
+  if (show)
+    console.log('d>', ...args);
+}
+
+function compareFields(fields, t1, t2, maxDistance) {
+  debug(false, `comparing fields at maxDistance: ${maxDistance}`);
+
+
+  /*
+  const compare = field => {
+    debug(false, `comparing "${field}" (${t1[field]}, ${t2[field]})`);
+
+    if (field === 'analyses' && (t1._analyses || t2._analyses)) {
+
+      console.log('analyses', t1.analyses === t2.analyses, t1._analyses);
+
+    } else if (field === 'head') {
+
+      let unmatched = {
+        old: new Set(),
+        new: new Set(),
+      };
+      let matched = {
+        old: new Set(),
+        new: new Set(),
+      };
+      t1.mapHeads((h1, d1) => {
+        t2.mapHeads((h2, d2) => {
+
+        });
+      });
+
+      console.log('head', t1._heads.toString('serial', 'dep'), t2._heads.toString('serial', 'dep'));
+
+    } else if (field === 'deps') {
+
+      console.log('deps', t1._deps.toString('serial', 'dep'), t2._deps.toString('serial', 'dep'));
+
+    } else if (t1[field] !== t2[field]) {
+      if (field === 'analyses') {
+
+        console.log(t1.analyses, t2.analyses)
+
+      }
+      //console.log(field, t1.indices.absolute, t2.indices.absolute)
+      distance += 1;
+    }
+  }
+  */
+
+  var distance = 0;
+
+  fields = fields.filter(field => t1[field] !== undefined);
+  const combinations = utils.combine(fields, fields.length - maxDistance);
+
+  [].forEach(combination => {
+
+  });
+
+  return distance;
+
+  console.log(fields, utils.combine(fields, fields.length - maxDistance));
+
+  const h1 = t1.hashFields(fields, 'indices'),
+    h2 = t2.hashFields(fields, 'indices');
+
+  if (h1 === h2)
+    return true;
+
+  console.log();
+  console.log('h1', h1);
+  console.log('h2', h2);
+  console.log();
+  return false;
+
+  debug(false, `distance: ${distance}`)
+  return distance <= maxDistance;
+}
+
+function compareIndices(_arg, t1, t2, maxDistance) {
+  debug(false, `comparing fields at maxDistance: ${maxDistance}`);
+
+  let distance = 0;
+  ['conllu', 'cg3', 'cytoscape', 'absolute'].forEach(indexName => {
+
+    debug(false, `comparing "${indexName}" (${t1.indices[indexName]}, ${t2.indices[indexName]})`);
+    if (t1.indices[indexName] !== t2.indices[indexName])
+      distance += 1;
+
+  });
+
+  debug(false, `distance: ${distance}`)
+  return distance <= maxDistance;
+}
+
+function updateToken(fields, t1, t2) {
+  debug(false, `updating`);
+
+  fields.forEach(field => {
+    debug(false, `trying to update "${field}"`);
+
+    switch (field) {
+      case ('subTokens'):
+        if (t1.subTokens.length || t2.subTokens.length) {
+          throw new Error('not implemented');
+        } else {
+          // pass
+        }
+        break;
+
+      default:
+        debug(false, `updating (${t1[field]} => ${t2[field]})`);
+        t1[field] = t2[field];
+    }
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function getDistance(fields, t1, t2) {
+
+  fields = fields.filter(field => t1[field] !== undefined);
+  for (let dist=0; dist<fields.length; dist++) {
+
+    let match = false;
+    utils.combine(fields, fields.length - dist).forEach(comb => {
+
+      const hash1 = t1.hashFields(comb),
+        hash2 = t2.hashFields(comb);
+
+      if (hash1 === hash2)
+        match = true;
+    });
+
+    if (match)
+      return dist;
+  }
+  return Infinity;
+}
+
+function getMatches(s, t, ...fields) {
+
+  fields = _.flatten(fields);
+
+  let s_unmatched = new Set((s.map(token => `${token.indices.absolute}`)));
+  let t_unmatched = new Set((t.map(token => `${token.indices.absolute}`)));
+
+  // build distances between nodes
+  let rawDistances = {};
+  s.forEach(t1 => {
+
+    const i1 = t1.indices.absolute;
+    rawDistances[i1] = {};
+
+    t.forEach(t2 => {
+
+      const i2 = t2.indices.absolute;
+      rawDistances[i1][i2] = getDistance(fields, t1, t2);
+
+    });
+  });
+
+  //console.log(rawDistances);
+
+  let neighbors = {};
+  _.each(rawDistances, (targets, source) => {
+
+    neighbors[source] = [];
+
+    let min = Infinity;
+    _.each(targets, distance => {
+      min = Math.min(distance, min);
+    });
+    if (min < Infinity)
+      _.each(targets, (distance, target) => {
+        if (distance === min)
+          neighbors[source].push(target);
+      });
+
+  });
+
+  //console.log(neighbors);
+
+  const lookup = (prefix, index) => key[`${prefix}_${index}`];
+
+  let matches = new Set();
+
+  _.each(neighbors, (neighbors, index) => {
+    if (neighbors.length === 1) {
+
+      matches.add([`${index}`, `${neighbors[0]}`]);
+      s_unmatched.delete(`${index}`);
+      t_unmatched.delete(`${neighbors[0]}`);
+
+    }
+  });
+
+  return {
+    matches,
+    s_unmatched,
+    t_unmatched,
+  };
+}
+
+function updateMatches(s_key, t_key, matches, fields) {
+
+  matches.forEach(match => {
+
+    const s_token = s_key[match[0]];
+    const t_token = t_key[match[1]];
+    //console.log('updating', match[0], match[1]);
+
+    fields.forEach(field => {
+
+      switch (field) {
+        case ('analyses'):
+
+          //console.log('begin analyses evaluations');
+          if (s_token._analyses === undefined || t_token.analyses === undefined)
+            break;
+
+          let s_analyses = s_token._analyses.slice();
+          let t_analyses = t_token._analyses.slice();
+
+          for (let i = 0; i<s_analyses.length; i++)
+            matchAndUpdate(
+              s_key,
+              s_analyses[i]._subTokens,
+              t_key,
+              t_analyses[i]._subTokens,
+              fields);
+          //console.log('end anlyses evaluations');
+
+          break;
+
+        case ('subTokens'):
+
+          //console.log('begin subToken evaluations');
+          if (s_token._analyses === undefined || t_token.analyses === undefined)
+            break;
+
+          let s = s_token.subTokens.slice();
+          let t = t_token.subTokens.slice();
+          matchAndUpdate(s_key, s, t_key, t, fields);
+          //console.log('end subToken evaluations');
+
+          break;
+
+        default:
+          //if (s_token[field] !== t_token[field])
+            //console.log('change!!!', field, s_token[field], t_token[field]);
+          s_token[field] = t_token[field];
+      }
+    });
+  });
+}
+
+function matchAndUpdate(s_key, s, t_key, t, fields) {
+
+  //console.log('matching on fields');
+  let m = getMatches(s, t, fields);
+  //console.log(m);
+  updateMatches(s_key, t_key, m.matches, fields);
+
+  if (m.s_unmatched.size || m.t_unmatched.size) {
+
+    let s = [], t = [];
+
+    m.s_unmatched.forEach(i => s.push(s_key[i]));
+    m.t_unmatched.forEach(i => t.push(t_key[i]));
+
+    //console.log('matching on fields and indices')
+    const m2 = getMatches(s, t, fields, 'indices');
+    //console.log(m2);
+    updateMatches(s_key, t_key, m2.matches, fields);
+
+    if (m2.s_unmatched.size || m2.t_unmatched.size) {
+
+      throw new Error('unable to find match')
 
     }
   }
-});
+}
 
-// expose to application
-module.exports = Analysis;
+module.exports = (original, update, options) => {
 
-},{"./errors":400,"underscore":422}],400:[function(require,module,exports){
+  debug(false, 'original input:', original.input);
+  debug(false, 'update input:', update.input);
+
+  // the input format of the new guy
+  let format = detect(update.input, _.extend({
+    requireOneFormat: true,
+  }, options));
+  debug(false, 'detected update as format:', format);
+  format = formats[format];
+
+  /*
+  let unmatched = {
+    old: new Set(),
+    new: new Set(),
+  };
+  let matched = {
+    old: new Set(),
+    new: new Set(),
+  };
+  */
+
+  if (format.hasComments) {
+    debug(false, '\n\ncomparing comments\n');
+    let i = 0, j = 0;
+    while (data.comments.new.unmatched.size) {
+
+      throw new Error('not implemented');
+
+      /*
+      const s1Comment = this.comments[i];
+      const s2Comment = sent.comments[i];
+
+      if (commentsEqual(s1Comment, s2Comment)) {
+        throw new Error('not implemented')
+      } else {
+        throw new Error('not implemented')
+      }
+      */
+    }
+  } else {
+    debug(false, 'using original comments');
+    // don't change anything
+  }
+
+
+
+
+
+
+
+
+
+  // build a hash table and a list of tokens for each sentence
+  let s_key = {}, s = [], t_key = {}, t = [];
+
+  original.iterate(token => {
+
+    s_key[token.indices.absolute] = token;
+    s.push(token);
+
+  });
+  update.iterate(token => {
+
+    t_key[token.indices.absolute] = token;
+    t.push(token)
+
+  });
+
+  // try to find matches between the items
+  matchAndUpdate(s_key, s, t_key, t, format.fields);
+
+  return;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const iterate = (predicate, dist) => {
+    debug(true, 'iterating at distance', dist);
+
+    original.iterate(t1 => {
+      update.iterate(t2 => {
+
+        if (!matched.old.has(t1) && !matched.new.has(t2))
+          if (predicate(format.fields, t1, t2, dist)) {
+
+            debug(false, 'same', t1.form, t2.form);
+            matched.old.add(t1);
+            matched.new.add(t2);
+            unmatched.old.delete(t1);
+            unmatched.new.delete(t2);
+            updateToken(format.fields, t1, t2);
+
+          } else {
+
+            debug(false, 'different', t1.form, t2.form);
+            unmatched.old.add(t1);
+            unmatched.new.add(t2);
+
+          }
+
+      });
+    });
+  };
+
+  debug(false, )
+  debug(true, `comparing tokens on fields to find exact matches`);
+  iterate(compareFields, 0);
+
+  if (!unmatched.old.size && !unmatched.new.size)
+    return;
+
+  debug(false, )
+  debug(true, `comparing tokens on fields to find close matches`);
+  for (let i=1; i<format.fields.length; i++) {
+
+    iterate(compareFields, i);
+    if (!unmatched.old.size && !unmatched.new.size)
+      return;
+
+  }
+
+  unmatched.old.forEach(e => debug(true, e.indices));
+  unmatched.new.forEach(e => debug(true, e.indices));
+
+  debug(false, )
+  debug(true, `comparing tokens on indices to find close matches`);
+  for (let i=0; i<4; i++) {
+
+    iterate(compareIndices, i);
+    if (!unmatched.old.size && !unmatched.new.size)
+      return;
+
+  }
+
+  debug(true, unmatched);
+  throw new Error('can\'t find a match');
+};
+
+  /*
+
+  let distance = 0;
+  while (data.tokens.new.unmatched.size) {
+    debug()
+    debug(`\tevaluating at maxDistance: ${distance}`);
+    debug()
+
+    for (let i=0; i<data.old.tokens.length; i++) {
+      for (let j=0; j<data.new.tokens.length; j++) {
+
+        if (data.tokens.old.unmatched.has(i) && data.tokens.new.unmatched.has(j))
+          if (compareFields(data, i, j, distance)) {
+            debug('same');
+
+            data.tokens.old.unmatched.delete(i);
+            data.tokens.old.matched.add(i);
+            data.tokens.new.unmatched.delete(j);
+            data.tokens.new.matched.add(j);
+
+            updateToken(data, i, j);
+
+          } else {
+            debug('different');
+          }
+
+      }
+    }
+
+    distance++;
+  }
+
+  return data;
+};
+
+
+/*
+
+
+// some helper functions
+
+function commentsEqual(c1, c2) {
+  throw new Error('not implemented');
+}
+
+function tokensIdentical(t1, t2) {
+
+  let matches = 0,
+    mismatches = 0;
+
+  newFormat.fields.forEach(field => {
+
+    debug(`comparing "${field}" (1: "${t1[field]}", 2: "${t2[field]}")`);
+    if (t1[field] === t2[field]) {
+      matches += 1;
+    } else {
+      mismatches += 1;
+    }
+  });
+
+  debug(matches, mismatches);
+
+  if (matches > 0 && mismatches === 0) {
+    debug('tokens equal')
+    return true;
+  }
+}
+
+function updateToken(t1, t2) {
+  newFormat.fields.forEach(field => {
+    debug(`updating "${field}" : "${t1[field]}" => "${t2[field]}"`)
+    t1[field] = t2[field];
+  });
+}
+
+
+// the new guy
+
+const numComments = Math.max(this.comments.length, sent.comments.length);
+if (newFormat.hasComments) {
+  debug('comparing comments');
+  for (let i=0; i<numTokens; i++) {
+    const s1Comment = this.comments[i];
+    const s2Comment = sent.comments[i];
+
+    if (commentsEqual(s1Comment, s2Comment)) {
+      throw new Error('not implemented')
+    } else {
+      throw new Error('not implemented')
+    }
+  }
+} else {
+  debug('using original comments');
+  // don't change anything
+}
+
+debug('comparing tokens');
+const numTokens = Math.max(this.tokens.length, sent.tokens.length);
+let i1 = 0,
+  oldMatches = new Set();
+  i2 = 0,
+  newMatches = new Set();
+
+while (i1 < numTokens && i2 < numTokens) {
+
+  const t1 = this.tokens[i1];
+  const t2 = sent.tokens[i2];
+
+  if (tokensIdentical(t1, t2)) {
+
+    debug(`updating (${i1}, ${i2})`);
+    oldMatches.add(i1);
+    newMatches.add(i2);
+    updateToken(t1, t2);
+
+  } else {
+
+
+
+  }
+
+  i1++;
+  i2++;
+}
+
+
+*/
+
+},{"../detector":406,"../formats":432,"../utils":479,"underscore":499}],474:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('./utils');
+const ParserError = utils.ParserError;
+
+let as = {
+
+	'apertium stream': require('./formats/apertium-stream').parse,
+  apertiumStream: require('./formats/apertium-stream').parse,
+  Brackets: require('./formats/brackets').parse,
+  brackets: require('./formats/brackets').parse,
+  CG3: require('./formats/cg3').parse,
+  cg3: require('./formats/cg3').parse,
+  'CoNLL-U': require('./formats/conllu').parse,
+  conllu: require('./formats/conllu').parse,
+  'notatrix serial': require('./formats/notatrix-serial').parse,
+  notatrixSerial: require('./formats/notatrix-serial').parse,
+  Params: require('./formats/params').parse,
+  params: require('./formats/params').parse,
+  'plain text': require('./formats/plain-text').parse,
+  plainText: require('./formats/plain-text').parse,
+	SD: require('./formats/sd').parse,
+  sd: require('./formats/sd').parse,
+
+};
+
+module.exports = (text, options) => {
+
+	options = _.defaults(options, {
+    suppressDetectorErrors: true,
+		suppressParserErrors: true,
+		returnAllPossibilities: true,
+  });
+
+	const possibilities = utils.formats.map(format => {
+
+		try {
+			return as[format](text, options);
+		} catch (e) {
+
+			if (e instanceof ParserError && options.suppressParserErrors)
+				return;
+
+			throw e;
+		}
+
+	}).filter(utils.thin);
+
+	if (!possibilities.length && !options.suppressDetectorErrors)
+		throw new DetectorError('Unable to detect format', text, options);
+
+	return options.returnAllPossibilities ? possibilities : possibilities[0];
+
+};
+module.exports.as = as;
+
+},{"./formats/apertium-stream":410,"./formats/brackets":417,"./formats/cg3":423,"./formats/conllu":429,"./formats/notatrix-serial":437,"./formats/params":444,"./formats/plain-text":451,"./formats/sd":458,"./utils":479,"underscore":499}],475:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('./utils');
+const defaultSplitter = require('./formats/default-splitter');
+const detector = require('./detector');
+const SplitterError = utils.SplitterError;
+
+let as = {
+
+	'apertium stream': require('./formats/apertium-stream').split,
+  apertiumStream: require('./formats/apertium-stream').split,
+  Brackets: require('./formats/brackets').split,
+  brackets: require('./formats/brackets').split,
+  CG3: require('./formats/cg3').split,
+  cg3: require('./formats/cg3').split,
+  'CoNLL-U': require('./formats/conllu').split,
+  conllu: require('./formats/conllu').split,
+  'notatrix serial': require('./formats/notatrix-serial').split,
+  notatrixSerial: require('./formats/notatrix-serial').split,
+  Params: require('./formats/params').split,
+  params: require('./formats/params').split,
+  'plain text': require('./formats/plain-text').split,
+  plainText: require('./formats/plain-text').split,
+	SD: require('./formats/sd').split,
+  sd: require('./formats/sd').split,
+
+};
+
+module.exports = (text, options) => {
+
+	let fromDefault = new Set();
+	const splitAsDefault = defaultSplitter(text, options);
+	splitAsDefault.forEach(line => {
+		detector(line, options).forEach(format => fromDefault.add(format));
+	});
+
+	let fromPlainText = new Set();
+	const splitAsPlainText = as.plainText(text, options);
+	splitAsPlainText.forEach(line => {
+		detector(line, options).forEach(format => fromPlainText.add(format));
+	});
+
+	if (fromPlainText.size === 1 && fromPlainText.has('plain text'))
+		return splitAsPlainText;
+
+	return splitAsDefault;
+};
+module.exports.as = as;
+module.exports.onNewlines = require('./formats/default-splitter');
+
+},{"./detector":406,"./formats/apertium-stream":410,"./formats/brackets":417,"./formats/cg3":423,"./formats/conllu":429,"./formats/default-splitter":431,"./formats/notatrix-serial":437,"./formats/params":444,"./formats/plain-text":451,"./formats/sd":458,"./utils":479,"underscore":499}],476:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+
+  fields: [
+    'index',
+    'form',
+    'lemma',
+    'upostag',
+    'xpostag',
+    'feats',
+    'head',
+    'deprel',
+    'deps',
+    'misc'
+  ],
+
+  formats: [
+    'apertium stream',
+    'Brackets',
+    'CG3',
+    'CoNLL-U',
+    'notatrix serial',
+    'Params',
+    'plain text',
+    'SD'
+  ],
+
+  nxSentenceFields: {
+    input: 'string',
+    options: 'object',
+    comments: 'array',
+    tokens: 'array',
+  },
+
+  nxSentenceTokensFields: {
+    semicolon: 'boolean',
+    isEmpty: 'boolean',
+    index: 'number',
+    form: 'string*',
+    lemma: 'string*',
+    upostag: 'string*',
+    xpostag: 'string*',
+    feats: 'string*',
+    head: 'string*',
+    deprel: 'string*',
+    deps: 'string*',
+    analyses: 'array',
+  },
+
+  nxAllOptions: {
+
+  },
+
+  fallback: '_',
+
+};
+
+},{}],477:[function(require,module,exports){
 'use strict';
 
 class NotatrixError extends Error {
@@ -63234,2025 +66639,268 @@ class InvalidCoNLLUError extends NotatrixError {
   }
 }
 
-class TransformationError extends NotatrixError {
+
+class ToolError extends NotatrixError {
   constructor(...args) {
     super(...args);
   }
 }
 
+class SplitterError extends ToolError {
+  constructor(message, text, options) {
+    super(message);
+
+    this.name = 'SplitterError';
+    this.text = text;
+    this.options = options;
+  }
+}
+
+class DetectorError extends ToolError {
+  constructor(message, text, options) {
+    super(message);
+
+    this.name = 'DetectorError';
+    this.text = text;
+    this.options = options;
+  }
+}
+
+class ParserError extends ToolError {
+  constructor(message, text, options) {
+    super(message);
+
+    this.name = 'ParserError';
+    this.text = text;
+    this.options = options;
+  }
+}
+
+class GeneratorError extends ToolError {
+  constructor(message, nx, options) {
+    super(message);
+
+    this.name = 'GeneratorError';
+    this.nx = nx;
+    this.options = options;
+  }
+}
+
+class Loss extends ToolError {
+  constructor(fields, output) {
+    super(`Conversion is lossy on: ${fields.join(', ')}`);
+
+    this.name = 'ConversionError';
+    this.fields = fields;
+    this.output = output;
+  }
+}
+
+class ConverterError extends ToolError {
+  constructor(message) {
+    super(message);
+
+    this.name = 'ConverterError';
+  }
+}
+
+
+
+class NxError extends NotatrixError {
+  constructor(...args) {
+    super(...args);
+  }
+}
+
+class CorpusError extends NxError {
+  constructor(message, nx) {
+    super(message);
+
+    this.name = 'CorpusError';
+    this.nx = nx;
+  }
+}
+
+class SentenceError extends NxError {
+  constructor(message, nx) {
+    super(message);
+
+    this.name = 'SentenceError';
+    this.nx = nx;
+  }
+}
+
+class BaseTokenError extends NxError {
+  constructor(...args) {
+    super(...args);
+    this.name = 'BaseTokenError';
+  }
+}
+
+class TokenError extends BaseTokenError {
+  constructor(message, nx) {
+    super(message);
+
+    this.name = 'TokenError';
+    this.nx = nx;
+  }
+}
+
+class AnalysisError extends NxError {
+  constructor(message, nx) {
+    super(message);
+
+    this.name = 'AnalysisError';
+    this.nx = nx;
+  }
+}
+
+class SubTokenError extends BaseTokenError {
+  constructor(message, nx) {
+    super(message);
+
+    this.name = 'SubTokenError';
+    this.nx = nx;
+  }
+}
+
+class DependencyError extends NxError {
+  constructor(message) {
+    super(message);
+
+    this.name = 'DependencyError';
+  }
+}
+
+
 
 module.exports = {
 
-  NotatrixError: NotatrixError,
-  InvalidCG3Error: InvalidCG3Error,
-  InvalidCoNLLUError: InvalidCoNLLUError,
-  TransformationError: TransformationError
+  NotatrixError,
+  InvalidCG3Error,
+  InvalidCoNLLUError,
+
+  ToolError,
+  SplitterError,
+  DetectorError,
+  ParserError,
+  GeneratorError,
+  Loss,
+  ConverterError,
+
+  NxError,
+  CorpusError,
+  SentenceError,
+  BaseTokenError,
+  TokenError,
+  AnalysisError,
+  SubTokenError,
+  DependencyError,
 
 };
 
-},{}],401:[function(require,module,exports){
+},{}],478:[function(require,module,exports){
 'use strict';
 
+function combine(arr, k) {
+
+  if (k > arr.length || k <= 0)
+    return [];
+
+  if (k === arr.length)
+    return [arr];
+
+  if (k === 1)
+    return arr.map(e => [e]);
+
+  let combs = [];
+  for (let i = 0; i < arr.length - k + 1; i++) {
+
+    const head = arr.slice(i, i+1);
+    const tailCombs = combine(arr.slice(i+1), k-1);
+    tailCombs.forEach(tailComb => {
+      combs.push(head.concat(tailComb));
+    });
+
+  }
+  return combs;
+}
+
 module.exports = {
 
-  Error: require('./errors'),
-  Sentence: require('./sentence'),
-  Token: require('./token'),
-  Analysis: require('./analysis')
+  isJSONSerializable: obj => {
+
+    if (typeof obj === 'string') {
+
+      try {
+        JSON.parse(obj);
+      } catch (e) {
+        return false;
+      }
+
+    } else {
+
+      try {
+        JSON.stringify(obj);
+      } catch (e) {
+        return false;
+      }
+
+    }
+
+    return true;
+  },
+
+  noop: arg => arg,
+
+  thin: arg => !!arg ? arg : undefined,
+
+  combine,
 
 };
 
-},{"./analysis":399,"./errors":400,"./sentence":402,"./token":403}],402:[function(require,module,exports){
+},{}],479:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
 
-const NotatrixError       = require('./errors').NotatrixError;
-const InvalidCG3Error     = require('./errors').InvalidCG3Error;
-const InvalidCoNLLUError  = require('./errors').InvalidCoNLLUError
+const constants = require('./constants');
+const errors = require('./errors');
+const funcs = require('./funcs');
+const regex = require('./regex');
+
+module.exports = _.extend({ re: regex }, errors, constants, funcs);
+
+},{"./constants":476,"./errors":477,"./funcs":478,"./regex":480,"underscore":499}],480:[function(require,module,exports){
+module.exports = {
+
+  multiNewlines: /\n{2,}/g,
+  punctuation: /[.,!?;]+/g,
+  allPunctuation: /^[.,!?;]+$/,
+  sentenceThenPunctuation: /([^.!?]*[.!?]*)/g,
+  spaceBeforePunctuation: /\s+([.,!?;]+)/g,
+  comment: /^(#\s*(.*))(\n|$)/,
+  conlluTokenLine: /^((\d+(\.\d+)?)(\-(\d+(\.\d+)?))?)(.+)/,
+  conlluTokenLineTenParams: /^((\d+(\.\d+)?)(\-(\d+(\.\d+)?))?)((\s+\S+){8,9})/,
+  conlluEmptyIndex: /(\d+)(\.\d+)?/,
+  cg3TokenStart: /^["']<((.|\\")*)>["']/,
+  cg3TokenContent: /^(;?)(\s+)"((.|\\")*)"((\s+[\w@#\->:]+)*)/,
+  cg3Dependency: /#?\d+(->\d*)?$/,
+  cg3Head: /#\d+->(\d*)$/,
+  cg3Index: /#(\d+)/,
+  cg3Deprel: /^@(.*)/,
+  cg3Other: /([^;].*(:.+)?)/,
+  whitespace: /(\s+)/,
+  whiteline: /^(\s*)(\n|$)/,
+  sdDependency: /^\s*([\w.]+)\(([\w.]+),\s*([\w.]+)\)\s*$/,
+  sdDependencyNoWhitespace: /^([\w.]+)\(([\w.]+),\s*([\w.]+)\)$/,
+  fallback: /^_$/,
+  commentLabel: /(\s*)(labels?|tags?)\s*=\s*(\w.*)/,
+  commentSentId: /(\s*)sent.?id\s*=\s*(\w*)/i,
 
-const Token = require('./token');
-const Analysis = require('./analysis');
-
-// define all the regex we use in this module here
-const regex = {
-  comment: /^\W*\#/,
-  commentContent: /^\W*\#\W*(.*)/,
-  superToken: /^\W*[0-9.]+\-[0-9.]+/,
-  empty: /^\W*[0-9]+\.[0-9]+/,
-  cg3TokenStart: /^"<(.|\\")*>"/,
-  cg3TokenContent: /^;?\s+"(.|\\")*"/
-}
-
-const fallback = '_';
-
-/**
- * this class contains all the information associated with a sentence, including
- *   an comments array, a tokens array, and a list of options/settings that apply
- *   to all subelements of this sentence
- */
-class Sentence {
-
-  constructor(paramsList, options) {
-
-    // handle only receiving one arg better
-    if (options === undefined && !Array.isArray(paramsList)) {
-      options = paramsList;
-      paramsList = undefined;
-    }
-
-    // save sentence-wide settings here
-    this.options = _.defaults(options, {
-      help: {
-        form: true,
-        lemma: true,
-        upostag: true,
-        xpostag: true,
-        head: true,
-        deps: true
-      },
-      showEnhanced: true,
-      showEmptyDependencies: true,
-      catchInvalid: true,
-      fallbackOnText: false
-    });
-
-    // the actual data
-    this.comments = [];
-    this.tokens = [];
-
-    // try parsing a list of parameters
-    if (paramsList)
-      this.params = paramsList;
-
-  }
-  /**
-   * @return {Number} total number of tokens/subTokens in this sentence
-   */
-  get length() {
-
-    let acc = 0;
-    this.forEach(token => {
-      acc++;
-    });
-    return acc;
-  }
-  /**
-   * loop through every token in the sentence and apply a callback
-   *
-   * @param {Function} callback function to be applied to every token
-   * @return {Sentence}
-   */
-  forEach(callback) {
-
-    let t = 0;
-    for (let i=0; i<this.tokens.length; i++) {
-      const token = this.tokens[i];
-      callback(token, t);
-      t++;
-      for (let j=0; j<token.subTokens.length; j++) {
-        callback(token.subTokens[j], t);
-        t++;
-      }
-    }
-
-    // chaining
-    return this;
-  }
-  /**
-   * loop through the tokens in the sentence and return the superToken and
-   *   subToken indices
-   * @param {Token} tok token to search for
-   * @return {(Object|null)}
-   */
-  getIndices(tok) {
-
-    let superTokenId = -1,
-      subTokenId = -1,
-      analysisId = 0,
-      found = false,
-      isSubToken = false;
-
-    tok.sentence.forEach(token => {
-
-      if (found)
-        return;
-
-
-      if (token.isSubToken) {
-        subTokenId++;
-        isSubToken = true;
-      } else {
-        superTokenId++;
-        subTokenId = -1;
-        isSubToken = false;
-      }
-
-      if (token === tok)
-        found = true;
-
-    });
-
-    return superTokenId === -1
-      ? null
-      : {
-          super: superTokenId,
-          sub: isSubToken ? subTokenId : null
-        };
-  }
-
-
-  /**
-   * return the comment at the given index, or null
-   *
-   * @param {Number} index
-   * @return {(String|null)}
-   */
-  getComment(index) {
-    return this.comments[index] || null;
-  }
-
-  /**
-   * return the token at the given index (note: this is regular token OR subToken),
-   *   or null.  to choose by superToken index, use Sentence[index] syntax.  this
-   *   function assumes only the current analysis is desired.
-   *
-   * @param {Number} index
-   * @return {(Token|null)}
-   */
-  getToken(index) {
-    let t = 0, token = null;
-    this.forEach((tok, t) => {
-      if (t === index)
-        token = tok;
-    });
-    return token;
-  }
-
-  /**
-   * return the current analysis of the token that matches a given index string
-   *
-   * NOTE: tokens outside the current analysis will have id=null and cannot be retrieved
-   *   with this function
-   *
-   * @param {String} index
-   * @return {(Analysis|null)}
-   */
-  getById(index) {
-    for (let i=0; i<this.tokens.length; i++) {
-      const token = this.tokens[i];
-      if (token.analysis.id == index)
-        return token.analysis;
-      for (let j=0; j<token.subTokens.length; j++) {
-        const subToken = token.subTokens[j];
-        if (subToken.analysis.id == index)
-          return subToken.analysis;
-      }
-    }
-    return null;
-  }
-
-  // manipulate token array
-
-  /**
-   * insert a token AFTER the given token
-   *
-   * NOTE: if only passed 1 arg, it will insert a token constructed from
-   *   the params { form: 'inserted' }
-   *
-   * @param {Token} atToken
-   * @param {(Token|null)} newToken
-   * @return {Sentence}
-   *
-   * @throws {NotatrixError} if given invalid token for first param
-   */
-  insertTokenBefore(atToken, newToken) {
-
-    if (!(atToken instanceof Token))
-      throw new NotatrixError('unable to insert token: not instance of Token');
-
-    if (!(newToken instanceof Token))
-      newToken = Token.fromParams(this, { form: 'inserted' });
-
-    const indices = this.getIndices(atToken);
-    if (indices === null)
-      return null;
-
-    return indices.sub === null
-      ? this.insertTokenAt(indices.super, newToken)
-      : this[indices.super].insertSubTokenAt(indices.sub, newToken);
-  }
-
-  /**
-   * insert a token AFTER the given token
-   *
-   * NOTE: if only passed 1 arg, it will insert a token constructed from
-   *   the params { form: 'inserted' }
-   *
-   * @param {Token} atToken
-   * @param {(Token|null)} newToken
-   * @return {Sentence}
-   *
-   * @throws {NotatrixError} if given invalid token for first param
-   */
-  insertTokenAfter(atToken, newToken) {
-
-    if (!(atToken instanceof Token))
-      throw new NotatrixError('unable to insert token: not instance of Token');
-
-    if (!(newToken instanceof Token))
-      newToken = Token.fromParams(this, { form: 'inserted' });
-
-    const indices = this.getIndices(atToken);
-    if (indices === null)
-      return null;
-
-    return indices.sub === null
-      ? this.insertTokenAt(indices.super + 1, newToken)
-      : this[indices.super].insertSubTokenAt(indices.sub + 1, newToken);
-  }
-
-  /**
-   * insert an analysis BEFORE the given analysis
-   *
-   * NOTE: if only passed 1 arg, it will insert an analysis constructed from
-   *   the params { form: 'inserted' }
-   *
-   * @param {Analysis} atAnalysis
-   * @param {(Analysis|null)} newAnalysis
-   * @return {Sentence}
-   *
-   * @throws {NotatrixError} if given invalid analysis for first param
-   */
-  insertAnalysisBefore(atAnalysis, newAnalysis) {
-
-    if (!(atAnalysis instanceof Analysis))
-      throw new NotatrixError('unable to insert analysis: not instance of Analysis');
-
-    if (!(newAnalysis instanceof Analysis))
-      newAnalysis = Token.fromParams(this, { form: 'inserted' }).analysis;
-
-    const indices = this.getIndices(atAnalysis.token);
-    if (indices === null)
-      return null;
-
-    const token = indices.sub === null
-      ? this[indices.super].token
-      : this[indices.super][indices.sub].token;
-
-    let analysisId = -1;
-    token.forEach((ana, i) => {
-      if (ana === atAnalysis)
-        analysisId = i;
-    });
-
-    if (analysisId > -1)
-      return token.insertAnalysisAt(analysisId, newAnalysis);
-  }
-
-  /**
-   * insert an analysis AFTER the given analysis
-   *
-   * NOTE: if only passed 1 arg, it will insert an analysis constructed from
-   *   the params { form: 'inserted' }
-   *
-   * @param {Analysis} atAnalysis
-   * @param {(Analysis|null)} newAnalysis
-   * @return {Sentence}
-   *
-   * @throws {NotatrixError} if given invalid analysis for first param
-   */
-  insertAnalysisAfter(atAnalysis, newAnalysis) {
-
-    if (!(atAnalysis instanceof Analysis))
-      throw new NotatrixError('unable to insert analysis: not instance of Analysis');
-
-    if (!(newAnalysis instanceof Analysis))
-      newAnalysis = Token.fromParams(this, { form: 'inserted' }).analysis;
-
-    const indices = this.getIndices(atAnalysis.token);
-    if (indices === null)
-      return null;
-
-    const token = indices.sub === null
-      ? this[indices.super].token
-      : this[indices.super][indices.sub].token;
-
-    let analysisId = -1;
-    token.forEach((ana, i) => {
-      if (ana === atAnalysis)
-        analysisId = i;
-    });
-
-    if (analysisId > -1)
-      return token.insertAnalysisAt(analysisId + 1, newAnalysis);
-  }
-
-  /**
-   * insert a token BEFORE the given index
-   *
-   * NOTE: if the index is out of bounds (<0 or >length), then it will be adjusted
-   *   to fit the bounds. this means that you can call this with `index=-Infinity`
-   *   to push to the front of the tokens array or with `index=Infinity` to push
-   *   to the end
-   *
-   * @param {Number} index
-   * @param {Token} token
-   * @return {Sentence}
-   *
-   * @throws {NotatrixError} if given invalid index or token
-   */
-  insertTokenAt(index, token) {
-    index = parseFloat(index); // catch Infinity
-    if (isNaN(index))
-      throw new NotatrixError('unable to insert token: unable to cast index to int');
-
-    if (!(token instanceof Token))
-      throw new NotatrixError('unable to insert token: not instance of Token');
-
-    // bounds checking
-    index = index < 0 ? 0
-      : index > this.length ? this.length
-      : parseInt(index);
-
-    // array insertion
-    this.tokens = this.tokens.slice(0, index)
-      .concat(token)
-      .concat(this.tokens.slice(index));
-
-    // chaining
-    return this;
-  }
-
-  /**
-   * remove a token at the given index
-   *
-   * NOTE: if the index is out of bounds (<0 or >length - 1), then it will be
-   *   adjusted to fit the bounds. this means that you can call this with
-   *   `index=-Infinity` to remove the first element of the tokens array or
-   *   with `index=Infinity` to remove the last
-   *
-   * @param {Number} index
-   * @return {(Token|null)}
-   *
-   * @throws {NotatrixError} if given invalid index
-   */
-  removeTokenAt(index) {
-    // can't remove if we have an empty sentence
-    if (!this.tokens.length)
-      return null;
-
-    index = parseFloat(index); // catch Infinity
-    if (isNaN(index))
-      throw new NotatrixError('unable to remove token: unable to cast index to int');
-
-    // bounds checking
-    index = index < 0 ? 0
-      : index > this.tokens.length - 1 ? this.tokens.length - 1
-      : parseInt(index);
-
-    // unlink heads and deps from the token to be removed
-    this.forEach(token => {
-      token.analysis
-        .eachHead(head => {
-          if (head === this[index])
-            token.analysis.removeHead(head);
-        })
-        .eachDep(dep => {
-          if (dep === this[index])
-            token.analysis.removeDep(dep);
-        });
-    });
-
-    // array splicing, return spliced element
-    return this.tokens.splice(index, 1)[0];
-  }
-
-  /**
-   * move a token from sourceIndex to targetIndex
-   *
-   * NOTE: if either index is out of bounds (<0 or >length - 1), then it will
-   *   be adjusted to fit the bounds. this means that you can call this with
-   *   `sourceIndex=-Infinity` to select the first element of the tokens array
-   *   or with `sourceIndex=Infinity` to select the last
-   *
-   * @param {Number} sourceIndex
-   * @param {Number} targetIndex
-   * @return {Sentence}
-   *
-   * @throws {NotatrixError} if given invalid sourceIndex or targetIndex
-   */
-  moveTokenAt(sourceIndex, targetIndex) {
-    sourceIndex = parseFloat(sourceIndex);
-    targetIndex = parseFloat(targetIndex);
-    if (isNaN(sourceIndex) || isNaN(targetIndex))
-      throw new NotatrixError('unable to move token: unable to cast indices to ints');
-
-    // bounds checking
-    sourceIndex = sourceIndex < 0 ? 0
-      : sourceIndex > this.tokens.length - 1 ? this.tokens.length - 1
-      : parseInt(sourceIndex);
-    targetIndex = targetIndex < 0 ? 0
-      : targetIndex > this.tokens.length - 1 ? this.tokens.length - 1
-      : parseInt(targetIndex);
-
-    if (sourceIndex === targetIndex) {
-      // do nothing
-    } else {
-
-      // array splice and insert
-      let token = this.tokens.splice(sourceIndex, 1);
-      this.tokens = this.tokens.slice(0, targetIndex)
-        .concat(token)
-        .concat(this.tokens.slice(targetIndex));
-
-    }
-
-    // chaining
-    return this;
-  }
-
-  /**
-   * push a token to the end of the tokens array ... sugar for
-   *   Sentence::insertTokenAt(Infinity, token)
-   *
-   * @param {Token} token
-   * @return {Sentence}
-   */
-  pushToken(token) {
-    return this.insertTokenAt(Infinity, token);
-  }
-
-  /**
-   * pop a token from the end of the tokens array ... sugar for
-   *   Sentence::removeTokenAt(Infinity)
-   *
-   * @return {(Token|null)}
-   */
-  popToken() {
-    return this.removeTokenAt(Infinity);
-  }
-
-  // external formats
-
-  /**
-   * returns the % (as a number in [0,1]) annotation of the sentence
-   *
-   * @return {Number}
-   */
-  get progress() {
-
-    // amount work done, amount total work
-    let done = 0,
-      total = 0;
-
-    this.forEach(token => {
-
-      total += 2;
-
-      // if analysis is not set, can't compute other stuff
-      if (!token.analysis)
-        return;
-
-      // if these fields are filled out, increment work
-      if (token.analysis.head && token.analysis.head !== fallback)
-        done++;
-      if (token.analysis.pos && token.analysis.head !== fallback)
-        done++;
-
-      // each head increases amount of work to do
-      token.analysis.eachHead(head => {
-
-        total++;
-        if (head.deprel && head.deprel !== fallback)
-          done++;
-
-      });
-    });
-
-    // return a float in [0,1] and avoid dividing by zero
-    return total ? done / total : 1;
-  }
-
-  /**
-   * get a serial version of the internal sentence representation
-   *
-   * @return {String}
-   */
-  get nx() {
-    // update indices
-    this.index();
-
-    // serialize tokens
-    let tokens = [];
-    for (let i=0; i<this.tokens.length; i++) {
-      tokens.push(this.tokens[i].nx);
-    }
-
-    // serialize other data
-    return {
-      comments: this.comments,
-      options: this.options,
-      tokens: tokens
-    };
-  }
-
-  /**
-   * deserialize an internal representation
-   *
-   * @param {Object} nx
-   * @return {String}
-   */
-  set nx(nx) {
-
-    this.options = nx.options;
-    this.comments = nx.comments;
-    this.tokens = nx.tokens.map(tokenNx => {
-      return Token.fromNx(this, tokenNx);
-    });
-
-    return this.attach().nx;
-  }
-
-  /**
-   * static method allowing us to construct a new Sentence directly from an
-   *   Nx string
-   *
-   * @param {String} serial
-   * @param {Object} options (optional)
-   * @return {Sentence}
-   */
-  static fromNx(serial, options) {
-    let sent = new Sentence(options);
-    sent.nx = serial;
-    return sent;
-  }
-
-  /**
-   * get a plain-text formatted string of the sentence's current analysis text
-   *
-   * @return {String}
-   */
-  get text() {
-    // only care about tokens (not comments or settings)
-    let tokens = [];
-    this.forEach(token => {
-      if (!token.isSubToken && !token.isEmpty)
-        tokens.push(token.text);
-    });
-    return tokens.join(' ');
-  }
-
-  /**
-   * parse a Plain text formatted string and save its contents to the sentence
-   *
-   * @param {String} text
-   * @return {String}
-   */
-  set text(text) {
-
-    // insert a space before final punctuation
-    text = text.trim().replace(/([.,?!]+)$/, ' $1');
-
-    // split on whitespace and add form-only tokens
-    _.map(text.split(/\s/), chunk => {
-      this.pushToken( Token.fromParams(this, { form: chunk }) );
-    });
-
-    return this.text;
-  }
-
-  /**
-   * static method allowing us to construct a new Sentence directly from a
-   *   text string
-   *
-   * @param {String} serial
-   * @param {Object} options (optional)
-   * @return {Sentence}
-   */
-  static fromText(serial, options) {
-    let sent = new Sentence(options);
-    sent.text = serial;
-    return sent;
-  }
-
-  /**
-   * get a CoNLL-U formatted string representing the sentence's current analysis
-   *
-   * @return {(String|null)}
-   */
-  get conllu() {
-    // comments first
-    const comments = _.map(this.comments, comment => {
-      return `# ${comment}`;
-    });
-
-    try {
-
-      let tokens = [];
-      this.forEach(token => {
-        tokens.push(token.conllu);
-      });
-      return comments.concat(tokens).join('\n');
-
-    } catch (e) {
-
-      // if the sentence contains ambiguous analyses, we will get an error,
-      // so catch only those types of errors here
-      if (!(e instanceof InvalidCoNLLUError) || !this.options.catchInvalid)
-        throw e;
-
-      // if sentence is ambiguous
-      return null;
-    }
-  }
-
-  /**
-   * parse a CoNLL-U formatted string and save its contents to the sentence
-   *
-   * @param {String} conllu
-   * @return {String}
-   */
-  set conllu(conllu) {
-    // clear existing data
-    this.comments = [];
-    this.tokens = [];
-
-    // split on newlines
-    const lines = conllu.trim().split('\n');
-    for (let i=0; i<lines.length; i++) {
-
-      // extract comments
-      if (regex.comment.test(lines[i])) {
-        this.comments.push(
-          lines[i].match(regex.commentContent)[1] );
-
-      // extract tokens
-      } else if (regex.superToken.test(lines[i])) {
-
-        // the top-level token
-        const superToken = Token.fromConllu(this, lines[i]);
-
-        // check which subTokens belong to this superToken
-        const k = i;
-        const subTokenIndices = lines[i]
-          .match(regex.superToken)[0]
-          .trim()
-          .split('-')
-          .map(str => { return parseInt(str); });
-
-        // push them all to the superToken's current analysis
-        for (let j=0; j<=(subTokenIndices[1] - subTokenIndices[0]); j++) {
-          superToken.analysis.pushSubToken( Token.fromConllu(this, lines[j + k + 1]) );
-          i++;
-        }
-
-        // push the superToken to the sentence
-        this.pushToken(superToken);
-
-      } else {
-
-        // regular (non-super) tokens pushed to sentence here
-        if (lines[i].trim().length)
-          this.pushToken( Token.fromConllu(this, lines[i]) );
-
-      }
-    }
-
-    // attach heads and return CoNLL-U string
-    return this.attach().conllu;
-  }
-
-  /**
-   * static method allowing us to construct a new Sentence directly from a
-   *   CoNLL-U string
-   *
-   * @param {String} serial
-   * @param {Object} options (optional)
-   * @return {Sentence}
-   */
-  static fromConllu(serial, options) {
-    let sent = new Sentence(options);
-    sent.conllu = serial;
-    return sent;
-  }
-
-  /**
-   * get a CG3 formatted string representing all of the sentence's analyses
-   *
-   * @return {(String|null)}
-   */
-  get cg3() {
-    // comments first
-    const comments = _.map(this.comments, comment => {
-      return `# ${comment}`;
-    });
-
-    try {
-
-      let tokens = [];
-      for (let i=0; i<this.tokens.length; i++) { // iterate over superTokens
-        tokens.push(this.tokens[i].cg3);
-      }
-      return comments.concat(tokens).join('\n');
-
-    } catch (e) {
-
-      // if the sentence is not analyzeable as CG3, we'll get an error
-      // NOTE: this doesn't currently happen under any circumstances
-      if (!(e instanceof InvalidCG3Error) || !this.options.catchInvalid)
-        throw e;
-
-      return null;
-    }
-  }
-
-  /**
-   * parse a CG3 formatted string and save its contents to the sentence
-   *
-   * @param {String} conllu
-   * @return {String}
-   */
-  set cg3(cg3) {
-    // clear existing data
-    this.comments = [];
-    this.tokens = [];
-
-    // since this parsing is more complicated than CoNLL-U parsing, keep this
-    //   array of lines for the current token we're parsing
-    // NOTE: CG3 tokens are separated by lines of the form `/^"<EXAMPLE>"/`
-    //   and lines beginning with one/more indent give data for that token
-    let tokenLines = [];
-
-    // split on newlines
-    const lines = cg3.trim().split('\n');
-    for (let i=0; i<lines.length; i++) {
-
-      // decide what the current line is
-      let isToken = regex.cg3TokenStart.test(lines[i]);
-      let isContent = regex.cg3TokenContent.test(lines[i]);
-
-      // current line is the start of a new token
-      if (isToken) {
-
-        // if we already have stuff in our tokenLines buffer, parse it as a token
-        if (tokenLines.length)
-          this.tokens.push(Token.fromCG3(this, tokenLines));
-
-        // reset tokenLines buffer
-        tokenLines = [ lines[i] ];
-
-      } else {
-
-        // add content lines to tokenLines buffer
-        if (tokenLines.length && isContent) {
-          tokenLines.push(lines[i]);
-
-        // push comment
-        } else {
-          this.comments.push(lines[i].match(regex.commentContent)[1]);
-        }
-      }
-    }
-
-    // clear tokenLines buffer
-    if (tokenLines.length)
-      this.tokens.push(Token.fromCG3(this, tokenLines));
-
-    // attach heads and return CG3 string
-    return this.attach().cg3;
-  }
-
-  /**
-   * static method allowing us to construct a new Sentence directly from a
-   *   CG3 string
-   *
-   * @param {String} serial
-   * @param {Object} options (optional)
-   * @return {Sentence}
-   */
-  static fromCG3(serial, options) {
-    let sent = new Sentence(options);
-    sent.cg3 = serial;
-    return sent;
-  }
-
-  /**
-   * get an array of token parameters representing the sentence
-   *
-   * NOTE: fails (returns null) if we have subTokens or ambiguous analyses
-   *
-   * @return {(Array|null)}
-   */
-  get params() {
-    try {
-
-      let params = [];
-      this.forEach(token => {
-
-        if (token.isSuperToken || token.isSubToken)
-          throw new InvalidCoNLLUError();
-        if (token.isAmbiguous)
-          throw new InvalidCG3Error();
-
-        params.push(token.params);
-      });
-      return params;
-
-    } catch (e) {
-      if (e instanceof InvalidCoNLLUError && this.options.catchInvalid) {
-        console.warn('cannot get params for this sentence: contains MultiWordTokens');
-        return null;
-
-      } else if (e instanceof InvalidCG3Error && this.options.catchInvalid) {
-        console.warn('cannot get params for this sentence: contains ambiguous analyses');
-        return null;
-
-      } else {
-        // throw other errors
-        throw e;
-      }
-    }
-  }
-
-  /**
-   * parse an array of token parameters and save contents to the sentence
-   *
-   * @param {Array} paramsList
-   * @return {(Array|null)}
-   */
-  set params(paramsList) {
-    // can only parse arrays
-    if (!(paramsList instanceof Array))
-      return null;
-
-    // clear existing data
-    this.comments = [];
-    this.tokens = [];
-
-    // push a new token for each set of parameters
-    _.each(paramsList, params => {
-      this.tokens.push(Token.fromParams(this, params));
-    });
-
-    // attach heads and return validated parameter list
-    return this.attach().params;
-  }
-
-  /**
-   * static method allowing us to construct a new Sentence directly from an
-   *   array of parameters
-   *
-   * @param {Array} paramsList
-   * @param {Object} options (optional)
-   * @return {Sentence}
-   */
-  static fromParams(paramsList, options) {
-    let sent = new Sentence(options);
-    sent.params = paramsList;
-    return sent;
-  }
-
-  /**
-   * get an array of the elements of this sentence, useful for exporting the data
-   *   to visualization libraries such as Cytoscape or D3
-   *
-   * @return {Array}
-   */
-  get eles() {
-
-    // just in case, since it's critical
-    this.index();
-
-    let eles = [];
-    _.each(this.tokens, token => {
-      eles = eles.concat(token.eles);
-    });
-
-    return eles;
-  }
-
-  clean() {
-    throw new Error('Sentence::clean is not implemented'); // TODO
-  }
-
-  /**
-   * iterate through the tokens and set an appropriate index for each (following
-   *   CoNLL-U indexing scheme with, e.g. 1 for regular token, 1-2 for superToken,
-   *   1.1 for "empty" token)
-   *
-   * @return {Sentence}
-   */
-  index() {
-    // track "overall" index number (id) and "empty" index number and "absolute" num
-    // NOTE: CoNLL-U indices start at 1 (0 is root), so we will increment this
-    //   index before using it (see Token::index)
-    let id = 0, empty = 0, num = 0, clump = 0;
-    _.each(this.tokens, token => {
-      // allow each token to return counters for the next guy
-      [id, empty, num, clump] = token.index(id, empty, num, clump);
-    });
-
-    // chaining
-    return this;
-  }
-
-  /**
-   * iterate through the tokens and try to convert a plain string index to a
-   *   head to the actual token given by that index (called after parsing
-   *   CoNLL-U, CG3, or params)
-   *
-   * @return {Sentence}
-   */
-  attach() {
-    // reindex in case we're out of date (valid index is crucial here)
-    this.index();
-    this.forEach(token => {
-      token.analysis.head = token.analysis.head;
-      token.analysis.deps = token.analysis.deps;
-    });
-
-    // chaining
-    return this;
-  }
-
-
-  /**
-   * iterate through the tokens and determine if they could be converted into
-   *   a CoNLL-U formatted string
-   *
-   * NOTE: currently, only returns false if it contains one/more ambiguous analyses
-   *
-   * @return {Boolean}
-   */
-  get isValidConllu() {
-    let valid = true;
-    this.forEach(token => {
-      if (token.isAmbiguous)
-        valid = false;
-    });
-    return valid;
-  }
-
-  /**
-   * iterate through the tokens and determine if they could be converted into
-   *   a CG3 formatted string
-   *
-   * NOTE: currently, always returns true (see update below)
-   *
-   * @return {Boolean}
-   */
-  get isValidCG3() {
-    let valid = true;
-    this.forEach(token => {
-      /*
-      UPDATE 6/9/18: apparently CG3 can handle all this stuff, it's just a bit lossy
-        (e.g. subTokens won't have their own `form` and `empty` tokens won't show up)
-
-      if (token.isSubToken || token.isSuperToken || token.isEmpty)
-        valid = false;
-      */
-    });
-    return valid;
-  }
-}
-
-/**
- * Proxy so that we can get tokens using Array-like syntax
- *
- * NOTE: usage: `sent[8]` would return the analysis of the token at index 8
- * NOTE: if `name` is not a Number, fall through to normal object
- *
- * @return {Mixed}
- * @name Sentence#get
- */
-Sentence.prototype.__proto__ = new Proxy(Sentence.prototype.__proto__, {
-
-  // default getter, called any time we use Sentence.name or Sentence[name]
-  get(target, name, receiver) {
-
-    // Symbols can't be cast to floats, so check here to avoid errors
-    if (typeof name === 'symbol')
-      return this[name];
-
-    // cast, catch Infinity
-    let id = parseFloat(name);
-    if (!isNaN(id)) {
-
-      // if we got a number, return analysis at that index
-      id = parseInt(id);
-      let token = receiver.tokens[id];
-      return token ? token.analysis : null;
-
-    } else {
-
-      // fall through to normal getting
-      return this[name];
-
-    }
-  }
-});
-
-// expose to application
-module.exports = Sentence;
-
-},{"./analysis":399,"./errors":400,"./token":403,"underscore":422}],403:[function(require,module,exports){
-'use strict';
-
-const _ = require('underscore');
-
-const NotatrixError       = require('./errors').NotatrixError;
-const InvalidCG3Error     = require('./errors').InvalidCG3Error;
-const InvalidCoNLLUError  = require('./errors').InvalidCoNLLUError
-
-const Analysis = require('./analysis');
-
-
-/**
- * helper function to split on whitespace
- *
- * @param {String} str
- * @return {Array}
- */
-function split(str) {
-  return (str || '').split(/\s+/);
-}
-
-/**
- * helper function to count the number of leading `\t` characters in a string
- *
- * @param {String} line
- * @return {Number}
- */
-function getIndent(line) {
-
-  let chars = line.split(''),
-    i = 0;
-
-  while (chars[i++] === '\t')
-    true; // do nothing
-
-  return i - 1;
-}
-
-// CG3 parser helper functions
-
-/**
- * extract the `form` parameter from a given string
- *
- * @param {String} line
- * @return {(undefined|String)}
- */
-function cg3StringGetForm(line) {
-
-  return cg3Regex.form.test(line)
-    ? line.match(cg3Regex.form)[1]
-    : undefined
-}
-
-/**
- * extract all the other (not `form`) tags from a given string
- *
- * @param {String} line
- * @return {Object}
- */
-function cg3StringGetTags(line) {
-
-  // initialize things
-  let lemma, xpostag = [],
-    head, deprel, deps, misc = [];
-
-  // get lemma
-  if (cg3Regex.lemma.test(line))
-    lemma = line.match(cg3Regex.lemma)[1];
-
-  // only consider line after lemma (if it exists)
-  line = lemma ? line.slice(line.indexOf(lemma) + lemma.length + 1).trim() : line;
-
-  // split on whitespace
-  let chunks = split(line);
-
-  // iterate over each chunk
-  for (let j=0; j<chunks.length; j++) {
-
-    // try to extract deprel
-    if (cg3Regex.deprel.test(chunks[j])) {
-      deprel = chunks[j].match(cg3Regex.deprel)[1];
-
-    // try to extract head
-    } else if (cg3Regex.id.test(chunks[j])) {
-      if (cg3Regex.dependency.test(chunks[j])) {
-        head = chunks[j].match(cg3Regex.dependency)[2];
-      } else {
-        head = chunks[j].match(cg3Regex.id)[1];
-      }
-
-    // try to extract misc, track with array (can be multiple)
-    } else if (cg3Regex.misc.test(chunks[j])) {
-      misc.push(chunks[j]);
-
-    // try to extract tags (and save to xpostag), track with an array (can be multiple)
-    } else {
-      if (chunks[j] !== '_')
-        xpostag.push(chunks[j]);
-    }
-  }
-
-  // return our extracted data
-  return {
-    lemma: lemma,
-    xpostag: xpostag.join(';') || undefined,
-    head: head,
-    deprel: deprel,
-    deps: deps,
-    misc: misc.join(';') || undefined
-  };
-}
-
-/**
- * parse an array of strings representing a CG3 analysis ... recall that in CG3,
- *   subTokens have an increasingly hanging indent from their superToken
- *
- * @param {Token} token token to attach the analyses to
- * @param {Array} lines [[String]]
- * @return {undefined}
- */
-function cg3StringParseAnalysis(token, lines) {
-
-  if (lines.length === 2) {
-
-    // no subTokens
-    let tags = cg3StringGetTags(lines[1]); // extract tags
-    tags.form = cg3StringGetForm(lines[0]); // extract the form
-    token.pushAnalysis(new Analysis(token, tags)); // save to token
-
-  } else {
-
-    // has subTokens
-    let analysis = new Analysis(token, {
-      form: cg3StringGetForm(lines[0]) // superToken only save form
-    });
-
-    // for each subToken
-    for (let i=1; i<lines.length; i++) {
-      let tags = cg3StringGetTags(lines[i]); // extract tags
-      let subToken = new Token(token.sentence, tags);  // make new subToken
-      analysis.pushSubToken( subToken ); // attach to this analysis
-    }
-    token.pushAnalysis(analysis); // save to token
-
-  }
-}
-
-// define all the CG3-parsing regex here
-const cg3Regex = {
-  form: /^"<((.|\\")*)>"/,
-  lemma: /["\]](.*)["\]](\s|$)/,
-  head: /->(\d*)$/,
-  dependency: /^#(\d+)->(\d*)/,
-  id: /^#(\d+)/,
-  deprel: /^@(.*)/,
-  misc: /.+:.*/
 };
 
-/**
- * this class contains all the information associated with a token, including
- *   a possible superToken, an array of possible analyses, an index to the
- *   current analysis, and a Boolean representing whether it is an "empty" token
- */
-class Token {
-  constructor(sent, params) {
-
-    // require sentence param
-    if (!sent)
-      throw new NotatrixError('missing required arg: Sentence')
-
-    // pointer to parent
-    this.sentence = sent;
-
-    // internal stuff
-    this.superToken = null;
-    this.analyses = []; // array of analyses
-    this._current = null; // index of current analysis in array
-    this._isEmpty = false; // used for CoNLL-U "empty" tokens
-
-    // try parsing an analysis from params
-    if (params)
-      this.analysis = new Analysis(this, params);
-  }
-
-  /**
-   *
-   * @return {Number} total number of analyses in this token
-   */
-  get length() {
-
-    return this.analyses.length;
-  }
-
-  /**
-   * loop through every analysis in the sentence and apply a callback
-   *
-   * @param {Function} callback function to be applied to every analysis
-   * @return {Token}
-   */
-  forEach(callback) {
-
-    for (let i=0; i<this.length; i++) {
-      callback(this.analyses[i], i);
-    }
-
-    // chaining
-    return this;
-  }
-
-  // keeping track of ambiguous analyses
-
-  /**
-   * decrement the _current counter by one (set "previous" analysis as current)
-   *
-   * @return {Token}
-   */
-  prev() {
-
-    // if no analyses set whatsoever
-    if (this._current === null)
-      return null;
-
-    // if we're not already at the first one
-    if (this._current > 0)
-      this._current--;
-
-    // chaining
-    return this;
-  }
-
-  /**
-   * increment the _current counter by one (set "next" analysis as current)
-   *
-   * @return {Token}
-   */
-  next() {
-
-    // if no analyses set whatsoever
-    if (this._current === null)
-      return null;
-
-    // if we're not already at the last one
-    if (this._current < this.length - 1)
-      this._current++;
-
-    // chaining
-    return this;
-  }
-
-  /**
-   * return the _current index
-   *
-   * @return {Number}
-   */
-  get current() {
-
-    return this._current;
-  }
-
-  /**
-   * set the _current index to the given index if possible
-   *
-   * @param {Number} current
-   * @return {Number}
-   */
-  set current(current) {
-
-    // force cast to int
-    current = parseInt(current);
-    if (isNaN(current))
-      return this.current;
-
-    // bounds checking
-    if (current < 0)
-      return this.current;
-    if (current > this.length - 1)
-      return this.current;
-
-    // set and return it
-    this._current = current;
-    return this.current;
-  }
-
-  // manipulate analyses array
-
-  /**
-   * insert an analysis BEFORE the given index
-   *
-   * NOTE: if the index is out of bounds (<0 or >length), then it will be adjusted
-   *   to fit the bounds. this means that you can call this with `index=-Infinity`
-   *   to push to the front of the analyses array or with `index=Infinity` to push
-   *   to the end
-   *
-   * @param {Number} index
-   * @param {Analysis} analysis
-   * @return {Token}
-   *
-   * @throws {NotatrixError} if given invalid index or analysis
-   */
-  insertAnalysisAt(index, analysis) {
-
-    index = parseFloat(index); // catch Infinity
-    if (isNaN(index))
-      throw new NotatrixError('unable to insert subToken: unable to cast index to int');
-
-    if (!(analysis instanceof Analysis))
-      throw new NotatrixError('unable to insert analysis: not instance of Analysis');
-
-    // if we had no analyses, make this the first
-    if (this.current === null)
-      this._current = 0;
-
-    // bounds checking
-    index = index < 0 ? 0
-      : index > this.length ? this.length
-      : parseInt(index);
-
-    // set the parent pointer on the analysis
-    analysis.token = this;
-
-    // array insertion
-    this.analyses = this.analyses.slice(0, index)
-      .concat(analysis)
-      .concat(this.analyses.slice(index));
-
-    // chaining
-    return this;
-  }
-
-  /**
-   * remove an analysis at the given index
-   *
-   * NOTE: if the index is out of bounds (<0 or >length - 1), then it will be
-   *   adjusted to fit the bounds. this means that you can call this with
-   *   `index=-Infinity` to remove the first element of the analyses array or
-   *   with `index=Infinity` to remove the last
-   *
-   * @param {Number} index
-   * @return {(null|Analysis)}
-   *
-   * @throws {NotatrixError} if given invalid index
-   */
-  removeAnalysisAt(index) {
-
-    // can't remove if we have an empty array
-    if (!this.length)
-      return null;
-
-    index = parseFloat(index); // catch Infinity
-    if (isNaN(index))
-      throw new NotatrixError('unable to remove subToken: unable to cast index to int');
-
-    // bounds checking
-    index = index < 0 ? 0
-      : index > this.length - 1 ? this.length - 1
-      : parseInt(index);
-
-    // go to previous analysis if we just deleted our current one or before it
-    if (this.current >= index)
-      this.prev();
-
-    // if we now have an empty array, update _current
-    if (this.length === 1)
-      this._current = null;
-
-    // array splicing, return spliced element
-    return this.analyses.splice(index, 1)[0];
-  }
-
-  /**
-   * move an analysis from sourceIndex to targetIndex
-   *
-   * NOTE: if either index is out of bounds (<0 or >length - 1), then it will
-   *   be adjusted to fit the bounds. this means that you can call this with
-   *   `sourceIndex=-Infinity` to select the first element of the analyses array
-   *   or with `sourceIndex=Infinity` to select the last
-   *
-   * @param {Number} sourceIndex
-   * @param {Number} targetIndex
-   * @return {Token}
-   *
-   * @throws {NotatrixError} if given invalid sourceIndex or targetIndex
-   */
-  moveAnalysisAt(sourceIndex, targetIndex) {
-
-    sourceIndex = parseFloat(sourceIndex);
-    targetIndex = parseFloat(targetIndex);
-    if (isNaN(sourceIndex) || isNaN(targetIndex))
-      throw new NotatrixError('unable to move analysis: unable to cast indices to ints');
-
-    // bounds checking
-    sourceIndex = sourceIndex < 0 ? 0
-      : sourceIndex > this.length - 1 ? this.length - 1
-      : parseInt(sourceIndex);
-    targetIndex = targetIndex < 0 ? 0
-      : targetIndex > this.length - 1 ? this.length - 1
-      : parseInt(targetIndex);
-
-    if (sourceIndex === targetIndex) {
-      // do nothing
-    } else {
-
-      // array splice and insert
-      let analysis = this.analyses.splice(sourceIndex, 1);
-      this.analyses = this.analyses.slice(0, targetIndex)
-        .concat(analysis)
-        .concat(this.analyses.slice(targetIndex));
-
-    }
-
-    // chaining
-    return this;
-  }
-
-  /**
-   * push an analysis to the end of the analyses array ... sugar for
-   *   Token::insertAnalysisAt(Infinity, analysis)
-   *
-   * @param {Analysis} analysis
-   * @return {Token}
-   */
-  pushAnalysis(analysis) {
-    return this.insertAnalysisAt(Infinity, analysis);
-  }
-
-  /**
-   * pop an analysis from the end of the analyses array ... sugar for
-   *   Token::insertRemoveAt(Infinity)
-   *
-   * @return {(null|Analysis)}
-   */
-  popAnalysis() {
-    return this.removeAnalysisAt(Infinity);
-  }
-
-  // token combining, merging, splitting
-
-  combineWith(token) {
-
-  }
-  mergeWith(token) {
-    if (!(token instanceof Token))
-      throw new NotatrixError('unable to merge: not instance of Token');
-
-    if (this === token)
-      throw new NotatrixError('unable to merge: can\'t merge with self');
-
-    if (this.isSuperToken || token.isSuperToken)
-      throw new NotatrixError('unable to merge: can\'t merge superTokens');
-
-    if (this.superToken !== token.superToken)
-      throw new NotatrixError('unable to merge: can\'t merge tokens with different superTokens');
-
-    const dist = Math.abs(this.analysis.clump - token.analysis.clump);
-    if (dist !== 1)
-      throw new NotatrixError('unable to merge: tokens must be adjacent');
-
-    if (this.analysis === null || token.analysis === null)
-      throw new NotatrixError('unable to merge: tokens must have at least one analysis');
-
-    // combine the form and lemma fields
-    this.analysis.form = ((this.analysis.form || '') + (token.analysis.form || '')) || null;
-    this.analysis.lemma = ((this.analysis.lemma || '') + (token.analysis.lemma || '')) || null;
-
-    // take one of these fields
-    this.upostag = this.upostag || token.upostag || null;
-    this.xpostag = this.xpostag || token.xpostag || null;
-    this.feats = this.feats || token.feats || null;
-    this.misc = this.misc || token.misc || null;
-
-    // remove the token
-    if (token.isSubToken) {
-
-      const indices = this.sentence.getIndices(token);
-      this.superToken.removeSubTokenAt(indices.sub);
-
-    } else {
-
-      const indices = this.sentence.getIndices(token);
-      this.sentence.removeTokenAt(indices.super);
-
-    }
-
-    this.sentence.index();
-    return this; // chaining
-  }
-  split() {
-
-  }
-
-  // internal format
-
-  /**
-   * get the current analysis for the token or null if none exist
-   *
-   * @return {(null|Analysis)}
-   */
-  get analysis() {
-
-    if (this.current === null)
-      return null;
-    return this.analyses[this.current];
-  }
-
-  /**
-   * set the current analysis for the token
-   *
-   * NOTE: if there is already an analysis, overwrite
-   *
-   * @param {Analysis} analysis
-   * @return {Token}
-   *
-   * @throws {NotatrixError} if given invalid analysis
-   */
-  set analysis(analysis) {
-
-    if (!(analysis instanceof Analysis))
-      throw new NotatrixError('unable to set analysis: not instance of Analysis');
-
-    if (this.analysis === null) {
-      // push to front if we have no analyses
-      this.insertAnalysisAt(0, analysis);
-
-    } else {
-      // otherwise overwrite
-      analysis.token = this;
-      this.analyses[this.current] = analysis;
-    }
-
-    return this;
-  }
-
-
-  /**
-   * if we have a current analysis, return its subTokens
-   *
-   * @return {(null|Array)}
-   */
-  get subTokens() {
-
-    if (this.analysis === null)
-      return null;
-    return this.analysis.subTokens;
-  }
-
-  // external format stuff
-
-  /**
-   * iterate over this token and its subTokens (if we have any) for the current
-   *   analysis, using the `id` and `empty` params to set indices
-   *
-   * @param {Number} id "overall" index
-   * @param {Number} empty
-   * @return {Array} [Number, Number]
-   *
-   * @throws {NotatrixError} if given invalid id or empty
-   */
-  index(id, empty, num, clump) {
-
-    id = parseInt(id);
-    empty = parseInt(empty);
-    num = parseInt(num);
-    clump = parseInt(clump);
-
-    if (isNaN(id) || isNaN(empty) || isNaN(num) || isNaN(clump))
-      throw new NotatrixError('can\'t index tokens using non-integers, make sure to call Sentence.index()')
-
-    // if no analysis, nothing to do
-    if (this.analysis === null)
-      return [id, empty, num, clump];
-
-    // iterate over analyses
-    this.forEach(analysis => {
-
-      // only set the "id" and "empty" indices on the current analysis
-      if (analysis.isCurrent) {
-        if (this.isSuperToken) {
-
-          // save the absolute index
-          this.analysis.num = num;
-          this.analysis.clump = null;
-          num++;
-
-          // index subTokens
-          _.each(this.analysis.subTokens, subToken => {
-            if (subToken.isEmpty) {
-              empty++; // incr empty counter
-              subToken.analysis.id = `${id}.${empty}` // dot syntax
-            } else {
-              id++; // incr regular counter
-              subToken.analysis.id = `${id}`; // vanilla syntax
-              empty = 0; // reset empty counter
-            }
-
-            // save the absolute index
-            subToken.forEach(analysis => {
-              analysis.num = num;
-              num++;
-              analysis.clump = clump;
-              clump++;
-            });
-          });
-
-          // set special superToken index scheme
-          const firstSubAnalysis = this.subTokens[0].analysis;
-          const lastSubAnalysis = this.subTokens[this.analysis.length - 1].analysis;
-          this.analysis.id = `${firstSubAnalysis.id}-${lastSubAnalysis.id}`;
-
-        } else {
-
-          // save the absolute index
-          this.analysis.num = num;
-          num++;
-          this.analysis.clump = clump;
-          clump++;
-
-          if (this.isEmpty) {
-            empty++; // incr empty counter
-            this.analysis.id = `${id}.${empty}` // dot syntax
-          } else {
-            id++; // incr regular counter
-            this.analysis.id = `${id}`; // vanilla syntax
-            empty = 0; // reset empty counter
-          }
-        }
-
-      } else {
-
-        // save the absolute index
-        this.analysis.num = num;
-        num++;
-
-        // non-current analyses get "id" and "empty" indices set to null
-        analysis.id = null;
-        _.each(analysis.subTokens, subToken => {
-          subToken.analysis.id = null;
-
-          subToken.forEach(analysis => {
-
-            // save the absolute index
-            this.analysis.num = num;
-            num++;
-
-          });
-        });
-      }
-    });
-
-    // return updated indices
-    return [id, empty, num, clump];
-  }
-
-  /**
-   * get a serial version of the internal token representation
-   *
-   * @return {Object}
-   */
-  get nx() {
-
-    // serialize analyses
-    let analyses = [];
-    this.forEach(analysis => {
-      analyses.push(analysis.nx);
-    });
-
-    // serialize other data
-    return {
-      current: this.current,
-      isEmpty: this.isEmpty,
-      analyses: analyses
-    };
-  }
-
-  /**
-   * deserialize an internal representation
-   *
-   * @param {Object} nx
-   * @return {undefined}
-   */
-  set nx(nx) {
-
-    this.analyses = nx.analyses.map(analysisNx => {
-
-      let analysis = Analysis.fromNx(this, analysisNx);
-      analysis.subTokens = analysisNx.subTokens.map(subTokenNx => {
-        return Token.fromNx(this.sentence, subTokenNx);
-      });
-      return analysis;
-
-    });
-    this.current = nx.current;
-    this._isEmpty = nx.isEmpty;
-
-  }
-
-  /**
-   * static method allowing us to construct a new Token directly from an
-   *   Nx string and bind it to a sentence
-   *
-   * @param {Sentence} sent
-   * @param {String} serial
-   * @return {Token}
-   */
-  static fromNx(sent, serial) {
-    let token = new Token(sent);
-    token.nx = serial;
-    return token;
-  }
-
-  /**
-   * get a plain-text formatted string of the current analysis text
-   *
-   * @return {String}
-   *
-   * @throws {NotatrixError} if no analysis
-   */
-  get text() {
-
-    if (this.analysis === null)
-      throw new NotatrixError('no analysis to get text for');
-
-    return this.analysis.text || '';
-  }
-
-  /**
-   * get a CoNLL-U formatted string representing the current analysis
-   *
-   * @return {String}
-   *
-   * @throws {NotatrixError} if no analysis
-   * @throws {InvalidCoNLLUError} if ambiguous
-   */
-  get conllu() {
-
-    if (this.analysis === null)
-      throw new NotatrixError('no analysis to get CoNLL-U for');
-
-    if (this.isAmbiguous)
-      throw new InvalidCoNLLUError('Token is ambiguous, can\'t be converted to CoNNL-U');
-
-    return this.analysis.conllu;
-  }
-
-  /**
-   * parse a CoNLL-U formatted string and save its contents to the current analysis
-   *
-   * @param {String} serial
-   * @return {undefined}
-   */
-  set conllu(serial) {
-    // split serial string on whitespace
-    const fields = split(serial);
-
-    // check if serial index indicates an "empty" token
-    this._isEmpty = /\./.test(fields[0]);
-
-    // generate an analysis from the fields
-    this.analysis = new Analysis(this, {
-      form: fields[1],
-      lemma: fields[2],
-      upostag: fields[3],
-      xpostag: fields[4],
-      feats: fields[5],
-      head: fields[6],
-      deprel: fields[7],
-      deps: fields[8],
-      misc: fields[9]
-    });
-  }
-
-  /**
-   * static method allowing us to construct a new Token directly from a
-   *   CoNLL-U string and bind it to a sentence
-   *
-   * @param {Sentence} sent
-   * @param {String} serial
-   * @return {Token}
-   */
-  static fromConllu(sent, serial) {
-    let token = new Token(sent);
-    token.conllu = serial;
-    return token;
-  }
-
-  /**
-   * get a CG3 formatted string representing the current analysis
-   *
-   * @return {String}
-   *
-   * @throws {NotatrixError} if no analysis
-   */
-  get cg3() {
-    if (this.analysis === null)
-      throw new NotatrixError('no analysis to get CG3 for');
-
-    // the form goes on its own line, with each analysis below
-    return [ `"<${this.analysis.form}>"` ].concat(
-      this.analyses.map(analysis => {
-        return analysis.cg3;
-      })
-    ).join('\n');
-  }
-
-  /**
-   * parse a CG3 formatted string and save its contents to the current analysis
-   *
-   * @param {Array} tokenLines generated in Sentence::cg3 [set] by splitting
-   *   a serial string on newlines
-   * @return {undefined}
-   */
-  set cg3(tokenLines) {
-    // again, we have complicated parsing here ... first make sure we get an
-    //   array of the important information (minimally the form on the first line)
-    let analysis = [ tokenLines[0] ];
-
-    // iterate over the strings
-    for (let i=1; i<tokenLines.length; i++) {
-
-      let line = tokenLines[i];
-      if (/^;/.test(line)) {
-        // strip leading semicolons
-        line = line.replace(/^;/, '');
-        // TODO: save this information somewhere
-      }
-
-      // determine line indent
-      let indent = getIndent(line);
-
-      // if we're back at indent=1 and we already have stuff in our analysis
-      //   buffer, parse it as an analysis
-      if (indent === 1 && i > 1) {
-        // parse as analysis
-        cg3StringParseAnalysis(this, analysis);
-        // reset buffer
-        analysis = [ tokenLines[0] ];
-      }
-
-      // add to buffer
-      analysis.push(line);
-    }
-
-    // parse and clear buffer
-    cg3StringParseAnalysis(this, analysis);
-  }
-
-  /**
-   * static method allowing us to construct a new Token directly from a
-   *   CG3 string
-   *
-   * @param {Sentence} sent
-   * @param {Array} tokenLines
-   * @return {Token}
-   */
-  static fromCG3(sent, tokenLines) {
-    let token = new Token(sent);
-    token.cg3 = tokenLines;
-    return token;
-  }
-
-  /**
-   * get the token parameters for the current analysis
-   *
-   * @return {Object}
-   *
-   * @throws {NotatrixError} if no analysis
-   */
-  get params() {
-    if (this.analysis === null)
-      throw new NotatrixError('no analysis to get params for');
-
-    return this.analysis.params;
-  }
-
-  /**
-   * set a set of parameters as the current analysis
-   *
-   * @param {Object} params
-   * @return {Object}
-   */
-  set params(params) {
-    this.analysis = new Analysis(this, params);
-    return this.params;
-  }
-
-  /**
-   * static method allowing us to construct a new Token directly from a set
-   *   of parameters
-   *
-   * @param {Sentence} sent
-   * @param {Object} params
-   * @return {Token}
-   */
-  static fromParams(sent, params) {
-    let token = new Token(sent);
-    token.params = params;
-    return token;
-  }
-
-  /**
-   * get an array of elements for exporting to external visualization libraries
-   *   for all the analyses of this token
-   *
-   * @return {Array}
-   */
-  get eles() {
-    let eles = [];
-    this.forEach(analysis => {
-      eles = eles.concat(analysis.eles);
-    });
-
-    return eles;
-  }
-
-  // bool stuff
-
-  /**
-   * returns true iff this token is a subToken of some other token
-   *
-   * @return {Boolean}
-   */
-  get isSubToken() {
-    return this.superToken !== null;
-  }
-
-  /**
-   * returns true iff this token has subTokens
-   *
-   * @return {Boolean}
-   */
-  get isSuperToken() {
-    return this.analysis ? this.analysis.isSuperToken : null;
-  }
-
-  /**
-   * returns true iff this token or its superToken is an "empty" token
-   *
-   * @return {Boolean}
-   */
-  get isEmpty() {
-    return this.isSubToken ? this.superToken.token.isEmpty : this._isEmpty;
-  }
-
-  /**
-   * return true iff this token has more than one analysis
-   *
-   * @return {Boolean}
-   */
-  get isAmbiguous() {
-    return this.length > 1;
-  }
-}
-
-// expose to application
-module.exports = Token;
-
-},{"./analysis":399,"./errors":400,"underscore":422}],404:[function(require,module,exports){
+},{}],481:[function(require,module,exports){
 /**
  * Compiles a querystring
  * Returns string representation of the object
@@ -65291,7 +66939,7 @@ exports.decode = function(qs){
   return qry;
 };
 
-},{}],405:[function(require,module,exports){
+},{}],482:[function(require,module,exports){
 /**
  * Parses an URI
  *
@@ -65332,7 +66980,7 @@ module.exports = function parseuri(str) {
     return uri;
 };
 
-},{}],406:[function(require,module,exports){
+},{}],483:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -65518,7 +67166,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],407:[function(require,module,exports){
+},{}],484:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -65614,7 +67262,7 @@ exports.connect = lookup;
 exports.Manager = require('./manager');
 exports.Socket = require('./socket');
 
-},{"./manager":408,"./socket":410,"./url":411,"debug":412,"socket.io-parser":415}],408:[function(require,module,exports){
+},{"./manager":485,"./socket":487,"./url":488,"debug":489,"socket.io-parser":492}],485:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -66189,7 +67837,7 @@ Manager.prototype.onreconnect = function () {
   this.emitAll('reconnect', attempt);
 };
 
-},{"./on":409,"./socket":410,"backo2":44,"component-bind":51,"component-emitter":52,"debug":412,"engine.io-client":378,"indexof":396,"socket.io-parser":415}],409:[function(require,module,exports){
+},{"./on":486,"./socket":487,"backo2":41,"component-bind":48,"component-emitter":49,"debug":489,"engine.io-client":375,"indexof":393,"socket.io-parser":492}],486:[function(require,module,exports){
 
 /**
  * Module exports.
@@ -66215,7 +67863,7 @@ function on (obj, ev, fn) {
   };
 }
 
-},{}],410:[function(require,module,exports){
+},{}],487:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -66655,7 +68303,7 @@ Socket.prototype.binary = function (binary) {
   return this;
 };
 
-},{"./on":409,"component-bind":51,"component-emitter":52,"debug":412,"has-binary2":392,"parseqs":404,"socket.io-parser":415,"to-array":421}],411:[function(require,module,exports){
+},{"./on":486,"component-bind":48,"component-emitter":49,"debug":489,"has-binary2":389,"parseqs":481,"socket.io-parser":492,"to-array":498}],488:[function(require,module,exports){
 (function (global){
 
 /**
@@ -66734,11 +68382,11 @@ function url (uri, loc) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"debug":412,"parseuri":405}],412:[function(require,module,exports){
-arguments[4][387][0].apply(exports,arguments)
-},{"./debug":413,"_process":406,"dup":387}],413:[function(require,module,exports){
-arguments[4][388][0].apply(exports,arguments)
-},{"dup":388,"ms":398}],414:[function(require,module,exports){
+},{"debug":489,"parseuri":482}],489:[function(require,module,exports){
+arguments[4][384][0].apply(exports,arguments)
+},{"./debug":490,"_process":483,"dup":384}],490:[function(require,module,exports){
+arguments[4][385][0].apply(exports,arguments)
+},{"dup":385,"ms":395}],491:[function(require,module,exports){
 (function (global){
 /*global Blob,File*/
 
@@ -66883,7 +68531,7 @@ exports.removeBlobs = function(data, callback) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./is-buffer":416,"isarray":419}],415:[function(require,module,exports){
+},{"./is-buffer":493,"isarray":496}],492:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -67302,7 +68950,7 @@ function error(msg) {
   };
 }
 
-},{"./binary":414,"./is-buffer":416,"component-emitter":52,"debug":417,"isarray":419}],416:[function(require,module,exports){
+},{"./binary":491,"./is-buffer":493,"component-emitter":49,"debug":494,"isarray":496}],493:[function(require,module,exports){
 (function (global){
 
 module.exports = isBuf;
@@ -67330,13 +68978,13 @@ function isBuf(obj) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],417:[function(require,module,exports){
-arguments[4][387][0].apply(exports,arguments)
-},{"./debug":418,"_process":406,"dup":387}],418:[function(require,module,exports){
-arguments[4][388][0].apply(exports,arguments)
-},{"dup":388,"ms":398}],419:[function(require,module,exports){
-arguments[4][393][0].apply(exports,arguments)
-},{"dup":393}],420:[function(require,module,exports){
+},{}],494:[function(require,module,exports){
+arguments[4][384][0].apply(exports,arguments)
+},{"./debug":495,"_process":483,"dup":384}],495:[function(require,module,exports){
+arguments[4][385][0].apply(exports,arguments)
+},{"dup":385,"ms":395}],496:[function(require,module,exports){
+arguments[4][390][0].apply(exports,arguments)
+},{"dup":390}],497:[function(require,module,exports){
 (function (setImmediate,clearImmediate){
 var nextTick = require('process/browser.js').nextTick;
 var apply = Function.prototype.apply;
@@ -67415,7 +69063,7 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
   delete immediateIds[id];
 };
 }).call(this,require("timers").setImmediate,require("timers").clearImmediate)
-},{"process/browser.js":406,"timers":420}],421:[function(require,module,exports){
+},{"process/browser.js":483,"timers":497}],498:[function(require,module,exports){
 module.exports = toArray
 
 function toArray(list, index) {
@@ -67430,7 +69078,7 @@ function toArray(list, index) {
     return array
 }
 
-},{}],422:[function(require,module,exports){
+},{}],499:[function(require,module,exports){
 (function (global){
 //     Underscore.js 1.9.1
 //     http://underscorejs.org
@@ -69126,7 +70774,7 @@ function toArray(list, index) {
 }());
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],423:[function(require,module,exports){
+},{}],500:[function(require,module,exports){
 /*
 Simple Javascript undo and redo.
 https://github.com/ArthurClemens/Javascript-Undo-Manager
@@ -69282,7 +70930,100 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
 
 }());
 
-},{}],424:[function(require,module,exports){
+},{}],501:[function(require,module,exports){
+/**
+ * Convert array of 16 byte values to UUID string format of the form:
+ * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+ */
+var byteToHex = [];
+for (var i = 0; i < 256; ++i) {
+  byteToHex[i] = (i + 0x100).toString(16).substr(1);
+}
+
+function bytesToUuid(buf, offset) {
+  var i = offset || 0;
+  var bth = byteToHex;
+  // join used to fix memory issue caused by concatenation: https://bugs.chromium.org/p/v8/issues/detail?id=3175#c4
+  return ([bth[buf[i++]], bth[buf[i++]], 
+	bth[buf[i++]], bth[buf[i++]], '-',
+	bth[buf[i++]], bth[buf[i++]], '-',
+	bth[buf[i++]], bth[buf[i++]], '-',
+	bth[buf[i++]], bth[buf[i++]], '-',
+	bth[buf[i++]], bth[buf[i++]],
+	bth[buf[i++]], bth[buf[i++]],
+	bth[buf[i++]], bth[buf[i++]]]).join('');
+}
+
+module.exports = bytesToUuid;
+
+},{}],502:[function(require,module,exports){
+// Unique ID creation requires a high quality random # generator.  In the
+// browser this is a little complicated due to unknown quality of Math.random()
+// and inconsistent support for the `crypto` API.  We do the best we can via
+// feature-detection
+
+// getRandomValues needs to be invoked in a context where "this" is a Crypto
+// implementation. Also, find the complete implementation of crypto on IE11.
+var getRandomValues = (typeof(crypto) != 'undefined' && crypto.getRandomValues && crypto.getRandomValues.bind(crypto)) ||
+                      (typeof(msCrypto) != 'undefined' && typeof window.msCrypto.getRandomValues == 'function' && msCrypto.getRandomValues.bind(msCrypto));
+
+if (getRandomValues) {
+  // WHATWG crypto RNG - http://wiki.whatwg.org/wiki/Crypto
+  var rnds8 = new Uint8Array(16); // eslint-disable-line no-undef
+
+  module.exports = function whatwgRNG() {
+    getRandomValues(rnds8);
+    return rnds8;
+  };
+} else {
+  // Math.random()-based (RNG)
+  //
+  // If all else fails, use Math.random().  It's fast, but is of unspecified
+  // quality.
+  var rnds = new Array(16);
+
+  module.exports = function mathRNG() {
+    for (var i = 0, r; i < 16; i++) {
+      if ((i & 0x03) === 0) r = Math.random() * 0x100000000;
+      rnds[i] = r >>> ((i & 0x03) << 3) & 0xff;
+    }
+
+    return rnds;
+  };
+}
+
+},{}],503:[function(require,module,exports){
+var rng = require('./lib/rng');
+var bytesToUuid = require('./lib/bytesToUuid');
+
+function v4(options, buf, offset) {
+  var i = buf && offset || 0;
+
+  if (typeof(options) == 'string') {
+    buf = options === 'binary' ? new Array(16) : null;
+    options = null;
+  }
+  options = options || {};
+
+  var rnds = options.random || (options.rng || rng)();
+
+  // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
+  rnds[6] = (rnds[6] & 0x0f) | 0x40;
+  rnds[8] = (rnds[8] & 0x3f) | 0x80;
+
+  // Copy bytes to buffer, if provided
+  if (buf) {
+    for (var ii = 0; ii < 16; ++ii) {
+      buf[i + ii] = rnds[ii];
+    }
+  }
+
+  return buf || bytesToUuid(rnds);
+}
+
+module.exports = v4;
+
+},{"./lib/bytesToUuid":501,"./lib/rng":502}],504:[function(require,module,exports){
 'use strict';
 
 var alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'.split('')
@@ -69352,5 +71093,5 @@ yeast.encode = encode;
 yeast.decode = decode;
 module.exports = yeast;
 
-},{}]},{},[15])(15)
+},{}]},{},[12])(12)
 });

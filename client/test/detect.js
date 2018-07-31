@@ -11,7 +11,7 @@ const detectFormat = require('../detect');
 const nx = require('notatrix');
 
 // export the test suite
-module.exports = () => {
+//module.exports = () => {
   describe('detect.js', () => {
     utils.forEachText((text, format, name) => {
       it(`should detect ${format}:${name}`, () => {
@@ -47,4 +47,4 @@ module.exports = () => {
       });
     });
   });
-};
+//};

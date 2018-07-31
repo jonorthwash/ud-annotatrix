@@ -17,7 +17,7 @@
     "mkdirp": "^0.5.1",
     "morgan": "^1.9.0",
     "nocache": "^2.0.0",
-    "notatrix": "^1.3.12",
+    "notatrix": "github:keggsmurph21/notatrix#corpus",
     "popper": "^1.0.1",
     "request": "^2.87.0",
     "socket.io": "^2.1.1",
