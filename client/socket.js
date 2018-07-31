@@ -18,6 +18,7 @@ module.exports = manager => {
   socket.on('connection', data => {
     console.log('connection', data);
     socket.initialized = true;
+    socket.isOpen = true;
     selfid = data.id;
 
     const num = funcs.getPresentUsers(data.room);
