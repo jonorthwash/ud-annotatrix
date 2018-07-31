@@ -38,6 +38,21 @@ Editing POS labels, editing deprels, drawing arcs and deleting arcs are undoable
 
 The interface supports right-to-left readin order and vertiacal alignment for long sentences.
 
+### Modes
+
+|     mode     | how to setup |    how to start      | how to access |  features   | limitations |
+|--------------|--------------|----------------------|---------------|-------------|-------------|
+| local server | `npmi`       | `npm run dev-server` |               | collaborative editing |             |
+| remote server| `nmpi`       | `npm run server`     |               | collaborative editing |             |
+| remote server - hiroku |    |                      |               |              |             |
+| local fs     |              |                      | `file:///.../server/public/html/annotatrix.html` |  |  |
+| serve locally|              | `python3 -m http.server` | `http://localhost/ud-annotatrix/server/public/html/annotatrix.html` |  |  |
+| `github.io`  |              |                      | `https://....github.io/ud-annotatrix/server/public/html/annotatrix.html` |  |  |
+
+### Configuring
+
+Change values in `config.js` and `.env` to adjust port, etc.
+
 ## User guide
 
 The basic user guide is available on the [help page](https://maryszmary.github.io/ud-annotatrix/standalone/help.html).
