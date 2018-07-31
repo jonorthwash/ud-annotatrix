@@ -8,17 +8,19 @@ const UploadError = require('./errors').UploadError;
 const CorpusDB = require('./models/corpus');
 const Logger = require('../client/node-logger');
 const Manager = require('../client/manager');
-global.log = new Logger('SILENT');
-global.server = null;
-global.manager = new Manager();
-manager.save = () => {}; // avoid autosave garbage
 
 
 function upload(treebank, file, next) {
+
   if (!file)
     return next(new UploadError(`No file provided.`));
 
   try {
+
+    global.log = new Logger('SILENT');
+    global.server = null;
+    global.manager = new Manager();
+    manager.save = () => {}; // avoid autosave garbage
 
     const contents = file.data.toString();
     manager.parse(contents);
@@ -26,7 +28,16 @@ function upload(treebank, file, next) {
     CorpusDB(treebank).save(manager.state, next);
 
   } catch (e) {
-    return next(new UploadError(e.message));
+
+    next(new UploadError(e.message));
+
+  } finally {
+
+    // clean up our global stuff
+    global.log = undefined;
+    global.server = undefined;
+    global.manager = undefined;
+
   }
 }
 
