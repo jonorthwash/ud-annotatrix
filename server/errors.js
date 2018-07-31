@@ -8,6 +8,7 @@ class UDAnnotatrixError extends Error {
 
 class ConfigError extends UDAnnotatrixError {
   constructor(...args) {
+    console.log('ConfigError:', ...args);
     super(...args);
   }
 }
@@ -28,7 +29,7 @@ class UploadError extends UDAnnotatrixError {
 
 class SocketError extends UDAnnotatrixError {
   constructor(...args) {
-    console.log('SocketError', ...args);
+    console.log('SocketError:', ...args);
     super(...args);
   }
 }

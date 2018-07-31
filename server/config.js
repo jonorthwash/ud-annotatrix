@@ -41,8 +41,10 @@ cfg.github = {
   state: crypto.randomBytes(8).toString('hex')
 };
 
-if (!cfg.github.client_secret)
-  throw new errors.ConfigError('Please provide ANNOTATRIX_GH_CLIENT_SECRET');
+if (!cfg.github.client_secret) {
+  new errors.ConfigError('Please provide ANNOTATRIX_GH_CLIENT_SECRET');
+  cfg.github = null;
+}
 
 // database config
 mkdirp(cfg.corpora_path);

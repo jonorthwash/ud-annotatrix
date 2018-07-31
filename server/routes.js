@@ -7,6 +7,7 @@ const request = require('request');
 const querystring = require('querystring');
 const upload = require('./upload');
 const getTreebanksList = require('./list-treebanks');
+const ConfigError = require('./errors').ConfigError;
 
 // --------------------------------------------------------------------------
 // middleware
@@ -101,7 +102,8 @@ module.exports = app => {
 
       req.session.treebank_id = treebank;
       res.render('annotatrix', {
-        username: req.session.username
+        username: req.session.username,
+        github_configured: !!cfg.github,
       });
 
     }
@@ -228,6 +230,11 @@ module.exports = app => {
   // GitHub OAuth
   app.get("/oauth/login", get_treebank, (req, res) => {
 
+    if (!cfg.github) {
+      new ConfigError('Unable to use GitHub OAuth without client secret');
+      res.redirect('/annotatrix');
+    }
+
     req.session.treebank = req.treebank;
     const url = 'https://github.com/login/oauth/authorize?'
       + querystring.stringify({
@@ -239,6 +246,11 @@ module.exports = app => {
   });
 
   app.get("/oauth/callback", (req, res) => {
+
+    if (!cfg.github) {
+      new ConfigError('Unable to use GitHub OAuth without client secret');
+      res.redirect('/annotatrix');
+    }
 
     if (cfg.github.state !== req.query.state)
       return res.json({ error: 'Unable to authenticate: state mismatch' });

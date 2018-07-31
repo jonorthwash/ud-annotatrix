@@ -32,7 +32,8 @@ function render_all() {
   mkdirp(html_base_path);
 
   render('annotatrix', {
-    username: null
+    username: null,
+    github_configured: false,
   });
   render('help', {});
   render('index', {

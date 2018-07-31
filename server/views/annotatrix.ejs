@@ -192,7 +192,7 @@
 											Manage permissions
 										</span>
 									</a>
-								<% } else { %>
+								<% } else if (github_configured) { %>
 									<span class="dropdown-group-title">
 										User:
 										<span id="username" class="not-logged-in disabled">
@@ -205,7 +205,14 @@
 											Login
 										</span>
 									</a>
-								<% } %>
+								<% } else { %>
+									<span class="dropdown-group-title">
+										User:
+										<span id="username" class="not-logged-in disabled">
+											(GitHub not configured)
+										</span>
+									</span>
+								<% }%>
 								<a class="dropdown-group-item pinnable" href="#" name="collab">
 									<span class="dropdown-group-item-name">
 										<i class="fa fa-edit"></i>
