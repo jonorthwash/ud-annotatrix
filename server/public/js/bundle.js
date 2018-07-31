@@ -31422,6 +31422,7 @@ var Menu = function () {
     value: function reset() {
 
       this.is_visible = false;
+      this.collab_visible = false;
       this.pinned = {
         login: false,
         'manage-permissions': false,
@@ -31449,6 +31450,9 @@ var Menu = function () {
       $('#btnMenuDropdown').click(function (e) {
         return _this.toggle(e);
       });
+      $('#toggle-collab').click(function (e) {
+        return _this.toggleCollab(e);
+      });
       $('.dropdown-group-item .pin').click(function (e) {
         return _this.togglePinned(e);
       });
@@ -31471,11 +31475,11 @@ var Menu = function () {
     value: function update() {
 
       $('#dropdown-container .dropdown-toggle').removeClass('open');
-      if (this.is_visible) {
-        $('#dropdown-container .dropdown-toggle').addClass('open');
-      }
+      if (this.is_visible) $('#dropdown-container .dropdown-toggle').addClass('open');
 
       $('#dropdown-container .dropdown-content').removeClass('menu-show menu-hidden').addClass(this.is_visible ? 'menu-show' : 'menu-hidden');
+
+      $('#toggle-collab #currently-online-list').removeClass('menu-show menu-hidden').addClass(this.collab_visible ? 'menu-show' : 'menu-hidden');
 
       $('.dropdown-group-item.pinnable, .btn.pinnable').removeClass('pinned unpinned');
       _.each(this.pinned, function (bool, name) {
@@ -31515,6 +31519,12 @@ var Menu = function () {
     key: 'toggle',
     value: function toggle(event) {
       this.is_visible = !this.is_visible;
+      this.gui.update();
+    }
+  }, {
+    key: 'toggleCollab',
+    value: function toggleCollab(event) {
+      this.collab_visible = !this.collab_visible;
       this.gui.update();
     }
   }, {
@@ -36070,6 +36080,8 @@ function Status(text, isError) {
 
 function normal(text) {
 
+  if (!gui.inBrowser) return;
+
   var div = Status(text, false);
   $('.status-container').prepend(div);
   div.fadeOut(cfg.statusNormalFadeout);
@@ -36077,6 +36089,8 @@ function normal(text) {
 }
 
 function error(text) {
+
+  if (!gui.inBrowser) return;
 
   var div = Status(text, true);
   $('.status-container').prepend(div);
@@ -69150,7 +69164,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             limit = 0,
             isExecuting = false,
             callback,
-
+            
             // functions
             execute;
 
@@ -69180,12 +69194,12 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
                 commands.splice(index + 1, commands.length - index);
 
                 commands.push(command);
-
+                
                 // if limit is set, remove items from the start
                 if (limit && commands.length > limit) {
                     removeFromTo(commands, 0, -(limit+1));
                 }
-
+                
                 // set the current index to the end
                 index = commands.length - 1;
                 if (callback) {
@@ -69262,7 +69276,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             getIndex: function() {
                 return index;
             },
-
+            
             setLimit: function (l) {
                 limit = l;
             }
