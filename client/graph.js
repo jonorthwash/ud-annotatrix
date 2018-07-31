@@ -175,11 +175,11 @@ class Graph {
 
           ele.data.label = gui.is_ltr
             ? tar.num < src.num
-              ? `${src.deprel}⊳`
-              : `⊲${src.deprel}`
-            : tar.num < src.num
               ? `⊲${src.deprel}`
-              : `${src.deprel}⊳`;
+              : `${src.deprel}⊳`
+            : tar.num < src.num
+              ? `${src.deprel}⊳`
+              : `⊲${src.deprel}`;
 
           ele.data.ctrl = getCtrl(src, tar);
           ele.style = getStyle(src, tar);
@@ -591,7 +591,7 @@ function addHead(srcId, tarId, dep='') {
   const src = manager.current.get(srcId),
     tar = manager.current.get(tarId);
 
-  src.addHead(tar, dep);
+  tar.addHead(src, dep);
   manager.parse(manager.toString());
 }
 
