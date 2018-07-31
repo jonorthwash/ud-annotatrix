@@ -42,12 +42,12 @@ The interface supports right-to-left readin order and vertiacal alignment for lo
 
 |     mode     | how to setup |    how to start      | how to access |  features   | limitations |
 |--------------|--------------|----------------------|---------------|-------------|-------------|
-| local server | `npmi`       | `npm run dev-server` |               | collaborative editing |             |
-| remote server| `nmpi`       | `npm run server`     |               | collaborative editing |             |
-| remote server - hiroku |    |                      |               |              |             |
-| local fs     |              |                      | `file:///.../server/public/html/annotatrix.html` |  |  |
-| serve locally|              | `python3 -m http.server` | `http://localhost/ud-annotatrix/server/public/html/annotatrix.html` |  |  |
-| `github.io`  |              |                      | `https://....github.io/ud-annotatrix/server/public/html/annotatrix.html` |  |  |
+| local server | `npm i`       | `npm run dev-server` | `http://localhost:5316/annotatrix.html` | collaborative editing |             |
+| remote server| `npm i`       | `npm run server`     | `http://<host>:5316/annotatrix.html` | collaborative editing |             |
+| remote server - heroku |    |                      |               |              |             |
+| local fs     |              |                      | `file:///<path>/server/public/html/annotatrix.html` |  | no database, no GitHub integration, no collaborative editing |
+| serve locally|              | `python3 -m http.server` | `http://localhost/ud-annotatrix/server/public/html/annotatrix.html` |  | no database, no GitHub integration, no collaborative editing |
+| `github.io`  |              |                      | `https://<username>.github.io/ud-annotatrix/server/public/html/annotatrix.html` |  | no database, no GitHub integration, no collaborative editing |
 
 ### Configuring
 
