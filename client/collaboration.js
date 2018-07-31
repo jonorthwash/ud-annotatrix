@@ -7,19 +7,18 @@ const funcs = require('./funcs');
 
 function getTableRow(selfid, userid, user) {
 
-  const name = funcs.getUsername(user);
+  let name = (selfid === userid)
+    ? '<me>'
+    : funcs.getUsername(user);
   const address = user.address;
   const index = isNaN(parseInt(user.index)) ? '?' : user.index + 1;
-
-  if (selfid === userid)
-    username = '<me>';
 
   return $('<tr>')
     .addClass('online-user')
     .addClass(selfid === userid ? 'self' : 'other')
     .append($('<td>')
       .addClass('online-user-data username')
-      .text(username)
+      .text(name)
     )
     .append($('<td>')
       .addClass('online-user-data ip-address')
