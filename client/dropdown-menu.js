@@ -15,6 +15,7 @@ class Menu {
   reset() {
 
     this.is_visible = false;
+    this.collab_visible = false;
     this.pinned = {
       login: false,
       'manage-permissions': false,
@@ -38,6 +39,7 @@ class Menu {
   bind() {
 
     $('#btnMenuDropdown').click(e => this.toggle(e));
+    $('#toggle-collab').click(e => this.toggleCollab(e));
     $('.dropdown-group-item .pin').click(e => this.togglePinned(e));
 
     $('.dropdown-group-item[name="logout"]').click(e => user.logout());
@@ -51,13 +53,16 @@ class Menu {
 
     $('#dropdown-container .dropdown-toggle')
       .removeClass('open');
-    if (this.is_visible) {
+    if (this.is_visible)
       $('#dropdown-container .dropdown-toggle').addClass('open');
-    }
 
     $('#dropdown-container .dropdown-content')
       .removeClass('menu-show menu-hidden')
       .addClass(this.is_visible ? 'menu-show' : 'menu-hidden');
+
+    $('#toggle-collab #currently-online-list')
+    .removeClass('menu-show menu-hidden')
+    .addClass(this.collab_visible ? 'menu-show' : 'menu-hidden');
 
     $('.dropdown-group-item.pinnable, .btn.pinnable').removeClass('pinned unpinned');
     _.each(this.pinned, (bool, name) => {
@@ -102,6 +107,11 @@ class Menu {
 
   toggle(event) {
     this.is_visible = !this.is_visible;
+    this.gui.update();
+  }
+
+  toggleCollab(event) {
+    this.collab_visible = !this.collab_visible;
     this.gui.update();
   }
 

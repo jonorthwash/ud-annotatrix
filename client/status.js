@@ -12,6 +12,9 @@ function Status(text, isError) {
 
 function normal(text) {
 
+  if (!gui.inBrowser)
+    return;
+    
   const div = Status(text, false);
   $('.status-container').prepend(div);
   div.fadeOut(cfg.statusNormalFadeout);
@@ -19,6 +22,9 @@ function normal(text) {
 }
 
 function error(text) {
+
+  if (!gui.inBrowser)
+    return;
 
   const div = Status(text, true);
   $('.status-container').prepend(div);
