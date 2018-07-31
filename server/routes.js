@@ -139,14 +139,33 @@ module.exports = app => {
 
   app.post('/upload', (req, res) => {
     const treebank = uuidv4();
-    upload(treebank, req.files.corpus, err => {
-      if (err)
-        return res.json({ error: err.message });
 
-      res.redirect('/annotatrix?' + querystring.stringify({
-        treebank_id: treebank,
-      }));
-    });
+    if (req.files) {
+
+      upload.fromFile(treebank, req.files.corpus, err => {
+        if (err)
+          return res.json({ error: err.message });
+
+        res.redirect('/annotatrix?' + querystring.stringify({
+          treebank_id: treebank,
+        }));
+      });
+
+    } else if (req.query.github_url) {
+
+      upload.fromGitHub(treebank, req.query.github_url, err => {
+        if (err)
+          return res.json({ error: err.message });
+
+        console.log('here');
+        res.redirect('/annotatrix?' + querystring.stringify({
+          treebank_id: treebank,
+        }));
+      });
+
+    } else {
+      res.json({ error: 'Please provide a file or a GitHub URL.' });
+    }
   });
 
 
