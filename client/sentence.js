@@ -6,8 +6,45 @@ const errors = require('./errors');
 const status = require('./status');
 
 function encode(serial, options) {
+  try {
 
-  let format = null;
+    let format = detectFormat(serial, options)
+
+    if (format === 'notatrix serial')
+      format = 'CoNLL-U';
+
+    options = _.extend({
+      interpretAs: format,
+      allowEmptyString: true,
+    }, options);
+
+    return {
+      format: format,
+      sent: new nx.Sentence(serial, options),
+    };
+
+  } catch (e) {
+
+    if (e instanceof nx.NotatrixError) {
+
+      console.log(e);
+      return {
+        format: 'plain text',
+        sent: new nx.Sentence('', options),
+      }
+
+    } else {
+
+      throw e;
+
+    }
+  }
+}
+
+function detectFormat(serial, options) {
+
+  if (!serial)
+    return 'plain text';
 
   const formats = nx.detect(serial, {
     suppressDetectorErrors: true,
@@ -19,51 +56,40 @@ function encode(serial, options) {
 
     status.error('Unable to interpret input');
     serial = '';
-    format = 'plain text'
+    return 'plain text';
 
   } else if (formats.indexOf('notatrix serial') > -1) {
 
-    is_notatrix_serial = true;
-    format = 'notatrix serial';
+    return 'notatrix serial';
 
   } else if (formats.length === 1) {
 
-    format = formats[0];
-    status.normal(`Interpreting as ${format}`);
+    console.log(`Interpreting as ${formats[0]}`);
+    return formats[0];
 
   } else {
 
+    // order we'd want to display in if we get multiple hits
     const preferences = [
       'CoNLL-U',
       'CG3',
+      'SD',
       'plain text',
+      'Brackets',
     ];
 
     for (let i=0; i<preferences.length; i++) {
       const pref = preferences[i];
       if (formats.indexOf(pref) > -1) {
-        format = pref;
-        status.normal(`Interpreting as ${format}`);
-        break;
+        status.normal(`Interpreting as ${pref}`);
+        return pref;
       }
     }
 
     // just choose one
-    format = formats[0];
-    status.normal(`Interpreting as ${format}`);
+    status.normal(`Interpreting as ${formats[0]}`);
+    return formats[0];
 
-  }
-
-  if (format === 'notatrix serial')
-    format = 'CoNLL-U';
-
-  options = _.extend({
-    interpretAs: format,
-    allowEmptyString: true,
-  }, options);
-  return {
-    format: format,
-    sent: new nx.Sentence(serial, options),
   }
 }
 
@@ -71,9 +97,10 @@ class Sentence {
   constructor(serial, options) {
 
     const encoded = encode(serial, options);
-
+    console.log('encoded', encoded);
     this.format = encoded.format;
     this._nx = encoded.sent;
+    this.conversion_warning = null;
 
     this.is_table_view = false;
     this.column_visibilities = new Array(10).fill(true);
@@ -88,23 +115,24 @@ class Sentence {
 
     try {
 
-      return this._nx.to(format);
+      const converted = this._nx.to(format);
+      this.conversion_warning = converted.loss.length
+        ? `Unable to convert: ${converted.loss.join(', ')}`
+        : null;
+
+      return converted.output;
 
     } catch (e) {
-
-      if (e instanceof nx.Loss) {
-
-        status.error(e.message);
-        return e.output;
-
-      } else if (e instanceof nx.GeneratorError) {
+      if (e instanceof nx.GeneratorError) {
 
         status.error(e.message);
         return null;
 
-      }
+      } else {
 
-      throw e;
+        throw e;
+
+      }
     }
 
   }
@@ -119,6 +147,7 @@ class Sentence {
 
       const encoded = encode(serial, options);
       this._nx = encoded.sent;
+      this.format = encoded.format;
 
     }
 
