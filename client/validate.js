@@ -283,8 +283,8 @@ function is_cycle(graph, src, tar) {
 }
 
 function depEdgeClasses(graph, ele) {
-  const src = ele.data.sourceAnalysis,
-    tar = ele.data.targetAnalysis;
+  const src = ele.data.sourceToken,
+    tar = ele.data.targetToken;
 
   let classes = new Set([ 'dependency' ]);
 

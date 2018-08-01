@@ -24,9 +24,9 @@ function latex() {
       if (node.data.label === undefined)
         return 'error';
 
-      const source = node.data.sourceAnalysis.id,
-        target = node.data.targetAnalysis.id,
-        label = node.data.sourceAnalysis.deprel;
+      const source = node.data.sourceToken.id,
+        target = node.data.targetToken.id,
+        label = node.data.sourceToken.deprel;
 
       deprelLines.push(`\depedge{${source}}{${target}}{${label}}`);
     }

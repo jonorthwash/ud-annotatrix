@@ -166,18 +166,18 @@ class Graph {
   }
 
   eles() {
-    if (manager.graphable)
-      return _.map(manager.current._nx.eles, ele => {
+    //if (manager.graphable)
+      return _.map(manager.current._nx.getCytoscapeEles(manager.current.format), ele => {
         if (ele.data.name === 'dependency') {
 
-          const src = ele.data.sourceAnalysis,
-            tar = ele.data.targetAnalysis;
+          const src = ele.data.sourceToken,
+            tar = ele.data.targetToken;
 
           ele.data.label = gui.is_ltr
-            ? tar.num < src.num
+            ? tar.indices.absolute > src.indices.absolute
               ? `${src.deprel}⊳`
               : `⊲${src.deprel}`
-            : tar.num < src.num
+            : tar.indices.absolute > src.indices.absolute
               ? `⊲${src.deprel}`
               : `${src.deprel}⊳`;
 
@@ -191,7 +191,7 @@ class Graph {
 
         return ele;
       });
-    return [];
+    //return [];
   }
 
   update() {
@@ -296,7 +296,7 @@ class Graph {
     if (gui.editing === null)
       return; // nothing to do
 
-    const analysis = gui.editing.data().analysis || gui.editing.data().sourceAnalysis,
+    const analysis = gui.editing.data().analysis || gui.editing.data().sourceToken,
       attr = gui.editing.data().attr,
       oldValue = analysis[attr],
       newValue = $('#edit').val();
@@ -371,8 +371,8 @@ class Graph {
   removeDependency(ele) {
     log.debug(`called removeDependency(${ele.attr('id')})`);
 
-    const src = ele.data('sourceAnalysis'),
-      tar = ele.data('targetAnalysis');
+    const src = ele.data('sourceToken'),
+      tar = ele.data('targetToken');
 
     removeHead(src.id, tar.id);
 
@@ -479,7 +479,7 @@ function getStyle(src, tar) {
     'target-endpoint': `0% -50%`
   };
 
-  if (tar.num < src.num) {
+  if (tar.indices.absolute < src.indices.absolute) {
     style['source-endpoint'] = `${-10 * cfg.defaultEdgeCoeff}px -50%`;
   } else {
     style['source-endpoint'] = `${10 * cfg.defaultEdgeCoeff}px -50%`;
@@ -494,7 +494,7 @@ function getCtrl(src, tar) {
 
 function getEdgeHeight(src, tar) {
 
-  const diff = tar.num - src.num;
+  const diff = tar.indices.absolute - src.indices.absolute;
 
   let edgeHeight = cfg.defaultEdgeHeight * diff;
   if (gui.is_ltr)
