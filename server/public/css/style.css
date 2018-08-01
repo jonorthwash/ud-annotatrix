@@ -1100,3 +1100,7 @@ span.dropdown-group-item-name i {
   text-align: center;
   padding: 0 0.5em;
 }
+
+#currently-online-list {
+  display: none;
+}

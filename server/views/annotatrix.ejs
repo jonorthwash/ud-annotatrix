@@ -30,104 +30,8 @@
 <body>
   <div id="content">
 
-		<div class="modal custom-modal" id="upload-modal" name="upload">
-			<div class="modal-dialog" role="document">
-				<form class="modal-content" action="./upload" method="post" enctype="multipart/form-data">
-					<div class="modal-header">
-						<h5 class="modal-title">Upload corpus</h5>
-						<button type="button" class="close" aria-label="Close" name="close">
-							<span aria-hidden="true">&times;</span>
-						</button>
-					</div>
-
-					<div class="modal-body">
-						<p>
-							This will upload your treebank to your browser's local storage. If there is not
-            	enough space then the file will not be uploaded successfully. The amount of
-            	available space according to your browser is reported below.
-						</p>
-						<span title="Select a file to upload into the interface">
-							<u>Choose and upload file</u>
-							<input type="file" name="file" id="upload-filename" />
-						</span>
-
-						<!--
-							<progress id="fileUploadProgressBar" value="0" max="100"></progress>
-							<div id="uploadFileSize">Size:</div>
-							<div id="errorUploadFileSize">ERROR: File exceeds local storage quota.</div>
-	          	<div>
-	              Treebank size: <span id="treebankSize"></span>
-	              Available space: <span id="localStorageAvailable"></span>
-							</div>
-						-->
-					</div>
-
-					<div class="modal-footer">
-						<button type="submit" name="submit" class="btn btn-primary" disabled>Upload</button>
-						<button type="button" name="close" class="btn btn-secondary">Close</button>
-					</div>
-				</form>
-			</div>
-		</div>
-
-		<div class="modal fade" id="fileModal" tabindex="-1" role="dialog" aria-labelledby="fileModalLabel" aria-hidden="true">
-			<div class="modal-dialog" role="document">
-				<div class="modal-content">
-
-					<div class="modal-header">
-						<h5 class="modal-title" id="fileModalLabel">Import corpus</h5>
-						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-							<span aria-hidden="true">&times;</span>
-						</button>
-					</div>
-
-					<div class="modal-body">
-            <!-- This message can be removed when we have better error handling. -->
-            <p>
-							This will upload your treebank to your browser's local storage. If there is not
-            	enough space then the file will not be uploaded successfully. The amount of
-            	available space according to your browser is reported below.
-						</p>
-						<span title="Select a file to upload into the interface">
-							<u>Choose and upload file</u>
-						</span>:
-						<input type="file" id="filename" />
-						<progress id="fileUploadProgressBar" value="0" max="100"></progress>
-						<div id="uploadFileSize">Size:</div>
-						<div id="errorUploadFileSize">ERROR: File exceeds local storage quota.</div>
-          	<div>
-              Treebank size: <span id="treebankSize"></span>
-              Available space: <span id="localStorageAvailable"></span>
-						</div>
-					</div>
-
-					<div class="modal-footer">
-						<button id="uploadFileButton" type="button" class="btn btn-primary" data-dismiss="modal" disabled>Upload</button>
-						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-						<!-- button type="button" class="btn btn-primary">Save changes</button -->
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="modal fade" id="helpModal" tabindex="-1" role="dialog" aria-labelledby="helpModalLabel" aria-hidden="true">
-			<div class="modal-dialog" role="document">
-				<div class="modal-content" id="helpModalContent">
-					<div class="modal-header">
-						<h5 class="modal-title" id="helpModalLabel">User guide</h5>
-						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-							<span aria-hidden="true">&times;</span>
-						</button>
-					</div>
-					<div class="modal-body">
-						&nbsp;
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-					</div>
-				</div>
-			</div>
-		</div>
+		<%- include(`${modalPath}/upload`) %>
+		<%- include(`${modalPath}/github-fork`) %>
 
     <div class="modal fade" id="exportModal" tabindex="-1" role="dialog" aria-labelledby="exportModalLabel" aria-hidden="true">
 			<div class="modal-dialog" role="document">
@@ -467,18 +371,38 @@
 
 			<div class="tabContainer col-xs-1 ml-auto" role="toolbar">
 				<div id="tabBox" class="nav nav-tabs">
+
 					<li class="nav-item">
-						<a href="#" class="nav-link" id="tabText">Text</a>
+						<a href="#" class="nav-link format-tab" id="brackets-tab" name="Brackets">
+							Brackets
+							<i class="fa fa-exclamation-triangle tab-warning"></i>
+						</a>
 					</li>
 					<li class="nav-item">
-						<a href="#" class="nav-link active" id="tabOther"></a>
+						<a href="#" class="nav-link format-tab" id="cg3-tab" name="CG3">
+							CG3
+							<i class="fa fa-exclamation-triangle tab-warning"></i>
+						</a>
 					</li>
 					<li class="nav-item">
-						<a href="#" class="nav-link" id="tabConllu">CoNLL-U</a>
+						<a href="#" class="nav-link format-tab" id="conllu-tab" name="CoNLL-U">
+							CoNLL-U
+							<i class="fa fa-exclamation-triangle tab-warning"></i>
+						</a>
 					</li>
 					<li class="nav-item">
-						<a href="#" class="nav-link" id="tabCG3">CG3</a>
+						<a href="#" class="nav-link format-tab" id="plain-text-tab" name="plain text">
+							plain text
+							<i class="fa fa-exclamation-triangle tab-warning"></i>
+						</a>
 					</li>
+					<li class="nav-item">
+						<a href="#" class="nav-link format-tab" id="sd-parse-tab" name="SD">
+							SDParse
+							<i class="fa fa-exclamation-triangle tab-warning"></i>
+						</a>
+					</li>
+
 				</div>
 				<div class="btn-group ml-auto corpusNavigation">
 					<a class="btn btn-secondary pinnable" id="btnToggleTable" href="#" name="show-table">
