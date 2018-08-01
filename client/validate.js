@@ -24,7 +24,7 @@ function is_upos(s) {
   s = (s || '').toUpperCase();
 
   let is_upos = false;
-  _.each(U_POS, u_pos => {
+  U_POS.forEach(u_pos => {
     if (s === u_pos)
       is_upos = true;
   });
@@ -44,7 +44,7 @@ function is_udeprel(s) {
   s = (s || '').split(':')[0].toLowerCase();
 
   let is_deprel = false;
-  _.each(U_DEPRELS, u_deprel => {
+  U_DEPRELS.forEach(u_deprel => {
     if (s.toLowerCase() === u_deprel)
       is_deprel = true;
   });
@@ -52,8 +52,19 @@ function is_udeprel(s) {
   return is_deprel;
 }
 
-function is_leaf(s) {
+function is_leaf(s, t) {
   log.debug(`called is_leaf(${s})`);
+
+  function is_upos_leaf(pos) {
+
+    let is_leaf = false;
+    U_POS_LEAF.forEach(upos => {
+      if (upos === pos)
+        is_leaf = true;
+    });
+
+    return is_leaf;
+  }
 
   // Checks if a node is in the list of part-of-speech tags which
   // are usually leaf nodes
@@ -61,15 +72,8 @@ function is_leaf(s) {
 
   // http://universaldependencies.org/u/dep/punct.html
   // Tokens with the relation punct always attach to content words (except in cases of ellipsis) and can never have dependents.
-  s = (s || '').toUpperCase();
 
-  let is_leaf = false;
-  _.each(U_POS_LEAF, u_pos => {
-    if (s === u_pos)
-      is_leaf = true;
-  });
-
-  return is_leaf;
+  return is_upos_leaf(t.upostag || t.xpostag) && is_upos_leaf(s.upostag || s.xpostag);
 }
 
 /*
@@ -249,68 +253,73 @@ function is_relation_conflict(tree) {
 }
 */
 
-function is_cycle(graph, src, tar) {
+function is_cycle(sent, src, tar) {
 
   // recursive DFS
-  function is_cycle_util(graph, src, tar) {
+  function is_cycle_util(sent, src, tar) {
 
     // visit node
-    seen.add(tar);
+    seen.add(src);
 
     // iterate neighbors
     let is_cycle = false;
-    if (!tar.eachHead) {
-      log.error(`unable to read property eachHead of tar: ${tar}`);
-      return;
+
+    if (sent.options.enhanced) {
+
+      src.mapDeps(head => {
+
+        is_cycle = head === tar
+          ? true // got back to orginal node
+          : seen.has(head)
+            ? false
+            : is_cycle_util(sent, head, tar); // recurse
+
+      });
+
+    } else {
+
+      const head = src._head;
+
+      if (head)
+        is_cycle = head === tar
+          ? true // got back to source
+          : seen.has(head)
+            ? false
+            : is_cycle_util(sent, head, src);
+
     }
-
-    tar.eachHead(head => {
-
-      is_cycle = head === src
-        ? true // got back to source
-        : seen.has(head)
-          ? false
-          : is_cycle_util(graph, src, head); // recurse
-
-    });
 
     return is_cycle;
   }
 
   // keep track of visited nodes
   var seen = new Set();
-  return is_cycle_util(graph, src, tar);
+  return is_cycle_util(sent, src, tar);
 }
 
-function depEdgeClasses(graph, ele) {
-  const src = ele.data.sourceToken,
-    tar = ele.data.targetToken;
+function depEdgeClasses(sent, src, tar) {
 
   let classes = new Set([ 'dependency' ]);
 
-  if (is_leaf(tar.upostag))
+  if (is_leaf(src, tar))
     classes.add('error');
 
-  if (is_cycle(graph, src, tar))
+  if (is_cycle(sent, src, tar))
     classes.add('error');
 
-  const deprel = ele.data.deprel || src.deprel;
-
-  if (!deprel || deprel === '_') {
+  if (!tar.deprel || tar.deprel === '_') {
     classes.add('incomplete');
-  } else if (!is_udeprel(deprel)) {
+  } else if (!is_udeprel(tar.deprel)) {
     classes.add('error');
   }
 
   return Array.from(classes).join(' ');
 }
 
-function posNodeClasses(ele) {
-  if (is_upos(ele.data.pos)) {
-    return 'pos';
-  } else {
-    return 'pos error';
-  }
+function posNodeClasses(pos) {
+  return is_upos(pos)
+    ? 'pos'
+    : 'pos error';
 }
 
 module.exports = {
