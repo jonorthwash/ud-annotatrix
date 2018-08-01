@@ -10,6 +10,7 @@ const funcs = require('./funcs');
 const sort = require('./sort');
 const validate = require('./validate');
 const ProgressBar = require('./progress-bar');
+const status = require('./status');
 
 class Graph {
   constructor(options) {
@@ -31,7 +32,7 @@ class Graph {
     if (gui.inBrowser)
       require('./selfcomplete');
 
-    this.progressBar = new ProgressBar();
+    this.progress = new ProgressBar();
 
     // cy handlers
     this.click = {
@@ -166,32 +167,190 @@ class Graph {
   }
 
   eles() {
-    //if (manager.graphable)
-      return _.map(manager.current._nx.getCytoscapeEles(manager.current.format), ele => {
-        if (ele.data.name === 'dependency') {
 
-          const src = ele.data.sourceToken,
-            tar = ele.data.targetToken;
+    function toSubscript(str) {
+      const subscripts = { 0:'₀', 1:'₁', 2:'₂', 3:'₃', 4:'₄', 5:'₅',
+        6:'₆', 7:'₇', 8:'₈', 9:'₉', '-':'₋', '(':'₍', ')':'₎' };
 
-          ele.data.label = gui.is_ltr
-            ? tar.indices.absolute > src.indices.absolute
-              ? `${src.deprel}⊳`
-              : `⊲${src.deprel}`
-            : tar.indices.absolute > src.indices.absolute
-              ? `⊲${src.deprel}`
-              : `${src.deprel}⊳`;
+      if (str == null)
+        return '';
 
-          ele.data.ctrl = getCtrl(src, tar);
-          ele.style = getStyle(src, tar);
-          ele.classes = validate.depEdgeClasses(manager.current.eles, ele);
+      return str.split('').map((char) => {
+        return (subscripts[char] || char);
+      }).join('');
+    }
 
-        } else if (ele.data.name === 'pos-node') {
-          ele.classes = validate.posNodeClasses(ele);
-        }
+    function getIndex(token, format) {
+      return format === 'CoNLL-U'
+        ? token.indices.conllu
+        : format === 'CG3'
+          ? token.indices.cg3
+          : token.indices.absolute;
+    }
 
-        return ele;
+    function getDependencyEdge(format, head, token, deprel, progress) {
+
+      progress.total += 1;
+      if (deprel && deprel !== '_')
+        progress.done += 1;
+
+      if (head.name === 'RootToken')
+        return;
+
+      deprel = deprel || '';
+
+      const id = getIndex(token, format),
+        headId = getIndex(head, format),
+        label = gui.is_ltr
+          ? token.indices.absolute > head.indices.absolute
+            ? `${deprel}⊳`
+            : `⊲${deprel}`
+          : token.indices.absolute > head.indices.absolute
+            ? `⊲${deprel}`
+            : `${deprel}⊳`;
+
+      eles.push({
+        data: {
+          id: `dep_${id}_${headId}`,
+          name: `dependency`,
+          attr: `deprel`,
+          deprel: deprel,
+          source: `form-${headId}`,
+          sourceToken: head,
+          target: `form-${id}`,
+          targetToken: token,
+          length: `${(deprel || '').length / 3}em`,
+          label: label,
+          ctrl: getCtrl(head, token),
+        },
+        classes: validate.depEdgeClasses(sent, head, token),
+        style: getStyle(head, token),
       });
-    //return [];
+    }
+
+    this.progress.done = 0;
+    this.progress.total = 0;
+
+    const sent = manager.current._nx,
+      format = manager.current.format;
+
+    sent.index();
+
+    let eles = [];
+
+    sent.iterate(token => {
+
+      if (token.indices.cytoscape == null && !token.isSuperToken)
+        return;
+
+      let id = getIndex(token, format);
+      let num = token.indices.absolute - 1;
+      let clump = token.indices.cytoscape;
+      let pos = format === 'CG3'
+        ? token.xpostag || token.upostag
+        : token.upostag || token.xpostag;
+
+      if (token.isSuperToken) {
+
+        eles.push({ // multiword label
+          data: {
+            id: `multiword-${id}`,
+            num: num,
+            clump: clump,
+            name: `multiword`,
+            label: `${token.form} ${toSubscript(`${id}`)}`,
+            length: `${token.form.length > 3
+              ? token.form.length * 0.7
+              : token.form.length}em`
+          },
+          classes: 'multiword'
+        });
+
+      } else {
+
+        this.progress.total += 2;
+        if (pos && pos !== '_')
+          this.progress.done += 1;
+        if (token._head)
+          this.progress.done += 1;
+
+        let parent = token.name === 'SubToken'
+          ? 'multiword-' + getIndex(sent.getSuperToken(token), format)
+          : undefined;
+
+        eles.push(
+
+          { // "number" node
+            data: {
+              id: `num-${id}`,
+              num: num,
+              clump: clump,
+              name: 'number',
+              label: id,
+              pos: pos,
+              parent: parent,
+              token: token,
+            },
+            classes: 'number'
+          },
+
+          { // "form" node
+            data: {
+              id: `form-${id}`,
+              num: num,
+              clump: clump,
+              name: 'form',
+              attr: 'form',
+              form: token.form,
+              label: token.form || '',
+              length: `${(token.form || '').length > 3
+                ? (token.form || '').length * 0.7
+                : (token.form || '').length}em`,
+              state: `normal`,
+              parent: `num-${id}`,
+              token: token,
+            },
+            classes: `form${sent.root === token ? ' root' : ''}`,
+          },
+
+          { // "pos" node
+            data: {
+              id: `pos-node-${id}`,
+              num: num,
+              clump: clump,
+              name: `pos-node`,
+              attr: format === 'CG3' ? `xpostag` : `upostag`,
+              pos: pos,
+              label: pos || '',
+              length: `${(pos || '').length * 0.7 + 1}em`,
+              token: token,
+            },
+            classes: validate.posNodeClasses(pos),
+          },
+
+          { // "pos" edge
+            data: {
+              id: `pos-edge-${id}`,
+              num: num,
+              clump: clump,
+              name: `pos-edge`,
+              pos: pos,
+              source: `form-${id}`,
+              target: `pos-node-${id}`
+            },
+            classes: 'pos'
+          }
+        );
+
+        if (sent.options.enhanced) {
+          token.mapDeps((h, d) => getDependencyEdge(format, h, token, d, this.progress));
+        } else if (token._head) {
+          getDependencyEdge(format, token._head, token, token.deprel, this.progress);
+        }
+      }
+    });
+
+    return eles;
   }
 
   update() {
@@ -227,7 +386,7 @@ class Graph {
       }, 5);
 
     this.bind();
-    this.progressBar.update();
+    this.progress.update();
 
     return this;
   }
@@ -322,16 +481,17 @@ class Graph {
      * Changes the text data and redraws the graph. Currently supports only conllu.
      */
 
-    src = src.data('analysis');
-    tar = tar.data('analysis');
+    src = src.data('token');
+    tar = tar.data('token');
 
     if (src === tar) {
-      log.warn(`makeDependency(): unable to create dependency within superToken ${src.superTokenId}`);
+      status.error('token cannot be its own head');
       return;
     }
 
-    addHead(src.id, tar.id);
+    addHead(src, tar);
 
+    /*
     undoManager.add({
       undo: () => {
         removeHead(src.id, tar.id);
@@ -588,11 +748,10 @@ function modify(id, attr, value) {
 }
 
 function addHead(srcId, tarId, dep='') {
-  const src = manager.current.get(srcId),
-    tar = manager.current.get(tarId);
 
   src.addHead(tar, dep);
   manager.parse(manager.toString());
+
 }
 
 function removeHead(srcId, tarId) {
