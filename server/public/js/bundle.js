@@ -31118,9 +31118,9 @@ function latex() {
     if (node.data.name === 'dependency') {
       if (node.data.label === undefined) return 'error';
 
-      var source = node.data.sourceAnalysis.id,
-          target = node.data.targetAnalysis.id,
-          label = node.data.sourceAnalysis.deprel;
+      var source = node.data.sourceToken.id,
+          target = node.data.targetToken.id,
+          label = node.data.sourceToken.deprel;
 
       deprelLines.push('depedge{' + source + '}{' + target + '}{' + label + '}');
     }
@@ -31419,13 +31419,14 @@ var Graph = function () {
   _createClass(Graph, [{
     key: 'eles',
     value: function eles() {
-      if (manager.graphable) return _.map(manager.current._nx.eles, function (ele) {
+      //if (manager.graphable)
+      return _.map(manager.current._nx.getCytoscapeEles(manager.current.format), function (ele) {
         if (ele.data.name === 'dependency') {
 
-          var src = ele.data.sourceAnalysis,
-              tar = ele.data.targetAnalysis;
+          var src = ele.data.sourceToken,
+              tar = ele.data.targetToken;
 
-          ele.data.label = gui.is_ltr ? tar.num < src.num ? src.deprel + '\u22B3' : '\u22B2' + src.deprel : tar.num < src.num ? '\u22B2' + src.deprel : src.deprel + '\u22B3';
+          ele.data.label = gui.is_ltr ? tar.indices.absolute > src.indices.absolute ? src.deprel + '\u22B3' : '\u22B2' + src.deprel : tar.indices.absolute > src.indices.absolute ? '\u22B2' + src.deprel : src.deprel + '\u22B3';
 
           ele.data.ctrl = getCtrl(src, tar);
           ele.style = getStyle(src, tar);
@@ -31436,7 +31437,7 @@ var Graph = function () {
 
         return ele;
       });
-      return [];
+      //return [];
     }
   }, {
     key: 'update',
@@ -31549,7 +31550,7 @@ var Graph = function () {
 
       if (gui.editing === null) return; // nothing to do
 
-      var analysis = gui.editing.data().analysis || gui.editing.data().sourceAnalysis,
+      var analysis = gui.editing.data().analysis || gui.editing.data().sourceToken,
           attr = gui.editing.data().attr,
           oldValue = analysis[attr],
           newValue = $('#edit').val();
@@ -31625,8 +31626,8 @@ var Graph = function () {
     value: function removeDependency(ele) {
       log.debug('called removeDependency(' + ele.attr('id') + ')');
 
-      var src = ele.data('sourceAnalysis'),
-          tar = ele.data('targetAnalysis');
+      var src = ele.data('sourceToken'),
+          tar = ele.data('targetToken');
 
       removeHead(src.id, tar.id);
 
@@ -31736,7 +31737,7 @@ function getStyle(src, tar) {
     'target-endpoint': '0% -50%'
   };
 
-  if (tar.num < src.num) {
+  if (tar.indices.absolute < src.indices.absolute) {
     style['source-endpoint'] = -10 * cfg.defaultEdgeCoeff + 'px -50%';
   } else {
     style['source-endpoint'] = 10 * cfg.defaultEdgeCoeff + 'px -50%';
@@ -31751,7 +31752,7 @@ function getCtrl(src, tar) {
 
 function getEdgeHeight(src, tar) {
 
-  var diff = tar.num - src.num;
+  var diff = tar.indices.absolute - src.indices.absolute;
 
   var edgeHeight = cfg.defaultEdgeHeight * diff;
   if (gui.is_ltr) edgeHeight *= -1;
@@ -32020,35 +32021,10 @@ var GUI = function () {
       $('#btnUndo').prop('disabled', !undoManager.hasUndo());
       $('#btnRedo').prop('disabled', !undoManager.hasRedo());
 
-      $('.nav-link').show().filter('.active').removeClass('active');
-      $('#tabOther').text(manager.format);
+      $('.nav-link').removeClass('active').filter('[name="' + manager.format + '"]').addClass('active');
 
-      switch (manager.format) {
-        case 'Unknown':
-          $('.nav-link').hide();
-          $('#tabOther').addClass('active').show();
-          break;
-        case 'CoNLL-U':
-          $('#tabConllu').addClass('active');
-          $('#tabOther').hide();
-          break;
-        case 'CG3':
-          $('#tabCG3').addClass('active');
-          $('#tabOther').hide();
-          break;
-        case 'plain text':
-          $('#tabText').hide();
-        default:
-          $('#tabOther').addClass('active');
-      }
-
-      if (this.readonly) {
-
-        $('#text-data').addClass('readonly').prop('readonly', true).val(manager.current.text);
-
-        $('.nav-link.active').removeClass('active');
-        $('#tabText').show().addClass('active');
-      }
+      $('.tab-warning').hide();
+      if (manager.current.conversion_warning) $('.format-tab[name="' + manager.current.format + '"] .tab-warning').show().attr('title', manager.current.conversion_warning);
 
       if (manager.format !== 'CoNLL-U') this.is_table_view = false;
 
@@ -32158,24 +32134,9 @@ var GUI = function () {
         if (!$(e.target).is('.pin')) funcs.link('/settings?treebank_id=' + funcs.getTreebankId(), '_self');
       });
 
-      $('#tabText').click(function (e) {
-        _this2.readonly = true;
-        _this2.update();
-      });
-      $('#tabConllu').click(function (e) {
-        _this2.readonly = false;
-        manager.parse($('#text-data').val(), {
-          transform: convert.to.conllu
-        });
-      });
-      $('#tabCG3').click(function (e) {
-        _this2.readonly = false;
-        manager.parse($('#text-data').val(), {
-          transform: convert.to.cg3
-        });
-      });
-      $('#tabOther').click(function (e) {
-        _this2.readonly = false;
+      $('.format-tab').click(function (e) {
+
+        manager.current.format = $(e.target).attr('name');
         _this2.update();
       });
 
@@ -34925,8 +34886,40 @@ var errors = require('./errors');
 var status = require('./status');
 
 function encode(serial, options) {
+  try {
 
-  var format = null;
+    var format = detectFormat(serial, options);
+
+    if (format === 'notatrix serial') format = 'CoNLL-U';
+
+    options = _.extend({
+      interpretAs: format,
+      allowEmptyString: true
+    }, options);
+
+    return {
+      format: format,
+      sent: new nx.Sentence(serial, options)
+    };
+  } catch (e) {
+
+    if (e instanceof nx.NotatrixError) {
+
+      console.log(e);
+      return {
+        format: 'plain text',
+        sent: new nx.Sentence('', options)
+      };
+    } else {
+
+      throw e;
+    }
+  }
+}
+
+function detectFormat(serial, options) {
+
+  if (!serial) return 'plain text';
 
   var formats = nx.detect(serial, {
     suppressDetectorErrors: true,
@@ -34938,43 +34931,31 @@ function encode(serial, options) {
 
     status.error('Unable to interpret input');
     serial = '';
-    format = 'plain text';
+    return 'plain text';
   } else if (formats.indexOf('notatrix serial') > -1) {
 
-    is_notatrix_serial = true;
-    format = 'notatrix serial';
+    return 'notatrix serial';
   } else if (formats.length === 1) {
 
-    format = formats[0];
-    status.normal('Interpreting as ' + format);
+    console.log('Interpreting as ' + formats[0]);
+    return formats[0];
   } else {
 
-    var preferences = ['CoNLL-U', 'CG3', 'plain text'];
+    // order we'd want to display in if we get multiple hits
+    var preferences = ['CoNLL-U', 'CG3', 'SD', 'plain text', 'Brackets'];
 
     for (var i = 0; i < preferences.length; i++) {
       var pref = preferences[i];
       if (formats.indexOf(pref) > -1) {
-        format = pref;
-        status.normal('Interpreting as ' + format);
-        break;
+        status.normal('Interpreting as ' + pref);
+        return pref;
       }
     }
 
     // just choose one
-    format = formats[0];
-    status.normal('Interpreting as ' + format);
+    status.normal('Interpreting as ' + formats[0]);
+    return formats[0];
   }
-
-  if (format === 'notatrix serial') format = 'CoNLL-U';
-
-  options = _.extend({
-    interpretAs: format,
-    allowEmptyString: true
-  }, options);
-  return {
-    format: format,
-    sent: new nx.Sentence(serial, options)
-  };
 }
 
 var Sentence = function () {
@@ -34982,9 +34963,10 @@ var Sentence = function () {
     _classCallCheck(this, Sentence);
 
     var encoded = encode(serial, options);
-
+    console.log('encoded', encoded);
     this.format = encoded.format;
     this._nx = encoded.sent;
+    this.conversion_warning = null;
 
     this.is_table_view = false;
     this.column_visibilities = new Array(10).fill(true);
@@ -35000,20 +34982,19 @@ var Sentence = function () {
 
       try {
 
-        return this._nx.to(format);
+        var converted = this._nx.to(format);
+        this.conversion_warning = converted.loss.length ? 'Unable to convert: ' + converted.loss.join(', ') : null;
+
+        return converted.output;
       } catch (e) {
-
-        if (e instanceof nx.Loss) {
-
-          status.error(e.message);
-          return e.output;
-        } else if (e instanceof nx.GeneratorError) {
+        if (e instanceof nx.GeneratorError) {
 
           status.error(e.message);
           return null;
-        }
+        } else {
 
-        throw e;
+          throw e;
+        }
       }
     }
   }, {
@@ -35027,6 +35008,7 @@ var Sentence = function () {
 
         var encoded = encode(serial, options);
         this._nx = encoded.sent;
+        this.format = encoded.format;
       }
 
       labeler.parse(this._nx.comments);
@@ -35966,8 +35948,8 @@ function is_cycle(graph, src, tar) {
 }
 
 function depEdgeClasses(graph, ele) {
-  var src = ele.data.sourceAnalysis,
-      tar = ele.data.targetAnalysis;
+  var src = ele.data.sourceToken,
+      tar = ele.data.targetToken;
 
   var classes = new Set(['dependency']);
 
@@ -61324,6 +61306,46 @@ module.exports = {
 
 },{}],398:[function(require,module,exports){
 module.exports = {
+equals: `# sent_id = mst-0001
+# text = Peşreve başlamalı.
+"<Peşreve>"
+	"peşrev" Noun @obl #1->2
+"<başlamalı>"
+	"başla" Verb SpaceAfter=No @root #2->0
+"<.>"
+	"." Punc @punct #3->2`,
+
+x_and_u_postag: `# text = Ñe'ẽnguéra iñe'ẽrapoambuéva (lenguas de flexión), umi ñe'ẽte indoeuropeo-icha.
+# text[spa] = Las lenguas de flexión, aquellas lenguas como indoeuropeas.
+# labels =
+"<Ñeʼẽnguéra>"
+	"ñeʼẽ" n @nsubj #1->
+		"kuéra" det pl @det #2->1
+"<iñeʼẽrapoambuéva>"
+	"iñeʼẽrapoambuéva" adj @amod #3->1
+"<(>"
+	"(" lpar @punct #4->5
+"<lenguas>"
+	"lenguas" barb @appos #5->1
+"<de>"
+	"de" barb @foreign #6->7
+"<flexión>"
+	"flexión" barb @foreign #7->5
+"<)>"
+	")" rpar @punct #8->5
+"<,>"
+	"," cm @punct #9->
+"<umi>"
+	"umi" adj dem pl @amod #10->11
+"<ñeʼẽte>"
+	"ñeʼẽ" n @obl #11->
+		"te" post @case #12->11
+"<indoeuropeo-icha>"
+	"indoeuropeo" barb @amod #13->11
+		"icha" comp @dep #14->13
+"<.>"
+	"." sent @punct #15->`,
+
 nested: `# sent_id = wikipedia:Poyvi_Paraguái:11
 # text = Poyvi peteĩha ñane retãmegua niko ojepuru’ypýkuri 15 jasypo guive 16 jasypoteĩ meve ary 1811-pe.
 # text[spa] = Bandera uno nosotros de-de _ él-se-utilizó-_ 15 maio desde 16 junio hasta año 1811-en.
@@ -61758,6 +61780,36 @@ apertium_kaz_2: `# https://bpaste.net/show/be7c03e6213e
 
 },{}],399:[function(require,module,exports){
 module.exports = {
+turkic: `# sent_id = mst-0008
+# text = Ercan Tezer, iç pazarda bu yıl seksen bin otomobil ve toplam yuzotuz bin araç satılmasının beklendiğini kaydederek, " onalti yıl geriden gidiyoruz " dedi.
+1	Ercan	Ercan	PROPN	Prop	Case=Nom|Number=Sing|Person=3	26	nsubj	_	_
+2	Tezer	Tezer	PROPN	Prop	Case=Nom|Number=Sing|Person=3	1	flat	_	SpaceAfter=No
+3	,	,	PUNCT	Punc	_	26	punct	_	_
+4	iç	iç	ADJ	Adj	_	16	amod	_	_
+5	pazarda	pazar	NOUN	Noun	Case=Loc|Number=Sing|Person=3	4	compound	_	_
+6	bu	bu	DET	Det	_	7	det	_	_
+7	yıl	yıl	NOUN	Noun	Case=Nom|Number=Sing|Person=3	16	obl	_	_
+8	seksen	seksen	NUM	ANum	NumType=Card	10	nummod	_	_
+9	bin	bin	NUM	ANum	NumType=Card	8	flat	_	_
+10	otomobil	otomobil	NOUN	Noun	Case=Nom|Number=Sing|Person=3	16	nsubj	_	_
+11	ve	ve	CCONJ	Conj	_	15	cc	_	_
+12	toplam	toplam	NOUN	Noun	Case=Nom|Number=Sing|Person=3	13	obl	_	_
+13	yuzotuz	yuzotuz	NUM	ANum	NumType=Card	15	nummod	_	_
+14	bin	bin	NUM	ANum	NumType=Card	13	flat	_	_
+15	araç	araç	NOUN	Noun	Case=Nom|Number=Sing|Person=3	10	conj	_	_
+16	satılmasının	sat	VERB	Verb	Aspect=Perf|Case=Gen|Mood=Ind|Number[psor]=Sing|Person[psor]=3|Polarity=Pos|Tense=Pres|VerbForm=Vnoun|Voice=Pass	17	nmod:poss	_	_
+17	beklendiğini	bekle	VERB	Verb	Aspect=Perf|Case=Acc|Mood=Ind|Number[psor]=Sing|Person[psor]=3|Polarity=Pos|Tense=Past|VerbForm=Part|Voice=Pass	18	obj	_	_
+18	kaydederek	kaydet	VERB	Verb	Aspect=Perf|Mood=Ind|Polarity=Pos|Tense=Pres|VerbForm=Conv	26	nmod	_	SpaceAfter=No
+19	,	,	PUNCT	Punc	_	18	punct	_	_
+20	"	"	PUNCT	Punc	_	24	punct	_	_
+21	onalti	onalti	NUM	ANum	NumType=Card	22	nummod	_	_
+22	yıl	yıl	NOUN	Noun	Case=Nom|Number=Sing|Person=3	23	nmod	_	_
+23	geriden	geri	ADJ	NAdj	Case=Abl|Number=Sing|Person=3	24	amod	_	_
+24	gidiyoruz	git	VERB	Verb	Aspect=Prog|Mood=Ind|Number=Plur|Person=1|Polarity=Pos|Polite=Infm|Tense=Pres	26	obj	_	_
+25	"	"	PUNCT	Punc	_	24	punct	_	_
+26	dedi	de	VERB	Verb	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Past	0	root	_	SpaceAfter=No
+27	.	.	PUNCT	Punc	_	26	punct	_	_`,
+
 labels_1: `# text = "This is a simple sentence."
 # labels = label1 another_label a-third-label
 1	This	This	_	_	_	_	_	_	_
@@ -62159,9 +62211,9 @@ ud_example_spaces: `1    They     they    PRON    PRP    Case=Nom|Number=Plur   
 6    .        .       PUNCT   .      _                                  2    punct    2:punct         _`,
 
 ud_example_modified: `1	They	they	PRON	PRP	Case=Nom|Number=Plur	2	nsubj	2:nsubj|4:nsubj	_
-2	buy	buy	VERB	VBP	Number=Plur|Person=3|Tense=Presroot	0:root	_	_	_
+2	buy	buy	VERB	VBP	Number=Plur|Person=3|Tense=Presroot	0	root	_	_
 3	and	and	CONJ	CC	_	4	cc	4:cc	_
-4	sell	sell	VERB	VBP	Number=Plur|Person=3|Tense=Presconj	0:root|2:conj	_	_	_
+4	sell	sell	VERB	VBP	Number=Plur|Person=3|Tense=Presconj	2	_	_	_
 5	books	book	NOUN	NNS	Number=Plur	2	obj	2:obj|4:obj	_
 6	.	.	PUNCT	.	_	2	punct	2:punct	_`,
 };
@@ -62405,41 +62457,6 @@ module.exports = (text, options) => {
 const _ = require('underscore');
 
 const utils = require('../../utils');
-const Loss = utils.Loss;
-const fields = require('./fields');
-
-module.exports = (sent, output) => {
-
-  const serial = sent.serialize();
-  let losses = new Set();
-
-  if (!fields.hasComments && serial.comments.length)
-    losses.add('comments');
-
-  serial.tokens.forEach(token => {
-    Object.keys(_.omit(token, fields)).forEach(field => {
-      switch (field) {
-        case ('uuid'):
-        case ('index'):
-        case ('deps'):
-          break;
-
-        default:
-          losses.add(field);
-      }
-    })
-
-    if (losses.size)
-      throw new Loss(Array.from(losses), output);
-  });
-};
-
-},{"../../utils":479,"./fields":415,"underscore":499}],414:[function(require,module,exports){
-'use strict';
-
-const _ = require('underscore');
-
-const utils = require('../../utils');
 const DetectorError = utils.DetectorError;
 
 module.exports = (text, options) => {
@@ -62512,7 +62529,7 @@ module.exports = (text, options) => {
   return 'Brackets';
 };
 
-},{"../../utils":479,"underscore":499}],415:[function(require,module,exports){
+},{"../../utils":479,"underscore":499}],414:[function(require,module,exports){
 module.exports = [
   'form',
   'head',
@@ -62520,14 +62537,14 @@ module.exports = [
 ];
 module.exports.hasComments = false;
 
-},{}],416:[function(require,module,exports){
+},{}],415:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
 
 const utils = require('../../utils');
 const GeneratorError = utils.GeneratorError;
-const checkLoss = require('./check-loss')
+const getLoss = require('./get-loss')
 
 module.exports = (sent, options) => {
 
@@ -62535,44 +62552,35 @@ module.exports = (sent, options) => {
     throw new GeneratorError(`Unable to generate, input not a Sentence`, sent, options);
 
   options = _.defaults(options, sent.options, {
-    checkLoss: true,
+
   });
 
   sent.index();
 
-  // get the root of the tree;
-  let root = null;
-  sent.tokens.forEach(token => {
-    token.mapHeads(head => {
-      if (head.token.name === 'RootToken')
-        root = token;
-    });
-  });
-
-  if (root == null)
+  if (!sent.root)
     throw new GeneratorError('Unable to generate, could not find root');
 
   // build the tree structure
-  let seen = new Set([ root ]);
-  root = {
-    token: root,
+  let seen = new Set([ sent.root ]);
+  let root = {
+    token: sent.root,
     deprel: 'root',
     deps: [],
   };
 
   const visit = node => {
 
-    node.token.mapDeps(dep => {
+    sent.getDependents(node.token).forEach(dep => {
 
-      if (seen.has(dep.token))
+      if (seen.has(dep))
         throw new GeneratorError('Unable to generate, dependency structure non-linear');
 
       node.deps.push({
-        token: dep.token,
+        token: dep,
         deprel: dep.deprel,
         deps: [],
       });
-      seen.add(dep.token);
+      seen.add(dep);
 
       const next = node.deps.slice(-1)[0];
       if (next)
@@ -62616,13 +62624,47 @@ module.exports = (sent, options) => {
 
   // console.log(output);
 
-  if (options.checkLoss)
-    checkLoss(sent, output);
-
-  return output;
+  return {
+    output: output,
+    loss: getLoss(sent),
+  };
 };
 
-},{"../../utils":479,"./check-loss":413,"underscore":499}],417:[function(require,module,exports){
+},{"../../utils":479,"./get-loss":416,"underscore":499}],416:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const fields = require('./fields');
+
+module.exports = sent => {
+
+  const serial = sent.serialize();
+  let losses = new Set();
+
+  if (serial.comments.length)
+    losses.add('comments');
+
+  serial.tokens.forEach(token => {
+    Object.keys(_.omit(token, fields)).forEach(field => {
+      switch (field) {
+        case ('uuid'):
+        case ('index'):
+        case ('deps'):
+          break;
+
+        default:
+          losses.add(field);
+      }
+    })
+
+  });
+
+  return Array.from(losses);
+};
+
+},{"../../utils":479,"./fields":414,"underscore":499}],417:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -62636,7 +62678,7 @@ module.exports = {
 
 };
 
-},{"../default-splitter":431,"./detector":414,"./fields":415,"./generator":416,"./parser":418}],418:[function(require,module,exports){
+},{"../default-splitter":431,"./detector":413,"./fields":414,"./generator":415,"./parser":418}],418:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
@@ -62806,70 +62848,7 @@ module.exports = (text, options) => {
   return sent.serialize();
 };
 
-},{"../../utils":479,"./detector":414,"underscore":499}],419:[function(require,module,exports){
-'use strict';
-
-const _ = require('underscore');
-
-const utils = require('../../utils');
-const Loss = utils.Loss;
-const fields = require('./fields');
-
-module.exports = (sent, output) => {
-
-  const serial = sent.serialize();
-  let losses = new Set();
-
-  if (!fields.hasComments && serial.comments.length)
-    losses.add('comments');
-
-  const tokenCalcLoss = token => {
-    Object.keys(_.omit(token, fields)).forEach(field => {
-      switch (field) {
-        case ('uuid'):
-        case ('index'):
-        case ('deps'):
-          break;
-
-        case ('misc'):
-          if (token.misc !== token.other)
-            losses.add(field);
-          break;
-
-        default:
-          losses.add(field);
-      }
-    });
-  };
-
-  serial.tokens.map(token => {
-
-    tokenCalcLoss(token);
-
-    (token.analyses || []).forEach(analysis => {
-
-      const analysisKeys = Object.keys(analysis);
-      if (analysisKeys.length > 1 || analysisKeys[0] !== 'subTokens') {
-        losses.add('analyses');
-      } else {
-        analysis.subTokens.map(subToken => {
-
-          tokenCalcLoss(subToken);
-
-          if (subToken.form != undefined)
-            losses.add('form');
-
-        });
-      }
-
-    });
-  });
-
-  if (losses.size)
-    throw new Loss(Array.from(losses), output);
-};
-
-},{"../../utils":479,"./fields":421,"underscore":499}],420:[function(require,module,exports){
+},{"../../utils":479,"./detector":413,"underscore":499}],419:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
@@ -62946,7 +62925,7 @@ module.exports = (text, options) => {
   return 'CG3';
 };
 
-},{"../../utils":479,"underscore":499}],421:[function(require,module,exports){
+},{"../../utils":479,"underscore":499}],420:[function(require,module,exports){
 module.exports = [
   'semicolon',
   'index',
@@ -62960,14 +62939,14 @@ module.exports = [
 ];
 module.exports.hasComments = true;
 
-},{}],422:[function(require,module,exports){
+},{}],421:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
 
 const utils = require('../../utils');
 const GeneratorError = utils.GeneratorError;
-const checkLoss = require('./check-loss')
+const getLoss = require('./get-loss')
 
 module.exports = (sent, options) => {
 
@@ -62975,7 +62954,6 @@ module.exports = (sent, options) => {
     throw new GeneratorError(`Unable to generate, input not a Sentence`, sent, options);
 
   options = _.defaults(options, sent.options, {
-    checkLoss: true,
     omitIndices: false,
   });
 
@@ -62992,13 +62970,14 @@ module.exports = (sent, options) => {
 
       indent = (token.semicolon ? ';' : '') + '\t'.repeat(indent);
 
-      const head = token.getHead();
+      const head = token.getHead('CG3');
       const dependency = options.omitIndices
         ? null
         : '#' + token.indices.cg3 + '->' + (head == undefined ? '' : head);
 
       let line = [ `"${token.lemma}"` ]
-        .concat(token.xpostag)
+        .concat(token.xpostag || token.upostag)
+        .concat((token.feats || '').split('|'))
         .concat(token._misc)
         .concat(token.deprel ? '@' + token.deprel : null)
         .concat(dependency);
@@ -63027,14 +63006,78 @@ module.exports = (sent, options) => {
 
   });
 
-  const output = lines.join('\n');
-  if (options.checkLoss)
-    checkLoss(sent, output);
-
-  return output;
+  return {
+    output: lines.join('\n'),
+    loss: getLoss(sent),
+  };
 };
 
-},{"../../utils":479,"./check-loss":419,"underscore":499}],423:[function(require,module,exports){
+},{"../../utils":479,"./get-loss":422,"underscore":499}],422:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const fields = require('./fields');
+
+module.exports = sent => {
+
+  const serial = sent.serialize();
+  let losses = new Set();
+
+  const tokenCalcLoss = token => {
+    Object.keys(_.omit(token, fields)).forEach(field => {
+      switch (field) {
+        case ('uuid'):
+        case ('index'):
+        case ('deps'):
+        case ('feats'):
+        case ('misc'):
+          break;
+
+        case ('upostag'):
+          if (token.xpostag && token.upostag)
+            losses.add(field);
+          break;
+
+        case ('isEmpty'):
+          if (token.isEmpty)
+            losses.add(field);
+          break;
+
+        default:
+          losses.add(field);
+      }
+    });
+  };
+
+  serial.tokens.map(token => {
+
+    tokenCalcLoss(token);
+
+    (token.analyses || []).forEach(analysis => {
+
+      const analysisKeys = Object.keys(analysis);
+      if (analysisKeys.length > 1 || analysisKeys[0] !== 'subTokens') {
+        losses.add('analyses');
+      } else {
+        analysis.subTokens.map(subToken => {
+
+          tokenCalcLoss(subToken);
+
+          if (subToken.form != undefined)
+            losses.add('form');
+
+        });
+      }
+
+    });
+  });
+
+  return Array.from(losses);
+};
+
+},{"../../utils":479,"./fields":420,"underscore":499}],423:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -63048,7 +63091,7 @@ module.exports = {
 
 };
 
-},{"../default-splitter":431,"./detector":420,"./fields":421,"./generator":422,"./parser":424}],424:[function(require,module,exports){
+},{"../default-splitter":431,"./detector":419,"./fields":420,"./generator":421,"./parser":424}],424:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
@@ -63355,64 +63398,7 @@ module.exports = (text, options) => {
   };
 };
 
-},{"../../utils":479,"./detector":420,"underscore":499}],425:[function(require,module,exports){
-'use strict';
-
-const _ = require('underscore');
-
-const utils = require('../../utils');
-const Loss = utils.Loss;
-const fields = require('./fields');
-
-module.exports = (sent, output) => {
-
-  const serial = sent.serialize();
-  let losses = new Set();
-
-  if (!fields.hasComments && serial.comments.length)
-    losses.add('comments');
-
-  const tokenCalcLoss = token => {
-    Object.keys(_.omit(token, fields)).forEach(field => {
-      switch (field) {
-        case ('uuid'):
-        case ('index'):
-          break;
-
-        case ('other'):
-          if (token.misc !== token.other)
-            losses.add(field);
-          break;
-
-        case ('analyses'):
-          if (token.analyses.length > 1) {
-            losses.add('analyses');
-          } else {
-
-            const analysis = token.analyses[0],
-              analysisKeys = Object.keys(analysis);
-
-            if (analysisKeys.length > 1 || analysisKeys[0] !== 'subTokens') {
-              losses.add('analyses');
-            } else {
-              analysis.subTokens.map(tokenCalcLoss);
-            }
-          }
-          break;
-
-        default:
-          losses.add(field);
-      }
-    });
-  };
-
-  serial.tokens.map(tokenCalcLoss);
-
-  if (losses.size)
-    throw new Loss(Array.from(losses), output);
-};
-
-},{"../../utils":479,"./fields":427,"underscore":499}],426:[function(require,module,exports){
+},{"../../utils":479,"./detector":419,"underscore":499}],425:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
@@ -63481,7 +63467,7 @@ module.exports = (text, options) => {
   return 'CoNLL-U';
 };
 
-},{"../../utils":479,"underscore":499}],427:[function(require,module,exports){
+},{"../../utils":479,"underscore":499}],426:[function(require,module,exports){
 module.exports = [
   'isEmpty',
   'index',
@@ -63498,14 +63484,14 @@ module.exports = [
 ];
 module.exports.hasComments = true;
 
-},{}],428:[function(require,module,exports){
+},{}],427:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
 
 const utils = require('../../utils');
 const GeneratorError = utils.GeneratorError;
-const checkLoss = require('./check-loss')
+const getLoss = require('./get-loss')
 
 
 module.exports = (sent, options) => {
@@ -63514,7 +63500,7 @@ module.exports = (sent, options) => {
     throw new GeneratorError(`Unable to generate, input not a Sentence`, sent, options);
 
   options = _.defaults(options, sent.options, {
-    checkLoss: true,
+
   });
 
   sent.index();
@@ -63548,14 +63534,61 @@ module.exports = (sent, options) => {
     });
   });
 
-  const output = lines.join('\n');
-  if (options.checkLoss)
-    checkLoss(sent, output);
-
-  return output;
+  return {
+    output: lines.join('\n'),
+    loss: getLoss(sent),
+  };
 };
 
-},{"../../utils":479,"./check-loss":425,"underscore":499}],429:[function(require,module,exports){
+},{"../../utils":479,"./get-loss":428,"underscore":499}],428:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const fields = require('./fields');
+
+module.exports = sent => {
+
+  const serial = sent.serialize();
+  let losses = new Set();
+
+  const tokenCalcLoss = token => {
+    Object.keys(_.omit(token, fields)).forEach(field => {
+      switch (field) {
+        case ('uuid'):
+        case ('index'):
+        case ('other'):
+          break;
+
+        case ('analyses'):
+          if (token.analyses.length > 1) {
+            losses.add('analyses');
+          } else {
+
+            const analysis = token.analyses[0],
+              analysisKeys = Object.keys(analysis);
+
+            if (analysisKeys.length > 1 || analysisKeys[0] !== 'subTokens') {
+              losses.add('analyses');
+            } else {
+              analysis.subTokens.map(tokenCalcLoss);
+            }
+          }
+          break;
+
+        default:
+          losses.add(field);
+      }
+    });
+  };
+
+  serial.tokens.map(tokenCalcLoss);
+
+  return Array.from(losses);
+};
+
+},{"../../utils":479,"./fields":426,"underscore":499}],429:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -63602,7 +63635,7 @@ module.exports = {
 }
 */
 
-},{"../default-splitter":431,"./detector":426,"./fields":427,"./generator":428,"./parser":430}],430:[function(require,module,exports){
+},{"../default-splitter":431,"./detector":425,"./fields":426,"./generator":427,"./parser":430}],430:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
@@ -63806,7 +63839,7 @@ module.exports = (text, options) => {
   };
 };
 
-},{"../../utils":479,"./detector":426,"underscore":499}],431:[function(require,module,exports){
+},{"../../utils":479,"./detector":425,"underscore":499}],431:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
@@ -63830,19 +63863,6 @@ module.exports = (text, options={}) => {
 },{"../utils":479,"underscore":499}],432:[function(require,module,exports){
 arguments[4][400][0].apply(exports,arguments)
 },{"./apertium-stream":410,"./brackets":417,"./cg3":423,"./conllu":429,"./notatrix-serial":437,"./params":444,"./plain-text":451,"./sd":458,"dup":400}],433:[function(require,module,exports){
-'use strict';
-
-const _ = require('underscore');
-
-const utils = require('../../utils');
-const Loss = utils.Loss;
-const fields = require('./fields');
-
-module.exports = (sent, output) => {
-  // do nothing, can't lose info on this one
-};
-
-},{"../../utils":479,"./fields":435,"underscore":499}],434:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
@@ -63936,18 +63956,18 @@ module.exports = (obj, options) => {
   })
 };
 
-},{"../../utils":479,"underscore":499}],435:[function(require,module,exports){
+},{"../../utils":479,"underscore":499}],434:[function(require,module,exports){
 module.exports = [];
 module.exports.hasComments = true;
 
-},{}],436:[function(require,module,exports){
+},{}],435:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
 
 const utils = require('../../utils');
 const GeneratorError = utils.GeneratorError;
-const checkLoss = require('./check-loss')
+const getLoss = require('./get-loss')
 
 
 module.exports = (sent, options) => {
@@ -63956,18 +63976,32 @@ module.exports = (sent, options) => {
     throw new GeneratorError(`Unable to generate, input not a Sentence`, sent, options);
 
   options = _.defaults(options, sent.options, {
-    checkLoss: true,
+
   });
 
   sent.index();
 
-  if (options.checkLoss)
-    checkLoss(sent, sent);
-
-  return sent.serialize();
+  return {
+    output: sent.serialize(),
+    loss: getLoss(sent),
+  };
 };
 
-},{"../../utils":479,"./check-loss":433,"underscore":499}],437:[function(require,module,exports){
+},{"../../utils":479,"./get-loss":436,"underscore":499}],436:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const Loss = utils.Loss;
+const fields = require('./fields');
+
+module.exports = sent => {
+  // do nothing, can't lose info on this one
+  return [];
+};
+
+},{"../../utils":479,"./fields":434,"underscore":499}],437:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -64078,7 +64112,7 @@ OUTPUT:
   ],
 */
 
-},{"./detector":434,"./fields":435,"./generator":436,"./parser":438,"./splitter":439}],438:[function(require,module,exports){
+},{"./detector":433,"./fields":434,"./generator":435,"./parser":438,"./splitter":439}],438:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
@@ -64101,7 +64135,7 @@ module.exports = (obj, options) => {
   return obj;
 };
 
-},{"../../utils":479,"./detector":434,"underscore":499}],439:[function(require,module,exports){
+},{"../../utils":479,"./detector":433,"underscore":499}],439:[function(require,module,exports){
 'use strict';
 
 const utils = require('../../utils');
@@ -64112,40 +64146,6 @@ module.exports = (text, options) => {
 };
 
 },{"../../utils":479}],440:[function(require,module,exports){
-'use strict';
-
-const _ = require('underscore');
-
-const utils = require('../../utils');
-const Loss = utils.Loss;
-const fields = require('./fields');
-
-module.exports = (sent, output) => {
-
-  const serial = sent.serialize();
-  let losses = new Set();
-
-  if (!fields.hasComments && serial.comments.length)
-    losses.add('comments');
-
-  serial.tokens.forEach(token => {
-    Object.keys(_.omit(token, fields)).forEach(field => {
-      switch (field) {
-        case ('uuid'):
-        case ('index'):
-          break;
-
-        default:
-          losses.add(field);
-      }
-    })
-
-    if (losses.size)
-      throw new Loss(Array.from(losses), output);
-  });
-};
-
-},{"../../utils":479,"./fields":442,"underscore":499}],441:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
@@ -64192,7 +64192,7 @@ module.exports = (obj, options) => {
   return 'Params';
 };
 
-},{"../../utils":479,"underscore":499}],442:[function(require,module,exports){
+},{"../../utils":479,"underscore":499}],441:[function(require,module,exports){
 module.exports = [
   'isEmpty',
   'index',
@@ -64208,14 +64208,14 @@ module.exports = [
 ];
 module.exports.hasComments = false;
 
-},{}],443:[function(require,module,exports){
+},{}],442:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
 
 const utils = require('../../utils');
 const GeneratorError = utils.GeneratorError;
-const checkLoss = require('./check-loss')
+const getLoss = require('./get-loss')
 
 
 module.exports = (sent, options) => {
@@ -64224,7 +64224,7 @@ module.exports = (sent, options) => {
     throw new GeneratorError(`Unable to generate, input not a Sentence`, sent, options);
 
   options = _.defaults(options, sent.options, {
-    checkLoss: true,
+
   });
 
   sent.index();
@@ -64241,13 +64241,45 @@ module.exports = (sent, options) => {
     return _.pick(params, value => value != undefined);
   });
 
-  if (options.checkLoss)
-    checkLoss(sent, output);
-
-  return output;
+  return {
+    output: output,
+    loss: getLoss(sent),
+  };
 };
 
-},{"../../utils":479,"./check-loss":440,"underscore":499}],444:[function(require,module,exports){
+},{"../../utils":479,"./get-loss":443,"underscore":499}],443:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const fields = require('./fields');
+
+module.exports = sent => {
+
+  const serial = sent.serialize();
+  let losses = new Set();
+
+  if (serial.comments.length)
+    losses.add('comments');
+
+  serial.tokens.forEach(token => {
+    Object.keys(_.omit(token, fields)).forEach(field => {
+      switch (field) {
+        case ('uuid'):
+        case ('index'):
+          break;
+
+        default:
+          losses.add(field);
+      }
+    })
+  });
+
+  return Array.from(losses);
+};
+
+},{"../../utils":479,"./fields":441,"underscore":499}],444:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -64261,7 +64293,7 @@ module.exports = {
 
 };
 
-},{"./detector":441,"./fields":442,"./generator":443,"./parser":445,"./splitter":446}],445:[function(require,module,exports){
+},{"./detector":440,"./fields":441,"./generator":442,"./parser":445,"./splitter":446}],445:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
@@ -64292,7 +64324,7 @@ module.exports = (obj, options) => {
   };
 };
 
-},{"../../utils":479,"./detector":441,"underscore":499}],446:[function(require,module,exports){
+},{"../../utils":479,"./detector":440,"underscore":499}],446:[function(require,module,exports){
 'use strict';
 
 const utils = require('../../utils');
@@ -64303,8 +64335,6 @@ module.exports = (text, options) => {
 };
 
 },{"../../utils":479}],447:[function(require,module,exports){
-arguments[4][440][0].apply(exports,arguments)
-},{"../../utils":479,"./fields":449,"dup":440,"underscore":499}],448:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
@@ -64344,20 +64374,20 @@ module.exports = (text, options) => {
   return 'plain text';
 };
 
-},{"../../utils":479,"underscore":499}],449:[function(require,module,exports){
+},{"../../utils":479,"underscore":499}],448:[function(require,module,exports){
 module.exports = [
   'form',
 ];
 module.exports.hasComments = false;
 
-},{}],450:[function(require,module,exports){
+},{}],449:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
 
 const utils = require('../../utils');
 const GeneratorError = utils.GeneratorError;
-const checkLoss = require('./check-loss')
+const getLoss = require('./get-loss')
 
 
 module.exports = (sent, options) => {
@@ -64366,7 +64396,7 @@ module.exports = (sent, options) => {
     throw new GeneratorError(`Unable to generate, input not a Sentence`, sent, options);
 
   options = _.defaults(options, sent.options, {
-    checkLoss: true,
+
   });
 
   sent.index();
@@ -64379,13 +64409,15 @@ module.exports = (sent, options) => {
 
   }).join(' ').replace(utils.re.spaceBeforePunctuation, '$1');
 
-  if (options.checkLoss)
-    checkLoss(sent, output);
-
-  return output;
+  return {
+    output: output,
+    loss: getLoss(sent),
+  };
 };
 
-},{"../../utils":479,"./check-loss":447,"underscore":499}],451:[function(require,module,exports){
+},{"../../utils":479,"./get-loss":450,"underscore":499}],450:[function(require,module,exports){
+arguments[4][443][0].apply(exports,arguments)
+},{"../../utils":479,"./fields":448,"dup":443,"underscore":499}],451:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -64399,7 +64431,7 @@ module.exports = {
 
 };
 
-},{"./detector":448,"./fields":449,"./generator":450,"./parser":452,"./splitter":453}],452:[function(require,module,exports){
+},{"./detector":447,"./fields":448,"./generator":449,"./parser":452,"./splitter":453}],452:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
@@ -64474,7 +64506,7 @@ module.exports = (text, options) => {
   };
 };
 
-},{"../../utils":479,"./detector":448,"underscore":499}],453:[function(require,module,exports){
+},{"../../utils":479,"./detector":447,"underscore":499}],453:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
@@ -64496,8 +64528,6 @@ module.exports = (text, options={}) => {
 };
 
 },{"../../utils":479,"underscore":499}],454:[function(require,module,exports){
-arguments[4][413][0].apply(exports,arguments)
-},{"../../utils":479,"./fields":456,"dup":413,"underscore":499}],455:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
@@ -64572,7 +64602,7 @@ module.exports = (text, options) => {
   return 'SD';
 };
 
-},{"../../utils":479,"underscore":499}],456:[function(require,module,exports){
+},{"../../utils":479,"underscore":499}],455:[function(require,module,exports){
 module.exports = [
   'form',
   'head',
@@ -64580,7 +64610,7 @@ module.exports = [
 ];
 module.exports.hasComments = true;
 
-},{}],457:[function(require,module,exports){
+},{}],456:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
@@ -64588,7 +64618,7 @@ const _ = require('underscore');
 const utils = require('../../utils');
 const GeneratorError = utils.GeneratorError;
 const generateText = require('../plain-text').generate;
-const checkLoss = require('./check-loss')
+const getLoss = require('./get-loss')
 
 module.exports = (sent, options) => {
 
@@ -64596,7 +64626,7 @@ module.exports = (sent, options) => {
     throw new GeneratorError(`Unable to generate, input not a Sentence`, sent, options);
 
   options = _.defaults(options, sent.options, {
-    checkLoss: true,
+
   });
 
   sent.index();
@@ -64606,33 +64636,55 @@ module.exports = (sent, options) => {
     lines.push('# ' + comment.body);
   });
 
-  lines.push(generateText(sent, { checkLoss: false }));
+  lines.push(generateText(sent).output);
+
+  if (sent.root)
+    lines.push(`root(ROOT, ${sent.root.form})`);
 
   sent.tokens.forEach(token => {
 
-    token.mapHeads(head => {
-      if (head.token.name === 'RootToken')
-        lines.push(`root(ROOT, ${token.form})`);
-    });
-  });
-  sent.tokens.forEach(token => {
-    let deps = [];
-    token.mapDeps(dep => {
-      if (dep.deprel)
-        deps.push(`${dep.deprel}(${token.form}, ${dep.token.form})`);
-    });
-    while (deps.length)
-      lines.push(deps.pop());
+    if (token._head && token.deprel && token._head.name !== 'RootToken')
+      lines.push(`${token.deprel}(${token._head.form}, ${token.form})`);
+
   });
 
-  const output = lines.join('\n');
-  if (options.checkLoss)
-    checkLoss(sent, output);
-
-  return output;
+  return {
+    output: lines.join('\n'),
+    loss: getLoss(sent),
+  };
 };
 
-},{"../../utils":479,"../plain-text":451,"./check-loss":454,"underscore":499}],458:[function(require,module,exports){
+},{"../../utils":479,"../plain-text":451,"./get-loss":457,"underscore":499}],457:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const fields = require('./fields');
+
+module.exports = sent => {
+
+  const serial = sent.serialize();
+  let losses = new Set();
+
+  serial.tokens.forEach(token => {
+    Object.keys(_.omit(token, fields)).forEach(field => {
+      switch (field) {
+        case ('uuid'):
+        case ('index'):
+        case ('deps'):
+          break;
+
+        default:
+          losses.add(field);
+      }
+    })
+  });
+
+  return Array.from(losses);
+};
+
+},{"../../utils":479,"./fields":455,"underscore":499}],458:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -64646,7 +64698,7 @@ module.exports = {
 
 };
 
-},{"../default-splitter":431,"./detector":455,"./fields":456,"./generator":457,"./parser":459}],459:[function(require,module,exports){
+},{"../default-splitter":431,"./detector":454,"./fields":455,"./generator":456,"./parser":459}],459:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
@@ -64774,7 +64826,7 @@ module.exports = (text, options) => {
   };
 };
 
-},{"../../utils":479,"../plain-text":451,"./detector":455,"underscore":499}],460:[function(require,module,exports){
+},{"../../utils":479,"../plain-text":451,"./detector":454,"underscore":499}],460:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
@@ -64887,7 +64939,7 @@ class BaseToken extends NxBaseClass {
     this._feats_init = false;
     this._misc_init = false;
 
-    this._heads = new DependencySet(options);
+    this._head = undefined;
     this._deps = new DependencySet(options);
 
     this.indices = {
@@ -64929,7 +64981,7 @@ class BaseToken extends NxBaseClass {
       hash += `|${_.map(this.indices, index => `{${index}}`).join('')}`;
 
     if (fields.indexOf('head') > -1)
-      hash += `|(h:${this.mapHeads(h => `${h.token.indices.absolute}:${h.deprel}`).join('|') || ''})`;
+      hash += `|(h:${this.head.token.indices.absolute}:${h.deprel})`;
 
     if (fields.indexOf('deps') > -1)
       hash += `|(d:${this.mapDeps(d => `${d.token.indices.absolute}:${d.deprel}`).join('|') || ''})`;
@@ -64983,7 +65035,7 @@ class BaseToken extends NxBaseClass {
   get value() {
     return this.form || this.lemma;
   }
-  
+
   get feats() {
     return this._feats_init
       ? this._feats.length
@@ -65025,58 +65077,17 @@ class BaseToken extends NxBaseClass {
   }
 
   getHead(format) {
-    return this._heads.toString(format, 'head');
+    if (format === 'CoNLL-U') {
+      return this._head ? `${this._head.indices.conllu}` : null;
+    } else if (format === 'CG3') {
+      return this._head ? `${this._head.indices.cg3}` : null;
+    } else {
+      return this._head ? `${this._head.indices.absolute}` : undefined;
+    }
   }
 
   getDeps(format) {
     return this._deps.toString(format, 'deps');
-  }
-
-  addHead(token, deprel) {
-
-    if (!(token instanceof BaseToken))
-      throw new BaseTokenError('cannot add head unless it is a token');
-
-    if (token === this)
-      throw new BaseTokenError('token cannot be its own head');
-
-    if (this.options.useTokenDeprel)
-      deprel = deprel || this.deprel;
-
-    this._heads.add(token, deprel);
-
-    if (this.options.addDepsWhenAddingHeads)
-      token._deps.add(this, deprel);
-  }
-
-  removeHead(token) {
-
-    if (!(token instanceof BaseToken))
-      throw new BaseTokenError('cannot remove head unless it is a token');
-
-    if (token === this)
-      throw new BaseTokenError('token cannot remove its own head');
-
-    this._heads.remove(token);
-    token._deps.remove(this);
-  }
-
-  modifyHead(token, deprel) {
-    const done = this._heads.modify(token, deprel);
-
-    if (done) {
-      token.modifyDep(this, deprel);
-      return true;
-    }
-
-    if (this.options.addHeadOnModifyFailure)
-      return this.addHead(token, deprel);
-
-    return false;
-  }
-
-  mapHeads(callback) {
-    return this._heads.map(callback);
   }
 
   addDep(token, deprel) {
@@ -65092,8 +65103,6 @@ class BaseToken extends NxBaseClass {
 
     this._deps.add(token, deprel);
 
-    if (this.options.addHeadsWhenAddingDeps)
-      token._heads.add(this, deprel);
   }
 
   removeDep(token) {
@@ -65105,7 +65114,6 @@ class BaseToken extends NxBaseClass {
       throw new BaseTokenError('token cannot remove its own dep');
 
     this._deps.remove(token);
-    token._heads.remove(this);
   }
 
   modifyDep(token, deprel) {
@@ -65115,9 +65123,6 @@ class BaseToken extends NxBaseClass {
       token.modifyHead(this, deprel);
       return true;
     }
-
-    if (this.options.addDepOnModifyFailure)
-      return this.addDep(token, deprel);
 
     return false;
   }
@@ -65255,11 +65260,7 @@ class DependencySet extends NxBaseClass {
         ? this.items.slice(0)
         : this.items;
 
-      const showDeprel = type === 'head'
-          ? this.options.headsShowDeprel
-          : type === 'deps'
-            ? this.options.depsShowDeprel
-            : true;
+      const showDeprel = (type === 'deps');
 
       const print = item => item.token.indices.conllu == undefined
         ? null
@@ -65347,6 +65348,7 @@ const generate = require('../generator');
 
 const NxBaseClass = require('./base-class');
 const Comment = require('./comment');
+const BaseToken = require('./base-token');
 const Token = require('./token');
 const RootToken = require('./root');
 const update = require('./update');
@@ -65363,15 +65365,10 @@ class Sentence extends NxBaseClass {
     options = _.defaults(options, {
       interpretAs: null,
       addHeadOnModifyFailure: true,
-      addHeadsWhenAddingDeps: true,
-      headsShowDeprel: true,
-      addDepOnModifyFailure: true,
-      addDepsWhenAddingHeads: true,
       depsShowDeprel: true,
       showRootDeprel: true,
-      showEnhancedDependencies: true,
+      enhanced: false,
       useTokenDeprel: true,
-      debugUpdates: false,
     });
 
     if (options.interpretAs) {
@@ -65400,6 +65397,7 @@ class Sentence extends NxBaseClass {
     this.options = serial.options;
     this.comments = serial.comments.map(com => new Comment(com, options));
     this.tokens = serial.tokens.map(tok => new Token(tok, options));
+    this.root = undefined;
 
     this.attach();
   }
@@ -65439,6 +65437,17 @@ class Sentence extends NxBaseClass {
     });
 
     return matches;
+  }
+
+  getDependents(token) {
+    return this.query(t => {
+
+      if (!t._head)
+        return;
+
+      return t._head.indices.absolute === token.indices.absolute;
+
+    });
   }
 
   getByIndices(tokenId, analysisId=null, subTokenId=null) {
@@ -65541,30 +65550,39 @@ class Sentence extends NxBaseClass {
     this.size = absolute;
   }
 
+  setRoot(token) {
+    if (!(token instanceof BaseToken))
+      throw new SentenceError(`cannot set ${token} as root`);
+
+    if (this.root)
+      throw new SentenceError(`root is already set`);
+
+    this.root = token;
+  }
+
   attach() {
     this.iterate((token, i, j, k) => {
 
-      (token.serial.head || '').split('|').forEach(fullHead => {
+      const head = token.serial.head;
 
-        fullHead = fullHead.split(':');
-        const head = fullHead[0];
-        const deprel = fullHead[1] || null;
+      if (head === '0' || head === 0) {
 
-        if (head === '0') {
+        token._head = new RootToken();
+        token.deprel = 'root';
+        this.setRoot(token);
 
-          token.addHead(new RootToken(), 'root');
+      } else if (head) {
 
-        } else if (head) {
-
-          const query = this.query(token => token.serial.index === head);
-          if (query.length !== 1) {
-            console.log(token.serial)
-            throw new SentenceError(`cannot locate token with serial index "${head}"`);
-          }
-
-          token.addHead(query[0], deprel);
+        const query = this.query(token => token.serial.index === head);
+        if (query.length !== 1) {
+          console.log(token.serial)
+          throw new SentenceError(`cannot locate token with serial index "${head}"`);
         }
-      });
+
+        token._head = query[0];
+        token.deprel = token.deprel || utils.guessDeprel(head, token);
+
+      }
 
       (token.serial.deps || '').split('|').forEach(fullDep => {
 
@@ -65621,6 +65639,14 @@ class Sentence extends NxBaseClass {
       }).join('');
     }
 
+    function getIndex(token, format) {
+      return format === 'CoNLL-U'
+        ? token.indices.conllu
+        : format === 'CG3'
+          ? token.indices.cg3
+          : token.indices.absolute;
+    }
+
     let eles = [];
 
     this.iterate(token => {
@@ -65628,21 +65654,12 @@ class Sentence extends NxBaseClass {
       if (token.indices.cytoscape == null && !token.isSuperToken)
         return;
 
-      let id = format === 'CoNLL-U'
-        ? token.indices.conllu
-        : format === 'CG3'
-          ? token.indices.cg3
-          : token.indices.absolute;
+      let id = getIndex(token, format);
       let num = token.indices.absolute - 1;
       let clump = token.indices.cytoscape;
       let pos = format === 'CG3'
         ? token.xpostag || token.upostag
         : token.upostag || token.xpostag;
-      let isRoot = false;
-      token.mapHeads(head => {
-        if (head.token.name === 'RootToken')
-          isRoot = true;
-      });
 
       if (token.isSuperToken) {
 
@@ -65652,7 +65669,7 @@ class Sentence extends NxBaseClass {
             num: num,
             clump: clump,
             name: `multiword`,
-            label: `${token.form} ${toSubscript(id)}`,
+            label: `${token.form} ${toSubscript(`${id}`)}`,
             /*length: `${token.form.length > 3
               ? token.form.length * 0.7
               : token.form.length}em`*/
@@ -65662,6 +65679,10 @@ class Sentence extends NxBaseClass {
 
       } else {
 
+        let parent = token.name === 'SubToken'
+          ? 'multiword-' + getIndex(this.getSuperToken(token), format)
+          : undefined;
+
         eles.push({ // "number" node
           data: {
             id: `num-${id}`,
@@ -65670,7 +65691,7 @@ class Sentence extends NxBaseClass {
             name: 'number',
             label: id,
             pos: pos,
-            parent: token.name === 'SubToken' ? `multiword-${id}` : undefined,
+            parent: parent,
             token: token,
           },
           classes: 'number'
@@ -65682,7 +65703,7 @@ class Sentence extends NxBaseClass {
             name: 'form',
             attr: 'form',
             form: token.form,
-            label: token.form,
+            label: token.form || '',
             length: `${(token.form || '').length > 3
               ? (token.form || '').length * 0.7
               : (token.form || '').length}em`,
@@ -65690,7 +65711,7 @@ class Sentence extends NxBaseClass {
             parent: `num-${id}`,
             token: token,
           },
-          classes: `form${isRoot ? ' root' : ''}`,
+          classes: `form${this.root === token ? ' root' : ''}`,
         }, { // "pos" node
           data: {
             id: `pos-node-${id}`,
@@ -65717,45 +65738,81 @@ class Sentence extends NxBaseClass {
           classes: 'pos'
         });
 
-        token.mapHeads(head => {
+        const getDependencyEdges = (format, head, token, deprel) => {
 
-          if (head.token.name === 'RootToken')
+          if (head.name === 'RootToken')
             return;
 
-          let headId = format === 'CoNLL-U'
-            ? head.token.indices.conllu
-            : format === 'CG3'
-              ? head.token.indices.cg3
-              : head.token.indices.absolute;
+          let headId = getIndex(head, format);
 
           eles.push({
             data: {
               id: `dep_${id}_${headId}`,
               name: `dependency`,
               attr: `deprel`,
-              deprel: (head.deprel || ''),
-              source: `form-${id}`,
-              sourceToken: token,
-              target: `form-${headId}`,
-              targetToken: head.token,
-              length: `${(head.deprel || '').length / 3}em`,
+              deprel: deprel,
+              source: `form-${headId}`,
+              sourceToken: head,
+              target: `form-${id}`,
+              targetToken: token,
+              length: `${(deprel || '').length / 3}em`,
               label: null, // NB overwrite this before use
               ctrl: null   // NB overwrite this before use
             },
             classes: null  // NB overwrite this before use
           });
+        };
 
-        });
+        if (this.options.enhanced) {
+          token.mapDeps((h, d) => getDependencyEdges(format, h, token, d));
+        } else if (token._head) {
+          getDependencyEdges(format, token._head, token, token.deprel);
+        }
       }
     });
 
     return eles;
   }
+
+  enhance() {
+    this.options.enhanced = true;
+
+    this.iterate(token => {
+      if (!token._head)
+        return;
+
+      token.addDep(token._head, token.deprel);
+
+    })
+  }
+
+  getSuperToken(token) {
+
+    let superToken = null;
+
+    this.iterate(tok => {
+      if (!tok._analyses)
+        return;
+
+      tok._analyses.forEach(ana => {
+        if (!ana._subTokens)
+          return;
+
+        ana._subTokens.forEach(sub => {
+          if (sub === token)
+            superToken = tok;
+
+        });
+      });
+    });
+
+    return superToken;
+  }
 }
 
 module.exports = Sentence;
 
-},{"../generator":460,"../parser":474,"../utils":479,"./base-class":463,"./comment":465,"./root":469,"./token":472,"./update":473,"underscore":499}],471:[function(require,module,exports){
+},{"../generator":460,"../parser":474,"../utils":479,"./base-class":463,"./base-token":464,"./comment":465,"./root":469,"./token":472,"./update":473,"underscore":499}],471:[function(require,module,exports){
 'use strict';
 
 const _ = require('underscore');
@@ -66578,7 +66635,7 @@ module.exports = {
   ],
 
   formats: [
-    'apertium stream',
+    //'apertium stream',
     'Brackets',
     'CG3',
     'CoNLL-U',
@@ -66686,16 +66743,6 @@ class GeneratorError extends ToolError {
   }
 }
 
-class Loss extends ToolError {
-  constructor(fields, output) {
-    super(`Conversion is lossy on: ${fields.join(', ')}`);
-
-    this.name = 'ConversionError';
-    this.fields = fields;
-    this.output = output;
-  }
-}
-
 class ConverterError extends ToolError {
   constructor(message) {
     super(message);
@@ -66785,7 +66832,6 @@ module.exports = {
   DetectorError,
   ParserError,
   GeneratorError,
-  Loss,
   ConverterError,
 
   NxError,
@@ -66857,6 +66903,8 @@ module.exports = {
 
   combine,
 
+  guessDeprel: (dependent, head, context) => undefined,
+
 };
 
 },{}],479:[function(require,module,exports){
@@ -66882,9 +66930,9 @@ module.exports = {
   comment: /^(#\s*(.*))(\n|$)/,
   conlluTokenLine: /^((\d+(\.\d+)?)(\-(\d+(\.\d+)?))?)(.+)/,
   conlluTokenLineTenParams: /^((\d+(\.\d+)?)(\-(\d+(\.\d+)?))?)((\s+\S+){8,9})/,
-  conlluEmptyIndex: /(\d+)(\.\d+)?/,
+  conlluEmptyIndex: /^(\d+)(\.\d+)?/,
   cg3TokenStart: /^["']<((.|\\")*)>["']/,
-  cg3TokenContent: /^(;?)(\s+)"((.|\\")*)"((\s+[\w@#\->:]+)*)/,
+  cg3TokenContent: /^(;?)(\s+)"((.|\\")*)"((\s+[\w@#\->:=]+)*)/,
   cg3Dependency: /#?\d+(->\d*)?$/,
   cg3Head: /#\d+->(\d*)$/,
   cg3Index: /#(\d+)/,
@@ -70798,7 +70846,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             limit = 0,
             isExecuting = false,
             callback,
-
+            
             // functions
             execute;
 
@@ -70828,12 +70876,12 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
                 commands.splice(index + 1, commands.length - index);
 
                 commands.push(command);
-
+                
                 // if limit is set, remove items from the start
                 if (limit && commands.length > limit) {
                     removeFromTo(commands, 0, -(limit+1));
                 }
-
+                
                 // set the current index to the end
                 index = commands.length - 1;
                 if (callback) {
@@ -70910,7 +70958,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             getIndex: function() {
                 return index;
             },
-
+            
             setLimit: function (l) {
                 limit = l;
             }
