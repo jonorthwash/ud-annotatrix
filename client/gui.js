@@ -215,38 +215,16 @@ class GUI {
     $('#btnUndo').prop('disabled', !undoManager.hasUndo());
     $('#btnRedo').prop('disabled', !undoManager.hasRedo());
 
-    $('.nav-link').show().filter('.active').removeClass('active');
-    $('#tabOther').text(manager.format);
+    $('.nav-link')
+      .removeClass('active')
+      .filter(`[name="${manager.format}"]`)
+      .addClass('active');
 
-    switch (manager.format) {
-      case ('Unknown'):
-        $('.nav-link').hide();
-        $('#tabOther').addClass('active').show();
-        break;
-      case ('CoNLL-U'):
-        $('#tabConllu').addClass('active');
-        $('#tabOther').hide();
-        break;
-      case ('CG3'):
-        $('#tabCG3').addClass('active');
-        $('#tabOther').hide();
-        break;
-      case ('plain text'):
-        $('#tabText').hide();
-      default:
-        $('#tabOther').addClass('active');
-    }
-
-    if (this.readonly) {
-
-      $('#text-data')
-        .addClass('readonly')
-        .prop('readonly', true)
-        .val(manager.current.text);
-
-      $('.nav-link.active').removeClass('active');
-      $('#tabText').show().addClass('active');
-    }
+    $('.tab-warning').hide();
+    if (manager.current.conversion_warning)
+      $(`.format-tab[name="${manager.current.format}"] .tab-warning`)
+        .show()
+        .attr('title', manager.current.conversion_warning);
 
     if (manager.format !== 'CoNLL-U')
       this.is_table_view = false;
@@ -359,25 +337,11 @@ class GUI {
         funcs.link('/settings?treebank_id=' + funcs.getTreebankId(), '_self');
     });
 
-    $('#tabText').click(e => {
-      this.readonly = true;
+    $('.format-tab').click(e => {
+
+      manager.current.format = $(e.target).attr('name');
       this.update();
-    });
-    $('#tabConllu').click(e => {
-      this.readonly = false;
-      manager.parse($('#text-data').val(), {
-        transform: convert.to.conllu
-      });
-    });
-    $('#tabCG3').click(e => {
-      this.readonly = false;
-      manager.parse($('#text-data').val(), {
-        transform: convert.to.cg3
-      });
-    });
-    $('#tabOther').click(e => {
-      this.readonly = false;
-      this.update();
+
     });
 
     $('[name="show-table"]').click(e => {
