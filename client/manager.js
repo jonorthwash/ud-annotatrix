@@ -14,7 +14,6 @@ const storage = require('./local-storage');
 const export_ = require('./export');
 const status = require('./status');
 const Sentence = require('./sentence');
-const Users = require('./users');
 const Socket = require('./socket');
 
 class Manager {
@@ -27,7 +26,6 @@ class Manager {
     funcs.global().labeler = new Labeler();
     if (gui.inBrowser)
       this.socket = Socket(this);
-    this.users = new Users();
     gui.bind();
 
     this.reset();
@@ -363,12 +361,12 @@ class Manager {
     return {
       meta: {
         current_index: this.index,
-        owner: this.users.owner,
-        github_url: this.users.github_url,
+        //owner: this.users.owner,
+        //github_url: this.users.github_url,
         gui: gui.state,
         labeler: labeler.state,
-        permissions: this.users.permissions,
-        editors: this.users.editors
+        //permissions: this.users.permissions,
+        //editors: this.users.editors
       },
       sentences: this.map((i, sent) => sent.state)
     };
@@ -389,7 +387,7 @@ class Manager {
       this.insertSentence(cfg.defaultSentence);
 
     // update users stuff
-    this.users.state = _.pick(state.meta, ['owner', 'github_url', 'permissions', 'editors']);
+    //this.users.state = _.pick(state.meta, ['owner', 'github_url', 'permissions', 'editors']);
 
     labeler.state = state.meta.labeler;
     this.updateFilter(); // use the filters set in labeler

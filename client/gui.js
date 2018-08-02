@@ -11,7 +11,6 @@ const table = require('./table');
 const storage = require('./local-storage');
 const keys = require('./keyboard');
 
-
 var pressed = {}; // used for onCtrlKeyup
 
 class GUI {
@@ -373,31 +372,5 @@ class GUI {
 
 }
 
-
-function mergeNodes(direction) {
-
-  // the highlighted one is the "major" token
-  const major = cy.$('node.form.merge').data().analysis;
-
-  // find the "minor" token by moving either one clump to the left or right
-  const minorClump = major.clump
-    + (direction === 'left' && gui.is_ltr || direction === 'right' && !gui.is_ltr
-      ? -1 : 1);
-
-  // iterate tokens until we find a matching candidate
-  let minor = null;
-  major.sentence.forEach(token => {
-    if (token.analysis.clump === minorClump)
-      minor = token.analysis;
-  });
-
-  // do the merge
-  if (major && minor)
-    major.token.mergeWith(minor.token);
-
-  // clean up
-  cy.$('node.form.merge').removeClass('merge');
-  gui.update();
-}
 
 module.exports = GUI;
