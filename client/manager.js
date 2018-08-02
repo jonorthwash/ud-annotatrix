@@ -334,19 +334,6 @@ class Manager {
     if (this.current)
       return this.current.format;
   }
-  get conllu() {
-    throw new Error('old method');
-    if (this.current)
-      return this.current._nx.to('CoNLL-U');
-  }
-  get cg3() {
-    throw new Error('old method');
-    if (this.current)
-      return this.current._nx.to('CG3');
-  }
-  get graphable() {
-    return this.format === 'CoNLL-U' || this.format === 'CG3';
-  }
   get corpus() {
     const fileHeader = cfg.downloadHasFileHeader
       ? `# __ud_annotatrix_filename__ = "${this.filename}"
