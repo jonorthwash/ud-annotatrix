@@ -6,6 +6,22 @@
 /* @import url(http://fonts.googleapis.com/css?family=Open+Sans:400,600,700,400italic,600italic,700italic&subset=latin&effect=smoothing); */
 /*@import url(https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,700,400italic,600italic,700italic&subset=latin&effect=smoothing);*/
 
+html, body {
+  min-height: 100%;
+}
+
+body {
+
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+
+  display: flex;
+  justify-content: flex-start;
+}
+
 /* override sentence number text style from brat style-vis.css */
 .sentnum text {
   display: none;
@@ -212,7 +228,11 @@ div.center {
   padding-right: 2em;
 }
 #content {
-  margin: 15px;
+  margin: 0 15px;
+  flex-grow: 1;
+  display: flex;
+  flex-flow: column;
+  justify-content: flex-start;
 }
 
 #manual-main {
@@ -556,10 +576,13 @@ h4, h5, h6 {
 
 .controls {
 	clear: both ;
+  flex-grow: 1;
 }
 
 .graph {
 	clear: both ;
+  position: relative;
+  height: 99%;
 }
 
 #current-sentence {
@@ -736,7 +759,12 @@ th i {
 }
 
 .controls > .graph-btn-group {
-  float: right;
+  position: absolute;
+  right: 0;
+}
+
+.graph-btn-group .btn {
+  z-index: 4;
 }
 
 #tabBox {
