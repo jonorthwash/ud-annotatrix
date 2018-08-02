@@ -11,6 +11,7 @@ const sort = require('./sort');
 const validate = require('./validate');
 const ProgressBar = require('./progress-bar');
 const status = require('./status');
+const nx = require('notatrix');
 
 class Graph {
   constructor(options) {
@@ -21,7 +22,7 @@ class Graph {
       autounselectify: true,
       autoungrabify: true,
       zoomingEnabled: true,
-      userZoomingEnabled: false,
+      userZoomingEnabled: true,
       wheelSensitivity: 0.1,
       style: require('./cy-style'),
       layout: null,
@@ -32,6 +33,7 @@ class Graph {
     if (gui.inBrowser)
       require('./selfcomplete');
 
+    this.length = 0;
     this.progress = new ProgressBar();
 
     // cy handlers
@@ -90,7 +92,7 @@ class Graph {
         cy.$('.arc-target').removeClass('arc-target');
         cy.$('.selected').removeClass('selected');
 
-        editLabel(target);
+        showEditLabelBox(target);
       },
       multiword: event => {
         const target = event.target;
@@ -114,7 +116,7 @@ class Graph {
         cy.$('.arc-target').removeClass('arc-target');
         cy.$('.selected').removeClass('selected');
 
-        editLabel(target);
+        showEditLabelBox(target);
       }
     };
     this.cxttapend = {
@@ -130,7 +132,7 @@ class Graph {
         cy.$('.arc-target').removeClass('arc-target');
         cy.$('.selected').removeClass('selected');
 
-        editLabel(target);
+        showEditLabelBox(target);
       },
       dependency: event => {
         const target = event.target;
@@ -213,6 +215,7 @@ class Graph {
         data: {
           id: `dep_${id}_${headId}`,
           name: `dependency`,
+          num: ++num,
           attr: `deprel`,
           deprel: deprel,
           source: `form-${headId}`,
@@ -227,6 +230,8 @@ class Graph {
         style: getStyle(head, token),
       });
     }
+
+    var num = 0;
 
     this.progress.done = 0;
     this.progress.total = 0;
@@ -244,18 +249,17 @@ class Graph {
         return;
 
       let id = getIndex(token, format);
-      let num = token.indices.absolute - 1;
       let clump = token.indices.cytoscape;
       let pos = format === 'CG3'
         ? token.xpostag || token.upostag
         : token.upostag || token.xpostag;
+      let isRoot = sent.root.dependents.has(token);
 
       if (token.isSuperToken) {
 
         eles.push({ // multiword label
           data: {
             id: `multiword-${id}`,
-            num: num,
             clump: clump,
             name: `multiword`,
             label: `${token.form} ${toSubscript(`${id}`)}`,
@@ -283,7 +287,6 @@ class Graph {
           { // "number" node
             data: {
               id: `num-${id}`,
-              num: num,
               clump: clump,
               name: 'number',
               label: id,
@@ -297,7 +300,7 @@ class Graph {
           { // "form" node
             data: {
               id: `form-${id}`,
-              num: num,
+              num: ++num,
               clump: clump,
               name: 'form',
               attr: 'form',
@@ -310,13 +313,13 @@ class Graph {
               parent: `num-${id}`,
               token: token,
             },
-            classes: `form${sent.root === token ? ' root' : ''}`,
+            classes: isRoot ? 'form root' : 'form',
           },
 
           { // "pos" node
             data: {
               id: `pos-node-${id}`,
-              num: num,
+              num: ++num,
               clump: clump,
               name: `pos-node`,
               attr: format === 'CG3' ? `xpostag` : `upostag`,
@@ -331,7 +334,6 @@ class Graph {
           { // "pos" edge
             data: {
               id: `pos-edge-${id}`,
-              num: num,
               clump: clump,
               name: `pos-edge`,
               pos: pos,
@@ -342,14 +344,13 @@ class Graph {
           }
         );
 
-        if (sent.options.enhanced) {
-          token.mapDeps((h, d) => getDependencyEdge(format, h, token, d, this.progress));
-        } else if (token._head) {
-          getDependencyEdge(format, token._head, token, token.deprel, this.progress);
-        }
+        token.mapHeads(head => {
+          getDependencyEdge(format, head.token, token, head.deprel, this.progress);
+        });
       }
     });
 
+    this.length = num;
     return eles;
   }
 
@@ -455,21 +456,20 @@ class Graph {
     if (gui.editing === null)
       return; // nothing to do
 
-    const analysis = gui.editing.data().analysis || gui.editing.data().sourceToken,
-      attr = gui.editing.data().attr,
-      oldValue = analysis[attr],
-      newValue = $('#edit').val();
+    const token = gui.editing.data('token') || gui.editing.data('targetToken'),
+      attr = gui.editing.data('attr'),
+      value = validate.attrValue(attr, $('#edit').val());
 
-    modify(analysis.id, attr, newValue);
+    if (attr === 'deprel') {
 
-    window.undoManager.add({
-      undo: () => {
-        modify(analysis.id, attr, oldValue);
-      },
-      redo: () => {
-        modify(analysis.id, attr, newValue);
-      }
-    });
+      this.modifyDependency(gui.editing, value);
+
+    } else {
+
+      token[attr] = value;
+      send();
+
+    }
 
     gui.editing = null;
   }
@@ -481,15 +481,25 @@ class Graph {
      * Changes the text data and redraws the graph. Currently supports only conllu.
      */
 
-    src = src.data('token');
-    tar = tar.data('token');
+    try {
 
-    if (src === tar) {
-      status.error('token cannot be its own head');
-      return;
+      src = src.data('token');
+      tar = tar.data('token');
+      tar.addHead(src);
+
+    } catch (e) {
+
+      if (e instanceof nx.NxError) {
+
+        status.error(e.message);
+
+      } else {
+
+        throw e;
+      }
     }
 
-    addHead(src, tar);
+    send();
 
     /*
     undoManager.add({
@@ -528,72 +538,79 @@ class Graph {
     }*/
   }
 
+  modifyDependency(ele, value) {
+
+    try {
+
+      let src = ele.data('sourceToken');
+      let tar = ele.data('targetToken');
+      tar.modifyHead(src, value);
+
+    } catch (e) {
+
+      if (e instanceof nx.NxError) {
+
+        status.error(e.message);
+
+      } else {
+
+        throw e;
+      }
+    }
+
+    send();
+  }
+
   removeDependency(ele) {
     log.debug(`called removeDependency(${ele.attr('id')})`);
 
-    const src = ele.data('sourceToken'),
-      tar = ele.data('targetToken');
+    try {
 
-    removeHead(src.id, tar.id);
+      let src = ele.data('sourceToken');
+      let tar = ele.data('targetToken');
+      tar.removeHead(src);
 
-    undoManager.add({
-      undo: () => {
-        addHead(src.id, tar.id);
-      },
-      redo: () => {
-        removeHead(src.id, tar.id);
+    } catch (e) {
+
+      if (e instanceof nx.NxError) {
+
+        status.error(e.message);
+
+      } else {
+
+        throw e;
       }
-    });
+    }
+
+    send();
   }
 
   setRoot(ele) {
     log.debug(`called setAsRoot(${ele.attr('id')})`);
 
-    // check if there is already a root
-    let oldRoot;
-    manager.current.forEach(token => {
-      token.forEach(analysis => {
-        if (analysis.head == 0 || analysis.deprel.toLowerCase() == 'root')
-          oldRoot = analysis;
-      });
-    });
+    const sent = manager.current._nx;
+    ele = ele.data('token');
 
-    // set new root
-    const newRoot = ele.data('analysis');
-    if (!newRoot)
-      return;
+    try {
 
-    if (oldRoot) {
-      modify(oldRoot.id, 'head', []);
-      modify(oldRoot.id, 'deprel', undefined);
+      if (!sent.options.enhanced)
+        sent.root.dependents.clear();
+
+      ele.addHead(sent.root, 'root');
+
+    } catch (e) {
+
+      if (e instanceof nx.NxError) {
+
+        status.error(e.message);
+
+      } else {
+
+        throw e;
+      }
     }
 
-    const oldHead = newRoot.head,
-      oldDeprel = newRoot.deprel;
-
-    modify(newRoot.id, 'head', '0');
-    modify(newRoot.id, 'deprel', 'root');
-
-    undoManager.add({
-      undo: () => {
-        if (oldRoot) {
-          modify(oldRoot.id, 'head', '0');
-          modify(oldRoot.id, 'deprel', 'root');
-        }
-
-        modify(newRoot.id, 'head', oldHead);
-        modify(newRoot.id, 'deprel', oldDeprel);
-      },
-      redo: () => {
-        if (oldRoot) {
-          modify(oldRoot.id, 'head', []);
-          modify(oldRoot.id, 'deprel', undefined);
-        }
-
-        modify(newRoot.id, 'head', '0');
-        modify(newRoot.id, 'deprel', 'root');
-      }
-    });
+    send();
   }
 
   merge(direction, strategy) {
@@ -621,15 +638,44 @@ class Graph {
     }
 
     manager.current.merge(major, minor, strategy);
+  }
 
-    undoManager.add({
-      undo: () => {
-        manager.parse(oldSentence);
-      },
-      redo: () => {
-        manager.parse(manager.conllu);
-      }
-    });
+  prev() {
+
+    const num = cy.$('.input').data('num');
+    gui.intercepted = false;
+    this.clear();
+
+    let prev = num + (graph.is_ltr ? 1 : -1)
+    if (prev === 0)
+      prev = this.length;
+    if (prev > this.length)
+      prev = 1;
+
+    const ele = cy.$(`[num = ${prev}]`);
+    gui.editing = ele;
+    if (ele.length)
+      showEditLabelBox(ele);
+
+  }
+
+  next() {
+
+    const num = cy.$('.input').data('num');
+    gui.intercepted = false;
+    this.clear();
+
+    let prev = num + (graph.is_ltr ? -1 : 1)
+    if (prev === 0)
+      prev = this.length;
+    if (prev > this.length)
+      prev = 1;
+
+    const ele = cy.$(`[num = ${prev}]`);
+    gui.editing = ele;
+    if (ele.length)
+      showEditLabelBox(ele);
+
   }
 }
 
@@ -669,8 +715,8 @@ function getEdgeHeight(src, tar) {
   return edgeHeight;
 }
 
-function editLabel(target) {
-  log.debug(`called editLabel(${target.attr('id')})`);
+function showEditLabelBox(target) {
+  log.debug(`called showEditLabelBox(${target.attr('id')})`);
 
   target.addClass('input');
 
@@ -730,37 +776,9 @@ function editLabel(target) {
     $('#edit').select(); // highlight the current contents
 }
 
-function modify(id, attr, value) {
-
-  // check we don't have any whitespace
-  if (/\s+/g.test(value)) {
-    const message = 'ERROR: Unable to add changes with whitespace!  Try creating a new node first.';
-    log.error(message);
-    alert(message); // TODO: probably should streamline errors
-    gui.editing = null;
-    return;
-  }
-
-  const ana = manager.current.get(id);
-
-  ana[attr] = value;
-  manager.parse(manager.toString());
+function send() {
+  manager.save();
+  gui.update();
 }
-
-function addHead(srcId, tarId, dep='') {
-
-  src.addHead(tar, dep);
-  manager.parse(manager.toString());
-
-}
-
-function removeHead(srcId, tarId) {
-  const src = manager.current.get(srcId),
-    tar = manager.current.get(tarId);
-
-  src.removeHead(tar);
-  manager.parse(manager.toString());
-}
-
 
 module.exports = Graph;
