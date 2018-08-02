@@ -66,6 +66,7 @@ module.exports = manager => {
 
     if (data.type === 'modify') {
 
+      console.log('DEPRECATED! fix me');
       manager.parse(text, { index: data.index });
 
     } else if (data.type === 'insert') {

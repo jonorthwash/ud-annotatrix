@@ -304,8 +304,8 @@ function depEdgeClasses(sent, src, tar) {
   if (is_leaf(src, tar))
     classes.add('error');
 
-  if (is_cycle(sent, src, tar))
-    classes.add('error');
+  //if (is_cycle(sent, src, tar))
+    //classes.add('error');
 
   if (!tar.deprel || tar.deprel === '_') {
     classes.add('incomplete');
@@ -322,11 +322,16 @@ function posNodeClasses(pos) {
     : 'pos error';
 }
 
+function attrValue(attr, value) {
+  return value;
+}
+
 module.exports = {
   U_DEPRELS,
   U_POS,
   depEdgeClasses,
   posNodeClasses,
   is_upos,
-  is_udeprel
+  is_udeprel,
+  attrValue,
 };
