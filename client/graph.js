@@ -12,6 +12,7 @@ const validate = require('./validate');
 const ProgressBar = require('./progress-bar');
 const status = require('./status');
 const nx = require('notatrix');
+const mice = require('./mice');
 
 class Graph {
   constructor(options) {
@@ -34,6 +35,7 @@ class Graph {
       require('./selfcomplete');
 
     this.length = 0;
+    this.clumps = 0;
     this.progress = new ProgressBar();
 
     // cy handlers
@@ -254,6 +256,7 @@ class Graph {
         ? token.xpostag || token.upostag
         : token.upostag || token.xpostag;
       let isRoot = sent.root.dependents.has(token);
+      this.clumps = clump;
 
       if (token.isSuperToken) {
 
@@ -424,6 +427,8 @@ class Graph {
     cy.on('click', 'edge.dependency', e => this.click.dependency(e));
     cy.on('cxttapend', 'node.form', e => this.cxttapend.form(e));
     cy.on('cxttapend', 'edge.dependency', e => this.cxttapend.dependency(e));
+
+    cy.on('mousemove', e => mice.emit(e.position));
   }
 
   clear() {
@@ -441,7 +446,11 @@ class Graph {
     cy.$('.arc-target').removeClass('arc-target');
     cy.$('.selected').removeClass('selected');
     cy.$('.moving').removeClass('moving');
-    cy.$('.merge').removeClass('merge');
+    cy.$('.neighbor').removeClass('neighbor');
+    cy.$('.merge-source, .merge-left, .merge-right')
+      .removeClass('merge-source merge-left merge-right');
+    cy.$('.combine-source, .combine-left, .combine-right')
+      .removeClass('combine-source combine-left combine-right');
     gui.moving_dependency = false;
 
     $('#mute').removeClass('activated');
@@ -613,10 +622,79 @@ class Graph {
     send();
   }
 
-  merge(direction, strategy) {
-    throw new errors.NotImplementedError('merging not implemented');
-    log.error(`called mergeNodes(${dir})`);
+  combine(src, tar) {
+    try {
 
+      manager.current._nx.combine(src, tar);
+
+    } catch (e) {
+
+      if (e instanceof nx.NxError) {
+
+        status.error(e.message);
+
+      } else {
+
+        throw e;
+      }
+    }
+
+    send();
+  }
+
+  split(ele) {
+    console.log('split', ele);
+    throw new Error('not implemented');
+  }
+
+  merge(src, tar) {
+    try {
+
+      manager.current._nx.merge(src, tar);
+
+    } catch (e) {
+
+      if (e instanceof nx.NxError) {
+
+        status.error(e.message);
+
+      } else {
+
+        throw e;
+      }
+    }
+
+    send();
+
+    /*
+
+    function mergeNodes(direction) {
+
+      // the highlighted one is the "major" token
+      const major = cy.$('node.form.merge').data().analysis;
+
+      // find the "minor" token by moving either one clump to the left or right
+      const minorClump = major.clump
+        + (direction === 'left' && gui.is_ltr || direction === 'right' && !gui.is_ltr
+          ? -1 : 1);
+
+      // iterate tokens until we find a matching candidate
+      let minor = null;
+      major.sentence.forEach(token => {
+        if (token.analysis.clump === minorClump)
+          minor = token.analysis;
+      });
+
+      // do the merge
+      if (major && minor)
+        major.token.mergeWith(minor.token);
+
+      // clean up
+      cy.$('node.form.merge').removeClass('merge');
+      gui.update();
+    }
+
+    */
     // old: (toMerge, side, how)
 
     /* Support for merging tokens into either a new token or a supertoken.
@@ -624,6 +702,7 @@ class Graph {
     how to merge the nodes. In case of success, redraws the tree. */
     // const indices = findConlluId(toMerge);
 
+    /*
     const oldSentence = manager.toString();
 
     // prefer traits on this one
@@ -638,6 +717,37 @@ class Graph {
     }
 
     manager.current.merge(major, minor, strategy);
+    */
+  }
+
+  getLeftForm() {
+
+    const clump = cy.$('.activated').data('clump');
+    if (clump === undefined)
+      return;
+
+    let prev = clump - 1;
+    if (prev < 0)
+      prev = this.clumps;
+    if (prev > this.clumps)
+      prev = 0;
+
+    return cy.$(`.form[clump = ${prev}]`);
+  }
+
+  getRightForm() {
+
+    const clump = cy.$('.activated').data('clump');
+    if (clump === undefined)
+      return;
+
+    let next = clump + 1;
+    if (next < 0)
+      next = this.clumps;
+    if (next > this.clumps)
+      next = 0;
+
+    return cy.$(`.form[clump = ${next}]`);
   }
 
   prev() {
@@ -646,7 +756,7 @@ class Graph {
     gui.intercepted = false;
     this.clear();
 
-    let prev = num + (graph.is_ltr ? 1 : -1)
+    let prev = num + 1;
     if (prev === 0)
       prev = this.length;
     if (prev > this.length)
@@ -665,13 +775,13 @@ class Graph {
     gui.intercepted = false;
     this.clear();
 
-    let prev = num + (graph.is_ltr ? -1 : 1)
-    if (prev === 0)
-      prev = this.length;
-    if (prev > this.length)
-      prev = 1;
+    let next = num - 1;
+    if (next === 0)
+      next = this.length;
+    if (next > this.length)
+      next = 1;
 
-    const ele = cy.$(`[num = ${prev}]`);
+    const ele = cy.$(`[num = ${next}]`);
     gui.editing = ele;
     if (ele.length)
       showEditLabelBox(ele);
