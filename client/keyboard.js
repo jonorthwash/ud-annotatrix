@@ -23,6 +23,7 @@ const KEYS = {
   PAGE_UP: 33,
   PAGE_DOWN: 34,
   META: 224,
+  C: 67,
   D: 68,
   I: 73,
   J: 74,
@@ -78,7 +79,6 @@ function keyup(gui, event) {
     } else if (47 < event.which && event.which < 58) { // key in 0-9
 
       const num = event.which - 48;
-      console.log(num)
       cy.zoom(1.5 ** (num - 5));
       gui.update();
       return;
@@ -154,7 +154,13 @@ function keyup(gui, event) {
         return;
 
       case (KEYS.TAB):
-        console.log('add a tab character not implemented');
+
+        const cursor = $('#text-data').prop('selectionStart'),
+          contents = $('#text-data').val(),
+          before = contents.substring(0, cursor),
+          after = contents.substring(cursor, contents.length);
+
+        $('#text-data').val(before + '\t' + after);
         return;
 
       default:
@@ -188,20 +194,35 @@ function keyup(gui, event) {
       return;
 
     case (KEYS.M):
-      if (cy.$('node.form.merge').length) {
 
-        cy.$('node.form.activated')
-          .removeClass('activated');
+      if (cy.$('.merge-source').length) {
 
-        cy.$('node.form.merge')
-          .addClass('activated')
-          .removeClass('merge');
+        cy.$('.neighbor')
+          .removeClass('merge-left merge-right neighbor');
 
-      } else if (cy.$('node.form.activated').length) {
+        cy.$('.merge-source')
+          .removeClass('merge-source')
+          .addClass('activated');
 
-        cy.$('node.form.activated')
-          .removeClass('activated')
-          .addClass('merge');
+      } else if (cy.$('.activated').length) {
+
+        cy.$('.activated')
+          .addClass('merge-source');
+
+        cy.$('.neighbor')
+          .removeClass('neighbor combine-source combine-left combine-right')
+
+        const left = graph.getLeftForm();
+        if (!left.hasClass('activated'))
+          left
+            .addClass('neighbor')
+            .addClass('merge-left');
+
+        const right = graph.getRightForm();
+        if (!right.hasClass('activated'))
+          right
+            .addClass('neighbor')
+            .addClass('merge-right');
 
       }
       return;
@@ -217,9 +238,37 @@ function keyup(gui, event) {
         graph.setRoot(cy.$('node.form.activated'));
       return;
 
-    case (KEYS.S):
-      // wf.addClass('supertoken');
-      // wf.removeClass('activated');
+    case (KEYS.C):
+      if (cy.$('.combine-source').length) {
+
+        cy.$('.neighbor')
+          .removeClass('combine-left combine-right neighbor');
+
+        cy.$('.combine-source')
+          .removeClass('combine-source')
+          .addClass('activated');
+
+      } else if (cy.$('.activated').length) {
+
+        cy.$('.activated')
+          .addClass('combine-source');
+
+        cy.$('.neighbor')
+          .removeClass('neighbor merge-source merge-left merge-right')
+
+        const left = graph.getLeftForm();
+        if (!left.hasClass('activated'))
+          left
+            .addClass('neighbor')
+            .addClass('combine-left');
+
+        const right = graph.getRightForm();
+        if (!right.hasClass('activated'))
+          right
+            .addClass('neighbor')
+            .addClass('combine-right');
+
+      }
       return;
 
     case (KEYS.LEFT):
@@ -228,8 +277,19 @@ function keyup(gui, event) {
       if (event.preventDefault)
         event.preventDefault();
 
-      if (cy.$('node.form.merge').length)
-        mergeNodes('left');
+      if (cy.$('.merge-left').length) {
+
+        const src = cy.$('.merge-source').data('token');
+        const tar = cy.$('.merge-left').data('token');
+        graph.merge(src, tar);
+
+      } else if (cy.$('.combine-left').length) {
+
+        const src = cy.$('.combine-source').data('token');
+        const tar = cy.$('.combine-left').data('token');
+        graph.combine(src, tar);
+
+      }
       return;
 
     case (KEYS.RIGHT):
@@ -238,12 +298,19 @@ function keyup(gui, event) {
       if (event.preventDefault)
         event.preventDefault();
 
-      if (cy.$('node.form.merge').length) {
-        mergeNodes('right');
-      } /*else if (cy.$('.supertoken')) {
-        // mergeNodes(toMerge, KEYS.SIDES[key.which], 'subtoken');
-        // mergeNodes(toSup, KEYS.SIDES[key.which], 'supertoken');
-      }*/
+        if (cy.$('.merge-right').length) {
+
+          const src = cy.$('.merge-source').data('token');
+          const tar = cy.$('.merge-right').data('token');
+          graph.merge(src, tar);
+
+        } else if (cy.$('.combine-right').length) {
+
+          const src = cy.$('.combine-source').data('token');
+          const tar = cy.$('.combine-right').data('token');
+          graph.combine(src, tar);
+
+        }
       return;
 
     case (KEYS.EQUALS):
@@ -269,6 +336,10 @@ function keyup(gui, event) {
       graph.clear();
       return;
 
+    case (KEYS.ESC):
+      graph.clear();
+      return;
+
   }
 }
 
@@ -289,28 +360,6 @@ module.exports.down = keydown;
 /*
 
 
-$('#current-sentence').keyup(e => onKeyupInCurrentSentence(e));
-$('#text-data').keyup(e => onEditTextData(e));
-$('#edit').keyup(e => onKeyupInEditLabel(e));
-onkeyup = onKeyupInDocument;
-
-
-function onKeyupInDocument(event) {
-  log.info(`called onKeyupInDocument(${event.which})`);
-
-  // returns true if it caught something
-  if (onCtrlKeyup(event))
-    return;
-
-  // editing an input
-  if ($('#text-data').is(':focus') || $('#edit').is(':focus'))
-    return;
-
-  // if we get here, we're handling a keypress without an input-focus or ctrl-press
-  // (which means it wasn't already handled)
-  log.debug(`onKeyupInDocument(): handling event.which:${event.which}`);
-
-}
 
 function onEnter(event) {
   log.debug(`called onEnter()`);
