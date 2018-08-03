@@ -86,6 +86,110 @@ function keyup(gui, event) {
     }
   }
 
+  if ($(':focus').is('.conllu-table')) {
+
+    function goRight(ele) {
+
+      const rows = $('#table-data').find('tr').length - 1;
+      let row = parseInt(td.attr('row-id'));
+      let col = parseInt(td.attr('col-id')) + 1;
+
+      if (col === 10) {
+        row += 1;
+        col = 1;
+      }
+      if (row === rows)
+        row = 0;
+
+      const next = $(`td.conllu-table[row-id = "${row}"][col-id = "${col}"]`);
+      setTimeout(() => next.focus(), 200);
+    }
+
+    function goLeft(ele) {
+
+      const rows = $('#table-data').find('tr').length - 1;
+      let row = parseInt(td.attr('row-id'));
+      let col = parseInt(td.attr('col-id')) - 1;
+
+      if (col === 0) {
+        row -= 1;
+        col = 9;
+      }
+      if (row === -1)
+        row = rows - 1;
+
+      const next = $(`td.conllu-table[row-id = "${row}"][col-id = "${col}"]`);
+      setTimeout(() => next.focus(), 200);
+    }
+
+    function goUp(ele) {
+
+      const rows = $('#table-data').find('tr').length - 1;
+      let row = parseInt(td.attr('row-id')) - 1;
+      let col = parseInt(td.attr('col-id'));
+
+      if (row === -1)
+        row = rows - 1;
+
+      const next = $(`td.conllu-table[row-id = "${row}"][col-id = "${col}"]`);
+      setTimeout(() => next.focus(), 200);
+    }
+
+    function goDown(ele) {
+
+      const rows = $('#table-data').find('tr').length - 1;
+      let row = parseInt(td.attr('row-id')) - 1;
+      let col = parseInt(td.attr('col-id'));
+
+      if (row === rows)
+        row = 0;
+
+      const next = $(`td.conllu-table[row-id = "${row}"][col-id = "${col}"]`);
+      setTimeout(() => next.focus(), 200);
+    }
+
+    const td = $(':focus');
+
+    switch (event.which) {
+      case (KEYS.ENTER):
+        td.blur();
+        return;
+
+      case (KEYS.TAB):
+        if (pressed.has(KEYS.SHIFT)) {
+          goLeft(td);
+        } else {
+          goRight(td);
+        }
+        return;
+
+      case (KEYS.UP):
+        if (pressed.has(KEYS.CTRL))
+          goUp(td);
+        return;
+
+      case (KEYS.DOWN):
+        if (pressed.has(KEYS.CTRL))
+          goDown(td);
+        return;
+
+      case (KEYS.LEFT):
+        if (pressed.has(KEYS.CTRL))
+          goLeft(td);
+        return;
+
+      case (KEYS.RIGHT):
+        if (pressed.has(KEYS.CTRL))
+          goRight(td);
+        return;
+
+      case (KEYS.ESC):
+        const originalValue = td.attr('original-value') || '';
+        td.text(originalValue).blur();
+        return;
+    }
+  }
+
   if ($(':focus').is('#current-sentence')) {
 
     switch (event.which) {
@@ -214,6 +318,7 @@ function keyup(gui, event) {
         graph.splitSuperToken(superToken);
 
       }
+      gui.status.update();
       return;
 
     case (KEYS.M):
@@ -251,6 +356,7 @@ function keyup(gui, event) {
             .addClass('merge-right');
 
       }
+      gui.status.update();
       return;
 
     case (KEYS.C):
@@ -287,6 +393,7 @@ function keyup(gui, event) {
             .addClass('combine-right');
 
       }
+      gui.status.update();
       return;
 
     case (KEYS.LEFT):

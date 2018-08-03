@@ -6,14 +6,19 @@ const validate = require('./validate');
 function build() {
   $('#table-data tbody').empty();
 
-  manager.current.forEach((token, i) => {
-    let tr = $('<tr>').attr('id', `table_${i}`);
+  let i = 0;
+  manager.current._nx.iterate(token => {
+    let tr = $('<tr>')
+      .attr('tabindex', '-1')
+      .attr('id', `table_${i}`);
 
     $.each(
       ['id', 'form', 'lemma', 'upostag', 'xpostag',
         'feats', 'head', 'deprel', 'deps', 'misc'], (j, field) => {
 
-      const value = token.analysis[field];
+      const value = field === 'id'
+        ? token.indices.conllu
+        : token[field];
 
       let valid = {},
         td = $('<td>'),
@@ -28,20 +33,17 @@ function build() {
       }
 
       td.prop('contenteditable', true)
+        .addClass('conllu-table')
+        .attr('tabindex', '-1')
         .attr('row-id', i)
         .attr('col-id', j)
-        .attr('tok-id', token.analysis.id)
+        .attr('num', 10*i + j)
+        .attr('uuid', token.uuid)
         .attr('field', field)
+        .attr('original-value', value)
         .attr('name', j === 0 ? 'index' : 'content')
         .css('visibility', gui.column_visible(j) ? 'visible' : 'hidden')
-        .blur(edit)
-        .keyup((event) => {
-          if (event.which === gui.keys.ESC) {
-            $(event.target).blur();
-          } else if (event.which === gui.keys.ENTER) {
-            gui.onEnter(event);
-          }
-        });
+        .blur(edit);
 
       inputSpan.text(value);
 
@@ -58,19 +60,24 @@ function build() {
     });
 
     $('#table-data tbody').append(tr);
+    i++;
   });
 }
 
 function edit(event) {
 
   const target = $(event.target),
-    id = target.attr('tok-id'),
-    ana = manager.current.getById(id),
+    uuid = target.attr('uuid'),
+    token = manager.current._nx.query(t => t.uuid === uuid)[0],
     field = target.attr('field'),
-    value = target.text();
+    originalValue = target.attr('original-value') || '',
+    value = target.text() || '';
 
-  ana[field] = value;
-  gui.update();
+  if (value === originalValue)
+    return;
+
+  token[field] = value;
+  manager.onChange();
 }
 
 module.exports = {

@@ -308,7 +308,10 @@ class Manager {
 
 
 
-
+  onChange() {
+    this.save();
+    gui.update();
+  }
   parse(text, options={}) {
 
     const index = options.index || this.index;
