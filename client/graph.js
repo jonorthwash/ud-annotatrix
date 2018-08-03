@@ -67,7 +67,15 @@ class Graph {
           cy.$('.arc-target').removeClass('arc-target');
           cy.$('.selected').removeClass('selected');
 
-          if (target.hasClass('activated')) {
+          if (target.hasClass('merge-right') || target.hasClass('merge-left')) {
+
+            this.merge(cy.$('.merge-source').data('token'), target.data('token'));
+
+          } else if (target.hasClass('combine-right') || target.hasClass('combine-left')) {
+
+            this.combine(cy.$('.combine-source').data('token'), target.data('token'));
+
+          } else if (target.hasClass('activated')) {
 
             gui.intercepted = false;
             this.clear();
