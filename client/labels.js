@@ -450,7 +450,7 @@ class Labeler {
     });
 
     if (!done)
-      manager.getSentence(index).push(new nx.Comment(`labels = ${name}`));
+      manager.getSentence(index).comments.push(new nx.Comment(manager.current._nx, `labels = ${name}`));
   }
 
   removeInComments(index, name) {
