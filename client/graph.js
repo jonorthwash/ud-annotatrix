@@ -465,6 +465,8 @@ class Graph {
 
     $('#mute').removeClass('activated');
     $('#edit').removeClass('activated');
+
+    gui.status.update();
   }
 
   save() {
@@ -496,7 +498,7 @@ class Graph {
       } else {
 
         token[attr] = value;
-        send();
+        manager.onChange();
 
       }
     }
@@ -529,7 +531,7 @@ class Graph {
       }
     }
 
-    send();
+    manager.onChange();
 
     /*
     undoManager.add({
@@ -588,7 +590,7 @@ class Graph {
       }
     }
 
-    send();
+    manager.onChange();
   }
 
   removeDependency(ele) {
@@ -612,7 +614,7 @@ class Graph {
       }
     }
 
-    send();
+    manager.onChange();
   }
 
   setRoot(ele) {
@@ -640,7 +642,7 @@ class Graph {
       }
     }
 
-    send();
+    manager.onChange();
   }
 
   flashTokenSplitInput(ele) {
@@ -668,7 +670,7 @@ class Graph {
       }
     }
 
-    send();
+    manager.onChange();
   }
 
   splitSuperToken(ele) {
@@ -688,7 +690,7 @@ class Graph {
       }
     }
 
-    send();
+    manager.onChange();
   }
 
   combine(src, tar) {
@@ -708,7 +710,7 @@ class Graph {
       }
     }
 
-    send();
+    manager.onChange();
   }
 
   merge(src, tar) {
@@ -728,7 +730,7 @@ class Graph {
       }
     }
 
-    send();
+    manager.onChange();
 
     /*
 
@@ -956,11 +958,8 @@ function showEditLabelBox(target) {
   $('#edit').focus(); // move cursor to the end
   if (target.data('name') === 'dependency')
     $('#edit').select(); // highlight the current contents
-}
 
-function send() {
-  manager.save();
-  gui.update();
+  gui.status.update();
 }
 
 module.exports = Graph;

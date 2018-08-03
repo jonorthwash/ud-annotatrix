@@ -10,6 +10,7 @@ const setupUndos = require('./undo-manager');
 const table = require('./table');
 const storage = require('./local-storage');
 const keys = require('./keyboard');
+const status = require('./status');
 
 var pressed = {}; // used for onCtrlKeyup
 
@@ -38,6 +39,7 @@ class GUI {
       this.keys = keys;
       this.menu = new Menu(this);
       this.modals = require('./modals/index');
+      this.status = status;
     }
 
     this.toggle = {
@@ -235,6 +237,7 @@ class GUI {
     }
     labeler.update();
     graph.update();
+    this.status.update();
   }
 
   bind() {
