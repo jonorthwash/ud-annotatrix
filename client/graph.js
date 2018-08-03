@@ -44,6 +44,8 @@ class Graph {
         const target = event.target;
         log.debug(`called onClickFormNode(${target.attr('id')})`);
 
+        cy.$('.multiword-active').removeClass('multiword-active');
+
         if (gui.moving_dependency) {
 
           const dep = cy.$('.selected');
@@ -66,7 +68,9 @@ class Graph {
           cy.$('.selected').removeClass('selected');
 
           if (target.hasClass('activated')) {
-            target.removeClass('activated');
+
+            gui.intercepted = false;
+            this.clear();
 
           } else {
 
@@ -98,6 +102,8 @@ class Graph {
       },
       multiword: event => {
         const target = event.target;
+
+        cy.$('.activated').removeClass('activated');
 
         if (target.hasClass('multiword-active')) {
           target.removeClass('multiword-active');
@@ -268,7 +274,8 @@ class Graph {
             label: `${token.form} ${toSubscript(`${id}`)}`,
             length: `${token.form.length > 3
               ? token.form.length * 0.7
-              : token.form.length}em`
+              : token.form.length}em`,
+            token: token,
           },
           classes: 'multiword'
         });
@@ -308,10 +315,11 @@ class Graph {
               name: 'form',
               attr: 'form',
               form: token.form,
-              label: token.form || '',
-              length: `${(token.form || '').length > 3
-                ? (token.form || '').length * 0.7
-                : (token.form || '').length}em`,
+              label: token.form || '_',
+              length: `${(token.form || '_').length > 3
+                ? (token.form || '_').length * 0.7
+                : (token.form || '_').length}em`,
+              type: parent ? 'subToken' : 'token',
               state: `normal`,
               parent: `num-${id}`,
               token: token,
@@ -440,8 +448,10 @@ class Graph {
 
     this.save();
 
+    cy.$('.splitting').removeClass('splitting');
     cy.$('.activated').removeClass('activated');
     cy.$('.multiword-active').removeClass('multiword-active');
+    cy.$('.multiword-selected').removeClass('multiword-selected');
     cy.$('.arc-source').removeClass('arc-source');
     cy.$('.arc-target').removeClass('arc-target');
     cy.$('.selected').removeClass('selected');
@@ -465,19 +475,30 @@ class Graph {
     if (gui.editing === null)
       return; // nothing to do
 
-    const token = gui.editing.data('token') || gui.editing.data('targetToken'),
-      attr = gui.editing.data('attr'),
-      value = validate.attrValue(attr, $('#edit').val());
+    if (cy.$('.splitting').length) {
 
-    if (attr === 'deprel') {
+      const value = $('#edit').val();
+      let index = value.indexOf(' ');
+      index = index < 0 ? value.length : index;
 
-      this.modifyDependency(gui.editing, value);
+      this.splitToken(gui.editing, index);
 
     } else {
 
-      token[attr] = value;
-      send();
+      const token = gui.editing.data('token') || gui.editing.data('targetToken'),
+        attr = gui.editing.data('attr'),
+        value = validate.attrValue(attr, $('#edit').val());
 
+      if (attr === 'deprel') {
+
+        this.modifyDependency(gui.editing, value);
+
+      } else {
+
+        token[attr] = value;
+        send();
+
+      }
     }
 
     gui.editing = null;
@@ -622,6 +643,54 @@ class Graph {
     send();
   }
 
+  flashTokenSplitInput(ele) {
+
+    ele.addClass('splitting');
+    gui.editing = ele;
+    showEditLabelBox(ele);
+
+  }
+
+  splitToken(ele, index) {
+    try {
+
+      manager.current._nx.split(ele.data('token'), index);
+
+    } catch (e) {
+
+      if (e instanceof nx.NxError) {
+
+        status.error(e.message);
+
+      } else {
+
+        throw e;
+      }
+    }
+
+    send();
+  }
+
+  splitSuperToken(ele) {
+    try {
+
+      manager.current._nx.split(ele.data('token'));
+
+    } catch (e) {
+
+      if (e instanceof nx.NxError) {
+
+        status.error(e.message);
+
+      } else {
+
+        throw e;
+      }
+    }
+
+    send();
+  }
+
   combine(src, tar) {
     try {
 
@@ -640,11 +709,6 @@ class Graph {
     }
 
     send();
-  }
-
-  split(ele) {
-    console.log('split', ele);
-    throw new Error('not implemented');
   }
 
   merge(src, tar) {
@@ -722,47 +786,55 @@ class Graph {
 
   getLeftForm() {
 
-    const clump = cy.$('.activated').data('clump');
+    let clump = cy.$('.activated').data('clump');
     if (clump === undefined)
       return;
 
-    let prev = clump - 1;
-    if (prev < 0)
-      prev = this.clumps;
-    if (prev > this.clumps)
-      prev = 0;
+    clump -= 1;
 
-    return cy.$(`.form[clump = ${prev}]`);
+    /*
+    // uncomment this to allow wrapping
+    if (clump < 0)
+      clump = this.clumps;
+    if (clump > this.clumps)
+      clump = 0;
+    */
+
+    return cy.$(`.form[clump = ${clump}]`);
   }
 
   getRightForm() {
 
-    const clump = cy.$('.activated').data('clump');
+    let clump = cy.$('.activated').data('clump');
     if (clump === undefined)
       return;
 
-    let next = clump + 1;
-    if (next < 0)
-      next = this.clumps;
-    if (next > this.clumps)
-      next = 0;
+    clump += 1;
 
-    return cy.$(`.form[clump = ${next}]`);
+    /*
+    // uncomment this to allow wrapping
+    if (clump < 0)
+      next = this.clumps;
+    if (clump > this.clumps)
+      clump = 0;
+    */
+
+    return cy.$(`.form[clump = ${clump}]`);
   }
 
   prev() {
 
-    const num = cy.$('.input').data('num');
+    let num = cy.$('.input').data('num');
     gui.intercepted = false;
     this.clear();
 
-    let prev = num + 1;
-    if (prev === 0)
-      prev = this.length;
-    if (prev > this.length)
-      prev = 1;
+    num += 1;
+    if (num === 0)
+      num = this.length;
+    if (num > this.length)
+      num = 1;
 
-    const ele = cy.$(`[num = ${prev}]`);
+    const ele = cy.$(`[num = ${num}]`);
     gui.editing = ele;
     if (ele.length)
       showEditLabelBox(ele);
@@ -771,17 +843,17 @@ class Graph {
 
   next() {
 
-    const num = cy.$('.input').data('num');
+    let num = cy.$('.input').data('num');
     gui.intercepted = false;
     this.clear();
 
-    let next = num - 1;
-    if (next === 0)
-      next = this.length;
-    if (next > this.length)
-      next = 1;
+    num -= 1;
+    if (num === 0)
+      num = this.length;
+    if (num > this.length)
+      num = 1;
 
-    const ele = cy.$(`[num = ${next}]`);
+    const ele = cy.$(`[num = ${num}]`);
     gui.editing = ele;
     if (ele.length)
       showEditLabelBox(ele);

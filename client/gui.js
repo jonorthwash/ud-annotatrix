@@ -336,6 +336,7 @@ class GUI {
     window.onkeydown = e => keys.down(this, e);
     window.onbeforeunload = e => manager.save();
 
+    $('#edit').click(e => { this.intercepted = true; });
   }
 
   get is_table_view() {

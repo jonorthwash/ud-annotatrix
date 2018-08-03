@@ -31304,6 +31304,8 @@ var Graph = function () {
         var target = event.target;
         log.debug('called onClickFormNode(' + target.attr('id') + ')');
 
+        cy.$('.multiword-active').removeClass('multiword-active');
+
         if (gui.moving_dependency) {
 
           var dep = cy.$('.selected');
@@ -31325,7 +31327,9 @@ var Graph = function () {
           cy.$('.selected').removeClass('selected');
 
           if (target.hasClass('activated')) {
-            target.removeClass('activated');
+
+            gui.intercepted = false;
+            _this.clear();
           } else {
 
             var _source = cy.$('.activated');
@@ -31356,6 +31360,8 @@ var Graph = function () {
       },
       multiword: function multiword(event) {
         var target = event.target;
+
+        cy.$('.activated').removeClass('activated');
 
         if (target.hasClass('multiword-active')) {
           target.removeClass('multiword-active');
@@ -31509,7 +31515,8 @@ var Graph = function () {
               clump: clump,
               name: 'multiword',
               label: token.form + ' ' + toSubscript('' + id),
-              length: (token.form.length > 3 ? token.form.length * 0.7 : token.form.length) + 'em'
+              length: (token.form.length > 3 ? token.form.length * 0.7 : token.form.length) + 'em',
+              token: token
             },
             classes: 'multiword'
           });
@@ -31540,8 +31547,9 @@ var Graph = function () {
               name: 'form',
               attr: 'form',
               form: token.form,
-              label: token.form || '',
-              length: ((token.form || '').length > 3 ? (token.form || '').length * 0.7 : (token.form || '').length) + 'em',
+              label: token.form || '_',
+              length: ((token.form || '_').length > 3 ? (token.form || '_').length * 0.7 : (token.form || '_').length) + 'em',
+              type: parent ? 'subToken' : 'token',
               state: 'normal',
               parent: 'num-' + id,
               token: token
@@ -31675,8 +31683,10 @@ var Graph = function () {
 
       this.save();
 
+      cy.$('.splitting').removeClass('splitting');
       cy.$('.activated').removeClass('activated');
       cy.$('.multiword-active').removeClass('multiword-active');
+      cy.$('.multiword-selected').removeClass('multiword-selected');
       cy.$('.arc-source').removeClass('arc-source');
       cy.$('.arc-target').removeClass('arc-target');
       cy.$('.selected').removeClass('selected');
@@ -31698,17 +31708,27 @@ var Graph = function () {
 
       if (gui.editing === null) return; // nothing to do
 
-      var token = gui.editing.data('token') || gui.editing.data('targetToken'),
-          attr = gui.editing.data('attr'),
-          value = validate.attrValue(attr, $('#edit').val());
+      if (cy.$('.splitting').length) {
 
-      if (attr === 'deprel') {
+        var value = $('#edit').val();
+        var index = value.indexOf(' ');
+        index = index < 0 ? value.length : index;
 
-        this.modifyDependency(gui.editing, value);
+        this.splitToken(gui.editing, index);
       } else {
 
-        token[attr] = value;
-        send();
+        var token = gui.editing.data('token') || gui.editing.data('targetToken'),
+            attr = gui.editing.data('attr'),
+            _value = validate.attrValue(attr, $('#edit').val());
+
+        if (attr === 'deprel') {
+
+          this.modifyDependency(gui.editing, _value);
+        } else {
+
+          token[attr] = _value;
+          send();
+        }
       }
 
       gui.editing = null;
@@ -31844,6 +31864,52 @@ var Graph = function () {
       send();
     }
   }, {
+    key: 'flashTokenSplitInput',
+    value: function flashTokenSplitInput(ele) {
+
+      ele.addClass('splitting');
+      gui.editing = ele;
+      showEditLabelBox(ele);
+    }
+  }, {
+    key: 'splitToken',
+    value: function splitToken(ele, index) {
+      try {
+
+        manager.current._nx.split(ele.data('token'), index);
+      } catch (e) {
+
+        if (e instanceof nx.NxError) {
+
+          status.error(e.message);
+        } else {
+
+          throw e;
+        }
+      }
+
+      send();
+    }
+  }, {
+    key: 'splitSuperToken',
+    value: function splitSuperToken(ele) {
+      try {
+
+        manager.current._nx.split(ele.data('token'));
+      } catch (e) {
+
+        if (e instanceof nx.NxError) {
+
+          status.error(e.message);
+        } else {
+
+          throw e;
+        }
+      }
+
+      send();
+    }
+  }, {
     key: 'combine',
     value: function combine(src, tar) {
       try {
@@ -31861,12 +31927,6 @@ var Graph = function () {
       }
 
       send();
-    }
-  }, {
-    key: 'split',
-    value: function split(ele) {
-      console.log('split', ele);
-      throw new Error('not implemented');
     }
   }, {
     key: 'merge',
@@ -31937,11 +31997,17 @@ var Graph = function () {
       var clump = cy.$('.activated').data('clump');
       if (clump === undefined) return;
 
-      var prev = clump - 1;
-      if (prev < 0) prev = this.clumps;
-      if (prev > this.clumps) prev = 0;
+      clump -= 1;
 
-      return cy.$('.form[clump = ' + prev + ']');
+      /*
+      // uncomment this to allow wrapping
+      if (clump < 0)
+        clump = this.clumps;
+      if (clump > this.clumps)
+        clump = 0;
+      */
+
+      return cy.$('.form[clump = ' + clump + ']');
     }
   }, {
     key: 'getRightForm',
@@ -31950,11 +32016,17 @@ var Graph = function () {
       var clump = cy.$('.activated').data('clump');
       if (clump === undefined) return;
 
-      var next = clump + 1;
-      if (next < 0) next = this.clumps;
-      if (next > this.clumps) next = 0;
+      clump += 1;
 
-      return cy.$('.form[clump = ' + next + ']');
+      /*
+      // uncomment this to allow wrapping
+      if (clump < 0)
+        next = this.clumps;
+      if (clump > this.clumps)
+        clump = 0;
+      */
+
+      return cy.$('.form[clump = ' + clump + ']');
     }
   }, {
     key: 'prev',
@@ -31964,11 +32036,11 @@ var Graph = function () {
       gui.intercepted = false;
       this.clear();
 
-      var prev = num + 1;
-      if (prev === 0) prev = this.length;
-      if (prev > this.length) prev = 1;
+      num += 1;
+      if (num === 0) num = this.length;
+      if (num > this.length) num = 1;
 
-      var ele = cy.$('[num = ' + prev + ']');
+      var ele = cy.$('[num = ' + num + ']');
       gui.editing = ele;
       if (ele.length) showEditLabelBox(ele);
     }
@@ -31980,11 +32052,11 @@ var Graph = function () {
       gui.intercepted = false;
       this.clear();
 
-      var next = num - 1;
-      if (next === 0) next = this.length;
-      if (next > this.length) next = 1;
+      num -= 1;
+      if (num === 0) num = this.length;
+      if (num > this.length) num = 1;
 
-      var ele = cy.$('[num = ' + next + ']');
+      var ele = cy.$('[num = ' + num + ']');
       gui.editing = ele;
       if (ele.length) showEditLabelBox(ele);
     }
@@ -32380,6 +32452,10 @@ var GUI = function () {
       window.onbeforeunload = function (e) {
         return manager.save();
       };
+
+      $('#edit').click(function (e) {
+        _this2.intercepted = true;
+      });
     }
   }, {
     key: 'column_visible',
@@ -32524,7 +32600,7 @@ function name(which) {
 function keyup(gui, event) {
 
   pressed.delete(event.which);
-  console.log(name(event.which), pressed); //.forEach(key => name(key)).join(' '));
+  console.log('keyup>', event.which, name(event.which) || event.key, pressed);
 
   // catch CTRL+<key> sequence first
   if (pressed.has(KEYS.CTRL)) {
@@ -32588,7 +32664,6 @@ function keyup(gui, event) {
 
   if ($(':focus').is('#edit')) {
 
-    console.log('#edit focus', event.which, event.which === KEYS.TAB);
     switch (event.which) {
       case KEYS.ENTER:
         gui.intercepted = false;
@@ -32597,14 +32672,11 @@ function keyup(gui, event) {
 
       case KEYS.TAB:
         graph.intercepted = false;
-        console.log(cy.$('.input'));
         if (pressed.has(KEYS.SHIFT)) {
           graph.prev();
         } else {
           graph.next();
         }
-        console.log('tabbed');
-        event.preventDefault();
         return;
 
       case KEYS.ESC:
@@ -32666,27 +32738,6 @@ function keyup(gui, event) {
       }
       return;
 
-    case KEYS.M:
-
-      if (cy.$('.merge-source').length) {
-
-        cy.$('.neighbor').removeClass('merge-left merge-right neighbor');
-
-        cy.$('.merge-source').removeClass('merge-source').addClass('activated');
-      } else if (cy.$('.activated').length) {
-
-        cy.$('.activated').addClass('merge-source');
-
-        cy.$('.neighbor').removeClass('neighbor combine-source combine-left combine-right');
-
-        var left = graph.getLeftForm();
-        if (!left.hasClass('activated')) left.addClass('neighbor').addClass('merge-left');
-
-        var right = graph.getRightForm();
-        if (!right.hasClass('activated')) right.addClass('neighbor').addClass('merge-right');
-      }
-      return;
-
     case KEYS.P:
       /* if (text not focused)
         setPunct();*/
@@ -32697,6 +32748,43 @@ function keyup(gui, event) {
       if (cy.$('node.form.activated')) graph.setRoot(cy.$('node.form.activated'));
       return;
 
+    case KEYS.S:
+
+      var token = cy.$('.activated');
+      var superToken = cy.$('.multiword-active');
+
+      if (token.length) {
+
+        graph.flashTokenSplitInput(token);
+      } else if (superToken.length) {
+
+        graph.splitSuperToken(superToken);
+      }
+      return;
+
+    case KEYS.M:
+
+      if (cy.$('.merge-source').length) {
+
+        cy.$('.neighbor').removeClass('merge-left merge-right neighbor');
+
+        cy.$('.merge-source').removeClass('merge-source').addClass('activated');
+      } else if (cy.$('.activated').length) {
+
+        if (cy.$('.activated').data('type') !== 'token') return;
+
+        cy.$('.activated').addClass('merge-source');
+
+        cy.$('.neighbor').removeClass('neighbor combine-source combine-left combine-right');
+
+        var left = graph.getLeftForm();
+        if (!left.hasClass('activated') && left.data('type') === 'token') left.addClass('neighbor').addClass('merge-left');
+
+        var right = graph.getRightForm();
+        if (!right.hasClass('activated') && right.data('type') === 'token') right.addClass('neighbor').addClass('merge-right');
+      }
+      return;
+
     case KEYS.C:
       if (cy.$('.combine-source').length) {
 
@@ -32705,15 +32793,17 @@ function keyup(gui, event) {
         cy.$('.combine-source').removeClass('combine-source').addClass('activated');
       } else if (cy.$('.activated').length) {
 
+        if (cy.$('.activated').data('type') !== 'token') return;
+
         cy.$('.activated').addClass('combine-source');
 
         cy.$('.neighbor').removeClass('neighbor merge-source merge-left merge-right');
 
         var _left = graph.getLeftForm();
-        if (!_left.hasClass('activated')) _left.addClass('neighbor').addClass('combine-left');
+        if (!_left.hasClass('activated') && _left.data('type') === 'token') _left.addClass('neighbor').addClass('combine-left');
 
         var _right = graph.getRightForm();
-        if (!_right.hasClass('activated')) _right.addClass('neighbor').addClass('combine-right');
+        if (!_right.hasClass('activated') && _right.data('type') === 'token') _right.addClass('neighbor').addClass('combine-right');
       }
       return;
 
@@ -66282,28 +66372,24 @@ class Sentence extends NxBaseClass {
   combine(src, tar) {
 
     if (!(src instanceof BaseToken) || !(tar instanceof BaseToken))
-      throw new NxError('unable to merge: src and tar must both be tokens');
+      throw new NxError('unable to combine: src and tar must both be tokens');
 
     if (src.isSuperToken || tar.isSuperToken)
-      throw new NxError('unable to merge: cannot merge superTokens');
+      throw new NxError('unable to combine: cannot combine superTokens');
 
     if (src.name === 'SubToken' || tar.name === 'SuperToken')
-      throw new NxError('unable to merge: cannot merge subTokens');
+      throw new NxError('unable to combine: cannot combine subTokens');
 
     if (Math.abs(tar.indices.absolute - src.indices.absolute) > 1)
-      throw new NxError('unable to merge: tokens too far apart');
+      throw new NxError('unable to combine: tokens too far apart');
 
     // get a new token to put things into
     let superToken = new Token(this, {});
     superToken._analyses = [ new Analysis(this, { subTokens: [] }) ];
     superToken._i = 0;
 
-    // mess around with some form/lemma stuff
+    // get the new superToken form from the subTokens
     superToken.form = (src.form || '') + (tar.form || '') || null;
-    src.lemma = src.lemma || src.form;
-    src.form = undefined;
-    tar.lemma = tar.lemma || tar.form;
-    tar.form = undefined;
 
     // make new subToken objects from src and tar
     let _src = new SubToken(this, {});
@@ -66383,8 +66469,106 @@ class Sentence extends NxBaseClass {
     return this.index();
   }
 
-  split(src, tar) {
+  split(src, splitAtIndex) {
 
+    if (!(src instanceof BaseToken))
+      throw new NxError('unable to split: src must be a token');
+
+    if (src.isSuperToken) {
+
+      const tokens = src.subTokens.map(subToken => {
+
+        let token = new Token(this, {});
+
+        // basic copying
+        token.semicolon = subToken.semicolon;
+        token.isEmpty = subToken.isEmpty;
+        token.form = subToken.form;
+        token.lemma = subToken.lemma;
+        token.upostag = subToken.upostag;
+        token.xpostag = subToken.xpostag;
+
+        // array-type copying
+        token._feats_init = subToken._feats_init;
+        token._feats = subToken._feats.slice();
+        token._misc_init = subToken._misc_init;
+        token._misc = subToken._misc.slice();
+
+        // transfer all the heads and dependents from subToken to token
+        subToken.mapHeads(head => {
+          subToken.removeHead(head.token);
+          token.addHead(head.token, head.deprel);
+        });
+
+        subToken.mapDependents(dep => {
+          dep.token.removeHead(subToken);
+          dep.token.addHead(token, dep.deprel);
+        });
+
+        return token;
+
+      });
+
+      const index = src.indices.sup;
+
+      // splice out the old superToken
+      this.tokens.splice(index, 1);
+
+      // insert the new tokens into its place
+      this.tokens = this.tokens
+        .slice(0, index)
+        .concat(tokens)
+        .concat(this.tokens.slice(index));
+
+    } else if (src.name === 'SubToken') {
+
+      splitAtIndex = parseInt(splitAtIndex);
+      if (isNaN(splitAtIndex))
+        throw new NxError(`unable to split: cannot split at index ${splitAtIndex}`);
+
+      let subToken = new SubToken(this, {});
+
+      const beginning = (src.form || '').slice(0, splitAtIndex);
+      const ending = (src.form || '').slice(splitAtIndex);
+
+      src.form = beginning;
+      subToken.form = ending;
+
+      const superToken = this.getSuperToken(src);
+      const subTokens = superToken._analyses[src.indices.ana]._subTokens;
+      const index = src.indices.sub;
+
+      // insert the new subToken after it
+      superToken._analyses[src.indices.ana]._subTokens = subTokens
+        .slice(0, index + 1)
+        .concat(subToken)
+        .concat(subTokens.slice(index + 1));
+
+    } else {
+
+      splitAtIndex = parseInt(splitAtIndex);
+      if (isNaN(splitAtIndex))
+        throw new NxError(`unable to split: cannot split at index ${splitAtIndex}`);
+
+      let token = new Token(this, {});
+
+      const beginning = (src.form || '').slice(0, splitAtIndex);
+      const ending = (src.form || '').slice(splitAtIndex);
+
+      src.form = beginning;
+      token.form = ending;
+
+      const index = src.indices.sup;
+
+      // insert the new token after it
+      this.tokens = this.tokens
+        .slice(0, index + 1)
+        .concat(token)
+        .concat(this.tokens.slice(index + 1));
+
+    }
+
+    return this.index();
   }
 }
 
