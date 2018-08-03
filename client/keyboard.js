@@ -28,6 +28,7 @@ const KEYS = {
   I: 73,
   J: 74,
   K: 75,
+  L: 76,
   M: 77,
   P: 80,
   R: 82,
@@ -35,7 +36,8 @@ const KEYS = {
   X: 88,
   Y: 89,
   Z: 90,
-  0: 48
+  0: 48,
+  QUESTION_MARK: 191,
 };
 
 var pressed = new Set();
@@ -52,7 +54,7 @@ function keyup(gui, event) {
   // catch CTRL+<key> sequence first
   if (pressed.has(KEYS.CTRL)) {
 
-    if (pressed.has(KEYS.PAGE_DOWN)) {
+    if (event.which === KEYS.PAGE_DOWN) {
       if (pressed.has(KEYS.SHIFT)) {
         manager.last();
       } else {
@@ -60,7 +62,7 @@ function keyup(gui, event) {
       }
       return;
 
-    } else if (pressed.has(KEYS.PAGE_UP)) {
+    } else if (event.which === KEYS.PAGE_UP) {
       if (pressed.has(KEYS.SHIFT)) {
         manager.first()
       } else {
@@ -68,12 +70,16 @@ function keyup(gui, event) {
       }
       return;
 
-    } else if (pressed.has(KEYS.Z) && !pressed.has(KEYS.SHIFT)) {
+    } else if (event.which === KEYS.Z && !pressed.has(KEYS.SHIFT)) {
       undoManager.undo();
       return;
 
-    } else if (pressed.has(KEYS.Y) || pressed.has(KEYS.Z)) {
+    } else if (event.which === KEYS.Y || pressed.has(KEYS.Z)) {
       undoManager.redo();
+      return;
+
+    } else if (event.which === KEYS.L) {
+      $('#label-input').focus();
       return;
 
     } else if (47 < event.which && event.which < 58) { // key in 0-9
@@ -463,6 +469,10 @@ function keyup(gui, event) {
 
     case (KEYS.ESC):
       graph.clear();
+      return;
+
+    case (KEYS.QUESTION_MARK):
+      console.log('help modal not implemented :(');
       return;
 
   }
