@@ -13,20 +13,20 @@ function latex() {
 
   _.each(graph.eles(), node => {
     if (node.data.name === 'form') {
-      if (node.data.analysis.upostag === undefined)
+      if (node.data.token.upostag === undefined)
         return 'error';
 
       tokensLine += ` \\& ${node.data.label}`;
-      posLine += `\\&{\\tt ${node.data.analysis.upostag}}`;
+      posLine += `\\&{\\tt ${node.data.token.upostag}}`;
     }
 
     if (node.data.name === 'dependency') {
       if (node.data.label === undefined)
         return 'error';
 
-      const source = node.data.sourceAnalysis.id,
-        target = node.data.targetAnalysis.id,
-        label = node.data.sourceAnalysis.deprel;
+      const source = node.data.sourceToken.id,
+        target = node.data.targetToken.id,
+        label = node.data.sourceToken.deprel;
 
       deprelLines.push(`\depedge{${source}}{${target}}{${label}}`);
     }

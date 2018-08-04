@@ -10,13 +10,10 @@ const GUI = require('./gui');
 const Graph = require('./graph');
 const Labeler = require('./labels');
 const errors = require('./errors');
-const detectFormat = require('./detect');
 const storage = require('./local-storage');
-const convert = require('./convert');
 const export_ = require('./export');
 const status = require('./status');
 const Sentence = require('./sentence');
-const Users = require('./users');
 const Socket = require('./socket');
 
 class Manager {
@@ -29,16 +26,12 @@ class Manager {
     funcs.global().labeler = new Labeler();
     if (gui.inBrowser)
       this.socket = Socket(this);
-    this.users = new Users();
     gui.bind();
 
     this.reset();
     this.load();
 
     this.export = export_;
-
-    // save once every ? msecs
-    setInterval(() => this.save(), cfg.saveInterval);
   }
 
   reset() {
@@ -220,13 +213,7 @@ class Manager {
     this._sentences[index].update(text);
 
     const sent = this._sentences[index];
-    this.emit('update', {
-      type: 'modify',
-      index: index,
-      format: sent.format,
-      nx: sent.nx
-    });
-    gui.update();
+    this.onChange();
 
     return this.getSentence(index);
   }
@@ -296,7 +283,7 @@ class Manager {
     this.emit('update', {
       type: 'remove',
       index: index,
-      format: sent.format,
+      format: removed.format,
       nx: null
     });
     gui.update();
@@ -312,43 +299,27 @@ class Manager {
 
 
 
+  onChange() {
+    /*
 
+    this.emit('update', {
+      type: 'modify',
+      index: index,
+      format: sent.format,
+      nx: sent.nx
+    });
+    gui.update();
+    */
+    if (!this.current.parsed)
+      return;
 
-  split(text) {
-
-    // split into sentences
-    let splitted;
-    if (detectFormat(text) === 'plain text') {
-
-      // match non-punctuation (optionally) followed by punctuation
-      const matched = text.match(/[^.!?]+[.!?]*/g);
-      log.debug(`parse(): match group: ${matched}`);
-      splitted = matched === null
-        ? [ text.trim() ]
-        : matched;
-
-    } else {
-
-      // match between multiple newlines
-      splitted = text.split(/\n{2,}/g).map(chunk => {
-        return chunk.trim();
-      });
-    }
-
-    // removing extra whitespace in reverseorder
-    for (let i = splitted.length - 1; i >= 0; i--) {
-        if (splitted[i].trim() === '')
-            splitted.splice(i, 1);
-    }
-    return splitted.length ? splitted : [ '' ]; // need a default if empty
-
+    this.save();
+    gui.update();
   }
   parse(text, options={}) {
 
-    const transform = options.transform || funcs.noop;
     const index = options.index || this.index;
-
-    let splitted = this.split(text).map(transform);
+    const splitted = nx.split(text, options);//.map(transform);
 
     // set the first one at the current index
     this.setSentence(index, splitted[0]);
@@ -358,7 +329,6 @@ class Manager {
       if (i)
         this.insertSentence(index + i, split);
     });
-
     gui.update();
     return this; // chaining
   }
@@ -368,17 +338,6 @@ class Manager {
   get format() {
     if (this.current)
       return this.current.format;
-  }
-  get conllu() {
-    if (this.current)
-      return this.current.conllu;
-  }
-  get cg3() {
-    if (this.current)
-      return this.current.cg3;
-  }
-  get graphable() {
-    return this.format === 'CoNLL-U' || this.format === 'CG3';
   }
   get corpus() {
     const fileHeader = cfg.downloadHasFileHeader
@@ -409,12 +368,12 @@ class Manager {
     return {
       meta: {
         current_index: this.index,
-        owner: this.users.owner,
-        github_url: this.users.github_url,
+        //owner: this.users.owner,
+        //github_url: this.users.github_url,
         gui: gui.state,
         labeler: labeler.state,
-        permissions: this.users.permissions,
-        editors: this.users.editors
+        //permissions: this.users.permissions,
+        //editors: this.users.editors
       },
       sentences: this.map((i, sent) => sent.state)
     };
@@ -435,7 +394,7 @@ class Manager {
       this.insertSentence(cfg.defaultSentence);
 
     // update users stuff
-    this.users.state = _.pick(state.meta, ['owner', 'github_url', 'permissions', 'editors']);
+    //this.users.state = _.pick(state.meta, ['owner', 'github_url', 'permissions', 'editors']);
 
     labeler.state = state.meta.labeler;
     this.updateFilter(); // use the filters set in labeler
@@ -479,7 +438,7 @@ class Manager {
     return state;
   }
   emit(eventName, data) {
-    console.log('try emitting', eventName, data)
+    //console.log('try emitting', eventName, data)
     if (this.socket && this.socket.initialized && this.socket.isOpen)
       this.socket.emit(eventName, data);
   }

@@ -102,8 +102,9 @@ module.exports = app => {
 
       req.session.treebank_id = treebank;
       res.render('annotatrix', {
-        username: req.session.username,
+        modalPath: 'modals',
         github_configured: !!cfg.github,
+        username: req.session.username
       });
 
     }

@@ -1,5 +1,3 @@
-'use strict';
-
 module.exports = {
 labels_1: `# text = "This is a simple sentence."
 # labels = label1 another_label a-third-label
@@ -33,7 +31,7 @@ nested_2: `# text = ab cde f h
 7	h	H	_	_	_	_	_	_	_`,
 
 t: `# testing :)
-1-3	He	he	det	_	pos|f|sp	_	det	_	_
+1-3	He	_	_	_	_	_	_	_	_
 1	boued	boued	n	_	m|sg	4	obj	_	_
 2	e	e	vpart	_	obj	4	aux	_	_
 3	tebr	debriñ	vblex	_	pri|p3|sg	0	root	_	_
@@ -101,7 +99,7 @@ with_tabs: `# sent_id = chapID01:paragID1:sentID1
 # text[eng] = Kechai was awoken by annoying flies.
 1	Кечаень	Кечай	N	N	Sem/Ant_Mal|Prop|SP|Gen|Indef	2	obj	_	Кечаень
 2	сыргозтизь	сыргозтемс	V	V	TV|Ind|Prt1|ScPl3|OcSg3	0	root	_	сыргозтизь
-3	налкставтыця	налкставтомс	PRC	Prc	V|TV|PrcPrsL|Sg|Nom|Indef	4	amod	налкставтыця	_
+3	налкставтыця	налкставтомс	PRC	Prc	V|TV|PrcPrsL|Sg|Nom|Indef	4	amod	_	налкставтыця
 4	карвот	карво	N	N	Sem/Ani|N|Pl|Nom|Indef	2	nsubj	_	карвот
 5	.	.	CLB	CLB	CLB	2	punct	_	.`,
 
@@ -110,7 +108,7 @@ without_tabs: `# sent_id = chapID01:paragID1:sentID1
 # text[eng] = Kechai was awoken by annoying flies.
 1 Кечаень Кечай N N Sem/Ant_Mal|Prop|SP|Gen|Indef 2 obj _ Кечаень
 2 сыргозтизь сыргозтемс V V TV|Ind|Prt1|ScPl3|OcSg3 0 root _ сыргозтизь
-3 налкставтыця налкставтомс PRC Prc V|TV|PrcPrsL|Sg|Nom|Indef 4 amod налкставтыця	_
+3 налкставтыця налкставтомс PRC Prc V|TV|PrcPrsL|Sg|Nom|Indef 4 amod _ налкставтыця
 4 карвот карво N N Sem/Ani|N|Pl|Nom|Indef 2 nsubj _ карвот
 5 . . CLB CLB CLB 2 punct _ .`,
 
@@ -388,16 +386,16 @@ katya_aplonova_long: `# sent_id = html/meyer_gorog-contes_bambara_10amadu_tara.d
 128	.	.	PUNCT	_	_	_	_	_	Gloss=.`,
 
 ud_example_tabs: `1	They	they	PRON	PRP	Case=Nom|Number=Plur	2	nsubj	2:nsubj|4:nsubj	_
-2	buy	buy	VERB	VBP	Number=Plur|Person=3|Tense=Pres	0	root	0:root	_
+2	buy	buy	VERB	VBP	Number=Plur|Person=3|Tense=Pres	0	root	_	_
 3	and	and	CONJ	CC	_	4	cc	4:cc	_
-4	sell	sell	VERB	VBP	Number=Plur|Person=3|Tense=Pres	2	conj	0:root|2:conj	_
+4	sell	sell	VERB	VBP	Number=Plur|Person=3|Tense=Pres	2	conj	2:conj	_
 5	books	book	NOUN	NNS	Number=Plur	2	obj	2:obj|4:obj	_
 6	.	.	PUNCT	.	_	2	punct	2:punct	_`,
 
 ud_example_spaces: `1    They     they    PRON    PRP    Case=Nom|Number=Plur               2    nsubj    2:nsubj|4:nsubj _
-2    buy      buy     VERB    VBP    Number=Plur|Person=3|Tense=Pres    0    root     0:root          _
+2    buy      buy     VERB    VBP    Number=Plur|Person=3|Tense=Pres    0    root     _          _
 3    and      and     CONJ    CC     _                                  4    cc       4:cc            _
-4    sell     sell    VERB    VBP    Number=Plur|Person=3|Tense=Pres    2    conj     0:root|2:conj   _
+4    sell     sell    VERB    VBP    Number=Plur|Person=3|Tense=Pres    2    conj     2:conj   _
 5    books    book    NOUN    NNS    Number=Plur                        2    obj      2:obj|4:obj     _
 6    .        .       PUNCT   .      _                                  2    punct    2:punct         _`,
 

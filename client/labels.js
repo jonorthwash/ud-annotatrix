@@ -3,6 +3,7 @@
 const _ = require('underscore');
 const $ = require('jquery');
 const DeserializationError = require('./errors').DeserializationError;
+const nx = require('notatrix');
 
 const regex = {
   labelComment: /(labels|tags)\s*=\s+(.*)$/,
@@ -323,7 +324,7 @@ class Labeler {
 
   static parseComment(comment) {
     let labels = [];
-    const labelString = comment.match(regex.labelComment);
+    const labelString = comment.body.match(regex.labelComment);
 
     if (labelString)
       labelString[2].split(/\s/).forEach(label => {
@@ -376,7 +377,6 @@ class Labeler {
   }
 
   add(name) {
-
     let found = false;
     _.each(this._labels, label => {
       if (label.name === name)
@@ -420,7 +420,7 @@ class Labeler {
 
   update() {
 
-    if (!gui || !gui.inBrowser)
+    if (!gui || !gui.inBrowser || !manager.current.parsed)
       return;
 
     $('#label-clear-filter .label-text').addClass('disabled');
@@ -441,8 +441,8 @@ class Labeler {
     let done = false;
     manager.getSentence(index).comments = manager.getSentence(index).comments.map(comment => {
 
-      if (comment.match(regex.labelComment) && !done) {
-        comment = `${comment} ${name}`;
+      if (comment.body.match(regex.labelComment) && !done) {
+        comment.body = `${comment.body} ${name}`;
         done = true;
       }
 
@@ -450,7 +450,7 @@ class Labeler {
     });
 
     if (!done)
-      manager.getSentence(index).comments = manager.getSentence(index).comments.concat([`labels = ${name}`]);
+      manager.getSentence(index).comments.push(new nx.Comment(manager.current._nx, `labels = ${name}`));
   }
 
   removeInComments(index, name) {
@@ -461,7 +461,8 @@ class Labeler {
     }
 
     manager.getSentence(index).comments = manager.getSentence(index).comments.map(comment => {
-      return comment.replace(regex.labelByName(name), '$1')
+      comment.body = comment.body.replace(regex.labelByName(name), '$1');
+      return comment;
     });
   }
 
@@ -474,7 +475,8 @@ class Labeler {
     }
 
     manager.getSentence(index).comments = manager.getSentence(index).comments.map(comment => {
-      return comment.replace(regex.labelByName(name), `$1${newName}$2`);
+      comment.body = comment.body.replace(regex.labelByName(name), '$1');
+      return comment;
     });
   }
 

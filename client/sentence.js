@@ -2,42 +2,114 @@
 
 const _ = require('underscore');
 const nx = require('notatrix');
-
 const errors = require('./errors');
-const detectFormat = require('./detect');
-const convert = require('./convert');
+const status = require('./status');
 
-function encode(serial) {
-  const format = detectFormat(serial);
-  switch (format) {
+function encode(serial, options) {
+  try {
 
-    case ('Unknown'):
-      return nx.Sentence.fromParams([]);
+    let format = detectFormat(serial, options)
 
-    case ('plain text'):
-      return nx.Sentence.fromText(serial);
+    if (format === 'notatrix serial')
+      format = 'CoNLL-U';
 
-    case ('CoNLL-U'):
-      return nx.Sentence.fromConllu(serial);
+    options = _.extend({
+      interpretAs: format,
+      allowEmptyString: true,
+    }, options);
 
-    case ('CG3'):
-      return nx.Sentence.fromCG3(serial);
+    return {
+      format: format,
+      sent: new nx.Sentence(serial, options),
+    };
 
-    default:
-      serial = convert.to.conllu(serial);
-      return nx.Sentence.fromConllu(serial);
+  } catch (e) {
+
+    if (e instanceof nx.NotatrixError) {
+
+      console.log(e);
+      gui.status.error('Unable to interpret input, disabling autoparsing and unsyncing')
+      return null;
+
+    } else {
+
+      throw e;
+
+    }
   }
+}
 
+function detectFormat(serial, options) {
+
+  if (!serial)
+    return 'plain text';
+
+  const formats = nx.detect(serial, {
+    suppressDetectorErrors: true,
+    returnAllMatches: true,
+    allowEmptyString: true,
+  });
+
+  if (formats.length === 0) {
+
+    throw new nx.NotatrixError('Unable to interpret input');
+
+  } else if (formats.indexOf('notatrix serial') > -1) {
+
+    return 'notatrix serial';
+
+  } else if (formats.length === 1) {
+
+    console.log(`Interpreting as ${formats[0]}`);
+    return formats[0];
+
+  } else {
+
+    // order we'd want to display in if we get multiple hits
+    const preferences = [
+      'CoNLL-U',
+      'CG3',
+      'SD',
+      'plain text',
+      'Brackets',
+    ];
+
+    for (let i=0; i<preferences.length; i++) {
+      const pref = preferences[i];
+      if (formats.indexOf(pref) > -1) {
+        status.normal(`Interpreting as ${pref}`);
+        return pref;
+      }
+    }
+
+    // just choose one
+    status.normal(`Interpreting as ${formats[0]}`);
+    return formats[0];
+
+  }
 }
 
 class Sentence {
-  constructor(serial) {
+  constructor(serial, options) {
 
-    this._input = serial;
+    const encoded = encode(serial, options);
 
-    this.format = detectFormat(serial);
-    this._nx = encode(serial);
+    if (encoded) {
 
+      this.parsed = true;
+      this.format = encoded.format;
+      this._nx = encoded.sent;
+
+    } else {
+
+      gui.status.error('')
+      this.parsed = false;
+      this.format = null;
+      this._nx = null;
+
+    }
+
+    this.conversion_warning = null;
     this.is_table_view = false;
     this.column_visibilities = new Array(10).fill(true);
 
@@ -45,102 +117,95 @@ class Sentence {
 
   }
 
-  toString() {
-    switch (this.format) {
-      case ('Unknown'):
-        return '';
+  toString(format) {
 
-      case ('plain text'):
-        return this._nx.text;
+    if (!this.parsed)
+      throw new Error('cannot cast unparsed text to string');
 
-      case ('CoNLL-U'):
-        return this._nx.conllu;
+    format = format || this.format;
 
-      case ('CG3'):
-        return this._nx.cg3;
+    try {
 
-      default:
-        return this._input || '';
+      const converted = this._nx.to(format);
+      this.conversion_warning = converted.loss.length
+        ? `Unable to convert: ${converted.loss.join(', ')}`
+        : null;
+
+      return converted.output;
+
+    } catch (e) {
+      if (e instanceof nx.GeneratorError) {
+
+        status.error(e.message);
+        return null;
+
+      } else {
+
+        throw e;
+
+      }
     }
+
   }
 
-  update(serial) {
+  update(serial, options) {
 
-    const updated = {
-      format: detectFormat(serial),
-      nx: encode(serial)
-    };
+    try {
 
-    // if they're not the same format, check if they're the same text (i.e.,
-    //   different encodings of the same sentence)
-    if (updated.format !== this.format && updated.nx.text === this.text) {
+      if (!this.parsed)
+        throw new Error();
 
-      const oldNx = this.nx,
-        newNx = updated.nx.nx;
+      this._nx.update(serial, options);
 
-      for (let i=0; i<newNx.tokens.length; i++) {
-        let oldToken = oldNx.tokens[i],
-          newToken = newNx.tokens[i];
+    } catch (e) {
 
-        if (!oldToken)
-          continue;
+      const encoded = encode(serial, options);
 
-        for (let j=0; j<newToken.analyses.length; j++) {
-          let oldAnalysis = oldToken.analyses[j],
-            newAnalysis = newToken.analyses[j];
+      if (encoded) {
 
-          if (!oldAnalysis)
-            continue;
+        this.parsed = true;
+        this._nx = encoded.sent;
+        this.format = encoded.format;
+        labeler.parse(this._nx.comments);
 
-          _.each(newAnalysis.values, (value, key) => {
-            newAnalysis.values[key] = (!!value && value !== '_')
-              ? value
-              : oldAnalysis.values[key];
-          });
-        }
+      } else {
+
+        this.parsed = false;
+        this._nx = null;
+        this.format = null;
+
       }
-
-      updated.nx.tokens = nx.Sentence.fromNx(newNx).tokens;
-      updated.nx.comments = updated.nx.comments.length
-        ? updated.nx.comments
-        : this._nx.comments;
     }
 
-    this._input = serial;
-    this._nx = updated.nx;
-    this.format = updated.format;
-    labeler.parse(this._nx.comments);
     return this;
-
   }
 
   clear() {
 
-    this._input = null;
-    this.format = detectFormat(null);
-    this._nx = encode(null);
+    this.format = null;
+    this._nx = null;
     return this;
 
   }
 
   get(id) {
-    return this._nx.getById(id);
+    return this._nx.query(e => e.indices.absolute === id)[0];
   }
 
   get conllu() {
-    return this._nx.conllu;
+    return this.toString('CoNLL-U');
   }
 
   get cg3() {
-    return this._nx.cg3;
+    return this.toString('CG3');
   }
 
   get text() {
-    return this._nx.text;
+    return this.toString('plain text');
   }
 
   get nx() {
-    return this._nx.nx;
+    return this.toString('notatrix serial');
   }
 
   get comments() {
@@ -157,7 +222,7 @@ class Sentence {
       column_visibilities: this.column_visibilities,
       format: this.format,
       is_table_view: this.is_table_view,
-      nx: this._nx.nx,
+      nx: this._nx.to.notatrixSerial,
       input: this._input
     };
   }
@@ -168,7 +233,7 @@ class Sentence {
     this.column_visibilities = state.column_visibilities;
     this.format = state.format;
     this.is_table_view = state.is_table_view;
-    this._nx = nx.Sentence.fromNx(state.nx);
+    this._nx = new nx.Sentence(state.nx);
 
     return this;
   }

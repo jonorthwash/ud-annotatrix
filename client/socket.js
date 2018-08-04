@@ -2,7 +2,6 @@
 
 const Socket = require('socket.io-client');
 const status = require('./status');
-const convert = require('./convert');
 const collab = require('./collaboration');
 const funcs = require('./funcs');
 
@@ -68,6 +67,7 @@ module.exports = manager => {
 
     if (data.type === 'modify') {
 
+      console.log('DEPRECATED! fix me');
       manager.parse(text, { index: data.index });
 
     } else if (data.type === 'insert') {

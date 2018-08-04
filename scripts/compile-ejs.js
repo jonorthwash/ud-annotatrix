@@ -32,8 +32,9 @@ function render_all() {
   mkdirp(html_base_path);
 
   render('annotatrix', {
-    username: null,
+    modalPath: `${__dirname}/../server/views/modals`,
     github_configured: false,
+    username: null
   });
   render('help', {});
   render('index', {

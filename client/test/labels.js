@@ -15,7 +15,7 @@ const errors = require('../errors');
 global.gui = null;
 global.server = null;
 
-module.exports = () => {
+//module.exports = () => {
   describe('labels.js', () => {
     describe('parse comments individually', () => {
 
@@ -42,7 +42,7 @@ module.exports = () => {
       _.each(data, datum => {
         it(`should parse labels from CoNLL-U:${datum.name}`, () => {
 
-          const s = nx.Sentence.fromConllu(conllu[datum.name]),
+          const s = new nx.Sentence(conllu[datum.name]),
             labeler = new Labeler();
 
           labeler.parse(s.comments);
@@ -79,7 +79,7 @@ module.exports = () => {
       it(`should parse labels from CoNLL-U:{${names.join(' ')}}`, () => {
         _.each(names, name => {
 
-          const s = nx.Sentence.fromConllu(conllu[name]);
+          const s = new nx.Sentence(conllu[name]);
 
           labeler.parse(s.comments);
         });
@@ -106,7 +106,7 @@ module.exports = () => {
       _.each(data, (labels, name) => {
         it(`should read for CoNLL-U:${name}`, () => {
           sinon.stub(manager, 'getSentence').callsFake(i => {
-            return nx.Sentence.fromConllu(conllu[name]);
+            return new nx.Sentence(conllu[name]);
           });
 
           manager.index = i++;
@@ -121,7 +121,7 @@ module.exports = () => {
     describe('pick a text color sanely', () => {
       global.manager = {
         index: 0,
-        getSentence: i => nx.Sentence.fromText('')
+        getSentence: i => new nx.Sentence('')
       };
 
       const labelName = 'test',
@@ -267,7 +267,7 @@ module.exports = () => {
             ['one_label', 'second', 'third-label', 'row_2', 'again:here', 'this', 'that'],
             ['this-is-a-tag', 'test', 'testing'] ],
           allLabels = _.reduce(labels, (l, labels) => l.concat(labels), []),
-          sentences = data.map(name => nx.Sentence.fromConllu(conllu[name])),
+          sentences = data.map(name => new nx.Sentence(conllu[name])),
           labeler = new Labeler();
 
         sinon.stub(manager, 'getSentence').callsFake(i => {
@@ -317,7 +317,7 @@ module.exports = () => {
 
       global.manager = {
         index: 0,
-        getSentence: i => nx.Sentence.fromText('')
+        getSentence: i => new nx.Sentence('')
       };
 
       const labeler = new Labeler();
@@ -409,6 +409,8 @@ module.exports = () => {
           conllu.labels_4
         ].join('\n\n'));
 
+        console.log(manager._sentences.map(sent => sent._nx.input))
+
         // should initialize correctly
         expect(manager._filtered.length).to.equal(0);
         expect(labeler._filter.size).to.equal(0);
@@ -425,6 +427,7 @@ module.exports = () => {
         labeler
           .addFilter('label1')
           .addFilter('new');
+        console.log(labeler)
         expect(labeler._filter.size).to.equal(2);
 
         // should do nothing when given an invalid name to remove
@@ -635,4 +638,4 @@ module.exports = () => {
       });
     });
   });
-};
+//};

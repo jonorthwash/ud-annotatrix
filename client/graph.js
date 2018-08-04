@@ -10,6 +10,9 @@ const funcs = require('./funcs');
 const sort = require('./sort');
 const validate = require('./validate');
 const ProgressBar = require('./progress-bar');
+const status = require('./status');
+const nx = require('notatrix');
+const mice = require('./mice');
 
 class Graph {
   constructor(options) {
@@ -20,7 +23,7 @@ class Graph {
       autounselectify: true,
       autoungrabify: true,
       zoomingEnabled: true,
-      userZoomingEnabled: false,
+      userZoomingEnabled: true,
       wheelSensitivity: 0.1,
       style: require('./cy-style'),
       layout: null,
@@ -31,13 +34,17 @@ class Graph {
     if (gui.inBrowser)
       require('./selfcomplete');
 
-    this.progressBar = new ProgressBar();
+    this.length = 0;
+    this.clumps = 0;
+    this.progress = new ProgressBar();
 
     // cy handlers
     this.click = {
       form: event => {
         const target = event.target;
         log.debug(`called onClickFormNode(${target.attr('id')})`);
+
+        cy.$('.multiword-active').removeClass('multiword-active');
 
         if (gui.moving_dependency) {
 
@@ -60,8 +67,18 @@ class Graph {
           cy.$('.arc-target').removeClass('arc-target');
           cy.$('.selected').removeClass('selected');
 
-          if (target.hasClass('activated')) {
-            target.removeClass('activated');
+          if (target.hasClass('merge-right') || target.hasClass('merge-left')) {
+
+            this.merge(cy.$('.merge-source').data('token'), target.data('token'));
+
+          } else if (target.hasClass('combine-right') || target.hasClass('combine-left')) {
+
+            this.combine(cy.$('.combine-source').data('token'), target.data('token'));
+
+          } else if (target.hasClass('activated')) {
+
+            gui.intercepted = false;
+            this.clear();
 
           } else {
 
@@ -89,10 +106,12 @@ class Graph {
         cy.$('.arc-target').removeClass('arc-target');
         cy.$('.selected').removeClass('selected');
 
-        editLabel(target);
+        showEditLabelBox(target);
       },
       multiword: event => {
         const target = event.target;
+
+        cy.$('.activated').removeClass('activated');
 
         if (target.hasClass('multiword-active')) {
           target.removeClass('multiword-active');
@@ -113,7 +132,7 @@ class Graph {
         cy.$('.arc-target').removeClass('arc-target');
         cy.$('.selected').removeClass('selected');
 
-        editLabel(target);
+        showEditLabelBox(target);
       }
     };
     this.cxttapend = {
@@ -129,7 +148,7 @@ class Graph {
         cy.$('.arc-target').removeClass('arc-target');
         cy.$('.selected').removeClass('selected');
 
-        editLabel(target);
+        showEditLabelBox(target);
       },
       dependency: event => {
         const target = event.target;
@@ -166,36 +185,193 @@ class Graph {
   }
 
   eles() {
-    if (manager.graphable)
-      return _.map(manager.current._nx.eles, ele => {
-        if (ele.data.name === 'dependency') {
 
-          const src = ele.data.sourceAnalysis,
-            tar = ele.data.targetAnalysis;
+    function toSubscript(str) {
+      const subscripts = { 0:'₀', 1:'₁', 2:'₂', 3:'₃', 4:'₄', 5:'₅',
+        6:'₆', 7:'₇', 8:'₈', 9:'₉', '-':'₋', '(':'₍', ')':'₎' };
 
-          ele.data.label = gui.is_ltr
-            ? tar.num < src.num
-              ? `⊲${src.deprel}`
-              : `${src.deprel}⊳`
-            : tar.num < src.num
-              ? `${src.deprel}⊳`
-              : `⊲${src.deprel}`;
+      if (str == null)
+        return '';
 
-          ele.data.ctrl = getCtrl(src, tar);
-          ele.style = getStyle(src, tar);
-          ele.classes = validate.depEdgeClasses(manager.current.eles, ele);
+      return str.split('').map((char) => {
+        return (subscripts[char] || char);
+      }).join('');
+    }
 
-        } else if (ele.data.name === 'pos-node') {
-          ele.classes = validate.posNodeClasses(ele);
-        }
+    function getIndex(token, format) {
+      return format === 'CoNLL-U'
+        ? token.indices.conllu
+        : format === 'CG3'
+          ? token.indices.cg3
+          : token.indices.absolute;
+    }
 
-        return ele;
-      });
-    return [];
+    var num = 0;
+
+    this.progress.done = 0;
+    this.progress.total = 0;
+
+    const sent = manager.current._nx,
+      format = manager.current.format;
+
+    sent.index();
+
+    let eles = [];
+
+    sent.iterate(token => {
+
+      if (token.indices.cytoscape == null && !token.isSuperToken)
+        return;
+
+      let id = getIndex(token, format);
+      let clump = token.indices.cytoscape;
+      let pos = format === 'CG3'
+        ? token.xpostag || token.upostag
+        : token.upostag || token.xpostag;
+      let isRoot = sent.root.dependents.has(token);
+      this.clumps = clump;
+
+      if (token.isSuperToken) {
+
+        eles.push({ // multiword label
+          data: {
+            id: `multiword-${id}`,
+            clump: clump,
+            name: `multiword`,
+            label: `${token.form} ${toSubscript(`${id}`)}`,
+            length: `${token.form.length > 3
+              ? token.form.length * 0.7
+              : token.form.length}em`,
+            token: token,
+          },
+          classes: 'multiword'
+        });
+
+      } else {
+
+        this.progress.total += 2;
+        if (pos && pos !== '_')
+          this.progress.done += 1;
+        if (token._head)
+          this.progress.done += 1;
+
+        let parent = token.name === 'SubToken'
+          ? 'multiword-' + getIndex(sent.getSuperToken(token), format)
+          : undefined;
+
+        eles.push(
+
+          { // "number" node
+            data: {
+              id: `num-${id}`,
+              clump: clump,
+              name: 'number',
+              label: id,
+              pos: pos,
+              parent: parent,
+              token: token,
+            },
+            classes: 'number'
+          },
+
+          { // "form" node
+            data: {
+              id: `form-${id}`,
+              num: ++num,
+              clump: clump,
+              name: 'form',
+              attr: 'form',
+              form: token.form,
+              label: token.form || '_',
+              length: `${(token.form || '_').length > 3
+                ? (token.form || '_').length * 0.7
+                : (token.form || '_').length}em`,
+              type: parent ? 'subToken' : 'token',
+              state: `normal`,
+              parent: `num-${id}`,
+              token: token,
+            },
+            classes: isRoot ? 'form root' : 'form',
+          },
+
+          { // "pos" node
+            data: {
+              id: `pos-node-${id}`,
+              num: ++num,
+              clump: clump,
+              name: `pos-node`,
+              attr: format === 'CG3' ? `xpostag` : `upostag`,
+              pos: pos,
+              label: pos || '',
+              length: `${(pos || '').length * 0.7 + 1}em`,
+              token: token,
+            },
+            classes: validate.posNodeClasses(pos),
+          },
+
+          { // "pos" edge
+            data: {
+              id: `pos-edge-${id}`,
+              clump: clump,
+              name: `pos-edge`,
+              pos: pos,
+              source: `form-${id}`,
+              target: `pos-node-${id}`
+            },
+            classes: 'pos'
+          }
+        );
+
+        token.mapHeads(head => {
+          getDependencyEdge(format, head.token, token, head.deprel, this.progress);
+
+          progress.total += 1;
+          if (head.deprel && head.deprel !== '_')
+            progress.done += 1;
+
+          if (head.token.name === 'RootToken')
+            return;
+
+          let deprel = head.deprel || '';
+
+          const id = getIndex(token, format),
+            headId = getIndex(head.token, format),
+            label = gui.is_ltr
+              ? token.indices.absolute > head.token.indices.absolute
+                ? `${deprel}⊳`
+                : `⊲${deprel}`
+              : token.indices.absolute > head.token.indices.absolute
+                ? `⊲${deprel}`
+                : `${deprel}⊳`;
+
+          eles.push({
+            data: {
+              id: `dep_${id}_${headId}`,
+              name: `dependency`,
+              num: ++num,
+              attr: `deprel`,
+              deprel: deprel,
+              source: `form-${headId}`,
+              sourceToken: head.token,
+              target: `form-${id}`,
+              targetToken: token,
+              length: `${(deprel || '').length / 3}em`,
+              label: label,
+              ctrl: getCtrl(head.token, token),
+            },
+            classes: validate.depEdgeClasses(sent, head.token, token),
+            style: getStyle(head.token, token),
+          });
+        });
+      }
+    });
+
+    this.length = num;
+    return eles;
   }
 
   update() {
-    if (gui.graph_disabled)
+    if (!manager.current.parsed)
       return;
 
     this.options.layout = {
@@ -227,7 +403,7 @@ class Graph {
       }, 5);
 
     this.bind();
-    this.progressBar.update();
+    this.progress.update();
 
     return this;
   }
@@ -264,6 +440,8 @@ class Graph {
     cy.on('click', 'edge.dependency', e => this.click.dependency(e));
     cy.on('cxttapend', 'node.form', e => this.cxttapend.form(e));
     cy.on('cxttapend', 'edge.dependency', e => this.cxttapend.dependency(e));
+
+    cy.on('mousemove', e => mice.emit(e.position));
   }
 
   clear() {
@@ -275,17 +453,25 @@ class Graph {
 
     this.save();
 
+    cy.$('.splitting').removeClass('splitting');
     cy.$('.activated').removeClass('activated');
     cy.$('.multiword-active').removeClass('multiword-active');
+    cy.$('.multiword-selected').removeClass('multiword-selected');
     cy.$('.arc-source').removeClass('arc-source');
     cy.$('.arc-target').removeClass('arc-target');
     cy.$('.selected').removeClass('selected');
     cy.$('.moving').removeClass('moving');
-    cy.$('.merge').removeClass('merge');
+    cy.$('.neighbor').removeClass('neighbor');
+    cy.$('.merge-source, .merge-left, .merge-right')
+      .removeClass('merge-source merge-left merge-right');
+    cy.$('.combine-source, .combine-left, .combine-right')
+      .removeClass('combine-source combine-left combine-right');
     gui.moving_dependency = false;
 
     $('#mute').removeClass('activated');
     $('#edit').removeClass('activated');
+
+    gui.status.update();
   }
 
   save() {
@@ -296,21 +482,31 @@ class Graph {
     if (gui.editing === null)
       return; // nothing to do
 
-    const analysis = gui.editing.data().analysis || gui.editing.data().sourceAnalysis,
-      attr = gui.editing.data().attr,
-      oldValue = analysis[attr],
-      newValue = $('#edit').val();
+    if (cy.$('.splitting').length) {
 
-    modify(analysis.id, attr, newValue);
+      const value = $('#edit').val();
+      let index = value.indexOf(' ');
+      index = index < 0 ? value.length : index;
 
-    window.undoManager.add({
-      undo: () => {
-        modify(analysis.id, attr, oldValue);
-      },
-      redo: () => {
-        modify(analysis.id, attr, newValue);
+      this.splitToken(gui.editing, index);
+
+    } else {
+
+      const token = gui.editing.data('token') || gui.editing.data('targetToken'),
+        attr = gui.editing.data('attr'),
+        value = validate.attrValue(attr, $('#edit').val());
+
+      if (attr === 'deprel') {
+
+        this.modifyDependency(gui.editing, value);
+
+      } else {
+
+        token[attr] = value;
+        manager.onChange();
+
       }
-    });
+    }
 
     gui.editing = null;
   }
@@ -322,16 +518,27 @@ class Graph {
      * Changes the text data and redraws the graph. Currently supports only conllu.
      */
 
-    src = src.data('analysis');
-    tar = tar.data('analysis');
+    try {
 
-    if (src === tar) {
-      log.warn(`makeDependency(): unable to create dependency within superToken ${src.superTokenId}`);
-      return;
+      src = src.data('token');
+      tar = tar.data('token');
+      tar.addHead(src);
+
+    } catch (e) {
+
+      if (e instanceof nx.NxError) {
+
+        status.error(e.message);
+
+      } else {
+
+        throw e;
+      }
     }
 
-    addHead(src.id, tar.id);
+    manager.onChange();
 
+    /*
     undoManager.add({
       undo: () => {
         removeHead(src.id, tar.id);
@@ -368,78 +575,197 @@ class Graph {
     }*/
   }
 
+  modifyDependency(ele, value) {
+
+    try {
+
+      let src = ele.data('sourceToken');
+      let tar = ele.data('targetToken');
+      tar.modifyHead(src, value);
+
+    } catch (e) {
+
+      if (e instanceof nx.NxError) {
+
+        status.error(e.message);
+
+      } else {
+
+        throw e;
+      }
+    }
+
+    manager.onChange();
+  }
+
   removeDependency(ele) {
     log.debug(`called removeDependency(${ele.attr('id')})`);
 
-    const src = ele.data('sourceAnalysis'),
-      tar = ele.data('targetAnalysis');
+    try {
 
-    removeHead(src.id, tar.id);
+      let src = ele.data('sourceToken');
+      let tar = ele.data('targetToken');
+      tar.removeHead(src);
 
-    undoManager.add({
-      undo: () => {
-        addHead(src.id, tar.id);
-      },
-      redo: () => {
-        removeHead(src.id, tar.id);
+    } catch (e) {
+
+      if (e instanceof nx.NxError) {
+
+        status.error(e.message);
+
+      } else {
+
+        throw e;
       }
-    });
+    }
+
+    manager.onChange();
   }
 
   setRoot(ele) {
     log.debug(`called setAsRoot(${ele.attr('id')})`);
 
-    // check if there is already a root
-    let oldRoot;
-    manager.current.forEach(token => {
-      token.forEach(analysis => {
-        if (analysis.head == 0 || analysis.deprel.toLowerCase() == 'root')
-          oldRoot = analysis;
-      });
-    });
+    const sent = manager.current._nx;
+    ele = ele.data('token');
 
-    // set new root
-    const newRoot = ele.data('analysis');
-    if (!newRoot)
-      return;
+    try {
 
-    if (oldRoot) {
-      modify(oldRoot.id, 'head', []);
-      modify(oldRoot.id, 'deprel', undefined);
+      if (!sent.options.enhanced)
+        sent.root.dependents.clear();
+
+      ele.addHead(sent.root, 'root');
+
+    } catch (e) {
+
+      if (e instanceof nx.NxError) {
+
+        status.error(e.message);
+
+      } else {
+
+        throw e;
+      }
     }
 
-    const oldHead = newRoot.head,
-      oldDeprel = newRoot.deprel;
-
-    modify(newRoot.id, 'head', '0');
-    modify(newRoot.id, 'deprel', 'root');
-
-    undoManager.add({
-      undo: () => {
-        if (oldRoot) {
-          modify(oldRoot.id, 'head', '0');
-          modify(oldRoot.id, 'deprel', 'root');
-        }
-
-        modify(newRoot.id, 'head', oldHead);
-        modify(newRoot.id, 'deprel', oldDeprel);
-      },
-      redo: () => {
-        if (oldRoot) {
-          modify(oldRoot.id, 'head', []);
-          modify(oldRoot.id, 'deprel', undefined);
-        }
-
-        modify(newRoot.id, 'head', '0');
-        modify(newRoot.id, 'deprel', 'root');
-      }
-    });
+    manager.onChange();
   }
 
-  merge(direction, strategy) {
-    throw new errors.NotImplementedError('merging not implemented');
-    log.error(`called mergeNodes(${dir})`);
+  flashTokenSplitInput(ele) {
 
+    ele.addClass('splitting');
+    gui.editing = ele;
+    showEditLabelBox(ele);
+
+  }
+
+  splitToken(ele, index) {
+    try {
+
+      manager.current._nx.split(ele.data('token'), index);
+
+    } catch (e) {
+
+      if (e instanceof nx.NxError) {
+
+        status.error(e.message);
+
+      } else {
+
+        throw e;
+      }
+    }
+
+    manager.onChange();
+  }
+
+  splitSuperToken(ele) {
+    try {
+
+      manager.current._nx.split(ele.data('token'));
+
+    } catch (e) {
+
+      if (e instanceof nx.NxError) {
+
+        status.error(e.message);
+
+      } else {
+
+        throw e;
+      }
+    }
+
+    manager.onChange();
+  }
+
+  combine(src, tar) {
+    try {
+
+      manager.current._nx.combine(src, tar);
+
+    } catch (e) {
+
+      if (e instanceof nx.NxError) {
+
+        status.error(e.message);
+
+      } else {
+
+        throw e;
+      }
+    }
+
+    manager.onChange();
+  }
+
+  merge(src, tar) {
+    try {
+
+      manager.current._nx.merge(src, tar);
+
+    } catch (e) {
+
+      if (e instanceof nx.NxError) {
+
+        status.error(e.message);
+
+      } else {
+
+        throw e;
+      }
+    }
+
+    manager.onChange();
+
+    /*
+
+    function mergeNodes(direction) {
+
+      // the highlighted one is the "major" token
+      const major = cy.$('node.form.merge').data().analysis;
+
+      // find the "minor" token by moving either one clump to the left or right
+      const minorClump = major.clump
+        + (direction === 'left' && gui.is_ltr || direction === 'right' && !gui.is_ltr
+          ? -1 : 1);
+
+      // iterate tokens until we find a matching candidate
+      let minor = null;
+      major.sentence.forEach(token => {
+        if (token.analysis.clump === minorClump)
+          minor = token.analysis;
+      });
+
+      // do the merge
+      if (major && minor)
+        major.token.mergeWith(minor.token);
+
+      // clean up
+      cy.$('node.form.merge').removeClass('merge');
+      gui.update();
+    }
+
+    */
     // old: (toMerge, side, how)
 
     /* Support for merging tokens into either a new token or a supertoken.
@@ -447,6 +773,7 @@ class Graph {
     how to merge the nodes. In case of success, redraws the tree. */
     // const indices = findConlluId(toMerge);
 
+    /*
     const oldSentence = manager.toString();
 
     // prefer traits on this one
@@ -461,15 +788,83 @@ class Graph {
     }
 
     manager.current.merge(major, minor, strategy);
+    */
+  }
 
-    undoManager.add({
-      undo: () => {
-        manager.parse(oldSentence);
-      },
-      redo: () => {
-        manager.parse(manager.conllu);
-      }
-    });
+  getLeftForm() {
+
+    let clump = cy.$('.activated').data('clump');
+    if (clump === undefined)
+      return;
+
+    clump -= 1;
+
+    /*
+    // uncomment this to allow wrapping
+    if (clump < 0)
+      clump = this.clumps;
+    if (clump > this.clumps)
+      clump = 0;
+    */
+
+    return cy.$(`.form[clump = ${clump}]`);
+  }
+
+  getRightForm() {
+
+    let clump = cy.$('.activated').data('clump');
+    if (clump === undefined)
+      return;
+
+    clump += 1;
+
+    /*
+    // uncomment this to allow wrapping
+    if (clump < 0)
+      next = this.clumps;
+    if (clump > this.clumps)
+      clump = 0;
+    */
+
+    return cy.$(`.form[clump = ${clump}]`);
+  }
+
+  prev() {
+
+    let num = cy.$('.input').data('num');
+    gui.intercepted = false;
+    this.clear();
+
+    num += 1;
+    if (num === 0)
+      num = this.length;
+    if (num > this.length)
+      num = 1;
+
+    const ele = cy.$(`[num = ${num}]`);
+    gui.editing = ele;
+    if (ele.length)
+      showEditLabelBox(ele);
+
+  }
+
+  next() {
+
+    let num = cy.$('.input').data('num');
+    gui.intercepted = false;
+    this.clear();
+
+    num -= 1;
+    if (num === 0)
+      num = this.length;
+    if (num > this.length)
+      num = 1;
+
+    const ele = cy.$(`[num = ${num}]`);
+    gui.editing = ele;
+    if (ele.length)
+      showEditLabelBox(ele);
+
   }
 }
 
@@ -479,7 +874,7 @@ function getStyle(src, tar) {
     'target-endpoint': `0% -50%`
   };
 
-  if (tar.num < src.num) {
+  if (tar.indices.absolute < src.indices.absolute) {
     style['source-endpoint'] = `${-10 * cfg.defaultEdgeCoeff}px -50%`;
   } else {
     style['source-endpoint'] = `${10 * cfg.defaultEdgeCoeff}px -50%`;
@@ -494,7 +889,7 @@ function getCtrl(src, tar) {
 
 function getEdgeHeight(src, tar) {
 
-  const diff = tar.num - src.num;
+  const diff = tar.indices.absolute - src.indices.absolute;
 
   let edgeHeight = cfg.defaultEdgeHeight * diff;
   if (gui.is_ltr)
@@ -509,8 +904,8 @@ function getEdgeHeight(src, tar) {
   return edgeHeight;
 }
 
-function editLabel(target) {
-  log.debug(`called editLabel(${target.attr('id')})`);
+function showEditLabelBox(target) {
+  log.debug(`called showEditLabelBox(${target.attr('id')})`);
 
   target.addClass('input');
 
@@ -568,40 +963,8 @@ function editLabel(target) {
   $('#edit').focus(); // move cursor to the end
   if (target.data('name') === 'dependency')
     $('#edit').select(); // highlight the current contents
+
+  gui.status.update();
 }
-
-function modify(id, attr, value) {
-
-  // check we don't have any whitespace
-  if (/\s+/g.test(value)) {
-    const message = 'ERROR: Unable to add changes with whitespace!  Try creating a new node first.';
-    log.error(message);
-    alert(message); // TODO: probably should streamline errors
-    gui.editing = null;
-    return;
-  }
-
-  const ana = manager.current.get(id);
-
-  ana[attr] = value;
-  manager.parse(manager.toString());
-}
-
-function addHead(srcId, tarId, dep='') {
-  const src = manager.current.get(srcId),
-    tar = manager.current.get(tarId);
-
-  tar.addHead(src, dep);
-  manager.parse(manager.toString());
-}
-
-function removeHead(srcId, tarId) {
-  const src = manager.current.get(srcId),
-    tar = manager.current.get(tarId);
-
-  src.removeHead(tar);
-  manager.parse(manager.toString());
-}
-
 
 module.exports = Graph;
