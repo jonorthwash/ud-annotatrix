@@ -420,7 +420,7 @@ class Labeler {
 
   update() {
 
-    if (!gui || !gui.inBrowser)
+    if (!gui || !gui.inBrowser || !manager.current.parsed)
       return;
 
     $('#label-clear-filter .label-text').addClass('disabled');

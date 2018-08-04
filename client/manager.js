@@ -32,9 +32,6 @@ class Manager {
     this.load();
 
     this.export = export_;
-
-    // save once every ? msecs
-    setInterval(() => this.save(), cfg.saveInterval);
   }
 
   reset() {
@@ -216,13 +213,7 @@ class Manager {
     this._sentences[index].update(text);
 
     const sent = this._sentences[index];
-    this.emit('update', {
-      type: 'modify',
-      index: index,
-      format: sent.format,
-      nx: sent.nx
-    });
-    gui.update();
+    this.onChange();
 
     return this.getSentence(index);
   }
@@ -309,6 +300,19 @@ class Manager {
 
 
   onChange() {
+    /*
+
+    this.emit('update', {
+      type: 'modify',
+      index: index,
+      format: sent.format,
+      nx: sent.nx
+    });
+    gui.update();
+    */
+    if (!this.current.parsed)
+      return;
+
     this.save();
     gui.update();
   }

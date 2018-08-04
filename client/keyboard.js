@@ -275,7 +275,10 @@ function keyup(gui, event) {
         //   parsing if we edit again w/in that 1-sec window
         clearTimeout(gui.parseTimer);
         gui.parseTimer = setTimeout(() => {
-          manager.parse($('#text-data').val());
+
+          if (manager.current.parsed)
+            manager.parse($('#text-data').val());
+            
         }, 1000);
         return;
     }

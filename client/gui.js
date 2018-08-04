@@ -25,7 +25,6 @@ class GUI {
 
     this.pan = this.pan || null;
     this.zoom = this.zoom || null;
-    this.graph_disabled = false;
     this.intercepted = false;
     this.moving_dependency = false;
     this.editing = null;
@@ -155,9 +154,10 @@ class GUI {
     this.menu.update();
 
     // textarea
-    $('#text-data')
-      .removeClass('readonly')
-      .val(manager.toString());
+    if (manager.current.parsed)
+      $('#text-data')
+        .removeClass('readonly')
+        .val(manager.toString());
 
     // navigation buttons
     $('.btn, .dropdown-group-item')
@@ -187,10 +187,18 @@ class GUI {
     $('#btnUndo').prop('disabled', !undoManager.hasUndo());
     $('#btnRedo').prop('disabled', !undoManager.hasRedo());
 
-    $('.nav-link')
-      .removeClass('active')
-      .filter(`[name="${manager.format}"]`)
-      .addClass('active');
+    if (manager.current.parsed) {
+
+      $('.nav-link')
+        .removeClass('active')
+        .filter(`[name="${manager.format}"]`)
+        .addClass('active');
+
+    } else {
+
+      $('.nav-link').removeClass('active');
+
+    }
 
     $('.tab-warning').hide();
     if (manager.current.conversion_warning)
@@ -313,6 +321,10 @@ class GUI {
     $('.format-tab').click(e => {
 
       manager.current.format = $(e.target).attr('name');
+
+      if (!manager.current.parsed)
+        manager.current.update($('#text-data').val());
+
       this.update();
 
     });
@@ -340,6 +352,19 @@ class GUI {
     window.onbeforeunload = e => manager.save();
 
     $('#edit').click(e => { this.intercepted = true; });
+    $('#parse-status').click(e => {
+
+      if (manager.current.parsed) {
+
+        manager.current.parsed = false;
+        this.update();
+
+      } else {
+
+        manager.parse($('#text-data').val());
+
+      }
+    });
   }
 
   get is_table_view() {

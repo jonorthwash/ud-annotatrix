@@ -28,10 +28,8 @@ function encode(serial, options) {
     if (e instanceof nx.NotatrixError) {
 
       console.log(e);
-      return {
-        format: 'plain text',
-        sent: new nx.Sentence('', options),
-      }
+      gui.status.error('Unable to interpret input, disabling autoparsing and unsyncing')
+      return null;
 
     } else {
 
@@ -54,9 +52,7 @@ function detectFormat(serial, options) {
 
   if (formats.length === 0) {
 
-    status.error('Unable to interpret input');
-    serial = '';
-    return 'plain text';
+    throw new nx.NotatrixError('Unable to interpret input');
 
   } else if (formats.indexOf('notatrix serial') > -1) {
 
@@ -97,11 +93,23 @@ class Sentence {
   constructor(serial, options) {
 
     const encoded = encode(serial, options);
-    console.log('encoded', encoded);
-    this.format = encoded.format;
-    this._nx = encoded.sent;
-    this.conversion_warning = null;
 
+    if (encoded) {
+
+      this.parsed = true;
+      this.format = encoded.format;
+      this._nx = encoded.sent;
+
+    } else {
+
+      gui.status.error('')
+      this.parsed = false;
+      this.format = null;
+      this._nx = null;
+
+    }
+
+    this.conversion_warning = null;
     this.is_table_view = false;
     this.column_visibilities = new Array(10).fill(true);
 
@@ -110,6 +118,9 @@ class Sentence {
   }
 
   toString(format) {
+
+    if (!this.parsed)
+      throw new Error('cannot cast unparsed text to string');
 
     format = format || this.format;
 
@@ -141,19 +152,32 @@ class Sentence {
 
     try {
 
+      if (!this.parsed)
+        throw new Error();
+
       this._nx.update(serial, options);
 
     } catch (e) {
 
       const encoded = encode(serial, options);
-      this._nx = encoded.sent;
-      this.format = encoded.format;
 
+      if (encoded) {
+
+        this.parsed = true;
+        this._nx = encoded.sent;
+        this.format = encoded.format;
+        labeler.parse(this._nx.comments);
+
+      } else {
+
+        this.parsed = false;
+        this._nx = null;
+        this.format = null;
+
+      }
     }
 
-    labeler.parse(this._nx.comments);
     return this;
-
   }
 
   clear() {

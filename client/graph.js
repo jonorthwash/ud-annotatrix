@@ -374,7 +374,7 @@ class Graph {
   }
 
   update() {
-    if (gui.graph_disabled)
+    if (!manager.current.parsed)
       return;
 
     this.options.layout = {

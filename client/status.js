@@ -15,12 +15,12 @@ function normal(text) {
   if (!gui.inBrowser)
     return null;
 
-  const div = Status(`| ${text}`, false)
+  const div = Status(text, false)
     .fadeOut(cfg.statusNormalFadeout);
 
   $('#status-container .flowing').prepend(div);
 
-  setTimeout(div.detach, cfg.statusNormalFadeout);
+  setTimeout(() => div.detach(), cfg.statusNormalFadeout);
 }
 
 function error(text) {
@@ -28,22 +28,43 @@ function error(text) {
   if (!gui.inBrowser)
     return null;
 
-  const div = Status(`| Error: ${text}`, true)
+  const div = Status(`Error: ${text}`, true)
     .fadeOut(cfg.statusErrorFadeout);
 
   $('#status-container .flowing').prepend(div);
 
-  setTimeout(div.detach, cfg.statusErrorFadeout);
+  setTimeout(() => div.detach(), cfg.statusErrorFadeout);
 }
 
 function update() {
 
-  const current = $('#current-status');
+  const parse = $('#parse-status')
+    .removeClass('red green');
+
+  const graph = $('#graph-status');
+
+  if (manager.current.parsed) {
+
+    parse
+      .addClass('green')
+      .text('auto');
+
+  } else {
+
+    parse
+      .addClass('red')
+      .text('off');
+
+    graph
+      .addClass('red')
+      .text('blocked');
+
+  }
 
   try {
     if (!cy.elements().length) {
 
-      current.text('uninitialized');
+      graph.text('uninitialized');
       return;
     }
   } catch (e) { }
@@ -51,23 +72,23 @@ function update() {
   // set the status now that we're sure we have a graph
   if (cy.$('.splitting').length) {
 
-    current.text('splitting node');
+    graph.text('splitting node');
 
   } else if (cy.$('.merge-source').length) {
 
-    current.text('merging tokens');
+    graph.text('merging tokens');
 
   } else if (cy.$('.combine-source').length) {
 
-    current.text('forming multiword token');
+    graph.text('forming multiword token');
 
   } else if (!gui.editing) {
 
-    current.text('viewing');
+    graph.text('viewing');
 
   } else {
 
-    current.text('editing ' + gui.editing.data('name'));
+    graph.text('editing ' + gui.editing.data('name'));
 
   }
 }
