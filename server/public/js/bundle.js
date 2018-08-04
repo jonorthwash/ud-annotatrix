@@ -31326,7 +31326,13 @@ var Graph = function () {
           cy.$('.arc-target').removeClass('arc-target');
           cy.$('.selected').removeClass('selected');
 
-          if (target.hasClass('activated')) {
+          if (target.hasClass('merge-right') || target.hasClass('merge-left')) {
+
+            _this.merge(cy.$('.merge-source').data('token'), target.data('token'));
+          } else if (target.hasClass('combine-right') || target.hasClass('combine-left')) {
+
+            _this.combine(cy.$('.combine-source').data('token'), target.data('token'));
+          } else if (target.hasClass('activated')) {
 
             gui.intercepted = false;
             _this.clear();
@@ -31592,7 +31598,7 @@ var Graph = function () {
   }, {
     key: 'update',
     value: function update() {
-      if (gui.graph_disabled) return;
+      if (!manager.current.parsed) return;
 
       this.options.layout = {
         name: 'tree',
@@ -31698,6 +31704,8 @@ var Graph = function () {
 
       $('#mute').removeClass('activated');
       $('#edit').removeClass('activated');
+
+      gui.status.update();
     }
   }, {
     key: 'save',
@@ -31727,7 +31735,7 @@ var Graph = function () {
         } else {
 
           token[attr] = _value;
-          send();
+          manager.onChange();
         }
       }
 
@@ -31758,7 +31766,7 @@ var Graph = function () {
         }
       }
 
-      send();
+      manager.onChange();
 
       /*
       undoManager.add({
@@ -31812,7 +31820,7 @@ var Graph = function () {
         }
       }
 
-      send();
+      manager.onChange();
     }
   }, {
     key: 'removeDependency',
@@ -31835,7 +31843,7 @@ var Graph = function () {
         }
       }
 
-      send();
+      manager.onChange();
     }
   }, {
     key: 'setRoot',
@@ -31861,7 +31869,7 @@ var Graph = function () {
         }
       }
 
-      send();
+      manager.onChange();
     }
   }, {
     key: 'flashTokenSplitInput',
@@ -31888,7 +31896,7 @@ var Graph = function () {
         }
       }
 
-      send();
+      manager.onChange();
     }
   }, {
     key: 'splitSuperToken',
@@ -31907,7 +31915,7 @@ var Graph = function () {
         }
       }
 
-      send();
+      manager.onChange();
     }
   }, {
     key: 'combine',
@@ -31926,7 +31934,7 @@ var Graph = function () {
         }
       }
 
-      send();
+      manager.onChange();
     }
   }, {
     key: 'merge',
@@ -31945,7 +31953,7 @@ var Graph = function () {
         }
       }
 
-      send();
+      manager.onChange();
 
       /*
        function mergeNodes(direction) {
@@ -32139,11 +32147,8 @@ function showEditLabelBox(target) {
 
   $('#edit').focus(); // move cursor to the end
   if (target.data('name') === 'dependency') $('#edit').select(); // highlight the current contents
-}
 
-function send() {
-  manager.save();
-  gui.update();
+  gui.status.update();
 }
 
 module.exports = Graph;
@@ -32165,6 +32170,7 @@ var setupUndos = require('./undo-manager');
 var table = require('./table');
 var storage = require('./local-storage');
 var keys = require('./keyboard');
+var status = require('./status');
 
 var pressed = {}; // used for onCtrlKeyup
 
@@ -32182,7 +32188,6 @@ var GUI = function () {
 
     this.pan = this.pan || null;
     this.zoom = this.zoom || null;
-    this.graph_disabled = false;
     this.intercepted = false;
     this.moving_dependency = false;
     this.editing = null;
@@ -32198,6 +32203,7 @@ var GUI = function () {
       this.keys = keys;
       this.menu = new Menu(this);
       this.modals = require('./modals/index');
+      this.status = status;
     }
 
     this.toggle = {
@@ -32275,7 +32281,7 @@ var GUI = function () {
       this.menu.update();
 
       // textarea
-      $('#text-data').removeClass('readonly').val(manager.toString());
+      if (manager.current.parsed) $('#text-data').removeClass('readonly').val(manager.toString());
 
       // navigation buttons
       $('.btn, .dropdown-group-item').removeClass('disabled').prop('disabled', false);
@@ -32295,7 +32301,13 @@ var GUI = function () {
       $('#btnUndo').prop('disabled', !undoManager.hasUndo());
       $('#btnRedo').prop('disabled', !undoManager.hasRedo());
 
-      $('.nav-link').removeClass('active').filter('[name="' + manager.format + '"]').addClass('active');
+      if (manager.current.parsed) {
+
+        $('.nav-link').removeClass('active').filter('[name="' + manager.format + '"]').addClass('active');
+      } else {
+
+        $('.nav-link').removeClass('active');
+      }
 
       $('.tab-warning').hide();
       if (manager.current.conversion_warning) $('.format-tab[name="' + manager.current.format + '"] .tab-warning').show().attr('title', manager.current.conversion_warning);
@@ -32336,6 +32348,7 @@ var GUI = function () {
       }
       labeler.update();
       graph.update();
+      this.status.update();
     }
   }, {
     key: 'bind',
@@ -32411,6 +32424,9 @@ var GUI = function () {
       $('.format-tab').click(function (e) {
 
         manager.current.format = $(e.target).attr('name');
+
+        if (!manager.current.parsed) manager.current.update($('#text-data').val());
+
         _this2.update();
       });
 
@@ -32455,6 +32471,17 @@ var GUI = function () {
 
       $('#edit').click(function (e) {
         _this2.intercepted = true;
+      });
+      $('#parse-status').click(function (e) {
+
+        if (manager.current.parsed) {
+
+          manager.current.parsed = false;
+          _this2.update();
+        } else {
+
+          manager.parse($('#text-data').val());
+        }
       });
     }
   }, {
@@ -32529,7 +32556,7 @@ var GUI = function () {
 
 module.exports = GUI;
 
-},{"./dropdown-menu":6,"./errors":7,"./funcs":9,"./keyboard":13,"./local-storage":15,"./modals/index":18,"./table":27,"./undo-manager":35,"jquery":396,"underscore":501}],12:[function(require,module,exports){
+},{"./dropdown-menu":6,"./errors":7,"./funcs":9,"./keyboard":13,"./local-storage":15,"./modals/index":18,"./status":26,"./table":27,"./undo-manager":35,"jquery":396,"underscore":501}],12:[function(require,module,exports){
 'use strict';
 
 require('babel-polyfill');
@@ -32581,6 +32608,7 @@ var KEYS = {
   I: 73,
   J: 74,
   K: 75,
+  L: 76,
   M: 77,
   P: 80,
   R: 82,
@@ -32588,7 +32616,8 @@ var KEYS = {
   X: 88,
   Y: 89,
   Z: 90,
-  0: 48
+  0: 48,
+  QUESTION_MARK: 191
 };
 
 var pressed = new Set();
@@ -32605,25 +32634,28 @@ function keyup(gui, event) {
   // catch CTRL+<key> sequence first
   if (pressed.has(KEYS.CTRL)) {
 
-    if (pressed.has(KEYS.PAGE_DOWN)) {
+    if (event.which === KEYS.PAGE_DOWN) {
       if (pressed.has(KEYS.SHIFT)) {
         manager.last();
       } else {
         manager.next();
       }
       return;
-    } else if (pressed.has(KEYS.PAGE_UP)) {
+    } else if (event.which === KEYS.PAGE_UP) {
       if (pressed.has(KEYS.SHIFT)) {
         manager.first();
       } else {
         manager.prev();
       }
       return;
-    } else if (pressed.has(KEYS.Z) && !pressed.has(KEYS.SHIFT)) {
+    } else if (event.which === KEYS.Z && !pressed.has(KEYS.SHIFT)) {
       undoManager.undo();
       return;
-    } else if (pressed.has(KEYS.Y) || pressed.has(KEYS.Z)) {
+    } else if (event.which === KEYS.Y || pressed.has(KEYS.Z)) {
       undoManager.redo();
+      return;
+    } else if (event.which === KEYS.L) {
+      $('#label-input').focus();
       return;
     } else if (47 < event.which && event.which < 58) {
       // key in 0-9
@@ -32632,6 +32664,109 @@ function keyup(gui, event) {
       cy.zoom(Math.pow(1.5, num - 5));
       gui.update();
       return;
+    }
+  }
+
+  if ($(':focus').is('.conllu-table')) {
+    var goRight = function goRight(ele) {
+
+      var rows = $('#table-data').find('tr').length - 1;
+      var row = parseInt(td.attr('row-id'));
+      var col = parseInt(td.attr('col-id')) + 1;
+
+      if (col === 10) {
+        row += 1;
+        col = 1;
+      }
+      if (row === rows) row = 0;
+
+      var next = $('td.conllu-table[row-id = "' + row + '"][col-id = "' + col + '"]');
+      setTimeout(function () {
+        return next.focus();
+      }, 200);
+    };
+
+    var goLeft = function goLeft(ele) {
+
+      var rows = $('#table-data').find('tr').length - 1;
+      var row = parseInt(td.attr('row-id'));
+      var col = parseInt(td.attr('col-id')) - 1;
+
+      if (col === 0) {
+        row -= 1;
+        col = 9;
+      }
+      if (row === -1) row = rows - 1;
+
+      var next = $('td.conllu-table[row-id = "' + row + '"][col-id = "' + col + '"]');
+      setTimeout(function () {
+        return next.focus();
+      }, 200);
+    };
+
+    var goUp = function goUp(ele) {
+
+      var rows = $('#table-data').find('tr').length - 1;
+      var row = parseInt(td.attr('row-id')) - 1;
+      var col = parseInt(td.attr('col-id'));
+
+      if (row === -1) row = rows - 1;
+
+      var next = $('td.conllu-table[row-id = "' + row + '"][col-id = "' + col + '"]');
+      setTimeout(function () {
+        return next.focus();
+      }, 200);
+    };
+
+    var goDown = function goDown(ele) {
+
+      var rows = $('#table-data').find('tr').length - 1;
+      var row = parseInt(td.attr('row-id')) - 1;
+      var col = parseInt(td.attr('col-id'));
+
+      if (row === rows) row = 0;
+
+      var next = $('td.conllu-table[row-id = "' + row + '"][col-id = "' + col + '"]');
+      setTimeout(function () {
+        return next.focus();
+      }, 200);
+    };
+
+    var td = $(':focus');
+
+    switch (event.which) {
+      case KEYS.ENTER:
+        td.blur();
+        return;
+
+      case KEYS.TAB:
+        if (pressed.has(KEYS.SHIFT)) {
+          goLeft(td);
+        } else {
+          goRight(td);
+        }
+        return;
+
+      case KEYS.UP:
+        if (pressed.has(KEYS.CTRL)) goUp(td);
+        return;
+
+      case KEYS.DOWN:
+        if (pressed.has(KEYS.CTRL)) goDown(td);
+        return;
+
+      case KEYS.LEFT:
+        if (pressed.has(KEYS.CTRL)) goLeft(td);
+        return;
+
+      case KEYS.RIGHT:
+        if (pressed.has(KEYS.CTRL)) goRight(td);
+        return;
+
+      case KEYS.ESC:
+        var originalValue = td.attr('original-value') || '';
+        td.text(originalValue).blur();
+        return;
     }
   }
 
@@ -32714,7 +32849,8 @@ function keyup(gui, event) {
         //   parsing if we edit again w/in that 1-sec window
         clearTimeout(gui.parseTimer);
         gui.parseTimer = setTimeout(function () {
-          manager.parse($('#text-data').val());
+
+          if (manager.current.parsed) manager.parse($('#text-data').val());
         }, 1000);
         return;
     }
@@ -32760,6 +32896,7 @@ function keyup(gui, event) {
 
         graph.splitSuperToken(superToken);
       }
+      gui.status.update();
       return;
 
     case KEYS.M:
@@ -32783,6 +32920,7 @@ function keyup(gui, event) {
         var right = graph.getRightForm();
         if (!right.hasClass('activated') && right.data('type') === 'token') right.addClass('neighbor').addClass('merge-right');
       }
+      gui.status.update();
       return;
 
     case KEYS.C:
@@ -32805,6 +32943,7 @@ function keyup(gui, event) {
         var _right = graph.getRightForm();
         if (!_right.hasClass('activated') && _right.data('type') === 'token') _right.addClass('neighbor').addClass('combine-right');
       }
+      gui.status.update();
       return;
 
     case KEYS.LEFT:
@@ -32868,6 +33007,10 @@ function keyup(gui, event) {
 
     case KEYS.ESC:
       graph.clear();
+      return;
+
+    case KEYS.QUESTION_MARK:
+      console.log('help modal not implemented :(');
       return;
 
   }
@@ -33337,7 +33480,7 @@ var Labeler = function () {
     value: function update() {
       var _this3 = this;
 
-      if (!gui || !gui.inBrowser) return;
+      if (!gui || !gui.inBrowser || !manager.current.parsed) return;
 
       $('#label-clear-filter .label-text').addClass('disabled');
       if (this._filter.size) $('#label-clear-filter .label-text').removeClass('disabled');
@@ -33367,7 +33510,7 @@ var Labeler = function () {
         return comment;
       });
 
-      if (!done) manager.getSentence(index).push(new nx.Comment('labels = ' + name));
+      if (!done) manager.getSentence(index).comments.push(new nx.Comment(manager.current._nx, 'labels = ' + name));
     }
   }, {
     key: 'removeInComments',
@@ -33724,8 +33867,6 @@ var Socket = require('./socket');
 
 var Manager = function () {
   function Manager() {
-    var _this = this;
-
     _classCallCheck(this, Manager);
 
     funcs.global().manager = this;
@@ -33739,11 +33880,6 @@ var Manager = function () {
     this.load();
 
     this.export = export_;
-
-    // save once every ? msecs
-    setInterval(function () {
-      return _this.save();
-    }, cfg.saveInterval);
   }
 
   _createClass(Manager, [{
@@ -33767,7 +33903,7 @@ var Manager = function () {
   }, {
     key: 'updateFilter',
     value: function updateFilter() {
-      var _this2 = this;
+      var _this = this;
 
       this._filtered = [];
       this._filterIndex = -1;
@@ -33775,13 +33911,13 @@ var Manager = function () {
         labeler._filter.forEach(function (name) {
 
           // ones that have this label
-          if (labeler.has(i, name) && _this2._filtered.indexOf(i) === -1) {
+          if (labeler.has(i, name) && _this._filtered.indexOf(i) === -1) {
 
             // save to array
-            _this2._filtered.push(i);
+            _this._filtered.push(i);
 
             // keep counting up for the _filterIndex
-            if (i <= _this2.index) _this2._filterIndex++;
+            if (i <= _this.index) _this._filterIndex++;
           }
         });
       });
@@ -33868,13 +34004,7 @@ var Manager = function () {
       this._sentences[index].update(text);
 
       var sent = this._sentences[index];
-      this.emit('update', {
-        type: 'modify',
-        index: index,
-        format: sent.format,
-        nx: sent.nx
-      });
-      gui.update();
+      this.onChange();
 
       return this.getSentence(index);
     }
@@ -33957,9 +34087,26 @@ var Manager = function () {
       return this.removeSentence(Infinity);
     }
   }, {
+    key: 'onChange',
+    value: function onChange() {
+      /*
+       this.emit('update', {
+        type: 'modify',
+        index: index,
+        format: sent.format,
+        nx: sent.nx
+      });
+      gui.update();
+      */
+      if (!this.current.parsed) return;
+
+      this.save();
+      gui.update();
+    }
+  }, {
     key: 'parse',
     value: function parse(text) {
-      var _this3 = this;
+      var _this2 = this;
 
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
@@ -33972,7 +34119,7 @@ var Manager = function () {
 
       // iterate over all elements except the first
       _.each(splitted, function (split, i) {
-        if (i) _this3.insertSentence(index + i, split);
+        if (i) _this2.insertSentence(index + i, split);
       });
       gui.update();
       return this; // chaining
@@ -34090,13 +34237,13 @@ var Manager = function () {
   }, {
     key: 'corpus',
     get: function get() {
-      var _this4 = this;
+      var _this3 = this;
 
       var fileHeader = cfg.downloadHasFileHeader ? '# __ud_annotatrix_filename__ = "' + this.filename + '"\n# __ud_annotatrix_timestamp__ = "' + new Date() + '"\n# __ud_annotatrix_version__ = "' + cfg.version + '"\n' : '';
 
       var sentences = this.map(function (i, sent) {
-        var sentenceHeader = cfg.downloadHasSentenceHeader ? '# __ud_annotatrix_id__ = "' + (i + 1) + '"\n# __ud_annotatrix_format__ = "' + _this4.format + '"\n' : '';
-        var content = _this4.format === 'Unknown' ? '' : _this4.sentence;
+        var sentenceHeader = cfg.downloadHasSentenceHeader ? '# __ud_annotatrix_id__ = "' + (i + 1) + '"\n# __ud_annotatrix_format__ = "' + _this3.format + '"\n' : '';
+        var content = _this3.format === 'Unknown' ? '' : _this3.sentence;
 
         return '' + sentenceHeader + content;
       }).join('\n\n');
@@ -35276,10 +35423,8 @@ function encode(serial, options) {
     if (e instanceof nx.NotatrixError) {
 
       console.log(e);
-      return {
-        format: 'plain text',
-        sent: new nx.Sentence('', options)
-      };
+      gui.status.error('Unable to interpret input, disabling autoparsing and unsyncing');
+      return null;
     } else {
 
       throw e;
@@ -35299,9 +35444,7 @@ function detectFormat(serial, options) {
 
   if (formats.length === 0) {
 
-    status.error('Unable to interpret input');
-    serial = '';
-    return 'plain text';
+    throw new nx.NotatrixError('Unable to interpret input');
   } else if (formats.indexOf('notatrix serial') > -1) {
 
     return 'notatrix serial';
@@ -35333,11 +35476,21 @@ var Sentence = function () {
     _classCallCheck(this, Sentence);
 
     var encoded = encode(serial, options);
-    console.log('encoded', encoded);
-    this.format = encoded.format;
-    this._nx = encoded.sent;
-    this.conversion_warning = null;
 
+    if (encoded) {
+
+      this.parsed = true;
+      this.format = encoded.format;
+      this._nx = encoded.sent;
+    } else {
+
+      gui.status.error('');
+      this.parsed = false;
+      this.format = null;
+      this._nx = null;
+    }
+
+    this.conversion_warning = null;
     this.is_table_view = false;
     this.column_visibilities = new Array(10).fill(true);
 
@@ -35347,6 +35500,8 @@ var Sentence = function () {
   _createClass(Sentence, [{
     key: 'toString',
     value: function toString(format) {
+
+      if (!this.parsed) throw new Error('cannot cast unparsed text to string');
 
       format = format || this.format;
 
@@ -35373,15 +35528,27 @@ var Sentence = function () {
 
       try {
 
+        if (!this.parsed) throw new Error();
+
         this._nx.update(serial, options);
       } catch (e) {
 
         var encoded = encode(serial, options);
-        this._nx = encoded.sent;
-        this.format = encoded.format;
+
+        if (encoded) {
+
+          this.parsed = true;
+          this._nx = encoded.sent;
+          this.format = encoded.format;
+          labeler.parse(this._nx.comments);
+        } else {
+
+          this.parsed = false;
+          this._nx = null;
+          this.format = null;
+        }
       }
 
-      labeler.parse(this._nx.comments);
       return this;
     }
   }, {
@@ -35730,25 +35897,75 @@ function normal(text) {
 
   if (!gui.inBrowser) return null;
 
-  var div = Status(text, false);
-  $('.status-container').prepend(div);
-  div.fadeOut(cfg.statusNormalFadeout);
-  setTimeout(div.detach, cfg.statusNormalFadeout);
+  var div = Status(text, false).fadeOut(cfg.statusNormalFadeout);
+
+  $('#status-container .flowing').prepend(div);
+
+  setTimeout(function () {
+    return div.detach();
+  }, cfg.statusNormalFadeout);
 }
 
 function error(text) {
 
   if (!gui.inBrowser) return null;
 
-  var div = Status(text, true);
-  $('.status-container').prepend(div);
-  div.fadeOut(cfg.statusErrorFadeout);
-  setTimeout(div.detach, cfg.statusErrorFadeout);
+  var div = Status('Error: ' + text, true).fadeOut(cfg.statusErrorFadeout);
+
+  $('#status-container .flowing').prepend(div);
+
+  setTimeout(function () {
+    return div.detach();
+  }, cfg.statusErrorFadeout);
+}
+
+function update() {
+
+  var parse = $('#parse-status').removeClass('red green');
+
+  var graph = $('#graph-status');
+
+  if (manager.current.parsed) {
+
+    parse.addClass('green').text('auto');
+  } else {
+
+    parse.addClass('red').text('off');
+
+    graph.addClass('red').text('blocked');
+  }
+
+  try {
+    if (!cy.elements().length) {
+
+      graph.text('uninitialized');
+      return;
+    }
+  } catch (e) {}
+
+  // set the status now that we're sure we have a graph
+  if (cy.$('.splitting').length) {
+
+    graph.text('splitting node');
+  } else if (cy.$('.merge-source').length) {
+
+    graph.text('merging tokens');
+  } else if (cy.$('.combine-source').length) {
+
+    graph.text('forming multiword token');
+  } else if (!gui.editing) {
+
+    graph.text('viewing');
+  } else {
+
+    graph.text('editing ' + gui.editing.data('name'));
+  }
 }
 
 module.exports = {
   normal: normal,
-  error: error
+  error: error,
+  update: update
 };
 
 },{"./config":3,"jquery":396}],27:[function(require,module,exports){
@@ -35760,12 +35977,13 @@ var validate = require('./validate');
 function build() {
   $('#table-data tbody').empty();
 
-  manager.current.forEach(function (token, i) {
-    var tr = $('<tr>').attr('id', 'table_' + i);
+  var i = 0;
+  manager.current._nx.iterate(function (token) {
+    var tr = $('<tr>').attr('tabindex', '-1').attr('id', 'table_' + i);
 
     $.each(['id', 'form', 'lemma', 'upostag', 'xpostag', 'feats', 'head', 'deprel', 'deps', 'misc'], function (j, field) {
 
-      var value = token.analysis[field];
+      var value = field === 'id' ? token.indices.conllu : token[field];
 
       var valid = {},
           td = $('<td>'),
@@ -35777,13 +35995,7 @@ function build() {
         if (j === 7) valid = validate.is_udeprel(value);
       }
 
-      td.prop('contenteditable', true).attr('row-id', i).attr('col-id', j).attr('tok-id', token.analysis.id).attr('field', field).attr('name', j === 0 ? 'index' : 'content').css('visibility', gui.column_visible(j) ? 'visible' : 'hidden').blur(edit).keyup(function (event) {
-        if (event.which === gui.keys.ESC) {
-          $(event.target).blur();
-        } else if (event.which === gui.keys.ENTER) {
-          gui.onEnter(event);
-        }
-      });
+      td.prop('contenteditable', true).addClass('conllu-table').attr('tabindex', '-1').attr('row-id', i).attr('col-id', j).attr('num', 10 * i + j).attr('uuid', token.uuid).attr('field', field).attr('original-value', value).attr('name', j === 0 ? 'index' : 'content').css('visibility', gui.column_visible(j) ? 'visible' : 'hidden').blur(edit);
 
       inputSpan.text(value);
 
@@ -35800,19 +36012,25 @@ function build() {
     });
 
     $('#table-data tbody').append(tr);
+    i++;
   });
 }
 
 function edit(event) {
 
   var target = $(event.target),
-      id = target.attr('tok-id'),
-      ana = manager.current.getById(id),
+      uuid = target.attr('uuid'),
+      token = manager.current._nx.query(function (t) {
+    return t.uuid === uuid;
+  })[0],
       field = target.attr('field'),
-      value = target.text();
+      originalValue = target.attr('original-value') || '',
+      value = target.text() || '';
 
-  ana[field] = value;
-  gui.update();
+  if (value === originalValue) return;
+
+  token[field] = value;
+  manager.onChange();
 }
 
 module.exports = {

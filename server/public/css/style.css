@@ -801,6 +801,11 @@ td .parse-error {
   margin-bottom: 1ex;
 }
 
+#top-buttons-container {
+  border: 1px solid #ddd;
+  border-top: 0;
+}
+
 .readonly:after {
   content: " (readonly)"
 }
@@ -1020,9 +1025,15 @@ span.dropdown-group-item-name i {
   text-decoration: none;
 }
 
-.status-container {
+#status-container {
+  position: absolute;
+  bottom: 4px;
+  left: 15px;
+  right: 15px;
+  overflow-x: scroll;
+
   display: flex;
-  max-width: 75ch;
+  max-width: 90%;
 }
 
 .status {
@@ -1031,6 +1042,7 @@ span.dropdown-group-item-name i {
   align-items: center;
   font-weight: bold;
   margin-right: 0.5em;
+  white-space: nowrap;
 }
 
 .status.error {
@@ -1131,4 +1143,16 @@ span.dropdown-group-item-name i {
 
 #currently-online-list {
   display: none;
+}
+
+.green {
+  color: #0d2;
+}
+
+.red {
+  color: #d02;
+}
+
+#parse-status {
+  cursor: pointer;
 }
