@@ -4,14 +4,12 @@ const _ = require('underscore');
 const nx = require('notatrix');
 const errors = require('./errors');
 const status = require('./status');
+const funcs = require('./funcs');
 
 function encode(serial, options) {
   try {
 
     let format = detectFormat(serial, options)
-
-    if (format === 'notatrix serial')
-      format = 'CoNLL-U';
 
     options = _.extend({
       interpretAs: format,
@@ -27,6 +25,7 @@ function encode(serial, options) {
 
     if (e instanceof nx.NotatrixError) {
 
+      //debugger;
       console.log(e);
       gui.status.error('Unable to interpret input, disabling autoparsing and unsyncing')
       return null;
@@ -51,7 +50,6 @@ function detectFormat(serial, options) {
   });
 
   if (formats.length === 0) {
-
     throw new nx.NotatrixError('Unable to interpret input');
 
   } else if (formats.indexOf('notatrix serial') > -1) {
@@ -110,8 +108,10 @@ class Sentence {
     }
 
     this.conversion_warning = null;
-    this.is_table_view = false;
     this.column_visibilities = new Array(10).fill(true);
+    this.is_table_view = false;
+    this.is_ltr = true;
+    this.is_vertical = false;
 
     labeler.parse(this._nx.comments);
 
@@ -122,6 +122,8 @@ class Sentence {
     if (!this.parsed)
       throw new Error('cannot cast unparsed text to string');
 
+    if (this.format === 'notatrix serial')
+      this.format = 'plain text';
     format = format || this.format;
 
     try {
@@ -218,22 +220,31 @@ class Sentence {
   }
 
   get state() {
-    return {
-      column_visibilities: this.column_visibilities,
-      format: this.format,
-      is_table_view: this.is_table_view,
-      nx: this._nx.to.notatrixSerial,
-      input: this._input
-    };
+
+    const state = this._nx.serialize();
+    state.meta.format = this.format;
+    state.meta.is_table_view = gui.is_table_view;
+    state.meta.is_ltr = gui.is_ltr;
+    state.meta.is_vertical = gui.is_vertical;
+    state.meta.column_visibilities = this.column_visibilities;
+    state.meta.pan = gui.pan;
+    state.meta.zoom = gui.zoom;
+
+    return state;
   }
 
   set state(state) {
 
-    this._input = state.input;
-    this.column_visibilities = state.column_visibilities;
-    this.format = state.format;
-    this.is_table_view = state.is_table_view;
-    this._nx = new nx.Sentence(state.nx);
+    const options = _.defaults(state.options, manager.options);
+    this.update(state, options);
+    this.format = state.meta.format || this.format;
+    this.column_visibilities = state.meta.column_visibilities || this.column_visibilities;
+    this.is_table_view = state.meta.is_table_view || this.is_table_view;
+    this.is_ltr = state.meta.is_ltr || this.is_ltr;
+    this.is_vertical = state.meta.is_vertical || this.is_vertical;
+
+    gui.pan = state.meta.pan;
+    gui.zoom = state.meta.zoom;
 
     return this;
   }

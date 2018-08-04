@@ -15,7 +15,7 @@ const nocache = require('nocache');
 const session = require('express-session');
 const MemoryStore = new session.MemoryStore();
 app.use(morgan(cfg.environment === 'development' ? 'dev' : 'tiny'));
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '500mb' }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(fileUpload());

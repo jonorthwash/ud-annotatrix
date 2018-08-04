@@ -36,12 +36,14 @@ class Manager {
 
   reset() {
     this.filename = cfg.defaultFilename;
+    this.options = {};
 
     this._sentences = [];
     this._index = -1;
 
     this._filtered = [];
     this._filterIndex = null;
+    this.insertSentence();
   }
   get length() {
     return this._sentences.length;
@@ -366,47 +368,59 @@ class Manager {
 
   get state() {
     return {
+      index: this._index,
+      labeler: labeler.state,
+      options: this.options,
+      sentences: this._sentences.map(sent => sent.state),
       meta: {
-        current_index: this.index,
-        //owner: this.users.owner,
-        //github_url: this.users.github_url,
-        gui: gui.state,
-        labeler: labeler.state,
-        //permissions: this.users.permissions,
-        //editors: this.users.editors
+        pinned_menu_items: gui.menu.state,
+        is_textarea_visible: gui.is_textarea_visible,
+        is_label_bar_visible: gui.is_label_bar_visible,
+        filename: this.filename,
       },
-      sentences: this.map((i, sent) => sent.state)
     };
   }
 
   set state(state) {
 
     console.info('LOADING STATE', state);
-    this._index = state.meta.current_index;
-    this._sentences = state.sentences.map(state => {
 
-      let sent = new Sentence();
+    this.options = state.options;
+    this._sentences = state.sentences.map((state, i) => {
+
+      console.log('loading', i)
+      const sent = new Sentence();
       sent.state = state;
       return sent;
 
     });
+    this._index = state.index;
+
     if (!this.current)
       this.insertSentence(cfg.defaultSentence);
 
     // update users stuff
     //this.users.state = _.pick(state.meta, ['owner', 'github_url', 'permissions', 'editors']);
 
-    labeler.state = state.meta.labeler;
+    labeler.state = state.labeler;
     this.updateFilter(); // use the filters set in labeler
 
-    // this triggers a gui refresh
-    gui.state = state.meta.gui;
+    gui.menu.state = state.meta.pinned_menu_items;
+    gui.is_textarea_visible = state.meta.is_textarea_visible;
+    gui.is_label_bar_visible = state.meta.is_label_bar_visible;
+    this.filename = state.meta.filename;
 
+    gui.update();
   }
 
   save() {
 
     status.normal('saving...');
+
+    if (!manager.current || !manager.current.parsed) {
+      status.error('Unable to save: no current parsed sentence')
+      return;
+    }
 
     const state = JSON.stringify(this.state);
 

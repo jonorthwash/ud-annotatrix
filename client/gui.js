@@ -18,9 +18,7 @@ class GUI {
   constructor() {
 
     this.is_textarea_visible = true;
-    this.are_labels_visible = true;
-    this.is_vertical = false;
-    this.is_ltr = true;
+    this.is_label_bar_visible = true;
     this.readonly = false;
 
     this.pan = this.pan || null;
@@ -115,12 +113,13 @@ class GUI {
 
   }
 
+  /*
   get state() {
     return {
 
       menu:                this.menu ? this.menu.state : null,
       is_textarea_visible: this.is_textarea_visible,
-      are_labels_visible:  this.are_labels_visible,
+      is_label_bar_visible:  this.is_label_bar_visible,
       is_vertical:         this.is_vertical,
       is_ltr:              this.is_ltr,
       readonly:            this.readonly,
@@ -136,7 +135,7 @@ class GUI {
     this.menu.state = state.menu;
 
     this.is_textarea_visible = state.is_textarea_visible,
-    this.are_labels_visible  = state.are_labels_visible,
+    this.is_label_bar_visible  = state.is_label_bar_visible,
     this.is_vertical         = state.is_vertical;
     this.is_ltr              = state.is_ltr;
     this.readonly            = state.readonly;
@@ -146,6 +145,7 @@ class GUI {
 
     this.update();
   }
+  */
 
   update() {
     if (!this.inBrowser)
@@ -232,7 +232,7 @@ class GUI {
     }
 
     $('#label-container')
-      .css('display', this.are_labels_visible && this.is_textarea_visible
+      .css('display', this.is_label_bar_visible && this.is_textarea_visible
         ? 'flex'
         : 'none');
 
@@ -306,7 +306,7 @@ class GUI {
       if ($(e.target).is('.pin'))
         return;
 
-      this.are_labels_visible = !this.are_labels_visible;
+      this.is_label_bar_visible = !this.is_label_bar_visible;
       this.update();
     });
     $('[name="show-help"]').click(e => {
@@ -368,7 +368,7 @@ class GUI {
   }
 
   get is_table_view() {
-    return manager.current.is_table_view;
+    return manager.current ? manager.current.is_table_view : false;
   }
   set is_table_view(bool) {
 
@@ -377,6 +377,20 @@ class GUI {
       manager.current.is_table_view = bool;
 
     return manager.current.is_table_view;
+  }
+  get is_ltr() {
+    return manager.current ? manager.current.is_ltr : true;
+  }
+  set is_ltr(bool) {
+    if (manager.current)
+      manager.current.is_ltr = bool;
+  }
+  get is_vertical() {
+    return manager.current ? manager.current.is_vertical : false;
+  }
+  set is_vertical(bool) {
+    if (manager.current)
+      manager.current.is_vertical = bool;
   }
 
   column_visible(col, bool) {

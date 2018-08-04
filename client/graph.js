@@ -323,11 +323,10 @@ class Graph {
         );
 
         token.mapHeads(head => {
-          getDependencyEdge(format, head.token, token, head.deprel, this.progress);
 
-          progress.total += 1;
+          this.progress.total += 1;
           if (head.deprel && head.deprel !== '_')
-            progress.done += 1;
+            this.progress.done += 1;
 
           if (head.token.name === 'RootToken')
             return;

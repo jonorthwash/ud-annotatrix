@@ -67,7 +67,18 @@ module.exports = {
 
   getPresentUsers: room => {
     return Object.keys(room.users).length;
-  }
+  },
 
+  dedup: (master, slave) => {
+
+    let dedup = {};
+
+    _.each(slave, (value, key) => {
+      if (master[key] !== value)
+        dedup[key] = value;
+    });
+
+    return dedup;
+  },
 
 };

@@ -2,7 +2,7 @@
 
 const cfg = require('./config');
 const uuidv4 = require('uuid/v4');
-const CorpusDB = require('./models/corpus');
+const CorpusDB = require('./models/corpus-json');
 const request = require('request');
 const querystring = require('querystring');
 const upload = require('./upload');
@@ -80,13 +80,13 @@ module.exports = app => {
   // ---------------------------
   // core
   app.get('/', (req, res) => {
-    getTreebanksList((err, treebanks) => {
+    //getTreebanksList((err, treebanks) => {
       res.render('index.ejs', {
         base: `${cfg.protocol}://${cfg.host}:${cfg.port}`,
-        error: err,
-        treebanks: treebanks
+        error: null,//err,
+        treebanks: [],//treebanks
       });
-    });
+    //});
   });
   app.get('/help', (req, res) => res.render('help.ejs'));
   app.get('/annotatrix', (req, res) => {
@@ -118,7 +118,9 @@ module.exports = app => {
 
   app.post('/save', get_treebank, (req, res) => {
 
-    CorpusDB(req.treebank).save(req.body, err => {
+    console.log(req.body);
+    console.log(typeof req.body)
+    CorpusDB(req.treebank).save(null, req.body, err => {
       if (err)
         throw err;
 

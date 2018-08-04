@@ -495,7 +495,7 @@ class Labeler {
     });
 
     this._filter = new Set();
-    _.each(state.filter, name => {
+    state.filter.forEach(name => {
       this.addFilter(name);
     });
   }

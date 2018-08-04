@@ -6,34 +6,21 @@ const uuidv4 = require('uuid/v4');
 const request = require('request');
 
 const UploadError = require('./errors').UploadError;
-const CorpusDB = require('./models/corpus');
-const Logger = require('../client/node-logger');
-const Manager = require('../client/manager');
+const nx = require('notatrix');
+const CorpusDB = require('./models/corpus-json');
 
 
-function upload(treebank, contents, next) {
+function upload(treebank, filename, contents, next) {
 
+  console.log('uploading')
   try {
 
-    global.log = new Logger('SILENT');
-    global.server = null;
-    global.manager = new Manager();
-    manager.save = () => {}; // avoid autosave garbage
-    manager.emit = () => {};
-    manager.parse(contents);
-
-    CorpusDB(treebank).save(manager.state, next);
+    const corpus = nx.Corpus.fromString(contents);
+    return CorpusDB(treebank).save(filename, corpus.serialize(), next);
 
   } catch (e) {
 
     next(new UploadError(e.message));
-
-  } finally {
-
-    // clean up our global stuff
-    global.log = undefined;
-    global.server = undefined;
-    global.manager = undefined;
 
   }
 }
@@ -44,7 +31,7 @@ function fromFile(treebank, file, next) {
     return next(new UploadError(`No file provided.`));
 
   const contents = file.data.toString();
-  return upload(treebank, contents, next);
+  return upload(treebank, file.name, contents, next);
 
 }
 
@@ -57,7 +44,7 @@ function fromGitHub(treebank, url, next) {
     if (err)
       return next(err);
 
-    return upload(treebank, body, next);
+    return upload(treebank, null, body, next);
 
   });
 

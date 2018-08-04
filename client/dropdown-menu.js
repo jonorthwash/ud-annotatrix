@@ -123,21 +123,16 @@ class Menu {
   }
 
   get state() {
-    return {
-      is_visible: this.is_visible,
-      pinned:     this.pinned
-    };
+    return this.pinned;
   }
 
   set state(state) {
 
     this.reset();
-    if (!state)
-      return;
-
-    if (state)
-      this.pinned = state.pinned || this.pinned;
-
+    _.each(state, (bool, name) => {
+      this.pinned[name] = bool;
+    });
+    
   }
 }
 
