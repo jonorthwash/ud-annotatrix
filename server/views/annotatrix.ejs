@@ -68,7 +68,7 @@
 					<a class="btn btn-secondary dropdown-toggle" href="#"  id="btnMenuDropdown">
 						<i class="fa fa-bars" title="Click to see more"></i>
 					</a>
-					<div class="dropdown-content">
+					<div class="dropdown-content menu-hidden">
 						<ul>
 							<li class="dropdown-group" id="dropdown-user">
 								<% if (username && username.length) { %>
@@ -164,21 +164,21 @@
 								<span class="dropdown-group-title">
 									Export
 								</span>
-								<a class="dropdown-group-item pinnable" href="#" name="export-as-latex">
+								<a class="dropdown-group-item pinnable export-button" href="#" name="export-as-latex">
 									<span class="dropdown-group-item-name">
 										<i class="fa fa-file-code-o"></i>
 										as LaTeX
 									</span>
 									<i class="pin fa fa-thumb-tack" title="Pin to menu"></i>
 								</a>
-								<a class="dropdown-group-item pinnable" href="#" name="export-as-png">
+								<a class="dropdown-group-item pinnable export-button" href="#" name="export-as-png">
 									<span class="dropdown-group-item-name">
 										<i class="fa fa-image"></i>
 										as PNG
 									</span>
 									<i class="pin fa fa-thumb-tack" title="Pin to menu"></i>
 								</a>
-								<a class="dropdown-group-item pinnable" href="#" name="export-as-svg">
+								<a class="dropdown-group-item pinnable export-button" href="#" name="export-as-svg">
 									<span class="dropdown-group-item-name">
 										<i class="fa fa-codepen"></i>
 										as SVG
@@ -269,13 +269,13 @@
 				</div>
 
 				<div class="btn-group">
-					<a class="btn btn-secondary pinnable" href="#" name="export-as-latex">
+					<a class="btn btn-secondary pinnable export-button" href="#" name="export-as-latex">
 						<i class="fa fa-file-code-o" title="Export as LaTeX"></i>
 					</a>
-					<a class="btn btn-secondary pinnable" href="#" name="export-as-png">
+					<a class="btn btn-secondary pinnable export-button" href="#" name="export-as-png">
 						<i class="fa fa-image" title="Export as PNG"></i>
 					</a>
-					<a class="btn btn-secondary pinnable" href="#" name="export-as-svg">
+					<a class="btn btn-secondary pinnable export-button" href="#" name="export-as-svg">
 						<i class="fa fa-codepen" title="Export as SVG"></i>
 					</a>
 				</div>
@@ -379,30 +379,35 @@
 					<li class="nav-item">
 						<a href="#" class="nav-link format-tab" id="brackets-tab" name="Brackets">
 							Brackets
+							<i class="fa fa-exclamation-triangle tab-error red"></i>
 							<i class="fa fa-exclamation-triangle tab-warning"></i>
 						</a>
 					</li>
 					<li class="nav-item">
 						<a href="#" class="nav-link format-tab" id="cg3-tab" name="CG3">
 							CG3
+							<i class="fa fa-exclamation-triangle tab-error red"></i>
 							<i class="fa fa-exclamation-triangle tab-warning"></i>
 						</a>
 					</li>
 					<li class="nav-item">
 						<a href="#" class="nav-link format-tab" id="conllu-tab" name="CoNLL-U">
 							CoNLL-U
+							<i class="fa fa-exclamation-triangle tab-error red"></i>
 							<i class="fa fa-exclamation-triangle tab-warning"></i>
 						</a>
 					</li>
 					<li class="nav-item">
 						<a href="#" class="nav-link format-tab" id="plain-text-tab" name="plain text">
 							plain text
+							<i class="fa fa-exclamation-triangle tab-error red"></i>
 							<i class="fa fa-exclamation-triangle tab-warning"></i>
 						</a>
 					</li>
 					<li class="nav-item">
 						<a href="#" class="nav-link format-tab" id="sd-parse-tab" name="SD">
 							SDParse
+							<i class="fa fa-exclamation-triangle tab-error red"></i>
 							<i class="fa fa-exclamation-triangle tab-warning"></i>
 						</a>
 					</li>
@@ -498,7 +503,7 @@
 			<div class="graph-btn-group">
 
 				<div class="btn-group ml-sx-auto">
-					<button id="RTL" type="button" class="btn btn-outline-primary" data-toggle="button" aria-pressed="false" autocomplete="off">
+					<button id="LTR" type="button" class="btn btn-outline-primary" data-toggle="button" aria-pressed="false" autocomplete="off">
 						<!-- when fa-align-right is set as default, the button shows the mode to switch to; if fa-align-left, then it shows the current mode -->
 						<i class="fa fa-align-right" title="Toggle right-to-left / left-to-right"></i>
 					</button>
@@ -512,9 +517,9 @@
 				</div>
 
 				<!--p>
-	          <input type="checkbox" id="RTL" name="RTL">
-	          <label for="RTL">Enable RTL</label>
-	          <input type="checkbox" id="vertical" name="RTL">
+	          <input type="checkbox" id="LTR" name="LTR">
+	          <label for="LTR">Enable LTR</label>
+	          <input type="checkbox" id="vertical" name="LTR">
 	          <label for="vertical">Enable vertical alignment</label>
 	      </p-->
 

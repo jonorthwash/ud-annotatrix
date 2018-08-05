@@ -1,1 +1,0 @@
-4	sell	sell	VERB	VBP	Number=Plur|Person=3|Tense=Pres	2	conj	0:root	_

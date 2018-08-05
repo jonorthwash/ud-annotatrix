@@ -1,41 +1,53 @@
 'use strict';
 
 const $ = require('jquery');
-const storage = require('./local-storage');
-const status = require('./status');
-const user = require('./user');
-const funcs = require('./funcs');
+const _ = require('underscore');
+const utils = require('./utils');
+
 
 class Server {
-	constructor() {
-		this.treebank_id = funcs.getTreebankId();
-		this.check();
+	constructor(app) {
+
+		this.app = app;
+		this.is_running = false;
+		this.treebank_id = utils.getTreebankId();
+
 	}
 
-	check() {
-		this.is_running = false;
+	connect() {
 		try {
 			$.ajax({
 				type: 'GET',
 				url: '/running',
 				success: data => {
-					status.normal('connected to server');
-					log.info(`checkServer AJAX response: ${JSON.stringify(data)}`);
+
+					console.info('AJAX connect success with response:', data);
+
 					this.is_running = true;
-					gui.update();
-					gui.modals.upload.enable();
+					this.app.gui.status.normal('connected to server');
 					this.load();
+
 				},
 				error: data => {
-					status.error('unable to connect to server');
-					log.error('Unable to complete AJAX request for check()');
-					gui.menu.update();
+
+					console.info('AJAX connect failed with response:', data)
+					this.app.gui.status.error('unable to connect to server');
+
+					const serial = utils.storage.load();
+					if (serial)
+						this.app.load(serial);
+
 				}
 			});
 		} catch (e) {
-			status.error('unable to connect to server');
-			log.error(`AJAX error in check(): ${e.message}`);
-			gui.menu.update();
+
+			console.info('AJAX connected failed with response:', e.message);
+			this.app.gui.status.error('unable to connect to server');
+
+			const serial = utils.storage.load();
+			if (serial)
+				this.app.load(serial);
+
 		}
 	}
 
@@ -52,18 +64,22 @@ class Server {
 				data: state,
 				dataType: 'json',
 				success: data => {
-					if (data.status === 'failure') {
-						log.error('Unable to save(): server error');
-					} else {
-						log.info('Successfully saved to server');
-					}
+
+					console.info('AJAX save success with response:', data);
+
 				},
 				error: data => {
-					log.error('Unable to complete AJAX request for save()')
+
+					console.info('AJAX save failed with response:', data);
+					this.app.gui.status.error('unable to save to server');
+
 				}
 			});
 		} catch (e) {
-			log.error(`AJAX error in save(): ${e.message}`);
+
+			console.info('AJAX save failed with response:', data);
+			this.app.gui.status.error('unable to save to server');
+
 		}
 	}
 
@@ -77,23 +93,35 @@ class Server {
 				type: 'GET',
 				url: `/load?treebank_id=${this.treebank_id}`,
 				success: data => {
-					if (data.status === 'failure') {
-						log.error('Unable to load(): server error');
-					} else {
-						log.info('Successfully loaded from server');
-						manager.load(data);
-					}
+
+					console.info('AJAX load success with response:', data);
+					this.app.load(data);
+
 				},
 				error: data => {
-					log.critical('Unable to complete AJAX request for load()');
-				}
-			})
-		} catch (e) {
-			log.critical(`AJAX error in load(): ${e.message}`);
-		}
 
-		return null; // want the loading to fail
+					console.info('AJAX load failed with response:', data);
+					this.app.gui.status.error('unable to load from server');
+
+					const serial = utils.storage.load();
+					if (serial)
+						this.app.load(serial);
+
+
+				}
+			});
+		} catch (e) {
+
+			console.info('AJAX load failed with response:', data);
+			this.app.gui.status.error('unable to load from server');
+
+			const serial = utils.storage.load();
+			if (serial)
+				this.app.load(serial);
+
+		}
 	}
 }
+
 
 module.exports = Server;

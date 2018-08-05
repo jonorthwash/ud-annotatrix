@@ -1,19 +1,39 @@
 'use strict';
 
-const Socket = require('socket.io-client');
-const status = require('./status');
-const collab = require('./collaboration');
-const funcs = require('./funcs');
+const _ = require('underscore');
+const utils = require('./utils');
+const _Socket = require('socket.io-client');
 
-var selfid = null;
 
-module.exports = manager => {
+class Socket {
+  constructor(app) {
+    this.app = app;
+    this._socket = utils.check_if_browser()
+      ? new _Socket()
+      : null;
+    this.initialized = false;
+  }
+
+  broadcast(...args) {
+    console.log('broadcast', ...args);
+  }
+
+  on(...args) {
+    console.log('socket on', ...args);
+  }
+}
+
+
+module.exports = Socket;
+
+//manager => {
 
   // get a new socket.io client, but make sure we don't emit anything until
   //   we've received confirmation from the server
-  const socket = Socket();
-  socket.initialized = false;
+  //const socket = Socket();
+  //socket.initialized = false;
 
+  /*
   socket.on('connection', data => {
     console.log('connection', data);
     socket.initialized = true;
@@ -86,3 +106,4 @@ module.exports = manager => {
 
   return socket;
 };
+*/

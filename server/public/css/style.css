@@ -1156,3 +1156,7 @@ span.dropdown-group-item-name i {
 #parse-status {
   cursor: pointer;
 }
+
+.format-tab.disabled {
+  cursor: default;
+}
