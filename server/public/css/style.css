@@ -107,8 +107,8 @@ span.tt {
 
 #mute.activated {
   position: absolute;
-  width: 1500px;
-  height: 400px;
+  width: 100%;
+  height: 100%;
   display: block;
   background-color: rgba(0,0,0,0.25);;
   z-index: 800;
@@ -1159,4 +1159,20 @@ span.dropdown-group-item-name i {
 
 .format-tab.disabled {
   cursor: default;
+}
+
+#table-data td.focused {
+  background-color: #eee;
+}
+
+#table-data td.editing {
+  background-color: #bbb;
+}
+
+td.column-hide [name="input"] {
+  display: none;
+}
+
+th.column-hide span.col-name {
+  display: none;
 }

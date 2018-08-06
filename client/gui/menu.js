@@ -110,6 +110,9 @@ class Menu {
         utils.export.svg(self.gui.app);
     });
 
+    $('#btnUndo').click(e => self.gui.app.undoer.undo());
+    $('#btnRedo').click(e => self.gui.app.undoer.redo());
+
     $('[name="show-labels"]').click(e => {
       if ($(e.target).is('.pin'))
         return;
@@ -250,8 +253,8 @@ class Menu {
     $('[name="show-table"]')
       .toggleClass('disabled', corpus.format !== 'CoNLL-U');
 
-    //$('#btnUndo').prop('disabled', !utils.undoManager.hasUndo());
-    //$('#btnRedo').prop('disabled', !utils.undoManager.hasRedo());
+    $('#btnUndo').prop('disabled', !this.gui.app.undoer.hasUndo());
+    $('#btnRedo').prop('disabled', !this.gui.app.undoer.hasRedo());
 
 
 
@@ -269,6 +272,16 @@ class Menu {
         .show()
         .attr('title', `Unable to encode ${corpus.conversionLosses.join(', ')}`);
 
+    // show our errors
+    $('.tab-error').hide();
+    _.each(corpus.conversionErrors, (message, format) => {
+      $(`.format-tab[name="${format}"]`)
+        .addClass('disabled')
+        .find(`.tab-error`)
+          .show()
+          .attr('title', message);
+    });
+
     $('#btnToggleTextarea .fa')
       .removeClass('fa-chevron-down fa-chevon-up');
 
@@ -276,6 +289,7 @@ class Menu {
 
       $('#data-container').show();
       $('#top-buttons-container').removeClass('extra-space');
+      $('.format-tab').show();
 
       $('#btnToggleTable .fa')
         .toggleClass('fa-code', config.is_table_visible)
@@ -285,21 +299,12 @@ class Menu {
 
       $('#btnToggleTextarea .fa').addClass('fa-chevron-up');
 
-      // show our errors
-      $('.tab-error').hide();
-      _.each(corpus.conversionErrors, (message, format) => {
-        $(`.format-tab[name="${format}"]`)
-          .addClass('disabled')
-          .find(`.tab-error`)
-            .show()
-            .attr('title', message);
-      });
 
     } else {
 
       $('#data-container').hide();
       $('#top-buttons-container').addClass('extra-space');
-      $('.nav-link').not('.active').hide();
+      $('.format-tab').not('.active').hide();
       $('#btnToggleTable').hide();
       $('#btnToggleTextarea .fa').addClass('fa-chevron-down');
     }

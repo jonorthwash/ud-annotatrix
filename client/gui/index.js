@@ -14,7 +14,6 @@ const Labeler = require('./labeler');
 const Menu = require('./menu');
 const modals = require('./modals');
 const Table = require('./table');
-const progressBar = require('./progress-bar');
 const Status = require('./status');
 
 
@@ -30,16 +29,31 @@ class GUI {
     this.keys = keys;
     this.labeler = new Labeler(this);
     this.menu = new Menu(this);
-    this.progressBar = progressBar;
     this.status = new Status(this);
     this.table = new Table(this);
 
+    this.load();
     this.bind();
   }
 
-  save(...args) {
+  save() {
 
-    console.log('save graph');
+    let serial = _.pick(this.config
+      , 'column_visibilities'
+      , 'is_label_bar_visible'
+      , 'is_table_visible'
+      , 'is_textarea_visible'
+      , 'pinned_menu_items' );
+    serial = JSON.stringify(serial);
+    utils.storage.setPrefs('gui', serial);
+
+  }
+
+  load() {
+
+    let serial = utils.storage.getPrefs('gui');
+    serial = JSON.parse(serial);
+    this.config.set(serial);
 
   }
 
@@ -62,9 +76,9 @@ class GUI {
     $('#edit').click(e => { self.app.graph.intercepted = true; });
 
     // keystroke handling & such
-    window.onkeyup = e => this.keys.up(self, e);
-    window.onkeydown = e => this.keys.down(self, e);
-    window.onbeforeunload = e => this.app.save();
+    window.onkeyup = e => self.keys.up(self.app, e);
+    window.onkeydown = e => self.keys.down(self.app, e);
+    window.onbeforeunload = e => self.app.save();
   }
 
   refresh() {
@@ -76,7 +90,6 @@ class GUI {
     // refresh all subelements
     this.labeler.refresh();
     this.menu.refresh();
-    this.progressBar.refresh();
     this.status.refresh();
 
     // show the data
@@ -89,7 +102,7 @@ class GUI {
 
         $('#table-data').show();
         $('#text-data').hide();
-        this.gui.table.refresh();
+        this.table.rebuild();
 
       } else {
 
@@ -102,6 +115,15 @@ class GUI {
 
     // and draw the graph
     this.app.graph.draw();
+
+    // show the completeness
+    const percent = 100 * (this.app.graph.progress.total
+      ? this.app.graph.progress.done / this.app.graph.progress.total
+      : 0);
+
+    $('#progressBar')
+      .css('width', `${percent}%`);
+
   }
 }
 

@@ -45,9 +45,9 @@ class Corpus {
     this.config = config;
 
     const _corpus = serial
-      ? nx.Corpus.deserialize(serial)
+      ? nx.Corpus.deserialize(serial, { allowZeroTokens: true })
       : new nx.Corpus();
-      
+
     this._corpus = _corpus;
     this._corpus._meta = _.defaults(_corpus._meta, {
 
@@ -62,10 +62,16 @@ class Corpus {
 
     this.conversionLosses = [];
     this.conversionErrors = {};
+
+    this.app.undoer.current = this.serialize();
   }
 
   get parsed() {
     return this.current ? this.current._meta.unparsed === null : false;
+  }
+
+  set parsed(text) {
+    throw new Error();
   }
 
   get length() {
@@ -83,6 +89,9 @@ class Corpus {
       index: this.index,
     });
 
+    if (this.app.initialized)
+      this.app.graph.save();
+      
     this._corpus.index = index;
     this.app.gui.refresh();
   }
@@ -115,7 +124,7 @@ class Corpus {
     return this._corpus.getSentence(index);
   }
 
-  setSentence(index, text, broadcast=true) {
+  setSentence(index, text, main=true) {
 
     let sent;
 
@@ -127,20 +136,14 @@ class Corpus {
       sent._meta.format = detectFormat();
       sent._meta.unparsed = null;
 
-      this.app.gui.status.normal('set-sentence');
-
     } catch (e) {
 
       if (e instanceof nx.NotatrixError) {
 
         // alert that we failed
         console.info(e.message);
-        this.app.socket.broadcast({
-          type: 'unsync-update',
-          index: this.index,
-          unparsed: serial,
-        });
-        this.app.gui.status.error('set-sentence');
+        this.app.socket.unlink(index);
+        this.app.gui.status.error(`Unable to set sentence ${index + 1}`);
 
         // make sure we know it's a dummy here
         sent._meta.format = null;
@@ -151,21 +154,13 @@ class Corpus {
       }
     }
 
-    // alert success here & across the socket
-    this.app.save(broadcast);
-    this.app.gui.refresh();
-    this.app.gui.status.normal('insert-sentence');
-    if (broadcast)
-      this.app.socket.broadcast({
-        type: 'insert-sentence',
-        index: this.index,
-        sent: sent,
-      });
+    if (main)
+      this.app.save();
 
     return sent;
   }
 
-  insertSentence(index, text, broadcast=true) {
+  insertSentence(index, text, main=true) {
 
     let sent;
 
@@ -177,20 +172,14 @@ class Corpus {
       sent._meta.format = detectFormat();
       sent._meta.unparsed = null;
 
-      this.app.gui.status.normal('insert-sentence');
-
     } catch (e) {
 
       if (e instanceof nx.NotatrixError) {
 
         // alert that we failed
         console.info(e.message);
-        this.app.socket.broadcast({
-          type: 'unsync-update',
-          index: this.index,
-          unparsed: serial,
-        });
-        this.app.gui.status.error('insert-sentence');
+        this.app.socket.unlink(index);
+        this.app.gui.status.error(`Unable to insert sentence ${index + 1}`);
 
         // on parsing failure, add a dummy sentence
         sent = this.insertSentence(index, '', false);
@@ -204,57 +193,39 @@ class Corpus {
       }
     }
 
-    // alert success here & across the socket
-    this.app.save(broadcast);
-    if (this.app.initialized) {
-
-      this.app.gui.refresh();
-      if (broadcast)
-        this.app.socket.broadcast({
-          type: 'insert-sentence',
-          index: this.index,
-          sent: sent,
-        });
-    }
+    if (main)
+      this.app.save();
 
     return sent;
   }
 
-  removeSentence(index, broadcast=true) {
+  removeSentence(index, main=true) {
 
     let sent;
 
     try {
 
       sent = this._corpus.removeSentence(index);
-      this.app.gui.status.normal('remove-sentence');
 
     } catch (e) {
 
       if (e instanceof nx.NotatrixError) {
 
         console.info(e.message);
-        this.app.gui.status.error('remove-sentence');
+        this.app.gui.status.error(`Unable to remove sentence ${index + 1}`);
 
       } else {
         throw e;
       }
     }
 
-    // alert success here & across the socket
-    this.app.save(broadcast);
-    this.app.gui.refresh();
-    if (broadcast)
-      this.app.socket.broadcast({
-        type: 'remove-sentence',
-        index: this.index,
-        sent: sent,
-      });
+    if (main)
+      this.app.save();
 
     return sent;
   }
 
-  parse(text, broadcast=true) {
+  parse(text, main=true) {
 
     let sent;
 
@@ -266,9 +237,9 @@ class Corpus {
       splitted.forEach((split, i) => {
 
         if (i) {
-          this.insertSentence(index + i, split);
+          this.insertSentence(index + i, split, false);
         } else {
-          this.setSentence(index, split);
+          this.setSentence(index, split, false);
         }
 
       });
@@ -278,15 +249,16 @@ class Corpus {
       if (e instanceof nx.NotatrixError) {
 
         console.info(e.message);
-        this.app.gui.status.error('parse-sentence');
+        this.app.gui.status.error(`Unable to parse input`);
 
       } else {
         throw e;
       }
     }
 
-    this.app.gui.refresh();
-    this.app.save();
+    if (main)
+      this.app.save();
+
     return sent;
   }
 
@@ -312,6 +284,38 @@ class Corpus {
       : this.current._meta.format === 'notatrix serial'
         ? 'plain text'
         : this.current._meta.format;
+  }
+
+  set format(format) {
+    throw new Error();
+  }
+
+  get is_ltr() {
+    return this._corpus._meta.is_ltr;
+  }
+
+  set is_ltr(bool) {
+    this._corpus._meta.is_ltr = bool;
+  }
+
+  get is_vertical() {
+    return this._corpus._meta.is_vertical;
+  }
+
+  set is_vertical(bool) {
+    this._corpus._meta.is_vertical = bool;
+  }
+
+  get is_enhanced() {
+    return this.current.options.enhanced;
+  }
+
+  get filename() {
+    return this._corpus._meta.filename;
+  }
+
+  set filename(filename) {
+    this._corpus._meta.filename = filename;
   }
 
   get current() {
@@ -341,7 +345,7 @@ class Corpus {
       if (e instanceof nx.NotatrixError) {
 
         console.info(e);
-        this.app.gui.status.error(`conversion-error-${format}`)
+        this.app.gui.status.error(`Error converting to format ${format}`)
         this.current._meta.format = 'plain text';
         this.current._meta.unparsed = this.current._meta.unparsed || '';
         this.app.gui.refresh();

@@ -1,5 +1,9 @@
 'use strict';
 
+const funcs = require('./funcs');
+const KEY = '__ud_annotatrix_prefs_';
+
+
 function isAvailable() {
 
   try {
@@ -8,7 +12,7 @@ function isAvailable() {
     return false;
   }
 
-  /* Taken from https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API */
+  // Taken from https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API
 
   try {
     const x = '__storage_test__';
@@ -32,10 +36,10 @@ function isAvailable() {
   }
 
 }
-
+/*
 function getAvailableSpace() {
 
-  /* Returns the remaining available space in localStorage */
+  // Returns the remaining available space in localStorage
   if (!isAvailable())
     return 0;
 
@@ -106,13 +110,14 @@ function formatUploadSize(fileSize) {
 
   return `${(fileSize/1048576).toFixed(1)} mB`;
 }
+*/
 
 function save(value) {
 
   if (!isAvailable())
     return null;
 
-  return localStorage.setItem(getTreebankId() || KEY, value);
+  return localStorage.setItem(funcs.getTreebankId(), value);
 }
 
 function load() {
@@ -120,7 +125,7 @@ function load() {
   if (!isAvailable())
     return null;
 
-  return localStorage.getItem(getTreebankId() || KEY);
+  return localStorage.getItem(funcs.getTreebankId());
 }
 
 function clear() {
@@ -128,18 +133,23 @@ function clear() {
   if (!isAvailable())
     return null;
 
-  return localStorage.removeItem(getTreebankId() || KEY);
+  return localStorage.removeItem(funcs.getTreebankId());
 }
 
-function get_key() {
-  return require('../config').localStorageKey;
+function setPrefs(item, prefs) {
+
+  if (!isAvailable() || !item)
+    return null;
+
+  return localStorage.setItem(KEY + item, prefs);
 }
 
-function load_preferences() {
+function getPrefs(item) {
 
-  if (!isAvailable)
-    return {};
+  if (!isAvailable() || !item)
+    return null;
 
+  return localStorage.getItem(KEY + item);
 }
 
 module.exports = {
@@ -150,5 +160,6 @@ module.exports = {
   save,
   load,
   clear,
-  load_preferences,
+  getPrefs,
+  setPrefs,
 };

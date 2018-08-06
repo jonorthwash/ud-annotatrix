@@ -16,7 +16,6 @@ const U_POS = ['ADJ', 'ADP', 'ADV', 'AUX', 'CCONJ', 'DET', 'INTJ', 'NOUN',
 const U_POS_LEAF = ['AUX', 'CCONJ', 'PART', 'PUNCT', 'SCONJ']; // no ADP
 
 function is_upos(s) {
-  log.debug(`called is_pos(${s})`);
 
   // Checks if a relation is in the list of valid parts of speech
   // @s = the input relation
@@ -34,7 +33,6 @@ function is_upos(s) {
 
 
 function is_udeprel(s) {
-  log.debug(`called is_udeprel(${s})`);
 
   // Checks if a relation is in the list of valid relations
   // @s = the input relation
@@ -53,7 +51,6 @@ function is_udeprel(s) {
 }
 
 function is_leaf(s, t) {
-  log.debug(`called is_leaf(${s})`);
 
   function is_upos_leaf(pos) {
 

@@ -20,8 +20,6 @@ module.exports = {
   check_if_browser,
 
   download: (filename, mimetype, uriComponent) => {
-    if (!gui.inBrowser)
-      return false;
 
     const link = $('<a>')
       .attr('download', filename)

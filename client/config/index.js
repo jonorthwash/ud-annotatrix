@@ -5,7 +5,6 @@ const utils = require('../utils');
 var _config = {
 
 	version: '0.0.0',
-	localStorageKey: '__ud_annotatrix_prefs',
 	treebank_id: utils.getTreebankId(),
 
 	corpus: require('../corpus/config'),
@@ -14,6 +13,6 @@ var _config = {
 
 };
 
-const prefs = utils.storage.load_preferences();
+const prefs = utils.storage.getPrefs();
 
 module.exports = _config;

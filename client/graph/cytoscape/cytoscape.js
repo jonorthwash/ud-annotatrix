@@ -20669,7 +20669,7 @@ TreeLayout.prototype.run = function () {
         //x = col * cellWidth + cellWidth / 2 + bb.x1;
         y = row * cellHeight + cellHeight / 2 + bb.y1;
 
-        log.debug('tree.js [' + row + '][' + col + '] x,y = ' + x + ',' + y);
+        //log.debug('tree.js [' + row + '][' + col + '] x,y = ' + x + ',' + y);
 
         use(row, col);
 
@@ -30155,7 +30155,7 @@ module.exports = Stylesheet;
 "use strict";
 
 
-module.exports = "snapshot-2fd4aa6cc2-1531006893492";
+module.exports = "snapshot-2fd4aa6cc2-1533526577051";
 
 /***/ })
 /******/ ]);

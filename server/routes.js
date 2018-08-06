@@ -122,7 +122,7 @@ module.exports = app => {
     console.log(typeof req.body)
     CorpusDB(req.treebank).save(null, req.body, err => {
       if (err)
-        throw err;
+        res.json({ error: err.message });
 
       res.json({ success: true });
     });
@@ -133,7 +133,7 @@ module.exports = app => {
 
     CorpusDB(req.treebank).load((err, data) => {
       if (err)
-        throw err;
+        res.json({ error: err.message });
 
       res.json(data);
     });

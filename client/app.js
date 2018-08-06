@@ -11,14 +11,27 @@ const Graph = require('./graph');
 const GUI = require('./gui');
 const Server = require('./server');
 const Socket = require('./socket');
-
+const UndoManager = require('./undo-manager');
 
 class App {
   constructor() {
 
-    this.nx = nx;
+    this.config = config;
+    this.constructors = {
+
+      CollaborationInterface,
+      Corpus,
+      Graph,
+      GUI,
+      nx,
+      Server,
+      Socket,
+      UndoManager,
+
+    };
 
     this.initialized = false;
+    this.undoer = new UndoManager(this);
     this.server = new Server(this);
     this.socket = new Socket(this);
     this.collab = new CollaborationInterface(this);
@@ -34,8 +47,10 @@ class App {
 
   save() {
 
-    if (!this.initialized)
+    if (!this.initialized || this.undoer.active)
       return;
+
+    this.gui.status.normal('saving...');
 
     // save local preference stuff
     this.gui.save();
@@ -45,15 +60,28 @@ class App {
     let serial = this.corpus.serialize();
     serial = JSON.stringify(serial);
     if (this.server.is_running) {
-      this.server.save(serial)
+      this.server.save(serial);
     } else {
       utils.storage.save(serial);
     }
 
-    console.log('saved');
+    // add it to the undo/redo stack
+    this.undoer.push();
+
+    // refresh the gui stuff
+    this.gui.refresh();
+    /*
+    if (broadcast)
+      this.app.socket.broadcast({
+        type: 'remove-sentence',
+        index: this.index,
+        sent: sent,
+      });*/
   }
 
   load(serial) {
+
+    this.gui.status.normal('loading...')
 
     serial = JSON.parse(serial);
     this.corpus = new Corpus(this, serial);

@@ -40,7 +40,7 @@ elif [ ! -d $layout_dir ]; then
   exit 1
 fi
 
-tree_path=$this_dir/client/tree.js
+tree_path=$this_dir/client/graph/tree.js
 
 if [ ! -f $tree_path ]; then
   echo "Error: unable to locate $tree_path (aborting)"
@@ -61,7 +61,7 @@ if [ ! -d node_modules ]; then
 fi
 
 npm run build
-cp build/cytoscape.* $this_dir/client/cytoscape
+cp build/cytoscape.* $this_dir/client/graph/cytoscape
 cd $this_dir
 npm run build
 

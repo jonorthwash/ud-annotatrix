@@ -9,25 +9,201 @@ class Table {
 
     this.gui = gui;
     this.col = 1;
+    this.cols = 10;
     this.row = 0;
+    this.rows = 0;
 
+  }
+
+  get editing() {
+    return $('#table-data .editing').length;
+  }
+
+  goRight(wrap) {
+
+    if (this.col === this.cols - 1) {
+      if (!wrap)
+        return;
+
+      this.col = 0;
+      this.row += 1;
+      if (this.row > this.rows)
+        this.row = 0;
+    }
+
+    this.col += 1;
+
+    $('#table-data .editing').blur();
+    $('.focused').removeClass('focused')
+
+    const td = $(`[col-id="${this.col}"][row-id="${this.row}"]`)
+      .addClass('focused')
+      .prop('contenteditable', false)
+      .focus();
+  }
+
+  goLeft(wrap) {
+
+    if (this.col === 1) {
+      if (!wrap)
+        return;
+
+      this.col = this.cols;
+      this.row -= 1;
+      if (this.row < 0)
+        this.row = this.rows;
+    }
+
+    this.col -= 1;
+
+    $('#table-data .editing').blur();
+    $('.focused').removeClass('focused')
+
+    const td = $(`[col-id="${this.col}"][row-id="${this.row}"]`)
+      .addClass('focused')
+      .prop('contenteditable', false)
+      .focus();
+  }
+
+  goUp() {
+
+    if (this.row === 0)
+      return;
+
+    this.row -= 1;
+
+    $('#table-data .editing').blur();
+    $('.focused').removeClass('focused')
+
+    const td = $(`[col-id="${this.col}"][row-id="${this.row}"]`)
+      .addClass('focused')
+      .prop('contenteditable', false)
+      .focus();
+  }
+
+  goDown() {
+
+    if (this.row === this.rows)
+      return;
+
+    this.row += 1;
+
+    $('#table-data .editing').blur();
+    $('.focused').removeClass('focused')
+
+    const td = $(`[col-id="${this.col}"][row-id="${this.row}"]`)
+      .addClass('focused')
+      .prop('contenteditable', false)
+      .focus();
+  }
+
+  toggleEditing(toggle) {
+
+    const td = $(`[col-id="${this.col}"][row-id="${this.row}"]`)
+      .toggleClass('editing', toggle);
+
+    if (td.hasClass('editing')) {
+
+      td
+        .prop('contenteditable', true)
+        .focus();
+
+    } else {
+
+      td
+        .blur()
+        .addClass('focused')
+        .focus();
+
+    }
+
+    console.log(td.prop('contenteditable'))
   }
 
   bind() {
 
     const self = this;
 
-    $('.thead-default th').click(e => {
+    $('#table-data th').click(e => {
 
-      const col = $(event.target).attr('col-id'),
+      const target = $(e.target),
+        col = target.attr('col-id'),
         columns = self.gui.config.column_visibilities;
+
+      if (!target.hasClass('hideable'))
+        return;
 
       columns[col] = !columns[col];
       self.refresh();
     });
+
+    $('#table-data td')
+      .click(e => {
+
+        const target = $(e.target);
+        self.row = parseInt(target.attr('row-id'));
+        self.col = parseInt(target.attr('col-id'));
+
+
+        $('.focused')
+          .removeClass('focused')
+          .blur();
+        target
+          .addClass('focused');
+
+        this.toggleEditing(true);
+
+      })
+      .blur(e => {
+
+        const target = $(e.target),
+          uuid = target.attr('uuid'),
+          token = self.gui.app.corpus.current.query(t => t.uuid === uuid)[0],
+          field = target.attr('field'),
+          originalValue = target.attr('original-value') || '',
+          value = target.text() || '';
+
+        target.prop('contenteditable', false)
+          .removeClass('editing')
+          .removeClass('focused');
+
+        if (value === originalValue)
+          return;
+        token[field] = value;
+        self.gui.app.save();
+
+      });
+
   }
 
   refresh() {
+
+    $('#table-data th')
+      .removeClass('column-show column-hide')
+      .find('.fa')
+        .removeClass('fa-angle-double-left fa-angle-double-right');
+
+    console.log('refresh table')
+    this.gui.config.column_visibilities.forEach((vis, i) => {
+
+      const column = $(`#table-data [col-id="${i}"]`);
+
+
+      console.log(i, vis, column)
+      column
+        .filter('th')
+        .addClass(vis ? 'column-show' : 'column-hide')
+        .find('.fa')
+          .addClass(vis ? 'fa-angle-double-left' : 'fa-angle-double-right');
+
+      column
+        .filter('td')
+        .addClass(vis ? 'column-show' : 'column-hide');
+    });
+
+  }
+
+  rebuild() {
 
     $('#table-data tbody').empty();
 
@@ -51,13 +227,14 @@ class Table {
 
         if (value !== '_') {
           if (j === 3)
-            valid = validate.is_upos(value);
+            valid = utils.validate.is_upos(value);
           if (j === 7)
-            valid = validate.is_udeprel(value);
+            valid = utils.validate.is_udeprel(value);
         }
 
-        td.prop('contenteditable', true)
-          .addClass('conllu-table')
+        const visibilities = this.gui.config.column_visibilities;
+
+        td.addClass('conllu-table')
           .attr('tabindex', '-1')
           .attr('row-id', i)
           .attr('col-id', j)
@@ -66,55 +243,30 @@ class Table {
           .attr('field', field)
           .attr('original-value', value)
           .attr('name', j === 0 ? 'index' : 'content')
-          .css('visibility', gui.column_visible(j) ? 'visible' : 'hidden')
-          .blur(e => {
-
-            const target = $(event.target),
-              uuid = target.attr('uuid'),
-              token = this.gui.app.corpus.current.query(t => t.uuid === uuid)[0],
-              field = target.attr('field'),
-              originalValue = target.attr('original-value') || '',
-              value = target.text() || '';
-
-            if (value === originalValue)
-              return;
-
-            token[field] = value;
-            this.gui.app.save();
-
-          });
+          .css('visibility', visibilities[j] ? 'visible' : 'hidden');
 
         inputSpan.text(value);
 
-        if (!valid) {
-          log.warn(`buildTable(): error parsing cell (err:"${valid.err}", value:"${value}")`);
-          /*document.l10n.formatValue(valid.err, valid.data).then(title => {
+        /*
+        if (!valid)
+          document.l10n.formatValue(valid.err, valid.data).then(title => {
             errorSpan.addClass('fa fa-exclamation-triangle')
               .addClass('parse-error')
               .attr('aria-hidden', 'true')
               .attr('title', title);
-          });*/
-        }
+          });
+        */
+
         tr.append( td.append(inputSpan).append(errorSpan) );
       });
 
       $('#table-data tbody').append(tr);
+      this.rows = i;
       i++;
     });
 
-    $('#table-data th').removeClass('column-hidden');
-    this.gui.config.column_visibilities.forEach((vis, i) => {
-
-      const column = $(`#table-data [colid="${i}"]`);
-
-      column
-        .find('th')
-        .addClass(vis ? 'fa-angle-double-left' : 'fa-angle-double-right');
-
-      column
-        .find('td')
-        .css('visibility', vis ? 'visible' : 'hidden');
-    });
+    this.refresh();
+    this.bind();
   }
 }
 

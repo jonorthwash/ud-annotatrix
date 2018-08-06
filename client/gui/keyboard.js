@@ -46,9 +46,11 @@ function name(which) {
   return _.invert(KEYS)[which];
 }
 
-function keyup(gui, event) {
+function keyup(app, event) {
 
-  const corpus = gui.app.corpus;
+  const corpus = app.corpus,
+    graph = app.graph,
+    gui = app.gui;
 
   pressed.delete(event.which);
   console.log('keyup>', event.which, name(event.which) || event.key, pressed)
@@ -87,8 +89,8 @@ function keyup(gui, event) {
     } else if (47 < event.which && event.which < 58) { // key in 0-9
 
       const num = event.which - 48;
-      cy.zoom(1.5 ** (num - 5));
-      gui.update();
+      graph.graph.cy.zoom(1.5 ** (num - 5));
+      gui.refresh();
       return;
 
     }
@@ -96,99 +98,42 @@ function keyup(gui, event) {
 
   if ($(':focus').is('.conllu-table')) {
 
-    function goRight(ele) {
-
-      const rows = $('#table-data').find('tr').length - 1;
-      let row = parseInt(td.attr('row-id'));
-      let col = parseInt(td.attr('col-id')) + 1;
-
-      if (col === 10) {
-        row += 1;
-        col = 1;
-      }
-      if (row === rows)
-        row = 0;
-
-      const next = $(`td.conllu-table[row-id = "${row}"][col-id = "${col}"]`);
-      setTimeout(() => next.focus(), 200);
-    }
-
-    function goLeft(ele) {
-
-      const rows = $('#table-data').find('tr').length - 1;
-      let row = parseInt(td.attr('row-id'));
-      let col = parseInt(td.attr('col-id')) - 1;
-
-      if (col === 0) {
-        row -= 1;
-        col = 9;
-      }
-      if (row === -1)
-        row = rows - 1;
-
-      const next = $(`td.conllu-table[row-id = "${row}"][col-id = "${col}"]`);
-      setTimeout(() => next.focus(), 200);
-    }
-
-    function goUp(ele) {
-
-      const rows = $('#table-data').find('tr').length - 1;
-      let row = parseInt(td.attr('row-id')) - 1;
-      let col = parseInt(td.attr('col-id'));
-
-      if (row === -1)
-        row = rows - 1;
-
-      const next = $(`td.conllu-table[row-id = "${row}"][col-id = "${col}"]`);
-      setTimeout(() => next.focus(), 200);
-    }
-
-    function goDown(ele) {
-
-      const rows = $('#table-data').find('tr').length - 1;
-      let row = parseInt(td.attr('row-id')) - 1;
-      let col = parseInt(td.attr('col-id'));
-
-      if (row === rows)
-        row = 0;
-
-      const next = $(`td.conllu-table[row-id = "${row}"][col-id = "${col}"]`);
-      setTimeout(() => next.focus(), 200);
-    }
-
+    const table = gui.table;
     const td = $(':focus');
 
     switch (event.which) {
       case (KEYS.ENTER):
-        td.blur();
+        table.toggleEditing();
         return;
 
       case (KEYS.TAB):
         if (pressed.has(KEYS.SHIFT)) {
-          goLeft(td);
+          table.goLeft(true);
+          table.toggleEditing(true);
         } else {
-          goRight(td);
+          table.goRight(true);
+          table.toggleEditing(true);
         }
         return;
 
       case (KEYS.UP):
-        if (pressed.has(KEYS.CTRL))
-          goUp(td);
+        if (!table.editing)
+          table.goUp();
         return;
 
       case (KEYS.DOWN):
-        if (pressed.has(KEYS.CTRL))
-          goDown(td);
+        if (!table.editing)
+          table.goDown();
         return;
 
       case (KEYS.LEFT):
-        if (pressed.has(KEYS.CTRL))
-          goLeft(td);
+        if (!table.editing)
+          table.goLeft();
         return;
 
       case (KEYS.RIGHT):
-        if (pressed.has(KEYS.CTRL))
-          goRight(td);
+        if (!table.editing)
+          table.goRight();
         return;
 
       case (KEYS.ESC):
@@ -229,7 +174,7 @@ function keyup(gui, event) {
 
     switch (event.which) {
       case (KEYS.ENTER):
-        gui.intercepted = false;
+        app.graph.intercepted = false;
         graph.clear();
         return;
 
@@ -243,8 +188,8 @@ function keyup(gui, event) {
         return;
 
       case (KEYS.ESC):
-        gui.intercepted = false;
-        gui.editing = null;
+        app.graph.intercepted = false;
+        app.graph.editing = null;
         graph.clear();
         return;
     }
@@ -289,209 +234,214 @@ function keyup(gui, event) {
     }
   }
 
-  switch (event.which) {
-    case (KEYS.DELETE):
-    case (KEYS.BACKSPACE):
-    case (KEYS.X):
-      if (cy.$('.selected').length) {
-        graph.removeDependency(cy.$('.selected'));
-      }/* else if (cy.$('.supAct').length) {
-        removeSup(st);
-      }*/
-      return;
+  if (event.which === KEYS.QUESTION_MARK) {
+    console.log('help modal not implemented :(');
+    return;
+  }
 
-    case (KEYS.D):
-      if (cy.$('.selected').length) {
-        cy.$('.selected').toggleClass('moving');
-        gui.moving_dependency = !gui.moving_dependency;
-      }
-      return;
+  if (graph.cy)
+    switch (event.which) {
+      case (KEYS.DELETE):
+      case (KEYS.BACKSPACE):
+      case (KEYS.X):
+        if (graph.cy.$('.selected').length) {
+          graph.removeDependency(graph.cy.$('.selected'));
+        }/* else if (graph.cy.$('.supAct').length) {
+          removeSup(st);
+        }*/
+        return;
 
-    case (KEYS.P):
-      /* if (text not focused)
-        setPunct();*/
-      console.log('setPunct() not implemented');
-      return;
+      case (KEYS.D):
+        if (graph.cy.$('.selected').length) {
+          graph.cy.$('.selected').toggleClass('moving');
+          graph.moving_dependency = !graph.moving_dependency;
+        }
+        return;
 
-    case (KEYS.R):
-      if (cy.$('node.form.activated'))
-        graph.setRoot(cy.$('node.form.activated'));
-      return;
+      case (KEYS.P):
+        /* if (text not focused)
+          setPunct();*/
+        console.log('setPunct() not implemented');
+        return;
 
-    case (KEYS.S):
+      case (KEYS.R):
+        if (graph.cy.$('node.form.activated'))
+          graph.setRoot(graph.cy.$('node.form.activated'));
+        return;
 
-      const token = cy.$('.activated');
-      const superToken = cy.$('.multiword-active');
+      case (KEYS.S):
 
-      if (token.length) {
+        const token = graph.cy.$('.activated');
+        const superToken = graph.cy.$('.multiword-active');
 
-        graph.flashTokenSplitInput(token);
+        if (token.length) {
 
-      } else if (superToken.length) {
+          graph.flashTokenSplitInput(token);
 
-        graph.splitSuperToken(superToken);
+        } else if (superToken.length) {
 
-      }
-      gui.status.update();
-      return;
+          graph.splitSuperToken(superToken);
 
-    case (KEYS.M):
+        }
+        gui.status.refresh();
+        return;
 
-      if (cy.$('.merge-source').length) {
+      case (KEYS.M):
 
-        cy.$('.neighbor')
-          .removeClass('merge-left merge-right neighbor');
+        if (graph.cy.$('.merge-source').length) {
 
-        cy.$('.merge-source')
-          .removeClass('merge-source')
-          .addClass('activated');
+          graph.cy.$('.neighbor')
+            .removeClass('merge-left merge-right neighbor');
 
-      } else if (cy.$('.activated').length) {
+          graph.cy.$('.merge-source')
+            .removeClass('merge-source')
+            .addClass('activated');
 
-        if (cy.$('.activated').data('type') !== 'token')
-          return;
+        } else if (graph.cy.$('.activated').length) {
 
-        cy.$('.activated')
-          .addClass('merge-source');
+          if (graph.cy.$('.activated').data('type') !== 'token')
+            return;
 
-        cy.$('.neighbor')
-          .removeClass('neighbor combine-source combine-left combine-right')
+          graph.cy.$('.activated')
+            .addClass('merge-source');
 
-        const left = graph.getLeftForm();
-        if (!left.hasClass('activated') && left.data('type') === 'token')
-          left
-            .addClass('neighbor')
-            .addClass('merge-left');
+          graph.cy.$('.neighbor')
+            .removeClass('neighbor combine-source combine-left combine-right')
 
-        const right = graph.getRightForm();
-        if (!right.hasClass('activated') && right.data('type') === 'token')
-          right
-            .addClass('neighbor')
-            .addClass('merge-right');
+          const left = graph.getLeftForm();
+          if (!left.hasClass('activated') && left.data('type') === 'token')
+            left
+              .addClass('neighbor')
+              .addClass('merge-left');
 
-      }
-      gui.status.update();
-      return;
+          const right = graph.getRightForm();
+          if (!right.hasClass('activated') && right.data('type') === 'token')
+            right
+              .addClass('neighbor')
+              .addClass('merge-right');
 
-    case (KEYS.C):
-      if (cy.$('.combine-source').length) {
+        }
+        gui.status.refresh();
+        return;
 
-        cy.$('.neighbor')
-          .removeClass('combine-left combine-right neighbor');
+      case (KEYS.C):
+        if (graph.cy.$('.combine-source').length) {
 
-        cy.$('.combine-source')
-          .removeClass('combine-source')
-          .addClass('activated');
+          graph.cy.$('.neighbor')
+            .removeClass('combine-left combine-right neighbor');
 
-      } else if (cy.$('.activated').length) {
+          graph.cy.$('.combine-source')
+            .removeClass('combine-source')
+            .addClass('activated');
 
-        if (cy.$('.activated').data('type') !== 'token')
-          return;
+        } else if (graph.cy.$('.activated').length) {
 
-        cy.$('.activated')
-          .addClass('combine-source');
+          if (graph.cy.$('.activated').data('type') !== 'token')
+            return;
 
-        cy.$('.neighbor')
-          .removeClass('neighbor merge-source merge-left merge-right')
+          graph.cy.$('.activated')
+            .addClass('combine-source');
 
-        const left = graph.getLeftForm();
-        if (!left.hasClass('activated') && left.data('type') === 'token')
-          left
-            .addClass('neighbor')
-            .addClass('combine-left');
+          graph.cy.$('.neighbor')
+            .removeClass('neighbor merge-source merge-left merge-right')
 
-        const right = graph.getRightForm();
-        if (!right.hasClass('activated') && right.data('type') === 'token')
-          right
-            .addClass('neighbor')
-            .addClass('combine-right');
+          const left = graph.getLeftForm();
+          if (!left.hasClass('activated') && left.data('type') === 'token')
+            left
+              .addClass('neighbor')
+              .addClass('combine-left');
 
-      }
-      gui.status.update();
-      return;
+          const right = graph.getRightForm();
+          if (!right.hasClass('activated') && right.data('type') === 'token')
+            right
+              .addClass('neighbor')
+              .addClass('combine-right');
 
-    case (KEYS.LEFT):
+        }
+        gui.status.refresh();
+        return;
 
-      // avoid panning the window
-      if (event.preventDefault)
-        event.preventDefault();
+      case (KEYS.LEFT):
 
-      if (cy.$('.merge-left').length) {
+        // avoid panning the window
+        if (event.preventDefault)
+          event.preventDefault();
 
-        const src = cy.$('.merge-source').data('token');
-        const tar = cy.$('.merge-left').data('token');
-        graph.merge(src, tar);
+        if (graph.cy.$('.merge-left').length) {
 
-      } else if (cy.$('.combine-left').length) {
-
-        const src = cy.$('.combine-source').data('token');
-        const tar = cy.$('.combine-left').data('token');
-        graph.combine(src, tar);
-
-      }
-      return;
-
-    case (KEYS.RIGHT):
-
-      // avoid panning the window
-      if (event.preventDefault)
-        event.preventDefault();
-
-        if (cy.$('.merge-right').length) {
-
-          const src = cy.$('.merge-source').data('token');
-          const tar = cy.$('.merge-right').data('token');
+          const src = graph.cy.$('.merge-source').data('token');
+          const tar = graph.cy.$('.merge-left').data('token');
           graph.merge(src, tar);
 
-        } else if (cy.$('.combine-right').length) {
+        } else if (graph.cy.$('.combine-left').length) {
 
-          const src = cy.$('.combine-source').data('token');
-          const tar = cy.$('.combine-right').data('token');
+          const src = graph.cy.$('.combine-source').data('token');
+          const tar = graph.cy.$('.combine-left').data('token');
           graph.combine(src, tar);
 
         }
-      return;
+        return;
 
-    case (KEYS.EQUALS):
-    case (KEYS.EQUALS_):
-      if (event.shiftKey) {
-        gui.zoomIn();
-      } else {
-        cy.fit().center();
-      }
-      return;
+      case (KEYS.RIGHT):
 
-    case (KEYS.MINUS):
-    case (KEYS.MINUS_):
-      if (event.shiftKey) {
-        gui.zoomOut();
-      } else {
-        cy.fit().center();
-      }
-      return;
+        // avoid panning the window
+        if (event.preventDefault)
+          event.preventDefault();
 
-    case (KEYS.ENTER):
-      gui.intercepted = false;
-      graph.clear();
-      return;
+          if (graph.cy.$('.merge-right').length) {
 
-    case (KEYS.ESC):
-      graph.clear();
-      return;
+            const src = graph.cy.$('.merge-source').data('token');
+            const tar = graph.cy.$('.merge-right').data('token');
+            graph.merge(src, tar);
 
-    case (KEYS.QUESTION_MARK):
-      console.log('help modal not implemented :(');
-      return;
+          } else if (graph.cy.$('.combine-right').length) {
 
-  }
+            const src = graph.cy.$('.combine-source').data('token');
+            const tar = graph.cy.$('.combine-right').data('token');
+            graph.combine(src, tar);
+
+          }
+        return;
+
+      case (KEYS.EQUALS):
+      case (KEYS.EQUALS_):
+        if (event.shiftKey) {
+          graph.zoomIn();
+        } else {
+          graph.cy.fit().center();
+        }
+        return;
+
+      case (KEYS.MINUS):
+      case (KEYS.MINUS_):
+        if (event.shiftKey) {
+          graph.zoomOut();
+        } else {
+          graph.cy.fit().center();
+        }
+        return;
+
+      case (KEYS.ENTER):
+        graph.intercepted = false;
+        graph.clear();
+        return;
+
+      case (KEYS.ESC):
+        graph.clear();
+        return;
+
+    }
+
 }
 
-function keydown(gui, event) {
+function keydown(app, event) {
 
   pressed.add(event.which);
   if (event.which === KEYS.TAB)
     event.preventDefault();
 
+  if (event.which === KEYS.ENTER && $(':focus').is('td'))
+    event.preventDefault();
 }
 
 module.exports = KEYS;
@@ -631,7 +581,7 @@ function onEnter(event) {
       insertSentence();
   }
 
-  gui.update();
+  gui.refresh();
 }
 
 */

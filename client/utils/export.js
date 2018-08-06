@@ -14,7 +14,7 @@ function latex(app) {
   posLine = '',
   deprelLines = [];
 
-  _.each(graph.eles(), node => {
+  app.graph.eles.forEach(node => {
     if (node.data.name === 'form') {
       if (node.data.token.upostag === undefined)
         return 'error';
@@ -48,7 +48,7 @@ function latex(app) {
         return `  \\${line}`;
     }), '\\end{dependency} \\\\').join('\n');
 
-  funcs.download(`${manager.filename}.tex`, 'application/x-latex', latex);
+  funcs.download(`${app.corpus.filename}.tex`, 'application/x-latex', latex);
 
   return latex;
 }
@@ -57,10 +57,10 @@ function png(app) {
 
   if (!app.graph.length)
     return;
-    
+
   const link = $('<a>')
-    .attr('download', `${manager.filename}.png`)
-    .attr('href', cy.png());
+    .attr('download', `${app.corpus.filename}.png`)
+    .attr('href', app.graph.cy.png());
   $('body').append(link);
   link[0].click();
 
@@ -72,10 +72,10 @@ function svg(app) {
   if (!app.graph.cy)
     return;
 
-  const ctx = new C2S(cy.width(), cy.height());
-  cy.renderer().renderTo(ctx); // DEBUG: this doesn't work
+  const ctx = new C2S(app.graph.cy.width(), app.graph.cy.height());
+  app.graph.cy.renderer().renderTo(ctx); // DEBUG: this doesn't work
 
-  funcs.download(`${manager.filename}.svg`, 'image/svg+xml', ctx.getSerializedSvg());
+  funcs.download(`${app.corpus.filename}.svg`, 'image/svg+xml', ctx.getSerializedSvg());
 }
 
 module.exports = {

@@ -65,7 +65,14 @@ class Server {
 				dataType: 'json',
 				success: data => {
 
-					console.info('AJAX save success with response:', data);
+					if (data.error) {
+
+						console.info('AJAX save failed with response:', data);
+						this.app.gui.status.error('unable to save to server');
+
+					} else {
+						console.info('AJAX save success with response:', data);
+					}
 
 				},
 				error: data => {
@@ -94,8 +101,21 @@ class Server {
 				url: `/load?treebank_id=${this.treebank_id}`,
 				success: data => {
 
-					console.info('AJAX load success with response:', data);
-					this.app.load(data);
+					if (data.error) {
+
+						console.info('AJAX load failed with response:', data);
+						this.app.gui.status.error('unable to load from server');
+
+						const serial = utils.storage.load();
+						if (serial)
+							this.app.load(serial);
+
+					} else {
+
+						console.info('AJAX load success with response:', data);
+						this.app.load(data);
+
+					}
 
 				},
 				error: data => {

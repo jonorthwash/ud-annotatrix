@@ -269,7 +269,7 @@ TreeLayout.prototype.run = function(){
         //x = col * cellWidth + cellWidth / 2 + bb.x1;
         y = row * cellHeight + cellHeight / 2 + bb.y1;
 
-        log.debug('tree.js [' + row + '][' + col + '] x,y = ' + x + ',' + y);
+        //log.debug('tree.js [' + row + '][' + col + '] x,y = ' + x + ',' + y);
 
         use( row, col );
 

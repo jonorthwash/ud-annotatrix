@@ -24,7 +24,6 @@
     "socket.io-cookie-parser": "^1.0.0",
     "sqlite3": "^4.0.2",
     "underscore": "^1.9.1",
-    "undo-manager": "^1.0.5",
     "uuid": "^3.3.2",
     "waypoints": "^4.0.1",
     "webfont": "^8.1.4"

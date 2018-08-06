@@ -7,6 +7,7 @@ var _graph = {
 
 	pan: { x: 0, y: 0 },
 	zoom: 1,
+	drawn_sentences: new Set(),
 
   edge_height: 40,
 	edge_coeff: 1,
