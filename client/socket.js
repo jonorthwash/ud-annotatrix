@@ -7,19 +7,53 @@ const _Socket = require('socket.io-client');
 
 class Socket {
   constructor(app) {
+
     this.app = app;
-    this._socket = utils.check_if_browser()
-      ? new _Socket()
-      : null;
+    this._socket = null;
     this.initialized = false;
+    this.isOpen = false;
+
   }
 
-  broadcast(...args) {
-    console.log('broadcast', ...args);
+  connect() {
+    if (!utils.check_if_browser())
+      return;
+
+    const collab = this.app.collab;
+
+    this._socket = new _Socket();
+
+    this._socket.on('initialization', data => {
+
+      this.initialized = true;
+      this.isOpen = true;
+      collab.setSelf(data);
+
+    });
+
+    this._socket.on('connection', d => collab.addUser(d));
+    this._socket.on('disconnection', d => collab.removeUser(d));
+
+    this._socket.on('modify corpus', d => collab.onModify(d));
+    this._socket.on('modify index', d => collab.onModifyIndex(d));
+    this._socket.on('lock graph', d => collab.onLock(d));
+    this._socket.on('unlock graph', d => collab.onUnlock(d));
+    this._socket.on('move mouse', d => collab.onMoveMouse(d));
+    this._socket.on('new message', d => collab.onMessage(d));
+  }
+
+  broadcast(name, data) {
+
+    console.log('broadcast', name, data);
+    this._socket.emit(name, data);
   }
 
   on(...args) {
     console.log('socket on', ...args);
+  }
+
+  unlink() {
+    console.log('socket unlink');
   }
 }
 

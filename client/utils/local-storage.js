@@ -117,6 +117,7 @@ function save(value) {
   if (!isAvailable())
     return null;
 
+  value = JSON.stringify(value);
   return localStorage.setItem(funcs.getTreebankId(), value);
 }
 
@@ -125,7 +126,8 @@ function load() {
   if (!isAvailable())
     return null;
 
-  return localStorage.getItem(funcs.getTreebankId());
+  let serial = localStorage.getItem(funcs.getTreebankId());
+  return JSON.parse(serial);
 }
 
 function clear() {

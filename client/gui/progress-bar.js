@@ -11,8 +11,9 @@ var _progress = {
 
 function refresh() {
 
+  console.log('refresh', _progress)
   const percent = (_progress.total ? _progress.done / _progress.total : 0) * 100;
-  $('#progressBar')
+  $('#progress-bar')
     .css('width', `${percent}%`);
 }
 

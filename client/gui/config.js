@@ -7,16 +7,15 @@ var _gui = {
 
 	is_browser: utils.check_if_browser(),
 
-	pinned_menu_items: [
-		'collab',
-		'save-corpus',
+	pinned_menu_items: new Set([
 		'discard-corpus',
 		'show-help',
-	],
+	]),
 	is_textarea_visible: true,
 	is_table_visible: false,
 	is_label_bar_visible: true,
 	column_visibilities: new Array(10).fill(true),
+	textarea_height: 238,
 
 	statusNormalFadeout: 3000,
 	statusErrorFadeout: 5000,

@@ -48,7 +48,8 @@ function name(which) {
 
 function keyup(app, event) {
 
-  const corpus = app.corpus,
+  const collab = app.collab,
+    corpus = app.corpus,
     graph = app.graph,
     gui = app.gui;
 
@@ -64,7 +65,6 @@ function keyup(app, event) {
       } else {
         corpus.next();
       }
-      return;
 
     } else if (event.which === KEYS.PAGE_UP) {
       if (pressed.has(KEYS.SHIFT)) {
@@ -72,28 +72,25 @@ function keyup(app, event) {
       } else {
         corpus.prev()
       }
-      return;
 
     } else if (event.which === KEYS.Z && !pressed.has(KEYS.SHIFT)) {
       undoManager.undo();
-      return;
 
     } else if (event.which === KEYS.Y || pressed.has(KEYS.Z)) {
       undoManager.redo();
-      return;
 
     } else if (event.which === KEYS.L) {
       $('#label-input').focus();
-      return;
 
     } else if (47 < event.which && event.which < 58) { // key in 0-9
 
       const num = event.which - 48;
-      graph.graph.cy.zoom(1.5 ** (num - 5));
+      graph.zoom.to(1.5 ** (num - 5));
       gui.refresh();
-      return;
 
     }
+
+    return;
   }
 
   if ($(':focus').is('.conllu-table')) {
@@ -104,7 +101,7 @@ function keyup(app, event) {
     switch (event.which) {
       case (KEYS.ENTER):
         table.toggleEditing();
-        return;
+        break;
 
       case (KEYS.TAB):
         if (pressed.has(KEYS.SHIFT)) {
@@ -114,33 +111,35 @@ function keyup(app, event) {
           table.goRight(true);
           table.toggleEditing(true);
         }
-        return;
+        break;
 
       case (KEYS.UP):
         if (!table.editing)
           table.goUp();
-        return;
+        break;
 
       case (KEYS.DOWN):
         if (!table.editing)
           table.goDown();
-        return;
+        break;
 
       case (KEYS.LEFT):
         if (!table.editing)
           table.goLeft();
-        return;
+        break;
 
       case (KEYS.RIGHT):
         if (!table.editing)
           table.goRight();
-        return;
+        break;
 
       case (KEYS.ESC):
         const originalValue = td.attr('original-value') || '';
         td.text(originalValue).blur();
-        return;
+        break;
     }
+
+    return;
   }
 
   if ($(':focus').is('#current-sentence')) {
@@ -148,26 +147,28 @@ function keyup(app, event) {
     switch (event.which) {
       case (KEYS.ENTER):
         corpus.index = parseInt($('current-sentence').val()) - 1;
-        return;
+        break;
 
       case (KEYS.LEFT):
       case (KEYS.J):
         corpus.prev();
-        return;
+        break;
 
       case (KEYS.RIGHT):
       case (KEYS.K):
         corpus.next();
-        return;
+        break;
 
       case (KEYS.MINUS):
         corpus.removeSentence();
-        return;
+        break;
 
       case (KEYS.EQUALS):
         corpus.insertSentence();
-        return;
+        break;
     }
+
+    return;
   }
 
   if ($(':focus').is('#edit')) {
@@ -176,7 +177,7 @@ function keyup(app, event) {
       case (KEYS.ENTER):
         app.graph.intercepted = false;
         graph.clear();
-        return;
+        break;
 
       case (KEYS.TAB):
         graph.intercepted = false;
@@ -185,14 +186,16 @@ function keyup(app, event) {
         } else {
           graph.next();
         }
-        return;
+        break;
 
       case (KEYS.ESC):
         app.graph.intercepted = false;
         app.graph.editing = null;
         graph.clear();
-        return;
+        break;
     }
+
+    return;
   }
 
   if ($(':focus').is('#text-data')) {
@@ -200,11 +203,11 @@ function keyup(app, event) {
     switch (event.which) {
       case (KEYS.ESC):
         this.blur();
-        return;
+        break;
 
       case (KEYS.ENTER):
         console.log('onEnter() not implemented');//onEnter(event);
-        return;
+        break;
 
       case (KEYS.TAB):
 
@@ -214,7 +217,7 @@ function keyup(app, event) {
           after = contents.substring(cursor, contents.length);
 
         $('#text-data').val(before + '\t' + after);
-        return;
+        break;
 
       default:
         // wait a full second before parsing (this prevents immediate trimming
@@ -226,12 +229,23 @@ function keyup(app, event) {
           if (corpus.parsed) {
             corpus.parse($('#text-data').val());
           } else {
-            corpus.current._meta.unparsed = $('#text-data').val();
+            corpus.unparsed = $('#text-data').val();
           }
 
         }, 1000);
-        return;
+        break;
     }
+
+    return;
+  }
+
+  if ($(':focus').is('#chat-input')) {
+    if (event.which === KEYS.ENTER) {
+
+      gui.chat.sendMessage(collab);
+
+    }
+    return;
   }
 
   if (event.which === KEYS.QUESTION_MARK) {
@@ -249,25 +263,25 @@ function keyup(app, event) {
         }/* else if (graph.cy.$('.supAct').length) {
           removeSup(st);
         }*/
-        return;
+        break;
 
       case (KEYS.D):
         if (graph.cy.$('.selected').length) {
           graph.cy.$('.selected').toggleClass('moving');
           graph.moving_dependency = !graph.moving_dependency;
         }
-        return;
+        break;
 
       case (KEYS.P):
         /* if (text not focused)
           setPunct();*/
         console.log('setPunct() not implemented');
-        return;
+        break;
 
       case (KEYS.R):
         if (graph.cy.$('node.form.activated'))
           graph.setRoot(graph.cy.$('node.form.activated'));
-        return;
+        break;
 
       case (KEYS.S):
 
@@ -284,9 +298,11 @@ function keyup(app, event) {
 
         }
         gui.status.refresh();
-        return;
+        break;
 
       case (KEYS.M):
+
+        graph.cy.$('.form').removeClass('combine-source combine-left combine-right');
 
         if (graph.cy.$('.merge-source').length) {
 
@@ -297,10 +313,12 @@ function keyup(app, event) {
             .removeClass('merge-source')
             .addClass('activated');
 
+          graph.lock(graph.cy.$('.activated'));
+
         } else if (graph.cy.$('.activated').length) {
 
           if (graph.cy.$('.activated').data('type') !== 'token')
-            return;
+            break;
 
           graph.cy.$('.activated')
             .addClass('merge-source');
@@ -309,22 +327,27 @@ function keyup(app, event) {
             .removeClass('neighbor combine-source combine-left combine-right')
 
           const left = graph.getLeftForm();
-          if (!left.hasClass('activated') && left.data('type') === 'token')
+          if (!left.hasClass('activated') && !left.hasClass('blocked') && left.data('type') === 'token')
             left
               .addClass('neighbor')
               .addClass('merge-left');
 
           const right = graph.getRightForm();
-          if (!right.hasClass('activated') && right.data('type') === 'token')
+          if (!right.hasClass('activated') && !right.hasClass('blocked') && right.data('type') === 'token')
             right
               .addClass('neighbor')
               .addClass('merge-right');
 
+          graph.lock(graph.cy.$('.activated'));
+
         }
         gui.status.refresh();
-        return;
+        break;
 
       case (KEYS.C):
+
+        graph.cy.$('.form').removeClass('merge-source merge-left merge-right');
+
         if (graph.cy.$('.combine-source').length) {
 
           graph.cy.$('.neighbor')
@@ -334,10 +357,12 @@ function keyup(app, event) {
             .removeClass('combine-source')
             .addClass('activated');
 
+          graph.lock(graph.cy.$('.activated'));
+
         } else if (graph.cy.$('.activated').length) {
 
           if (graph.cy.$('.activated').data('type') !== 'token')
-            return;
+            break;
 
           graph.cy.$('.activated')
             .addClass('combine-source');
@@ -346,20 +371,20 @@ function keyup(app, event) {
             .removeClass('neighbor merge-source merge-left merge-right')
 
           const left = graph.getLeftForm();
-          if (!left.hasClass('activated') && left.data('type') === 'token')
+          if (!left.hasClass('activated') && !left.hasClass('blocked') && left.data('type') === 'token')
             left
-              .addClass('neighbor')
-              .addClass('combine-left');
+              .addClass('neighbor combine-left');
 
           const right = graph.getRightForm();
-          if (!right.hasClass('activated') && right.data('type') === 'token')
+          if (!right.hasClass('activated') && !right.hasClass('blocked') && right.data('type') === 'token')
             right
-              .addClass('neighbor')
-              .addClass('combine-right');
+              .addClass('neighbor combine-right');
+
+          graph.lock(graph.cy.$('.activated'));
 
         }
         gui.status.refresh();
-        return;
+        break;
 
       case (KEYS.LEFT):
 
@@ -369,18 +394,20 @@ function keyup(app, event) {
 
         if (graph.cy.$('.merge-left').length) {
 
-          const src = graph.cy.$('.merge-source').data('token');
-          const tar = graph.cy.$('.merge-left').data('token');
-          graph.merge(src, tar);
+          const src = graph.cy.$('.merge-source');
+          const tar = graph.cy.$('.merge-left');
+          if (!tar.hasClass('locked'))
+            graph.merge(src.data('token'), tar.data('token'));
 
         } else if (graph.cy.$('.combine-left').length) {
 
-          const src = graph.cy.$('.combine-source').data('token');
-          const tar = graph.cy.$('.combine-left').data('token');
-          graph.combine(src, tar);
+          const src = graph.cy.$('.combine-source');
+          const tar = graph.cy.$('.combine-left');
+          if (!tar.hasClass('locked'))
+            graph.combine(src.data('token'), tar.data('token'));
 
         }
-        return;
+        break;
 
       case (KEYS.RIGHT):
 
@@ -390,45 +417,48 @@ function keyup(app, event) {
 
           if (graph.cy.$('.merge-right').length) {
 
-            const src = graph.cy.$('.merge-source').data('token');
-            const tar = graph.cy.$('.merge-right').data('token');
-            graph.merge(src, tar);
+            const src = graph.cy.$('.merge-source');
+            const tar = graph.cy.$('.merge-right');
+            if (!tar.hasClass('locked'))
+              graph.merge(src.data('token'), tar.data('token'));
 
           } else if (graph.cy.$('.combine-right').length) {
 
-            const src = graph.cy.$('.combine-source').data('token');
-            const tar = graph.cy.$('.combine-right').data('token');
-            graph.combine(src, tar);
+            const src = graph.cy.$('.combine-source');
+            const tar = graph.cy.$('.combine-right');
+            if (!tar.hasClass('locked'))
+              graph.combine(src.data('token'), tar.data('token'));
 
           }
-        return;
+        break;
 
       case (KEYS.EQUALS):
       case (KEYS.EQUALS_):
         if (event.shiftKey) {
-          graph.zoomIn();
+          graph.zoom.in();
         } else {
-          graph.cy.fit().center();
+          graph.zoom.fit();
         }
-        return;
+        break;
 
       case (KEYS.MINUS):
       case (KEYS.MINUS_):
         if (event.shiftKey) {
-          graph.zoomOut();
+          graph.zoom.out();
         } else {
-          graph.cy.fit().center();
+          graph.zoom.fit();
         }
-        return;
+        break;
 
       case (KEYS.ENTER):
         graph.intercepted = false;
         graph.clear();
-        return;
+        break;
 
       case (KEYS.ESC):
+        graph.intercepted = false;
         graph.clear();
-        return;
+        break;
 
     }
 

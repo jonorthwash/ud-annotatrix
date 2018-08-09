@@ -19,6 +19,7 @@ function hide() {
 
 function bind() {
 
+  console.log('binding');
   $('#upload-modal')
     .find('[name="close"]')
     .click(hide);
@@ -28,6 +29,7 @@ function bind() {
 module.exports = gui => {
 
   _gui = gui;
+  bind();
 
   return {
     bind,

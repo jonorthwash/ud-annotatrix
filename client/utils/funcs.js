@@ -51,9 +51,7 @@ module.exports = {
 
   noop: arg => arg,
 
-  getUsername: data => {
-    return data.username || '<Anonymous>';
-  },
+  thin: arg => !!arg ? arg : undefined,
 
   getPresentUsers: room => {
     return Object.keys(room.users).length;

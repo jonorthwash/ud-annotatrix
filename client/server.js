@@ -51,17 +51,20 @@ class Server {
 		}
 	}
 
-	save(state) {
+	save(serial) {
 
 		if (!this.is_running)
 			return null;
 
 		try {
+
+			serial = JSON.stringify(serial);
+
 			$.ajax({
 				type: 'POST',
 				url: `/save?treebank_id=${this.treebank_id}`,
   			contentType: "application/json; charset=utf-8",
-				data: state,
+				data: serial,
 				dataType: 'json',
 				success: data => {
 
@@ -112,7 +115,8 @@ class Server {
 
 					} else {
 
-						console.info('AJAX load success with response:', data);
+						//console.info('AJAX load success with response:', data);
+						data = JSON.parse(data);
 						this.app.load(data);
 
 					}

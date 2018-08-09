@@ -19,6 +19,24 @@ class Table {
     return $('#table-data .editing').length;
   }
 
+  toConllu() {
+
+    let rows = [];
+    for (let i=0; i<this.rows; i++) {
+
+      let row = [];
+      for (let j=0; j<10; j++) {
+
+        row.push($(`[row-id="${i}"][col-id="${j}"]`).text() || '_');
+
+      }
+
+      rows.push(row.join('\t'));
+    }
+
+    return rows.join('\n');
+  }
+
   goRight(wrap) {
 
     if (this.col === this.cols - 1) {
@@ -151,7 +169,7 @@ class Table {
         target
           .addClass('focused');
 
-        this.toggleEditing(true);
+        self.toggleEditing(true);
 
       })
       .blur(e => {
@@ -169,9 +187,8 @@ class Table {
 
         if (value === originalValue)
           return;
-        token[field] = value;
-        self.gui.app.save();
 
+        self.gui.app.corpus.parse(self.toConllu());
       });
 
   }

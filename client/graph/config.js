@@ -7,10 +7,16 @@ var _graph = {
 
 	pan: { x: 0, y: 0 },
 	zoom: 1,
-	drawn_sentences: new Set(),
+	drawn_sentence: false,
 
   edge_height: 40,
 	edge_coeff: 1,
+
+	mouse_move_delay: 100, // msecs
+
+	locked_index: null,
+	locked_id: null,
+	locked_classes: null,
 
   set: params => _.each(params, (value, key) => {
 			if (_graph[key] !== undefined)

@@ -227,13 +227,6 @@ div.center {
   padding-left: 2em;
   padding-right: 2em;
 }
-#content {
-  margin: 0 15px;
-  flex-grow: 1;
-  display: flex;
-  flex-flow: column;
-  justify-content: flex-start;
-}
 
 #manual-main {
   max-width:960px;
@@ -518,38 +511,19 @@ h4, h5, h6 {
   float: right;
 }
 
-.inarea {
+#upper {
+
 	clear: both ;
-	background-color: #eee ;
 	width: 100% ;
 	vertical-align: bottom ;
+  padding: 0 2em;
+
 }
 
-/**
-.inarea button.selected {
-	background: #fff ;
-}
+#upper .row {
 
-.inarea button {
-	border: 1px solid silver ;
-	border-radius: 3px 3px 0 0 ;
-	border-bottom: none ;
-	margin-right: 1ex ;
-	padding: 0.5ex ;
-	display: inline-block ;
-}
-
-.inarea button:hover {
-	cursor: pointer ;
-	color: #aaa ;
-	display: inline-block ;
-}
-**/
-
-.inarea .row {
 	margin-left: 0 !important;
 	margin-right: 0 !important;
-	padding: 1ex 1ex 0 1ex;
 
 }
 
@@ -579,10 +553,10 @@ h4, h5, h6 {
   flex-grow: 1;
 }
 
-.graph {
-	clear: both ;
-  position: relative;
-  height: 99%;
+#graph {
+
+  height: 100%;
+
 }
 
 #current-sentence {
@@ -691,15 +665,11 @@ th i {
 	border-right: 1px solid #e9ecef !important ;
 }
 
-#progressContainer {
-    position: fixed;
-    left: 0px;
-    bottom: 0px;
-    height: 4px;
-    width: 100%;
+#progress-container {
+  height: 5px;
 }
 
-#progressBar {
+#progress-bar {
     width: 0%;
     border-radius: 5px;
     height: 100%;
@@ -758,12 +728,17 @@ th i {
   display: none;
 }
 
-.controls > .graph-btn-group {
+#graph-buttons {
   position: absolute;
-  right: 0;
+  top: 0;
+  right: 2em;
 }
 
-.graph-btn-group .btn {
+#graph-buttons .btn-group {
+  padding-right: 0;
+}
+
+#graph-buttons .btn {
   z-index: 4;
 }
 
@@ -802,6 +777,8 @@ td .parse-error {
 }
 
 #top-buttons-container {
+  padding: 1ex 1ex 0 1ex;
+  background-color: #eee;
   border: 1px solid #ddd;
   border-top: 0;
 }
@@ -811,9 +788,11 @@ td .parse-error {
 }
 
 #label-container {
+
   background-color: #fff;
   display: flex;
   padding: 0;
+
 }
 
 #labels-horiz {
@@ -949,8 +928,6 @@ li.label input[name="label-color"] {
   top: 38px;
   z-index: 10;
   background-color: #eee;
-  width: 19em; /* enough to cover the pan-sentences buttons */
-  background-color: #eee;
   padding: 12px 16px;
   border: 3px solid #333;
   border-radius: 3px;
@@ -987,6 +964,7 @@ a.dropdown-group-item {
   justify-content: space-between;
   align-items: center;
   margin-left: 1ch;
+  white-space: nowrap;
 }
 
 a.dropdown-group-item.disabled {
@@ -1001,10 +979,12 @@ a.dropdown-group-item:hover {
 span.dropdown-group-item-name i {
   width: 1.5ch;
   text-align: center;
+  margin: 0 0.5ch;
 }
 
 .pin {
   opacity: 0;
+  margin-left: 2ch;
 }
 
 .pinned .pin {
@@ -1015,7 +995,7 @@ span.dropdown-group-item-name i {
   opacity: 0.3;
 }
 
-.btn.pinnable.unpinned {
+.btn.pinnable.unpinned:not(.dropdown-group-item) {
   display: none;
 }
 
@@ -1026,14 +1006,11 @@ span.dropdown-group-item-name i {
 }
 
 #status-container {
-  position: absolute;
-  bottom: 4px;
-  left: 15px;
-  right: 15px;
-  overflow-x: scroll;
 
+  overflow-x: scroll;
   display: flex;
-  max-width: 90%;
+  padding: 0 1em;
+
 }
 
 .status {
@@ -1175,4 +1152,199 @@ td.column-hide [name="input"] {
 
 th.column-hide span.col-name {
   display: none;
+}
+
+#content {
+
+  height: 100%;
+  width: 100%;
+
+  display: flex;
+  flex-flow: column;
+}
+
+#lower {
+  height: 100%;
+  position: relative;
+
+  display: flex;
+  flex-flow: column;
+}
+
+#chat {
+  z-index: 4;
+  position: absolute;
+  right: 2em;
+  bottom: 0;
+  width: 16em;
+
+  display: flex;
+  flex-flow: column;
+  align-items: flex-end;
+  background-color: #eee;
+
+  border: solid 2px #ddd;
+  border-bottom: 0;
+  border-radius: 0;
+  border-top-left-radius: 0.25rem;
+  border-top-right-radius: 0.25rem;
+  padding: 0;
+}
+
+#chat-persist {
+
+  display: flex;
+  justify-content: space-between;
+  padding: 0;
+  line-height: 2em;
+  cursor: pointer;
+  width: 100%;
+
+  padding: 0 0.5rem;
+}
+
+#chat-available {
+  font-size: 50%;
+  vertical-align: middle;
+}
+
+#chat-persist a.btn {
+  font-size: 70%;
+  padding: 0.2rem 0.3rem;
+}
+
+#chat-persist .chat-detail {
+  color: #868e96;
+}
+
+#chat-expand {
+  display: flex;
+  flex-flow: column;
+  padding: 0;
+  width: 100%;
+}
+
+#chat-expand .chat-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+#chat-expand .chat-content {
+  min-height: 12em;
+  max-height: 20em;
+
+  border: solid 2px #ddd;
+  border-radius: 0;
+
+  background-color: #fefefe;
+  overflow: scroll;
+}
+
+#chat-expand .chat-footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 0;
+  line-height: 2em;
+  cursor: pointer;
+  width: 100%;
+
+  padding: 0;
+}
+
+#chat-expand #chat-input {
+  width: 100%;
+  border: solid 2px #868e96;
+  padding: 0 0.5rem;
+}
+
+#chat-expand #chat-send {
+  border-radius: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+#chat-messages {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem;
+}
+
+.message {
+  display: flex;
+  flex-flow: column;
+  width: 100%;
+  margin: 0.3rem 0;
+  padding: 0 0.5rem;
+}
+
+.message.message-alert {
+  flex-flow: row;
+  justify-content: center;
+  font-size: 70%;
+}
+
+.message-content {
+  display: flex;
+  flex-flow: row;
+  justify-content: space-between;
+  align-items: center;
+  white-space: normal;
+}
+
+.self .message-content {
+  flex-flow: row-reverse;
+}
+
+.message-text {
+  border: solid 1px #868e96;
+  background-color: #ddd;
+  border-radius: 1rem;
+
+  padding: 0.2rem 0.5rem;
+  text-align: left;
+  max-width: 80%;
+}
+
+.self .message-text {
+  border-bottom-right-radius: 0;
+}
+
+.other .message-text {
+  border-bottom-left-radius: 0;
+}
+
+.message .meta {
+  font-size: 60%;
+  color: #868e96;
+}
+
+.message .message-timestamp {
+  display: none;
+  padding: 0 0.2rem;
+}
+
+.message:hover .message-timestamp {
+  display: inline;
+}
+
+.message-sender {
+  text-align: left;
+}
+
+.self .message-sender {
+  display: none;
+}
+
+.message-color-blob {
+  vertical-align: middle;
+  font-size: 60%;
+  margin: 0 0.15rem;
+}
+
+.message-alert .message-sender-info {
+  margin: 0 0.3rem;
+}
+
+.message-alert .content {
+  color: #868e96;
 }

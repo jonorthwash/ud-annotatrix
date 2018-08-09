@@ -118,8 +118,6 @@ module.exports = app => {
 
   app.post('/save', get_treebank, (req, res) => {
 
-    console.log(req.body);
-    console.log(typeof req.body)
     CorpusDB(req.treebank).save(null, req.body, err => {
       if (err)
         res.json({ error: err.message });

@@ -274,23 +274,6 @@ class CorpusDB {
 
     state.meta = _.defaults(state.meta, {
       filename: filename,
-      pinned_menu_items: {
-        login: false,
-        'manage-permissions': false,
-        collab: true,
-				'save-corpus': false,
-				'upload-corpus': false,
-				'download-corpus': false,
-				'discard-corpus': false,
-				"export-as-latex": false,
-				"export-as-png": false,
-				"export-as-svg": false,
-				'show-help': true,
-				'show-settings': false,
-				'show-table': false
-      },
-      is_textarea_visible: true,
-      is_label_bar_visible: true,
     });
     state = JSON.stringify(state, null, 2);
     fs.writeFile(this.path, state, next);

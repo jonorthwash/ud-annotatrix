@@ -34,18 +34,19 @@ class App {
     this.undoer = new UndoManager(this);
     this.server = new Server(this);
     this.socket = new Socket(this);
-    this.collab = new CollaborationInterface(this);
     this.gui = new GUI(this);
+    this.collab = new CollaborationInterface(this);
     this.corpus = new Corpus(this);
     this.graph = new Graph(this);
     this.initialized = true;
 
-    this.gui.refresh();
     this.server.connect();
+    this.socket.connect();
+    this.gui.refresh();
 
   }
 
-  save() {
+  save(message) {
 
     if (!this.initialized || this.undoer.active)
       return;
@@ -56,34 +57,34 @@ class App {
     this.gui.save();
     this.graph.save();
 
-    // save the treebank
+    // serialize the corpus
     let serial = this.corpus.serialize();
-    serial = JSON.stringify(serial);
+
+    // add it to the undo/redo stack if it's an actual change
+    this.undoer.push(serial)
+
+    if (message)
+      this.socket.broadcast('modify corpus', {
+        type: message.type,
+        indices: message.indices,
+        serial: serial,
+      });
+
+    // save it to server/local
     if (this.server.is_running) {
       this.server.save(serial);
     } else {
       utils.storage.save(serial);
     }
 
-    // add it to the undo/redo stack
-    this.undoer.push();
-
     // refresh the gui stuff
     this.gui.refresh();
-    /*
-    if (broadcast)
-      this.app.socket.broadcast({
-        type: 'remove-sentence',
-        index: this.index,
-        sent: sent,
-      });*/
+
   }
 
   load(serial) {
 
-    this.gui.status.normal('loading...')
-
-    serial = JSON.parse(serial);
+    //this.gui.status.normal('loading...')
     this.corpus = new Corpus(this, serial);
     this.gui.refresh();
 
@@ -91,13 +92,25 @@ class App {
 
   discard() {
 
-    console.log('discard');
+    this.corpus = new Corpus(this);
+    this.save();
+    this.gui.menu.is_visible = false;
+    this.gui.refresh();
 
   }
 
   download() {
 
-    console.log('download');
+    const contents = this.corpus._corpus._sentences.map((sent, i) => {
+      try {
+        return sent.to(this.corpus.format).output;
+      } catch (e) {
+        console.error(e);
+        return `[Unable to generate sentence #${i+1} in "${this.corpus.format}" format]`;
+      }
+    }).join('\n\n');
+
+    utils.download(`${this.corpus.filename}.corpus`, 'text/plain', contents);
 
   }
 }

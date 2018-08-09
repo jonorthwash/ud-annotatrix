@@ -9,8 +9,7 @@ class Menu {
   constructor(gui) {
 
     this.gui = gui;
-    this.is_menu_visible = false;
-    this.is_collab_visible = false; // TODO: move this to /client/collab ?
+    this.is_visible = false;
 
   }
 
@@ -18,9 +17,20 @@ class Menu {
 
     const self = this;
 
+    $('#content').click(e => {
+
+      const isDescendent = !!$(e.target).closest('#dropdown-container').length;
+      if (isDescendent)
+        return;
+
+      self.is_visible = false;
+      self.refresh();
+
+    });
+
     $('#btnMenuDropdown').click(e => {
 
-      self.is_menu_visible = !self.is_menu_visible;
+      self.is_visible = !self.is_visible;
       self.refresh();
 
     });
@@ -36,28 +46,27 @@ class Menu {
     $('#btnRemoveSentence').click(e => self.gui.app.corpus.removeSentence());
     $('#btnAddSentence').click(e => self.gui.app.corpus.insertSentence());
 
-    $('#toggle-collab').click(e => {
-
-      self.is_collab_visible = !self.is_collab_visible;
-      self.refresh();
-
-    });
-
     $('.pin').click(e => {
 
-      const name = $(e.target).closest('.dropdown-group-item').attr('name'),
-        pinned = self.gui.config.pinned_menu_items,
-        index = pinned.indexOf(name);
+      const name = $(e.target).closest('.dropdown-group-item').attr('name');
 
-      if (index > -1) {
-        pinned.splice(index, 1);
+      if (self.gui.config.pinned_menu_items.has(name)) {
+        self.gui.config.pinned_menu_items.delete(name);
       } else {
-        pinned.push(name);
+        self.gui.config.pinned_menu_items.add(name);
       }
 
       self.gui.save();
       self.refresh();
     });
+
+    $('[name="chat"]').click(e => {
+
+      const chat = self.gui.chat;
+      chat.is_visible = !chat.is_visible;
+
+      chat.refresh();
+    })
 
     $('[name="logout"]').click(e => {
       utils.link(`/logout?treebank_id=${utils.getTreebankId()}`, '_self');
@@ -150,10 +159,15 @@ class Menu {
       if ($(e.target).hasClass('disabled'))
         return;
 
-      if (!self.gui.app.corpus.parsed)
-        self.gui.app.corpus.parse($('#text-data').val());
+      const corpus = self.gui.app.corpus;
 
-      self.gui.app.corpus.current._meta.format = $(e.target).attr('name');
+      if (corpus.format === $(e.target).attr('name'))
+        return;
+
+      if (!corpus.parsed)
+        corpus.parse(corpus.unparsed);
+
+      corpus.format = $(e.target).attr('name');
       self.gui.refresh();
 
     });
@@ -171,16 +185,12 @@ class Menu {
 
     $('#dropdown-container .dropdown-toggle')
       .removeClass('open');
-    if (this.is_menu_visible)
+    if (this.is_visible)
       $('#dropdown-container .dropdown-toggle').addClass('open');
 
     $('#dropdown-container .dropdown-content')
       .removeClass('menu-show menu-hidden')
-      .addClass(this.is_menu_visible ? 'menu-show' : 'menu-hidden');
-
-    $('#toggle-collab #currently-online-list')
-      .removeClass('menu-show menu-hidden')
-      .addClass(this.is_collab_visible ? 'menu-show' : 'menu-hidden');
+      .addClass(this.is_visible ? 'menu-show' : 'menu-hidden');
 
     $('.pinnable')
       .removeClass('pinned')
@@ -241,10 +251,10 @@ class Menu {
 
     // other buttons
 
-    if (!this.gui.app.server.is_running)
-      $('[name="upload-corpus"]')
-        .addClass('disabled')
-        .prop('disabled', true);
+    const server_running = this.gui.app.server.is_running;
+    $('[name="upload-corpus"]')
+      .toggleClass('disabled', !server_running)
+      .prop('disabled', !server_running);
 
     $('.export-button')
       .toggleClass('disabled', !this.gui.app.graph.length);
@@ -264,23 +274,6 @@ class Menu {
       .removeClass('active')
       .filter(`[name="${corpus.format}"]`)
       .toggleClass('active', corpus.parsed);
-
-    // show our warnings
-    $('.tab-warning').hide();
-    if (corpus.conversionLosses.length)
-      $(`.format-tab[name="${corpus.format}"] .tab-warning`)
-        .show()
-        .attr('title', `Unable to encode ${corpus.conversionLosses.join(', ')}`);
-
-    // show our errors
-    $('.tab-error').hide();
-    _.each(corpus.conversionErrors, (message, format) => {
-      $(`.format-tab[name="${format}"]`)
-        .addClass('disabled')
-        .find(`.tab-error`)
-          .show()
-          .attr('title', message);
-    });
 
     $('#btnToggleTextarea .fa')
       .removeClass('fa-chevron-down fa-chevon-up');

@@ -58,12 +58,17 @@ class Corpus {
     });
 
     if (this._corpus.length === 0)
-      this.insertSentence(0, '');
+      this.insertSentence(0, '', false);
 
     this.conversionLosses = [];
     this.conversionErrors = {};
 
     this.app.undoer.current = this.serialize();
+
+    setTimeout(() => {
+      if (this.app.initialized)
+        this.app.socket.broadcast('modify index', this.index);
+    }, 500);
   }
 
   get parsed() {
@@ -84,36 +89,43 @@ class Corpus {
 
   set index(index) {
 
-    this.app.socket.broadcast({
-      type: 'pan-sentences',
-      index: this.index,
-    });
-
-    if (this.app.initialized)
-      this.app.graph.save();
-      
     this._corpus.index = index;
     this.app.gui.refresh();
+
+    if (this.app.initialized)
+      this.app.socket.broadcast('modify index', this.index);
   }
 
   first() {
     this._corpus.first();
     this.app.gui.refresh();
+
+    if (this.app.initialized)
+      this.app.socket.broadcast('modify index', this.index);
   }
 
   prev() {
     this._corpus.prev();
     this.app.gui.refresh();
+
+    if (this.app.initialized)
+      this.app.socket.broadcast('modify index', this.index);
   }
 
   next() {
     this._corpus.next();
     this.app.gui.refresh();
+
+    if (this.app.initialized)
+      this.app.socket.broadcast('modify index', this.index);
   }
 
   last() {
     this._corpus.last();
     this.app.gui.refresh();
+
+    if (this.app.initialized)
+      this.app.socket.broadcast('modify index', this.index);
   }
 
   serialize() {
@@ -145,9 +157,12 @@ class Corpus {
         this.app.socket.unlink(index);
         this.app.gui.status.error(`Unable to set sentence ${index + 1}`);
 
+        // set dummy sentence
+        sent = this._corpus.setSentence(index, '');
+
         // make sure we know it's a dummy here
         sent._meta.format = null;
-        sent._meta.unparsed = serial;
+        sent._meta.unparsed = text;
 
       } else {
         throw e;
@@ -155,7 +170,13 @@ class Corpus {
     }
 
     if (main)
-      this.app.save();
+      this.app.save({
+        type: 'set',
+        indices: [index || this.index],
+      });
+
+    if (main && this.app.initialized)
+      this.app.socket.broadcast('modify index', this.index);
 
     return sent;
   }
@@ -194,7 +215,13 @@ class Corpus {
     }
 
     if (main)
-      this.app.save();
+      this.app.save({
+        type: 'insert',
+        indices: [index || this.index],
+      });
+
+    if (main && this.app.initialized)
+      this.app.socket.broadcast('modify index', this.index);
 
     return sent;
   }
@@ -220,14 +247,20 @@ class Corpus {
     }
 
     if (main)
-      this.app.save();
+      this.app.save({
+        type: 'remove',
+        indices: [index || this.index],
+      });
+
+    if (main && this.app.initialized)
+      this.app.socket.broadcast('modify index', this.index);
 
     return sent;
   }
 
   parse(text, main=true) {
 
-    let sent;
+    let sents = [];
 
     try {
 
@@ -241,6 +274,8 @@ class Corpus {
         } else {
           this.setSentence(index, split, false);
         }
+
+        sents.push(index + i);
 
       });
 
@@ -257,14 +292,20 @@ class Corpus {
     }
 
     if (main)
-      this.app.save();
+      this.app.save({
+        type: 'parse',
+        indices: sents,
+      });
 
-    return sent;
+    if (main && this.app.initialized)
+      this.app.socket.broadcast('modify index', this.index);
+
+    return sents;
   }
 
   get textdata() {
     this.tryConvertAll();
-    return this.convertTo(this.format);
+    return this.unparsed || this.convertTo(this.format);
   }
 
   getIndices() {
@@ -279,15 +320,15 @@ class Corpus {
   }
 
   get format() {
-    return this.current._meta.unparsed
-      ? null
-      : this.current._meta.format === 'notatrix serial'
+    return this.current._meta.unparsed === null
+      ? this.current._meta.format === 'notatrix serial'
         ? 'plain text'
-        : this.current._meta.format;
+        : this.current._meta.format
+      : null;
   }
 
   set format(format) {
-    throw new Error();
+    this.current._meta.format = format;
   }
 
   get is_ltr() {
@@ -318,14 +359,20 @@ class Corpus {
     this._corpus._meta.filename = filename;
   }
 
+  get unparsed() {
+    return this.current._meta.unparsed;
+  }
+
+  set unparsed(text) {
+    this.format = null;
+    this.current._meta.unparsed = text;
+  }
+
   get current() {
     return this.getSentence(this.index);
   }
 
   convertTo(format) {
-
-    if (!this.current)
-      return this.current._meta.unparsed;
 
     try {
 
@@ -358,6 +405,7 @@ class Corpus {
 
   tryConvertAll() {
 
+    this.conversionErrors = {};
     ['Brackets', 'CG3', 'CoNLL-U', 'plain text', 'SD'].forEach(format => {
       try {
 

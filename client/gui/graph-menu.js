@@ -13,34 +13,48 @@ class GraphMenu {
 
   bind() {
 
-    const corpus = this.gui.app.corpus,
-      self = this;
+    const self = this;
 
     $('#LTR').click(e => {
 
-      corpus._meta.is_ltr = !corpus._meta.is_ltr;
-      self.gui,app.save();
+      const corpus = self.gui.app.corpus;
+
+      corpus.is_ltr = !corpus.is_ltr;
+      self.gui.app.save({
+        type: 'set',
+        indices: [corpus.index],
+      });
       self.gui.refresh();
 
     });
 
     $('#vertical').click(e => {
 
-      corpus._meta.is_vertical = !corpus._meta.is_vertical;
-      self.gui.app.save();
+      const corpus = self.gui.app.corpus;
+
+      corpus.is_vertical = !corpus.is_vertical;
+      self.gui.app.save({
+        type: 'set',
+        indices: [corpus.index],
+      });
       self.gui.refresh();
 
     });
 
     $('#enhanced').click(e => {
 
-      if (corpus.current.options.enhanced) {
+      const corpus = self.gui.app.corpus;
+
+      if (corpus.is_enhanced) {
         corpus.current.unenhance();
       } else {
         corpus.current.enhance();
       }
 
-      self.gui.app.save();
+      self.gui.app.save({
+        type: 'set',
+        indices: [corpus.index],
+      });
       self.gui.refresh();
     });
   }
@@ -51,14 +65,14 @@ class GraphMenu {
 
     $('#LTR .fa')
       .removeClass('fa-align-left fa-align-right')
-      .addClass(corpus._meta.is_ltr ? 'fa-align-left' : 'fa-align-right');
+      .addClass(corpus.is_ltr ? 'fa-align-left' : 'fa-align-right');
 
     $('#vertical .fa')
-      .toggleClass('fa-rotate-90', corpus._meta.is_vertical);
+      .toggleClass('fa-rotate-90', corpus.is_vertical);
 
-    $('#enhanced')
+    $('#enhanced .fa')
       .removeClass('fa-tree fa-magic')
-      .addClass(corpus.current.options.enhanced ? 'fa-magic' : 'fa-tree');
+      .addClass(corpus.is_enhanced ? 'fa-magic' : 'fa-tree');
 
   }
 }

@@ -3,10 +3,12 @@
 const _ = require('underscore');
 const $ = require('jquery');
 const cytoscape = require('./cytoscape/cytoscape.min');
+const nx = require('notatrix');
 const utils = require('../utils');
 
 const config = require('./config');
 const sort = require('./sort');
+const zoom = require('./zoom');
 
 
 class Graph {
@@ -14,6 +16,7 @@ class Graph {
 
     this.app = app;
     this.config = config;
+    this.zoom = zoom;
     this.progress = {
       done: 0,
       total: 0,
@@ -39,7 +42,28 @@ class Graph {
     this.length = 0;
     this.clumps = 0;
 
+    this.locked = null;
+    this.mouseBlocked = false;
+
     this.load();
+  }
+
+  drawMice(mice = []) {
+    mice.forEach(mouse => {
+
+      const id = mouse.id.replace(/[#:]/g, '_');
+
+      if (!this.cy.$(`#${id}.mouse`).length)
+        this.cy.add({
+          data: { id: id },
+          classes: 'mouse'
+        });
+
+      this.cy.$(`#${id}.mouse`)
+        .position(mouse.position)
+        .css('background-color', '#' + mouse.color);
+
+    });
   }
 
   get eles() {
@@ -254,6 +278,11 @@ class Graph {
       src = src.data('token');
       tar = tar.data('token');
       tar.addHead(src);
+      this.unlock();
+      this.app.save({
+        type: 'set',
+        indices: [this.app.corpus.index],
+      });
 
     } catch (e) {
 
@@ -266,8 +295,6 @@ class Graph {
         throw e;
       }
     }
-
-    this.app.save();
 
     /*
     // TODO:
@@ -301,6 +328,11 @@ class Graph {
       let src = ele.data('sourceToken');
       let tar = ele.data('targetToken');
       tar.modifyHead(src, value);
+      this.unlock();
+      this.app.save({
+        type: 'set',
+        indices: [this.app.corpus.index],
+      });
 
     } catch (e) {
 
@@ -313,8 +345,6 @@ class Graph {
         throw e;
       }
     }
-
-    this.app.save();
   }
 
   removeDependency(ele) {
@@ -324,6 +354,11 @@ class Graph {
       let src = ele.data('sourceToken');
       let tar = ele.data('targetToken');
       tar.removeHead(src);
+      this.unlock();
+      this.app.save({
+        type: 'set',
+        indices: [this.app.corpus.index],
+      });
 
     } catch (e) {
 
@@ -336,8 +371,6 @@ class Graph {
         throw e;
       }
     }
-
-    this.app.save();
   }
 
   setRoot(ele) {
@@ -351,6 +384,11 @@ class Graph {
         sent.root.dependents.clear();
 
       ele.addHead(sent.root, 'root');
+      this.unlock();
+      this.app.save({
+        type: 'set',
+        indices: [this.app.corpus.index],
+      });
 
     } catch (e) {
 
@@ -363,8 +401,6 @@ class Graph {
         throw e;
       }
     }
-
-    this.app.save();
   }
 
   flashTokenSplitInput(ele) {
@@ -379,6 +415,11 @@ class Graph {
     try {
 
       this.app.corpus.current.split(ele.data('token'), index);
+      this.unlock();
+      this.app.save({
+        type: 'set',
+        indices: [this.app.corpus.index],
+      });
 
     } catch (e) {
 
@@ -391,14 +432,17 @@ class Graph {
         throw e;
       }
     }
-
-    this.app.save();
   }
 
   splitSuperToken(ele) {
     try {
 
       this.app.corpus.current.split(ele.data('token'));
+      this.unlock();
+      this.app.save({
+        type: 'set',
+        indices: [this.app.corpus.index],
+      });
 
     } catch (e) {
 
@@ -411,14 +455,17 @@ class Graph {
         throw e;
       }
     }
-
-    this.app.save();
   }
 
   combine(src, tar) {
     try {
 
       this.app.corpus.current.combine(src, tar);
+      this.unlock();
+      this.app.save({
+        type: 'set',
+        indices: [this.app.corpus.index],
+      });
 
     } catch (e) {
 
@@ -431,14 +478,17 @@ class Graph {
         throw e;
       }
     }
-
-    this.app.save();
   }
 
   merge(src, tar) {
     try {
 
       this.app.corpus.current.merge(src, tar);
+      this.unlock();
+      this.app.save({
+        type: 'set',
+        indices: [this.app.corpus.index],
+      });
 
     } catch (e) {
 
@@ -451,8 +501,6 @@ class Graph {
         throw e;
       }
     }
-
-    this.app.save();
   }
 
   getLeftForm() {
@@ -537,7 +585,8 @@ class Graph {
       config.zoom = this.cy.zoom();
       config.pan = this.cy.pan();
     }
-    let serial = _.pick(config, 'pan', 'zoom');
+    let serial = _.pick(config, 'pan', 'zoom', 'locked_index'
+      , 'locked_id', 'locked_classes');
     serial = JSON.stringify(serial);
     utils.storage.setPrefs('graph', serial);
 
@@ -602,6 +651,7 @@ class Graph {
     if (target.data('name') === 'dependency')
       $('#edit').select(); // highlight the current contents
 
+    this.lock(target);
     this.app.gui.status.refresh();
   }
 
@@ -610,6 +660,8 @@ class Graph {
     let serial = utils.storage.getPrefs('graph');
     serial = JSON.parse(serial);
     config.set(serial);
+
+    console.log(serial, config);
   }
 
   commit() {
@@ -641,7 +693,10 @@ class Graph {
 
         token[attr] = value;
         this.editing = null;
-        this.app.save();
+        this.app.save({
+          type: 'set',
+          indices: [this.app.corpus.index],
+        });
 
       }
     }
@@ -657,9 +712,9 @@ class Graph {
 
     this.commit();
 
-    this.cy.$('*').removeClass('splitting activated multiword-active'
-      + 'multiword-selected arc-source arc-target selected moving neighbor'
-      + 'merge-source merge-left merge-right combine-source combine-left'
+    this.cy.$('*').removeClass('splitting activated multiword-active '
+      + 'multiword-selected arc-source arc-target selected moving neighbor '
+      + 'merge-source merge-left merge-right combine-source combine-left '
       + 'combine-right');
 
     this.moving_dependency = false;
@@ -668,6 +723,7 @@ class Graph {
     $('#edit').removeClass('activated');
 
     this.app.gui.status.refresh();
+    this.unlock();
 
   }
 
@@ -698,15 +754,43 @@ class Graph {
       .zoom(config.zoom)
       .pan(config.pan);
 
-    // add a slight delay to ensure this gets drawn last
-    if (!config.drawn_sentences.has(corpus.index)) {
+    this.zoom.checkFirst(this);
 
-      console.log('never seen');
-      this.cy.fit().center();
-      config.zoom = this.cy.zoom();
-      config.pan = this.cy.pan();
-      config.drawn_sentences.add(corpus.index);
+    this.drawMice(this.app.collab.getMouseNodes());
+    this.setLocks(this.app.collab.getLocks());
 
+    if (config.locked_index === this.app.corpus.index) {
+      console.log(config.locked_id, config.locked_classes);
+
+      const locked = this.cy.$('#' + config.locked_id);
+      locked.addClass(config.locked_classes);
+
+      if (config.locked_classes.indexOf('merge-source') > -1) {
+
+        const left = this.getLeftForm();
+        if (left && !left.hasClass('activated') && !left.hasClass('blocked') && left.data('type') === 'token')
+          left
+            .addClass('neighbor merge-left');
+
+        const right = this.getRightForm();
+        if (right && !right.hasClass('activated') && !right.hasClass('blocked') && right.data('type') === 'token')
+          right
+            .addClass('neighbor merge-right');
+
+      } else if (config.locked_classes.indexOf('combine-source') > -1) {
+
+        const left = this.getLeftForm();
+        if (left && !left.hasClass('activated') && !left.hasClass('blocked') && left.data('type') === 'token')
+          left
+            .addClass('neighbor combine-left');
+
+        const right = this.getRightForm();
+        if (right && !right.hasClass('activated') && !right.hasClass('blocked') && right.data('type') === 'token')
+          right
+            .addClass('neighbor combine-right');
+      }
+
+      this.lock(locked);
     }
 
     this.bind();
@@ -718,18 +802,34 @@ class Graph {
 
     const self = this;
 
+    this.zoom.bind(this);
+
     // set a countdown to triggering a "background" click unless a node/edge intercepts it
     $('#cy canvas, #mute').mouseup(e => {
+
+      $(':focus').blur();
       self.intercepted = false;
       setTimeout(() => self.clear(), 100);
+      self.save();
+
     });
-    $('#cy canvas').mousemove(e => {
-      self.intercepted = true;
-    });
-    $('#edit').mouseup(e => {
-      self.intercepted = true;
+    $('#edit').mouseup(e => { self.intercepted = true; });
+    $('#cy canvas')
+      .mousemove(e => { self.intercepted = true; })
+      .on('wheel', e => self.save());
+
+    this.cy.on('mousemove', e => {
+
+      // send out a 'move mouse' event at most every <mouse_move_delay> msecs
+      if (self.app.initialized && !self.mouseBlocked)
+        self.app.socket.broadcast('move mouse', e.position);
+
+      self.mouseBlocked = true;
+      setTimeout(() => { self.mouseBlocked = false; }, config.mouse_move_delay);
+
     });
     this.cy.on('click cxttapend', '*', e => {
+
       self.intercepted = true;
 
       // DEBUG: this line should be taken out in production
@@ -740,6 +840,9 @@ class Graph {
     self.cy.on('click', 'node.form', e => {
 
       const target = e.target;
+
+      if (target.hasClass('locked'))
+        return;
 
       self.cy.$('.multiword-active').removeClass('multiword-active');
 
@@ -753,8 +856,11 @@ class Graph {
         self.cy.$('.moving').removeClass('moving');
         self.moving_dependency = false;
 
-        // right-click the new edge
-        self.cy.$(`#${source.attr('id')} -> #${target.attr('id')}`).trigger('cxttapend');
+        const newEdge = self.cy.$(`#${source.attr('id')} -> #${target.attr('id')}`);
+
+        // right click the new edge and lock it
+        newEdge.trigger('cxttapend');
+        self.lock(newEdge);
 
       } else {
 
@@ -767,10 +873,12 @@ class Graph {
         if (target.hasClass('merge-right') || target.hasClass('merge-left')) {
 
           self.merge(self.cy.$('.merge-source').data('token'), target.data('token'));
+          self.unlock();
 
         } else if (target.hasClass('combine-right') || target.hasClass('combine-left')) {
 
           self.combine(self.cy.$('.combine-source').data('token'), target.data('token'));
+          self.unlock();
 
         } else if (target.hasClass('activated')) {
 
@@ -784,9 +892,16 @@ class Graph {
 
           // if there was already an activated node
           if (source.length === 1) {
+
             self.makeDependency(source, target);
             source.removeClass('activated');
             target.removeClass('activated');
+            self.unlock();
+
+          } else {
+
+            self.lock(target);
+
           }
         }
       }
@@ -795,6 +910,9 @@ class Graph {
 
       const target = e.target;
 
+      if (target.hasClass('locked'))
+        return;
+
       self.commit();
       self.editing = target;
 
@@ -804,25 +922,38 @@ class Graph {
       self.cy.$('.selected').removeClass('selected');
 
       this.showEditLabelBox(target);
+      self.lock(target);
 
     });
     self.cy.on('click', '$node > node', e => {
 
       const target = e.target;
 
+      if (target.hasClass('locked'))
+        return;
+
       self.cy.$('.activated').removeClass('activated');
 
       if (target.hasClass('multiword-active')) {
+
         target.removeClass('multiword-active');
+        self.unlock();
+
       } else {
+
         self.cy.$('.multiword-active').removeClass('multiword-active');
         target.addClass('multiword-active');
+        self.lock(target);
+
       }
     });
     self.cy.on('click', 'edge.dependency', e => {
 
       const target = e.target;
 
+      if (target.hasClass('locked'))
+        return;
+
       self.commit();
       self.editing = target;
 
@@ -832,12 +963,16 @@ class Graph {
       self.cy.$('.selected').removeClass('selected');
 
       this.showEditLabelBox(target);
+      self.lock(target);
 
     });
     self.cy.on('cxttapend', 'node.form', e => {
 
       const target = e.target;
 
+      if (target.hasClass('locked'))
+        return;
+
       self.commit();
       self.editing = target;
 
@@ -847,11 +982,15 @@ class Graph {
       self.cy.$('.selected').removeClass('selected');
 
       this.showEditLabelBox(target);
+      self.lock(target);
 
     });
     self.cy.on('cxttapend', 'edge.dependency', e => {
 
       const target = e.target;
+
+      if (target.hasClass('locked'))
+        return;
 
       self.commit();
       self.cy.$('.activated').removeClass('activated');
@@ -861,6 +1000,7 @@ class Graph {
         self.cy.$(`#${target.data('source')}`).removeClass('arc-source');
         self.cy.$(`#${target.data('target')}`).removeClass('arc-target');  // visual effects on targeted node
         target.removeClass('selected');
+        self.unlock();
 
       } else {
 
@@ -872,11 +1012,59 @@ class Graph {
 
         self.cy.$('.selected').removeClass('selected');
         target.addClass('selected');
+        self.lock(target);
 
       }
     });
+  }
 
-    //self.cy.on('mousemove', e => mice.emit(e.position));
+  lock(ele) {
+
+    if (!ele || !ele.length)
+      return this.unlock();
+
+    this.locked = ele;
+    config.locked_index = this.app.corpus.index;
+    config.locked_id = ele.id();
+
+    let keys = Object.keys(_.pick(ele[0]._private.classes._obj, value => !!value));
+    keys = _.intersection(keys, ['selected', 'activated'
+      , 'multiword-active', 'merge-source', 'combine-source']);
+
+    config.locked_classes = keys.join(' ');
+    this.save();
+    this.app.socket.broadcast('lock graph', ele.id());
+
+  }
+
+  unlock() {
+
+    this.locked = null;
+    config.locked_index = null;
+    config.locked_id = null;
+    config.locked_classes = null;
+    this.save();
+    this.app.socket.broadcast('unlock graph');
+
+  }
+
+  setLocks(locks) {
+
+    this.cy.$('.locked')
+      .removeClass('locked')
+      .data('locked_by', null)
+      .css('background-color', '')
+      .css('line-color', '');
+
+    locks.forEach(lock => {
+
+      this.cy.$('#' + lock.locked)
+        .addClass('locked')
+        .data('locked_by', lock.id)
+        .css('background-color', '#' + lock.color)
+        .css('line-color', '#' + lock.color);
+
+    });
   }
 }
 

@@ -53,21 +53,22 @@ class UndoManager {
     return !!this.redoStack.length;
   }
 
-  push() {
+  push(serial) {
 
     if (this.active)
-      return;
+      return false;
 
-    const serial = this.app.corpus.serialize();
-
-    // do some comparisons here
-    if (JSON.stringify(serial) === JSON.stringify(this.current))
-      return;
+    // do some comparisons here to change for changes
+    console.log(serial)
+    console.log(this.current)
+    //if (JSON.stringify(serial) === JSON.stringify(this.current))
+      //return false;
 
     this.undoStack.push(this.current);
     this.redoStack.clear();
     this.current = serial;
 
+    return true;
   }
 
   undo() {
@@ -76,16 +77,20 @@ class UndoManager {
       return false;
 
     this.active = true;
-    let currentSerial = this.app.corpus.serialize();
+    let current = this.app.corpus.serialize();
     this.redoStack.push(this.current);
-    this.current = currentSerial;
+    this.current = current;
 
-    let undoSerial = this.undoStack.pop();
-    this.app.corpus = new Corpus(this.app, undoSerial);
+    let undo = this.undoStack.pop();
+    this.app.corpus = new Corpus(this.app, undo);
+    this.app.socket.broadcast('modify corpus', {
+      type: 'undo',
+      serial: undo,
+    });
+    this.app.save();
     this.app.gui.refresh();
     this.active = false;
 
-    this.app.save();
     return true;
   }
 
@@ -95,14 +100,18 @@ class UndoManager {
       return false;
 
     this.active = true;
-    let currentSerial = this.app.corpus.serialize();
+    let current = this.app.corpus.serialize();
     this.undoStack.push(this.current);
-    this.current = currentSerial;
+    this.current = current;
 
-    let redoSerial = this.redoStack.pop();
-    this.app.corpus = new Corpus(this.app, redoSerial);
-    this.app.gui.refresh();
+    let redo = this.redoStack.pop();
+    this.app.corpus = new Corpus(this.app, redo);
+    this.app.socket.broadcast('modify corpus', {
+      type: 'redo',
+      serial: redo,
+    });
     this.app.save();
+    this.app.gui.refresh();
     this.active = false;
 
     return true;
