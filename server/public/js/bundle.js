@@ -20,6 +20,8 @@ var UndoManager = require('./undo-manager');
 
 var App = function () {
   function App() {
+    var _this = this;
+
     _classCallCheck(this, App);
 
     this.config = config;
@@ -45,6 +47,13 @@ var App = function () {
     this.corpus = new Corpus(this);
     this.graph = new Graph(this);
     this.initialized = true;
+
+    // jump to sentence from frag id
+    setTimeout(function () {
+
+      var hash = window.location.hash.substring(1);
+      _this.corpus.index = parseInt(hash) - 1;
+    }, 500);
 
     this.server.connect();
     this.socket.connect();
@@ -105,14 +114,14 @@ var App = function () {
   }, {
     key: 'download',
     value: function download() {
-      var _this = this;
+      var _this2 = this;
 
       var contents = this.corpus._corpus._sentences.map(function (sent, i) {
         try {
-          return sent.to(_this.corpus.format).output;
+          return sent.to(_this2.corpus.format).output;
         } catch (e) {
           console.error(e);
-          return '[Unable to generate sentence #' + (i + 1) + ' in "' + _this.corpus.format + '" format]';
+          return '[Unable to generate sentence #' + (i + 1) + ' in "' + _this2.corpus.format + '" format]';
         }
       }).join('\n\n');
 
@@ -252,7 +261,6 @@ var CollaborationInterface = function () {
     key: 'onModifyIndex',
     value: function onModifyIndex(data) {
 
-      console.log(data);
       var user = this._users[data.id];
       user.viewing = data.index;
 
@@ -433,6 +441,7 @@ var _ = require('underscore');
 var nx = require('notatrix');
 
 var config = require('./config');
+var utils = require('../utils');
 
 function detectFormat(serial) {
 
@@ -480,6 +489,25 @@ var Corpus = function () {
 
     });
 
+    this._corpus._sentences.forEach(function (sent, i) {
+
+      try {
+
+        // add some metadata
+        sent._meta.format = detectFormat(sent.input);
+        sent._meta.unparsed = null;
+      } catch (e) {
+
+        if (e instanceof nx.NotatrixError) {
+          console.log(i, e.message);
+          sent._meta.format = null;
+          sent._meta.unparsed = sent.input;
+        } else {
+          throw e;
+        }
+      }
+    });
+
     if (this._corpus.length === 0) this.insertSentence(0, '', false);
 
     this.conversionLosses = [];
@@ -490,39 +518,67 @@ var Corpus = function () {
     setTimeout(function () {
       if (_this.app.initialized) _this.app.socket.broadcast('modify index', _this.index);
     }, 500);
+
+    if (utils.check_if_browser()) setTimeout(function () {
+      window.location.hash = _this.index + 1;
+    }, 100);
   }
 
   _createClass(Corpus, [{
     key: 'first',
     value: function first() {
+      var _this2 = this;
+
       this._corpus.first();
       this.app.gui.refresh();
 
       if (this.app.initialized) this.app.socket.broadcast('modify index', this.index);
+
+      if (utils.check_if_browser()) setTimeout(function () {
+        window.location.hash = _this2.index + 1;
+      }, 100);
     }
   }, {
     key: 'prev',
     value: function prev() {
+      var _this3 = this;
+
       this._corpus.prev();
       this.app.gui.refresh();
 
       if (this.app.initialized) this.app.socket.broadcast('modify index', this.index);
+
+      if (utils.check_if_browser()) setTimeout(function () {
+        window.location.hash = _this3.index + 1;
+      }, 100);
     }
   }, {
     key: 'next',
     value: function next() {
+      var _this4 = this;
+
       this._corpus.next();
       this.app.gui.refresh();
 
       if (this.app.initialized) this.app.socket.broadcast('modify index', this.index);
+
+      if (utils.check_if_browser()) setTimeout(function () {
+        window.location.hash = _this4.index + 1;
+      }, 100);
     }
   }, {
     key: 'last',
     value: function last() {
+      var _this5 = this;
+
       this._corpus.last();
       this.app.gui.refresh();
 
       if (this.app.initialized) this.app.socket.broadcast('modify index', this.index);
+
+      if (utils.check_if_browser()) setTimeout(function () {
+        window.location.hash = _this5.index + 1;
+      }, 100);
     }
   }, {
     key: 'serialize',
@@ -547,7 +603,7 @@ var Corpus = function () {
         sent = this._corpus.setSentence(index, text);
 
         // add some metadata
-        sent._meta.format = detectFormat();
+        sent._meta.format = detectFormat(text);
         sent._meta.unparsed = null;
       } catch (e) {
 
@@ -581,6 +637,8 @@ var Corpus = function () {
   }, {
     key: 'insertSentence',
     value: function insertSentence(index, text) {
+      var _this6 = this;
+
       var main = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
 
@@ -591,7 +649,7 @@ var Corpus = function () {
         sent = this._corpus.insertSentence(index, text);
 
         // add some metadata
-        sent._meta.format = detectFormat();
+        sent._meta.format = detectFormat(text);
         sent._meta.unparsed = null;
       } catch (e) {
 
@@ -620,11 +678,17 @@ var Corpus = function () {
 
       if (main && this.app.initialized) this.app.socket.broadcast('modify index', this.index);
 
+      if (utils.check_if_browser()) setTimeout(function () {
+        window.location.hash = _this6.index + 1;
+      }, 100);
+
       return sent;
     }
   }, {
     key: 'removeSentence',
     value: function removeSentence(index) {
+      var _this7 = this;
+
       var main = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 
 
@@ -651,12 +715,16 @@ var Corpus = function () {
 
       if (main && this.app.initialized) this.app.socket.broadcast('modify index', this.index);
 
+      if (utils.check_if_browser()) setTimeout(function () {
+        window.location.hash = _this7.index + 1;
+      }, 100);
+
       return sent;
     }
   }, {
     key: 'parse',
     value: function parse(text) {
-      var _this2 = this;
+      var _this8 = this;
 
       var main = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 
@@ -671,9 +739,9 @@ var Corpus = function () {
         splitted.forEach(function (split, i) {
 
           if (i) {
-            _this2.insertSentence(index + i, split, false);
+            _this8.insertSentence(index + i, split, false);
           } else {
-            _this2.setSentence(index, split, false);
+            _this8.setSentence(index, split, false);
           }
 
           sents.push(index + i);
@@ -695,6 +763,10 @@ var Corpus = function () {
       });
 
       if (main && this.app.initialized) this.app.socket.broadcast('modify index', this.index);
+
+      if (utils.check_if_browser()) setTimeout(function () {
+        window.location.hash = _this8.index + 1;
+      }, 100);
 
       return sents;
     }
@@ -741,16 +813,16 @@ var Corpus = function () {
   }, {
     key: 'tryConvertAll',
     value: function tryConvertAll() {
-      var _this3 = this;
+      var _this9 = this;
 
       this.conversionErrors = {};
       ['Brackets', 'CG3', 'CoNLL-U', 'plain text', 'SD'].forEach(function (format) {
         try {
 
-          _this3.current.to(format);
+          _this9.current.to(format);
         } catch (e) {
 
-          _this3.conversionErrors[format] = e.message;
+          _this9.conversionErrors[format] = e.message;
         }
       });
     }
@@ -801,11 +873,18 @@ var Corpus = function () {
       return this._corpus.index;
     },
     set: function set(index) {
+      var _this10 = this;
 
+      console.log(index);
       this._corpus.index = index;
+      console.log(this.index);
       this.app.gui.refresh();
 
       if (this.app.initialized) this.app.socket.broadcast('modify index', this.index);
+
+      if (utils.check_if_browser()) setTimeout(function () {
+        window.location.hash = _this10.index + 1;
+      }, 100);
     }
   }, {
     key: 'textdata',
@@ -871,7 +950,7 @@ var Corpus = function () {
 
 module.exports = Corpus;
 
-},{"./config":5,"notatrix":461,"underscore":502}],7:[function(require,module,exports){
+},{"../utils":32,"./config":5,"notatrix":461,"underscore":502}],7:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -9151,8 +9230,6 @@ var Graph = function () {
       var serial = utils.storage.getPrefs('graph');
       serial = JSON.parse(serial);
       config.set(serial);
-
-      console.log(serial, config);
     }
   }, {
     key: 'commit',
@@ -9216,8 +9293,6 @@ var Graph = function () {
 
       var corpus = this.app.corpus;
 
-      if (!corpus.parsed) return;
-
       this.options.layout = {
         name: 'tree',
         padding: 0,
@@ -9226,7 +9301,7 @@ var Graph = function () {
         rows: corpus.is_vertical ? undefined : 2,
         sort: corpus.is_vertical ? sort.vertical : corpus.is_ltr ? sort.ltr : sort.rtl
       };
-      this.options.elements = this.eles;
+      this.options.elements = corpus.parsed ? this.eles : [];
 
       this.cy = cytoscape(this.options).minZoom(0.1).maxZoom(10.0).zoom(config.zoom).pan(config.pan);
 
@@ -9880,7 +9955,6 @@ var Chat = function () {
     value: function updateUser(user) {
 
       var dom = $('.message-sender-info[name="' + user.id + '"]');
-      console.log('updating', user.viewing, user._viewing);
       dom.find('.message-sender-name').text(user.name);
       dom.find('.message-sender-viewing').text(user.viewing);
     }
@@ -10298,10 +10372,12 @@ function keyup(app, event) {
     return;
   }
 
-  if ($(':focus').is('.conllu-table')) {
+  var focus = $(':focus');
+
+  if (focus.is('.conllu-table')) {
 
     var table = gui.table;
-    var td = $(':focus');
+    var td = focus;
 
     switch (event.which) {
       case KEYS.ENTER:
@@ -10343,11 +10419,11 @@ function keyup(app, event) {
     return;
   }
 
-  if ($(':focus').is('#current-sentence')) {
+  if (focus.is('#current-sentence')) {
 
     switch (event.which) {
       case KEYS.ENTER:
-        corpus.index = parseInt($('current-sentence').val()) - 1;
+        corpus.index = parseInt($('#current-sentence').val()) - 1;
         break;
 
       case KEYS.LEFT:
@@ -10372,7 +10448,7 @@ function keyup(app, event) {
     return;
   }
 
-  if ($(':focus').is('#edit')) {
+  if (focus.is('#edit')) {
 
     switch (event.which) {
       case KEYS.ENTER:
@@ -10399,11 +10475,11 @@ function keyup(app, event) {
     return;
   }
 
-  if ($(':focus').is('#text-data')) {
+  if (focus.is('#text-data')) {
 
     switch (event.which) {
       case KEYS.ESC:
-        this.blur();
+        focus.blur();
         break;
 
       case KEYS.ENTER:
@@ -10439,7 +10515,7 @@ function keyup(app, event) {
     return;
   }
 
-  if ($(':focus').is('#chat-input')) {
+  if (focus.is('#chat-input')) {
     if (event.which === KEYS.ENTER) {
 
       gui.chat.sendMessage(collab);
@@ -10925,6 +11001,8 @@ var Labeler = function () {
       $('.label.horiz').detach();
       _.each(this.labeler._labels, function (label) {
 
+        label = label._label;
+
         $('#labels-horiz').append($('<li>').attr('name', label.name).addClass('label horiz').addClass(_this.labeler.sentenceHasLabel(_this.current) ? 'in-comments' : 'not-in-comments').addClass(_this.labeler.sentenceInFilter(_this.current) ? 'filtering' : 'not-filtering').append($('<div>').addClass('label-text').text(label.name).css('background-color', '#' + label.bColor).css('color', '#' + label.tColor)).append($('<div>').addClass('label-hidden').append($('<div>').addClass('label-hidden-group').append($('<div>').addClass('label-hidden-item').append($('<strong>').text('Name')).append($('<input>').attr('name', 'label-name').val(label.name))).append($('<div>').addClass('label-hidden-item').append($('<strong>').text('Description')).append($('<input>').attr('name', 'label-desc').val(label.desc))).append($('<div>').addClass('label-hidden-item').append($('<strong>').text('Color')).append($('<div>').addClass('label-hidden-item-inner').append($('<span>').addClass('hex-color-group').text('#').append($('<input>').attr('name', 'label-color').attr('pattern', '[A-Fa-f\\d]{6}').val(label.bColor))).append($('<button>').attr('type', 'button').addClass('btn btn-secondary refresh-color').css('background-color', '#' + label.bColor).append($('<i>').addClass('fa fa-refresh')))))).append($('<hr>')).append($('<div>').addClass('label-hidden-group').append($('<div>').addClass('label-hidden-item').append($('<div>').addClass('label-hidden-item-inner').append($('<input>').attr('name', 'filtering').attr('type', 'checkbox').prop('checked', _this.labeler.sentenceInFilter(_this.current))).append($('<span>').addClass('filtering-label checkbox-label').text('filtering'))))).append($('<hr>')).append($('<div>').addClass('label-hidden-group').append($('<div>').addClass('label-hidden-item delete-item').append($('<button>').attr('type', 'button').addClass('btn btn-secondary delete-button').text('delete'))))));
       });
 
@@ -11249,7 +11327,6 @@ function hide() {
 
 function bind() {
 
-  console.log('binding');
   $('#upload-modal').find('[name="close"]').click(hide);
 }
 
@@ -13146,10 +13223,6 @@ var AnnotatrixError = function (_Error) {
 
     // override prototype name
     _this.name = 'AnnotatrixError';
-
-    // log all errors, even if we eventually catch them ... note that this does
-    //   not show the full stack trace
-    log.error(_this.message);
     return _this;
   }
 
@@ -13389,6 +13462,7 @@ module.exports = {
 
 var _ = require('underscore');
 var $ = require('jquery');
+var uuidv4 = require('uuid/v4');
 
 var AnnotatrixError = require('./errors').AnnotatrixError;
 
@@ -13417,9 +13491,7 @@ module.exports = {
     if (!check_if_browser()) return null;
 
     var match = location.href.match(/treebank_id=([0-9a-f-]{36})(#|\/|$|&)/);
-    if (!match) throw new AnnotatrixError('invalid treebank url, must be valid uuidv4');
-
-    return match[1];
+    return match ? match[1] : uuidv4();
   },
 
   link: function link(href) {
@@ -13455,7 +13527,7 @@ module.exports = {
 
 };
 
-},{"./errors":29,"jquery":393,"underscore":502}],32:[function(require,module,exports){
+},{"./errors":29,"jquery":393,"underscore":502,"uuid/v4":505}],32:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -13505,31 +13577,31 @@ function isAvailable() {
     && localStorage.length !== 0;
   }
 }
-/*
+
 function getAvailableSpace() {
 
   // Returns the remaining available space in localStorage
-  if (!isAvailable())
-    return 0;
+  if (!isAvailable()) return 0;
 
-  const max = 10 * 1024 * 1024,
-    testKey = `size-test-${Math.random().toString()}`; // generate random key
-  let i = 64,
-    string1024 = '',
-    string = '',
-    found = 0;
+  var max = 10 * 1024 * 1024,
+      testKey = 'size-test-' + Math.random().toString(); // generate random key
+  var i = 64,
+      string1024 = '',
+      string = '',
+      found = 0;
 
   if (localStorage) {
 
     error = error || 25e4;
 
     // fill a string with 1024 symbols/bytes
-    while (i--) string1024 += 1e16
-
-    // fill a string with "max" amount of symbols/bytes
-    i = max/1024;
-    while (i--) string += string1024;
-    i = max;
+    while (i--) {
+      string1024 += 1e16;
+    } // fill a string with "max" amount of symbols/bytes
+    i = max / 1024;
+    while (i--) {
+      string += string1024;
+    }i = max;
 
     // binary search
     while (i > 1) {
@@ -13543,7 +13615,6 @@ function getAvailableSpace() {
         } else {
           break;
         }
-
       } catch (e) {
         localStorage.removeItem(testKey);
         i = found + (i - found) / 2;
@@ -13556,30 +13627,25 @@ function getAvailableSpace() {
 
 function isQuotaExceeded(event) {
 
-    if (event && event.code === 22) {
-      return true;
+  if (event && event.code === 22) {
+    return true;
+  } else if (event && event.code === 1014) {
+    return event.name === 'NS_ERROR_DOM_QUOTA_REACHED';
+  } else if (event) {
+    return event.number === -2147024882; // IE8
+  }
 
-    } else if (event && event.code === 1014) {
-      return (event.name === 'NS_ERROR_DOM_QUOTA_REACHED');
-
-    } else if (event) {
-      return (event.number === -2147024882); // IE8
-    }
-
-    return false;
+  return false;
 }
 
 function formatUploadSize(fileSize) {
 
-  if (fileSize < 1024)
-    return `${fileSize} B`;
+  if (fileSize < 1024) return fileSize + ' B';
 
-  if (fileSize < 1048576)
-    return `${(fileSize/1024).toFixed(1)} kB`;
+  if (fileSize < 1048576) return (fileSize / 1024).toFixed(1) + ' kB';
 
-  return `${(fileSize/1048576).toFixed(1)} mB`;
+  return (fileSize / 1048576).toFixed(1) + ' mB';
 }
-*/
 
 function save(value) {
 
@@ -13621,7 +13687,7 @@ function getPrefs(item) {
 module.exports = {
   isAvailable: isAvailable,
   //isQuotaExceeded,
-  //getAvailableSpace,
+  getAvailableSpace: getAvailableSpace,
   //formatUploadSize,
   save: save,
   load: load,
@@ -40524,6 +40590,12 @@ const getLoss = require('./get-loss')
 
 module.exports = (sent, options) => {
 
+  if (!sent.is_parsed)
+    return {
+      output: null,
+      loss: undefined,
+    };
+
   if (!sent || sent.name !== 'Sentence')
     throw new GeneratorError(`Unable to generate, input not a Sentence`, sent, options);
 
@@ -40923,6 +40995,12 @@ const GeneratorError = utils.GeneratorError;
 const getLoss = require('./get-loss')
 
 module.exports = (sent, options) => {
+
+  if (!sent.is_parsed)
+    return {
+      output: null,
+      loss: undefined,
+    };
 
   if (!sent || sent.name !== 'Sentence')
     throw new GeneratorError(`Unable to generate, input not a Sentence`, sent, options);
@@ -41476,6 +41554,12 @@ const getLoss = require('./get-loss')
 
 module.exports = (sent, options) => {
 
+  if (!sent.is_parsed)
+    return {
+      output: null,
+      loss: undefined,
+    };
+
   if (!sent || sent.name !== 'Sentence')
     throw new GeneratorError(`Unable to generate, input not a Sentence`, sent, options);
 
@@ -41782,7 +41866,11 @@ module.exports = (text, options) => {
         	xpostag: utils.re.fallback.test(fields[3]) ? null : fields[3],
         	feats: utils.re.fallback.test(fields[4]) ? null : fields[4].split('|'),
           heads: getHeads(fields[5], fields[6], fields[7]),
-        	misc: utils.re.fallback.test(fields[8]) ? null : fields[8].split('|'),
+        	misc: fields[8]
+            ? utils.re.fallback.test(fields[8])
+              ? null
+              : fields[8].split('|')
+            : null,
         };
 
       }
@@ -42024,6 +42112,12 @@ const getLoss = require('./get-loss')
 
 
 module.exports = (sent, options) => {
+
+  if (!sent.is_parsed)
+    return {
+      output: null,
+      loss: undefined,
+    };
 
   if (!sent || sent.name !== 'Sentence')
     throw new GeneratorError(`Unable to generate, input not a Sentence`, sent, options);
@@ -42273,6 +42367,12 @@ const getLoss = require('./get-loss')
 
 module.exports = (sent, options) => {
 
+  if (!sent.is_parsed)
+    return {
+      output: null,
+      loss: undefined,
+    };
+
   if (!sent || sent.name !== 'Sentence')
     throw new GeneratorError(`Unable to generate, input not a Sentence`, sent, options);
 
@@ -42443,6 +42543,12 @@ const getLoss = require('./get-loss')
 
 
 module.exports = (sent, options) => {
+
+  if (!sent.is_parsed)
+    return {
+      output: null,
+      loss: undefined,
+    };
 
   if (!sent || sent.name !== 'Sentence')
     throw new GeneratorError(`Unable to generate, input not a Sentence`, sent, options);
@@ -42673,6 +42779,12 @@ const generateText = require('../plain-text').generate;
 const getLoss = require('./get-loss')
 
 module.exports = (sent, options) => {
+
+  if (!sent.is_parsed)
+    return {
+      output: null,
+      loss: undefined,
+    };
 
   if (!sent || sent.name !== 'Sentence')
     throw new GeneratorError(`Unable to generate, input not a Sentence`, sent, options);
@@ -43324,6 +43436,7 @@ module.exports = Comment;
 
 const _ = require('underscore');
 const fs = require('fs');
+const path = require('path');
 const uuid = require('uuid/v4');
 
 const utils = require('../utils');
@@ -43349,6 +43462,7 @@ class Corpus extends NxBaseClass {
     options = _.defaults(options, {
       requireOne: true,
     });
+    this.filename = null;
     this.options = options;
     this.sources = [];
 
@@ -43360,12 +43474,33 @@ class Corpus extends NxBaseClass {
 
   }
 
+  get snapshot() {
+    return {
+      filename: this.filename,
+      sentences: this.length,
+      errors: this.errors.length,
+      labels: this._labeler.sort(),
+    };
+  }
+
   get length() {
     return this._sentences.length;
   }
 
+  get errors() {
+    return this._sentences.filter(sent => {
+      if (!sent.is_parsed)
+        return sent;
+    });
+  }
+
+  get topLabels() {
+    return this._labeler.top;
+  }
+
   serialize() {
     return {
+      filename: this.filename,
       meta: this._meta,
       options: this.options,
       labeler: this._labeler.serialize(),
@@ -43377,6 +43512,7 @@ class Corpus extends NxBaseClass {
   static deserialize(serial) {
 
     const corpus = new Corpus(serial.options);
+    corpus.filename = serial.filename || null;
     corpus._meta = serial.meta;
     corpus._labeler = Labeler.deserialize(corpus, serial.labeler);
     corpus._sentences = serial.sentences.map(s => {
@@ -43386,7 +43522,7 @@ class Corpus extends NxBaseClass {
 
       _.each(corpus._labeler._labels, (label, name) => {
         if (corpus._labeler.sentenceHasLabel(sent, name))
-          label.sents.add(sent);
+          label._sents.add(sent);
       });
 
       return sent;
@@ -43603,6 +43739,7 @@ class Corpus extends NxBaseClass {
     const index = this.index || 0;
 
     splitted.forEach((split, i) => {
+      //console.log(i, split);
       this.insertSentence(index + i, split, false);
     });
 
@@ -43630,6 +43767,7 @@ class Corpus extends NxBaseClass {
         data = data.toString();
         this.parse(data);
         this.sources.push(filepath);
+        this.filename = path.basename(filepath);
 
         if (next)
           next(this);
@@ -43644,7 +43782,6 @@ class Corpus extends NxBaseClass {
       next = options;
       options = {};
     }
-
     const corpus = new Corpus(options);
     corpus.readFile(filepath, next);
 
@@ -43677,7 +43814,7 @@ class Corpus extends NxBaseClass {
 
 module.exports = Corpus;
 
-},{"../converter":405,"../detector":406,"../generator":460,"../parser":476,"../splitter":477,"../utils":481,"./base-class":463,"./labeler":469,"./sentence":472,"fs":43,"underscore":502,"uuid/v4":505}],467:[function(require,module,exports){
+},{"../converter":405,"../detector":406,"../generator":460,"../parser":476,"../splitter":477,"../utils":481,"./base-class":463,"./labeler":469,"./sentence":472,"fs":43,"path":485,"underscore":502,"uuid/v4":505}],467:[function(require,module,exports){
 module.exports = {
 
   NxBaseClass: require('./base-class'),
@@ -43882,6 +44019,30 @@ class Labeler extends NxBaseClass {
     this._labels = {};
     this._filter = new Set();
 
+  }
+
+  sort() {
+
+    const size = name => this._labels[name]._sents.size;
+
+    return Object.keys(this._labels).sort((x, y) => {
+
+      if (size(x) < size(y))
+        return 1;
+
+      if (size(x) > size(y))
+        return -1;
+
+      return 0;
+
+    }).map(name => {
+
+      return {
+        name: name,
+        size: this._labels[name]._sents.size,
+      };
+
+    });
   }
 
   serialize() {
@@ -44235,6 +44396,7 @@ const _ = require('underscore');
 
 const utils = require('../utils');
 const NxError = utils.NxError;
+const ToolError = utils.ToolError;
 const parse = require('../parser');
 const generate = require('../generator');
 
@@ -44267,35 +44429,56 @@ class Sentence extends NxBaseClass {
       autoAddPunct: true,
     });
 
-    if (options.interpretAs) {
+    this.input = serial.input || serial;
+    this.is_parsed = false;
+    this.ParseError = null;
+    this.options = options;
+    this.comments = [];
+    this.tokens = [];
 
-      // interpret as a particular format if passed option
-      serial = parse.as[options.interpretAs](serial, options);
+    try {
 
-    } else {
+      if (options.interpretAs) {
 
-      // otherwise, get an array of possible interpretations
-      serial = parse(serial, options);
+        // interpret as a particular format if passed option
+        serial = parse.as[options.interpretAs](serial, options);
 
-      // choose one of them if possible
-      if (serial.length === 0) {
-        throw new NxError('Unable to parse input', this);
-      } else if (serial.length === 1) {
-        serial = serial[0];
       } else {
-        throw new NxError(
-          `Unable to disambiguate input interpretations (${serial.length})`, this);
+
+        // otherwise, get an array of possible interpretations
+        serial = parse(serial, options);
+
+        // choose one of them if possible
+        if (serial.length === 0) {
+          throw new NxError('Unable to parse: unrecognized format', this);
+        } else if (serial.length === 1) {
+          serial = serial[0];
+        } else {
+          throw new NxError(
+            `Unable to parse: ambiguous format (${serial.join(', ')})`, this);
+        }
+
       }
 
+      this.options = serial.options;
+
+      this.root = new RootToken(this);
+      this.comments = serial.comments.map(com => new Comment(this, com));
+      this.tokens = serial.tokens.map(tok => new Token(this, tok));
+
+      this.attach();
+      this.is_parsed = true;
+
+    } catch (e) {
+
+      if ((e instanceof NxError || e instanceof ToolError)) {
+
+        this.ParseError = e;
+
+      } else {
+        throw e;
+      }
     }
-
-    this.input = serial.input;
-    this.options = serial.options;
-    this.comments = serial.comments.map(com => new Comment(this, com));
-    this.tokens = serial.tokens.map(tok => new Token(this, tok));
-    this.root = new RootToken(this);
-
-    this.attach();
   }
 
   serialize(master = {}) {
@@ -44439,6 +44622,7 @@ class Sentence extends NxBaseClass {
 
           const query = token.sent.query(token => token.indices.serial === dependency.index);
           if (query.length !== 1) {
+            //console.log(token)
             throw new NxError(`cannot locate token with serial index "${dependency.index}"`);
           }
 
@@ -45524,7 +45708,9 @@ module.exports = (text, options) => {
 		detector(line, options).forEach(format => fromPlainText.add(format));
 	});
 
-	if (fromPlainText.size === 1 && fromPlainText.has('plain text'))
+	if (fromDefault.size !== 1
+		&& fromPlainText.size === 1
+		&& fromPlainText.has('plain text'))
 		return splitAsPlainText;
 
 	return splitAsDefault;
