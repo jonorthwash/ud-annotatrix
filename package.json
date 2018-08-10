@@ -15,6 +15,7 @@
     "l20n": "^5.0.0",
     "minimist": "^1.2.0",
     "mkdirp": "^0.5.1",
+    "moment": "^2.22.2",
     "morgan": "^1.9.0",
     "nocache": "^2.0.0",
     "notatrix": "github:keggsmurph21/notatrix",
@@ -36,6 +37,7 @@
     "babelify": "^8.0.0",
     "browserify": "^16.2.2",
     "chai": "^4.1.2",
+    "cheerio": "^1.0.0-rc.2",
     "font-awesome-base64": "^1.0.4",
     "gulp": "^3.9.1",
     "gulp-rename": "^1.3.0",
@@ -56,7 +58,7 @@
     "build": "gulp",
     "build-watch": "gulp && gulp watch",
     "server": "node server/app.js",
-    "dev-server": "ANNOTATRIX_ENV=development nodemon server/app.js"
+    "dev-server": "ANNOTATRIX_ENV=development nodemon server/app.js --ignore corpora"
   },
   "repository": {
     "type": "git",
