@@ -44,7 +44,7 @@ class App {
     setTimeout(() => {
 
       const hash = window.location.hash.substring(1);
-      this.corpus.index = hash;
+      this.corpus.index = parseInt(hash) - 1;
 
     }, 500);
 
