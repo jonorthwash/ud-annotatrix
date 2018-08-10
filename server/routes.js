@@ -80,16 +80,16 @@ module.exports = app => {
   // ---------------------------
   // core
   app.get('/', (req, res) => {
-    //getTreebanksList((err, treebanks) => {
+    getTreebanksList((err, treebanks) => {
       res.render('index.ejs', {
         base: `${cfg.protocol}://${cfg.host}:${cfg.port}`,
-        error: null,//err,
-        treebanks: [],//treebanks
+        error: err,
+        treebanks: treebanks
       });
-    //});
+    });
   });
-  app.get('/help', (req, res) => res.render('help.ejs'));
-  app.get('/annotatrix', (req, res) => {
+  app.get('/help(.html)?', (req, res) => res.render('help.ejs'));
+  app.get('/annotatrix(.html)?', (req, res) => {
     let treebank = req.query.treebank_id;
     if (!treebank) {
 
@@ -143,7 +143,7 @@ module.exports = app => {
 
     if (req.files) {
 
-      upload.fromFile(treebank, req.files.corpus, err => {
+      upload.fromFile(treebank, req.files.file, err => {
         if (err)
           return res.json({ error: err.message });
 
