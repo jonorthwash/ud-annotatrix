@@ -792,6 +792,7 @@ td .parse-error {
   background-color: #fff;
   display: flex;
   padding: 0;
+  overflow-x: scroll;
 
 }
 
@@ -844,7 +845,7 @@ li.label .label-hidden, #dropdown-container .menu-hidden {
   display: none;
   flex-flow: column;
 
-  position: absolute;
+  position: fixed;
   background-color: #eee;
   min-width: 160px;
 
@@ -1347,4 +1348,8 @@ th.column-hide span.col-name {
 
 .message-alert .content {
   color: #868e96;
+}
+
+#available-treebanks th {
+  text-align: center;
 }

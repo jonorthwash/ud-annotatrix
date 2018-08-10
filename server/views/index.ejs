@@ -15,44 +15,68 @@
 		<h1 id="welcome-banner">Welcome to UD Annotatrix</h1>
 
 		<form method="post" enctype="multipart/form-data" action="./upload">
-      <input type="file" name="corpus" />
+      <input type="file" name="file" />
       <input type="submit" value="Upload to server" />
 		</form>
 
 		<div id="links">
 			<strong>Links:</strong>
-			<a id="to_annotatrix" href="./annotatrix">
+			<a id="to_annotatrix" href="./annotatrix.html">
 				Online annotator
 			</a>
-			<a id="to_help" href="./help">
+			<a id="to_help" href="./help.html">
 				Help
 			</a>
 		</div>
 
 		<div id="treebanks">
-			<ul>
-				<% if (error) { %>
-					<span>
-						Error loading treebanks: <%= error %>
-					</span>
-				<% } else if (treebanks.length) { %>
-					<span>
-						Available treebanks:
-					</span>
-					<% treebanks.forEach(treebank => { %>
-						<li id="<%= treebank.url %>">
-							<a href="<%= `${base}/annotatrix?treebank_id=${treebank.url}` %>">
-								<span class="treebank-info treebank-id">
-									<%= treebank.url.split('-')[0] %>
-								</span>
-								<span class="treebank-info treebank-modified">
-									<%= treebank.modified %>
-								</span>
+			<% if (error) { %>
+				<span>
+					Error loading treebanks: <%= error %>
+				</span>
+			<% } else if (treebanks.length) { %>
+				<span>
+					Available treebanks:
+				</span>
+				<table id="available-treebanks" class="table table-hover table-striped table-sm">
+					<thead>
+						<tr>
+							<th>Last modified</th>
+							<th>ID</th>
+							<th>Filename</th>
+							<th>Sentences (total)</th>
+							<th>Sentences (invalid)</th>
+							<th>Top labels</th>
+						</tr>
+					</thead>
+					<tbody>
+						<% treebanks.forEach(treebank => {
+							const url = `${base}/annotatrix?treebank_id=${treebank.id}`; %>
+								<tr id="<%= treebank.id %>">
+									<td><a href="<%= url %>" title="<%= treebank.modified %>">
+										<%= treebank.modified_ago %>
+									</a></td>
+									<td><a href="<%= url %>" title="<%= treebank.id %>">
+										<%= treebank.id.split('-')[0] %>
+									</a></td>
+									<td><a href="<%= url %>">
+										<%= treebank.filename %>
+									</a></td>
+									<td><a href="<%= url %>">
+										<%= treebank.sentences %>
+									</a></td>
+									<td><a href="<%= url %>">
+										<%= treebank.errors %>
+									</a></td>
+									<td><a href="<%= url %>">
+										<%= treebank.labels.map(label => `${label.name} (${label.size})`).join(', ') %>
+									</a></td>
+								</tr>
 							</a>
-						</li>
-					<% });  %>
-				<% } %>
-			</ul>
+						<% }); %>
+					</tbody>
+				</table>
+			<% } %>
 		</div>
 
 	</div>
