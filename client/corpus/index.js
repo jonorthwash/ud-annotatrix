@@ -4,6 +4,7 @@ const _ = require('underscore');
 const nx = require('notatrix');
 
 const config = require('./config');
+const utils = require('../utils');
 
 
 function detectFormat(serial) {
@@ -57,6 +58,14 @@ class Corpus {
 
     });
 
+    this._corpus._sentences.forEach(sent => {
+
+      // add some metadata
+      sent._meta.format = detectFormat(sent.input);
+      sent._meta.unparsed = null;
+
+    });
+
     if (this._corpus.length === 0)
       this.insertSentence(0, '', false);
 
@@ -69,6 +78,10 @@ class Corpus {
       if (this.app.initialized)
         this.app.socket.broadcast('modify index', this.index);
     }, 500);
+
+    if (utils.check_if_browser())
+      setTimeout(() => {
+        window.location.hash = (this.index + 1); }, 100);
   }
 
   get parsed() {
@@ -94,6 +107,10 @@ class Corpus {
 
     if (this.app.initialized)
       this.app.socket.broadcast('modify index', this.index);
+
+    if (utils.check_if_browser())
+      setTimeout(() => {
+        window.location.hash = (this.index + 1); }, 100);
   }
 
   first() {
@@ -102,6 +119,10 @@ class Corpus {
 
     if (this.app.initialized)
       this.app.socket.broadcast('modify index', this.index);
+
+    if (utils.check_if_browser())
+      setTimeout(() => {
+        window.location.hash = (this.index + 1); }, 100);
   }
 
   prev() {
@@ -110,6 +131,10 @@ class Corpus {
 
     if (this.app.initialized)
       this.app.socket.broadcast('modify index', this.index);
+
+    if (utils.check_if_browser())
+      setTimeout(() => {
+        window.location.hash = (this.index + 1); }, 100);
   }
 
   next() {
@@ -118,6 +143,10 @@ class Corpus {
 
     if (this.app.initialized)
       this.app.socket.broadcast('modify index', this.index);
+
+    if (utils.check_if_browser())
+      setTimeout(() => {
+        window.location.hash = (this.index + 1); }, 100);
   }
 
   last() {
@@ -126,6 +155,10 @@ class Corpus {
 
     if (this.app.initialized)
       this.app.socket.broadcast('modify index', this.index);
+
+    if (utils.check_if_browser())
+      setTimeout(() => {
+        window.location.hash = (this.index + 1); }, 100);
   }
 
   serialize() {
@@ -145,7 +178,7 @@ class Corpus {
       sent = this._corpus.setSentence(index, text);
 
       // add some metadata
-      sent._meta.format = detectFormat();
+      sent._meta.format = detectFormat(text);
       sent._meta.unparsed = null;
 
     } catch (e) {
@@ -190,7 +223,7 @@ class Corpus {
       sent = this._corpus.insertSentence(index, text);
 
       // add some metadata
-      sent._meta.format = detectFormat();
+      sent._meta.format = detectFormat(text);
       sent._meta.unparsed = null;
 
     } catch (e) {
@@ -223,6 +256,10 @@ class Corpus {
     if (main && this.app.initialized)
       this.app.socket.broadcast('modify index', this.index);
 
+    if (utils.check_if_browser())
+      setTimeout(() => {
+        window.location.hash = (this.index + 1); }, 100);
+
     return sent;
   }
 
@@ -254,6 +291,10 @@ class Corpus {
 
     if (main && this.app.initialized)
       this.app.socket.broadcast('modify index', this.index);
+
+    if (utils.check_if_browser())
+      setTimeout(() => {
+        window.location.hash = (this.index + 1); }, 100);
 
     return sent;
   }
@@ -299,6 +340,10 @@ class Corpus {
 
     if (main && this.app.initialized)
       this.app.socket.broadcast('modify index', this.index);
+
+    if (utils.check_if_browser())
+      setTimeout(() => {
+        window.location.hash = (this.index + 1); }, 100);
 
     return sents;
   }

@@ -40,6 +40,14 @@ class App {
     this.graph = new Graph(this);
     this.initialized = true;
 
+    // jump to sentence from frag id
+    setTimeout(() => {
+
+      const hash = window.location.hash.substring(1);
+      this.corpus.index = hash;
+
+    }, 500);
+
     this.server.connect();
     this.socket.connect();
     this.gui.refresh();
