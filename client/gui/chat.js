@@ -82,7 +82,6 @@ class Chat {
   updateUser(user) {
 
     const dom = $(`.message-sender-info[name="${user.id}"]`);
-    console.log('updating', user.viewing, user._viewing)
     dom.find('.message-sender-name').text(user.name);
     dom.find('.message-sender-viewing').text(user.viewing);
 

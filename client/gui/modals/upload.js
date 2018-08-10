@@ -19,7 +19,6 @@ function hide() {
 
 function bind() {
 
-  console.log('binding');
   $('#upload-modal')
     .find('[name="close"]')
     .click(hide);

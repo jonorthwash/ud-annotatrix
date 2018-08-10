@@ -121,7 +121,6 @@ class CollaborationInterface {
 
   onModifyIndex(data) {
 
-    console.log(data);
     const user = this._users[data.id];
     user.viewing = data.index;
 
