@@ -173,6 +173,8 @@ class Labeler {
     $('.label.horiz').detach();
     _.each(this.labeler._labels, label => {
 
+      label = label._label;
+
       $(`#labels-horiz`).append($('<li>')
         .attr('name', label.name)
         .addClass('label horiz')

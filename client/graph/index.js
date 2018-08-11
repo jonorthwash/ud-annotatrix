@@ -661,7 +661,6 @@ class Graph {
     serial = JSON.parse(serial);
     config.set(serial);
 
-    console.log(serial, config);
   }
 
   commit() {
@@ -731,9 +730,6 @@ class Graph {
 
     const corpus = this.app.corpus;
 
-    if (!corpus.parsed)
-      return;
-
     this.options.layout = {
       name: 'tree',
       padding: 0,
@@ -746,7 +742,7 @@ class Graph {
           ? sort.ltr
           : sort.rtl)
     };
-    this.options.elements = this.eles;
+    this.options.elements = corpus.parsed ? this.eles : [];
 
     this.cy = cytoscape(this.options)
       .minZoom(0.1)

@@ -2,6 +2,7 @@
 
 const _ = require('underscore');
 const $ = require('jquery');
+const uuidv4 = require('uuid/v4');
 
 const AnnotatrixError = require('./errors').AnnotatrixError;
 
@@ -35,10 +36,7 @@ module.exports = {
       return null;
 
     const match = location.href.match(/treebank_id=([0-9a-f-]{36})(#|\/|$|&)/);
-    if (!match)
-      throw new AnnotatrixError('invalid treebank url, must be valid uuidv4');
-
-    return match[1];
+    return match ? match[1] : uuidv4();
   },
 
   link: (href, target='_blank') => {

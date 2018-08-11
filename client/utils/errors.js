@@ -33,10 +33,6 @@ class AnnotatrixError extends Error {
 
     // override prototype name
     this.name = 'AnnotatrixError';
-
-    // log all errors, even if we eventually catch them ... note that this does
-    //   not show the full stack trace
-    log.error(this.message);
   }
 }
 

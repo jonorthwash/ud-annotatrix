@@ -58,11 +58,24 @@ class Corpus {
 
     });
 
-    this._corpus._sentences.forEach(sent => {
+    this._corpus._sentences.forEach((sent, i) => {
 
-      // add some metadata
-      sent._meta.format = detectFormat(sent.input);
-      sent._meta.unparsed = null;
+      try {
+
+        // add some metadata
+        sent._meta.format = detectFormat(sent.input);
+        sent._meta.unparsed = null;
+
+      } catch (e) {
+
+        if (e instanceof nx.NotatrixError) {
+          console.log(i, e.message);
+          sent._meta.format = null;
+          sent._meta.unparsed = sent.input;
+        } else {
+          throw e;
+        }
+      }
 
     });
 
@@ -102,7 +115,9 @@ class Corpus {
 
   set index(index) {
 
+    console.log(index)
     this._corpus.index = index;
+    console.log(this.index);
     this.app.gui.refresh();
 
     if (this.app.initialized)

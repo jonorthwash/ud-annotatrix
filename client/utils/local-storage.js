@@ -36,7 +36,7 @@ function isAvailable() {
   }
 
 }
-/*
+
 function getAvailableSpace() {
 
   // Returns the remaining available space in localStorage
@@ -110,7 +110,6 @@ function formatUploadSize(fileSize) {
 
   return `${(fileSize/1048576).toFixed(1)} mB`;
 }
-*/
 
 function save(value) {
 
@@ -157,7 +156,7 @@ function getPrefs(item) {
 module.exports = {
   isAvailable,
   //isQuotaExceeded,
-  //getAvailableSpace,
+  getAvailableSpace,
   //formatUploadSize,
   save,
   load,

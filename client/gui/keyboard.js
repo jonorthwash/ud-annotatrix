@@ -93,10 +93,12 @@ function keyup(app, event) {
     return;
   }
 
-  if ($(':focus').is('.conllu-table')) {
+  const focus = $(':focus');
+
+  if (focus.is('.conllu-table')) {
 
     const table = gui.table;
-    const td = $(':focus');
+    const td = focus;
 
     switch (event.which) {
       case (KEYS.ENTER):
@@ -142,11 +144,11 @@ function keyup(app, event) {
     return;
   }
 
-  if ($(':focus').is('#current-sentence')) {
+  if (focus.is('#current-sentence')) {
 
     switch (event.which) {
       case (KEYS.ENTER):
-        corpus.index = parseInt($('current-sentence').val()) - 1;
+        corpus.index = parseInt($('#current-sentence').val()) - 1;
         break;
 
       case (KEYS.LEFT):
@@ -171,7 +173,7 @@ function keyup(app, event) {
     return;
   }
 
-  if ($(':focus').is('#edit')) {
+  if (focus.is('#edit')) {
 
     switch (event.which) {
       case (KEYS.ENTER):
@@ -198,11 +200,11 @@ function keyup(app, event) {
     return;
   }
 
-  if ($(':focus').is('#text-data')) {
+  if (focus.is('#text-data')) {
 
     switch (event.which) {
       case (KEYS.ESC):
-        this.blur();
+        focus.blur();
         break;
 
       case (KEYS.ENTER):
@@ -239,7 +241,7 @@ function keyup(app, event) {
     return;
   }
 
-  if ($(':focus').is('#chat-input')) {
+  if (focus.is('#chat-input')) {
     if (event.which === KEYS.ENTER) {
 
       gui.chat.sendMessage(collab);
