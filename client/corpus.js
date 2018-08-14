@@ -2,7 +2,7 @@
 
 const _ = require('underscore');
 const nx = require('notatrix');
-const utils = require('../utils');
+const utils = require('./utils');
 
 // for when we're editing a corpus that isn't from /upload
 const default_filename = 'ud-annotatrix-corpus';
@@ -69,7 +69,9 @@ class Corpus {
     this.app = app;
 
     // get the nx.Corpus data structure (with some corpus-wide metadata)
-    this._corpus = nx.Corpus.deserialize(serial);
+    this._corpus = serial
+      ? nx.Corpus.deserialize(serial)
+      : new nx.Corpus();
     this._corpus._meta = _.defaults(this._corpus._meta, {
 
       filename: default_filename,
@@ -90,7 +92,7 @@ class Corpus {
     // keep undo stack up to date
     this.app.undoer.current = this.serialize();
 
-    // broadcast, update hash
+    // update hash
     this.afterModifyIndex();
   }
 
@@ -282,12 +284,11 @@ class Corpus {
    */
   afterModifyIndex() {
 
-    // update the view
-    this.app.gui.refresh();
-
-    // possibly send something over the wire
-    if (this.app.initialized)
+    // possibly update the view and send something over the wire
+    if (this.app.initialized) {
+      this.app.gui.refresh();
       this.app.socket.broadcast('modify index', this.index);
+    }
 
     // update the fragment identifier (the stuff after '#' in the url)
     if (utils.check_if_browser())
