@@ -67,7 +67,7 @@ class User {
   }
 
   /**
-   * Get a DOM object containing some of the user's data (this get's rendered in #chat)
+   * Get a DOM object containing some of the user's data (this gets rendered in #chat)
    *
    * NB: this looks a bit messy, but it should have this structure:
    *  <span class="message-sender-info" name="{ id }">
