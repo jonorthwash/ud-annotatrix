@@ -2,20 +2,38 @@
 
 const _ = require('underscore');
 const nx = require('notatrix');
-
-const config = require('./config');
 const utils = require('../utils');
 
+// for when we're editing a corpus that isn't from /upload
+const default_filename = 'ud-annotatrix-corpus';
 
+// use these formats in order in case of ambiguity (rare)
+const format_preferences = [
+  'CoNLL-U',
+  'CG3',
+  'SD',
+  'plain text',
+  'Brackets',
+];
+
+/**
+ * Helper function for Corpus.  Attempts to detect the format of a given serial
+ *  string/object.  If it can't detect one, it returns null.  If it detects one
+ *  or more, it follows a simple resolution algorithm to pick one.
+ *
+ * @param {(String|Object)} serial
+ * @return {(String|null)} the string name of the detected format
+ */
 function detectFormat(serial) {
 
-  let formats = [ 'plain text' ];
-  if (serial)
-    formats = nx.detect(serial);
+  // do the detecting under the hood
+  let formats = serial
+    ? nx.detect(serial)
+    : [ 'plain text' ];
 
   // check if we found nothing
   if (formats.length === 0)
-    throw new nx.NotatrixError('Unable to interpret input');
+    return null;
 
   // or found something lossless
   if (formats.indexOf('notatrix serial') > -1)
@@ -26,496 +44,469 @@ function detectFormat(serial) {
     return formats[0];
 
   // or found one of the formats we like
-  config.format_preferences.forEach(pref => {
+  format_preferences.forEach(pref => {
 
     if (formats.indexOf(pref) > -1)
       return pref;
-
   });
 
-  // just take whatever's left
+  // just take whatever's left (safety valve, hopefully never hit this case)
   return formats[0];
 }
 
 
-
+/**
+ * Abstraction over the nx.Corpus to handle some extra metadata (filename, text
+ *  direction, filename) and interfacing with our other modules.
+ *
+ * @param {App} app a reference to the parent of this module
+ * @param {(String|Object)} serial a serial representation of an nx.Corpus in any format
+ */
 class Corpus {
   constructor(app, serial='') {
 
+    // save a reference to the parent
     this.app = app;
-    this.config = config;
 
-    const _corpus = serial
-      ? nx.Corpus.deserialize(serial, { allowZeroTokens: true })
-      : new nx.Corpus();
+    // get the nx.Corpus data structure (with some corpus-wide metadata)
+    this._corpus = nx.Corpus.deserialize(serial);
+    this._corpus._meta = _.defaults(this._corpus._meta, {
 
-    this._corpus = _corpus;
-    this._corpus._meta = _.defaults(_corpus._meta, {
-
-      filename: config.default_filename,
+      filename: default_filename,
       is_ltr: true,
       is_vertical: false,
 
     });
 
+    // add some metadata
     this._corpus._sentences.forEach((sent, i) => {
-
-      try {
-
-        // add some metadata
-        sent._meta.format = detectFormat(sent.input);
-        sent._meta.unparsed = null;
-
-      } catch (e) {
-
-        if (e instanceof nx.NotatrixError) {
-          console.log(i, e.message);
-          sent._meta.format = null;
-          sent._meta.unparsed = sent.input;
-        } else {
-          throw e;
-        }
-      }
-
+      sent._meta.format = detectFormat(sent.input);
     });
 
+    // make sure we always have at least one sentence
     if (this._corpus.length === 0)
       this.insertSentence(0, '', false);
 
-    this.conversionLosses = [];
-    this.conversionErrors = {};
-
+    // keep undo stack up to date
     this.app.undoer.current = this.serialize();
 
-    setTimeout(() => {
-      if (this.app.initialized)
-        this.app.socket.broadcast('modify index', this.index);
-    }, 500);
-
-    if (utils.check_if_browser())
-      setTimeout(() => {
-        window.location.hash = (this.index + 1); }, 100);
+    // broadcast, update hash
+    this.afterModifyIndex();
   }
 
-  get parsed() {
-    return this.current ? this.current._meta.unparsed === null : false;
-  }
 
-  set parsed(text) {
-    throw new Error();
-  }
-
-  get length() {
-    return this._corpus.length;
-  }
-
-  get index() {
-    return this._corpus.index;
-  }
-
-  set index(index) {
-
-    console.log(index)
-    this._corpus.index = index;
-    console.log(this.index);
-    this.app.gui.refresh();
-
-    if (this.app.initialized)
-      this.app.socket.broadcast('modify index', this.index);
-
-    if (utils.check_if_browser())
-      setTimeout(() => {
-        window.location.hash = (this.index + 1); }, 100);
-  }
-
-  first() {
-    this._corpus.first();
-    this.app.gui.refresh();
-
-    if (this.app.initialized)
-      this.app.socket.broadcast('modify index', this.index);
-
-    if (utils.check_if_browser())
-      setTimeout(() => {
-        window.location.hash = (this.index + 1); }, 100);
-  }
-
-  prev() {
-    this._corpus.prev();
-    this.app.gui.refresh();
-
-    if (this.app.initialized)
-      this.app.socket.broadcast('modify index', this.index);
-
-    if (utils.check_if_browser())
-      setTimeout(() => {
-        window.location.hash = (this.index + 1); }, 100);
-  }
-
-  next() {
-    this._corpus.next();
-    this.app.gui.refresh();
-
-    if (this.app.initialized)
-      this.app.socket.broadcast('modify index', this.index);
-
-    if (utils.check_if_browser())
-      setTimeout(() => {
-        window.location.hash = (this.index + 1); }, 100);
-  }
-
-  last() {
-    this._corpus.last();
-    this.app.gui.refresh();
-
-    if (this.app.initialized)
-      this.app.socket.broadcast('modify index', this.index);
-
-    if (utils.check_if_browser())
-      setTimeout(() => {
-        window.location.hash = (this.index + 1); }, 100);
-  }
-
-  serialize() {
-    return this._corpus.serialize();
-  }
-
-  getSentence(index) {
-    return this._corpus.getSentence(index);
-  }
-
-  setSentence(index, text, main=true) {
-
-    let sent;
-
-    try {
-
-      sent = this._corpus.setSentence(index, text);
-
-      // add some metadata
-      sent._meta.format = detectFormat(text);
-      sent._meta.unparsed = null;
-
-    } catch (e) {
-
-      if (e instanceof nx.NotatrixError) {
-
-        // alert that we failed
-        console.info(e.message);
-        this.app.socket.unlink(index);
-        this.app.gui.status.error(`Unable to set sentence ${index + 1}`);
-
-        // set dummy sentence
-        sent = this._corpus.setSentence(index, '');
-
-        // make sure we know it's a dummy here
-        sent._meta.format = null;
-        sent._meta.unparsed = text;
-
-      } else {
-        throw e;
-      }
-    }
-
-    if (main)
-      this.app.save({
-        type: 'set',
-        indices: [index || this.index],
-      });
-
-    if (main && this.app.initialized)
-      this.app.socket.broadcast('modify index', this.index);
-
-    return sent;
-  }
-
-  insertSentence(index, text, main=true) {
-
-    let sent;
-
-    try {
-
-      sent = this._corpus.insertSentence(index, text);
-
-      // add some metadata
-      sent._meta.format = detectFormat(text);
-      sent._meta.unparsed = null;
-
-    } catch (e) {
-
-      if (e instanceof nx.NotatrixError) {
-
-        // alert that we failed
-        console.info(e.message);
-        this.app.socket.unlink(index);
-        this.app.gui.status.error(`Unable to insert sentence ${index + 1}`);
-
-        // on parsing failure, add a dummy sentence
-        sent = this.insertSentence(index, '', false);
-
-        // make sure we know it's a dummy here
-        sent._meta.format = null;
-        sent._meta.unparsed = serial;
-
-      } else {
-        throw e;
-      }
-    }
-
-    if (main)
-      this.app.save({
-        type: 'insert',
-        indices: [index || this.index],
-      });
-
-    if (main && this.app.initialized)
-      this.app.socket.broadcast('modify index', this.index);
-
-    if (utils.check_if_browser())
-      setTimeout(() => {
-        window.location.hash = (this.index + 1); }, 100);
-
-    return sent;
-  }
-
-  removeSentence(index, main=true) {
-
-    let sent;
-
-    try {
-
-      sent = this._corpus.removeSentence(index);
-
-    } catch (e) {
-
-      if (e instanceof nx.NotatrixError) {
-
-        console.info(e.message);
-        this.app.gui.status.error(`Unable to remove sentence ${index + 1}`);
-
-      } else {
-        throw e;
-      }
-    }
-
-    if (main)
-      this.app.save({
-        type: 'remove',
-        indices: [index || this.index],
-      });
-
-    if (main && this.app.initialized)
-      this.app.socket.broadcast('modify index', this.index);
-
-    if (utils.check_if_browser())
-      setTimeout(() => {
-        window.location.hash = (this.index + 1); }, 100);
-
-    return sent;
-  }
-
-  parse(text, main=true) {
-
-    let sents = [];
-
-    try {
-
-      const splitted = nx.split(text, this._corpus.options);
-      const index = this.index || 0;
-
-      splitted.forEach((split, i) => {
-
-        if (i) {
-          this.insertSentence(index + i, split, false);
-        } else {
-          this.setSentence(index, split, false);
-        }
-
-        sents.push(index + i);
-
-      });
-
-    } catch (e) {
-
-      if (e instanceof nx.NotatrixError) {
-
-        console.info(e.message);
-        this.app.gui.status.error(`Unable to parse input`);
-
-      } else {
-        throw e;
-      }
-    }
-
-    if (main)
-      this.app.save({
-        type: 'parse',
-        indices: sents,
-      });
-
-    if (main && this.app.initialized)
-      this.app.socket.broadcast('modify index', this.index);
-
-    if (utils.check_if_browser())
-      setTimeout(() => {
-        window.location.hash = (this.index + 1); }, 100);
-
-    return sents;
-  }
-
-  get textdata() {
-    this.tryConvertAll();
-    return this.unparsed || this.convertTo(this.format);
-  }
-
-  getIndices() {
-    const filtered = this._corpus.filtered;
-
-    return {
-      current: this._corpus.index + 1,
-      total: filtered.length
-        ? `${filtered.length} (total: ${this.length})`
-        : `${this.length}`,
-    };
-  }
-
+  // ---------------------------------------------------------------------------
+  // Getters & Setters for corpus- and sentence-wide metadata
+
+  /**
+   * Get the format of the current sentence.  If the sentence is not fully parsed,
+   *  then we return null.
+   *
+   * NB: this will never return 'notatrix serial' as the format, even if this was
+   *  most recent serial string given (because we never want the user to see this
+   *  format, which is what we send over the wire).
+   *
+   * @return {(String|null)}
+   */
   get format() {
-    return this.current._meta.unparsed === null
+
+    // if not parsed, format is always null
+    return this.isParsed
       ? this.current._meta.format === 'notatrix serial'
         ? 'plain text'
         : this.current._meta.format
       : null;
   }
 
+  /**
+   * Set the format of the current sentence (internal, not sanitized).
+   *
+   * @param {String} format
+   */
   set format(format) {
     this.current._meta.format = format;
   }
 
+  /**
+   * Get whether the corpus orientation is Left-to-Right (important for the Graph).
+   *
+   * @return {Boolean}
+   */
   get is_ltr() {
     return this._corpus._meta.is_ltr;
   }
 
+  /**
+   * Set whether the corpus orientation is Left-to-Right (important for the Graph).
+   *
+   * @param {Boolean} bool
+   */
   set is_ltr(bool) {
     this._corpus._meta.is_ltr = bool;
   }
 
+  /**
+   * Get whether the corpus orientation is Top-to-Bottom (important for the Graph).
+   *
+   * @return {Boolean}
+   */
   get is_vertical() {
     return this._corpus._meta.is_vertical;
   }
 
+  /**
+   * Set whether the corpus orientation is Top-to-Bottom (important for the Graph).
+   *
+   * @param {Boolean} bool
+   */
   set is_vertical(bool) {
     this._corpus._meta.is_vertical = bool;
   }
 
+  /**
+   * Get whether the corpus is in 'enhanced' mode (i.e. should display and allow
+   *  us to add multiple heads for each token).
+   *
+   * @return {Boolean}
+   */
   get is_enhanced() {
     return this.current.options.enhanced;
   }
 
+  /**
+   * Get the filename associated with the corpus.
+   *
+   * @return {String}
+   */
   get filename() {
     return this._corpus._meta.filename;
   }
 
+  /**
+   * Set the filename associated with the corpus.
+   *
+   * @param {String} filename
+   */
   set filename(filename) {
     this._corpus._meta.filename = filename;
   }
 
+
+
+  // ---------------------------------------------------------------------------
+  // Helper functions for the GUI sentence navigation
+
+  /**
+   * Returns the string that we should set as the val() of #text-data
+   *
+   * @return {String}
+   */
+  get textdata() {
+
+    return this.isParsed
+      ? this.convertTo(this.format)
+      : this.current.input
+          .replace(/\\n/g, '\n')
+          .replace(/\\t/g, '\t');
+  }
+
+  /**
+   * Returns the two values that we should set to tell the user what our current
+   *  index is. (current -> #current-sentence, total -> #total-sentences).
+   *
+   * @return {Object} { current: Number, total: String }
+   */
+  getIndices() {
+
+    // the label filter
+    const filtered = this._corpus.filtered;
+
+    return {
+      current: this.index + 1,
+      total: filtered.length
+        ? `${filtered.length} (total: ${this.length})`
+        : `${this.length}`,
+    };
+  }
+
+
+
+  // ---------------------------------------------------------------------------
+  // General helper functions
+
+  /**
+   * Get a serial representation of the nx.Corpus (useful for saving/sending
+   *  over the wire).
+   *
+   * @return {Object}
+   */
+  serialize() {
+    return this._corpus.serialize();
+  }
+
+  /**
+   * Checks whether the current sentence is parsed
+   *
+   * @return {Boolean}
+   */
+  get isParsed() {
+    return this.current ? this.current.isParsed : false;
+  }
+
+  /**
+   * Returns the unparsed content of the current sentence
+   *
+   * @return {(String|null)}
+   */
   get unparsed() {
-    return this.current._meta.unparsed;
+    return this.isParsed
+      ? null
+      : this.current.input;
   }
 
-  set unparsed(text) {
-    this.format = null;
-    this.current._meta.unparsed = text;
+  /**
+   * Get a representation of the current sentence in <format>, ignoring lossiness.
+   *  NB: this function *should* not throw errors because we already check if a
+   *  given conversion will throw errors (in `gui/textarea.js::refresh`)
+   *
+   * @param {String} format
+   * @return {String}
+   */
+  convertTo(format) {
+    return this.current.to(format).output;
   }
 
+  /**
+   * Helper function to handle broadcasting index modifications and hash updates.
+   *  NB: internal only.
+   */
+  afterModifyIndex() {
+
+    // update the view
+    this.app.gui.refresh();
+
+    // possibly send something over the wire
+    if (this.app.initialized)
+      this.app.socket.broadcast('modify index', this.index);
+
+    // update the fragment identifier (the stuff after '#' in the url)
+    if (utils.check_if_browser())
+      setTimeout(() => {
+        window.location.hash = (this.index + 1);
+      }, 1000);
+  }
+
+
+
+  // ---------------------------------------------------------------------------
+  // Wrappers for nx.Corpus methods
+
+  /**
+   * Returns the number of sentences in the corpus
+   *
+   * @return {Number}
+   */
+  get length() {
+    return this._corpus.length;
+  }
+
+  /**
+   * Returns the currently-focused sentence.  This is useful if another method
+   *  wants to access the internals of the nx.Sentence at this.index.  If there
+   *  are no sentences, it returns null.
+   *
+   * @return {(nx.Sentence)|null}
+   */
   get current() {
     return this.getSentence(this.index);
   }
 
-  convertTo(format) {
-
-    try {
-
-      if (!format) {
-        format = 'plain text';
-        this.current._meta.format = 'plain text';
-        this.current._meta.unparsed = this.current._meta.unparsed || '';
-      }
-
-      const converted = this.current.to(format);
-
-      this.conversionLosses = converted.loss;
-      return converted.output;
-
-    } catch (e) {
-
-      if (e instanceof nx.NotatrixError) {
-
-        console.info(e);
-        this.app.gui.status.error(`Error converting to format ${format}`)
-        this.current._meta.format = 'plain text';
-        this.current._meta.unparsed = this.current._meta.unparsed || '';
-        this.app.gui.refresh();
-
-      } else {
-        throw e;
-      }
-    }
+  /**
+   * Returns the index of the current sentence in the nx.Corpus.  If there are
+   *  no sentences, it returns null.
+   *
+   * @return {(Number|null)}
+   */
+  get index() {
+    return this._corpus.index;
   }
 
-  tryConvertAll() {
-
-    this.conversionErrors = {};
-    ['Brackets', 'CG3', 'CoNLL-U', 'plain text', 'SD'].forEach(format => {
-      try {
-
-        this.current.to(format);
-
-      } catch (e) {
-
-        this.conversionErrors[format] = e.message;
-
-      }
-    });
+  /**
+   * Modify the current index to <index>.
+   *
+   * @param {Number} index
+   */
+  set index(index) {
+    this._corpus.index = index;
+    this.afterModifyIndex();
   }
 
-  /*
-  editSentence(index, serial) {
+  /**
+   * Navigate to the first sentence.
+   */
+  first() {
+    this._corpus.first();
+    this.afterModifyIndex();
+  }
 
-    let sent;
+  /**
+   * Decrement the current index if possible, otherwise do nothing.
+   */
+  prev() {
+    this._corpus.prev();
+    this.afterModifyIndex();
+  }
 
-    try {
+  /**
+   * Increment the current index if possible, otherwise do nothing.
+   */
+  next() {
+    this._corpus.next();
+    this.afterModifyIndex();
+  }
 
-      if (this.getSentence(index)._meta.unparsed)
-        throw new Error(); // fail on purpose
+  /**
+   * Navigate to the last sentence.
+   */
+  last() {
+    this._corpus.last();
+    this.afterModifyIndex();
+  }
 
-      sent = this.getSentence(index).update(serial, this._corpus.options);
+  /**
+   * Get the nx.Sentence at <index>.
+   *
+   * @param {Number} index
+   * @return {(nx.Sentence|null)}
+   */
+  getSentence(index) {
+    return this._corpus.getSentence(index);
+  }
 
-    } catch (e) {
+  /**
+   * Set a serial value for the nx.Sentence at <index>.
+   *
+   * @param {Number} index
+   * @param {(String|Object)} text
+   * @param {Boolean} main whether or not to broadcast updates
+   * @return {nx.Sentence}
+   */
+  setSentence(index, text, main=true) {
 
-      if (e instanceof nx.NotatrixError) {
+    // do the work under the hood
+    const sent = this._corpus.setSentence(index, text);
 
-        this.removeSentence(this.index, false);
-        sent = this.insertSentence(this.index, serial, false);
+    // add some metadata
+    sent._meta.format = detectFormat(text);
 
-      } else {
-        throw e;
-      }
-
-    }
-
-    this.app.save(false);
-    this.app.gui.status.normal('update-sentence');
-    if (broadcast)
-      this.app.socket.broadcast({
-        type: 'update-sentence',
-        index: this.index,
-        sent: sent,
+    // maybe broadcast stuff
+    if (main) {
+      this.app.save({
+        type: 'set',
+        indices: [index || this.index],
       });
+      this.afterModifyIndex();
+    }
 
+    // return the affected guy
     return sent;
   }
-  */
+
+  /**
+   * Insert an nx.Sentence (with serial value <text>) after <index>.
+   *
+   * @param {Number} index
+   * @param {(String|Object)} text
+   * @param {Boolean} main whether or not to broadcast updates
+   * @return {nx.Sentence}
+   */
+  insertSentence(index, text, main=true) {
+
+    // do the work under the hood
+    const sent = this._corpus.insertSentence(index, text);
+
+    // add some metadata
+    sent._meta.format = detectFormat(text);
+
+    // maybe broadcast stuff
+    if (main) {
+      this.app.save({
+        type: 'insert',
+        indices: [index || this.index],
+      });
+      this.afterModifyIndex();
+    }
+
+    // return the new guy
+    return sent;
+  }
+
+  /**
+   * Remove the nx.Sentence at <index>.
+   *
+   * @param {Number} index
+   * @param {Boolean} main whether or not to broadcast updates
+   * @return {nx.Sentence}
+   */
+  removeSentence(index, main=true) {
+
+    // do the work under the hood
+    const sent = this._corpus.removeSentence(index);
+
+    // maybe broadcast stuff
+    if (main) {
+      this.app.save({
+        type: 'remove',
+        indices: [index || this.index],
+      });
+      this.afterModifyIndex();
+    }
+
+    // return the removed guy
+    return sent;
+  }
+
+  /**
+   * Split the incoming text (on double newlines or punctuation).  The first
+   *  item will overwrite the current sentence, with sentences inserted seqntially
+   *  thereafter.
+   *
+   * @param {(String|Object)} text
+   * @param {Boolean} main whether or not to broadcast updates
+   * @return {nx.Sentence}
+   */
+  parse(text, main=true) {
+
+    // split under the hood
+    const splitted = nx.split(text, this._corpus.options);
+
+    // get the index to start at
+    const index = this.index || 0;
+
+    // iterate over all the pieces, get a list of affected indices
+    const sents = splitted.map((split, i) => {
+
+      if (i) { // insert *after* the first one
+        this.insertSentence(index + i, split, false);
+      } else { // overwrite the first  one
+        this.setSentence(index, split, false);
+      }
+
+      return index + i;
+    });
+
+    // maybe broadcast stuff
+    if (main) {
+      this.app.save({
+        type: 'parse',
+        indices: [index || this.index],
+      });
+      this.afterModifyIndex();
+    }
+
+    // return the indices of the affected guys
+    return sents;
+  }
 }
 
 
