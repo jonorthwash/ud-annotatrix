@@ -5,139 +5,171 @@ const utils = require('./utils');
 const _Socket = require('socket.io-client');
 
 
+/**
+ * Abstraction over a SocketIO connection.  Handles sending and receiving small
+ *  packets from a server.
+ *
+ * NB: this handles all server communication except for the (de)serialization of
+ *  the corpus (this is handled via AJAX calls).
+ *
+ * @param {App} app a reference to the parent of this module.
+ */
 class Socket {
   constructor(app) {
 
     this.app = app;
+
+    // save some internal state to avoid loops and errors
     this._socket = null;
     this.initialized = false;
     this.isOpen = false;
 
   }
 
+  /**
+   * Make a connection to the server and set callbacks for the various messages
+   *  we expect to receive.
+   */
   connect() {
+
+    // we shouldn't try to connect if we're just testing
     if (!utils.check_if_browser())
       return;
 
-    const collab = this.app.collab;
+    // cache this access
+    const collab = this.app.collab,
+      corpus = this.app.corpus,
+      graph = this.app.graph,
+      gui = this.app.gui;
 
+    // request a server connection
     this._socket = new _Socket();
 
+    // handle server approving our request for connection
     this._socket.on('initialization', data => {
 
+      // internals
       this.initialized = true;
       this.isOpen = true;
+
+      // make a note of our id, name, etc
       collab.setSelf(data);
 
     });
 
+    // another user connected to the document
     this._socket.on('connection', d => collab.addUser(d));
+
+    // a user diconnected from the document
     this._socket.on('disconnection', d => collab.removeUser(d));
 
-    this._socket.on('modify corpus', d => collab.onModify(d));
-    this._socket.on('modify index', d => collab.onModifyIndex(d));
-    this._socket.on('lock graph', d => collab.onLock(d));
-    this._socket.on('unlock graph', d => collab.onUnlock(d));
-    this._socket.on('move mouse', d => collab.onMoveMouse(d));
-    this._socket.on('new message', d => collab.onMessage(d));
+    // a user modified the corpus
+    this._socket.on('modify corpus', data => {
+
+      const user = collab.getUser(data.id);
+
+      let index = corpus.index;
+
+      // check whether we need to change our corpus index
+      switch (data.type) {
+        case ('insert'):
+          if (data.indices[0] <= index)
+            index++;
+          break;
+
+        case ('remove'):
+          if (data.indices[0] < index)
+            index--;
+          break;
+
+        case ('redo'):
+        case ('undo'):
+          index = data.serial.index;
+          break;
+
+        case ('set'):
+          break;
+
+        case ('parse'):
+          if (data.indices[0] < index)
+            index += data.indices.length - 1;
+          break;
+      }
+
+      // send a chat alert
+      gui.chat.alert(`%u: '${data.type}' index ${data.indices[0]}`, [user]);
+
+      // update the undo stack
+      this.app.undoer.push(data.serial);
+
+      // load the newest serialization
+      this.app.load(data.serial);
+
+      // navigate to the correct index
+      this.app.corpus.index = index;
+
+    });
+
+    // a user modified their current index
+    this._socket.on('modify index', data => {
+
+      const user = collab.getUser(data.id);
+      user.viewing = data.index;
+      gui.chat.updateUser(user);
+
+    });
+
+    // a user clicked on a graph node
+    this._socket.on('lock graph', data => {
+
+      const user = collab.getUser(data.id);
+      user.locked = data.locked;
+      graph.setLocks(collab.getLocks());
+
+    });
+
+    // a user clicked off of a graph node
+    this._socket.on('unlock graph', data => {
+
+      const user = collab.getUser(data.id);
+      user.locked = data.locked;
+      graph.setLocks(collab.getLocks());
+
+    });
+
+    // a user moved their mouse in the graph area
+    this._socket.on('move mouse', data => {
+
+      const user = collab.getUser(data.id);
+      user.mouse = data.mouse;
+      graph.drawMice(collab.getMouseNodes());
+
+    });
+
+    // a user sent a chat message
+    this._socket.on('new message', data => {
+
+      const user = collab.getUser(data.id);
+      gui.chat.newMessage(user, data.message, false);
+
+    });
   }
 
+  /**
+   * Broadcast (/emit) a packet of type <name> with arguments <data> to the server.
+   *
+   * @param {String} name the name of the event we want to notify the server of
+   * @param {Object} data any other arguments for the event
+   */
   broadcast(name, data) {
 
-    console.log('broadcast', name, data);
+    // debugging
+    // console.log('broadcast', name, data);
+
+    // do the work
     this._socket.emit(name, data);
-  }
-
-  on(...args) {
-    console.log('socket on', ...args);
-  }
-
-  unlink() {
-    console.log('socket unlink');
   }
 }
 
 
 module.exports = Socket;
-
-//manager => {
-
-  // get a new socket.io client, but make sure we don't emit anything until
-  //   we've received confirmation from the server
-  //const socket = Socket();
-  //socket.initialized = false;
-
-  /*
-  socket.on('connection', data => {
-    console.log('connection', data);
-    socket.initialized = true;
-    socket.isOpen = true;
-    selfid = data.id;
-
-    const num = funcs.getPresentUsers(data.room);
-    collab.update(selfid, data.room);
-    socket.emit('pan', { index: manager.index });
-  });
-
-  socket.on('new connection', data => {
-    console.log('new connection', data);
-
-    const name = funcs.getUsername(data);
-    collab.update(selfid, data.room);
-    status.normal(`${name} joined`);
-  });
-
-  socket.on('disconnection', data => {
-    console.log('disconnection', data)
-
-    const name = funcs.getUsername(data);
-    collab.update(selfid, data.room);
-    status.normal(`${name} left`);
-  });
-
-  socket.on('update', data => {
-    console.log('update', data);
-    const name = funcs.getUsername(data);
-    const verb = {
-      modify: 'modified',
-      remove: 'removed',
-      insert: 'inserted'
-    }[data.type];
-
-    socket.isOpen = false;
-    status.normal(`${name} ${verb} sentence #${data.index + 1}`);
-
-    let text;
-    if (data.format === 'CoNLL-U') {
-      text = convert.to.conllu(data.nx);
-    } else if (data.format === 'CG3') {
-      text = convert.to.cg3(data.nx);
-    } else if (data.format === 'plain text') {
-      text = convert.to.plainText(data.nx);
-    } else {
-      status.normal(`Cannot output to ${data.format}, converting to CoNLL-U`);
-      text = convert.to.conllu(data.nx);
-    }
-
-    if (data.type === 'modify') {
-
-      console.log('DEPRECATED! fix me');
-      manager.parse(text, { index: data.index });
-
-    } else if (data.type === 'insert') {
-      console.log('insert', text, 'at', data.index );
-    } else if (data.type === 'remove') {
-      console.log('remove', text, 'at', data.index );
-    }
-
-    socket.isOpen = true;
-  });
-
-  socket.on('pan', data => {
-    console.log('pan', data);
-    collab.update(selfid, data.room);
-  });
-
-  return socket;
-};
-*/
