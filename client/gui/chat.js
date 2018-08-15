@@ -5,6 +5,13 @@ const $ = require('jquery');
 const utils = require('../utils');
 
 
+/**
+ * Abstraction to deal with interaction with #chat element and its descendents.
+ *  Handles outgoing and incoming messages and alerts, event callbacks, and
+ *  updating user spans.
+ *
+ * @param {GUI} gui reference to the parent
+ */
 class Chat {
   constructor(gui) {
 
@@ -14,12 +21,21 @@ class Chat {
 
   }
 
+  /**
+   * Add an "alert" to the #chat.  Alert messages show up centrally aligned in
+   *  the #chat.  This method also escapes '%u' strings in the message and
+   *  replaces them with the `User::dom`.
+   *
+   * @param {String} message message to be alerted
+   * @param {Array} users [User] list of users to be interleaved
+   */
   alert(message, users=[]) {
 
     const messages = $('#chat-messages'),
       alert = $('<span>')
         .addClass('message message-alert');
 
+    // do the interleaving
     message.split('%u').forEach((chunk, i) => {
 
       if (i && users[i-1])
@@ -38,19 +54,45 @@ class Chat {
       .scrollTop(messages.prop('scrollHeight'));
   }
 
+  /**
+   * Send a message from the current user to the chat.  Also broadcasts the
+   *  message to the other users.
+   *
+   * @param {CollaborationInterface} collab
+   */
   sendMessage(collab) {
 
+    // get the message
     const input = $('#chat-input'),
       message = input.val().trim();
 
+    // don't send just whitespace
     if (!message)
       return;
 
-    collab.sendMessage(message);
-    input.val('');
+    // broadcast
+    const self = collab.self;
+    this.gui.app.socket.broadcast('new message', {
+      id: self.id,
+      message: message,
+    });
 
+    // add it to #chat
+    this.newMessage(self, message, true);
+
+    // reset the input
+    input.val('');
   }
 
+  /**
+   * Add a message to #chat with content `text` from `user`.  If `self == true`,
+   *  then the message will be right-aligned.  Otherwise, it will be left-
+   *  aligned.
+   *
+   * @param {User} user
+   * @param {String} text
+   * @param {Boolean} self (optional, default = `false`)
+   */
   newMessage(user, text, self=false) {
 
     const messages = $('#chat-messages');
@@ -79,6 +121,12 @@ class Chat {
       .scrollTop(messages.prop('scrollHeight'));
   }
 
+  /**
+   * Scan through #chat and update each `.message-sender-info` span for the given
+   *  `user` to use the most recent values of `user.name` and `user.viewing`.
+   *
+   * @param {User} user
+   */
   updateUser(user) {
 
     const dom = $(`.message-sender-info[name="${user.id}"]`);
@@ -87,6 +135,10 @@ class Chat {
 
   }
 
+  /**
+   * Force to redraw #chat based on our internal state.  Called every time there
+   *  is a change.
+   */
   refresh() {
 
     $('#chat')
@@ -108,6 +160,9 @@ class Chat {
 
   }
 
+  /**
+   * Bind callbacks.
+   */
   bind() {
 
     const self = this;
@@ -116,7 +171,6 @@ class Chat {
 
     $('#chat-persist *, #chat-persist').click(e => {
 
-      console.log($(e.target).attr('id'), $(e.target).is('#chat-close'))
       if ($(e.target).is('#chat-close'))
         return;
 
