@@ -124,7 +124,7 @@ class Socket {
 
       const user = collab.getUser(data.id);
       user.locked = data.locked;
-      graph.setLocks(collab.getLocks());
+      graph.setLocks();
 
     });
 
@@ -133,7 +133,7 @@ class Socket {
 
       const user = collab.getUser(data.id);
       user.locked = data.locked;
-      graph.setLocks(collab.getLocks());
+      graph.setLocks();
 
     });
 
@@ -142,7 +142,7 @@ class Socket {
 
       const user = collab.getUser(data.id);
       user.mouse = data.mouse;
-      graph.drawMice(collab.getMouseNodes());
+      graph.drawMice();
 
     });
 

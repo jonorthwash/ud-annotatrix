@@ -67,8 +67,8 @@ class CollaborationInterface {
     this.chat.alert(`you are logged in as %u`, [self]);
 
     // draw the mice and locks for everyone in the room
-    this.app.graph.drawMice(this.getMouseNodes());
-    this.app.graph.setLocks(this.getLocks());
+    this.app.graph.drawMice();
+    this.app.graph.setLocks();
 
   }
 
