@@ -21,7 +21,7 @@ module.exports = (sio, MemoryStore) => {
     if (!request.headers.cookie || !request.cookies['express.sid'])
       next(new SocketError(`AuthorizationError: unable to find cookie`), false);
 
-    const sid = request.cookies['express.sid'].substring(2,34);
+    const sid = (request.cookies['express.sid'] || '').substring(2,34);
     MemoryStore.get(sid, (err, session) => {
 
       if (err)
