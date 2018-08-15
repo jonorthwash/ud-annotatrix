@@ -184,9 +184,9 @@ function keyup(app, event) {
       case (KEYS.TAB):
         graph.intercepted = false;
         if (pressed.has(KEYS.SHIFT)) {
-          graph.prev();
+          graph.selectPrevEle();
         } else {
-          graph.next();
+          graph.selectNextEle();
         }
         break;
 
@@ -228,10 +228,11 @@ function keyup(app, event) {
         clearTimeout(gui.parseTimer);
         gui.parseTimer = setTimeout(() => {
 
-          if (corpus.parsed) {
+          if (gui.config.autoparsing) {
             corpus.parse($('#text-data').val());
           } else {
-            corpus.unparsed = $('#text-data').val();
+            if (corpus.current)
+              corpus.current.input = $('#text-data').val();
           }
 
         }, 1000);
@@ -328,13 +329,13 @@ function keyup(app, event) {
           graph.cy.$('.neighbor')
             .removeClass('neighbor combine-source combine-left combine-right')
 
-          const left = graph.getLeftForm();
+          const left = graph.getPrevForm();
           if (!left.hasClass('activated') && !left.hasClass('blocked') && left.data('type') === 'token')
             left
               .addClass('neighbor')
               .addClass('merge-left');
 
-          const right = graph.getRightForm();
+          const right = graph.getNextForm();
           if (!right.hasClass('activated') && !right.hasClass('blocked') && right.data('type') === 'token')
             right
               .addClass('neighbor')
@@ -372,12 +373,12 @@ function keyup(app, event) {
           graph.cy.$('.neighbor')
             .removeClass('neighbor merge-source merge-left merge-right')
 
-          const left = graph.getLeftForm();
+          const left = graph.getPrevForm();
           if (!left.hasClass('activated') && !left.hasClass('blocked') && left.data('type') === 'token')
             left
               .addClass('neighbor combine-left');
 
-          const right = graph.getRightForm();
+          const right = graph.getNextForm();
           if (!right.hasClass('activated') && !right.hasClass('blocked') && right.data('type') === 'token')
             right
               .addClass('neighbor combine-right');
