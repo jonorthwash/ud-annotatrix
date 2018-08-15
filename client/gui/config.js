@@ -16,6 +16,7 @@ var _gui = {
 	is_label_bar_visible: true,
 	column_visibilities: new Array(10).fill(true),
 	textarea_height: 238,
+	autoparsing: true,
 
 	statusNormalFadeout: 3000,
 	statusErrorFadeout: 5000,
