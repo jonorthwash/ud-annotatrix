@@ -1008,6 +1008,7 @@ span.dropdown-group-item-name i {
 
 #status-container {
 
+  z-index: 5;
   overflow-x: scroll;
   display: flex;
   padding: 0 1em;
