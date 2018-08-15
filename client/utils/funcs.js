@@ -4,8 +4,6 @@ const _ = require('underscore');
 const $ = require('jquery');
 const uuidv4 = require('uuid/v4');
 
-const AnnotatrixError = require('./errors').AnnotatrixError;
-
 
 function check_if_browser() {
   try {
@@ -67,4 +65,7 @@ module.exports = {
     return dedup;
   },
 
+  forEachFormat: callback => {
+    ['Brackets', 'CG3', 'CoNLL-U', 'plain text', 'SD'].forEach(callback);
+  },
 };
