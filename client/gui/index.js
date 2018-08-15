@@ -2,14 +2,10 @@
 
 const $ = require('jquery');
 const _ = require('underscore');
-const nx = require('notatrix');
 const utils = require('../utils');
-
+const Chat = require('./chat');
 const config = require('./config');
 const corpus = require('../corpus');
-const graph = require('../graph');
-
-const Chat = require('./chat');
 const GraphMenu = require('./graph-menu');
 const keys = require('./keyboard');
 const Labeler = require('./labeler');

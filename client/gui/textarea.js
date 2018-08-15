@@ -3,6 +3,7 @@
 const _ = require('underscore');
 const $ = require('jquery');
 const config = require('./config');
+const nx = require('notatrix');
 const utils = require('../utils');
 
 class Textarea {
@@ -53,7 +54,9 @@ class Textarea {
     }
 
     // show errors and warnings
-    $('.tab-warning, .tab-error').hide();
+    $('.tab-warning, .tab-error')
+      .removeClass('disabled')
+      .hide();
     utils.forEachFormat(format => {
       if (corpus.current.isParsed) {
 
