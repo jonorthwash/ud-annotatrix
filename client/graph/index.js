@@ -2,30 +2,43 @@
 
 const _ = require('underscore');
 const $ = require('jquery');
+const config = require('./config');
 const cytoscape = require('./cytoscape/cytoscape.min');
 const nx = require('notatrix');
-const utils = require('../utils');
-
-const config = require('./config');
 const sort = require('./sort');
+const utils = require('../utils');
 const zoom = require('./zoom');
 
 
+/**
+ * Abstraction over the cytoscape canvas.  Handles interaction between the graph
+ *  and the user.  For example, all the event handlers are here, the methods that
+ *  draw the graph, and the methods that place the mice / locks.
+ *
+ * @param {App} app a reference to the parent of this module
+ */
 class Graph {
   constructor(app) {
 
+    // save refs
     this.app = app;
     this.config = config;
+
+    // pull this complexity out into its own module
     this.zoom = zoom;
+
+    // keep track for our progress bar
     this.progress = {
       done: 0,
       total: 0,
     };
 
+    // GUI-state stuff
     this.intercepted = false;
     this.editing = null;
     this.moving_dependency = null;
 
+    // default options for the cytoscape canvas
     this.options = {
       container: this.app.gui.config.is_browser ? $('#cy') : null,
       boxSelectionEnabled: false,
@@ -39,34 +52,38 @@ class Graph {
       elements: []
     };
 
+    // total number of elements in the graph
     this.length = 0;
+
+    // number of "clumps" in the graph (i.e. form-node, pos-node, pos-edge, and
+    //  number-node all form a single "clump"). the clump determines the horiz
+    //  positioning of the cytoscape eles
     this.clumps = 0;
 
+    // selector for our currently locked node/edge
     this.locked = null;
+
+    // timer to enforce our mouse-move broadcast min-interval
     this.mouseBlocked = false;
 
+    // load configuration prefs
     this.load();
   }
 
-  drawMice(mice = []) {
-    mice.forEach(mouse => {
 
-      const id = mouse.id.replace(/[#:]/g, '_');
 
-      if (!this.cy.$(`#${id}.mouse`).length)
-        this.cy.add({
-          data: { id: id },
-          classes: 'mouse'
-        });
+  // ---------------------------------------------------------------------------
+  // core functionality
 
-      this.cy.$(`#${id}.mouse`)
-        .position(mouse.position)
-        .css('background-color', '#' + mouse.color);
-
-    });
-  }
-
+  /**
+   * Build a list of cytoscape elements, both nodes and edges.  This function
+   *  also validates all the elements.
+   *
+   * @return {Array} [{ data: Object, classes: String }]
+   */
   get eles() {
+
+    // helper function to get subscripted index numbers for superTokens
     function toSubscript(str) {
       const subscripts = { 0:'₀', 1:'₁', 2:'₂', 3:'₃', 4:'₄', 5:'₅',
         6:'₆', 7:'₇', 8:'₈', 9:'₉', '-':'₋', '(':'₍', ')':'₎' };
@@ -79,6 +96,7 @@ class Graph {
       }).join('');
     }
 
+    // helper function to get index numbers for a particular format
     function getIndex(token, format) {
       return format === 'CoNLL-U'
         ? token.indices.conllu
@@ -87,29 +105,33 @@ class Graph {
           : token.indices.absolute;
     }
 
-    var num = 0;
-
+    // reset our progress tracker
     this.progress.done = 0;
     this.progress.total = 0;
 
+    // cache these
     const sent = this.app.corpus.current,
       format = this.app.corpus.format;
 
-    sent.index();
+    // num is like clump except not including superTokens, eles in the list
+    let num = 0, eles = [];
 
-    let eles = [];
+    // walk over all the tokens
+    sent.index().iterate(token => {
 
-    sent.iterate(token => {
-
+      // don't draw other analyses
       if (token.indices.cytoscape == null && !token.isSuperToken)
         return;
 
+      // cache some values
       let id = getIndex(token, format);
       let clump = token.indices.cytoscape;
       let pos = format === 'CG3'
         ? token.xpostag || token.upostag
         : token.upostag || token.xpostag;
       let isRoot = sent.root.dependents.has(token);
+
+      // after iteration, this will just be the max
       this.clumps = clump;
 
       if (token.isSuperToken) {
@@ -203,8 +225,10 @@ class Graph {
           }
         );
 
+        // iterate over the token's heads to get edges
         token.mapHeads(head => {
 
+          // TODO: improve this (basic) algorithm
           function getEdgeHeight(corpus, src, tar) {
 
             const diff = tar.indices.absolute - src.indices.absolute;
@@ -224,6 +248,7 @@ class Graph {
           if (head.deprel && head.deprel !== '_')
             this.progress.done += 1;
 
+          // roots don't get edges drawn (just bolded)
           if (head.token.name === 'RootToken')
             return;
 
@@ -271,6 +296,449 @@ class Graph {
     return eles;
   }
 
+  /**
+   * Create the cytoscape instance and populate it with the nodes and edges we
+   *  generate in `this.eles`.
+   *
+   * @return {Graph} (chaining)
+   */
+  draw() {
+
+    // cache a ref
+    const corpus = this.app.corpus;
+
+    // extend our default cytoscape config based on current params
+    this.options.layout = {
+      name: 'tree',
+      padding: 0,
+      nodeDimensionsIncludeLabels: false,
+      cols: (corpus.is_vertical ? 2 : undefined),
+      rows: (corpus.is_vertical ? undefined : 2),
+      sort: (corpus.is_vertical
+        ? sort.vertical
+        : corpus.is_ltr
+          ? sort.ltr
+          : sort.rtl)
+    };
+
+    // set the cytoscape content
+    this.options.elements = corpus.isParsed ? this.eles : [];
+
+    // instantiate and recall zoom/pan
+    this.cy = cytoscape(this.options)
+      .minZoom(0.1)
+      .maxZoom(10.0)
+      .zoom(config.zoom)
+      .pan(config.pan);
+
+    // see if we should calculate a zoom/pan or use our default
+    this.zoom.checkFirst(this);
+
+    // add the mice and locks from `collab`
+    this.drawMice();
+    this.setLocks();
+
+    // check if we had something locked already before we redrew the graph
+    if (config.locked_index === this.app.corpus.index) {
+
+      // add the class to the element
+      const locked = this.cy.$('#' + config.locked_id);
+      locked.addClass(config.locked_classes);
+
+      if (config.locked_classes.indexOf('merge-source') > -1) {
+
+        // add the classes to adjacent elements if we were merging
+
+        const left = this.getPrevForm();
+        if (left && !left.hasClass('activated') && !left.hasClass('blocked') && left.data('type') === 'token')
+          left
+            .addClass('neighbor merge-left');
+
+        const right = this.getNextForm();
+        if (right && !right.hasClass('activated') && !right.hasClass('blocked') && right.data('type') === 'token')
+          right
+            .addClass('neighbor merge-right');
+
+      } else if (config.locked_classes.indexOf('combine-source') > -1) {
+
+        // add the classes to the adjacent elements if we were combining
+
+        const left = this.getPrevForm();
+        if (left && !left.hasClass('activated') && !left.hasClass('blocked') && left.data('type') === 'token')
+          left
+            .addClass('neighbor combine-left');
+
+        const right = this.getNextForm();
+        if (right && !right.hasClass('activated') && !right.hasClass('blocked') && right.data('type') === 'token')
+          right
+            .addClass('neighbor combine-right');
+      }
+
+      // make sure we lock it in the same way as if we had just clicked it
+      this.lock(locked);
+    }
+
+    // set event handler callbacks
+    return this.bind();
+  }
+
+  /**
+   * Bind event handlers to the cytoscape elements and the enclosing canvas.
+   *
+   * @return {Graph} (chaining)
+   */
+  bind() {
+
+    // avoid problems w/ `this`-rebinding in callbacks
+    const self = this;
+
+    // make sure zoom is bound to the correct cytoscape instance
+    this.zoom.bind(this);
+
+    // set a countdown to triggering a "background" click unless a node/edge intercepts it
+    $('#cy canvas, #mute').mouseup(e => {
+
+      // force focus off our inputs/textarea
+      $(':focus').blur();
+      self.intercepted = false;
+      setTimeout(() => self.clear(), 100);
+      self.save();
+
+    });
+
+    // don't clear if we clicked inside #edit
+    $('#edit').mouseup(e => { self.intercepted = true; });
+
+    // if we're dragging, don't clear; also save after we change the zoom
+    $('#cy canvas')
+      .mousemove(e => { self.intercepted = true; })
+      .on('wheel', e => self.save());
+
+    this.cy.on('mousemove', e => {
+
+      // send out a 'move mouse' event at most every `mouse_move_delay` msecs
+      if (self.app.initialized && !self.mouseBlocked)
+        self.app.socket.broadcast('move mouse', e.position);
+
+      // enforce the delay
+      self.mouseBlocked = true;
+      setTimeout(() => { self.mouseBlocked = false; }, config.mouse_move_delay);
+
+    });
+
+    // don't clear if we right- or left-click on an element
+    this.cy.on('click cxttapend', '*', e => {
+
+      self.intercepted = true;
+
+      // debugging
+      console.info(`clicked ${e.target.attr('id')}, data:`, e.target.data());
+    });
+
+    // bind the cy events
+    self.cy.on('click', 'node.form', e => {
+
+      const target = e.target;
+
+      if (target.hasClass('locked'))
+        return;
+
+      self.cy.$('.multiword-active').removeClass('multiword-active');
+
+      if (self.moving_dependency) {
+
+        const dep = self.cy.$('.selected');
+        const source = self.cy.$('.arc-source');
+
+        // make a new dep, remove the old one
+        self.makeDependency(source, target);
+        self.removeDependency(dep);
+        self.cy.$('.moving').removeClass('moving');
+        self.moving_dependency = false;
+
+        const newEdge = self.cy.$(`#${source.attr('id')} -> #${target.attr('id')}`);
+
+        // right click the new edge and lock it
+        newEdge.trigger('cxttapend');
+        self.lock(newEdge);
+
+      } else {
+
+        // check if there's anything in-progress
+        self.commit();
+
+        self.cy.$('.arc-source').removeClass('arc-source');
+        self.cy.$('.arc-target').removeClass('arc-target');
+        self.cy.$('.selected').removeClass('selected');
+
+        // handle the click differently based on current state
+
+        if (target.hasClass('merge-right') || target.hasClass('merge-left')) {
+
+          // perform merge
+          self.merge(self.cy.$('.merge-source').data('token'), target.data('token'));
+          self.unlock();
+
+        } else if (target.hasClass('combine-right') || target.hasClass('combine-left')) {
+
+          // perform combine
+          self.combine(self.cy.$('.combine-source').data('token'), target.data('token'));
+          self.unlock();
+
+        } else if (target.hasClass('activated')) {
+
+          // de-activate
+          self.intercepted = false;
+          self.clear();
+
+        } else {
+
+          const source = self.cy.$('.activated');
+          target.addClass('activated');
+
+          // if there was already an activated node
+          if (source.length === 1) {
+
+            // add a new edge
+            self.makeDependency(source, target);
+            source.removeClass('activated');
+            target.removeClass('activated');
+            self.unlock();
+
+          } else {
+
+            // activate it
+            self.lock(target);
+
+          }
+        }
+      }
+    });
+
+    self.cy.on('click', 'node.pos', e => {
+
+      const target = e.target;
+
+      if (target.hasClass('locked'))
+        return;
+
+      self.commit();
+      self.editing = target;
+
+      self.cy.$('.activated').removeClass('activated');
+      self.cy.$('.arc-source').removeClass('arc-source');
+      self.cy.$('.arc-target').removeClass('arc-target');
+      self.cy.$('.selected').removeClass('selected');
+
+      this.showEditLabelBox(target);
+      self.lock(target);
+
+    });
+
+    self.cy.on('click', '$node > node', e => {
+
+      const target = e.target;
+
+      if (target.hasClass('locked'))
+        return;
+
+      self.cy.$('.activated').removeClass('activated');
+
+      if (target.hasClass('multiword-active')) {
+
+        target.removeClass('multiword-active');
+        self.unlock();
+
+      } else {
+
+        self.cy.$('.multiword-active').removeClass('multiword-active');
+        target.addClass('multiword-active');
+        self.lock(target);
+
+      }
+    });
+
+    self.cy.on('click', 'edge.dependency', e => {
+
+      const target = e.target;
+
+      if (target.hasClass('locked'))
+        return;
+
+      self.commit();
+      self.editing = target;
+
+      self.cy.$('.activated').removeClass('activated');
+      self.cy.$('.arc-source').removeClass('arc-source');
+      self.cy.$('.arc-target').removeClass('arc-target');
+      self.cy.$('.selected').removeClass('selected');
+
+      this.showEditLabelBox(target);
+      self.lock(target);
+
+    });
+    self.cy.on('cxttapend', 'node.form', e => {
+
+      const target = e.target;
+
+      if (target.hasClass('locked'))
+        return;
+
+      self.commit();
+      self.editing = target;
+
+      self.cy.$('.activated').removeClass('activated');
+      self.cy.$('.arc-source').removeClass('arc-source');
+      self.cy.$('.arc-target').removeClass('arc-target');
+      self.cy.$('.selected').removeClass('selected');
+
+      this.showEditLabelBox(target);
+      self.lock(target);
+
+    });
+    self.cy.on('cxttapend', 'edge.dependency', e => {
+
+      const target = e.target;
+
+      if (target.hasClass('locked'))
+        return;
+
+      self.commit();
+      self.cy.$('.activated').removeClass('activated');
+
+      if (target.hasClass('selected')) {
+
+        self.cy.$(`#${target.data('source')}`).removeClass('arc-source');
+        self.cy.$(`#${target.data('target')}`).removeClass('arc-target');
+        target.removeClass('selected');
+        self.unlock();
+
+      } else {
+
+        self.cy.$('.arc-source').removeClass('arc-source');
+        self.cy.$(`#${target.data('source')}`).addClass('arc-source');
+
+        self.cy.$('.arc-target').removeClass('arc-target');
+        self.cy.$(`#${target.data('target')}`).addClass('arc-target');
+
+        self.cy.$('.selected').removeClass('selected');
+        target.addClass('selected');
+        self.lock(target);
+
+      }
+    });
+
+    return this;
+  }
+
+  /**
+   * Save the current graph config to `localStorage`.
+   */
+  save() {
+
+    if (this.cy) {
+      config.zoom = this.cy.zoom();
+      config.pan = this.cy.pan();
+    }
+    let serial = _.pick(config, 'pan', 'zoom', 'locked_index'
+      , 'locked_id', 'locked_classes');
+    serial = JSON.stringify(serial);
+    utils.storage.setPrefs('graph', serial);
+
+  }
+
+  /**
+   * Load the graph config from `localStorage` if it exists.
+   */
+  load() {
+
+    let serial = utils.storage.getPrefs('graph');
+    serial = JSON.parse(serial);
+    config.set(serial);
+
+  }
+
+  /**
+   * Save in-progress changes to the graph (labels being edited).
+   */
+  commit() {
+
+    this.cy.$('.input').removeClass('input');
+
+    if (this.editing === null)
+      return; // nothing to do
+
+    if (this.cy.$('.splitting').length) {
+
+      const value = $('#edit').val();
+      let index = value.indexOf(' ');
+      index = index < 0 ? value.length : index;
+
+      this.splitToken(this.editing, index);
+
+    } else {
+
+      const token = this.editing.data('token') || this.editing.data('targetToken'),
+        attr = this.editing.data('attr'),
+        value = utils.validate.attrValue(attr, $('#edit').val());
+
+      if (attr === 'deprel') {
+
+        this.modifyDependency(this.editing, value);
+
+      } else {
+
+        token[attr] = value;
+        this.editing = null;
+        this.app.save({
+          type: 'set',
+          indices: [this.app.corpus.index],
+        });
+
+      }
+    }
+
+    this.editing = null;
+  }
+
+  /**
+   * Remove all the graph state that would indicate we're in the process of
+   *  editing a label or activating a particular element.
+   */
+  clear() {
+
+    // intercepted by clicking a canvas subobject || mousemove (i.e. drag) || #edit
+    if (this.intercepted)
+      return;
+
+    this.commit();
+
+    this.cy.$('*').removeClass('splitting activated multiword-active '
+      + 'multiword-selected arc-source arc-target selected moving neighbor '
+      + 'merge-source merge-left merge-right combine-source combine-left '
+      + 'combine-right');
+
+    this.moving_dependency = false;
+
+    $('#mute').removeClass('activated');
+    $('#edit').removeClass('activated');
+
+    this.app.gui.status.refresh();
+    this.unlock();
+
+  }
+
+
+
+  // ---------------------------------------------------------------------------
+  // abstractions over modifying the corpus
+
+  /**
+   * Try to add `src` as a head for `tar`, save changes, and update graph.
+   *
+   * @param {CytoscapeNode} src
+   * @param {CytoscapeNode} tar
+   */
   makeDependency(src, tar) {
 
     try {
@@ -321,13 +789,20 @@ class Graph {
     }*/
   }
 
-  modifyDependency(ele, value) {
+  /**
+   * Try to change the deprel for the dependency given by `ele` to `deprel`, save
+   *  changes, and update graph.
+   *
+   * @param {CytoscapeEdge} ele
+   * @param {String} deprel
+   */
+  modifyDependency(ele, deprel) {
 
     try {
 
       let src = ele.data('sourceToken');
       let tar = ele.data('targetToken');
-      tar.modifyHead(src, value);
+      tar.modifyHead(src, deprel);
       this.unlock();
       this.app.save({
         type: 'set',
@@ -347,6 +822,11 @@ class Graph {
     }
   }
 
+  /**
+   * Try to remove the dependency given by `ele`, save changes, and update graph.
+   *
+   * @param {CytoscapeEdge} ele
+   */
   removeDependency(ele) {
 
     try {
@@ -373,6 +853,11 @@ class Graph {
     }
   }
 
+  /**
+   * Try to set `ele` as the root of the sentence, save changes, and update graph.
+   *
+   * @param {CytoscapeNode} ele
+   */
   setRoot(ele) {
 
     const sent = this.app.corpus.current;
@@ -403,15 +888,14 @@ class Graph {
     }
   }
 
-  flashTokenSplitInput(ele) {
-
-    ele.addClass('splitting');
-    this.editing = ele;
-    this.showEditLabelBox(ele);
-
-  }
-
+  /**
+   * Try to the token given by `ele` as `index`, save changes, and update graph.
+   *
+   * @param {CytoscapeNode} ele
+   * @param {Number} index
+   */
   splitToken(ele, index) {
+
     try {
 
       this.app.corpus.current.split(ele.data('token'), index);
@@ -434,7 +918,14 @@ class Graph {
     }
   }
 
+  /**
+   * Try to the superToken given by `ele` into normal tokens save changes, and
+   *  update graph.
+   *
+   * @param {CytoscapeNode} ele
+   */
   splitSuperToken(ele) {
+
     try {
 
       this.app.corpus.current.split(ele.data('token'));
@@ -457,7 +948,15 @@ class Graph {
     }
   }
 
+  /**
+   * Try to combine `src` and `tar` into a superToken, save changes, and update
+   *  graph.
+   *
+   * @param {CytoscapeNode} src
+   * @param {CytoscapeNode} tar
+   */
   combine(src, tar) {
+
     try {
 
       this.app.corpus.current.combine(src, tar);
@@ -480,7 +979,15 @@ class Graph {
     }
   }
 
+  /**
+   * Try to merge `src` and `tar` into a single normal token, save changes, and
+   *  update graph.
+   *
+   * @param {CytoscapeNode} src
+   * @param {CytoscapeNode} tar
+   */
   merge(src, tar) {
+
     try {
 
       this.app.corpus.current.merge(src, tar);
@@ -503,7 +1010,20 @@ class Graph {
     }
   }
 
-  getLeftForm() {
+
+
+  // ---------------------------------------------------------------------------
+  // methods for traversing the graph
+
+  /**
+   * Get the `previous` form relative to the activated form (no wrapping).  This
+   *  is useful for when we want to get the neighbors of a node (e.g. for merge
+   *  or combine).  The `previous` form is the `form-node` with `clump` one less.
+   *  If there is no `previous` form, returns undefined.
+   *
+   * @return {(CytoscapeCollection|undefined)}
+   */
+  getPrevForm() {
 
     let clump = this.cy.$('.activated').data('clump');
     if (clump === undefined)
@@ -511,18 +1031,18 @@ class Graph {
 
     clump -= 1;
 
-    /*
-    // uncomment this to allow wrapping
-    if (clump < 0)
-      clump = this.clumps;
-    if (clump > this.clumps)
-      clump = 0;
-    */
-
     return this.cy.$(`.form[clump = ${clump}]`);
   }
 
-  getRightForm() {
+  /**
+   * Get the `next` form relative to the activated form (no wrapping).  This
+   *  is useful for when we want to get the neighbors of a node (e.g. for merge
+   *  or combine).  The `next` form is the `form-node` with `clump` one greater.
+   *  If there is no `next` form, returns undefined.
+   *
+   * @return {(CytoscapeCollection|undefined)}
+   */
+  getNextForm() {
 
     let clump = this.cy.$('.activated').data('clump');
     if (clump === undefined)
@@ -530,18 +1050,14 @@ class Graph {
 
     clump += 1;
 
-    /*
-    // uncomment this to allow wrapping
-    if (clump < 0)
-      next = this.clumps;
-    if (clump > this.clumps)
-      clump = 0;
-    */
-
     return this.cy.$(`.form[clump = ${clump}]`);
   }
 
-  prev() {
+  /**
+   * Show #edit on the `previous` cytoscape element, determined by the order it
+   *  was drawn to the graph.
+   */
+  selectPrevEle() {
 
     let num = this.cy.$('.input').data('num');
     this.intercepted = false;
@@ -560,7 +1076,11 @@ class Graph {
 
   }
 
-  next() {
+  /**
+   * Show #edit on the `next` cytoscape element, determined by the order it
+   *  was drawn to the graph.
+   */
+  selectNextEle() {
 
     let num = this.cy.$('.input').data('num');
     this.intercepted = false;
@@ -579,19 +1099,22 @@ class Graph {
 
   }
 
-  save() {
+  /**
+   * Flash the #edit box, but stay in `splitting` mode (this affects what happens
+   *  during `commit`).
+   */
+  flashTokenSplitInput(ele) {
 
-    if (this.cy) {
-      config.zoom = this.cy.zoom();
-      config.pan = this.cy.pan();
-    }
-    let serial = _.pick(config, 'pan', 'zoom', 'locked_index'
-      , 'locked_id', 'locked_classes');
-    serial = JSON.stringify(serial);
-    utils.storage.setPrefs('graph', serial);
+    ele.addClass('splitting');
+    this.editing = ele;
+    this.showEditLabelBox(ele);
 
   }
 
+  /**
+   * Flash the #edit box around the current `input` node.  Also locks the target
+   *  and flashes the #mute.
+   */
   showEditLabelBox(target) {
 
     target.addClass('input');
@@ -655,365 +1178,61 @@ class Graph {
     this.app.gui.status.refresh();
   }
 
-  load() {
 
-    let serial = utils.storage.getPrefs('graph');
-    serial = JSON.parse(serial);
-    config.set(serial);
 
-  }
+  // ---------------------------------------------------------------------------
+  // methods for collaboration
 
-  commit() {
+  /**
+   * Add `mouse` nodes for each of the users on the current corpus index.
+   */
+  drawMice() {
+    this.app.collab.getMouseNodes().forEach(mouse => {
 
-    this.cy.$('.input').removeClass('input');
+      const id = mouse.id.replace(/[#:]/g, '_');
 
-    if (this.editing === null)
-      return; // nothing to do
-
-    if (this.cy.$('.splitting').length) {
-
-      const value = $('#edit').val();
-      let index = value.indexOf(' ');
-      index = index < 0 ? value.length : index;
-
-      this.splitToken(this.editing, index);
-
-    } else {
-
-      const token = this.editing.data('token') || this.editing.data('targetToken'),
-        attr = this.editing.data('attr'),
-        value = utils.validate.attrValue(attr, $('#edit').val());
-
-      if (attr === 'deprel') {
-
-        this.modifyDependency(this.editing, value);
-
-      } else {
-
-        token[attr] = value;
-        this.editing = null;
-        this.app.save({
-          type: 'set',
-          indices: [this.app.corpus.index],
+      if (!this.cy.$(`#${id}.mouse`).length)
+        this.cy.add({
+          data: { id: id },
+          classes: 'mouse'
         });
 
-      }
-    }
+      this.cy.$(`#${id}.mouse`)
+        .position(mouse.position)
+        .css('background-color', '#' + mouse.color);
 
-    this.editing = null;
-  }
-
-  clear() {
-
-    // intercepted by clicking a canvas subobject || mousemove (i.e. drag) || #edit
-    if (this.intercepted)
-      return;
-
-    this.commit();
-
-    this.cy.$('*').removeClass('splitting activated multiword-active '
-      + 'multiword-selected arc-source arc-target selected moving neighbor '
-      + 'merge-source merge-left merge-right combine-source combine-left '
-      + 'combine-right');
-
-    this.moving_dependency = false;
-
-    $('#mute').removeClass('activated');
-    $('#edit').removeClass('activated');
-
-    this.app.gui.status.refresh();
-    this.unlock();
-
-  }
-
-  draw() {
-
-    const corpus = this.app.corpus;
-
-    this.options.layout = {
-      name: 'tree',
-      padding: 0,
-      nodeDimensionsIncludeLabels: false,
-      cols: (corpus.is_vertical ? 2 : undefined),
-      rows: (corpus.is_vertical ? undefined : 2),
-      sort: (corpus.is_vertical
-        ? sort.vertical
-        : corpus.is_ltr
-          ? sort.ltr
-          : sort.rtl)
-    };
-    this.options.elements = corpus.parsed ? this.eles : [];
-
-    this.cy = cytoscape(this.options)
-      .minZoom(0.1)
-      .maxZoom(10.0)
-      .zoom(config.zoom)
-      .pan(config.pan);
-
-    this.zoom.checkFirst(this);
-
-    this.drawMice(this.app.collab.getMouseNodes());
-    this.setLocks(this.app.collab.getLocks());
-
-    if (config.locked_index === this.app.corpus.index) {
-      console.log(config.locked_id, config.locked_classes);
-
-      const locked = this.cy.$('#' + config.locked_id);
-      locked.addClass(config.locked_classes);
-
-      if (config.locked_classes.indexOf('merge-source') > -1) {
-
-        const left = this.getLeftForm();
-        if (left && !left.hasClass('activated') && !left.hasClass('blocked') && left.data('type') === 'token')
-          left
-            .addClass('neighbor merge-left');
-
-        const right = this.getRightForm();
-        if (right && !right.hasClass('activated') && !right.hasClass('blocked') && right.data('type') === 'token')
-          right
-            .addClass('neighbor merge-right');
-
-      } else if (config.locked_classes.indexOf('combine-source') > -1) {
-
-        const left = this.getLeftForm();
-        if (left && !left.hasClass('activated') && !left.hasClass('blocked') && left.data('type') === 'token')
-          left
-            .addClass('neighbor combine-left');
-
-        const right = this.getRightForm();
-        if (right && !right.hasClass('activated') && !right.hasClass('blocked') && right.data('type') === 'token')
-          right
-            .addClass('neighbor combine-right');
-      }
-
-      this.lock(locked);
-    }
-
-    this.bind();
-
-    return this;
-  }
-
-  bind() {
-
-    const self = this;
-
-    this.zoom.bind(this);
-
-    // set a countdown to triggering a "background" click unless a node/edge intercepts it
-    $('#cy canvas, #mute').mouseup(e => {
-
-      $(':focus').blur();
-      self.intercepted = false;
-      setTimeout(() => self.clear(), 100);
-      self.save();
-
-    });
-    $('#edit').mouseup(e => { self.intercepted = true; });
-    $('#cy canvas')
-      .mousemove(e => { self.intercepted = true; })
-      .on('wheel', e => self.save());
-
-    this.cy.on('mousemove', e => {
-
-      // send out a 'move mouse' event at most every <mouse_move_delay> msecs
-      if (self.app.initialized && !self.mouseBlocked)
-        self.app.socket.broadcast('move mouse', e.position);
-
-      self.mouseBlocked = true;
-      setTimeout(() => { self.mouseBlocked = false; }, config.mouse_move_delay);
-
-    });
-    this.cy.on('click cxttapend', '*', e => {
-
-      self.intercepted = true;
-
-      // DEBUG: this line should be taken out in production
-      console.info(`clicked ${e.target.attr('id')}, data:`, e.target.data());
-    });
-
-    // bind the cy events
-    self.cy.on('click', 'node.form', e => {
-
-      const target = e.target;
-
-      if (target.hasClass('locked'))
-        return;
-
-      self.cy.$('.multiword-active').removeClass('multiword-active');
-
-      if (self.moving_dependency) {
-
-        const dep = self.cy.$('.selected');
-        const source = self.cy.$('.arc-source');
-
-        self.makeDependency(source, target);
-        self.removeDependency(dep);
-        self.cy.$('.moving').removeClass('moving');
-        self.moving_dependency = false;
-
-        const newEdge = self.cy.$(`#${source.attr('id')} -> #${target.attr('id')}`);
-
-        // right click the new edge and lock it
-        newEdge.trigger('cxttapend');
-        self.lock(newEdge);
-
-      } else {
-
-        self.commit();
-
-        self.cy.$('.arc-source').removeClass('arc-source');
-        self.cy.$('.arc-target').removeClass('arc-target');
-        self.cy.$('.selected').removeClass('selected');
-
-        if (target.hasClass('merge-right') || target.hasClass('merge-left')) {
-
-          self.merge(self.cy.$('.merge-source').data('token'), target.data('token'));
-          self.unlock();
-
-        } else if (target.hasClass('combine-right') || target.hasClass('combine-left')) {
-
-          self.combine(self.cy.$('.combine-source').data('token'), target.data('token'));
-          self.unlock();
-
-        } else if (target.hasClass('activated')) {
-
-          self.intercepted = false;
-          self.clear();
-
-        } else {
-
-          const source = self.cy.$('.activated');
-          target.addClass('activated');
-
-          // if there was already an activated node
-          if (source.length === 1) {
-
-            self.makeDependency(source, target);
-            source.removeClass('activated');
-            target.removeClass('activated');
-            self.unlock();
-
-          } else {
-
-            self.lock(target);
-
-          }
-        }
-      }
-    });
-    self.cy.on('click', 'node.pos', e => {
-
-      const target = e.target;
-
-      if (target.hasClass('locked'))
-        return;
-
-      self.commit();
-      self.editing = target;
-
-      self.cy.$('.activated').removeClass('activated');
-      self.cy.$('.arc-source').removeClass('arc-source');
-      self.cy.$('.arc-target').removeClass('arc-target');
-      self.cy.$('.selected').removeClass('selected');
-
-      this.showEditLabelBox(target);
-      self.lock(target);
-
-    });
-    self.cy.on('click', '$node > node', e => {
-
-      const target = e.target;
-
-      if (target.hasClass('locked'))
-        return;
-
-      self.cy.$('.activated').removeClass('activated');
-
-      if (target.hasClass('multiword-active')) {
-
-        target.removeClass('multiword-active');
-        self.unlock();
-
-      } else {
-
-        self.cy.$('.multiword-active').removeClass('multiword-active');
-        target.addClass('multiword-active');
-        self.lock(target);
-
-      }
-    });
-    self.cy.on('click', 'edge.dependency', e => {
-
-      const target = e.target;
-
-      if (target.hasClass('locked'))
-        return;
-
-      self.commit();
-      self.editing = target;
-
-      self.cy.$('.activated').removeClass('activated');
-      self.cy.$('.arc-source').removeClass('arc-source');
-      self.cy.$('.arc-target').removeClass('arc-target');
-      self.cy.$('.selected').removeClass('selected');
-
-      this.showEditLabelBox(target);
-      self.lock(target);
-
-    });
-    self.cy.on('cxttapend', 'node.form', e => {
-
-      const target = e.target;
-
-      if (target.hasClass('locked'))
-        return;
-
-      self.commit();
-      self.editing = target;
-
-      self.cy.$('.activated').removeClass('activated');
-      self.cy.$('.arc-source').removeClass('arc-source');
-      self.cy.$('.arc-target').removeClass('arc-target');
-      self.cy.$('.selected').removeClass('selected');
-
-      this.showEditLabelBox(target);
-      self.lock(target);
-
-    });
-    self.cy.on('cxttapend', 'edge.dependency', e => {
-
-      const target = e.target;
-
-      if (target.hasClass('locked'))
-        return;
-
-      self.commit();
-      self.cy.$('.activated').removeClass('activated');
-
-      if (target.hasClass('selected')) {
-
-        self.cy.$(`#${target.data('source')}`).removeClass('arc-source');
-        self.cy.$(`#${target.data('target')}`).removeClass('arc-target');  // visual effects on targeted node
-        target.removeClass('selected');
-        self.unlock();
-
-      } else {
-
-        self.cy.$('.arc-source').removeClass('arc-source');
-        self.cy.$(`#${target.data('source')}`).addClass('arc-source');
-
-        self.cy.$('.arc-target').removeClass('arc-target');
-        self.cy.$(`#${target.data('target')}`).addClass('arc-target');
-
-        self.cy.$('.selected').removeClass('selected');
-        target.addClass('selected');
-        self.lock(target);
-
-      }
     });
   }
 
+  /**
+   * Add the `locked` class to each of the elements being edited by other users
+   *  on the current corpus index.
+   */
+  setLocks() {
+
+    this.cy.$('.locked')
+      .removeClass('locked')
+      .data('locked_by', null)
+      .css('background-color', '')
+      .css('line-color', '');
+
+    this.app.collab.getLocks().forEach(lock => {
+
+      this.cy.$('#' + lock.locked)
+        .addClass('locked')
+        .data('locked_by', lock.id)
+        .css('background-color', '#' + lock.color)
+        .css('line-color', '#' + lock.color);
+
+    });
+  }
+
+  /**
+   * Add a lock to `ele`, save it to the config, and broadcast it to the other
+   *  users.
+   *
+   * @param {(CytoscapeEdge|CytoscapeNode)}
+   */
   lock(ele) {
 
     if (!ele || !ele.length)
@@ -1033,6 +1252,9 @@ class Graph {
 
   }
 
+  /**
+   * Remove the lock for the current user, save and broadcast.
+   */
   unlock() {
 
     this.locked = null;
@@ -1044,24 +1266,6 @@ class Graph {
 
   }
 
-  setLocks(locks) {
-
-    this.cy.$('.locked')
-      .removeClass('locked')
-      .data('locked_by', null)
-      .css('background-color', '')
-      .css('line-color', '');
-
-    locks.forEach(lock => {
-
-      this.cy.$('#' + lock.locked)
-        .addClass('locked')
-        .data('locked_by', lock.id)
-        .css('background-color', '#' + lock.color)
-        .css('line-color', '#' + lock.color);
-
-    });
-  }
 }
 
 
