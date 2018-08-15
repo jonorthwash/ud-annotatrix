@@ -164,7 +164,7 @@ class Menu {
       if (corpus.format === $(e.target).attr('name'))
         return;
 
-      if (!corpus.parsed)
+      if (!corpus.isParsed)
         corpus.parse(corpus.unparsed);
 
       corpus.format = $(e.target).attr('name');
@@ -273,7 +273,7 @@ class Menu {
     $('.nav-link')
       .removeClass('active')
       .filter(`[name="${corpus.format}"]`)
-      .toggleClass('active', corpus.parsed);
+      .toggleClass('active', corpus.isParsed);
 
     $('#btnToggleTextarea .fa')
       .removeClass('fa-chevron-down fa-chevon-up');
