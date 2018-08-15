@@ -2,6 +2,7 @@
 
 const $ = require('jquery');
 const _ = require('underscore');
+const nx = require('notatrix');
 const utils = require('../utils');
 
 const config = require('./config');
@@ -14,8 +15,9 @@ const keys = require('./keyboard');
 const Labeler = require('./labeler');
 const Menu = require('./menu');
 const modalFactory = require('./modals');
-const Table = require('./table');
 const Status = require('./status');
+const Table = require('./table');
+const Textarea = require('./textarea');
 
 
 class GUI {
@@ -24,7 +26,6 @@ class GUI {
     this.app = app;
 
     // bind subelements
-    // something about undo?
     this.chat = new Chat(this);
     this.config = config;
     this.graphMenu = new GraphMenu(this);
@@ -34,6 +35,7 @@ class GUI {
     this.modals = modalFactory(this);
     this.status = new Status(this);
     this.table = new Table(this);
+    this.textarea = new Textarea(this);
 
     this.load();
     this.bind();
@@ -47,7 +49,8 @@ class GUI {
       , 'is_table_visible'
       , 'is_textarea_visible'
       , 'pinned_menu_items'
-      , 'textarea_height' );
+      , 'textarea_height'
+      , 'autoparsing' );
     serial = JSON.stringify(serial);
     utils.storage.setPrefs('gui', serial);
 
@@ -72,12 +75,13 @@ class GUI {
 
     const self = this;
 
-    // bind the subelements
+    // bind all subelements
     require('./selfcomplete');
     this.chat.bind();
     this.graphMenu.bind();
     this.menu.bind();
     this.status.bind();
+    this.textarea.bind();
 
     // graph interception stuff
     $('.controls').click(e => $(':focus:not(#edit)').blur());
@@ -86,17 +90,7 @@ class GUI {
     // keystroke handling & such
     window.onkeyup = e => self.keys.up(self.app, e);
     window.onkeydown = e => self.keys.down(self.app, e);
-    //window.onbeforeunload = e => self.app.save();
-
-    // textarea resizing
-
-    $('#text-data').mouseup(e => {
-
-      config.textarea_height = $(e.target).css('height');
-      self.app.graph.draw();
-      self.save();
-
-    });
+    window.onbeforeunload = e => self.app.save();
 
   }
 
@@ -106,53 +100,13 @@ class GUI {
     if (!this.config.is_browser)
       return;
 
-    const corpus = this.app.corpus;
-
     // refresh all subelements
     this.chat.refresh();
     this.graphMenu.refresh();
     this.labeler.refresh();
     this.menu.refresh();
     this.status.refresh();
-
-    // show the data
-    if (this.config.is_textarea_visible) {
-
-      if (corpus.format !== 'CoNLL-U')
-        this.config.is_table_visible = false;
-
-      if (this.config.is_table_visible) {
-
-        $('#table-data').show();
-        $('#text-data').hide();
-        this.table.rebuild();
-
-      } else {
-
-        $('#table-data').hide();
-        $('#text-data')
-          .val(corpus.textdata)
-          .css('height', config.textarea_height)
-          .show();
-      }
-    }
-
-    // show our warnings
-    $('.tab-warning').hide();
-    if (corpus.conversionLosses.length)
-      $(`.format-tab[name="${corpus.format}"] .tab-warning`)
-        .show()
-        .attr('title', `Unable to encode ${corpus.conversionLosses.join(', ')}`);
-
-    // show our errors
-    $('.tab-error').hide();
-    _.each(corpus.conversionErrors, (message, format) => {
-      $(`.format-tab[name="${format}"]`)
-        .addClass('disabled')
-        .find(`.tab-error`)
-          .show()
-          .attr('title', message);
-    });
+    this.textarea.refresh();
 
     // and draw the graph
     this.app.graph.draw();
