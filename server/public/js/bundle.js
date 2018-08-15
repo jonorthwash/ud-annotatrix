@@ -10586,14 +10586,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var $ = require('jquery');
 var _ = require('underscore');
-var nx = require('notatrix');
 var utils = require('../utils');
-
+var Chat = require('./chat');
 var config = require('./config');
 var corpus = require('../corpus');
-var graph = require('../graph');
-
-var Chat = require('./chat');
 var GraphMenu = require('./graph-menu');
 var keys = require('./keyboard');
 var Labeler = require('./labeler');
@@ -10709,7 +10705,7 @@ var GUI = function () {
 
 module.exports = GUI;
 
-},{"../corpus":5,"../graph":9,"../utils":31,"./chat":12,"./config":13,"./graph-menu":14,"./keyboard":16,"./labeler":17,"./menu":18,"./modals":19,"./selfcomplete":21,"./status":22,"./table":23,"./textarea":24,"jquery":392,"notatrix":460,"underscore":501}],16:[function(require,module,exports){
+},{"../corpus":5,"../utils":31,"./chat":12,"./config":13,"./graph-menu":14,"./keyboard":16,"./labeler":17,"./menu":18,"./modals":19,"./selfcomplete":21,"./status":22,"./table":23,"./textarea":24,"jquery":392,"underscore":501}],16:[function(require,module,exports){
 'use strict';
 
 var _ = require('underscore');
@@ -13158,6 +13154,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var _ = require('underscore');
 var $ = require('jquery');
 var config = require('./config');
+var nx = require('notatrix');
 var utils = require('../utils');
 
 var Textarea = function () {
@@ -13205,7 +13202,7 @@ var Textarea = function () {
       }
 
       // show errors and warnings
-      $('.tab-warning, .tab-error').hide();
+      $('.tab-warning, .tab-error').removeClass('disabled').hide();
       utils.forEachFormat(function (format) {
         if (corpus.current.isParsed) {
 
@@ -13234,7 +13231,7 @@ var Textarea = function () {
 
 module.exports = Textarea;
 
-},{"../utils":31,"./config":13,"jquery":392,"underscore":501}],25:[function(require,module,exports){
+},{"../utils":31,"./config":13,"jquery":392,"notatrix":460,"underscore":501}],25:[function(require,module,exports){
 'use strict';
 
 require('babel-polyfill');

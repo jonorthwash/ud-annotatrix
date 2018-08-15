@@ -12,7 +12,7 @@ const CorpusDB = require('./models/corpus-json');
 
 function upload(treebank, filename, contents, next) {
 
-  console.log('uploading')
+  console.log('uploading');
   try {
 
     const corpus = nx.Corpus.fromString(contents);
@@ -41,11 +41,30 @@ function fromGitHub(treebank, url, next) {
   if (!url)
     return next(new UploadError(`No URL provided.`));
 
-  request.get(url, (err, _res, body) => {
+  // regex magic
+  const match = url.match(/^(https?:\/\/)?(github\.com|raw\.githubusercontent\.com)\/([\w\d]*)\/([^/]*)\/(tree\/|blob\/)?([^/]*)\/(.*)$/);
+  if (!match)
+    return next(new UploadError(`Unsupported URL format: ${url}`));
+
+  const [
+    string,
+    protocol,
+    domain,
+    owner,
+    repo,
+    blob_or_tree,
+    branch,
+    filepath
+  ] = match;
+
+  const filename = `${repo}__${branch}__${filepath.replace(/\//g, '__')}`;
+  const rawURL = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filepath}`;
+
+  request.get(rawURL, (err, _res, body) => {
     if (err)
       return next(err);
 
-    return upload(treebank, null, body, next);
+    return upload(treebank, filename, body, next);
 
   });
 

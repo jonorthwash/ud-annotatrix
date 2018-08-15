@@ -152,20 +152,19 @@ module.exports = app => {
         }));
       });
 
-    } else if (req.query.github_url) {
+    } else if (req.body.url) {
 
-      upload.fromGitHub(treebank, req.query.github_url, err => {
+      upload.fromGitHub(treebank, req.body.url, err => {
         if (err)
           return res.json({ error: err.message });
 
-        console.log('here');
         res.redirect('/annotatrix?' + querystring.stringify({
           treebank_id: treebank,
         }));
       });
 
     } else {
-      res.json({ error: 'Please provide a file or a GitHub URL.' });
+      res.json({ error: 'Please provide a file or URL.' });
     }
   });
 
