@@ -6,6 +6,9 @@ const $ = require('jquery');
 var _gui;
 
 
+/**
+ * Show the modal.
+ */
 function show() {
   $('#upload-modal')
     .show()
@@ -13,10 +16,16 @@ function show() {
       .prop('disabled', !_gui.app.server.is_running);
 }
 
+/**
+ * Hide the modal.
+ */
 function hide() {
   $('#upload-modal').hide();
 }
 
+/**
+ * Bind the click-handler.
+ */
 function bind() {
 
   $('#upload-modal')
