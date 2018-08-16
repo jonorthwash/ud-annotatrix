@@ -1,5 +1,13 @@
 #!/usr/bin/env node
 
+/*
+ * Kevin Murphy
+ * 7/25/18
+ *
+ * This script handles compiling the EJS templates into plain HTML files to
+ *  allow clients to open the UD Annotatrix without a server.
+ */
+
 'use strict';
 
 const ejs = require('ejs');

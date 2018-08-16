@@ -1,5 +1,13 @@
 #!/usr/bin/env node
 
+/*
+ * Kevin Murphy
+ * 8/9/18
+ *
+ * This script handles downloading all of the CoNLL-U treebanks linked to on
+ *  universaldependencies.org to the local filesystem.
+ */
+
 'use strict';
 
 const _ = require('underscore');
