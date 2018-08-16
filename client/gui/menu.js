@@ -281,7 +281,7 @@ class Menu {
       .toggleClass('active', corpus.isParsed);
 
     $('#btnToggleTextarea .fa')
-      .removeClass('fa-chevron-down fa-chevon-up');
+      .removeClass('fa-chevron-down fa-chevron-up');
 
     if (config.is_textarea_visible) {
 
@@ -289,14 +289,16 @@ class Menu {
       $('#top-buttons-container').removeClass('extra-space');
       $('.format-tab').show();
 
-      $('#btnToggleTable .fa')
-        .toggleClass('fa-code', config.is_table_visible)
+      $('#btnToggleTable')
+        .show()
+        .find('.fa')
+        .removeClass('fa-table fa-code')
+        .addClass(config.is_table_visible ? 'fa-code' : 'fa-table')
         .toggleClass('disabled', corpus.format !== 'CoNLL-U')
         .prop('disabled', corpus.format !== 'CoNLL-U')
         .show();
 
       $('#btnToggleTextarea .fa').addClass('fa-chevron-up');
-
 
     } else {
 
