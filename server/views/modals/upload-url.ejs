@@ -1,0 +1,24 @@
+<div class="modal custom-modal" id="upload-url-modal">
+  <div class="modal-dialog" role="document">
+    <form class="modal-content" action="./upload" method="post" enctype="multipart/form-data">
+      <div class="modal-header">
+        <h5 class="modal-title">Upload corpus</h5>
+        <button type="button" class="close" aria-label="Close" name="close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <span title="Select a file to upload to the server">
+          <u>Enter a URL</u>
+          <input name="url" id="load-from-url" />
+        </span>
+      </div>
+
+      <div class="modal-footer">
+        <button type="submit" name="submit" class="btn btn-primary" disabled>Upload</button>
+        <button type="button" name="close" class="btn btn-secondary">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>

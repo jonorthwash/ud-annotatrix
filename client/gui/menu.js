@@ -85,10 +85,15 @@ class Menu {
       if (!$(e.target).is('.pin'))
         self.gui.app.save();
     });
-    $('[name="upload-corpus"]').click(e => {
+    $('[name="upload-file"]').click(e => {
       const target = $(e.target);
       if (!target.is('.pin') && !target.closest('a').hasClass('disabled'))
-        self.gui.modals.upload.show();
+        self.gui.modals.uploadFile.show();
+    });
+    $('[name="upload-url"]').click(e => {
+      const target = $(e.target);
+      if (!target.is('.pin') && !target.closest('a').hasClass('disabled'))
+        self.gui.modals.uploadURL.show();
     });
     $('[name="download-corpus"]').click(e => {
       if (!$(e.target).is('.pin'))
@@ -252,7 +257,7 @@ class Menu {
     // other buttons
 
     const server_running = this.gui.app.server.is_running;
-    $('[name="upload-corpus"]')
+    $('[name="upload-file"]')
       .toggleClass('disabled', !server_running)
       .prop('disabled', !server_running);
 

@@ -1,16 +1,15 @@
 'use strict';
 
 const $ = require('jquery');
-
-
-var _gui;
-
+var _gui = null;
 
 /**
  * Show the modal.
  */
 function show() {
-  $('#upload-modal')
+  console.log('show')
+  console.trace();
+  $('#upload-file-modal')
     .show()
     .find('[type="submit"]')
       .prop('disabled', !_gui.app.server.is_running);
@@ -20,7 +19,7 @@ function show() {
  * Hide the modal.
  */
 function hide() {
-  $('#upload-modal').hide();
+  $('#upload-file-modal').hide();
 }
 
 /**
@@ -28,7 +27,7 @@ function hide() {
  */
 function bind() {
 
-  $('#upload-modal')
+  $('#upload-file-modal')
     .find('[name="close"]')
     .click(hide);
 
@@ -40,7 +39,6 @@ module.exports = gui => {
   bind();
 
   return {
-    bind,
     hide,
     show,
   };

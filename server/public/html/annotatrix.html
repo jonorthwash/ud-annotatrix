@@ -33,7 +33,7 @@
 
 	  <div id="modals">
 
-			<div class="modal custom-modal" id="upload-modal" name="upload">
+			<div class="modal custom-modal" id="upload-file-modal">
   <div class="modal-dialog" role="document">
     <form class="modal-content" action="./upload" method="post" enctype="multipart/form-data">
       <div class="modal-header">
@@ -44,12 +44,7 @@
       </div>
 
       <div class="modal-body">
-        <p>
-          This will upload your treebank to your browser's local storage. If there is not
-          enough space then the file will not be uploaded successfully. The amount of
-          available space according to your browser is reported below.
-        </p>
-        <span title="Select a file to upload into the interface">
+        <span title="Select a file to upload to the server">
           <u>Choose and upload file</u>
           <input type="file" name="file" id="upload-filename" />
         </span>
@@ -63,6 +58,31 @@
             Available space: <span id="localStorageAvailable"></span>
           </div>
         -->
+      </div>
+
+      <div class="modal-footer">
+        <button type="submit" name="submit" class="btn btn-primary" disabled>Upload</button>
+        <button type="button" name="close" class="btn btn-secondary">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+			<div class="modal custom-modal" id="upload-url-modal">
+  <div class="modal-dialog" role="document">
+    <form class="modal-content" action="./upload" method="post" enctype="multipart/form-data">
+      <div class="modal-header">
+        <h5 class="modal-title">Upload corpus</h5>
+        <button type="button" class="close" aria-label="Close" name="close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <span title="Select a file to upload to the server">
+          <u>Enter a URL</u>
+          <input name="url" id="load-from-url" />
+        </span>
       </div>
 
       <div class="modal-footer">
@@ -150,10 +170,17 @@
 										</span>
 										<i class="pin fa fa-thumb-tack" title="Pin to menu"></i>
 									</a>
-									<a class="dropdown-group-item pinnable" href="#" name="upload-corpus">
+									<a class="dropdown-group-item pinnable" href="#" name="upload-file">
 										<span class="dropdown-group-item-name">
 											<i class="fa fa-upload"></i>
 											Upload
+										</span>
+										<i class="pin fa fa-thumb-tack" title="Pin to menu"></i>
+									</a>
+									<a class="dropdown-group-item pinnable" href="#" name="upload-url">
+										<span class="dropdown-group-item-name">
+											<i class="fa fa-code-branch"></i>
+											Upload from GitHub
 										</span>
 										<i class="pin fa fa-thumb-tack" title="Pin to menu"></i>
 									</a>
@@ -267,15 +294,15 @@
 						<a class="btn btn-secondary pinnable" href="#" name="save-corpus">
 							<i class="fa fa-save" title="Save corpus"></i>
 						</a>
-						<a class="btn btn-secondary pinnable" href="#" data-toggle="modal" data-target="#fileModal" id="btnUploadCorpus" name="upload-corpus">
+						<a class="btn btn-secondary pinnable" href="#" data-toggle="modal" data-target="#fileModal" id="btnUploadCorpus" name="upload-file">
 							<i class="fa fa-upload" title="Import corpus"></i>
+						</a>
+						<a class="btn btn-secondary pinnable" href="#" name="upload-url">
+							<i class="fa fa-code-branch" title="Upload from GitHub"></i>
 						</a>
 						<a class="btn btn-secondary pinnable" id="btnExportCorpus" href="#" name="download-corpus">
 							<i class="fa fa-download" title="Download corpus"></i>
 						</a>
-						<!--<a class="btn btn-secondary" id="btnSaveServer" href="#">
-							<i class="fa fa-cloud-upload" title="Save on server"></i>
-						</a>-->
 						<a class="btn btn-secondary pinnable" id="btnDiscardCorpus" href="#" name="discard-corpus">
 							<i class="fa fa-trash" title="Discard corpus"></i>
 						</a>

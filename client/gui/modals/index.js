@@ -1,7 +1,8 @@
 module.exports = gui => {
   return {
-    
-    upload: require('./upload')(gui),
+
+    uploadFile: require('./upload-file')(gui),
+    uploadURL: require('./upload-url')(gui),
 
   };
 };

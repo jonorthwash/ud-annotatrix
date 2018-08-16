@@ -26,7 +26,7 @@ INSERT INTO meta (current_index, gui, labeler, permissions, editors) VALUES (
         "manage-permissions": false,
         "collab": true,
 				"save-corpus": false,
-				"upload-corpus": false,
+				"upload-file": false,
 				"download-corpus": false,
 				"discard-corpus": false,
 				"export-as-latex": false,
