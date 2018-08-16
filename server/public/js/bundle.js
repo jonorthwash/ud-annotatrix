@@ -11700,7 +11700,7 @@ var Menu = function () {
       //   NB: when unparsed, none will be active
       $('.nav-link').removeClass('active').filter('[name="' + corpus.format + '"]').toggleClass('active', corpus.isParsed);
 
-      $('#btnToggleTextarea .fa').removeClass('fa-chevron-down fa-chevon-up');
+      $('#btnToggleTextarea .fa').removeClass('fa-chevron-down fa-chevron-up');
 
       if (config.is_textarea_visible) {
 
@@ -11708,7 +11708,7 @@ var Menu = function () {
         $('#top-buttons-container').removeClass('extra-space');
         $('.format-tab').show();
 
-        $('#btnToggleTable .fa').toggleClass('fa-code', config.is_table_visible).toggleClass('disabled', corpus.format !== 'CoNLL-U').prop('disabled', corpus.format !== 'CoNLL-U').show();
+        $('#btnToggleTable').show().find('.fa').removeClass('fa-table fa-code').addClass(config.is_table_visible ? 'fa-code' : 'fa-table').toggleClass('disabled', corpus.format !== 'CoNLL-U').prop('disabled', corpus.format !== 'CoNLL-U').show();
 
         $('#btnToggleTextarea .fa').addClass('fa-chevron-up');
       } else {
