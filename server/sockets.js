@@ -127,7 +127,19 @@ module.exports = (sio, MemoryStore) => {
       const treebank = socket.request.treebank;
       const id = socket.request.id;
 
-      const user = rooms[treebank].users[id];
+      let user = rooms[treebank].users[id];
+      if (!user) {
+        user = {
+          id: id,
+          index: null,
+          mouse: null,
+          locked: null,
+          address: socket.request.address,
+          username: socket.request.username
+        };
+        rooms[treebank].users[id] = user;
+      }
+
       user.locked = locked;
 
       const response = {
@@ -144,7 +156,19 @@ module.exports = (sio, MemoryStore) => {
       const treebank = socket.request.treebank;
       const id = socket.request.id;
 
-      const user = rooms[treebank].users[id];
+      let user = rooms[treebank].users[id];
+      if (!user) {
+        user = {
+          id: id,
+          index: null,
+          mouse: null,
+          locked: null,
+          address: socket.request.address,
+          username: socket.request.username
+        };
+        rooms[treebank].users[id] = user;
+      }
+
       user.locked = null;
 
       const response = {
@@ -161,7 +185,19 @@ module.exports = (sio, MemoryStore) => {
       const treebank = socket.request.treebank;
       const id = socket.request.id;
 
-      const user = rooms[treebank].users[id];
+      let user = rooms[treebank].users[id];
+      if (!user) {
+        user = {
+          id: id,
+          index: null,
+          mouse: null,
+          locked: null,
+          address: socket.request.address,
+          username: socket.request.username
+        };
+        rooms[treebank].users[id] = user;
+      }
+
       user.mouse = mouse;
 
       const response = {
@@ -179,7 +215,19 @@ module.exports = (sio, MemoryStore) => {
       const treebank = socket.request.treebank;
       const id = socket.request.id;
 
-      const user = rooms[treebank].users[id];
+      let user = rooms[treebank].users[id];
+      if (!user) {
+        user = {
+          id: id,
+          index: null,
+          mouse: null,
+          locked: null,
+          address: socket.request.address,
+          username: socket.request.username
+        };
+        rooms[treebank].users[id] = user;
+      }
+
       user.index = index;
 
       const response = {
