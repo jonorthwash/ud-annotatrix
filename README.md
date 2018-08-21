@@ -36,18 +36,30 @@ At the moment, the interface supports:
 
 Editing POS labels, editing deprels, drawing arcs and deleting arcs are undoable and redoable.
 
-The interface supports right-to-left readin order and vertiacal alignment for long sentences.
+The interface supports right-to-left readin order and vertical alignment for long sentences.
+
+### Development
+
+When developing, make sure you have the most recent versions of all source files and dependencies by running `git pull && npm install`.
+
+After making changes, make sure to recompile the JavaScript and HTML with `npm run build`.  Alternatively, running `npm run build-watch` will build the application and listen for changes.
 
 ### Modes
 
-|     mode     | how to setup |    how to start      | how to access |  features   | limitations |
-|--------------|--------------|----------------------|---------------|-------------|-------------|
-| local server | `npm i`       | `npm run dev-server` | `http://localhost:5316/annotatrix.html` | collaborative editing |             |
-| remote server| `npm i`       | `npm run server`     | `http://<host>:5316/annotatrix.html` | collaborative editing |             |
-| remote server - heroku |    |                      |               |              |             |
-| local fs     |              |                      | `file:///<path>/server/public/html/annotatrix.html` |  | no database, no GitHub integration, no collaborative editing |
-| serve locally|              | `python3 -m http.server` | `http://localhost/ud-annotatrix/server/public/html/annotatrix.html` |  | no database, no GitHub integration, no collaborative editing |
-| `github.io`  |              |                      | `https://<username>.github.io/ud-annotatrix/server/public/html/annotatrix.html` |  | no database, no GitHub integration, no collaborative editing |
+The UD-Annotatrix tool can be run with or without a server backend.  To use the server backend, run `npm install` before executing any other commands.  This assumes you have a working installation of `node` and `npm`.  To verify this is the case, run `node -v`.
+
+Note: running without a server does not require this step.
+
+A comparison of each different mode is given by this table:
+
+|     mode     |    how to start      | how to access |  features   | limitations |
+|--------------|----------------------|---------------|-------------|-------------|
+| local server | `npm run dev-server` | `http://localhost:5316/annotatrix.html` | collaborative editing |             |
+| remote server| `npm run server`     | `http://<host>:5316/annotatrix.html` | collaborative editing |             |
+| remote server - heroku |                      |               |              |             |
+| local fs     |                      | `file:///<path>/server/public/html/annotatrix.html` |  | no database, no GitHub integration, no collaborative editing |
+| serve locally| `python3 -m http.server` | `http://localhost/ud-annotatrix/server/public/html/annotatrix.html` |  | no database, no GitHub integration, no collaborative editing |
+| `github.io`  |                      | `https://<username>.github.io/ud-annotatrix/server/public/html/annotatrix.html` |  | no database, no GitHub integration, no collaborative editing |
 
 ### Configuring
 
