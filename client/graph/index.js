@@ -653,6 +653,9 @@ class Graph {
   load() {
 
     let serial = utils.storage.getPrefs('graph');
+    if (!serial)
+        return;
+
     serial = JSON.parse(serial);
     config.set(serial);
 
