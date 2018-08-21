@@ -10,5 +10,3 @@ echo
 echo "For more info, check the README or file an issue at"
 echo "  https://github.com/jonorthwash/ud-annotatrix/issues"
 echo
-
-exit 1
