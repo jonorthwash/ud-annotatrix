@@ -57,8 +57,8 @@
     "coverage": "nyc mocha client/test/index.js",
     "build": "gulp",
     "build-watch": "gulp && gulp watch",
-    "server": "node server/app.js || echo '\n\nError: unable to start server ... try running \"npm install\" first'",
-    "dev-server": "ANNOTATRIX_ENV=development nodemon server/app.js --ignore corpora || echo '\n\nError: unable to start server ... try running \"npm install\" first'"
+    "server": "node server/app.js || ./scripts/fail-nicely.sh",
+    "dev-server": "ANNOTATRIX_ENV=development nodemon server/app.js --ignore corpora || ./scripts/fail-nicely.sh"
   },
   "repository": {
     "type": "git",
