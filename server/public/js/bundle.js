@@ -9329,6 +9329,8 @@ var Graph = function () {
     value: function load() {
 
       var serial = utils.storage.getPrefs('graph');
+      if (!serial) return;
+
       serial = JSON.parse(serial);
       config.set(serial);
     }
@@ -10634,6 +10636,8 @@ var GUI = function () {
     value: function load() {
 
       var serial = utils.storage.getPrefs('gui');
+      if (!serial) return;
+
       serial = JSON.parse(serial);
       serial.pinned_menu_items = new Set(serial.pinned_menu_items || []);
 
@@ -13251,7 +13255,10 @@ var Textarea = function () {
         if (corpus.current.isParsed) {
 
           if (corpus.format === format) {
-            $('.format-tab[name="' + format + '"] .tab-warning').show().attr('title', 'Unable to encode ' + corpus.current.to(format).loss.join(', '));
+
+            var loss = corpus.current.to(format).loss;
+
+            if (loss.length) $('.format-tab[name="' + format + '"] .tab-warning').show().attr('title', 'Unable to encode ' + loss.join(', '));
           } else {
             try {
 
@@ -40954,8 +40961,7 @@ module.exports = (text, options) => {
 },{"../../utils":481,"underscore":502}],414:[function(require,module,exports){
 module.exports = [
   'form',
-  'head',
-  'deprel',
+  'heads',
 ];
 module.exports.hasComments = false;
 
@@ -41078,8 +41084,20 @@ module.exports = sent => {
         case ('deps'):
           break;
 
+        case ('heads'):
+          if (token.heads.length > 1)
+            losses.add(field);
+          break;
+
+        case ('feats'):
+        case ('misc'):
+          if (token[field] && token[field].length)
+            losses.add(field);
+          break;
+
         default:
-          losses.add(field);
+          if (token[field])
+            losses.add(field);
       }
     })
 
@@ -41357,8 +41375,7 @@ module.exports = [
   'index',
   'form',
   'lemma',
-  'head',
-  'deprel',
+  'heads',
   'xpostag',
   'other',
   'analyses',
@@ -41412,7 +41429,7 @@ module.exports = (sent, options) => {
         .concat(token.xpostag || token.upostag)
         .concat((token._feats || []).join(' '))
         .concat((token._misc || []).join(' '))
-        .concat(head ? '@' + head.deprel : null)
+        .concat(head && head.deprel ? '@' + head.deprel : null)
         .concat(dependency);
 
       line = indent + line.filter(utils.thin).join(' ');
@@ -41459,6 +41476,9 @@ module.exports = sent => {
   let losses = new Set();
 
   const tokenCalcLoss = token => {
+    if (token.heads && token.heads.length > 1)
+      losses.add('enhanced dependencies');
+
     Object.keys(_.omit(token, fields)).forEach(field => {
       switch (field) {
         case ('uuid'):
@@ -41914,9 +41934,7 @@ module.exports = [
   'upostag',
   'xpostag',
   'feats',
-  'head',
-  'deprel',
-  'deps',
+  'heads',
   'misc',
   'subTokens',
 ];
@@ -42001,6 +42019,10 @@ module.exports = sent => {
   let losses = new Set();
 
   const tokenCalcLoss = token => {
+
+    if (token.heads.length > 1 && !sent.options.enhanced)
+      losses.add('enhanced dependencies');
+
     Object.keys(_.omit(token, fields)).forEach(field => {
       switch (field) {
         case ('uuid'):
@@ -42240,17 +42262,25 @@ module.exports = (text, options) => {
         	type: 'token',
           index: tokenLine[1],
         	isEmpty: !!tokenLine[3],
-        	form: utils.re.fallback.test(fields[0]) ? null : fields[0],
-        	lemma: utils.re.fallback.test(fields[1]) ? null : fields[1],
-        	upostag: utils.re.fallback.test(fields[2]) ? null : fields[2],
-        	xpostag: utils.re.fallback.test(fields[3]) ? null : fields[3],
-        	feats: utils.re.fallback.test(fields[4]) ? null : fields[4].split('|'),
+        	form: !fields[0] || utils.re.fallback.test(fields[0])
+            ? null
+            : fields[0],
+        	lemma: !fields[1] || utils.re.fallback.test(fields[1])
+            ? null
+            : fields[1],
+        	upostag: !fields[2] || utils.re.fallback.test(fields[2])
+            ? null
+            : fields[2],
+        	xpostag: !fields[3] || utils.re.fallback.test(fields[3])
+            ? null
+            : fields[3],
+        	feats: !fields[4] || utils.re.fallback.test(fields[4])
+            ? null
+            : fields[4].split('|'),
           heads: getHeads(fields[5], fields[6], fields[7]),
-        	misc: fields[8]
-            ? utils.re.fallback.test(fields[8])
-              ? null
-              : fields[8].split('|')
-            : null,
+        	misc: !fields[8] || utils.re.fallback.test(fields[8])
+            ? null
+            : fields[8].split('|'),
         };
 
       }
@@ -42802,6 +42832,11 @@ module.exports = sent => {
         case ('index'):
           break;
 
+        case ('heads'):
+          if (token.heads.length > 1)
+            losses.add('enhanced dependencies');
+          break;
+
         default:
           losses.add(field);
       }
@@ -42954,8 +42989,50 @@ module.exports = (sent, options) => {
 };
 
 },{"../../utils":481,"./get-loss":450,"underscore":502}],450:[function(require,module,exports){
-arguments[4][443][0].apply(exports,arguments)
-},{"../../utils":481,"./fields":448,"dup":443,"underscore":502}],451:[function(require,module,exports){
+'use strict';
+
+const _ = require('underscore');
+
+const utils = require('../../utils');
+const fields = require('./fields');
+
+module.exports = sent => {
+
+  const serial = sent.serialize();
+  let losses = new Set();
+
+  if (serial.comments.length)
+    losses.add('comments');
+
+  serial.tokens.forEach(token => {
+    Object.keys(_.omit(token, fields)).forEach(field => {
+      switch (field) {
+        case ('uuid'):
+        case ('index'):
+          break;
+
+        case ('feats'):
+        case ('misc'):
+          if (token[field] && token[field].length)
+            losses.add(field);
+          break;
+
+        case ('heads'):
+          if (token.heads.length)
+            losses.add('heads');
+          break;
+
+        default:
+          if (token[field])
+            losses.add(field);
+      }
+    })
+  });
+
+  return Array.from(losses);
+};
+
+},{"../../utils":481,"./fields":448,"underscore":502}],451:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -43143,8 +43220,7 @@ module.exports = (text, options) => {
 },{"../../utils":481,"underscore":502}],455:[function(require,module,exports){
 module.exports = [
   'form',
-  'head',
-  'deprel',
+  'heads',
 ];
 module.exports.hasComments = true;
 
@@ -43185,7 +43261,7 @@ module.exports = (sent, options) => {
   [sent.root].concat(sent.tokens).forEach(token => {
 
     token.mapDependents(dependent => {
-      lines.push(`${dependent.deprel}(${token.form}, ${dependent.token.form})`);
+      lines.push(`${dependent.deprel || '_'}(${token.form}, ${dependent.token.form})`);
     });
 
   });
@@ -43223,6 +43299,9 @@ module.exports = sent => {
   let losses = new Set();
 
   serial.tokens.forEach(token => {
+    if (token.heads && token.heads.length > 1)
+      losses.add('enhanced dependencies');
+      
     Object.keys(_.omit(token, fields)).forEach(field => {
       switch (field) {
         case ('uuid'):
@@ -43230,8 +43309,21 @@ module.exports = sent => {
         case ('deps'):
           break;
 
+        case ('heads'):
+          if (token.heads.length > 1)
+            losses.add(field);
+          break;
+
+
+        case ('feats'):
+        case ('misc'):
+          if (token[field] && token[field].length)
+            losses.add(field);
+          break;
+
         default:
-          losses.add(field);
+          if (token[field])
+            losses.add(field);
       }
     })
   });
@@ -43560,13 +43652,13 @@ class BaseToken extends NxBaseClass {
 
   mapHeads(callback) {
 
-    if (this.sent.options.enhanced) {
+    //if (this.sent.options.enhanced) {
       return this.heads.map(callback);
-    } else {
+    /*} else {
       return this.heads.first
         ? [ this.heads.first ].map(callback)
         : [].map(callback);
-    }
+    }*/
 
   }
 
