@@ -161,7 +161,6 @@ body {
 /*  font-family: 'Open Sans', Arial, freesans, sans-serif; */
   font-family: 'Source Sans Pro', Arial, freesans, sans-serif;
   font-size: 14px;
-  overflow-y: scroll;
 }
 
 h2 {
@@ -792,7 +791,7 @@ td .parse-error {
   background-color: #fff;
   display: flex;
   padding: 0;
-  overflow-x: scroll;
+  overflow-x: auto;
 
 }
 
@@ -1009,7 +1008,7 @@ span.dropdown-group-item-name i {
 #status-container {
 
   z-index: 5;
-  overflow-x: scroll;
+  overflow-x: auto;
   display: flex;
   padding: 0 1em;
 
@@ -1239,7 +1238,7 @@ th.column-hide span.col-name {
   border-radius: 0;
 
   background-color: #fefefe;
-  overflow: scroll;
+  overflow: auto;
 }
 
 #chat-expand .chat-footer {
