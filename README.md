@@ -54,12 +54,12 @@ A comparison of each different mode is given by this table:
 
 |     mode     |    how to start      | how to access |  features   | limitations |
 |--------------|----------------------|---------------|-------------|-------------|
-| local server | `npm run dev-server` | `http://localhost:5316/annotatrix.html` | collaborative editing |             |
-| remote server| `npm run server`     | `http://<host>:5316/annotatrix.html` | collaborative editing |             |
+| local server | `npm run dev-server` | `http://localhost:5316/annotatrix` | collaborative editing |             |
+| remote server| `npm run server`     | `http://<host>:5316/annotatrix` | collaborative editing |             |
 | remote server - heroku |                      |               |              |             |
-| local fs     |                      | `file:///<path>/server/public/html/annotatrix.html` |  | no database, no GitHub integration, no collaborative editing |
-| serve locally| `python3 -m http.server` | `http://localhost/ud-annotatrix/server/public/html/annotatrix.html` |  | no database, no GitHub integration, no collaborative editing |
-| `github.io`  |                      | `https://<username>.github.io/ud-annotatrix/server/public/html/annotatrix.html` |  | no database, no GitHub integration, no collaborative editing |
+| local fs     |                      | `file:///<path>/index.html` |  | no database, no GitHub integration, no collaborative editing |
+| serve locally| `python3 -m http.server` | `http://localhost/ud-annotatrix/` |  | no database, no GitHub integration, no collaborative editing |
+| `github.io`  |                      | `https://<username>.github.io/ud-annotatrix/` |  | no database, no GitHub integration, no collaborative editing |
 
 ### Configuring
 
