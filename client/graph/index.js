@@ -226,7 +226,11 @@ class Graph {
         );
 
         // iterate over the token's heads to get edges
-        token.mapHeads(head => {
+        token.mapHeads((head, i) => {
+
+          // if not enhanced, only draw the first dependency
+          if (i && !sent.options.enhanced)
+            return;
 
           // TODO: improve this (basic) algorithm
           function getEdgeHeight(corpus, src, tar) {
