@@ -261,30 +261,16 @@ function is_cycle(sent, src, tar) {
     // iterate neighbors
     let is_cycle = false;
 
-    if (sent.options.enhanced) {
+    src.mapHeads((head, i) => {
+      if (i && !sent.options.enhanced)
+        return;
 
-      src.mapDeps(head => {
-
-        is_cycle = head === tar
-          ? true // got back to orginal node
-          : seen.has(head)
-            ? false
-            : is_cycle_util(sent, head, tar); // recurse
-
-      });
-
-    } else {
-
-      const head = src._head;
-
-      if (head)
-        is_cycle = head === tar
-          ? true // got back to source
-          : seen.has(head)
-            ? false
-            : is_cycle_util(sent, head, src);
-
-    }
+      is_cycle = head.token === tar
+        ? true // got back to original node
+        : seen.has(head.token)
+          ? false
+          : is_cycle_util(sent, head.token, tar); // recurse
+    });
 
     return is_cycle;
   }
@@ -301,8 +287,8 @@ function depEdgeClasses(sent, token, head) {
   if (is_leaf(head.token, token))
     classes.add('error');
 
-  //if (is_cycle(sent, head.token, token))
-    //classes.add('error');
+  if (is_cycle(sent, head.token, token))
+    classes.add('error');
 
   if (!head.deprel || head.deprel === '_') {
     classes.add('incomplete');
