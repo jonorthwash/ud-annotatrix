@@ -18,7 +18,7 @@
     "moment": "^2.22.2",
     "morgan": "^1.9.0",
     "nocache": "^2.0.0",
-    "notatrix": "^2.1.9",
+    "notatrix": "^2.1.10",
     "popper": "^1.0.1",
     "request": "^2.87.0",
     "socket.io": "^2.1.1",

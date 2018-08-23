@@ -9995,7 +9995,7 @@ var Graph = function () {
 
           _this4.progress.total += 2;
           if (pos && pos !== '_') _this4.progress.done += 1;
-          if (token._head) _this4.progress.done += 1;
+          if (token.heads.length) _this4.progress.done += 1;
 
           var parent = token.name === 'SubToken' ? 'multiword-' + getIndex(sent.getSuperToken(token), format) : undefined;
 
@@ -10052,7 +10052,10 @@ var Graph = function () {
           });
 
           // iterate over the token's heads to get edges
-          token.mapHeads(function (head) {
+          token.mapHeads(function (head, i) {
+
+            // if not enhanced, only draw the first dependency
+            if (i && !sent.options.enhanced) return;
 
             // TODO: improve this (basic) algorithm
             function getEdgeHeight(corpus, src, tar) {
@@ -10094,7 +10097,7 @@ var Graph = function () {
                 label: label,
                 ctrl: new Array(4).fill(getEdgeHeight(_this4.app.corpus, head.token, token))
               },
-              classes: utils.validate.depEdgeClasses(sent, head.token, token),
+              classes: utils.validate.depEdgeClasses(sent, token, head),
               style: {
                 'control-point-weights': '0.1 0.5 1',
                 'target-endpoint': '0% -50%',
@@ -11616,15 +11619,17 @@ var Menu = function () {
       // tab converters
       $('.format-tab').click(function (e) {
 
-        if ($(e.target).hasClass('disabled')) return;
+        var target = $(e.target);
+
+        if (target.hasClass('disabled') || target.hasClass('fa')) return;
 
         var corpus = self.gui.app.corpus;
 
-        if (corpus.format === $(e.target).attr('name')) return;
+        if (corpus.format === target.attr('name')) return;
 
         if (!corpus.isParsed) corpus.parse(corpus.unparsed);
 
-        corpus.format = $(e.target).attr('name');
+        corpus.format = target.attr('name');
         self.gui.refresh();
       });
     }
@@ -12886,7 +12891,7 @@ var Status = function () {
         graphStatus = 'blocked';
       } else if (!graph.eles.length) {
 
-        graphStatus = 'uninitialized';
+        graphStatus = 'uninitialised';
       } else if (graph.cy.$('.splitting').length) {
 
         graphStatus = 'splitting node';
@@ -13250,7 +13255,7 @@ var Textarea = function () {
       }
 
       // show errors and warnings
-      $('.tab-warning, .tab-error').removeClass('disabled').hide();
+      $('.format-tab').removeClass('disabled').find('.tab-warning, .tab-error').hide();
       utils.forEachFormat(function (format) {
         if (corpus.current.isParsed) {
 
@@ -13796,9 +13801,9 @@ function latex(app) {
     if (node.data.name === 'dependency') {
       if (node.data.label === undefined) return 'error';
 
-      var source = node.data.sourceToken.id,
-          target = node.data.targetToken.id,
-          label = node.data.sourceToken.deprel;
+      var source = node.data.sourceToken.indices.cytoscape,
+          target = node.data.targetToken.indices.cytoscape,
+          label = node.data.deprel || '_';
 
       deprelLines.push('depedge{' + source + '}{' + target + '}{' + label + '}');
     }
@@ -14338,20 +14343,12 @@ function is_cycle(sent, src, tar) {
     // iterate neighbors
     var is_cycle = false;
 
-    if (sent.options.enhanced) {
+    src.mapHeads(function (head, i) {
+      if (i && !sent.options.enhanced) return;
 
-      src.mapDeps(function (head) {
-
-        is_cycle = head === tar ? true // got back to orginal node
-        : seen.has(head) ? false : is_cycle_util(sent, head, tar); // recurse
-      });
-    } else {
-
-      var head = src._head;
-
-      if (head) is_cycle = head === tar ? true // got back to source
-      : seen.has(head) ? false : is_cycle_util(sent, head, src);
-    }
+      is_cycle = head.token === tar ? true // got back to original node
+      : seen.has(head.token) ? false : is_cycle_util(sent, head.token, tar); // recurse
+    });
 
     return is_cycle;
   }
@@ -14361,18 +14358,17 @@ function is_cycle(sent, src, tar) {
   return is_cycle_util(sent, src, tar);
 }
 
-function depEdgeClasses(sent, src, tar) {
+function depEdgeClasses(sent, token, head) {
 
   var classes = new Set(['dependency']);
 
-  if (is_leaf(src, tar)) classes.add('error');
+  if (is_leaf(head.token, token)) classes.add('error');
 
-  //if (is_cycle(sent, src, tar))
-  //classes.add('error');
+  if (is_cycle(sent, head.token, token)) classes.add('error');
 
-  if (!tar.deprel || tar.deprel === '_') {
+  if (!head.deprel || head.deprel === '_') {
     classes.add('incomplete');
-  } else if (!is_udeprel(tar.deprel)) {
+  } else if (!is_udeprel(head.deprel)) {
     classes.add('error');
   }
 
@@ -44901,7 +44897,7 @@ class Sentence extends NxBaseClass {
       autoAddPunct: true,
     });
 
-    this.input = serial.input || serial;
+    this.input = serial.input == null ? serial : serial.input;
     this.isParsed = false;
     this.Error = null;
 
