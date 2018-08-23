@@ -294,19 +294,19 @@ function is_cycle(sent, src, tar) {
   return is_cycle_util(sent, src, tar);
 }
 
-function depEdgeClasses(sent, src, tar) {
+function depEdgeClasses(sent, token, head) {
 
   let classes = new Set([ 'dependency' ]);
 
-  if (is_leaf(src, tar))
+  if (is_leaf(head.token, token))
     classes.add('error');
 
-  //if (is_cycle(sent, src, tar))
+  //if (is_cycle(sent, head.token, token))
     //classes.add('error');
 
-  if (!tar.deprel || tar.deprel === '_') {
+  if (!head.deprel || head.deprel === '_') {
     classes.add('incomplete');
-  } else if (!is_udeprel(tar.deprel)) {
+  } else if (!is_udeprel(head.deprel)) {
     classes.add('error');
   }
 
