@@ -54,9 +54,10 @@ class Textarea {
     }
 
     // show errors and warnings
-    $('.tab-warning, .tab-error')
+    $('.format-tab')
       .removeClass('disabled')
-      .hide();
+      .find('.tab-warning, .tab-error')
+        .hide();
     utils.forEachFormat(format => {
       if (corpus.current.isParsed) {
 
