@@ -1,5 +1,6 @@
 'use strict';
 
+const Room = require('./room');
 const SocketError = require('./errors').SocketError;
 
 function extractTreebank(url) {
@@ -48,36 +49,17 @@ module.exports = (sio, MemoryStore) => {
 
       // join the room and keep track of the number of occupants
       const treebank = socket.request.treebank;
-      const id = socket.request.id;
 
       socket.join(treebank);
-      if (!rooms[treebank])
-        rooms[treebank] = { users: {} };
-
-      rooms[treebank].users[id] = {
-        id: id,
-        index: null,
-        mouse: null,
-        locked: null,
-        address: socket.request.address,
-        username: socket.request.username
-      };
+      const room = rooms[treebank] = rooms[treebank] || new Room();
+      const user = room.addUser(socket.request);
 
       // debugging stuff
-      console.log(`New connection (id: ${id})`);
+      console.log(`user:`, user);
       console.log('rooms:', rooms);
 
-      // broadcast the new connection to the rest of the room
-      //   and back to the original client
-      const response = {
-        id: id,
-        index: null,
-        mouse: null,
-        locked: null,
-        username: socket.request.username,
-        address: socket.request.address,
-        room: rooms[treebank]
-      };
+      const response = Object.assign({}, user);
+      response.room = { users: room.users };
       socket.broadcast.to(treebank).emit('connection', response);
       socket.emit('initialization', response);
 
@@ -87,24 +69,17 @@ module.exports = (sio, MemoryStore) => {
 
       // remove this user from the room
       const treebank = socket.request.treebank;
-      const id = socket.request.id;
-
-      if (rooms[treebank])
-        delete rooms[treebank].users[id];
+      const room = rooms[treebank];
+      const user = room.removeUser(socket.request);
 
       // debugging stuff
-      console.log(`End connection (id: ${id})`);
+      console.log(`user:`, user);
       console.log('rooms:', rooms);
 
-      socket.broadcast.to(treebank).emit('disconnection', {
-        id: id,
-        index: null,
-        mouse: null,
-        locked: null,
-        username: socket.request.username,
-        address: socket.request.address,
-        room: rooms[treebank]
-      });
+      const response = Object.assign({}, user);
+      response.room = { users: room.users };
+      socket.broadcast.to(treebank).emit('disconnection', response);
+
     });
 
     socket.on('modify corpus', data => {
@@ -125,30 +100,26 @@ module.exports = (sio, MemoryStore) => {
 
       // forward the data along to anyone else in this room
       const treebank = socket.request.treebank;
-      const id = socket.request.id;
-
-      const user = rooms[treebank].users[id];
-      user.locked = locked;
+      const room = rooms[treebank];
+      const user = room.editUser(socket.request, { locked: locked });
 
       const response = {
-        id: id,
+        id: user.id,
         locked: locked,
       };
 
-      socket.broadcast.to(treebank).emit('unlock graph', response);
+      socket.broadcast.to(treebank).emit('lock graph', response);
     });
 
     socket.on('unlock graph', () => {
 
       // forward the data along to anyone else in this room
       const treebank = socket.request.treebank;
-      const id = socket.request.id;
-
-      const user = rooms[treebank].users[id];
-      user.locked = null;
+      const room = rooms[treebank];
+      const user = room.editUser(socket.request, { locked: null });
 
       const response = {
-        id: id,
+        id: user.id,
         locked: null,
       };
 
@@ -159,13 +130,11 @@ module.exports = (sio, MemoryStore) => {
 
       // forward the data along to anyone else in this room
       const treebank = socket.request.treebank;
-      const id = socket.request.id;
-
-      const user = rooms[treebank].users[id];
-      user.mouse = mouse;
+      const room = rooms[treebank];
+      const user = room.editUser(socket.request, { mouse: mouse });
 
       const response = {
-        id: id,
+        id: user.id,
         mouse: mouse,
       };
 
@@ -177,13 +146,11 @@ module.exports = (sio, MemoryStore) => {
 
       // forward the data along to anyone else in this room
       const treebank = socket.request.treebank;
-      const id = socket.request.id;
-
-      const user = rooms[treebank].users[id];
-      user.index = index;
+      const room = rooms[treebank];
+      const user = room.editUser(socket.request, { index: index });
 
       const response = {
-        id: id,
+        id: user.id,
         index: index,
       };
 
@@ -196,27 +163,6 @@ module.exports = (sio, MemoryStore) => {
       //console.log(`Update treebank ${treebank}:`, data);
       //console.log('room:', rooms[treebank]);
 
-      /*
-      const id = socket.request.id;
-
-      rooms[treebank].users[id] = {
-        index: data.index,
-        address: socket.request.address,
-        username: socket.request.username
-      };
-
-      // debugging stuff
-      console.log(`pan to ${data.index + 1} (id: ${id})`);
-      console.log('rooms:', rooms);
-
-      // broadcast the new connection to the rest of the room
-      //   and back to the original client
-      const response = {
-        room: rooms[treebank]
-      };
-      socket.broadcast.to(treebank).emit('pan', response);
-      socket.emit('pan', response);
-      */
     });
 
     socket.on('new message', data => {
