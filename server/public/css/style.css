@@ -1009,6 +1009,7 @@ span.dropdown-group-item-name i {
 
   z-index: 5;
   overflow-x: auto;
+  overflow-y: hidden;
   display: flex;
   padding: 0 1em;
 
