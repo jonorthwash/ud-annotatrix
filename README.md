@@ -1,113 +1,157 @@
-# ud-annotatrix
+# UD Annotatrix
 
-The online interface is currently available from several places:
+UD Annotatrix is a client-side, browser-only, language-independent ool for editing dependency trees according to the guidelines established by the [Universal Dependencies](https://universaldependencies.org) project.  UD-Annotatrix supports uploading corpora to the browser to add, remove, and edit dependencies in a wide variety of formats (managed with the [notatrix](https://github.com/keggsmurph21/notatrix) tool), including:
+ - [CoNLL-U](http://universaldependencies.org/format.html)
+ - [VISL CG3](http://beta.visl.sdu.dk/cg3/single/#streamformats)
+ - Brackets
+ - SDParse
+ - plain text
 
-* [Jonathan's GitHub pages](https://jonorthwash.github.io/ud-annotatrix/) - latest code of main repo.
-* [Masha's GitHub pages](https://maryszmary.github.io/ud-annotatrix/standalone/annotator.html).
-* [Fran's GitHub pages](https://ftyers.github.io/ud-annotatrix/).
-* [Server version on web-corpora](http://web-corpora.net/wsgi3/annotatrix/)(beta).
-* [Jonathan's alternate GitHub pages](https://jonorthwash.github.io/visualiser.html) - synchronised to v0.1.3, a late version of just the visualiser code.
+NOTE: [brat](http://brat.nlplab.org) is a similar corpus annotation tool, but we're aiming for a simpler, cleaner, faster interface optimized for Universal Dependencies with an optional server-side component.
 
-To use it offline, clone this repository to your local machine and open the file `index.html` in your browser.
+##### contents
+[Features](#features)
+[Getting started](#getting-started)
+[User guide](#user-guide)
+[Contributing](#contributing)
+[Support](#support)
+[Acknowledgements](#acknowledgements)
+[Contributors](#contributors)
 
-Alternatively, you can serve the files using a web server.  An easy way to do this locally is to run `python3 -m http.server` in the cloned directory.
+## Features
 
-## Support
+Note: some features (corpus uploading, collaborative editing, etc.) only work when run with a server.
 
-Having a problem with Annotatrix ? Want some one-on-one support ? You can try <tt>#_u-dep</tt> on <tt>irc.freenode.net</tt> or
-join our [Telegram chat](https://t.me/joinchat/EWWgMhGXARzxvgO5AzI0ew).
+### dependency editing
+| feature | how to use |
+| --
+| add sentences
+| remove sentences
+| add heads
+| edit heads
+| edit dependency relation
+| remove heads
+| edit part of speech labels
+| edit tokens
+| split token
+| split multi-word token
+| combine tokens
+| create multi-word token
+| set sentence root
+| direct text editing
+| table mode (CoNLL-U)
+| support for enhanced dependencies
+| support for LTR/RTL/vertical writing systems
 
-## About
+### uploading, exporting
+| feature | works without server? | how to use |
+| --
+| upload from file | no
+| upload form URL | no
+| export to LaTeX | yes
+| export to PNG | yes
+| save editor preferences | yes
+| save annotation data | yes<sup>1</sup>
 
-### The idea
+<sup>1</sup> if server unavailable saves to `localStorage`
 
-UD Annotatrix is a client-side, browser only, tool for editting dependency trees in [CoNLL-U](http://universaldependencies.org/format.html) and [VISL](http://beta.visl.sdu.dk/cg3/single/#streamformats) formats.  The point of this is to make manual editing of dependency corpora quicker. The aim of this project is to create an easy-to-use, quick and interactive interface tool for Universal Dependencies annotation, which would work both online and offline and allow the user to edit the annotation in both graphical and text modes.
+### labels
+| feature | how to use |
+| --
+| add label to sentence
+| remove label from sentence
+| edit label name
+| edit label description
+| edit label color
+| filter sentences by label
 
-Note that something similar exists in [brat](http://brat.nlplab.org), but that we're aiming for a simpler, cleaner, faster interface optimised for Universal Dependencies with an optional server-side component.
+### real-time collaboration<sup>2</sup>
+| feature | how to use
+| --
+| dependency editing
+| locking on selected node/edge
+| global undo/redo
+| mouse tracking
+| chat
 
-### Functionality
+<sup>2</sup> all collaborative features require a server to be running
 
-At the moment, the interface supports:
-* draw dependencies between tokens
-* edit dependency relations
-* delete dependencies
-* edit POS labels
-* edit tokens
+## Getting started
 
-Editing POS labels, editing deprels, drawing arcs and deleting arcs are undoable and redoable.
+UD Annotatrix can be used in several different ways.  Some methods don't require a server backend, although this restricts the available features.
 
-The interface supports right-to-left readin order and vertical alignment for long sentences.
+Many of these methods require the `node` and `npm` executables.  To check if you have these, run `node -v`.  If you don't, you can find installation instructions [here](https://www.npmjs.com/get-npm).
 
-### Development
+### serve dynamic files
 
-When developing, make sure you have the most recent versions of all source files and dependencies by running `git pull && npm install`.
+Run a copy of UD Annotatrix with server backend on your machine.  Uploaded databases will be saved directly to your hard drive.
 
-After making changes, make sure to recompile the JavaScript and HTML with `npm run build`.  Alternatively, running `npm run build-watch` will build the application and listen for changes.
+##### installing
+To install, run
+```bash
+git clone https://github.com/jonorthwash/ud-annotatrix
+cd ud-annotatrix/
+npm install
+```
+You can configure the environment in several ways by setting `KEY=VALUE` pairs in the `.env` file (see [the server configuration file](server/config.js)).
 
-### Modes
+##### using
+To run the server, run (in the project directory root)
+```bash
+npm run dev-server
+```
+Navigate your browser to `localhost:5316`.
 
-The UD-Annotatrix tool can be run with or without a server backend.  To use the server backend, run `npm install` before executing any other commands.  This assumes you have a working installation of `node` and `npm`.  To verify this is the case, run `node -v`.
+If you would like to deploy your own copy of UD Annotatrix, you could alternately run `npm run server`.
 
-Note: running without a server does not require this step.
+### remote (dynamic) server
 
-A comparison of each different mode is given by this table:
+Access a copy of UD Annotatrix with server backend running on another machine.  Uploaded databases will be saved on the remote server.  Some currently active remote servers:
+ - [Kevin's website](`http://annotator.murp.us/`)
 
-|     mode     |    how to start      | how to access |  features   | limitations |
-|--------------|----------------------|---------------|-------------|-------------|
-| local server | `npm run dev-server` | `http://localhost:5316/annotatrix` | collaborative editing |             |
-| remote server| `npm run server`     | `http://<host>:5316/annotatrix` | collaborative editing |             |
-| remote server - heroku |                      |               |              |             |
-| local fs     |                      | `file:///<path>/index.html` |  | no database, no GitHub integration, no collaborative editing |
-| serve locally| `python3 -m http.server` | `http://localhost/ud-annotatrix/` |  | no database, no GitHub integration, no collaborative editing |
-| `github.io`  |                      | `https://<username>.github.io/ud-annotatrix/` |  | no database, no GitHub integration, no collaborative editing |
+### as a static file
 
-### Configuring
+Run a copy of UD Annotatrix without the server backend from a static file.  This version does __not__ have a server backend, so [some features](#features) will be unavailable.  Uploaded databases will be saved into `localStorage`.  Navigate your browser to `file:///path/to/ud-annotatrix/index.html`.
 
-Change values in `config.js` and `.env` to adjust port, etc.
+### serving static files
+
+Serve up a copy of the UD Annotatrix static site.  This version does __not__ have a server backend, so [some features](#features) will be unavailable.  Uploaded databases will be saved into `localStorage`.  To start the server, `cd` to the project directory root and run `python -m http.server`.  The files should be available at `localhost:8000`.
+
+If you want to host the static files, you can do so by
+
+### remote (static) files
+
+Access a copy of the UD Annotatrix static site on another machine.  This version does __not__ have a server backend, so [some features](#features) will be unavailable.  Uploaded databases will be saved into `localStorage`.  Some currently active remote static servers (items marked with '\*' are running older versions):
+  - [Jonathan's GitHub Pages](https://jonorthwash.github.io/ud-annotatrix)
+  * [Masha's GitHub pages](https://maryszmary.github.io/ud-annotatrix/standalone/annotator.html)\*
+  * [Fran's GitHub pages](https://ftyers.github.io/ud-annotatrix/)\*
+  * [web-corpora](http://web-corpora.net/wsgi3/annotatrix/)\* (beta).
+  * [Jonathan's alternate GitHub pages](https://jonorthwash.github.io/visualiser.html)\* (just the visualizer code)
+
 
 ## User guide
 
 The basic user guide is available on the [help page](https://maryszmary.github.io/ud-annotatrix/standalone/help.html).
 
-## Architecture and components
+## Contributing
 
+We welcome your pull requests!  To get started, fork this repository and run (where `$REPO` gives the fork's URL)
+```bash
+git clone $REPO
+cd ud-annotatrix
+npm install
+```
 
-### Standalone
+Whenever you make changes, you will need to regenerate some of the source files.  You can compile by running `npm run build`.  Alternatively, you could run `npm run build-watch` to compile and then listen for changes.
 
-The standalone part of the project is written in JavaScript. The standalone version supports full functionality, apart from saving corpora on server.
+## Support
 
-#### Project architecture
-
-* main managing script: `annotator.js`
-* support for visualisation: `visualiser.js`, `cy-style.js`
-* support for graphical editing: `gui.js`
-* format handling: `converters.js`, `CG2conllu.js`
-
-#### Dependencies
-
-* jQuery
-* Cytoscape
-* head.js
-* undomanager.js
-* a JS library for parsing conllu written by Magdalena Parks
-
-All the dependencies are stored in ./standalone/lib/ext/.
-
-#### Tests
-
-Currently, there are only tests for CG3 to CoNLL-U converters.
-
-### Server
-
-The server package provides additional support for deploying the web-interface on a web-server. The back-end is written Python 3, Flask.
-
-#### Dependencies
-
-* Flask
+Having a problem with UD Annotatrix? Want some one-on-one support? You can try to reach us on IRC at <tt>#\_u-dep</tt> on <tt>irc.freenode.net</tt> or
+join our [Telegram chat](https://t.me/joinchat/EWWgMhGXARzxvgO5AzI0ew).
 
 ## Acknowledgements
 
-If you use Annotatrix in your work, please cite:
+If you use UD Annotatrix in your work, please cite:
 
 ```
 @inproceedings{tyers-etal:2018,
@@ -121,15 +165,18 @@ If you use Annotatrix in your work, please cite:
 
 ## Contributors
 
-* Jonathan North Washington (@jonorthwash)
-* Mariya Sheyanova (@maryszmary; [documentation of the changes](http://wiki.apertium.org/wiki/UD_annotatrix/UD_annotatrix_at_GSoC_2017))
-* Tai Vongsathorn Warner (@MidasDoas; [documentation of the changes](https://wikis.swarthmore.edu/ling073/User:Twarner2/Final_project))
-* Francis Tyers (@ftyers)
-* Grzegorz Stark (@gstark0)
-* Jonathan Pan (@JPJPJPOPOP)
-* Suresh Michael Peiris (@tsuresh)
-* Diogo Fernandes (@diogoscf)
-* Robin Richtsfeld (@Androbin)
-* Sushain Cherivirala (@sushain97)
-* Kevin Brubeck Unhammer (@unhammer)
-* Ethan Yang (@thatprogrammer1)
+* Jonathan North Washington ([@jonorthwash](https://github.com/jonorthwash))
+* Kevin Murphy ([@keggsmurph21](https://github.com/keggsmurph21); [documentation of the changes](https://gist.github.com/keggsmurph21))
+* Mariya Sheyanova ([@maryszmary](https://github.com/maryszmary); [documentation of the changes](http://wiki.apertium.org/wiki/UD_annotatrix/UD_annotatrix_at_GSoC_2017))
+* Tai Vongsathorn Warner ([@MidasDoas](https://github.com/MidasDoas); [documentation of the changes](https://wikis.swarthmore.edu/ling073/User:Twarner2/Final_project))
+* Francis Tyers ([@ftyers](https://github.com/ftyers))
+* Grzegorz Stark ([@gstark0](https://github.com/gstark0))
+* Jonathan Pan ([@JPJPJPOPOP](https://github.com/JPJPJPOPOP))
+* Suresh Michael Peiris ([@tsuresh](https://github.com/tsuresh))
+* Diogo Fernandes ([@diogoscf](https://github.com/diogoscf))
+* Robin Richtsfeld ([@Androbin](https://github.com/Androbin))
+* Sushain Cherivirala ([@sushain97](https://github.com/sushain97))
+* Kevin Brubeck Unhammer ([@unhammer](https://github.com/unhammer))
+* Ethan Yang ([@thatprogrammer1](https://github.com/thatprogrammer1))
+
+See also: the [AUTHORS](AUTHORS) file.
