@@ -9,13 +9,19 @@ UD Annotatrix is a client-side, browser-only, language-independent ool for editi
 
 NOTE: [brat](http://brat.nlplab.org) is a similar corpus annotation tool, but we're aiming for a simpler, cleaner, faster interface optimized for Universal Dependencies with an optional server-side component.
 
-##### contents
+##### Contents
 [Features](#features)
+
 [Getting started](#getting-started)
+
 [User guide](#user-guide)
+
 [Contributing](#contributing)
+
 [Support](#support)
+
 [Acknowledgements](#acknowledgements)
+
 [Contributors](#contributors)
 
 ## Features
@@ -24,55 +30,55 @@ Note: some features (corpus uploading, collaborative editing, etc.) only work wh
 
 ### dependency editing
 | feature | how to use |
-| --
-| add sentences
-| remove sentences
-| add heads
-| edit heads
-| edit dependency relation
-| remove heads
-| edit part of speech labels
-| edit tokens
-| split token
-| split multi-word token
-| combine tokens
-| create multi-word token
-| set sentence root
-| direct text editing
-| table mode (CoNLL-U)
-| support for enhanced dependencies
-| support for LTR/RTL/vertical writing systems
+| -- | -- |
+| add sentences | |
+| remove sentences | |
+| add heads | |
+| edit heads | |
+| edit dependency relation | |
+| remove heads | |
+| edit part of speech labels | |
+| edit tokens | |
+| split token | |
+| split multi-word token | |
+| combine tokens | |
+| create multi-word token | |
+| set sentence root | |
+| direct text editing | |
+| table mode (CoNLL-U only) | |
+| support for enhanced dependencies | |
+| support for LTR/RTL/vertical writing systems | |
 
 ### uploading, exporting
 | feature | works without server? | how to use |
-| --
-| upload from file | no
-| upload form URL | no
-| export to LaTeX | yes
-| export to PNG | yes
-| save editor preferences | yes
-| save annotation data | yes<sup>1</sup>
+| -- | -- | -- |
+| upload from file | no | |
+| upload form URL | no | |
+| export to LaTeX | yes | |
+| export to PNG | yes | |
+| save editor preferences | yes | |
+| save annotation data | yes<sup>1</sup> | |
 
-<sup>1</sup> if server unavailable saves to `localStorage`
+<sup>1</sup> if server unavailable, saves to `localStorage`
 
 ### labels
 | feature | how to use |
-| --
-| add label to sentence
-| remove label from sentence
-| edit label name
-| edit label description
-| edit label color
-| filter sentences by label
+| -- | -- |
+| add label to sentence | |
+| remove label from sentence | |
+| edit label name | |
+| edit label description | |
+| edit label color | |
+| filter sentences by label | |
 
 ### real-time collaboration<sup>2</sup>
-| feature | how to use
-| --
-| dependency editing
-| locking on selected node/edge
-| global undo/redo
-| mouse tracking
-| chat
+| feature | how to use |
+| -- | -- |
+| dependency editing | |
+| locking on selected node/edge | |
+| global undo/redo | |
+| mouse tracking | |
+| chat | |
 
 <sup>2</sup> all collaborative features require a server to be running
 
@@ -84,10 +90,7 @@ Many of these methods require the `node` and `npm` executables.  To check if you
 
 ### serve dynamic files
 
-Run a copy of UD Annotatrix with server backend on your machine.  Uploaded databases will be saved directly to your hard drive.
-
-##### installing
-To install, run
+Run a copy of UD Annotatrix with server backend on your machine.  Uploaded databases will be saved directly to your hard drive.  This is the recommended method.  To install, run
 ```bash
 git clone https://github.com/jonorthwash/ud-annotatrix
 cd ud-annotatrix/
@@ -95,14 +98,7 @@ npm install
 ```
 You can configure the environment in several ways by setting `KEY=VALUE` pairs in the `.env` file (see [the server configuration file](server/config.js)).
 
-##### using
-To run the server, run (in the project directory root)
-```bash
-npm run dev-server
-```
-Navigate your browser to `localhost:5316`.
-
-If you would like to deploy your own copy of UD Annotatrix, you could alternately run `npm run server`.
+To run the server, run `npm run dev-server` in the project directory root, then navigate your browser to `localhost:5316`.  If you would like to deploy your own copy of UD Annotatrix, you could alternately run `npm run server`.
 
 ### remote (dynamic) server
 
@@ -143,6 +139,8 @@ npm install
 ```
 
 Whenever you make changes, you will need to regenerate some of the source files.  You can compile by running `npm run build`.  Alternatively, you could run `npm run build-watch` to compile and then listen for changes.
+
+See also: the [API Documentation](documentation/README.md).
 
 ## Support
 
