@@ -7,7 +7,7 @@ UD Annotatrix is a client-side, browser-only, language-independent ool for editi
  - SDParse
  - plain text
 
-NOTE: [brat](http://brat.nlplab.org) is a similar corpus annotation tool, but we're aiming for a simpler, cleaner, faster interface optimized for Universal Dependencies with an optional server-side component.
+Note: [brat](http://brat.nlplab.org) is a similar corpus annotation tool, but we're aiming for a simpler, cleaner, faster interface optimized for Universal Dependencies with an optional server-side component.
 
 ##### Contents
 [Features](#features)
@@ -31,23 +31,23 @@ Note: some features (corpus uploading, collaborative editing, etc.) only work wh
 ### dependency editing
 | feature | how to use |
 | -- | -- |
-| add sentences | |
-| remove sentences | |
-| add heads | |
-| edit heads | |
-| edit dependency relation | |
-| remove heads | |
-| edit part of speech labels | |
-| edit tokens | |
-| split token | |
-| split multi-word token | |
-| combine tokens | |
-| create multi-word token | |
-| set sentence root | |
-| direct text editing | |
-| table mode (CoNLL-U only) | |
-| support for enhanced dependencies | |
-| support for LTR/RTL/vertical writing systems | |
+| add sentences | click the `+` button on the top row |
+| remove sentences | click the `-` button on the top row |
+| add heads | click on the dependent node, click on its head |
+| edit heads | right-click on the dependency arrow, press `d`, click on its new head |
+| edit dependency relation | click on the dependency arrow |
+| remove heads | right-click on the dependency arrow, press `x`, `Backspace`, or `Delete` |
+| edit part of speech labels | click on the light purple blobs below the blue 'form node' |
+| edit tokens | right-click on the blue 'form node' |
+| split token | click on the blue 'form node', press `s`, insert a `Space` character anywhere in the box, press `Enter` |
+| split multi-word token | click on the lighter blue 'multi-word' node, press `s` |
+| combine tokens into multi-word token | click on the blue 'form node', press `c`, then either click on one of the green nodes or use the `Left`/`Right` arrow keys |
+| merge tokens | click on the blue 'form node', press `m`, then either click on one of the green nodes or use the `Left`/`Right` arrow keys |
+| set sentence root | click on the blue 'form node', press `r` |
+| direct text editing | edit the text in the main textarea (Note: by default, the textarea is reparsed every 100ms; this can be turned off by click the green `on` text in the bottom left of the screen) |
+| table mode (CoNLL-U only) | convert the sentence into `CoNLL-U` format, click `Show > Table` from the dropdown menu |
+| support for enhanced dependencies | click the `Tree` icon below the main textarea to toggle enhanced dependencies on/off; when on, adding heads/roots will not delete the existing heads |
+| support for LTR/RTL/vertical writing systems | click the `Left-Justify`/`Right-Justify` icons below the main textarea |
 
 ### uploading, exporting
 | feature | works without server? | how to use |
