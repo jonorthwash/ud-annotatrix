@@ -22,7 +22,7 @@ class Table {
   toConllu() {
 
     let rows = [];
-    for (let i=0; i<this.rows; i++) {
+    for (let i=0; i<=this.rows; i++) {
 
       let row = [];
       for (let j=0; j<10; j++) {
