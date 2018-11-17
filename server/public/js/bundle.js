@@ -19,117 +19,117 @@ var Socket = require('./socket');
 var UndoManager = require('./undo-manager');
 
 var App = function () {
-  function App() {
-    var _this = this;
+    function App() {
+        var _this = this;
 
-    _classCallCheck(this, App);
+        _classCallCheck(this, App);
 
-    this.config = config;
-    this.constructors = {
+        this.config = config;
+        this.constructors = {
 
-      CollaborationInterface: CollaborationInterface,
-      Corpus: Corpus,
-      Graph: Graph,
-      GUI: GUI,
-      nx: nx,
-      Server: Server,
-      Socket: Socket,
-      UndoManager: UndoManager
+            CollaborationInterface: CollaborationInterface,
+            Corpus: Corpus,
+            Graph: Graph,
+            GUI: GUI,
+            nx: nx,
+            Server: Server,
+            Socket: Socket,
+            UndoManager: UndoManager
 
-    };
+        };
 
-    this.initialized = false;
-    this.undoer = new UndoManager(this);
-    this.server = new Server(this);
-    this.socket = new Socket(this);
-    this.gui = new GUI(this);
-    this.collab = new CollaborationInterface(this);
-    this.corpus = new Corpus(this);
-    this.graph = new Graph(this);
-    this.initialized = true;
+        this.initialized = false;
+        this.undoer = new UndoManager(this);
+        this.server = new Server(this);
+        this.socket = new Socket(this);
+        this.gui = new GUI(this);
+        this.collab = new CollaborationInterface(this);
+        this.corpus = new Corpus(this);
+        this.graph = new Graph(this);
+        this.initialized = true;
 
-    // jump to sentence from frag id
-    setTimeout(function () {
+        // jump to sentence from frag id
+        setTimeout(function () {
 
-      var hash = window.location.hash.substring(1);
-      _this.corpus.index = parseInt(hash) - 1;
-    }, 500);
+            var hash = window.location.hash.substring(1);
+            _this.corpus.index = parseInt(hash) - 1;
+        }, 500);
 
-    this.server.connect();
-    this.socket.connect();
-    this.gui.refresh();
-  }
-
-  _createClass(App, [{
-    key: 'save',
-    value: function save(message) {
-
-      if (!this.initialized || this.undoer.active) return;
-
-      this.gui.status.normal('saving...');
-
-      // save local preference stuff
-      this.gui.save();
-      this.graph.save();
-
-      // serialize the corpus
-      var serial = this.corpus.serialize();
-
-      // add it to the undo/redo stack if it's an actual change
-      this.undoer.push(serial);
-
-      if (message) this.socket.broadcast('modify corpus', {
-        type: message.type,
-        indices: message.indices,
-        serial: serial
-      });
-
-      // save it to server/local
-      if (this.server.is_running) {
-        this.server.save(serial);
-      } else {
-        utils.storage.save(serial);
-      }
-
-      // refresh the gui stuff
-      this.gui.refresh();
+        this.server.connect();
+        this.socket.connect();
+        this.gui.refresh();
     }
-  }, {
-    key: 'load',
-    value: function load(serial) {
 
-      //this.gui.status.normal('loading...')
-      this.corpus = new Corpus(this, serial);
-      this.gui.refresh();
-    }
-  }, {
-    key: 'discard',
-    value: function discard() {
+    _createClass(App, [{
+        key: 'save',
+        value: function save(message) {
 
-      this.corpus = new Corpus(this);
-      this.save();
-      this.gui.menu.is_visible = false;
-      this.gui.refresh();
-    }
-  }, {
-    key: 'download',
-    value: function download() {
-      var _this2 = this;
+            if (!this.initialized || this.undoer.active) return;
 
-      var contents = this.corpus._corpus._sentences.map(function (sent, i) {
-        try {
-          return sent.to(_this2.corpus.format).output;
-        } catch (e) {
-          console.error(e);
-          return '[Unable to generate sentence #' + (i + 1) + ' in "' + _this2.corpus.format + '" format]';
+            this.gui.status.normal('saving...');
+
+            // save local preference stuff
+            this.gui.save();
+            this.graph.save();
+
+            // serialize the corpus
+            var serial = this.corpus.serialize();
+
+            // add it to the undo/redo stack if it's an actual change
+            this.undoer.push(serial);
+
+            if (message) this.socket.broadcast('modify corpus', {
+                type: message.type,
+                indices: message.indices,
+                serial: serial
+            });
+
+            // save it to server/local
+            if (this.server.is_running) {
+                this.server.save(serial);
+            } else {
+                utils.storage.save(serial);
+            }
+
+            // refresh the gui stuff
+            this.gui.refresh();
         }
-      }).join('\n\n');
+    }, {
+        key: 'load',
+        value: function load(serial) {
 
-      utils.download(this.corpus.filename + '.corpus', 'text/plain', contents);
-    }
-  }]);
+            //this.gui.status.normal('loading...')
+            this.corpus = new Corpus(this, serial);
+            this.gui.refresh();
+        }
+    }, {
+        key: 'discard',
+        value: function discard() {
 
-  return App;
+            this.corpus = new Corpus(this);
+            this.save();
+            this.gui.menu.is_visible = false;
+            this.gui.refresh();
+        }
+    }, {
+        key: 'download',
+        value: function download() {
+            var _this2 = this;
+
+            var contents = this.corpus._corpus._sentences.map(function (sent, i) {
+                try {
+                    return sent.to(_this2.corpus.format).output;
+                } catch (e) {
+                    console.error(e);
+                    return '[Unable to generate sentence #' + (i + 1) + ' in "' + _this2.corpus.format + '" format]';
+                }
+            }).join('\n\n');
+
+            utils.download(this.corpus.filename + '.corpus', 'text/plain', contents);
+        }
+    }]);
+
+    return App;
 }();
 
 module.exports = App;
@@ -9443,16 +9443,16 @@ var Graph = function () {
       // IF the target POS tag is CCONJ set the deprel to @cc [88%]
       // IF the target POS tag is SCONJ set the deprel to @mark [86%]
       // IF the target POS tag is DET set the deprel to @det [83%]
-       const POS_TO_REL = {
+        const POS_TO_REL = {
           'PUNCT': 'punct',
           'DET': 'det',
           'CCONJ': 'cc',
           'SCONJ': 'mark'
       }
-       // TODO: Put this somewhere better
+        // TODO: Put this somewhere better
       if (thisToken.upostag in POS_TO_REL)
           sentAndPrev = changeConlluAttr(sent, indices, 'deprel', POS_TO_REL[thisToken.upostag]);
-       let isValidDep = true;
+        let isValidDep = true;
       if (thisToken.upostag === 'PUNCT' && !is_projective_nodes(sent.tokens, [targetIndex])) {
           log.warn('writeArc(): Non-projective punctuation');
           isValidDep = false
@@ -10605,109 +10605,109 @@ var Table = require('./table');
 var Textarea = require('./textarea');
 
 var GUI = function () {
-  function GUI(app) {
-    _classCallCheck(this, GUI);
+    function GUI(app) {
+        _classCallCheck(this, GUI);
 
-    this.app = app;
+        this.app = app;
 
-    // bind subelements
-    this.chat = new Chat(this);
-    this.config = config;
-    this.graphMenu = new GraphMenu(this);
-    this.keys = keys;
-    this.labeler = new Labeler(this);
-    this.menu = new Menu(this);
-    this.modals = modalFactory(this);
-    this.status = new Status(this);
-    this.table = new Table(this);
-    this.textarea = new Textarea(this);
+        // bind subelements
+        this.chat = new Chat(this);
+        this.config = config;
+        this.graphMenu = new GraphMenu(this);
+        this.keys = keys;
+        this.labeler = new Labeler(this);
+        this.menu = new Menu(this);
+        this.modals = modalFactory(this);
+        this.status = new Status(this);
+        this.table = new Table(this);
+        this.textarea = new Textarea(this);
 
-    this.load();
-    this.bind();
-  }
-
-  _createClass(GUI, [{
-    key: 'save',
-    value: function save() {
-
-      var serial = _.pick(this.config, 'column_visibilities', 'is_label_bar_visible', 'is_table_visible', 'is_textarea_visible', 'pinned_menu_items', 'textarea_height', 'autoparsing');
-      serial = JSON.stringify(serial);
-      utils.storage.setPrefs('gui', serial);
+        this.load();
+        this.bind();
     }
-  }, {
-    key: 'load',
-    value: function load() {
 
-      var serial = utils.storage.getPrefs('gui');
-      if (!serial) return;
+    _createClass(GUI, [{
+        key: 'save',
+        value: function save() {
 
-      serial = JSON.parse(serial);
-      serial.pinned_menu_items = new Set(serial.pinned_menu_items || []);
+            var serial = _.pick(this.config, 'column_visibilities', 'is_label_bar_visible', 'is_table_visible', 'is_textarea_visible', 'pinned_menu_items', 'textarea_height', 'autoparsing');
+            serial = JSON.stringify(serial);
+            utils.storage.setPrefs('gui', serial);
+        }
+    }, {
+        key: 'load',
+        value: function load() {
 
-      this.config.set(serial);
-    }
-  }, {
-    key: 'bind',
-    value: function bind() {
+            var serial = utils.storage.getPrefs('gui');
+            if (!serial) return;
 
-      // ignore all this stuff if we're in Node
-      if (!this.config.is_browser) return;
+            serial = JSON.parse(serial);
+            serial.pinned_menu_items = new Set(serial.pinned_menu_items || []);
 
-      var self = this;
+            this.config.set(serial);
+        }
+    }, {
+        key: 'bind',
+        value: function bind() {
 
-      // bind all subelements
-      require('./selfcomplete');
-      this.chat.bind();
-      this.graphMenu.bind();
-      this.menu.bind();
-      this.status.bind();
-      this.textarea.bind();
+            // ignore all this stuff if we're in Node
+            if (!this.config.is_browser) return;
 
-      // graph interception stuff
-      $('.controls').click(function (e) {
-        return $(':focus:not(#edit)').blur();
-      });
-      $('#edit').click(function (e) {
-        self.app.graph.intercepted = true;
-      });
+            var self = this;
 
-      // keystroke handling & such
-      window.onkeyup = function (e) {
-        return self.keys.up(self.app, e);
-      };
-      window.onkeydown = function (e) {
-        return self.keys.down(self.app, e);
-      };
-      window.onbeforeunload = function (e) {
-        return self.app.save();
-      };
-    }
-  }, {
-    key: 'refresh',
-    value: function refresh() {
+            // bind all subelements
+            require('./selfcomplete');
+            this.chat.bind();
+            this.graphMenu.bind();
+            this.menu.bind();
+            this.status.bind();
+            this.textarea.bind();
 
-      // ignore all this stuff if we're in node
-      if (!this.config.is_browser) return;
+            // graph interception stuff
+            $('.controls').click(function (e) {
+                return $(':focus:not(#edit)').blur();
+            });
+            $('#edit').click(function (e) {
+                self.app.graph.intercepted = true;
+            });
 
-      // refresh all subelements
-      this.chat.refresh();
-      this.graphMenu.refresh();
-      this.labeler.refresh();
-      this.menu.refresh();
-      this.status.refresh();
-      this.textarea.refresh();
+            // keystroke handling & such
+            window.onkeyup = function (e) {
+                return self.keys.up(self.app, e);
+            };
+            window.onkeydown = function (e) {
+                return self.keys.down(self.app, e);
+            };
+            window.onbeforeunload = function (e) {
+                return self.app.save();
+            };
+        }
+    }, {
+        key: 'refresh',
+        value: function refresh() {
 
-      // and draw the graph
-      this.app.graph.draw();
+            // ignore all this stuff if we're in node
+            if (!this.config.is_browser) return;
 
-      // show the completeness
-      var percent = 100 * (this.app.graph.progress.total ? this.app.graph.progress.done / this.app.graph.progress.total : 0);
+            // refresh all subelements
+            this.chat.refresh();
+            this.graphMenu.refresh();
+            this.labeler.refresh();
+            this.menu.refresh();
+            this.status.refresh();
+            this.textarea.refresh();
 
-      $('#progress-bar').css('width', percent + '%');
-    }
-  }]);
+            // and draw the graph
+            this.app.graph.draw();
 
-  return GUI;
+            // show the completeness
+            var percent = 100 * (this.app.graph.progress.total ? this.app.graph.progress.done / this.app.graph.progress.total : 0);
+
+            $('#progress-bar').css('width', percent + '%');
+        }
+    }]);
+
+    return GUI;
 }();
 
 module.exports = GUI;
@@ -11234,12 +11234,12 @@ while (cursorLine < lines.length - 1) {
     cursor += lines[cursorLine].length + 1;
     log.debug(`onEnter(): incrementing line[${cursorLine}]: "${lines[cursorLine]}", cursor[${cursor}]: "${sentence[cursor]}"`);
 }
- lineId = lines.slice(0, cursorLine + 1).reduce((acc, line) => {
+  lineId = lines.slice(0, cursorLine + 1).reduce((acc, line) => {
     return acc + line.startsWith('"<');
 }, 0) + 1;
 log.debug(`onEnter(): inserting line with id: ${lineId}`);
 log.debug(`onEnter(): resetting all content lines: [${lines}]`);
- const incrementIndices = (lines, lineId) => {
+  const incrementIndices = (lines, lineId) => {
   return lines.map((line) => {
     if (line.startsWith('#'))
       return line;
@@ -11254,10 +11254,10 @@ log.debug(`onEnter(): resetting all content lines: [${lines}]`);
 before = incrementIndices(lines.slice(0, cursorLine + 1), lineId);
 during = [`"<_>"`, `\t${getCG3Analysis(lineId, {id:lineId})}`];
 after = incrementIndices(lines.slice(cursorLine + 1), lineId);
- log.debug(`onEnter(): preceding line(s) : [${before}]`);
+  log.debug(`onEnter(): preceding line(s) : [${before}]`);
 log.debug(`onEnter(): interceding lines : [${during}]`);
 log.debug(`onEnter(): proceeding line(s): [${after}]`);
- $('#text-data').val(before.concat(during, after).join('\n'))
+  $('#text-data').val(before.concat(during, after).join('\n'))
   .prop('selectionStart', cursor)
   .prop('selectionEnd', cursor);*/
 
@@ -12846,106 +12846,106 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var $ = require('jquery');
 
 var Status = function () {
-  function Status(gui) {
-    _classCallCheck(this, Status);
+    function Status(gui) {
+        _classCallCheck(this, Status);
 
-    this.gui = gui;
-  }
+        this.gui = gui;
+    }
 
-  _createClass(Status, [{
-    key: 'bind',
-    value: function bind() {
+    _createClass(Status, [{
+        key: 'bind',
+        value: function bind() {
 
-      var self = this;
+            var self = this;
 
-      // turn off autoparsing
-      $('#parse-status').click(function (e) {
+            // turn off autoparsing
+            $('#parse-status').click(function (e) {
 
-        var gui = self.gui;
-        gui.config.autoparsing = !gui.config.autoparsing;
+                var gui = self.gui;
+                gui.config.autoparsing = !gui.config.autoparsing;
 
-        if (gui.config.autoparsing) {
-          self.gui.app.corpus.parse($('#text-data').val());
-        } else {
-          self.gui.app.corpus.current.input = $('#text-data').val();
-          self.gui.app.corpus.format = null;
+                if (gui.config.autoparsing) {
+                    self.gui.app.corpus.parse($('#text-data').val());
+                } else {
+                    self.gui.app.corpus.current.input = $('#text-data').val();
+                    self.gui.app.corpus.format = null;
+                }
+
+                gui.save();
+                gui.refresh();
+            });
         }
+    }, {
+        key: 'refresh',
+        value: function refresh() {
 
-        gui.save();
-        gui.refresh();
-      });
-    }
-  }, {
-    key: 'refresh',
-    value: function refresh() {
+            var corpus = this.gui.app.corpus,
+                graph = this.gui.app.graph,
+                gui = this.gui;
 
-      var corpus = this.gui.app.corpus,
-          graph = this.gui.app.graph,
-          gui = this.gui;
+            $('#parse-status').removeClass('red green').addClass(gui.config.autoparsing ? 'green' : 'red').text(gui.config.autoparsing ? 'on' : 'off');
 
-      $('#parse-status').removeClass('red green').addClass(gui.config.autoparsing ? 'green' : 'red').text(gui.config.autoparsing ? 'on' : 'off');
+            var graphStatus = void 0;
+            if (!corpus.isParsed) {
 
-      var graphStatus = void 0;
-      if (!corpus.isParsed) {
+                graphStatus = 'blocked';
+            } else if (!graph.eles.length) {
 
-        graphStatus = 'blocked';
-      } else if (!graph.eles.length) {
+                graphStatus = 'uninitialised';
+            } else if (graph.cy.$('.splitting').length) {
 
-        graphStatus = 'uninitialised';
-      } else if (graph.cy.$('.splitting').length) {
+                graphStatus = 'splitting node';
+            } else if (graph.cy.$('.merge-source').length) {
 
-        graphStatus = 'splitting node';
-      } else if (graph.cy.$('.merge-source').length) {
+                graphStatus = 'merging tokens';
+            } else if (graph.cy.$('.combine-source').length) {
 
-        graphStatus = 'merging tokens';
-      } else if (graph.cy.$('.combine-source').length) {
+                graphStatus = 'forming multiword token';
+            } else if (graph.editing) {
 
-        graphStatus = 'forming multiword token';
-      } else if (graph.editing) {
+                graphStatus = 'editing ' + graph.editing.data('name');
+            } else {
 
-        graphStatus = 'editing ' + graph.editing.data('name');
-      } else {
+                graphStatus = 'viewing';
+            }
 
-        graphStatus = 'viewing';
-      }
+            $('#graph-status').removeClass('red green').addClass(corpus.isParsed ? 'green' : 'red').text(graphStatus);
+        }
+    }, {
+        key: 'normal',
+        value: function normal(message) {
 
-      $('#graph-status').removeClass('red green').addClass(corpus.isParsed ? 'green' : 'red').text(graphStatus);
-    }
-  }, {
-    key: 'normal',
-    value: function normal(message) {
+            var config = this.gui.config;
 
-      var config = this.gui.config;
+            if (!config.is_browser) return;
 
-      if (!config.is_browser) return;
+            var div = $('<div>').addClass('status normal').text(message).fadeOut(config.statusNormalFadeout);
 
-      var div = $('<div>').addClass('status normal').text(message).fadeOut(config.statusNormalFadeout);
+            $('#status-container .flowing').prepend(div);
 
-      $('#status-container .flowing').prepend(div);
+            setTimeout(function () {
+                return div.detach();
+            }, config.statusNormalFadeout);
+        }
+    }, {
+        key: 'error',
+        value: function error(message) {
 
-      setTimeout(function () {
-        return div.detach();
-      }, config.statusNormalFadeout);
-    }
-  }, {
-    key: 'error',
-    value: function error(message) {
+            var config = this.gui.config;
 
-      var config = this.gui.config;
+            if (!config.is_browser) return;
 
-      if (!config.is_browser) return;
+            var div = $('<div>').addClass('status error').text('Error: ' + message).fadeOut(config.statusErrorFadeout);
 
-      var div = $('<div>').addClass('status error').text('Error: ' + message).fadeOut(config.statusErrorFadeout);
+            $('#status-container .flowing').prepend(div);
 
-      $('#status-container .flowing').prepend(div);
+            setTimeout(function () {
+                return div.detach();
+            }, config.statusErrorFadeout);
+        }
+    }]);
 
-      setTimeout(function () {
-        return div.detach();
-      }, config.statusErrorFadeout);
-    }
-  }]);
-
-  return Status;
+    return Status;
 }();
 
 module.exports = Status;
@@ -12977,7 +12977,7 @@ var Table = function () {
     value: function toConllu() {
 
       var rows = [];
-      for (var i = 0; i < this.rows; i++) {
+      for (var i = 0; i <= this.rows; i++) {
 
         var row = [];
         for (var j = 0; j < 10; j++) {
@@ -13468,164 +13468,164 @@ var _Socket = require('socket.io-client');
  */
 
 var Socket = function () {
-  function Socket(app) {
-    _classCallCheck(this, Socket);
+    function Socket(app) {
+        _classCallCheck(this, Socket);
 
-    this.app = app;
+        this.app = app;
 
-    // save some internal state to avoid loops and errors
-    this._socket = null;
-    this.initialized = false;
-    this.isOpen = false;
-  }
-
-  /**
-   * Make a connection to the server and set callbacks for the various messages
-   *  we expect to receive.
-   */
-
-
-  _createClass(Socket, [{
-    key: 'connect',
-    value: function connect() {
-      var _this = this;
-
-      // we shouldn't try to connect if we're just testing
-      if (!utils.check_if_browser()) return;
-
-      // cache this access
-      var collab = this.app.collab,
-          corpus = this.app.corpus,
-          graph = this.app.graph,
-          gui = this.app.gui;
-
-      // request a server connection
-      this._socket = new _Socket();
-
-      // handle server approving our request for connection
-      this._socket.on('initialization', function (data) {
-
-        // internals
-        _this.initialized = true;
-        _this.isOpen = true;
-
-        // make a note of our id, name, etc
-        collab.setSelf(data);
-      });
-
-      // another user connected to the document
-      this._socket.on('connection', function (d) {
-        return collab.addUser(d);
-      });
-
-      // a user diconnected from the document
-      this._socket.on('disconnection', function (d) {
-        return collab.removeUser(d);
-      });
-
-      // a user modified the corpus
-      this._socket.on('modify corpus', function (data) {
-
-        var user = collab.getUser(data.id);
-
-        var index = corpus.index;
-
-        // check whether we need to change our corpus index
-        switch (data.type) {
-          case 'insert':
-            if (data.indices[0] <= index) index++;
-            break;
-
-          case 'remove':
-            if (data.indices[0] < index) index--;
-            break;
-
-          case 'redo':
-          case 'undo':
-            index = data.serial.index;
-            break;
-
-          case 'set':
-            break;
-
-          case 'parse':
-            if (data.indices[0] < index) index += data.indices.length - 1;
-            break;
-        }
-
-        // send a chat alert
-        gui.chat.alert('%u: \'' + data.type + '\' index ' + data.indices[0], [user]);
-
-        // update the undo stack
-        _this.app.undoer.push(data.serial);
-
-        // load the newest serialization
-        _this.app.load(data.serial);
-
-        // navigate to the correct index
-        _this.app.corpus.index = index;
-      });
-
-      // a user modified their current index
-      this._socket.on('modify index', function (data) {
-
-        var user = collab.getUser(data.id);
-        user.viewing = data.index;
-        gui.chat.updateUser(user);
-      });
-
-      // a user clicked on a graph node
-      this._socket.on('lock graph', function (data) {
-
-        var user = collab.getUser(data.id);
-        user.locked = data.locked;
-        graph.setLocks();
-      });
-
-      // a user clicked off of a graph node
-      this._socket.on('unlock graph', function (data) {
-
-        var user = collab.getUser(data.id);
-        user.locked = data.locked;
-        graph.setLocks();
-      });
-
-      // a user moved their mouse in the graph area
-      this._socket.on('move mouse', function (data) {
-
-        var user = collab.getUser(data.id);
-        user.mouse = data.mouse;
-        graph.drawMice();
-      });
-
-      // a user sent a chat message
-      this._socket.on('new message', function (data) {
-
-        var user = collab.getUser(data.id);
-        gui.chat.newMessage(user, data.message, false);
-      });
+        // save some internal state to avoid loops and errors
+        this._socket = null;
+        this.initialized = false;
+        this.isOpen = false;
     }
 
     /**
-     * Broadcast (/emit) a packet of type <name> with arguments <data> to the server.
-     *
-     * @param {String} name the name of the event we want to notify the server of
-     * @param {Object} data any other arguments for the event
+     * Make a connection to the server and set callbacks for the various messages
+     *  we expect to receive.
      */
 
-  }, {
-    key: 'broadcast',
-    value: function broadcast(name, data) {
 
-      // debugging
-      // console.log('broadcast', name, data);
+    _createClass(Socket, [{
+        key: 'connect',
+        value: function connect() {
+            var _this = this;
 
-      // do the work
-      this._socket.emit(name, data);
-    }
-  }]);
+            // we shouldn't try to connect if we're just testing
+            if (!utils.check_if_browser()) return;
 
-  return Socket;
+            // cache this access
+            var collab = this.app.collab,
+                corpus = this.app.corpus,
+                graph = this.app.graph,
+                gui = this.app.gui;
+
+            // request a server connection
+            this._socket = new _Socket();
+
+            // handle server approving our request for connection
+            this._socket.on('initialization', function (data) {
+
+                // internals
+                _this.initialized = true;
+                _this.isOpen = true;
+
+                // make a note of our id, name, etc
+                collab.setSelf(data);
+            });
+
+            // another user connected to the document
+            this._socket.on('connection', function (d) {
+                return collab.addUser(d);
+            });
+
+            // a user diconnected from the document
+            this._socket.on('disconnection', function (d) {
+                return collab.removeUser(d);
+            });
+
+            // a user modified the corpus
+            this._socket.on('modify corpus', function (data) {
+
+                var user = collab.getUser(data.id);
+
+                var index = corpus.index;
+
+                // check whether we need to change our corpus index
+                switch (data.type) {
+                    case 'insert':
+                        if (data.indices[0] <= index) index++;
+                        break;
+
+                    case 'remove':
+                        if (data.indices[0] < index) index--;
+                        break;
+
+                    case 'redo':
+                    case 'undo':
+                        index = data.serial.index;
+                        break;
+
+                    case 'set':
+                        break;
+
+                    case 'parse':
+                        if (data.indices[0] < index) index += data.indices.length - 1;
+                        break;
+                }
+
+                // send a chat alert
+                gui.chat.alert('%u: \'' + data.type + '\' index ' + data.indices[0], [user]);
+
+                // update the undo stack
+                _this.app.undoer.push(data.serial);
+
+                // load the newest serialization
+                _this.app.load(data.serial);
+
+                // navigate to the correct index
+                _this.app.corpus.index = index;
+            });
+
+            // a user modified their current index
+            this._socket.on('modify index', function (data) {
+
+                var user = collab.getUser(data.id);
+                user.viewing = data.index;
+                gui.chat.updateUser(user);
+            });
+
+            // a user clicked on a graph node
+            this._socket.on('lock graph', function (data) {
+
+                var user = collab.getUser(data.id);
+                user.locked = data.locked;
+                graph.setLocks();
+            });
+
+            // a user clicked off of a graph node
+            this._socket.on('unlock graph', function (data) {
+
+                var user = collab.getUser(data.id);
+                user.locked = data.locked;
+                graph.setLocks();
+            });
+
+            // a user moved their mouse in the graph area
+            this._socket.on('move mouse', function (data) {
+
+                var user = collab.getUser(data.id);
+                user.mouse = data.mouse;
+                graph.drawMice();
+            });
+
+            // a user sent a chat message
+            this._socket.on('new message', function (data) {
+
+                var user = collab.getUser(data.id);
+                gui.chat.newMessage(user, data.message, false);
+            });
+        }
+
+        /**
+         * Broadcast (/emit) a packet of type <name> with arguments <data> to the server.
+         *
+         * @param {String} name the name of the event we want to notify the server of
+         * @param {Object} data any other arguments for the event
+         */
+
+    }, {
+        key: 'broadcast',
+        value: function broadcast(name, data) {
+
+            // debugging
+            // console.log('broadcast', name, data);
+
+            // do the work
+            this._socket.emit(name, data);
+        }
+    }]);
+
+    return Socket;
 }();
 
 module.exports = Socket;
