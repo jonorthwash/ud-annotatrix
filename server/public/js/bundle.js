@@ -13065,7 +13065,8 @@ var Table = function () {
         td.prop('contenteditable', true).focus();
       } else {
 
-        td.blur().addClass('focused').focus();
+        td.blur();
+        $('[col-id="' + this.col + '"][row-id="' + this.row + '"]').addClass('focused').focus();
       }
 
       console.log(td.prop('contenteditable'));
