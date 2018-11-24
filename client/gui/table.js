@@ -128,8 +128,8 @@ class Table {
 
     } else {
 
-      td
-        .blur()
+      td.blur()
+      $(`[col-id="${this.col}"][row-id="${this.row}"]`)
         .addClass('focused')
         .focus();
 
