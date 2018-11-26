@@ -13131,7 +13131,7 @@ var Table = function () {
         console.log(i, vis, column);
         column.filter('th').addClass(vis ? 'column-show' : 'column-hide').find('.fa').addClass(vis ? 'fa-angle-double-left' : 'fa-angle-double-right');
 
-        column.filter('td').addClass(vis ? 'column-show' : 'column-hide');
+        column.filter('td').removeClass('column-show column-hide').addClass(vis ? 'column-show' : 'column-hide');
       });
     }
   }, {

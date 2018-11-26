@@ -215,6 +215,7 @@ class Table {
 
       column
         .filter('td')
+        .removeClass('column-show column-hide')
         .addClass(vis ? 'column-show' : 'column-hide');
     });
 
