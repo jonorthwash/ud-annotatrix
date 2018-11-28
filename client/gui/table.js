@@ -215,6 +215,7 @@ class Table {
 
       column
         .filter('td')
+        .removeClass('column-show column-hide')
         .addClass(vis ? 'column-show' : 'column-hide');
     });
 
@@ -235,7 +236,21 @@ class Table {
 
         const value = field === 'id'
           ? token.indices.conllu
-          : token[field];
+          : field === 'head' && token.heads._items.length
+            ? token.heads._items[0].token.indices.conllu
+            : field === 'deprel' && token.heads._items.length
+              ? token.heads._items[0].deprel
+              : field === 'deps' && token.heads._items.length
+                ? function () {
+                  var val = '';
+                  token.mapHeads((head, i) => {
+                    if (i != 0)
+                      val += '|';
+                    val += head.token.indices.conllu + ':' + head.deprel
+                    })
+                    return val;
+                  }
+                : token[field];
 
         let valid = {},
           td = $('<td>'),

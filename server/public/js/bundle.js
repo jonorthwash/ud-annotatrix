@@ -13131,7 +13131,7 @@ var Table = function () {
         console.log(i, vis, column);
         column.filter('th').addClass(vis ? 'column-show' : 'column-hide').find('.fa').addClass(vis ? 'fa-angle-double-left' : 'fa-angle-double-right');
 
-        column.filter('td').addClass(vis ? 'column-show' : 'column-hide');
+        column.filter('td').removeClass('column-show column-hide').addClass(vis ? 'column-show' : 'column-hide');
       });
     }
   }, {
@@ -13147,7 +13147,14 @@ var Table = function () {
 
         ['id', 'form', 'lemma', 'upostag', 'xpostag', 'feats', 'head', 'deprel', 'deps', 'misc'].forEach(function (field, j) {
 
-          var value = field === 'id' ? token.indices.conllu : token[field];
+          var value = field === 'id' ? token.indices.conllu : field === 'head' && token.heads._items.length ? token.heads._items[0].token.indices.conllu : field === 'deprel' && token.heads._items.length ? token.heads._items[0].deprel : field === 'deps' && token.heads._items.length ? function () {
+            var val = '';
+            token.mapHeads(function (head, i) {
+              if (i != 0) val += '|';
+              val += head.token.indices.conllu + ':' + head.deprel;
+            });
+            return val;
+          } : token[field];
 
           var valid = {},
               td = $('<td>'),
