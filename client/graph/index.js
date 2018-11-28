@@ -1168,7 +1168,8 @@ class Graph {
         lookup: autocompletes,
         tabDisabled: false,
         autoSelectFirst: true,
-        lookupLimit: 5
+        lookupLimit: 5,
+        width: 'flex'
       });
 
     // add the background-mute div
