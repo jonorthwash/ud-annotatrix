@@ -33,6 +33,7 @@ const KEYS = {
   P: 80,
   R: 82,
   S: 83,
+  T: 84,
   X: 88,
   Y: 89,
   Z: 90,
@@ -88,6 +89,10 @@ function keyup(app, event) {
       graph.zoom.to(1.5 ** (num - 5));
       gui.refresh();
 
+    } else if (pressed.has(KEYS.OPT) && event.which === KEYS.T && corpus.format === 'CoNLL-U') {
+      gui.config.is_table_visible = true;
+      gui.refresh();
+      gui.table.toggleEditing(false);
     }
 
     return;
@@ -137,7 +142,19 @@ function keyup(app, event) {
 
       case (KEYS.ESC):
         const originalValue = td.attr('original-value') || '';
-        td.text(originalValue).blur();
+        td.text(originalValue);
+        table.toggleEditing(false);
+        break;
+
+      case (KEYS.BACKSPACE):
+      case (KEYS.DELETE):
+        if (!table.editing)
+          td.text('')
+        break;
+
+      case (KEYS.MINUS_):
+        if (!table.editing)
+          $('th').filter(`[col-id="${td.attr('col-id')}"]`).trigger('click');
         break;
     }
 

@@ -142,13 +142,17 @@ class Table {
 
     const self = this;
 
+    $(window).resize(function() {
+      $('#data-container > div').css({'width':'', 'height':''})
+    });
+
     $('#table-data th').click(e => {
 
       const target = $(e.target),
-        col = target.attr('col-id'),
+        col = target.closest('.hideable').attr('col-id'),
         columns = self.gui.config.column_visibilities;
 
-      if (!target.hasClass('hideable'))
+      if (!target.closest('.hideable').length)
         return;
 
       columns[col] = !columns[col];
