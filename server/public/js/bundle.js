@@ -10855,10 +10855,13 @@ function keyup(app, event) {
 
       case KEYS.BACKSPACE:
       case KEYS.DELETE:
-        if (!table.editing) td.text('');
+        if (table.editing) break;
+        td.text('');
+        table.toggleEditing(false);
         break;
 
       case KEYS.MINUS_:
+      case KEYS.MINUS:
         if (!table.editing) $('th').filter('[col-id="' + td.attr('col-id') + '"]').trigger('click');
         break;
     }
@@ -13188,7 +13191,7 @@ var Table = function () {
 
           var visibilities = _this.gui.config.column_visibilities;
 
-          td.addClass('conllu-table').attr('tabindex', '-1').attr('row-id', i).attr('col-id', j).attr('num', 10 * i + j).attr('uuid', token.uuid).attr('field', field).attr('original-value', value).attr('name', j === 0 ? 'index' : 'content').css('visibility', visibilities[j] ? 'visible' : 'hidden');
+          td.addClass('conllu-table').attr('tabindex', '-1').attr('row-id', i).attr('col-id', j).attr('num', 10 * i + j).attr('uuid', token.uuid).attr('field', field).attr('original-value', value).attr('name', j === 0 ? 'index' : 'content').addClass(visibilities[j] ? 'column-show' : 'column-hide');
 
           inputSpan.text(value);
 

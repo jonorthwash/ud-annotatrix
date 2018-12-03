@@ -279,7 +279,7 @@ class Table {
           .attr('field', field)
           .attr('original-value', value)
           .attr('name', j === 0 ? 'index' : 'content')
-          .css('visibility', visibilities[j] ? 'visible' : 'hidden');
+          .addClass(visibilities[j] ? 'column-show' : 'column-hide');
 
         inputSpan.text(value);
 

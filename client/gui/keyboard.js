@@ -148,11 +148,14 @@ function keyup(app, event) {
 
       case (KEYS.BACKSPACE):
       case (KEYS.DELETE):
-        if (!table.editing)
-          td.text('')
+        if (table.editing)
+          break;
+        td.text('')
+        table.toggleEditing(false);
         break;
 
       case (KEYS.MINUS_):
+      case (KEYS.MINUS):
         if (!table.editing)
           $('th').filter(`[col-id="${td.attr('col-id')}"]`).trigger('click');
         break;
