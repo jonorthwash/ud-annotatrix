@@ -13087,6 +13087,7 @@ var Table = function () {
         td.blur();
         $('[col-id="' + this.col + '"][row-id="' + this.row + '"]').addClass('focused').focus();
       }
+      if (td.hasClass('column-hide')) $('#table-data th').filter('[col-id=' + this.col.toString() + ']').trigger('click');
 
       console.log(td.prop('contenteditable'));
     }
@@ -13100,7 +13101,7 @@ var Table = function () {
         $('#data-container > div').css({ 'width': '', 'height': '' });
       });
 
-      $('#table-data th').click(function (e) {
+      $('#table-data th').off().click(function (e) {
 
         var target = $(e.target),
             col = target.closest('.hideable').attr('col-id'),

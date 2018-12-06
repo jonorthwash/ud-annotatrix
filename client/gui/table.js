@@ -134,6 +134,8 @@ class Table {
         .focus();
 
     }
+    if (td.hasClass('column-hide'))
+      $('#table-data th').filter(`[col-id=${this.col.toString()}]`).trigger('click');
 
     console.log(td.prop('contenteditable'))
   }
@@ -146,18 +148,20 @@ class Table {
       $('#data-container > div').css({'width':'', 'height':''})
     });
 
-    $('#table-data th').click(e => {
+    $('#table-data th')
+      .off()
+      .click(e => {
 
-      const target = $(e.target),
-        col = target.closest('.hideable').attr('col-id'),
-        columns = self.gui.config.column_visibilities;
+        const target = $(e.target),
+          col = target.closest('.hideable').attr('col-id'),
+          columns = self.gui.config.column_visibilities;
 
-      if (!target.closest('.hideable').length)
-        return;
+          if (!target.closest('.hideable').length)
+          return;
 
-      columns[col] = !columns[col];
-      self.refresh();
-    });
+          columns[col] = !columns[col];
+          self.refresh();
+        });
 
     $('#table-data td')
       .click(e => {
