@@ -30,6 +30,7 @@ const KEYS = {
   K: 75,
   L: 76,
   M: 77,
+  N: 78,
   P: 80,
   R: 82,
   S: 83,
@@ -89,12 +90,15 @@ function keyup(app, event) {
       graph.zoom.to(1.5 ** (num - 5));
       gui.refresh();
 
-    } else if (pressed.has(KEYS.OPT) && event.which === KEYS.T && corpus.format === 'CoNLL-U') {
-      gui.config.is_table_visible = true;
-      gui.refresh();
-      gui.table.toggleEditing(false);
     }
 
+    return;
+  }
+
+  if (pressed.has(KEYS.OPT) && event.which === KEYS.N && corpus.format === 'CoNLL-U') {
+    gui.config.is_table_visible = true;
+    gui.refresh();
+    gui.table.toggleEditing(false);
     return;
   }
 
