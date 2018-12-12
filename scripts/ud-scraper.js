@@ -18,7 +18,7 @@ const request = require('request');
 
 require('dotenv').config();
 const gh_token = process.env.GITHUB_TOKEN;
-const dest_path = '/tmp/treebanks/';
+const dest_path = '/data/treebanks/ud/';
 mkdirp(dest_path);
 
 const re = {
@@ -89,10 +89,12 @@ request.get('http://universaldependencies.org', (err, res, body) => {
                 fs.writeFile(dest_path + file.name, body, err => {
                   if (err)
                     throw err;
+
+                  process.stderr.write(`Wrote file to ${dest_path + file.name}\n`);
                 });
 
               } else {
-                process.stderr.write(`bad response from ${file.download_url}\n`);
+                process.stderr.write(`Bad response from ${file.download_url}\n`);
               }
             });
         });
