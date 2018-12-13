@@ -23,10 +23,8 @@
     "request": "^2.87.0",
     "socket.io": "^2.1.1",
     "socket.io-cookie-parser": "^1.0.0",
-    "sqlite3": "^4.0.2",
     "underscore": "^1.9.1",
     "uuid": "^3.3.2",
-    "waypoints": "^4.0.1",
     "webfont": "^8.1.4"
   },
   "devDependencies": {
