@@ -55,6 +55,9 @@ class GUI {
   load() {
 
     let serial = utils.storage.getPrefs('gui');
+    if (!serial)
+        return;
+
     serial = JSON.parse(serial);
     serial.pinned_menu_items = new Set(serial.pinned_menu_items || []);
 

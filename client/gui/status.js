@@ -50,7 +50,7 @@ class Status {
 
     } else if (!graph.eles.length) {
 
-      graphStatus = 'uninitialized';
+      graphStatus = 'uninitialised';
 
     } else if (graph.cy.$('.splitting').length) {
 

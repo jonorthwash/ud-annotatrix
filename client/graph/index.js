@@ -155,7 +155,7 @@ class Graph {
         this.progress.total += 2;
         if (pos && pos !== '_')
           this.progress.done += 1;
-        if (token._head)
+        if (token.heads.length)
           this.progress.done += 1;
 
         let parent = token.name === 'SubToken'
@@ -226,7 +226,11 @@ class Graph {
         );
 
         // iterate over the token's heads to get edges
-        token.mapHeads(head => {
+        token.mapHeads((head, i) => {
+
+          // if not enhanced, only draw the first dependency
+          if (i && !sent.options.enhanced)
+            return;
 
           // TODO: improve this (basic) algorithm
           function getEdgeHeight(corpus, src, tar) {
@@ -279,7 +283,7 @@ class Graph {
               label: label,
               ctrl: new Array(4).fill(getEdgeHeight(this.app.corpus, head.token, token)),
             },
-            classes: utils.validate.depEdgeClasses(sent, head.token, token),
+            classes: utils.validate.depEdgeClasses(sent, token, head),
             style: {
               'control-point-weights': '0.1 0.5 1',
               'target-endpoint': `0% -50%`,
@@ -653,6 +657,9 @@ class Graph {
   load() {
 
     let serial = utils.storage.getPrefs('graph');
+    if (!serial)
+        return;
+
     serial = JSON.parse(serial);
     config.set(serial);
 
@@ -1161,7 +1168,8 @@ class Graph {
         lookup: autocompletes,
         tabDisabled: false,
         autoSelectFirst: true,
-        lookupLimit: 5
+        lookupLimit: 5,
+        width: 'flex'
       });
 
     // add the background-mute div

@@ -161,18 +161,20 @@ class Menu {
     // tab converters
     $('.format-tab').click(e => {
 
-      if ($(e.target).hasClass('disabled'))
+      const target = $(e.target);
+
+      if (target.hasClass('disabled') || target.hasClass('fa'))
         return;
 
       const corpus = self.gui.app.corpus;
 
-      if (corpus.format === $(e.target).attr('name'))
+      if (corpus.format === target.attr('name'))
         return;
 
       if (!corpus.isParsed)
         corpus.parse(corpus.unparsed);
 
-      corpus.format = $(e.target).attr('name');
+      corpus.format = target.attr('name');
       self.gui.refresh();
 
     });

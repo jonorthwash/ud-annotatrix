@@ -27,9 +27,9 @@ function latex(app) {
       if (node.data.label === undefined)
         return 'error';
 
-      const source = node.data.sourceToken.id,
-        target = node.data.targetToken.id,
-        label = node.data.sourceToken.deprel;
+      const source = node.data.sourceToken.indices.cytoscape,
+        target = node.data.targetToken.indices.cytoscape,
+        label = node.data.deprel || '_';
 
       deprelLines.push(`\depedge{${source}}{${target}}{${label}}`);
     }
