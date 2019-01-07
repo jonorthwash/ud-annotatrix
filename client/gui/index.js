@@ -16,6 +16,12 @@ const Table = require('./table');
 const Textarea = require('./textarea');
 
 
+/**
+ * Abstraction over the user interface.  Handles interaction between user via
+ *  DOM elements & keystrokes and the application instance.
+ *
+ * @param {App} app a reference to the parent of this module
+ */
 class GUI {
   constructor(app) {
 
@@ -37,6 +43,9 @@ class GUI {
     this.bind();
   }
 
+  /**
+   * Save the GUI preferences to localStorage
+   */
   save() {
 
     let serial = _.pick(this.config
@@ -52,11 +61,14 @@ class GUI {
 
   }
 
+  /**
+   * Load the GUI preferences from localStorage
+   */
   load() {
 
     let serial = utils.storage.getPrefs('gui');
     if (!serial)
-        return;
+      return;
 
     serial = JSON.parse(serial);
     serial.pinned_menu_items = new Set(serial.pinned_menu_items || []);
@@ -65,6 +77,9 @@ class GUI {
 
   }
 
+  /**
+   * Bind DOM elements to user keystrokes recursively
+   */
   bind() {
 
     // ignore all this stuff if we're in Node
@@ -92,6 +107,10 @@ class GUI {
 
   }
 
+  /**
+   * Called after any change to application state.  Refreshes the view of the
+   *  application by recursively refreshing subelements.
+   */
   refresh() {
 
     // ignore all this stuff if we're in node

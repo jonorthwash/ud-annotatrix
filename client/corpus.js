@@ -316,7 +316,7 @@ class Corpus {
    *  wants to access the internals of the nx.Sentence at this.index.  If there
    *  are no sentences, it returns null.
    *
-   * @return {(nx.Sentence)|null}
+   * @return {(nx.Sentence|null)}
    */
   get current() {
     return this.getSentence(this.index);

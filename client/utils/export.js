@@ -5,6 +5,13 @@ const $ = require('jquery');
 const C2S = require('canvas2svg');
 const funcs = require('./funcs');
 
+/**
+ * Export an application instance to LaTeX format.  The client will be prompted
+ *  to download the file.
+ *
+ * @param {App} app
+ * @return {String}
+ */
 function latex(app) {
 
   if (!app.graph.length)
@@ -53,6 +60,12 @@ function latex(app) {
   return latex;
 }
 
+/**
+ * Export an application instance to PNG format.  The client will be prompted to
+ *  download the file.
+ *
+ * @param {App} app
+ */
 function png(app) {
 
   if (!app.graph.length)
@@ -67,6 +80,12 @@ function png(app) {
   return;
 }
 
+/**
+ * Export an application instance to SVG format.  The client will be prompted to
+ *  download the file.
+ *
+ * @param {App} app
+ */
 function svg(app) {
 
   if (!app.graph.cy)

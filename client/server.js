@@ -4,16 +4,27 @@ const $ = require('jquery');
 const _ = require('underscore');
 const utils = require('./utils');
 
-
+/**
+ * Abstraction over an AJAX connection.  Handles sending and receiving large
+ *  packets from a server.  Usually, this means the initial loading of the
+ *	corpus, as well as saving (including (de)serialization).
+ *
+ * @param {App} app a reference to the parent of this module.
+ */
 class Server {
 	constructor(app) {
 
+		// save a reference to the parent
 		this.app = app;
 		this.is_running = false;
 		this.treebank_id = utils.getTreebankId();
 
 	}
 
+	/**
+	 * Attempt to connect to the server via AJAX.  This function updates the
+	 *	<tt>Server.is_running<\tt> attribute, which is checked by other functions.
+	 */
 	connect() {
 		try {
 			$.ajax({
@@ -51,6 +62,12 @@ class Server {
 		}
 	}
 
+	/**
+	 * Save a JSON object containing a serial representation of the corpus to the
+	 *  server (if running).
+	 *
+	 * @param {Object} serial
+	 */
 	save(serial) {
 
 		if (!this.is_running)
@@ -93,6 +110,9 @@ class Server {
 		}
 	}
 
+	/**
+	 * Attempt to load a serial representation of the corpus from the server.
+	 */
 	load() {
 
  		if (!this.is_running)

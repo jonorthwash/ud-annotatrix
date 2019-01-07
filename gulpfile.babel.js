@@ -7,6 +7,8 @@ const rename = require('gulp-rename');
 const uglify = require('gulp-uglify');
 const sourcemaps = require('gulp-sourcemaps');
 const compileEJS = require('./scripts/compile-ejs');
+const jsdoc2md = require('jsdoc-to-markdown');
+const fs = require('fs');
 
 gulp.task('js', () => {
   return browserify('client/index.js', {
@@ -24,6 +26,20 @@ gulp.task('js', () => {
 
 gulp.task('html', () => {
   return compileEJS();
+});
+
+gulp.task('docs', () => {
+  jsdoc2md.render({
+    files: [
+      'client/*.js',
+      'client/*/*.js',
+    ]
+  }).then(md => {
+    fs.writeFile('./client/README.md', md, err => {
+      if (err)
+        throw err;
+    });
+  });
 });
 
 /*
@@ -65,7 +81,7 @@ gulp.task('uglifyify', () => {
 */
 
 gulp.task('watch', () => {
-  gulp.watch(['client/*.js', 'client/*/*.js'], [/*'uglify', */'js', 'html']);
+  gulp.watch(['client/*.js', 'client/*/*.js'], [/*'uglify', */'js', 'html', 'docs']);
 });
 
-gulp.task('default', [/*'uglify', */'js', 'html']);
+gulp.task('default', [/*'uglify', */'js', 'html', 'docs']);

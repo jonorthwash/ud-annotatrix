@@ -13,6 +13,11 @@ const Server = require('./server');
 const Socket = require('./socket');
 const UndoManager = require('./undo-manager');
 
+/**
+ * Wrapper class to hold references to all of our actual client objects (e.g.
+ *  CollaborationInterface, Corpus, GUI, Graph, Server, Socket, UndoManager).
+ *  This class should be instantiated at the beginning of a session.
+ */
 class App {
   constructor() {
 
@@ -54,6 +59,10 @@ class App {
 
   }
 
+  /**
+   * Save all current corpus- and meta-data, either to the server or to
+   *  localStorage.
+   */
   save(message) {
 
     if (!this.initialized || this.undoer.active)
@@ -90,6 +99,9 @@ class App {
 
   }
 
+  /**
+   * Load a corpus from a serial string.
+   */
   load(serial) {
 
     //this.gui.status.normal('loading...')
@@ -98,6 +110,9 @@ class App {
 
   }
 
+  /**
+   * Load a fresh/new corpus and overwrite an existing one.
+   */
   discard() {
 
     this.corpus = new Corpus(this);
@@ -107,6 +122,9 @@ class App {
 
   }
 
+  /**
+   * Download the contents of an application instance.
+   */
   download() {
 
     const contents = this.corpus._corpus._sentences.map((sent, i) => {

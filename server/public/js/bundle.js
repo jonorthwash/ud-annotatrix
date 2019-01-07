@@ -18,6 +18,12 @@ var Server = require('./server');
 var Socket = require('./socket');
 var UndoManager = require('./undo-manager');
 
+/**
+ * Wrapper class to hold references to all of our actual client objects (e.g.
+ *  CollaborationInterface, Corpus, GUI, Graph, Server, Socket, UndoManager).
+ *  This class should be instantiated at the beginning of a session.
+ */
+
 var App = function () {
   function App() {
     var _this = this;
@@ -60,6 +66,12 @@ var App = function () {
     this.gui.refresh();
   }
 
+  /**
+   * Save all current corpus- and meta-data, either to the server or to
+   *  localStorage.
+   */
+
+
   _createClass(App, [{
     key: 'save',
     value: function save(message) {
@@ -94,6 +106,11 @@ var App = function () {
       // refresh the gui stuff
       this.gui.refresh();
     }
+
+    /**
+     * Load a corpus from a serial string.
+     */
+
   }, {
     key: 'load',
     value: function load(serial) {
@@ -102,6 +119,11 @@ var App = function () {
       this.corpus = new Corpus(this, serial);
       this.gui.refresh();
     }
+
+    /**
+     * Load a fresh/new corpus and overwrite an existing one.
+     */
+
   }, {
     key: 'discard',
     value: function discard() {
@@ -111,6 +133,11 @@ var App = function () {
       this.gui.menu.is_visible = false;
       this.gui.refresh();
     }
+
+    /**
+     * Download the contents of an application instance.
+     */
+
   }, {
     key: 'download',
     value: function download() {
@@ -1011,7 +1038,7 @@ var Corpus = function () {
      *  wants to access the internals of the nx.Sentence at this.index.  If there
      *  are no sentences, it returns null.
      *
-     * @return {(nx.Sentence)|null}
+     * @return {(nx.Sentence|null)}
      */
 
   }, {
@@ -10605,6 +10632,13 @@ var Status = require('./status');
 var Table = require('./table');
 var Textarea = require('./textarea');
 
+/**
+ * Abstraction over the user interface.  Handles interaction between user via
+ *  DOM elements & keystrokes and the application instance.
+ *
+ * @param {App} app a reference to the parent of this module
+ */
+
 var GUI = function () {
   function GUI(app) {
     _classCallCheck(this, GUI);
@@ -10627,6 +10661,11 @@ var GUI = function () {
     this.bind();
   }
 
+  /**
+   * Save the GUI preferences to localStorage
+   */
+
+
   _createClass(GUI, [{
     key: 'save',
     value: function save() {
@@ -10635,6 +10674,11 @@ var GUI = function () {
       serial = JSON.stringify(serial);
       utils.storage.setPrefs('gui', serial);
     }
+
+    /**
+     * Load the GUI preferences from localStorage
+     */
+
   }, {
     key: 'load',
     value: function load() {
@@ -10647,6 +10691,11 @@ var GUI = function () {
 
       this.config.set(serial);
     }
+
+    /**
+     * Bind DOM elements to user keystrokes recursively
+     */
+
   }, {
     key: 'bind',
     value: function bind() {
@@ -10683,6 +10732,12 @@ var GUI = function () {
         return self.app.save();
       };
     }
+
+    /**
+     * Called after any change to application state.  Refreshes the view of the
+     *  application by recursively refreshing subelements.
+     */
+
   }, {
     key: 'refresh',
     value: function refresh() {
@@ -13320,14 +13375,29 @@ var $ = require('jquery');
 var _ = require('underscore');
 var utils = require('./utils');
 
+/**
+ * Abstraction over an AJAX connection.  Handles sending and receiving large
+ *  packets from a server.  Usually, this means the initial loading of the
+ *	corpus, as well as saving (including (de)serialization).
+ *
+ * @param {App} app a reference to the parent of this module.
+ */
+
 var Server = function () {
 	function Server(app) {
 		_classCallCheck(this, Server);
 
+		// save a reference to the parent
 		this.app = app;
 		this.is_running = false;
 		this.treebank_id = utils.getTreebankId();
 	}
+
+	/**
+  * Attempt to connect to the server via AJAX.  This function updates the
+  *	<tt>Server.is_running<\tt> attribute, which is checked by other functions.
+  */
+
 
 	_createClass(Server, [{
 		key: 'connect',
@@ -13364,6 +13434,14 @@ var Server = function () {
 				if (serial) this.app.load(serial);
 			}
 		}
+
+		/**
+   * Save a JSON object containing a serial representation of the corpus to the
+   *  server (if running).
+   *
+   * @param {Object} serial
+   */
+
 	}, {
 		key: 'save',
 		value: function save(serial) {
@@ -13403,6 +13481,11 @@ var Server = function () {
 				this.app.gui.status.error('unable to save to server');
 			}
 		}
+
+		/**
+   * Attempt to load a serial representation of the corpus from the server.
+   */
+
 	}, {
 		key: 'load',
 		value: function load() {
@@ -13791,6 +13874,13 @@ var $ = require('jquery');
 var C2S = require('canvas2svg');
 var funcs = require('./funcs');
 
+/**
+ * Export an application instance to LaTeX format.  The client will be prompted
+ *  to download the file.
+ *
+ * @param {App} app
+ * @return {String}
+ */
 function latex(app) {
 
   if (!app.graph.length) return;
@@ -13831,6 +13921,12 @@ function latex(app) {
   return latex;
 }
 
+/**
+ * Export an application instance to PNG format.  The client will be prompted to
+ *  download the file.
+ *
+ * @param {App} app
+ */
 function png(app) {
 
   if (!app.graph.length) return;
@@ -13842,6 +13938,12 @@ function png(app) {
   return;
 }
 
+/**
+ * Export an application instance to SVG format.  The client will be prompted to
+ *  download the file.
+ *
+ * @param {App} app
+ */
 function svg(app) {
 
   if (!app.graph.cy) return;
