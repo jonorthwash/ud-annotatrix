@@ -61,10 +61,13 @@ class Textarea {
       if (corpus.current.isParsed) {
 
         if (corpus.format === format) {
-          $(`.format-tab[name="${format}"] .tab-warning`)
-            .show()
-            .attr('title',
-              `Unable to encode ${corpus.current.to(format).loss.join(', ')}`);
+
+          const loss = corpus.current.to(format).loss;
+          if (loss.length)
+            $(`.format-tab[name="${format}"] .tab-warning`)
+              .show()
+              .attr('title',
+                `Unable to encode ${loss.join(', ')}`);
 
         } else {
           try {
@@ -73,6 +76,7 @@ class Textarea {
 
           } catch (e) {
 
+            console.log('error', format);
             $(`.format-tab[name="${format}"]`)
               .addClass('disabled')
               .find(`.tab-error`)
