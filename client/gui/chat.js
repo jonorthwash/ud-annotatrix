@@ -17,7 +17,7 @@ class Chat {
 
     this.gui = gui;
     this.is_visible = true;
-    this.is_minimized = false;
+    this.is_minimized = true;
 
   }
 
