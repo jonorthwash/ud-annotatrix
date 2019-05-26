@@ -10801,9 +10801,11 @@ var KEYS = {
   K: 75,
   L: 76,
   M: 77,
+  N: 78,
   P: 80,
   R: 82,
   S: 83,
+  T: 84,
   X: 88,
   Y: 89,
   Z: 90,
@@ -10859,6 +10861,13 @@ function keyup(app, event) {
     return;
   }
 
+  if (pressed.has(KEYS.OPT) && event.which === KEYS.N && corpus.format === 'CoNLL-U') {
+    gui.config.is_table_visible = true;
+    gui.refresh();
+    gui.table.toggleEditing(false);
+    return;
+  }
+
   var focus = $(':focus');
 
   if (focus.is('.conllu-table')) {
@@ -10899,7 +10908,20 @@ function keyup(app, event) {
 
       case KEYS.ESC:
         var originalValue = td.attr('original-value') || '';
-        td.text(originalValue).blur();
+        td.text(originalValue);
+        table.toggleEditing(false);
+        break;
+
+      case KEYS.BACKSPACE:
+      case KEYS.DELETE:
+        if (table.editing) break;
+        td.text('');
+        table.toggleEditing(false);
+        break;
+
+      case KEYS.MINUS_:
+      case KEYS.MINUS:
+        if (!table.editing) $('th').filter('[col-id="' + td.attr('col-id') + '"]').trigger('click');
         break;
     }
 
@@ -13124,6 +13146,7 @@ var Table = function () {
         td.blur();
         $('[col-id="' + this.col + '"][row-id="' + this.row + '"]').addClass('focused').focus();
       }
+      if (td.hasClass('column-hide')) $('#table-data th').filter('[col-id=' + this.col.toString() + ']').trigger('click');
 
       console.log(td.prop('contenteditable'));
     }
@@ -13133,13 +13156,17 @@ var Table = function () {
 
       var self = this;
 
-      $('#table-data th').click(function (e) {
+      $(window).resize(function () {
+        $('#data-container > div').css({ 'width': '', 'height': '' });
+      });
+
+      $('#table-data th').off().click(function (e) {
 
         var target = $(e.target),
-            col = target.attr('col-id'),
+            col = target.closest('.hideable').attr('col-id'),
             columns = self.gui.config.column_visibilities;
 
-        if (!target.hasClass('hideable')) return;
+        if (!target.closest('.hideable').length) return;
 
         columns[col] = !columns[col];
         self.refresh();
@@ -13224,7 +13251,7 @@ var Table = function () {
 
           var visibilities = _this.gui.config.column_visibilities;
 
-          td.addClass('conllu-table').attr('tabindex', '-1').attr('row-id', i).attr('col-id', j).attr('num', 10 * i + j).attr('uuid', token.uuid).attr('field', field).attr('original-value', value).attr('name', j === 0 ? 'index' : 'content').css('visibility', visibilities[j] ? 'visible' : 'hidden');
+          td.addClass('conllu-table').attr('tabindex', '-1').attr('row-id', i).attr('col-id', j).attr('num', 10 * i + j).attr('uuid', token.uuid).attr('field', field).attr('original-value', value).attr('name', j === 0 ? 'index' : 'content').addClass(visibilities[j] ? 'column-show' : 'column-hide');
 
           inputSpan.text(value);
 

@@ -134,6 +134,8 @@ class Table {
         .focus();
 
     }
+    if (td.hasClass('column-hide'))
+      $('#table-data th').filter(`[col-id=${this.col.toString()}]`).trigger('click');
 
     console.log(td.prop('contenteditable'))
   }
@@ -142,18 +144,24 @@ class Table {
 
     const self = this;
 
-    $('#table-data th').click(e => {
-
-      const target = $(e.target),
-        col = target.attr('col-id'),
-        columns = self.gui.config.column_visibilities;
-
-      if (!target.hasClass('hideable'))
-        return;
-
-      columns[col] = !columns[col];
-      self.refresh();
+    $(window).resize(function() {
+      $('#data-container > div').css({'width':'', 'height':''})
     });
+
+    $('#table-data th')
+      .off()
+      .click(e => {
+
+        const target = $(e.target),
+          col = target.closest('.hideable').attr('col-id'),
+          columns = self.gui.config.column_visibilities;
+
+          if (!target.closest('.hideable').length)
+          return;
+
+          columns[col] = !columns[col];
+          self.refresh();
+        });
 
     $('#table-data td')
       .click(e => {
@@ -275,7 +283,7 @@ class Table {
           .attr('field', field)
           .attr('original-value', value)
           .attr('name', j === 0 ? 'index' : 'content')
-          .css('visibility', visibilities[j] ? 'visible' : 'hidden');
+          .addClass(visibilities[j] ? 'column-show' : 'column-hide');
 
         inputSpan.text(value);
 

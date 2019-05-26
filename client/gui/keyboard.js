@@ -30,9 +30,11 @@ const KEYS = {
   K: 75,
   L: 76,
   M: 77,
+  N: 78,
   P: 80,
   R: 82,
   S: 83,
+  T: 84,
   X: 88,
   Y: 89,
   Z: 90,
@@ -93,6 +95,13 @@ function keyup(app, event) {
     return;
   }
 
+  if (pressed.has(KEYS.OPT) && event.which === KEYS.N && corpus.format === 'CoNLL-U') {
+    gui.config.is_table_visible = true;
+    gui.refresh();
+    gui.table.toggleEditing(false);
+    return;
+  }
+
   const focus = $(':focus');
 
   if (focus.is('.conllu-table')) {
@@ -137,7 +146,22 @@ function keyup(app, event) {
 
       case (KEYS.ESC):
         const originalValue = td.attr('original-value') || '';
-        td.text(originalValue).blur();
+        td.text(originalValue);
+        table.toggleEditing(false);
+        break;
+
+      case (KEYS.BACKSPACE):
+      case (KEYS.DELETE):
+        if (table.editing)
+          break;
+        td.text('')
+        table.toggleEditing(false);
+        break;
+
+      case (KEYS.MINUS_):
+      case (KEYS.MINUS):
+        if (!table.editing)
+          $('th').filter(`[col-id="${td.attr('col-id')}"]`).trigger('click');
         break;
     }
 
