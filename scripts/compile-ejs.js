@@ -40,9 +40,11 @@ function render_all() {
   mkdirp(html_base_path);
 
   render('annotatrix', {
-    modalPath: `${__dirname}/../server/views/modals`,
+    // `${__dirname}/../server/views/modals`
+    modalPath:  path.join(__dirname, '../', 'server', 'views', 'modals'),
     github_configured: false,
-    username: null
+    username: null,
+    path: path
   });
   render('help', {});
   render('index', {

@@ -421,7 +421,7 @@ class Graph {
     this.cy.on('mousemove', e => {
 
       // send out a 'move mouse' event at most every `mouse_move_delay` msecs
-      if (self.app.initialized && !self.mouseBlocked)
+      if (self.app.initialized && !self.mouseBlocked && self.app.online)
         self.app.socket.broadcast('move mouse', e.position);
 
       // enforce the delay
@@ -1256,7 +1256,9 @@ class Graph {
 
     config.locked_classes = keys.join(' ');
     this.save();
-    this.app.socket.broadcast('lock graph', ele.id());
+    if(this.app.online) {
+      this.app.socket.broadcast('lock graph', ele.id());
+    }
 
   }
 
@@ -1270,7 +1272,9 @@ class Graph {
     config.locked_id = null;
     config.locked_classes = null;
     this.save();
-    this.app.socket.broadcast('unlock graph');
+    if(this.app.online) {
+      this.app.socket.broadcast('unlock graph');
+    }
 
   }
 

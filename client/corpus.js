@@ -287,7 +287,9 @@ class Corpus {
     // possibly update the view and send something over the wire
     if (this.app.initialized) {
       this.app.gui.refresh();
-      this.app.socket.broadcast('modify index', this.index);
+      if(this.app.online) {
+        this.app.socket.broadcast('modify index', this.index);
+      }
     }
 
     // update the fragment identifier (the stuff after '#' in the url)

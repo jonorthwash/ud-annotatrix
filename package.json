@@ -40,7 +40,7 @@
     "chai": "^4.2.0",
     "cheerio": "^1.0.0-rc.2",
     "font-awesome-base64": "^1.0.4",
-    "gulp": "^4.0.0",
+    "gulp": "^4.0.2",
     "gulp-babel": "^8.0.0-beta.2",
     "gulp-rename": "^1.4.0",
     "gulp-sourcemaps": "^2.6.5",

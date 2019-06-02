@@ -111,6 +111,24 @@ function formatUploadSize(fileSize) {
   return `${(fileSize/1048576).toFixed(1)} mB`;
 }
 
+function backup(value) {
+
+  if (!isAvailable())
+    return null;
+
+  value = JSON.stringify(value);
+  return localStorage.setItem(KEY + "backup", value);
+}
+
+function restore() {
+
+  if (!isAvailable())
+    return null;
+
+  let serial = localStorage.getItem(KEY + "backup");
+  return JSON.parse(serial);
+}
+
 function save(value) {
 
   if (!isAvailable())
@@ -160,6 +178,8 @@ module.exports = {
   //formatUploadSize,
   save,
   load,
+  backup,
+  restore,
   clear,
   getPrefs,
   setPrefs,

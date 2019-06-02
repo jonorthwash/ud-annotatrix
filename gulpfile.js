@@ -18,7 +18,7 @@ gulp.task('js', function () {
     .transform(babelify, { global: true })
     .bundle()
     .on('error', function (err) { console.error(err); })
-    .pipe(source('bundle2.js'))
+    .pipe(source('bundle.js'))
     .pipe(buffer())
     .pipe(gulp.dest('server/public/js'));
 });
@@ -43,8 +43,14 @@ gulp.task('docs', done => {
 done();
 });
 
-gulp.task('watch', () => {
-  gulp.watch(['client/*.js', 'client/*/*.js'], gulp.parallel(/*'uglify', */'js', 'html', 'docs'));
+gulp.task('ico', function () {
+    return gulp
+        .src([ './client/favicon.png'])
+        .pipe(gulp.dest('./server/public'));
 });
 
-gulp.task('default', gulp.parallel('js', 'html', 'docs'));
+gulp.task('watch', () => {
+  gulp.watch(['client/*.js', 'client/*/*.js', 'server/views/*.ejs'], gulp.parallel(/*'uglify', */'js', 'html', 'docs'));
+});
+
+gulp.task('default', gulp.parallel('js', 'html', 'docs', 'ico'));
