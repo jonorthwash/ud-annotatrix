@@ -37,11 +37,17 @@ module.exports = {
     return match ? match[1] : uuidv4();
   },
 
+  getRootPath: () => {
+    let pageURL = window.location.href;
+    return pageURL.substr(0, pageURL.lastIndexOf('/') + 1);
+  },
+
   link: (href, target='_blank') => {
     const link = $('<a>')
       .attr('href', href)
       .attr('target', target);
     $('body').append(link);
+    console.log(href, target);
     link[0].click();
   },
 

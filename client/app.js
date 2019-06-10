@@ -65,15 +65,10 @@ const UndoManager = require('./undo-manager');
       let backup  = utils.storage.restore();
 
       if(!$.isEmptyObject(backup)) {
+        console.log("backup", backup);
         this.corpus = new Corpus(this, backup);
-        // serial = nx.Corpus.deserialize(backup);
-
-        // serial = backup;
-
       }
     }
-
-
   }
 
   /**
@@ -154,7 +149,7 @@ const UndoManager = require('./undo-manager');
       }
     }).join('\n\n');
 
-    utils.download(`${this.corpus.filename}.corpus`, 'text/plain', contents);
+    utils.download(`${this.corpus.filename}.conll`, 'text/plain', contents);
 
   }
 }

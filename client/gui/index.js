@@ -14,7 +14,7 @@ const modalFactory = require('./modals');
 const Status = require('./status');
 const Table = require('./table');
 const Textarea = require('./textarea');
-
+const nx = require('notatrix');
 
 /**
  * Abstraction over the user interface.  Handles interaction between user via
@@ -39,6 +39,7 @@ class GUI {
     this.status = new Status(this);
     this.table = new Table(this);
     this.textarea = new Textarea(this);
+    this.root = utils.getRootPath();
 
     this.load();
     this.bind();
@@ -96,6 +97,38 @@ class GUI {
     this.menu.bind();
     this.status.bind();
     this.textarea.bind();
+
+    if (!this.app.online) {
+      $("#upload-filename").on("change", function(e){
+        // console.log("changed", e.target.files);
+        if (e.target.files.length > 0){
+          let reader = new FileReader();
+          reader.onload = (function(theFile) {
+            return function(d) {
+              self.uploaded = {"name":theFile.name, "text": d.target.result};
+            }
+          })(e.target.files[0]);
+          reader.readAsText(e.target.files[0]);
+        }
+      });
+      $('#uploadform').on("submit",function(e) {
+         e.preventDefault(); // cancel the actual submit
+         if (window.File && window.FileReader && window.FileList && window.Blob){
+           // console.log("FileAPI OK");
+           if (self.hasOwnProperty("uploaded") && self.uploaded.hasOwnProperty("text")) {
+             let upcorpus = nx.Corpus.fromString(self.uploaded["text"]);
+             upcorpus.filename = self.uploaded["name"];;
+             console.log(upcorpus.serialize());
+             self.app.corpus = new corpus(self.app, upcorpus.serialize());
+             $('#upload-file-modal').hide();
+             $('#upload-filename').val(null);
+             self.refresh();
+           }
+         } else {
+           alert("Your browser does not support FileAPI");
+         }
+       });
+     }
 
     // graph interception stuff
     $('.controls').click(e => $(':focus:not(#edit)').blur());

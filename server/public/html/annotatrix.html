@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 	<title>UD Annotatrix</title>
 	<link rel="icon" href="../favicon.png" sizes="230x230" type="image/png">
 	<link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css" />
-	<link rel="stylesheet" type="text/css" href="../css/font-awesome-base64.min.css" />
+	<link rel="stylesheet" type="text/css" href="../css/fontawesome.all.min.css" />
 	<link rel="stylesheet" type="text/css" href="../css/style.css" />
 	<link rel="stylesheet" type="text/css" href="../css/jquery.autocomplete.css" />
 	<meta name="defaultLanguage" content="eng">
@@ -36,7 +36,7 @@
 
 			<div class="modal custom-modal" id="upload-file-modal">
   <div class="modal-dialog" role="document">
-    <form class="modal-content" action="./upload" method="post" enctype="multipart/form-data">
+    <form id="uploadform" class="modal-content" action="./upload" method="post" enctype="multipart/form-data">
       <div class="modal-header">
         <h5 class="modal-title">Upload corpus</h5>
         <button type="button" class="close" aria-label="Close" name="close">
