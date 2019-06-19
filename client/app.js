@@ -35,7 +35,8 @@ const UndoManager = require('./undo-manager');
       UndoManager,
 
     };
-    this.online = args[0];
+
+    this.online = args;
     this.initialized = false;
     this.undoer = new UndoManager(this);
     this.server = new Server(this);

@@ -140,6 +140,11 @@ class Menu {
         utils.link(self.gui.root + "help.html", '_blank');
       }
     });
+    $('[name="go-home"]').click(e => {
+      if (!$(e.target).is('.pin')){
+        utils.link(self.gui.root, '_self');
+      }
+    });
     $('[name="show-settings"]').click(e => {
       if (!$(e.target).is('.pin')){
         console.log(self.gui.app.online);
@@ -255,7 +260,7 @@ class Menu {
       indices = corpus.getIndices();
 
     $('#current-sentence').val(indices.current);
-    $('#total-sentences').text(indices.total);
+    $('#total-sentences').val(indices.total);
     if (!corpus.index)
       $('#btnPrevSentence').addClass('disabled');
     if (corpus.index === (corpus._corpus.filtered.length || corpus.length) - 1)

@@ -260,6 +260,13 @@
 										</span>
 										<i class="pin fa fa-thumbtack" title="Pin to menu"></i>
 									</a>
+									<a class="dropdown-group-item pinnable" href="#" name="go-home">
+										<span class="dropdown-group-item-name" title="Home page">
+											<i class="fa fa-home"></i>
+											Home page
+										</span>
+										<i class="pin fa fa-thumbtack" title="Pin to menu"></i>
+									</a>
 								</li>
 							</ul>
 						</div>
@@ -271,10 +278,11 @@
 							</a>
 						</div>
 						<input class="form-control col-xs-2" id="current-sentence" value="1" size="2"/>
-						<span class="input-group-addon">
+						<!-- <span class="input-group-addon">
 							/&nbsp;
 							<span id="total-sentences">1</span>
-						</span>
+						</span> -->
+						<input class="form-control col-xs-2" id="total-sentences" value="1" size="2" disabled/>
 						<div class="input-group-btn ml-auto">
 							<a class="btn btn-secondary" href="#" id="btnNextSentence">
 								<i class="fa fa-arrow-right" title="Next sentence"></i>
@@ -341,6 +349,13 @@
 							<i class="fa fa-question-circle" title="Help"></i>
 						</a>
 					</div>
+
+					<div class="btn-group">
+						<a class="btn btn-secondary pinnable" href="#" id="btnHome" name="go-home">
+							<i class="fa fa-home" title="Home"></i>
+						</a>
+					</div>
+
 
 					<div class="btn-group">
 						<a class="btn btn-secondary pinnable" href="#" data-toggle="modal" data-target="#settingsModal" id="btnSettings" name="show-settings">

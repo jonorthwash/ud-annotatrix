@@ -16,6 +16,7 @@ function upload(treebank, filename, contents, next) {
   try {
 
     const corpus = nx.Corpus.fromString(contents);
+    console.log(corpus);
     corpus.filename = filename;
     return CorpusDB(treebank).save(filename, corpus.serialize(), next);
 

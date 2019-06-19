@@ -10,6 +10,7 @@ var _gui = {
 	pinned_menu_items: new Set([
 		'discard-corpus',
 		'show-help',
+		'go-home'
 	]),
 	is_textarea_visible: true,
 	is_table_visible: false,

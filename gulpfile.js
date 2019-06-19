@@ -18,7 +18,7 @@ console.log("Gulp runs in "+ gulp_mode + " mode");
 
 gulp.task('js', function () {
     let stream =  browserify({
-        entries: 'client/index.js',
+        entries: ['client/index.js'],
         debug: true
     })
     .transform(babelify, { global: true})

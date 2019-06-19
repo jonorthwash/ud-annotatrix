@@ -1,5 +1,5 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html>
 
 <head>
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
@@ -30,10 +30,10 @@
       <div class="settings-group" id="sharing">
 
         <%
-          var claimed = (meta.owner && typeof meta.owner === 'string');
+          var claimed = meta && meta.hasOwnProperty("owner") && meta.owner && typeof meta.owner === 'string';
           var is_owner = claimed && (meta.owner === username);
-          var allowed = meta.permissions ? meta.permissions.allow : null;
-          var disallowed = meta.permissions ? meta.permissions.disallow : [];
+          var allowed = meta && meta.permissions ? meta.permissions.allow : null;
+          var disallowed = meta && meta.permissions ? meta.permissions.disallow : [];
         %>
 
         <div class="settings-item" id="owner">
@@ -160,17 +160,17 @@
 						-->
 						<div class="settings-sub-item" id="permission-sharing">
 							<% if (!claimed) { %>
-                <input type="checkbox" name="permissions-sharing" title="Cannot set this property unless 'owner' is set" <%= meta.permissions.sharing ? 'checked' : '' %> disabled />
+                <input type="checkbox" name="permissions-sharing" title="Cannot set this property unless 'owner' is set" <%= meta && meta.permissions.sharing ? 'checked' : '' %> disabled />
               <% } else { %>
-                <input type="checkbox" name="permissions-sharing" <%= meta.permissions.sharing ? 'checked' : '' %> />
+                <input type="checkbox" name="permissions-sharing" <%= meta && meta.permissions.sharing ? 'checked' : '' %> />
               <% } %>
               Enable collaborative editing
             </div>
             <div class="settings-sub-item" id="permissions-require-login">
               <% if (!claimed) { %>
-                <input type="checkbox" name="permissions-require-login" title="Cannot set this property unless 'owner' is set" <%= meta.permissions.require_login ? 'checked' : '' %> disabled />
+                <input type="checkbox" name="permissions-require-login" title="Cannot set this property unless 'owner' is set" <%= meta && meta.permissions.require_login ? 'checked' : '' %> disabled />
               <% } else { %>
-                <input type="checkbox" name="permissions-require-login" <%= meta.permissions.require_login ? 'checked' : '' %> />
+                <input type="checkbox" name="permissions-require-login" <%= meta && meta.permissions.require_login ? 'checked' : '' %> />
               <% } %>
               Require GitHub login to edit treebank
             </div>
@@ -209,7 +209,7 @@
                 </tr>
               </thead>
               <tbody>
-                <% if (meta.editors) { for (let i=0; i< meta.editors.length; i++) { %>
+                <% if (meta && meta.editors) { for (let i=0; i< meta.editors.length; i++) { %>
                   <tr>
                     <td class="username">
                       <%= meta.editors[i] %>

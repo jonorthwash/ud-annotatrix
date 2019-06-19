@@ -8,6 +8,8 @@ const querystring = require('querystring');
 const upload = require('./upload');
 const getTreebanksList = require('./list-treebanks');
 const ConfigError = require('./errors').ConfigError;
+const path = require('path');
+const fs = require('fs');
 
 // --------------------------------------------------------------------------
 // middleware
@@ -82,7 +84,10 @@ module.exports = app => {
   app.get('/', (req, res) => {
     getTreebanksList((err, treebanks) => {
       res.render('index.ejs', {
-        base: `${cfg.protocol}://${cfg.host}:${cfg.port}`,
+        // base: `${cfg.protocol}://${cfg.host}:${cfg.port}`,
+        // leave relative path instead absolute one
+        // for correct urls when it works behind a frontend proxy
+        base: '',
         error: err,
         treebanks: treebanks
       });
@@ -101,10 +106,12 @@ module.exports = app => {
     } else {
 
       req.session.treebank_id = treebank;
+
       res.render('annotatrix', {
         modalPath: 'modals',
         github_configured: !!cfg.github,
-        username: req.session.username
+        username: req.session.username,
+        path: path
       });
 
     }
@@ -127,6 +134,20 @@ module.exports = app => {
 
   });
 
+app.post('/delete', (req, res) => {
+  if (req.body.hasOwnProperty("id")){
+    const filepath = path.join(cfg.corpora_path, req.body.id+'.json');
+      console.log("delete",  filepath, req.body.id);
+      fs.unlink(filepath, (err) => {
+        err ?
+          res.json({ error: err.message })
+          :
+          res.json({ success: true });
+      });
+  }
+});
+//
+
   app.get('/load', get_treebank, (req, res) => {
 
     CorpusDB(req.treebank).load((err, data) => {
@@ -147,9 +168,10 @@ module.exports = app => {
         if (err)
           return res.json({ error: err.message });
 
-        res.redirect('/annotatrix?' + querystring.stringify({
-          treebank_id: treebank,
-        }));
+        // res.redirect('/annotatrix?' + querystring.stringify({
+        //   treebank_id: treebank,
+        // }));
+        res.json({ success: 'File is stored' });
       });
 
     } else if (req.body.url) {
