@@ -88,6 +88,15 @@ UD Annotatrix can be used in several different ways.  Some methods don't require
 
 Many of these methods require the `node` and `npm` executables.  To check if you have these, run `node -v`.  If you don't, you can find installation instructions [here](https://www.npmjs.com/get-npm).
 
+| feature | local dynamic server | remote dynamic server | local static file | locally served static files | remotely served static files |
+| ----------------------------- | --- | -- | -- | -- | -- | -- |
+| create and edit trees         | ✔   |  ✔ |  ✔ |  ✔ |  ✔ | ✔  |
+| edit GitHub-hosted treebanks  |     |    |    |    |    |    |
+| collaborative editing         | (✔) |  ✔ |  ✖ |  ✖ |  ✖ | ✖  |
+| chat                          | (✔) |  ✔ |  ✖ |  ✖ |  ✖ | ✖  |
+
+
+
 ### serve dynamic files
 
 Run a copy of UD Annotatrix with server backend on your machine.  Uploaded databases will be saved directly to your hard drive.  This is the recommended method.  To install, run
