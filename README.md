@@ -90,12 +90,11 @@ Many of these methods require the `node` and `npm` executables.  To check if you
 
 | feature | local dynamic server | remote dynamic server | local static file | locally served static files | remotely served static files |
 | ----------------------------- | --- | -- | -- | -- | -- |
-|         | `npm server` |    | open in browser | `python -m SimpleHTTPServer` | github.io |
-| ----------------------------- | --- | -- | -- | -- | -- |
 | create and edit trees         | ✔   |  ✔ |  ✔ |  ✔ |  ✔ |
 | edit GitHub-hosted treebanks  |     |    |    |    |    |
 | collaborative editing         | (✔) |  ✔ |  ✖ |  ✖ |  ✖ |
 | chat                          | (✔) |  ✔ |  ✖ |  ✖ |  ✖ |
+| *HOW TO RUN*         | `npm server` |    | open in browser | `python -m SimpleHTTPServer` | github.io |
 
 
 
