@@ -89,6 +89,7 @@ UD Annotatrix can be used in several different ways.  Some methods don't require
 Many of these methods require the `node` and `npm` executables.  To check if you have these, run `node -v`.  If you don't, you can find installation instructions [here](https://www.npmjs.com/get-npm).
 
 | feature | local dynamic server | remote dynamic server | local static file | locally served static files | remotely served static files |
+| ----------------------------- | --- | -- | -- | -- | -- |
 |         | `npm server` |    | open in browser | `python -m SimpleHTTPServer` | github.io |
 | ----------------------------- | --- | -- | -- | -- | -- |
 | create and edit trees         | ✔   |  ✔ |  ✔ |  ✔ |  ✔ |
