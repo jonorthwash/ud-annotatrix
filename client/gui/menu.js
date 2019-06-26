@@ -142,7 +142,7 @@ class Menu {
     });
     $('[name="go-home"]').click(e => {
       if (!$(e.target).is('.pin')){
-        utils.link(self.gui.root, '_self');
+        utils.link(self.gui.root+"index.html", '_self');
       }
     });
     $('[name="show-settings"]').click(e => {

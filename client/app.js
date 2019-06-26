@@ -56,20 +56,17 @@ const UndoManager = require('./undo-manager');
       this.corpus.index = parseInt(hash) - 1;
 
     }, 500);
-    if (this.online) { // only if the app was loaded from a server
-      this.server.connect();
-      this.socket.connect();
-    }
-    this.gui.refresh();
-
-    if(!this.online) {
+    if (this.online) {
+        this.server.connect();
+        this.socket.connect();
+    } else {
       let backup  = utils.storage.restore();
-
       if(!$.isEmptyObject(backup)) {
         console.log("backup", backup);
         this.corpus = new Corpus(this, backup);
       }
     }
+    this.gui.refresh();
   }
 
   /**
@@ -150,7 +147,7 @@ const UndoManager = require('./undo-manager');
       }
     }).join('\n\n');
 
-    utils.download(`${this.corpus.filename}.conll`, 'text/plain', contents);
+    utils.download(`${this.corpus.filename}.conllu`, 'text/plain', contents);
 
   }
 }

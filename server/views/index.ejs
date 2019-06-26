@@ -1,292 +1,176 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
+
 <head>
-	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="icon" href="../favicon.png" sizes="230x230" type="image/png">
-  <title>UD Annotatrix</title>
-	<link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css" />
-	<!-- <link rel="stylesheet" type="text/css" href="../css/font-awesome.min.css" /> -->
-	<link rel="stylesheet" type="text/css" href="../css/style.css" />
-	<style>
-     body {
-       padding-top: 100px;
-     }
-		 .actmode{
-		 	line-height: .5rem;
-		 }
-  </style>
-	<script src="../js/jquery.min.js"></script>
-	<script src="../js/bootstrap.bundle.js"></script>
-	<script type="text/javascript">
-		$(document).on('change', '.custom-file-input', function (event) {
-	    $(this).next('.custom-file-label').html(event.target.files[0].name);
-		});
-		$( document ).ready(function() {
-		var deletemode = false;
-		$(".actmode" ).click(function() {
-			// const url = `${base}/annotatrix?treebank_id=${treebank.id}`; %>
-			var this_el  = $(this);
-			var this_id  = this_el.data('id');
-
-
-
-			console.log(deletemode, this_id);
-			if(deletemode){
-				var formData = new FormData();
-				formData.append('id', this_id);
-				$.ajax({
-							 url : 'delete',
-							 type : 'POST',
-							 data : formData,
-							 processData: false,  // tell jQuery not to process the data
-							 contentType: false,  // tell jQuery not to set contentType
-							 success : function(data) {
-								 	if (data.hasOwnProperty("success") && data.success === true){
-										this_el.parent().parent().empty();
-									} else {
-										alert(data.error);
-									}
-							 }
-				});
-
-			} else {
-				window.location.href = '/annotatrix?treebank_id='+this_id;
-			}
-
-		});
-
-			$('#actionswitch').change(function() {
-
-        if(this.checked) {
-            // var returnVal = confirm("Are you sure?");
-            // $(this).prop("checked", returnVal);
-						$(".actmode").html('Delete');
-						console.log("checked");
-						deletemode = true;
-        } else {
-					$(".actmode").html('Edit');
-					console.log("unchecked");
-					deletemode = false;
-				}
-        // $('#textbox1').val(this.checked);
-    	});
-
-			$( "#upload-to-server" ).click(function() {
-					var file2load = $('input[type=file]').val();
-					if (file2load){
-						// alert(file2load);
-						var formData = new FormData();
-						formData.append('file', $('#fileupload')[0].files[0]);
-
-						$.ajax({
-						       url : 'upload',
-						       type : 'POST',
-						       data : formData,
-						       processData: false,  // tell jQuery not to process the data
-						       contentType: false,  // tell jQuery not to set contentType
-						       success : function(data) {
-						           // console.log(data);
-						           // alert(data);
-											 // location.reload(true);
-											 if (data.error) {
-												 alert(data.error);
-											 }
-											 location.reload(true);
-						       }
-						});
-					} else {
-						alert("No file selected!");
-					}
-          return false;
-			});
-			$( "#webload" ).click(function() {
-					var url2load = $('#gitlink').val();
-					if (url2load){
-						var formData = new FormData();
-						formData.append('url', url2load);
-
-						$.ajax({
-									 url : 'upload',
-									 type : 'POST',
-									 data : formData,
-									 processData: false,  // tell jQuery not to process the data
-									 contentType: false,  // tell jQuery not to set contentType
-									 success : function(data) {
-										 	if (data.error) {
-												alert(data.error);
-											}
-											location.reload(true);
-									 }
-						});
-					} else {
-						alert("No file selected!");
-					}
-					return false;
-			});
-		});
-
-	</script>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../favicon.png" sizes="230x230" type="image/png">
+    <title>UD Annotatrix</title>
+    <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css" />
+    <!-- <link rel="stylesheet" type="text/css" href="../css/font-awesome.min.css" /> -->
+    <link rel="stylesheet" type="text/css" href="../css/style.css" />
+    <style>
+        body {
+            padding-top: 100px;
+        }
+        .actmode{
+                line-height: .5rem;
+        }
+    </style>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.bundle.js"></script>
+    <script src="../js/main.js"></script>
 </head>
 
 <body>
-	<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
-		<a class="navbar-brand" href="/">
-		  <img src="../logo.svg" class="ud-logo" alt="Annotatrix">
-		</a>
-	  <!-- <a class="navbar-brand" href="#">UD Annotatrix</a> -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+        <a class="navbar-brand" href="/">
+            <img src="../logo.svg" class="ud-logo" alt="Annotatrix">
+        </a>
+        <!-- <a class="navbar-brand" href="#">UD Annotatrix</a> -->
 
-	  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-		<span class="navbar-toggler-icon"></span>
-	  </button>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-	  <div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
-		<ul class="navbar-nav">
+        <div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
+            <ul class="navbar-nav">
 
-		  <!-- <li class="nav-item active">
-			<a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-		  </li> -->
-		  <li class="nav-item">
-				<div class="input-group mb-3 form-inline my-2 my-lg-0">
-					<a class="btn btn-default btn-outline-success" href="./help.html" target="_blank">Help</a>
-			</div>
-		  </li>
-		  <li class="nav-item">
-				<div class="input-group mb-3 form-inline my-2 my-lg-0">
-					<a class="btn btn-default btn-outline-secondary" href="./annotatrix.html" target="_blank">Annotate!</a>
-				</div>
-		  </li>
-				<li class="nav-item">
-					<div class="input-group mb-3 form-inline my-2 my-lg-0">
-						<input type="text" id="gitlink" class="form-control" placeholder="URL">
-						<div class="input-group-append">
-							<button class="btn btn-default btn-outline-secondary" id="webload" type="submit">Load</button>
-						</div>
-					</div>
+                <!-- <li class="nav-item active">
+            <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+          </li> -->
+                <li class="nav-item">
+                    <div class="input-group mb-3 form-inline my-2 my-lg-0">
+                        <a class="btn btn-default btn-outline-success" href="./help.html" target="_blank">Help</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <div class="input-group mb-3 form-inline my-2 my-lg-0">
+                        <a class="btn btn-default btn-outline-secondary" href="./annotatrix.html" target="_blank">Annotate!</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <div class="input-group mb-3 form-inline my-2 my-lg-0">
+                        <input type="text" id="gitlink" class="form-control" placeholder="URL">
+                        <div class="input-group-append">
+                            <button class="btn btn-default btn-outline-secondary" id="webload" type="submit">Load</button>
+                        </div>
+                    </div>
 
-					<!-- <form class="form-inline my-2 my-lg-0">
-					<input class="form-control mr-sm-2" type="search" placeholder="URL" aria-label="Search">
-					<button class="btn btn-outline-success my-2 my-sm-0" type="submit">Load</button>
-				</form> -->
-			 </li>
-		  <li class="nav-item">
-				<div class="input-group">
-	              <div class="input-group-prepend">
-	                <!-- <span class="input-group-text" id="inputGroupFileAddon01">Upload</span> -->
-									 <button id="upload-to-server" class="btn btn-outline-secondary" type="button">Upload</button>
-	              </div>
-	              <div class="custom-file">
-	                <input type="file" class="custom-file-input" id="fileupload"
-	                  aria-describedby="fileupload">
-	                <label class="custom-file-label" for="inputGroupFile01">Select local file</label>
-	              </div>
-	            </div>
-		  </li>
-		  <!-- <li class="nav-item dropdown">
-			<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-			  Dropdown
-			</a>
-			<div class="dropdown-menu" aria-labelledby="navbarDropdown">
-			  <a class="dropdown-item" href="#">Action</a>
-			  <a class="dropdown-item" href="#">Another action</a>
-			  <div class="dropdown-divider"></div>
-			  <a class="dropdown-item" href="#">Something else here</a>
-			</div>
-		  </li>	       -->
-		</ul>
-	  </div>
-	</nav>
+                    <!-- <form class="form-inline my-2 my-lg-0">
+                    <input class="form-control mr-sm-2" type="search" placeholder="URL" aria-label="Search">
+                    <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Load</button>
+                </form> -->
+                </li>
+                <li class="nav-item">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <!-- <span class="input-group-text" id="inputGroupFileAddon01">Upload</span> -->
+                            <button id="upload-to-server" class="btn btn-outline-secondary" type="button">Upload</button>
+                        </div>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="fileupload" aria-describedby="fileupload">
+                            <label class="custom-file-label" for="inputGroupFile01">Select local file</label>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </nav>
 
-	<!-- end snippet -->
-	<div class="container">
-		<div id="welcome-content">
+    <!-- end snippet -->
+    <div class="container">
+        <div id="welcome-content">
 
-	<!-- <h1 id="welcome-banner">Welcome to UD Annotatrix</h1> -->
+            <!-- <h1 id="welcome-banner">Welcome to UD Annotatrix</h1> -->
 
-	<!-- <form method="post" enctype="multipart/form-data" action="./upload">
-		<input type="file" name="file" />
-		<input type="submit" value="Upload to server" />
-	</form> -->
+            <!-- <form method="post" enctype="multipart/form-data" action="./upload">
+        <input type="file" name="file" />
+        <input type="submit" value="Upload to server" />
+    </form> -->
 
-	<!-- <form method="post" action="./upload">
-		<input id="load-from-url" name="url" />
-		<input type="submit" value="Load from url" />
-	</form> -->
+            <!-- <form method="post" action="./upload">
+        <input id="load-from-url" name="url" />
+        <input type="submit" value="Load from url" />
+    </form> -->
 
-	<!-- <div id="links">
-		<strong>Links:</strong>
-		<a id="to_annotatrix" href="./annotatrix.html">
-			Online annotator
-		</a>
-		<a id="to_help" href="./help.html">
-			Help
-		</a>
-	</div> -->
+            <!-- <div id="links">
+        <strong>Links:</strong>
+        <a id="to_annotatrix" href="./annotatrix.html">
+            Online annotator
+        </a>
+        <a id="to_help" href="./help.html">
+            Help
+        </a>
+    </div> -->
+            <div class="spinner-border d-none" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <div id="treebanks">
+                <% if (error) { %>
+                <span>
+                    Error loading treebanks: <%= error %>
+                </span>
+                <% } else if (treebanks.length) { %>
+                <!-- <span>
+                Available treebanks:
+            </span> -->
+                <table id="available-treebanks" class="table table-hover table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th>Last modified</th>
+                            <th>Action</th>
+                            <th>Filename</th>
+                            <th>Sentences (total)</th>
+                            <th>Sentences (invalid)</th>
+                            <th>Top labels</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% treebanks.forEach(treebank => {
+                            const url = `${base}/annotatrix?treebank_id=${treebank.id}`; %>
+                        <tr id="<%= treebank.id %>">
+                            <td><a href="<%= url %>" title="<%= treebank.modified %>">
+                                    <%= treebank.modified_ago %>
+                                </a></td>
+                            <td>
+                                <!-- <a href="<%= url %>" title="<%= treebank.id %>"> -->
+                                <!-- <%= treebank.id.split('-')[0] %> -->
+                                <button type="button" class="btn btn-secondary btn-sm actmode" data-id="<%= treebank.id %>">Edit</button>
+                                <!-- </a> -->
+                            </td>
+                            <td><a href="<%= url %>">
+                                    <%= treebank.filename || " " %>
+                                </a></td>
+                            <td><a href="<%= url %>">
+                                    <%= treebank.sentences %>
+                                </a></td>
+                            <td><a href="<%= url %>">
+                                    <%= treebank.errors %>
+                                </a></td>
+                            <td><a href="<%= url %>">
+                                    <%= treebank.labels.map(label => `${label.name} (${label.size})`).join(', ') || " " %>
+                                </a></td>
+                        </tr>
+                        </a>
+                        <% }); %>
+                    </tbody>
+                </table>
+                <div class="custom-control custom-switch">
+                    <input type="checkbox" class="custom-control-input" id="actionswitch">
+                    <label class="custom-control-label" for="actionswitch">Edit/Delete</label>
+                </div>
+                <% } else { %>
+                <h1 id="welcome-banner">Welcome to UD Annotatrix!</h1>
+                <div class="row  justify-content-md-center">
+                    <h4>You can make a corpus by downloading Github file or by uploading local one!</h4>
+                </div>
+                <% } %>
+            </div>
 
-	<div id="treebanks">
-		<% if (error) { %>
-			<span>
-				Error loading treebanks: <%= error %>
-			</span>
-		<% } else if (treebanks.length) { %>
-			<!-- <span>
-				Available treebanks:
-			</span> -->
-			<table id="available-treebanks" class="table table-hover table-striped table-sm">
-				<thead>
-					<tr>
-						<th>Last modified</th>
-						<th>Action</th>
-						<th>Filename</th>
-						<th>Sentences (total)</th>
-						<th>Sentences (invalid)</th>
-						<th>Top labels</th>
-					</tr>
-				</thead>
-				<tbody>
-					<% treebanks.forEach(treebank => {
-							const url = `${base}/annotatrix?treebank_id=${treebank.id}`; %>
-							<tr id="<%= treebank.id %>">
-								<td><a href="<%= url %>" title="<%= treebank.modified %>">
-									<%= treebank.modified_ago %>
-								</a></td>
-								<td>
-									<!-- <a href="<%= url %>" title="<%= treebank.id %>"> -->
-									<!-- <%= treebank.id.split('-')[0] %> -->
-									<button type="button" class="btn btn-secondary btn-sm actmode" data-id="<%= treebank.id %>">Edit</button>
-									<!-- </a> -->
-							</td>
-								<td><a href="<%= url %>">
-									<%= treebank.filename || " " %>
-								</a></td>
-								<td><a href="<%= url %>">
-									<%= treebank.sentences %>
-								</a></td>
-								<td><a href="<%= url %>">
-									<%= treebank.errors %>
-								</a></td>
-								<td><a href="<%= url %>">
-									<%= treebank.labels.map(label => `${label.name} (${label.size})`).join(', ') || " " %>
-								</a></td>
-							</tr>
-						</a>
-					<% }); %>
-				</tbody>
-			</table>
-			<div class="custom-control custom-switch">
-			  <input type="checkbox" class="custom-control-input" id="actionswitch">
-			  <label class="custom-control-label" for="actionswitch">Edit/Delete</label>
-			</div>
-		<% } else { %>
-			<h1 id="welcome-banner">Welcome to UD Annotatrix!</h1>
-			<div class="row  justify-content-md-center">
-				<h4>You can make a corpus by downloading Github file or by uploading local one!</h4>
-			</div>
-		<% } %>
-	</div>
-
-</div>
-	</div>
+        </div>
+    </div>
 
 </body>
+
 </html>

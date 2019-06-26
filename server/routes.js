@@ -81,6 +81,9 @@ module.exports = app => {
 
   // ---------------------------
   // core
+  app.get('/index.html', (req, res) => {
+    res.redirect('/');
+  });
   app.get('/', (req, res) => {
     getTreebanksList((err, treebanks) => {
       res.render('index.ejs', {

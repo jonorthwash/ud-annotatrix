@@ -28,7 +28,6 @@ class GUI {
     this.app = app;
 
     // bind subelements
-    //    this.app.online
     this.chat = new Chat(this);
     this.config = config;
     this.graphMenu = new GraphMenu(this);
