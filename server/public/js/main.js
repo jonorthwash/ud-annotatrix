@@ -71,6 +71,8 @@ $(document).ready(function() {
 			// alert(file2load);
 			var formData = new FormData();
 			formData.append('file', $('#fileupload')[0].files[0]);
+			formData.append('src', 'main');
+			$('.spinner-border').removeClass("d-none");
 
 			$.ajax({
 				url: 'upload',
@@ -85,6 +87,7 @@ $(document).ready(function() {
 					if (data.error) {
 						alert(data.error);
 					}
+					$('.spinner-border').addClass("d-none");
 					location.reload(true);
 				}
 			});
@@ -99,6 +102,7 @@ $(document).ready(function() {
 		if (url2load) {
 			var formData = new FormData();
 			formData.append('url', url2load);
+			formData.append('src', 'main');
 			$('.spinner-border').removeClass("d-none");
 
 			$.ajax({

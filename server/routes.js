@@ -166,15 +166,18 @@ app.post('/delete', (req, res) => {
     const treebank = uuidv4();
 
     if (req.files) {
-
       upload.fromFile(treebank, req.files.file, err => {
-        if (err)
+        if (err) {
           return res.json({ error: err.message });
+        }
+        if (req.body.hasOwnProperty("src") && req.body["src"] === "main"){
+          res.json({ success: 'File is stored' });
+        } else {
+          res.redirect('/annotatrix?' + querystring.stringify({
+            treebank_id: treebank,
+          }));
+        }
 
-        // res.redirect('/annotatrix?' + querystring.stringify({
-        //   treebank_id: treebank,
-        // }));
-        res.json({ success: 'File is stored' });
       });
 
     } else if (req.body.url) {
