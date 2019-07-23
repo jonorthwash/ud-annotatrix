@@ -2,121 +2,121 @@
 <html>
 
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="../favicon.png" sizes="230x230" type="image/png">
-    <title>UD Annotatrix</title>
-    <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css" />
-    <!-- <link rel="stylesheet" type="text/css" href="../css/font-awesome.min.css" /> -->
-    <link rel="stylesheet" type="text/css" href="../css/style.css" />
-    <style>
-        body {
-            padding-top: 100px;
-        }
-        .actmode{
-                line-height: .5rem;
-        }
-    </style>
-    <script src="../js/jquery.min.js"></script>
-    <script src="../js/bootstrap.bundle.js"></script>
-    <script src="../js/main.js"></script>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" href="../favicon.png" sizes="230x230" type="image/png">
+	<title>UD Annotatrix</title>
+	<link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css" />
+	<!-- <link rel="stylesheet" type="text/css" href="../css/font-awesome.min.css" /> -->
+	<link rel="stylesheet" type="text/css" href="../css/style.css" />
+	<style>
+		body {
+			padding-top: 100px;
+		}
+		.actmode{
+				line-height: .5rem;
+		}
+	</style>
+	<script src="../js/jquery.min.js"></script>
+	<script src="../js/bootstrap.bundle.js"></script>
+	<script src="../js/main.js"></script>
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
-        <a class="navbar-brand" href="/">
-            <img src="../logo.svg" class="ud-logo" alt="Annotatrix">
-        </a>
-        <!-- <a class="navbar-brand" href="#">UD Annotatrix</a> -->
+	<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+		<a class="navbar-brand" href="/">
+			<img src="../logo.svg" class="ud-logo" alt="Annotatrix">
+		</a>
+		<!-- <a class="navbar-brand" href="#">UD Annotatrix</a> -->
 
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
 
-        <div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
-            <ul class="navbar-nav">
+		<div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
+			<ul class="navbar-nav">
 
-                <!-- <li class="nav-item active">
-            <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-          </li> -->
-                <li class="nav-item">
-                    <div class="input-group mb-3 form-inline my-2 my-lg-0">
-                        <a class="btn btn-default btn-outline-success" href="./help.html" target="_blank">Help</a>
-                    </div>
-                </li>
-                <li class="nav-item">
-                    <div class="input-group mb-3 form-inline my-2 my-lg-0">
-                        <a class="btn btn-default btn-outline-secondary" href="./annotatrix.html" target="_blank">Annotate!</a>
-                    </div>
-                </li>
-                <li class="nav-item">
-                    <div class="input-group mb-3 form-inline my-2 my-lg-0">
-                        <input type="text" id="gitlink" class="form-control" placeholder="URL">
-                        <div class="input-group-append">
-                            <button class="btn btn-default btn-outline-secondary" id="webload" type="submit">Load</button>
-                        </div>
-                    </div>
+				<!-- <li class="nav-item active">
+			<a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+		  </li> -->
+				<li class="nav-item">
+					<div class="input-group mb-3 form-inline my-2 my-lg-0">
+						<a class="btn btn-default btn-outline-success" href="./help.html" target="_blank">Help</a>
+					</div>
+				</li>
+				<li class="nav-item">
+					<div class="input-group mb-3 form-inline my-2 my-lg-0">
+						<a class="btn btn-default btn-outline-secondary" href="./annotatrix.html" target="_blank">Annotate!</a>
+					</div>
+				</li>
+				<li class="nav-item">
+					<div class="input-group mb-3 form-inline my-2 my-lg-0">
+						<input type="text" id="gitlink" class="form-control" placeholder="URL">
+						<div class="input-group-append">
+							<button class="btn btn-default btn-outline-secondary" id="webload" type="submit">Load</button>
+						</div>
+					</div>
 
-                    <!-- <form class="form-inline my-2 my-lg-0">
-                    <input class="form-control mr-sm-2" type="search" placeholder="URL" aria-label="Search">
-                    <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Load</button>
-                </form> -->
-                </li>
-                <li class="nav-item">
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <!-- <span class="input-group-text" id="inputGroupFileAddon01">Upload</span> -->
-                            <button id="upload-to-server" class="btn btn-outline-secondary" type="button">Upload</button>
-                        </div>
-                        <div class="custom-file">
-                            <input type="file" class="custom-file-input" id="fileupload" aria-describedby="fileupload">
-                            <label class="custom-file-label" for="inputGroupFile01">Select local file</label>
-                        </div>
-                    </div>
-                </li>
-            </ul>
-        </div>
-    </nav>
+					<!-- <form class="form-inline my-2 my-lg-0">
+					<input class="form-control mr-sm-2" type="search" placeholder="URL" aria-label="Search">
+					<button class="btn btn-outline-success my-2 my-sm-0" type="submit">Load</button>
+				</form> -->
+				</li>
+				<li class="nav-item">
+					<div class="input-group">
+						<div class="input-group-prepend">
+							<!-- <span class="input-group-text" id="inputGroupFileAddon01">Upload</span> -->
+							<button id="upload-to-server" class="btn btn-outline-secondary" type="button">Upload</button>
+						</div>
+						<div class="custom-file">
+							<input type="file" class="custom-file-input" id="fileupload" aria-describedby="fileupload">
+							<label class="custom-file-label" for="inputGroupFile01">Select local file</label>
+						</div>
+					</div>
+				</li>
+			</ul>
+		</div>
+	</nav>
 
-    <!-- end snippet -->
-    <div class="container">
-        <div id="welcome-content">
+	<!-- end snippet -->
+	<div class="container">
+		<div id="welcome-content">
 
-            <!-- <h1 id="welcome-banner">Welcome to UD Annotatrix</h1> -->
+			<!-- <h1 id="welcome-banner">Welcome to UD Annotatrix</h1> -->
 
-            <!-- <form method="post" enctype="multipart/form-data" action="./upload">
-        <input type="file" name="file" />
-        <input type="submit" value="Upload to server" />
-    </form> -->
+			<!-- <form method="post" enctype="multipart/form-data" action="./upload">
+		<input type="file" name="file" />
+		<input type="submit" value="Upload to server" />
+	</form> -->
 
-            <!-- <form method="post" action="./upload">
-        <input id="load-from-url" name="url" />
-        <input type="submit" value="Load from url" />
-    </form> -->
+			<!-- <form method="post" action="./upload">
+		<input id="load-from-url" name="url" />
+		<input type="submit" value="Load from url" />
+	</form> -->
 
-            <!-- <div id="links">
-        <strong>Links:</strong>
-        <a id="to_annotatrix" href="./annotatrix.html">
-            Online annotator
-        </a>
-        <a id="to_help" href="./help.html">
-            Help
-        </a>
-    </div> -->
-            <div class="spinner-border d-none" role="status">
-                <span class="sr-only">Loading...</span>
-            </div>
-            <div id="treebanks">
-                
-                <h1 id="welcome-banner">Welcome to UD Annotatrix!</h1>
-                <div class="row  justify-content-md-center">
-                    <h4>You can make a corpus by downloading Github file or by uploading local one!</h4>
-                </div>
-                
-            </div>
+			<!-- <div id="links">
+		<strong>Links:</strong>
+		<a id="to_annotatrix" href="./annotatrix.html">
+			Online annotator
+		</a>
+		<a id="to_help" href="./help.html">
+			Help
+		</a>
+	</div> -->
+			<div class="spinner-border d-none" role="status">
+				<span class="sr-only">Loading...</span>
+			</div>
+			<div id="treebanks">
+				
+				<h1 id="welcome-banner">Welcome to UD Annotatrix!</h1>
+				<div class="row  justify-content-md-center">
+					<h4>You can make a corpus by downloading Github file or by uploading local one!</h4>
+				</div>
+				
+			</div>
 
-        </div>
-    </div>
+		</div>
+	</div>
 
 </body>
 
