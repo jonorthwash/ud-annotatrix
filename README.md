@@ -100,6 +100,50 @@ You can configure the environment in several ways by setting `KEY=VALUE` pairs i
 
 To run the server, run `npm run dev-server` in the project directory root, then navigate your browser to `localhost:5316`.  If you would like to deploy your own copy of UD Annotatrix, you could alternately run `npm run server`.
 
+#### Github integration
+
+If a user connects the application to [Github](https://github.com/), it can provide functions to deal with corpora from Github repositories, without leaving the application.
+
+It means that one could provide a URL to a corpus file, and the application downloads content of the repository that contains the file, and forks the repository to user's Github account. After that, user is able to edit this corpus in the application and «commit» (upload) the changes to forked repository in own Github account. If at least one commit is made, one may create «pull request» (request to update source) by means of the interface of the application.
+
+Those features  are available, if user properly sets up Github account (OAuth application) and put the credentials into the application configuration file.
+
+Setting up a Github OAuth app in Github interface is described [here](https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/). The things one has to put are like this:
+
+<u>Application name:</u>
+anything you want, may be *Annotatrix* or not
+
+<u>Homepage URL</u>
+http://127.0.0.1:5316/oauth/login
+
+<u>Authorization callback URL</u>
+http://127.0.0.1:5316/oauth/callback
+
+***Note***: it is an example, those settings are correct for default Annotatrix setup, running on **local** machine. The application config is `.env` file in application root directory (as it was mentioned above).
+
+Add this line to change the port to *3000* instead of *5316*
+
+`ANNOTATRIX_PORT=3000`
+
+Add this line to change the domain of the application to *example.com*
+
+`ANNOTATRIX_HOST=example.com`
+
+If you change those settings, you have to appropriately change Github OAuth app setup (put real domain instead 127.0.0.1, change port, if needed). 
+
+To make Github integration work with Annotatrix, you have to add two additional lines to `.env ` (without them, in application menu a caption *Github is not configured* is shown).
+
+`ANNOTATRIX_GH_CLIENT_SECRET=941d8891d35a78316eb0d5ced674515fc688cfec`
+`ANNOTATRIX_GH_CLIENT_ID=6fa2d6934fd2af2df420`
+
+***Note***: you have to put after equal sign **your credentials** from your Github account, unless it won't work. Above are dummy secret and ID, they fail to work with Github.
+
+After setup, you have to run the application and login via its interface. You will be redirected to Github page which would require to confirm that this OAuth app, with those privileges is the app you trust. This is a last step of setting up Github integration for Annotatrix. 
+
+To start work with Github-hosted corpora, click *Corpus* ► *Load and fork.* You will see a window with text field where a link to a **file** of a corpus should be put. Be careful, it must be link to a file, not to a repository. The application gets all the information about the repository automatically, then it loads the file and forks (makes a copy) a whole repository in your Github account. Now you are able to save all the changes you make to this corpus file not only locally, but to your remote repository as well. To achieve this, click *Corpus* ► *Commit changes.* If this action is successful , all the changes are now in your remote repository.
+
+If you click *Corpus* ► *Make pull request*, fill in and submit the form that appears, you create pull request – a request to accept the changes you have made in your repository into the original repository (from which you downloaded the corpus file).
+
 ### remote (dynamic) server
 
 Access a copy of UD Annotatrix with server backend running on another machine.  Uploaded databases will be saved on the remote server.  Some currently active remote servers:
