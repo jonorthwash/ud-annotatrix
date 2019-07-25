@@ -3,6 +3,7 @@
 const errors = require('./errors');
 const crypto = require('crypto');
 const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
 let cfg = {};
