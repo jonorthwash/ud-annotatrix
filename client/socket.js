@@ -33,7 +33,7 @@ class Socket {
   connect() {
 
     // we shouldn't try to connect if we're just testing
-    if (!utils.check_if_browser())
+    if (!utils.check_if_browser() || !this.app.online)
       return;
 
     // cache this access

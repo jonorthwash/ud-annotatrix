@@ -33,6 +33,7 @@ INSERT INTO meta (current_index, gui, labeler, permissions, editors) VALUES (
 				"export-as-png": false,
 				"export-as-svg": false,
 				"show-help": true,
+				"go-home": true,
 				"show-settings": false,
 				"show-table": false
       }

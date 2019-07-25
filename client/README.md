@@ -221,13 +221,13 @@ Set the format of the current sentence (internal, not sanitized).
 
 <a name="Corpus+is_ltr"></a>
 
-### corpus.is_ltr ⇒ <code>Boolean</code>
+### corpus.is\_ltr ⇒ <code>Boolean</code>
 Get whether the corpus orientation is Left-to-Right (important for the Graph).
 
 **Kind**: instance property of [<code>Corpus</code>](#Corpus)  
 <a name="Corpus+is_ltr"></a>
 
-### corpus.is_ltr
+### corpus.is\_ltr
 Set whether the corpus orientation is Left-to-Right (important for the Graph).
 
 **Kind**: instance property of [<code>Corpus</code>](#Corpus)  
@@ -238,13 +238,13 @@ Set whether the corpus orientation is Left-to-Right (important for the Graph).
 
 <a name="Corpus+is_vertical"></a>
 
-### corpus.is_vertical ⇒ <code>Boolean</code>
+### corpus.is\_vertical ⇒ <code>Boolean</code>
 Get whether the corpus orientation is Top-to-Bottom (important for the Graph).
 
 **Kind**: instance property of [<code>Corpus</code>](#Corpus)  
 <a name="Corpus+is_vertical"></a>
 
-### corpus.is_vertical
+### corpus.is\_vertical
 Set whether the corpus orientation is Top-to-Bottom (important for the Graph).
 
 **Kind**: instance property of [<code>Corpus</code>](#Corpus)  
@@ -255,7 +255,7 @@ Set whether the corpus orientation is Top-to-Bottom (important for the Graph).
 
 <a name="Corpus+is_enhanced"></a>
 
-### corpus.is_enhanced ⇒ <code>Boolean</code>
+### corpus.is\_enhanced ⇒ <code>Boolean</code>
 Get whether the corpus is in 'enhanced' mode (i.e. should display and allow
  us to add multiple heads for each token).
 
@@ -1187,7 +1187,7 @@ Bind the cytoscape graph to the internal reference.
 
 <a name="_in"></a>
 
-## _in()
+## \_in()
 Zoom in and save changes.
 
 **Kind**: global function  

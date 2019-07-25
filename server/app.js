@@ -38,6 +38,7 @@ app.use(express.static('server/public'));
 // run server
 const server = http.createServer(app).listen(cfg.port, () => {
   console.log(`Express server listening at ${cfg.protocol}://${cfg.host}:${cfg.port}`);
+  console.log("ENV:", cfg.environment);
   if (cfg.environment === 'development')
     console.dir(cfg);
 });

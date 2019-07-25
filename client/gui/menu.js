@@ -135,12 +135,22 @@ class Menu {
       self.gui.refresh();
     });
     $('[name="show-help"]').click(e => {
-      if (!$(e.target).is('.pin'))
-        utils.link('/help', '_self');
+      if (!$(e.target).is('.pin')){
+        // utils.link('/help', '_self');
+        utils.link(self.gui.root + "help.html", '_blank');
+      }
+    });
+    $('[name="go-home"]').click(e => {
+      if (!$(e.target).is('.pin')){
+        utils.link(self.gui.root+"index.html", '_self');
+      }
     });
     $('[name="show-settings"]').click(e => {
-      if (!$(e.target).is('.pin'))
-        utils.link('/settings?treebank_id=' + utils.getTreebankId(), '_self');
+      if (!$(e.target).is('.pin')){
+        console.log(self.gui.app.online);
+        // utils.link('/settings?treebank_id=' + utils.getTreebankId(), '_self');
+        utils.link(self.gui.root + 'settings?treebank_id=' + utils.getTreebankId(), '_self');
+      }
     });
     $('[name="show-table"]').click(e => {
       const target = $(e.target);
@@ -250,7 +260,7 @@ class Menu {
       indices = corpus.getIndices();
 
     $('#current-sentence').val(indices.current);
-    $('#total-sentences').text(indices.total);
+    $('#total-sentences').val(indices.total);
     if (!corpus.index)
       $('#btnPrevSentence').addClass('disabled');
     if (corpus.index === (corpus._corpus.filtered.length || corpus.length) - 1)
@@ -258,10 +268,15 @@ class Menu {
 
     // other buttons
 
-    const server_running = this.gui.app.server.is_running;
-    $('[name="upload-file"]')
-      .toggleClass('disabled', !server_running)
-      .prop('disabled', !server_running);
+    // const server_running = this.gui.app.server.is_running;
+    // $('[name="upload-file"]')
+    //   .toggleClass('disabled', !server_running)
+    //   .prop('disabled', !server_running);
+
+
+    $('[name="chat"]')
+      .toggleClass('disabled', !this.gui.app.online)
+      .prop('disabled', !this.gui.app.online);
 
     $('.export-button')
       .toggleClass('disabled', !this.gui.app.graph.length);

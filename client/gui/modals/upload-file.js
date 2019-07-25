@@ -20,6 +20,7 @@ function show() {
  */
 function hide() {
   $('#upload-file-modal').hide();
+  $('#upload-filename').val(null);
 }
 
 /**

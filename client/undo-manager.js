@@ -1,6 +1,7 @@
 'use strict';
 
 const Corpus = require('./corpus')
+const utils = require('./utils');
 
 class Stack {
   constructor() {
@@ -59,8 +60,9 @@ class UndoManager {
       return false;
 
     // do some comparisons here to change for changes
-    console.log(serial)
-    console.log(this.current)
+    console.log("serial", serial) // updated
+    utils.storage.backup(serial);
+    console.log("current", this.current)
     //if (JSON.stringify(serial) === JSON.stringify(this.current))
       //return false;
 

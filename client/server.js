@@ -86,7 +86,7 @@ class Server {
 				success: data => {
 
 					if (data.error) {
-
+						console.log(this.treebank_id);
 						console.info('AJAX save failed with response:', data);
 						this.app.gui.status.error('unable to save to server');
 

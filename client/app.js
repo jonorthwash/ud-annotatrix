@@ -18,9 +18,10 @@ const UndoManager = require('./undo-manager');
  *  CollaborationInterface, Corpus, GUI, Graph, Server, Socket, UndoManager).
  *  This class should be instantiated at the beginning of a session.
  */
-class App {
-  constructor() {
+ class App {
+  constructor(args) {
 
+    // console.log("oloo", args);
     this.config = config;
     this.constructors = {
 
@@ -35,6 +36,7 @@ class App {
 
     };
 
+    this.online = args;
     this.initialized = false;
     this.undoer = new UndoManager(this);
     this.server = new Server(this);
@@ -45,6 +47,8 @@ class App {
     this.graph = new Graph(this);
     this.initialized = true;
 
+    console.log("mode:", this.online?"online":"offline");
+
     // jump to sentence from frag id
     setTimeout(() => {
 
@@ -52,11 +56,17 @@ class App {
       this.corpus.index = parseInt(hash) - 1;
 
     }, 500);
-
-    this.server.connect();
-    this.socket.connect();
+    if (this.online) {
+        this.server.connect();
+        this.socket.connect();
+    } else {
+      let backup  = utils.storage.restore();
+      if(!$.isEmptyObject(backup)) {
+        console.log("backup", backup);
+        this.corpus = new Corpus(this, backup);
+      }
+    }
     this.gui.refresh();
-
   }
 
   /**
@@ -76,16 +86,17 @@ class App {
 
     // serialize the corpus
     let serial = this.corpus.serialize();
-
+    console.log("this.corpus.serialize", serial);
     // add it to the undo/redo stack if it's an actual change
     this.undoer.push(serial)
 
-    if (message)
+    if (message && this.online) {
       this.socket.broadcast('modify corpus', {
         type: message.type,
         indices: message.indices,
         serial: serial,
       });
+    }
 
     // save it to server/local
     if (this.server.is_running) {
@@ -136,7 +147,7 @@ class App {
       }
     }).join('\n\n');
 
-    utils.download(`${this.corpus.filename}.corpus`, 'text/plain', contents);
+    utils.download(`${this.corpus.filename}.conllu`, 'text/plain', contents);
 
   }
 }
