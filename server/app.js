@@ -13,7 +13,10 @@ const cookieParser = require('cookie-parser');
 const fileUpload = require('express-fileupload');
 const nocache = require('nocache');
 const session = require('express-session');
+const compression = require('compression');
 const MemoryStore = new session.MemoryStore();
+// compress all responses
+app.use(compression());
 app.use(morgan(cfg.environment === 'development' ? 'dev' : 'tiny'));
 app.use(bodyParser.json({ limit: '500mb' }));
 app.use(bodyParser.urlencoded({ extended: true }));

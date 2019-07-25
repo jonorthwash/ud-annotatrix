@@ -85,6 +85,32 @@ class Menu {
       if (!$(e.target).is('.pin'))
         self.gui.app.save();
     });
+    $('[name="fork-file"]').click(e => {
+      const target = $(e.target);
+      if (!target.is('.pin') && !target.closest('a').hasClass('disabled'))
+              self.gui.modals.forkFile.show();
+    });
+    $('[name="commit-changes"]').click(e => {
+      const target = $(e.target);
+      if (!target.is('.pin') && !target.closest('a').hasClass('disabled')){
+        self.gui.modals.commitFile.show();
+      }
+    });
+    $('[name="pull-request"]').click(e => {
+      const target = $(e.target);
+      if (!target.is('.pin') && !target.closest('a').hasClass('disabled')){
+          //self.gui.modals.uploadFile.show();
+          $.post( "/pullreq",{ title: "Some changes", content: "There will be some content" }, function( data ) {
+            // $( ".result" ).html( data );
+            // console.log("from server", data);
+            // const msg  = data.hasOwnProperty("url") ? "New commit link: " + data.url :
+            //   JSON.stringify(data);
+            alert(JSON.stringify(data));
+          });
+
+      }
+
+    });
     $('[name="upload-file"]').click(e => {
       const target = $(e.target);
       if (!target.is('.pin') && !target.closest('a').hasClass('disabled'))
@@ -288,6 +314,24 @@ class Menu {
     $('#btnUndo').prop('disabled', !this.gui.app.undoer.hasUndo());
     $('#btnRedo').prop('disabled', !this.gui.app.undoer.hasRedo());
 
+    // display of items related to Github corpus and its state
+    if(this.gui.app.git) {
+      $(".ud-status").html(this.gui.app.git);
+    }
+
+    if (this.gui.app.git){
+      // $('[name="fork-file"]').addClass('disabled');
+      $('[name="commit-changes"]').removeClass('disabled');
+      if (this.gui.app.git === "fork"){
+        $('[name="pull-request"]').addClass('disabled');
+      } else {
+        $('[name="pull-request"]').removeClass('disabled');
+      }
+    } else{
+      // $('[name="fork-file"]').removeClass('disabled');
+      $('[name="commit-changes"]').addClass('disabled');
+      $('[name="pull-request"]').addClass('disabled');
+    }
 
 
     // deactive all the other format tabs

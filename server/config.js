@@ -1,9 +1,8 @@
 'use strict';
 
-const mkdirp = require('mkdirp');
 const errors = require('./errors');
 const crypto = require('crypto');
-
+const fs = require('fs');
 require('dotenv').config();
 
 let cfg = {};
@@ -47,9 +46,10 @@ if (!cfg.github.client_secret) {
 }
 
 // database config
-mkdirp(cfg.corpora_path);
+fs.mkdirSync(cfg.corpora_path, { recursive: true });
 cfg.users_db_path = process.env.ANNOTATRIX_USERS_DB_PATH
   || '.users';
 cfg.users = require('./models/users')(cfg.users_db_path);
+cfg.corpora = require('./models/corpora')(cfg.users_db_path);
 
 module.exports = cfg;

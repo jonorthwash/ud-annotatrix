@@ -129,6 +129,66 @@ Access a copy of the UD Annotatrix static site on another machine.  This version
 
 The basic user guide is available on the [help page](https://maryszmary.github.io/ud-annotatrix/standalone/help.html).
 
+## Keybindings
+
+Plus sign + means that keys have to be pressed simultaneously.
+
+Non-global shortcuts work only when cursor (focus) is inside specific interface element.
+
+| Scope                                   | Keys                     | Action                                                      |
+| --------------------------------------- | ------------------------ | ----------------------------------------------------------- |
+| ***Global***                            | Ctrl + Page Down         | Next sentence                                               |
+|                                         | Ctrl + Shift + Page Down | Last sentence                                               |
+|                                         | Ctrl + Page Up           | Previous sentence                                           |
+|                                         | Ctrl + Shift + Page Down | First sentence                                              |
+|                                         | Ctrl + Shift + Z         | Undo                                                        |
+|                                         | Ctrl  Z + Y              | Redo                                                        |
+|                                         | Ctrl + L                 | Focus on label input / **intercepted by a browser**         |
+|                                         | Ctrl  + (0...9)          | Zoom graph to the zoom level / **intercepted by a browser** |
+| ***Table view***                        | Enter                    | Toggle editing of a cell                                    |
+|                                         | Tab                      | Go right and toggle editing there                           |
+|                                         | Shift Tab                | Go left and toggle editing there                            |
+|                                         | Up                       | Go up                                                       |
+|                                         | Down                     | Go down                                                     |
+|                                         | Left Arrow               | Go left                                                     |
+|                                         | Right Arrow              | Go right                                                    |
+|                                         | Esc                      | Restore original cell value when editing a cell             |
+| ***Current sentence number***           | Enter                    | Set corpus index to current sentence                        |
+|                                         | Left Arrow               | Load previous sentence                                      |
+|                                         | J                        | Load previous sentence                                      |
+|                                         | Right Arrow              | Load next sentence                                          |
+|                                         | K                        | Load next sentence                                          |
+|                                         | -                        | Remove sentence                                             |
+|                                         | =                        | Insert sentence                                             |
+| ***Edit control of a text on a graph*** | Enter                    | Clear graph state                                           |
+|                                         | Tab                      | Next element                                                |
+|                                         | Shift + Tab              | Previous element                                            |
+|                                         | Esc                      | Clear graph state and exit the edit mode                    |
+| ***Textbox of a sentence***             | Esc                      | Unfocus                                                     |
+|                                         | Enter                    | **Not implemented**                                         |
+|                                         | Tab                      | Insert a tabulation                                         |
+| ***Chat window***                       | Enter                    | Send message                                                |
+|                                         | ?                        | Not implemented                                             |
+| ***Graph***                             | Del                      | Remove dependency                                           |
+|                                         | Backspace                | Remove dependency                                           |
+|                                         | X                        | Remove dependency                                           |
+|                                         | D                        | Switch moving mode for dependency                           |
+|                                         | P                        | Set punct (**Not implemented**)                             |
+|                                         | R                        | Set root                                                    |
+|                                         | S                        | Split token                                                 |
+|                                         | M                        | Merge tokens                                                |
+|                                         | C                        | Combine tokens                                              |
+|                                         | Left Arrow               | Combine with left token                                     |
+|                                         | Right Arrow              | Combine with right token                                    |
+|                                         | =                        | Fit graph to screen                                         |
+|                                         | Shift + =                | Zoom in                                                     |
+|                                         | -                        | Fit graph to screen                                         |
+|                                         | Shift + -                | Zoom out                                                    |
+|                                         | Enter                    | Clear graph state                                           |
+|                                         | Esc                      | Clear graph state                                           |
+
+
+
 ## Contributing
 
 We welcome your pull requests!  To get started, fork this repository and run (where `$REPO` gives the fork's URL)
@@ -144,8 +204,7 @@ See also: the [API Documentation](documentation/README.md).
 
 ## Support
 
-Having a problem with UD Annotatrix? Want some one-on-one support? You can try to reach us on IRC at <tt>#\_u-dep</tt> on <tt>irc.freenode.net</tt> or
-join our [Telegram chat](https://t.me/joinchat/EWWgMhGXARzxvgO5AzI0ew).
+Having a problem with UD Annotatrix? Want some one-on-one support? You can try to reach us on IRC at <tt>#\_u-dep</tt> on <tt>irc.freenode.net</tt> or join our [Telegram chat](https://t.me/joinchat/EWWgMhGXARzxvgO5AzI0ew).
 
 ## Acknowledgements
 
@@ -177,4 +236,4 @@ If you use UD Annotatrix in your work, please cite:
 * Kevin Brubeck Unhammer ([@unhammer](https://github.com/unhammer))
 * Ethan Yang ([@thatprogrammer1](https://github.com/thatprogrammer1))
 
-See also: the [AUTHORS](AUTHORS) file.
+  See also: the [AUTHORS](AUTHORS) file.

@@ -2,15 +2,15 @@
   <div class="modal-dialog" role="document">
     <form id="uploadform" class="modal-content" action="./upload" method="post" enctype="multipart/form-data">
       <div class="modal-header">
-        <h5 class="modal-title">Upload corpus</h5>
+        <h5 class="modal-title">Load corpus</h5>
         <button type="button" class="close" aria-label="Close" name="close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
 
       <div class="modal-body">
-        <span title="Select a file to upload to the server">
-          <u>Choose and upload file</u>
+        <span title="Select a file to load to the application">
+          <u>Choose file to load</u>
           <input type="file" name="file" id="upload-filename" />
         </span>
 
@@ -26,7 +26,7 @@
       </div>
 
       <div class="modal-footer">
-        <button type="submit" name="submit" class="btn btn-primary" disabled>Upload</button>
+        <button type="submit" name="submit" class="btn btn-primary" disabled>Load</button>
         <button type="button" name="close" class="btn btn-secondary">Cancel</button>
       </div>
     </form>

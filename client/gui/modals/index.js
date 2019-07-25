@@ -3,6 +3,8 @@ module.exports = gui => {
 
     uploadFile: require('./upload-file')(gui),
     uploadURL: require('./upload-url')(gui),
+    forkFile: require('./fork-file')(gui),
+    commitFile: require('./commit-file')(gui),
 
   };
 };

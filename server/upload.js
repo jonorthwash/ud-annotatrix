@@ -3,7 +3,7 @@
 const _ = require('underscore');
 const fs = require('fs');
 const uuidv4 = require('uuid/v4');
-const request = require('request');
+const axios = require('axios');
 
 const UploadError = require('./errors').UploadError;
 const nx = require('notatrix');
@@ -37,41 +37,48 @@ function fromFile(treebank, file, next) {
 
 }
 
-function fromGitHub(treebank, url, next) {
+function fromURL(treebank, url, next) {
 
-  if (!url)
+  if (!url) {
     return next(new UploadError(`No URL provided.`));
+  }
 
-  // regex magic
-  const match = url.match(/^(https?:\/\/)?(github\.com|raw\.githubusercontent\.com)\/([\w\d]*)\/([^/]*)\/(tree\/|blob\/)?([^/]*)\/(.*)$/);
-  if (!match)
-    return next(new UploadError(`Unsupported URL format: ${url}`));
+  console.log(url);
 
-  const [
-    string,
-    protocol,
-    domain,
-    owner,
-    repo,
-    blob_or_tree,
-    branch,
-    filepath
-  ] = match;
+  let filename  = url.split('?')[0].replace(/\/+$/, '').split("/").slice(-1)[0];
 
-  const filename = `${repo}__${branch}__${filepath.replace(/\//g, '__')}`;
-  const rawURL = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filepath}`;
+  if (!filename) {
+    return next(new UploadError(`File has not a proper name.`));
+  }
 
-  request.get(rawURL, (err, _res, body) => {
-    if (err)
-      return next(err);
+  console.log(filename);
 
-    return upload(treebank, filename, body, next);
-
+  axios.get(url)
+  .catch(function (error) {
+    return next(error);
+  })
+  .then(function (response) {
+    return upload(treebank, filename, response.data, next);
   });
+
+}
+function fromContent(treebank, content, filename, next) {
+
+  if (!content) {
+    return next(new UploadError(`No data were provided.`));
+  }
+
+  if (!filename) {
+    return next(new UploadError(`File has not a proper name.`));
+  }
+
+  return upload(treebank, filename, content, next);
+
 
 }
 
 module.exports = {
   fromFile,
-  fromGitHub,
+  fromURL,
+  fromContent,
 };

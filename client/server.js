@@ -122,7 +122,7 @@ class Server {
 			$.ajax({
 				type: 'GET',
 				url: `/load?treebank_id=${this.treebank_id}`,
-				success: data => {
+				success: (data, textStatus, request) => {
 
 					if (data.error) {
 
@@ -136,8 +136,11 @@ class Server {
 					} else {
 
 						//console.info('AJAX load success with response:', data);
-						data = JSON.parse(data);
+						// data = JSON.parse(data);
 						this.app.load(data);
+						this.app.git = request.getResponseHeader('git');
+						// update GitHub states related controls (caption, menu)
+						this.app.gui.menu.refresh();
 
 					}
 

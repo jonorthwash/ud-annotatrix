@@ -1,7 +1,16 @@
 $(document).on('change', '.custom-file-input', function(event) {
 	$(this).next('.custom-file-label').html(event.target.files[0].name);
 });
+$(document).on('visibilitychange', function(event) {
+		if (document.hidden) {
+			console.log("sleep", document.visibilityState);
+		} else  {
+			console.log("awake", document.visibilityState);
+			location.reload();
+		}
+});
 $(document).ready(function() {
+
 	if (location.protocol === "file:"){
 		window.location.href = './annotatrix.html';
 	} else {

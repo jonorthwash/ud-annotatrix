@@ -7,21 +7,16 @@ const DBError = require('../errors').DBError;
 
 
 function open(filename, next) {
-  if (fs.existsSync(filename)) {
-
-    next( null, new sqlite3.Database(filename) );
-
-  } else {
 
     const db = new sqlite3.Database(filename);
+
     db.run(`
-      CREATE TABLE users (
+      CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY,
         username UNIQUE,
         token UNIQUE
       )`, err => next(err, db));
 
-  }
 }
 
 

@@ -14,20 +14,15 @@ const ejs = require('ejs');
 const fs = require('fs');
 const path = require('path');
 
-const mkdirp = require('mkdirp');
-const html_base_path = path.join('server', 'public', 'html');
+const html_base_path_array = ['server', 'public', 'html'];
 
 function render(filename, args) {
   const ejs_path = path.join('server', 'views', `${filename}.ejs`);
   const html_path = path.join('server', 'public', 'html', `${filename}.html`);
 
-  fs.readFile(ejs_path, (err, contents) => {
+  ejs.renderFile(ejs_path, args, function (err, html) {
     if (err)
       throw err;
-
-    contents = contents.toString();
-    const html = ejs.render(contents, args);
-
     fs.writeFile(html_path, html, err => {
       if (err)
         throw err;
@@ -37,11 +32,18 @@ function render(filename, args) {
 
 function render_all() {
 
-  mkdirp(html_base_path);
-
+  html_base_path_array
+   .reduce((pre, dir) => {
+         const cur = path.join(pre, dir);
+         if (!fs.existsSync(cur)){
+           fs.mkdirSync(cur);
+         }
+         return cur;
+       },
+   "");
   render('annotatrix', {
     // `${__dirname}/../server/views/modals`
-    modalPath:  path.join(__dirname, '../', 'server', 'views', 'modals'),
+    modalPath:  path.join(__dirname, '..', 'server', 'views', 'modals'),
     github_configured: false,
     username: null,
     path: path

@@ -20,7 +20,7 @@ body {
 
   display: flex;
   justify-content: flex-start;
- 
+
 }
 
 /* override sentence number text style from brat style-vis.css */
@@ -929,7 +929,8 @@ li.label input[name="label-color"] {
   top: 38px;
   z-index: 10;
   background-color: #eee;
-  padding: 12px 16px;
+  /* padding: 12px 16px; */
+  padding: 5px 10px;
   border: 3px solid #333;
   border-radius: 3px;
 }
@@ -940,7 +941,8 @@ li.label input[name="label-color"] {
 
 .dropdown-content ul {
   list-style: none;
-  margin: 0 0.5em;
+  /* margin: 0 0.5em; */
+  margin: 0;
   padding: 0;
   display: flex;
   flex-flow: column nowrap;
@@ -1384,69 +1386,77 @@ th.column-hide span.col-name {
   transform-origin: 50% 50%;
 }
 
-
+.ud-status{
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+}
 
 
 /* .navbar-brand { */
   /* background-color: rgba(255, 255, 255, 1); */
 /* } */
 
-table { 
-  width: 100%; 
-  border-collapse: collapse; 
-}
-/* Zebra striping */
-tr:nth-of-type(odd) { 
-  background: #eee; 
-}
-th { 
-  background: #333; 
-  color: white; 
-  font-weight: bold; 
-}
-td, th { 
-  padding: 6px; 
-  border: 1px solid #ccc; 
-  text-align: left; 
+hr.internal {
+ margin: .5em;
 }
 
-@media 
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+/* Zebra striping */
+tr:nth-of-type(odd) {
+  background: #eee;
+}
+th {
+  background: #333;
+  color: white;
+  font-weight: bold;
+}
+td, th {
+  padding: 6px;
+  border: 1px solid #ccc;
+  text-align: left;
+}
+
+@media
 only screen and (max-width: 760px),
 (min-device-width: 768px) and (max-device-width: 1024px)  {
 
 	/* Force table to not be like tables anymore */
-	table, thead, tbody, th, td, tr { 
-		display: block; 
+	table, thead, tbody, th, td, tr {
+		display: block;
 	}
-	
+
 	/* Hide table headers (but not display: none;, for accessibility) */
-	thead tr { 
+	thead tr {
 		position: absolute;
 		top: -9999px;
 		left: -9999px;
 	}
-	
+
 	tr { border: 1px solid #ccc; }
-	
-	td { 
+
+	td {
 		/* Behave  like a "row" */
 		border: none;
-		border-bottom: 1px solid #eee; 
+		border-bottom: 1px solid #eee;
 		position: relative;
-		padding-left: 100%; 
+		padding-left: 100%;
 	}
-	
-	td:before { 
+
+	td:before {
 		/* Now like a table header */
 		position: absolute;
 		/* Top/left values mimic padding */
 		top: 6px;
 		left: 6px;
-		width: 45%; 
-		padding-right: 10px; 
+		/* width: 45%;  */
+		padding-right: 10px;
 		white-space: nowrap;
 	}
-	
+
 	/*
 	Label the data
 	*/
@@ -1456,12 +1466,12 @@ only screen and (max-width: 760px),
 	td:nth-of-type(4):before { content: "Sentences (total)"; }
 	td:nth-of-type(5):before { content: "Sentences (invalid)"; }
 	td:nth-of-type(6):before { content: "Top labels"; }
-	
+
 	#treebanks{
 		padding-left: 30px;
 		width:100%;
 	}
-	
+
 	tbody tr  td {
 		padding-left: 120px !important;
 		color: black;

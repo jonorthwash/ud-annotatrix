@@ -1,0 +1,30 @@
+<div class="modal custom-modal" id="commit-file-modal">
+  <div class="modal-dialog" role="document">
+    <form class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Commit and push changes to your repo</h5>
+        <button type="button" class="close" aria-label="Close" name="close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div id="commit-editor">
+          <span title="Put here commit message">
+            <u>Enter commit message</u>
+            <input name="commit-message" id="commit-message" />
+            <div><small>It is short description of the changes you made. It cannot be empty.</small></div>
+          </span>
+        </div>
+        <div class=".d-none" id="commit-result">
+
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" name="commit-button" id="commit-button" class="btn btn-primary">Commit</button>
+        <button type="button" name="close" class="btn btn-secondary">Close</button>
+      </div>
+    </form>
+  </div>
+</div>
