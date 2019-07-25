@@ -18,8 +18,8 @@ const MemoryStore = new session.MemoryStore();
 // compress all responses
 app.use(compression());
 app.use(morgan(cfg.environment === 'development' ? 'dev' : 'tiny'));
-app.use(bodyParser.json({ limit: '500mb' }));
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({limit: '200mb', extended: true}))
+app.use(bodyParser.urlencoded({limit: '200mb', extended: true}))
 app.use(cookieParser());
 app.use(fileUpload());
 app.use(session({
