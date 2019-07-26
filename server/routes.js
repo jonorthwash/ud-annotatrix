@@ -324,7 +324,7 @@ module.exports = app => {
           const content = Buffer.from(blob.content, blob["encoding"]).toString('utf8');
 
           const fork_data = await github(token, "post", fork_url);
-          logger.info("fork data", fork_data);
+          // logger.info("fork data", fork_data);
           if (!fork_data){
             return res.json({ error: 'Github fork error' });
           }
@@ -337,6 +337,7 @@ module.exports = app => {
             cfg.corpora.insert([owner, repo, branch, req.session.username, req.body.url,
               filepath, filepath, blob["size"], blob["sha"], treebank], (err, data) => {
               if (err){
+                logger.info("Error writing repo info to database");
                 throw err;
               }
 
@@ -464,8 +465,10 @@ module.exports = app => {
           // console.log(req.body.corpus);
           const treebank = req.query.treebank_id||req.session.treebank;
           cfg.corpora.query(treebank, (err, data) => {
-            if (err){
-              throw(err)
+            if (err || !data){
+              // throw(err)
+              logger.info("Error with database", treebank, data);
+              return res.json({"error": "Error with database"});
             }
             logger.info("data for commit", treebank, data);
 
