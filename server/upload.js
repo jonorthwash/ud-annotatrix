@@ -43,7 +43,7 @@ function fromURL(treebank, url, next) {
     return next(new UploadError(`No URL provided.`));
   }
 
-  console.log(url);
+  console.log("url", url);
 
   let filename  = url.split('?')[0].replace(/\/+$/, '').split("/").slice(-1)[0];
 
@@ -51,14 +51,16 @@ function fromURL(treebank, url, next) {
     return next(new UploadError(`File has not a proper name.`));
   }
 
-  console.log(filename);
+  console.log("filename", filename);
 
   axios.get(url)
   .catch(function (error) {
     return next(error);
   })
   .then(function (response) {
-    return upload(treebank, filename, response.data, next);
+	  if(response.data){
+		  return upload(treebank, filename, response.data, next);
+	  }
   });
 
 }
