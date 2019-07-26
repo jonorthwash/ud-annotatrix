@@ -3,6 +3,7 @@
 const sqlite3 = require('sqlite3');
 const fs = require('fs');
 const DBError = require('../errors').DBError;
+const logger = require('../logger');
 
 
 
@@ -72,8 +73,10 @@ class CorporaDB {
 
         db.get('SELECT * FROM corpora WHERE treebank_id = ?',
           params, (err, data) => {
-            if (err)
+            logger.info(err, data);
+            if (err) {
               return next(new DBError(err), null);
+            }
 
             next(null, data);
           }

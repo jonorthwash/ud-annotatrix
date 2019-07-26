@@ -73,19 +73,20 @@ async function github(token, method, url, data) {
   try {
     const response = await axios(query);
   	const data = response.data;
-  	console.log(response.headers.status);
+  	logger.info("STATUS", response.headers.status);
   	return data;
   } catch (error) { // https://gist.github.com/fgilio/230ccd514e9381fafa51608fcf137253
     // Error 😨
-    logger.info(error);
+	logger.info("GITHUB ERROR");
+    // logger.info(error);
     if (error.response) {
         /*
          * The request was made and the server responded with a
          * status code that falls out of the range of 2xx
          */
-        console.log(error.response.data);
-        console.log(error.response.status);
-        console.log(error.response.headers);
+        logger.info(error.response.data);
+        logger.info(error.response.status);
+        logger.info(error.response.headers);
         return error.response.data;
     } else if (error.request) {
         /*
@@ -93,11 +94,11 @@ async function github(token, method, url, data) {
          * is an instance of XMLHttpRequest in the browser and an instance
          * of http.ClientRequest in Node.js
          */
-        console.log(error.request);
+        logger.info(error.request);
         return {"message": "No response received from Github"};
     } else {
         // Something happened in setting up the request and triggered an Error
-        console.log('Error', error.message);
+        logger.info('Error', error.message);
         return {"message": "Request issue with Github"};
     }
     // console.log(error);
@@ -337,8 +338,8 @@ module.exports = app => {
             cfg.corpora.insert([owner, repo, branch, req.session.username, req.body.url,
               filepath, filepath, blob["size"], blob["sha"], treebank], (err, data) => {
               if (err){
-                logger.info("Error writing repo info to database");
-                throw err;
+                // throw err;
+				logger.info("Error saving user data in database");
               }
 
               if (req.body.hasOwnProperty("src") && req.body["src"] === "main"){
@@ -461,9 +462,13 @@ module.exports = app => {
 
   app.post('/commit', is_logged_in, async (req, res) => {
     logger.info("commit item click");
-    if (req.body.hasOwnProperty("corpus") && req.body.hasOwnProperty("message") ){
+    if (req.body.hasOwnProperty("corpus")
+          && req.body.hasOwnProperty("message")
+          && req.body.hasOwnProperty("treebank")
+        ){
           // console.log(req.body.corpus);
-          const treebank = req.query.treebank_id||req.session.treebank;
+          // const treebank = req.query.treebank_id||req.session.treebank;
+          const treebank = req.body.treebank;
           cfg.corpora.query(treebank, (err, data) => {
             if (err || !data){
               // throw(err)
