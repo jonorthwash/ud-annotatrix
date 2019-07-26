@@ -56,7 +56,7 @@ cfg.corpora_path.split(path.sep).reduce((pre, dir) => {
    }
    return cur;
  }, "");
- 
+
 cfg.users_db_path = process.env.ANNOTATRIX_USERS_DB_PATH
   || '.users';
 cfg.users = require('./models/users')(cfg.users_db_path);

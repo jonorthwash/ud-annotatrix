@@ -1,10 +1,12 @@
 'use strict';
 
 // basic stuff
+const logger = require('./logger');
 const cfg = require('./config');
 const express = require('express');
 const app = express();
 const http = require('http');
+
 
 // express plugins
 const morgan = require('morgan');
@@ -40,10 +42,10 @@ app.use(express.static('server/public'));
 
 // run server
 const server = http.createServer(app).listen(cfg.port, () => {
-  console.log(`Express server listening at ${cfg.protocol}://${cfg.host}:${cfg.port}`);
-  console.log("ENV:", cfg.environment);
+	logger.info(`Server listening at ${cfg.protocol}://${cfg.host}:${cfg.port}`);
+  logger.info(`ENV: ${cfg.environment}`);
   if (cfg.environment === 'development')
-    console.dir(cfg);
+		logger.info(cfg);
 });
 
 // set up sockets

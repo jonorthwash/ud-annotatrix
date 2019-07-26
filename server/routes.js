@@ -1,5 +1,6 @@
 'use strict';
 
+const logger = require('./logger');
 const cfg = require('./config');
 const uuidv4 = require('uuid/v4');
 const CorpusDB = require('./models/corpus-json');
@@ -16,7 +17,7 @@ const fs = require('fs');
 // middleware
 
 function get_treebank(req, res, next) {
-  console.log("getting treebank");
+  logger.info("getting treebank");
   const treebank = req.query.treebank_id||req.session.treebank;
   // if (!treebank){ // setting response headers!
     // res.json({ error: 'Missing required argument: treebank_id' });
@@ -68,7 +69,7 @@ async function github(token, method, url, data) {
      data: data
   };
   console.log("github", url);
-// console.log("query", query);
+  // logger.info("query", query);
   try {
     const response = await axios(query);
   	const data = response.data;
@@ -76,6 +77,7 @@ async function github(token, method, url, data) {
   	return data;
   } catch (error) { // https://gist.github.com/fgilio/230ccd514e9381fafa51608fcf137253
     // Error 😨
+    logger.info(error);
     if (error.response) {
         /*
          * The request was made and the server responded with a
@@ -113,6 +115,7 @@ async function getrandomtext(){
 }
 
 async function commit(token, owner, repo, branch, content, filename, message){
+  logger.info("in commit function");
   try {
       const blob_obj = {
        "content": content,
@@ -123,13 +126,13 @@ async function commit(token, owner, repo, branch, content, filename, message){
       const head_url = `${git}refs/heads/${branch}`;
 
       const head_data = await github(token, "get", head_url);
-      // console.log(">>head", head_data);
+      logger.info(">>head", head_data);
       const com_data = await github(token, "get", head_data["object"]["url"]);
-      // console.log(">>commit", com_data);
+      logger.info(">>commit", com_data);
       const blob_data = await github(token, "post", `${git}blobs`, blob_obj);
-      // console.log(">>blob", blob_data);
+      logger.info(">>blob", blob_data);
       const tree_data = await github(token, "get", com_data["tree"]["url"]);
-      // console.log(">>tree", tree_data);
+      logger.info(">>tree", tree_data);
       const tree_obj = {
        "base_tree": tree_data["sha"],
        "tree": [
@@ -143,7 +146,7 @@ async function commit(token, owner, repo, branch, content, filename, message){
       };
 
       const newtree_data = await github(token, "post", `${git}trees`, tree_obj);
-      // console.log(">>new tree", newtree_data);
+      logger.info(">>new tree", newtree_data);
       const newcom_obj = {
        "message": message,
        "committer": {
@@ -154,14 +157,14 @@ async function commit(token, owner, repo, branch, content, filename, message){
       };
 
       const newcom_data = await github(token, "post", `${git}commits`, newcom_obj);
-      // console.log(">>new commit", newcom_data);
+      logger.info(">>new commit", newcom_data);
       const patch_obj = {
        "sha": newcom_data["sha"],
        "force": true
       };
 
       const newhead_data = await github(token, "patch", head_url, patch_obj);
-      // console.log(">>new head", newhead_data);
+      logger.info(">>new head", newhead_data);
       const sha = newhead_data["object"]["sha"];
       const commit_url = `https://github.com/${owner}/${repo}/commit/${sha}`;
 
@@ -258,6 +261,7 @@ module.exports = app => {
   });
 
   app.get('/load', get_treebank, (req, res) => {
+      logger.info("load corpus");
       cfg.corpora.query(req.treebank, (err, data) => {
         if (err){
           throw err;
@@ -284,6 +288,8 @@ module.exports = app => {
    const treebank = uuidv4();
    const token = req.session.token;
 
+   logger.info("fork item clicked");
+
    if (req.body.url) {
      const match = req.body.url.match(/^(https?:\/\/)?(github\.com|raw\.githubusercontent\.com)\/([\w\d]*)\/([^/]*)\/(tree\/|blob\/)?([^/]*)\/(.*)$/);
 
@@ -300,25 +306,25 @@ module.exports = app => {
      // console.log("git url", githubURL);
      // const repoURL = `https://github.com/${owner}/${repo}`;
      const fork_url = `/repos/${owner}/${repo}/forks`;
-     console.log("fork url", fork_url);
+     logger.info("fork url", fork_url);
      const content_url = `/repos/${owner}/${repo}/contents/${filepath}`;
-     console.log("content url", content_url);
+     logger.info("content url", content_url);
      const content_dir = content_url.substr(0, content_url.lastIndexOf("/"));
-     console.log("content dir url", content_dir);
+     logger.info("content dir url", content_dir);
      try {
         const dir_data = await github(token, "get", content_dir);
         const dir_data_filtered = dir_data.filter(x => x.path === filepath);
         if(dir_data_filtered){
           const file_info = dir_data_filtered.pop();
-          // console.log("dir", file_info);
+          logger.info("dir", file_info);
           const blob_url = file_info["git_url"];
-          // console.log("blob", blob_url);
+          logger.info("blob", blob_url);
           const blob = await github(token, "get", blob_url);
-          // console.log("size", blob["size"]);
+          logger.info("size", blob["size"]);
           const content = Buffer.from(blob.content, blob["encoding"]).toString('utf8');
 
           const fork_data = await github(token, "post", fork_url);
-          // console.log("fork data", fork_data);
+          logger.info("fork data", fork_data);
           if (!fork_data){
             return res.json({ error: 'Github fork error' });
           }
@@ -393,6 +399,7 @@ module.exports = app => {
   // ---------------------------
   // user/account management
   app.get('/login', get_token, get_treebank, async (req, res) => {
+    logger.info("logging in");
     const token = req.session.token;
     try {
         const body = await github(token, "get", "/user");
@@ -452,6 +459,7 @@ module.exports = app => {
   });
 
   app.post('/commit', is_logged_in, async (req, res) => {
+    logger.info("commit item click");
     if (req.body.hasOwnProperty("corpus") && req.body.hasOwnProperty("message") ){
           // console.log(req.body.corpus);
           const treebank = req.query.treebank_id||req.session.treebank;
@@ -459,7 +467,7 @@ module.exports = app => {
             if (err){
               throw(err)
             }
-            console.log("data for commit", treebank, data);
+            logger.info("data for commit", treebank, data);
 
             (async() => {
 
@@ -554,6 +562,7 @@ module.exports = app => {
   // ---------------------------
   // GitHub OAuth
   app.get("/oauth/login", get_treebank, (req, res) => {
+    logger.info("logging in (OAuth)");
     console.log("oauth", req["session"]);
     if (!cfg.github) {
       new ConfigError('Unable to use GitHub OAuth without client secret');
