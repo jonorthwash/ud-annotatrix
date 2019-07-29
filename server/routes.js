@@ -50,7 +50,7 @@ async function getdata(url) {
   try {
     const response = await axios.get(url);
   	const data = response.data;
-  	// console.log(response.headers);
+  	// logger.info(response.headers);
   	return data;
   } catch (error) {
     console.error(error.response.data.message);
@@ -68,7 +68,7 @@ async function github(token, method, url, data) {
      url: url.includes(host)?url:host+url,
      data: data
   };
-  console.log("github", url);
+  logger.debug("github", url);
   // logger.info("query", query);
   try {
     const response = await axios(query);
@@ -101,7 +101,7 @@ async function github(token, method, url, data) {
         logger.info('Error', error.message);
         return {"message": "Request issue with Github"};
     }
-    // console.log(error);
+    // logger.error(error);
   }
 }
 
@@ -110,7 +110,7 @@ async function getrandomtext(){
     const data = await getdata("http://numbersapi.com/random/trivia");
     return ["commit " + data.split(' ')[0], data];
   } catch(error){
-    console.log(error);
+    logger.error(error);
     return ["autocommit message", "nothing"];
   }
 }
@@ -243,7 +243,7 @@ module.exports = app => {
   app.post('/delete', (req, res) => {
     if (req.body.hasOwnProperty("id")){
       const filepath = path.join(cfg.corpora_path, req.body.id+'.json');
-        console.log("delete",  filepath, req.body.id);
+        logger.info("delete",  filepath, req.body.id);
         fs.unlink(filepath, (err) => {
           if (err) {
             return res.json({ error: err.message });
@@ -267,7 +267,8 @@ module.exports = app => {
         if (err){
           throw err;
         }
-        console.log("db", data);
+        logger.info("This file in database" + (data ? ': ID is '+ data.id : "does not exist"));
+        logger.debug(data);
         let msg  = "";
         if (data){
             msg = data.pr_at? "PR": data.committed_at ? "commited": "fork";
@@ -300,11 +301,11 @@ module.exports = app => {
 
      const [ string, protocol, domain, owner, repo, blob_or_tree, branch, filepath ] = match;
      const filename = `${repo}__${branch}__${filepath.replace(/\//g, '__')}`;
-     console.log("filename", filename);
+     console.debug("filename", filename);
      // const rawURL = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filepath}`;
-     // console.log("raw url", rawURL);
+     // logger.debug("raw url", rawURL);
      // const githubURL = `https://github.com/${owner}/${repo}/${branch}/${filepath}`;
-     // console.log("git url", githubURL);
+     // logger.debug("git url", githubURL);
      // const repoURL = `https://github.com/${owner}/${repo}`;
      const fork_url = `/repos/${owner}/${repo}/forks`;
      logger.info("fork url", fork_url);
@@ -415,7 +416,7 @@ module.exports = app => {
           if (err)
             throw err;
 
-          console.log('/login changes to Users:', data.changes);
+          logger.info('/login changes to Users:', data.changes);
           req.session.username = username;
           // req.session.treebank = req.treebank;
           res.redirect('/annotatrix?' + querystring.stringify({
@@ -439,7 +440,7 @@ module.exports = app => {
       if (err)
         throw err;
 
-      console.log('/logout changes to Users:', data.changes);
+      logger.info('/logout changes to Users:', data.changes);
       req.session.username = null;
       req.session.token = null;
       res.redirect('/annotatrix?' + querystring.stringify({
@@ -466,7 +467,7 @@ module.exports = app => {
           && req.body.hasOwnProperty("message")
           && req.body.hasOwnProperty("treebank")
         ){
-          // console.log(req.body.corpus);
+          // logger.info(req.body.corpus);
           // const treebank = req.query.treebank_id||req.session.treebank;
           const treebank = req.body.treebank;
           cfg.corpora.query(treebank, (err, data) => {
@@ -522,7 +523,7 @@ module.exports = app => {
         };
         const git_url = `/repos/${data.owner}/${data.repo}/pulls`;
         const pr_data = await github(token, "post", git_url, pr_obj);
-        // console.log(pr_data);
+        // logger.debug(pr_data);
 
         if (pr_data.hasOwnProperty("html_url")){
 
@@ -571,7 +572,7 @@ module.exports = app => {
   // GitHub OAuth
   app.get("/oauth/login", get_treebank, (req, res) => {
     logger.info("logging in (OAuth)");
-    console.log("oauth", req["session"]);
+    logger.debug("oauth", req["session"]);
     if (!cfg.github) {
       new ConfigError('Unable to use GitHub OAuth without client secret');
       res.redirect('/annotatrix');

@@ -1,5 +1,6 @@
 'use strict';
 
+const logger = require('./logger');
 const fs = require('fs');
 const cfg = require('./config');
 const moment = require('moment');
@@ -18,7 +19,7 @@ module.exports = next => {
     dirs.forEach(dir => {
       const filepath = path.join(cfg.corpora_path, dir);
 
-      console.log(filepath)
+      logger.info("[list]", filepath)
       fs.lstat(filepath, (err, stat) => {
         touched++;
 

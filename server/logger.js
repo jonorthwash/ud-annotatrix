@@ -1,15 +1,18 @@
 const fs = require('fs');
 const path = require('path');
 const pino = require('pino');
+const pinoms = require('pino-multi-stream');
 
-const multistream = require('pino-multi-stream').multistream;
+const prettyStream = pinoms.prettyStream(
+    { colorize: true, translateTime: "SYS:standard", ignore: "hostname,pid,time" }
+);
+
 const streams = [
-  {stream: fs.createWriteStream('app.log')},
-  {stream: process.stdout}
-]
+    {level: 'trace', stream: fs.createWriteStream(path.resolve("app.log"), {flags:"a"})},
+    {level: 'debug', stream: prettyStream}
+];
 
-const logger = pino({
-  level: 'trace'
-}, multistream(streams))
+const pn = pinoms(pinoms.multistream(streams));
+pn.level = "trace";
 
-module.exports = logger;
+module.exports = pn;
