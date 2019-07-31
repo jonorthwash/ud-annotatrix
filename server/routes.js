@@ -53,7 +53,7 @@ async function getdata(url) {
   	// logger.info(response.headers);
   	return data;
   } catch (error) {
-    console.error(error.response.data.message);
+    logger.error(error.response.data.message);
   }
 }
 
@@ -68,7 +68,7 @@ async function github(token, method, url, data) {
      url: url.includes(host)?url:host+url,
      data: data
   };
-  logger.debug("github", url);
+  logger.debug("github", method, url);
   // logger.info("query", query);
   try {
     const response = await axios(query);
@@ -77,16 +77,16 @@ async function github(token, method, url, data) {
   	return data;
   } catch (error) { // https://gist.github.com/fgilio/230ccd514e9381fafa51608fcf137253
     // Error 😨
-	logger.info("GITHUB ERROR");
+	   logger.error("GITHUB ERROR");
     // logger.info(error);
     if (error.response) {
         /*
          * The request was made and the server responded with a
          * status code that falls out of the range of 2xx
          */
-        logger.info(error.response.data);
-        logger.info(error.response.status);
-        logger.info(error.response.headers);
+        logger.error(error.response.data);
+        logger.error(error.response.status);
+        logger.error(error.response.headers);
         return error.response.data;
     } else if (error.request) {
         /*
@@ -94,24 +94,14 @@ async function github(token, method, url, data) {
          * is an instance of XMLHttpRequest in the browser and an instance
          * of http.ClientRequest in Node.js
          */
-        logger.info(error.request);
+        logger.error(error.request);
         return {"message": "No response received from Github"};
     } else {
         // Something happened in setting up the request and triggered an Error
-        logger.info('Error', error.message);
+        logger.error('Error', error.message);
         return {"message": "Request issue with Github"};
     }
     // logger.error(error);
-  }
-}
-
-async function getrandomtext(){
-  try {
-    const data = await getdata("http://numbersapi.com/random/trivia");
-    return ["commit " + data.split(' ')[0], data];
-  } catch(error){
-    logger.error(error);
-    return ["autocommit message", "nothing"];
   }
 }
 
@@ -127,13 +117,17 @@ async function commit(token, owner, repo, branch, content, filename, message){
       const head_url = `${git}refs/heads/${branch}`;
 
       const head_data = await github(token, "get", head_url);
-      logger.info(">>head", head_data);
+      logger.debug(">>head");
+      logger.debug(head_data);
       const com_data = await github(token, "get", head_data["object"]["url"]);
-      logger.info(">>commit", com_data);
+      logger.debug(">>commit");
+      logger.debug(com_data);
       const blob_data = await github(token, "post", `${git}blobs`, blob_obj);
-      logger.info(">>blob", blob_data);
+      logger.debug(">>blob");
+      logger.debug(blob_data);
       const tree_data = await github(token, "get", com_data["tree"]["url"]);
-      logger.info(">>tree", tree_data);
+      logger.debug(">>tree");
+      logger.debug(tree_data);
       const tree_obj = {
        "base_tree": tree_data["sha"],
        "tree": [
@@ -147,7 +141,8 @@ async function commit(token, owner, repo, branch, content, filename, message){
       };
 
       const newtree_data = await github(token, "post", `${git}trees`, tree_obj);
-      logger.info(">>new tree", newtree_data);
+      logger.debug(">>new tree");
+      logger.debug(newtree_data);
       const newcom_obj = {
        "message": message,
        "committer": {
@@ -158,17 +153,19 @@ async function commit(token, owner, repo, branch, content, filename, message){
       };
 
       const newcom_data = await github(token, "post", `${git}commits`, newcom_obj);
-      logger.info(">>new commit", newcom_data);
+      logger.debug(">>new commit");
+      logger.debug(newcom_data);
       const patch_obj = {
        "sha": newcom_data["sha"],
        "force": true
       };
 
       const newhead_data = await github(token, "patch", head_url, patch_obj);
-      logger.info(">>new head", newhead_data);
+      logger.debug(">>new head");
+      logger.debug(newhead_data);
       const sha = newhead_data["object"]["sha"];
       const commit_url = `https://github.com/${owner}/${repo}/commit/${sha}`;
-
+      logger.debug(commit_url);
       return({"url": commit_url});
 
  }  catch (e) {
@@ -290,6 +287,12 @@ module.exports = app => {
    const treebank = uuidv4();
    const token = req.session.token;
 
+   if (!(req.session.hasOwnProperty("username") && req.session.username)){
+     return res.json({ error: 'Session info has no username' });
+   }
+
+   logger.debug("prepare fork by", req.session.username);
+
    logger.info("fork item clicked");
 
    if (req.body.url) {
@@ -301,7 +304,7 @@ module.exports = app => {
 
      const [ string, protocol, domain, owner, repo, blob_or_tree, branch, filepath ] = match;
      const filename = `${repo}__${branch}__${filepath.replace(/\//g, '__')}`;
-     console.debug("filename", filename);
+     logger.debug("filename", filename);
      // const rawURL = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filepath}`;
      // logger.debug("raw url", rawURL);
      // const githubURL = `https://github.com/${owner}/${repo}/${branch}/${filepath}`;
@@ -309,26 +312,53 @@ module.exports = app => {
      // const repoURL = `https://github.com/${owner}/${repo}`;
      const fork_url = `/repos/${owner}/${repo}/forks`;
      logger.info("fork url", fork_url);
-     const content_url = `/repos/${owner}/${repo}/contents/${filepath}`;
+
+     let isForked = false;
+     const forklist_data = await github(token, "get", fork_url);
+     logger.debug("forklist data");
+     logger.debug(forklist_data);
+
+     for (let fork_num in forklist_data) {
+       logger.debug(fork_num);
+       logger.debug(forklist_data[fork_num]);
+
+       const new_fork_url = `https://api.github.com/repos/${req.session.username}/${repo}`;
+       if (forklist_data[fork_num]["url"] === new_fork_url) {
+         logger.info("user already has repo forked");
+         isForked = true;
+         break;
+       }
+     }
+
+     const content_owner  = isForked ? req.session.username : owner;
+     logger.info("getting content from", content_owner);
+     const content_url =  `/repos/${content_owner}/${repo}/contents/${filepath}`;
      logger.info("content url", content_url);
      const content_dir = content_url.substr(0, content_url.lastIndexOf("/"));
      logger.info("content dir url", content_dir);
+
      try {
         const dir_data = await github(token, "get", content_dir);
         const dir_data_filtered = dir_data.filter(x => x.path === filepath);
-        if(dir_data_filtered){
+
+        if (dir_data_filtered) {
+
           const file_info = dir_data_filtered.pop();
-          logger.info("dir", file_info);
+          logger.debug("content dir");
+          logger.debug(file_info);
           const blob_url = file_info["git_url"];
           logger.info("blob", blob_url);
           const blob = await github(token, "get", blob_url);
           logger.info("size", blob["size"]);
           const content = Buffer.from(blob.content, blob["encoding"]).toString('utf8');
 
-          const fork_data = await github(token, "post", fork_url);
-          // logger.info("fork data", fork_data);
-          if (!fork_data){
-            return res.json({ error: 'Github fork error' });
+          if (!isForked){
+            const fork_data = await github(token, "post", fork_url);
+            logger.debug("fork data");
+            logger.debug(fork_data);
+            if (!fork_data){
+              return res.json({ error: 'Github fork error' });
+            }
           }
 
           upload.fromContent(treebank, content, filename, err => {
@@ -340,7 +370,7 @@ module.exports = app => {
               filepath, filepath, blob["size"], blob["sha"], treebank], (err, data) => {
               if (err){
                 // throw err;
-				logger.info("Error saving user data in database");
+                logger.info("Error saving user data in database");
               }
 
               if (req.body.hasOwnProperty("src") && req.body["src"] === "main"){
@@ -355,12 +385,14 @@ module.exports = app => {
           });
 
         }
+        
      }  catch (e) {
          return res.json({ error: 'Github fork error' });
      }
     } else {
       res.json({ error: 'Please provide a file or URL.' });
     }
+
   });
 
   app.post('/upload', (req, res) => {
@@ -462,7 +494,7 @@ module.exports = app => {
   });
 
   app.post('/commit', is_logged_in, async (req, res) => {
-    logger.info("commit item click");
+    logger.debug("commit item click");
     if (req.body.hasOwnProperty("corpus")
           && req.body.hasOwnProperty("message")
           && req.body.hasOwnProperty("treebank")
@@ -473,10 +505,10 @@ module.exports = app => {
           cfg.corpora.query(treebank, (err, data) => {
             if (err || !data){
               // throw(err)
-              logger.info("Error with database", treebank, data);
+              logger.error("Error with database", treebank, data);
               return res.json({"error": "Error with database"});
             }
-            logger.info("data for commit", treebank, data);
+            logger.debug("data for commit", treebank, data);
 
             (async() => {
 
@@ -500,30 +532,93 @@ module.exports = app => {
     }
   });
 
-  app.post('/pullreq', get_treebank, is_logged_in, (req, res) => {
-    const treebank = req.query.treebank_id||req.session.treebank;
+  app.post('/pullcheck', get_treebank, is_logged_in, (req, res) => {
+    logger.fatal(req.body);
     const token = req.session.token;
+    const treebank = req.body.treebank_id;
     cfg.corpora.query(treebank, (err, data) => {
       if (err){
         throw(err)
       }
+
       (async() => {
-        const title =  req.body.hasOwnProperty("title") ?
-          req.body.title : `Corpus update`;
-        const content  =  req.body.hasOwnProperty("content") ?
-          req.body.content : "Please pull this in!";
+
+        const prlist_obj = {
+          "state": "open",
+          "head": `${data.username}:${data.branch}`,
+          "base": data.branch
+        };
+        logger.debug("PR list object");
+        logger.debug(prlist_obj);
+
+        const git_url = `/repos/${data.owner}/${data.repo}/pulls`;
+        const prlist_data = await github(token, "get", git_url, prlist_obj);
+
+        logger.debug(prlist_data);
+
+        let isOkToPR = true;
+
+        if (prlist_data.hasOwnProperty("message")){
+          return res.json({"error": prlist_data.message});
+        } else {
+          for (let pr_num in prlist_data) {
+
+            // logger.debug("PR number:", pr_num);
+            // logger.debug(prlist_data[pr_num]);
+
+            if (prlist_data[pr_num]["head"]["repo"]["full_name"] === `${data.username}/${data.repo}`) {
+              logger.info("open PR already to this repo exists");
+              isOkToPR =  false;
+              break;
+            }
+
+           }
+        }
+
+        return res.json({"success": isOkToPR});
+
+      })();
+    });
+  });
+
+  app.post('/pullreq', get_treebank, is_logged_in, (req, res) => {
+    const token = req.session.token;
+
+    logger.info("pull request is clicked");
+
+    if (req.body.hasOwnProperty("title") && req.body.hasOwnProperty("treebank")) {
+
+      const treebank = req.body.treebank;
+      const title = req.body.title;
+      const content  = req.body.hasOwnProperty("content") ? req.body.content: "";
+      const allowModify = req.body.hasOwnProperty("allowModify") ?
+        req.body.allowModify == "true" ? true : false
+        : true;
+      const isDraft = req.body.hasOwnProperty("isDraft") ?
+        req.body.isDraft == "false" ? false : true
+         : false;
+
+      cfg.corpora.query(treebank, (err, data) => {
+        if (err){
+          throw(err)
+        }
+
+      (async() => {
 
         const pr_obj = {
           "title": title,
           "body": content,
           "head": `${data.username}:${data.branch}`,
           "base": data.branch,
-          "maintainer_can_modify": true,
-          "draft": false
+          "maintainer_can_modify": allowModify,
+          "draft": isDraft
         };
+        logger.debug("PR object");
+        logger.debug(pr_obj);
+
         const git_url = `/repos/${data.owner}/${data.repo}/pulls`;
         const pr_data = await github(token, "post", git_url, pr_obj);
-        // logger.debug(pr_data);
+        logger.debug(pr_data);
 
         if (pr_data.hasOwnProperty("html_url")){
 
@@ -544,6 +639,7 @@ module.exports = app => {
       })();
 
     });
+   }
   });
 
   app.get('/settings', get_treebank, /*is_logged_in,*/ (req, res) => {
@@ -563,16 +659,11 @@ module.exports = app => {
     res.json(req.body);
   });
 
-  app.post('/fork', (req, res) => {
-    res.json(req.body);
-  });
-
-
   // ---------------------------
   // GitHub OAuth
   app.get("/oauth/login", get_treebank, (req, res) => {
     logger.info("logging in (OAuth)");
-    logger.debug("oauth", req["session"]);
+    logger.debug(req["session"]);
     if (!cfg.github) {
       new ConfigError('Unable to use GitHub OAuth without client secret');
       res.redirect('/annotatrix');

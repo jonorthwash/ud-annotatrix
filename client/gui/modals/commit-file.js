@@ -31,8 +31,8 @@ function processCommit() {
   const commitMessage  = $('#commit-message').val();
   if (commitMessage && commitMessage.replace(/\s/g, '').length) {
     const rawCorpus = _gui.app.download(true);
-    console.log("treebank ID", _gui.app.corpus._corpus.treebank_id);
-    var params={};
+    // console.log("treebank ID", _gui.app.corpus._corpus.treebank_id);
+    let params={};
     window.location.search
       .replace(/[?&]+([^=&]+)=([^&]*)/gi, function(str,key,value) {
         params[key] = value;

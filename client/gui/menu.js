@@ -99,17 +99,27 @@ class Menu {
     $('[name="pull-request"]').click(e => {
       const target = $(e.target);
       if (!target.is('.pin') && !target.closest('a').hasClass('disabled')){
-          //self.gui.modals.uploadFile.show();
-          $.post( "/pullreq",{ title: "Some changes", content: "There will be some content" }, function( data ) {
-            // $( ".result" ).html( data );
-            // console.log("from server", data);
-            // const msg  = data.hasOwnProperty("url") ? "New commit link: " + data.url :
-            //   JSON.stringify(data);
-            alert(JSON.stringify(data));
-          });
+
+        let params={};
+        window.location.search
+          .replace(/[?&]+([^=&]+)=([^&]*)/gi, function(str,key,value) {
+            params[key] = value;
+          }
+        );
+
+        $.post( "/pullcheck", params, function( data ) {
+            if (data.hasOwnProperty("success")) {
+              data.success === true ?
+                self.gui.modals.pullRequest.show()
+                :
+                alert("Open PR to this repo already exists.\nOne cannot make other one before that is not closed.")
+            } else if (data.hasOwnProperty("error")) {
+              alert("Github error: " + data.error)
+            }
+            console.log(data);
+        });
 
       }
-
     });
     $('[name="upload-file"]').click(e => {
       const target = $(e.target);
