@@ -52,7 +52,8 @@ function render_all() {
   render('index', {
     base: null,
     error: null,
-    treebanks: []
+    treebanks: [],
+    github: null
   });
 
 }

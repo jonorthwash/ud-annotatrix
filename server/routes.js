@@ -185,6 +185,7 @@ module.exports = app => {
     res.redirect('/');
   });
   app.get('/', (req, res) => {
+    const token = req.session.token;
     getTreebanksList((err, treebanks) => {
       res.render('index.ejs', {
         // base: `${cfg.protocol}://${cfg.host}:${cfg.port}`,
@@ -192,7 +193,8 @@ module.exports = app => {
         // for correct urls when it works behind a frontend proxy
         base: '',
         error: err,
-        treebanks: treebanks
+        treebanks: treebanks,
+        github: token,
       });
     });
   });
@@ -264,7 +266,7 @@ module.exports = app => {
         if (err){
           throw err;
         }
-        logger.info("This file in database" + (data ? ': ID is '+ data.id : "does not exist"));
+        logger.info("This file in database" + (data ? ': ID is '+ data.id : " does not exist"));
         logger.debug(data);
         let msg  = "";
         if (data){
@@ -385,7 +387,7 @@ module.exports = app => {
           });
 
         }
-        
+
      }  catch (e) {
          return res.json({ error: 'Github fork error' });
      }
@@ -451,9 +453,10 @@ module.exports = app => {
           logger.info('/login changes to Users:', data.changes);
           req.session.username = username;
           // req.session.treebank = req.treebank;
-          res.redirect('/annotatrix?' + querystring.stringify({
+          logger.debug("treebank on login", req.treebank);
+          res.redirect(req.treebank ? '/annotatrix?' + querystring.stringify({
             treebank_id: req.treebank
-          }));
+          }) : '/');
         });
 
     } catch(error) {
@@ -469,15 +472,17 @@ module.exports = app => {
       token: req.session.token
 
     }, (err, data) => {
-      if (err)
+      if (err) {
         throw err;
+      }
 
       logger.info('/logout changes to Users:', data.changes);
+      logger.debug("treebank on logout", req.treebank);
       req.session.username = null;
       req.session.token = null;
-      res.redirect('/annotatrix?' + querystring.stringify({
+      res.redirect(req.treebank ? '/annotatrix?' + querystring.stringify({
         treebank_id: req.treebank
-      }));
+      }) : '/');
 
     });
   });
@@ -678,12 +683,13 @@ module.exports = app => {
         // https://developer.github.com/apps/building-oauth-apps/understanding-scopes-for-oauth-apps/
         scope: ['user', 'public_repo']
       });
-
+    logger.info("redirect", url);
     res.redirect(url);
   });
 
   app.get("/oauth/callback", (req, res) => {
 
+    logger.info("callback");
     if (!cfg.github) {
       new ConfigError('Unable to use GitHub OAuth without client secret');
       res.redirect('/annotatrix');

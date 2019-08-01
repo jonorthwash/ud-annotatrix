@@ -107,7 +107,7 @@ $(document).ready(function() {
 	});
 	$("#webload").click(function() {
 	   $('.navbar-collapse').collapse('hide');
-		var url2load = $('#gitlink').val();
+		var url2load = $('#remotelink').val();
 		if (url2load) {
 			var formData = new FormData();
 			formData.append('url', url2load);
@@ -116,6 +116,34 @@ $(document).ready(function() {
 
 			$.ajax({
 				url: 'upload',
+				type: 'POST',
+				data: formData,
+				processData: false, // tell jQuery not to process the data
+				contentType: false, // tell jQuery not to set contentType
+				success: function(data) {
+					if (data.error) {
+						alert(data.error);
+					}
+					$('.spinner-border').addClass("d-none");
+					location.reload(true);
+				}
+			});
+		} else {
+			alert("No file selected!");
+		}
+		return false;
+	});
+	$("#gitload").click(function() {
+	   $('.navbar-collapse').collapse('hide');
+		var url2load = $('#gitlink').val();
+		if (url2load) {
+			var formData = new FormData();
+			formData.append('url', url2load);
+			formData.append('src', 'main');
+			$('.spinner-border').removeClass("d-none");
+
+			$.ajax({
+				url: 'fork',
 				type: 'POST',
 				data: formData,
 				processData: false, // tell jQuery not to process the data
