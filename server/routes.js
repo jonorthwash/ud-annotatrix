@@ -186,6 +186,12 @@ module.exports = app => {
   });
   app.get('/', (req, res) => {
     const token = req.session.token;
+    const username = req.cookies.github;
+    logger.debug(req.session);
+    logger.debug("github account", username);
+    if (!token && username) {
+      return res.redirect('/oauth/login');
+    }
     getTreebanksList((err, treebanks) => {
       res.render('index.ejs', {
         // base: `${cfg.protocol}://${cfg.host}:${cfg.port}`,
@@ -214,7 +220,7 @@ module.exports = app => {
 
       res.render('annotatrix', {
         modalPath: 'modals',
-        github_configured: !!cfg.github,
+        github_configured: !!cfg.github, // object or null
         username: req.session.username,
         path: path
       });
@@ -451,6 +457,7 @@ module.exports = app => {
             throw err;
 
           logger.info('/login changes to Users:', data.changes);
+          res.cookie('github',username, { path: '/', expires: new Date(Date.now() + 9000000), httpOnly: false });
           req.session.username = username;
           // req.session.treebank = req.treebank;
           logger.debug("treebank on login", req.treebank);
@@ -668,6 +675,7 @@ module.exports = app => {
   // GitHub OAuth
   app.get("/oauth/login", get_treebank, (req, res) => {
     logger.info("logging in (OAuth)");
+    logger.debug("session");
     logger.debug(req["session"]);
     if (!cfg.github) {
       new ConfigError('Unable to use GitHub OAuth without client secret');
