@@ -43,6 +43,40 @@ function is_logged_in(req, res, next) {
   next();
 }
 
+function get_user(req, res, next) {
+  logger.debug("checking for user/token");
+  // const token = req.query.token;
+  // if (!token)
+  //   res.json({ error: 'Missing required argument: token' });
+  //
+  // req.session.token = token;
+  const token = req.session.token;
+  const username = req.cookies.github;
+  if (!token && username) {
+    cfg.users.query({
+      username: username,
+      token: null
+    }, (err, data) => {
+      if (err) {
+        throw err;
+        }
+
+        logger.debug("users data");
+        logger.debug(data);
+
+        if (data.token) {
+          logger.debug("token is in database");
+          req.session.token = data.token;
+          req.session.username = data.username;
+          next();
+        }
+    });
+  } else {
+    next();
+  }
+
+}
+
 // --------------------------------------------------------------------------
 // helper funcs
 
@@ -184,14 +218,7 @@ module.exports = app => {
   app.get('/index.html', (req, res) => {
     res.redirect('/');
   });
-  app.get('/', (req, res) => {
-    const token = req.session.token;
-    const username = req.cookies.github;
-    logger.debug(req.session);
-    logger.debug("github account", username);
-    if (!token && username) {
-      return res.redirect('/oauth/login');
-    }
+  app.get('/', get_user, (req, res) => {
     getTreebanksList((err, treebanks) => {
       res.render('index.ejs', {
         // base: `${cfg.protocol}://${cfg.host}:${cfg.port}`,
@@ -200,13 +227,14 @@ module.exports = app => {
         base: '',
         error: err,
         treebanks: treebanks,
-        github: token,
+        github: req.session.username,
       });
     });
   });
   app.get('/help(.html)?', (req, res) => res.render('help.ejs'));
-  app.get('/annotatrix(.html)?', (req, res) => {
+  app.get('/annotatrix(.html)?', get_user, (req, res) => {
     let treebank = req.query.treebank_id;
+
     if (!treebank) {
 
       treebank = uuidv4();
@@ -457,7 +485,7 @@ module.exports = app => {
             throw err;
 
           logger.info('/login changes to Users:', data.changes);
-          res.cookie('github',username, { path: '/', expires: new Date(Date.now() + 9000000), httpOnly: false });
+          res.cookie('github', username, { path: '/', expires: new Date(Date.now() + 9000000), httpOnly: false });
           req.session.username = username;
           // req.session.treebank = req.treebank;
           logger.debug("treebank on login", req.treebank);
@@ -487,6 +515,7 @@ module.exports = app => {
       logger.debug("treebank on logout", req.treebank);
       req.session.username = null;
       req.session.token = null;
+      res.clearCookie('github');
       res.redirect(req.treebank ? '/annotatrix?' + querystring.stringify({
         treebank_id: req.treebank
       }) : '/');
