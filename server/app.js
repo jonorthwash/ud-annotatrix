@@ -70,7 +70,7 @@ const server = http.createServer(app).listen(cfg.port, () => {
 	logger.info(`Server listening at ${cfg.protocol}://${cfg.host}:${cfg.port}`);
   logger.info(`ENV: ${cfg.environment}`);
   if (cfg.environment === 'development') {
-		logger.info(cfg);
+		logger.info(cfg, "APP CONFIG:");
   }
 });
 

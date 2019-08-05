@@ -73,7 +73,7 @@ class CorporaDB {
 
         db.get('SELECT * FROM corpora WHERE treebank_id = ?',
           params, (err, data) => {
-            logger.info(err, data);
+
             if (err) {
               return next(new DBError(err), null);
             }

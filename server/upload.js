@@ -4,6 +4,7 @@ const _ = require('underscore');
 const fs = require('fs');
 const uuidv4 = require('uuid/v4');
 const axios = require('axios');
+const logger = require('./logger');
 
 const UploadError = require('./errors').UploadError;
 const nx = require('notatrix');
@@ -12,11 +13,10 @@ const CorpusDB = require('./models/corpus-json');
 
 function upload(treebank, filename, contents, next) {
 
-  console.log('uploading');
+  logger.info('uploading');
   try {
 
     const corpus = nx.Corpus.fromString(contents);
-    // console.log(corpus);
     corpus.filename = filename;
     return CorpusDB(treebank).save(filename, corpus.serialize(), next);
 
@@ -43,7 +43,7 @@ function fromURL(treebank, url, next) {
     return next(new UploadError(`No URL provided.`));
   }
 
-  console.log("url", url);
+  logger.info("url to load", url);
 
   let filename  = url.split('?')[0].replace(/\/+$/, '').split("/").slice(-1)[0];
 
@@ -51,7 +51,7 @@ function fromURL(treebank, url, next) {
     return next(new UploadError(`File has not a proper name.`));
   }
 
-  console.log("filename", filename);
+  logger.info("filename in URL", filename);
 
   axios.get(url)
   .catch(function (error) {
