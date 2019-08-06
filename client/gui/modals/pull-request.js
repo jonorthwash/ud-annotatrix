@@ -59,6 +59,7 @@ function processPR() {
            $("#pr-result").removeClass("d-none").html(msg);
            $("#pr-editor").addClass("d-none");
            $("#pr-button").addClass("d-none");
+           _gui.app.git = "PR";
            _gui.app.gui.menu.refresh();
       });
 

@@ -112,7 +112,7 @@ class Menu {
               data.success === true ?
                 self.gui.modals.pullRequest.show()
                 :
-                alert("Open PR to this repo already exists.\nOne cannot make other one before that is not closed.")
+                alert("Open PR to this repo already exists.\nYou cannot make other one before that is not closed.")
             } else if (data.hasOwnProperty("error")) {
               alert("Github error: " + data.error)
             }

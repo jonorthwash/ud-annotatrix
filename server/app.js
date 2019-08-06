@@ -47,7 +47,7 @@ const appLogger = function (req, res, next) {
   res.on("finish", () => {
     const elapsed = process.hrtime(started);
     const time = Math.round(elapsed[0] * 1e3 + elapsed[1] * 1e-6);
-    const ip = req.ip == "::ffff:127.0.0.1" ? "" : req.ip;
+    const ip = (req.ip == "::ffff:127.0.0.1" || req.ip == "::1")? "" : req.ip;
     const codeClass = res.statusCode == 200 ? "green" : "red";
     const timeClass = time > 1000 ? "inverse": "dim";
     console.log(ip + req.method, req.originalUrl, colors[codeClass](res.statusCode), colors[timeClass](time), "ms", req.xhr?colors.bold("<AJAX>"):"");

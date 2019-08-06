@@ -46,12 +46,13 @@ function processCommit() {
         },
         function( data ) {
           const msg  = data.hasOwnProperty("url") ?
-            `Link of the new commit: <a href="${data.url}">${data.url}</a>` :
-            JSON.stringify(data);
+            `Link of the new commit: <a href="${data.url}" target="_blank">${data.url.substring(data.url.lastIndexOf('/') + 1)}</a>` :
+            `<div class="alert alert-danger" role="alert">${data.error}</div>`;
 
          $("#commit-result").removeClass("d-none").html(msg);
          $("#commit-editor").addClass("d-none");
          $("#commit-button").addClass("d-none");
+         _gui.app.git = "commited";
          _gui.app.gui.menu.refresh();
     });
 

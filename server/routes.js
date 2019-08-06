@@ -63,7 +63,7 @@ function get_user(req, res, next) {
 
         logger.debug(data, "users data");
 
-        if (data.token) {
+        if (data && data.token) {
           logger.debug("token is in database");
           req.session.token = data.token;
           req.session.username = data.username;
@@ -138,61 +138,97 @@ async function github(token, method, url, data) {
   }
 }
 
-async function commit(token, owner, repo, branch, content, filename, message){
+async function commit(token, owner, repo, branch, content, filename, message, filesha, treebank,userinfo){
   logger.info("in commit function");
   try {
-      const blob_obj = {
-       "content": content,
-       "encoding": "utf-8"
+      let sha, commit_url;
+      const author = {
+        "name": userinfo.realname, "email": userinfo.email,
       };
-
-      const git =  `/repos/${owner}/${repo}/git/`;
-      const head_url = `${git}refs/heads/${branch}`;
-
-      const head_data = await github(token, "get", head_url);
-      logger.debug(head_data, ">>head");
-      const com_data = await github(token, "get", head_data["object"]["url"]);
-      logger.debug(com_data, ">>commit");
-      const blob_data = await github(token, "post", `${git}blobs`, blob_obj);
-      logger.debug(blob_data, ">>blob");
-      const tree_data = await github(token, "get", com_data["tree"]["url"]);
-      logger.debug(tree_data, ">>tree");
-      const tree_obj = {
-       "base_tree": tree_data["sha"],
-       "tree": [
-         {
-           "path": filename,
-           "mode": "100644",
-           "type": "blob",
-           "sha": blob_data["sha"]
-         }
-       ]
+      const committer = {
+        "name": "UD Annotatrix", "email": "annotatrix@gmail.com",
       };
+      const filesize  = Buffer.byteLength(content, 'utf8');
+      logger.info(filename, filesize);
+      // if content file size is above 1 Mb one has to use low-level Tree API,
+      // but, if possible, it is better to deal with simpler Contents API
+      if (filesize < 1000000) {
 
-      const newtree_data = await github(token, "post", `${git}trees`, tree_obj);
-      logger.debug(newtree_data, ">>new tree");
-      const newcom_obj = {
-       "message": message,
-       "committer": {
-         "name": "UD Annotatrix", "email": "annotatrix@gmail.com",
-       },
-       "parents": [head_data["object"]["sha"]],
-       "tree": newtree_data["sha"],
-      };
+        logger.debug("Commit via Contents API");
 
-      const newcom_data = await github(token, "post", `${git}commits`, newcom_obj);
-      logger.debug(newcom_data, ">>new commit");
-      const patch_obj = {
-       "sha": newcom_data["sha"],
-       "force": true
-      };
+        const contents_com_data = {
+          "message": message,
+          "author": author,
+          "committer": committer,
+          "content": Buffer.from(content).toString('base64'),
+          "sha": filesha
+        }
+        const contents_url =  `/repos/${owner}/${repo}/contents/${filename}`;
+        const contents_data = await github(token, "put", contents_url, contents_com_data);
+        logger.debug(contents_data, ">>contents");
+        if (contents_data.hasOwnProperty("message")){
+          return({"error": contents_data.message});
+        }
+        sha = contents_data["content"]["sha"];
+        commit_url = contents_data["commit"]["html_url"];
 
-      const newhead_data = await github(token, "patch", head_url, patch_obj);
-      logger.debug(newhead_data, ">>new head");
-      const sha = newhead_data["object"]["sha"];
-      const commit_url = `https://github.com/${owner}/${repo}/commit/${sha}`;
-      logger.debug(commit_url);
-      return({"url": commit_url});
+      } else {
+
+        logger.debug("Commit via Tree API");
+
+        const blob_obj = {
+         "content": content,
+         "encoding": "utf-8"
+        };
+
+        const git =  `/repos/${owner}/${repo}/git/`;
+        const head_url = `${git}refs/heads/${branch}`;
+
+        const head_data = await github(token, "get", head_url);
+        logger.debug(head_data, ">>head");
+        const com_data = await github(token, "get", head_data["object"]["url"]);
+        logger.debug(com_data, ">>commit");
+        const blob_data = await github(token, "post", `${git}blobs`, blob_obj);
+        logger.debug(blob_data, ">>blob");
+        const tree_data = await github(token, "get", com_data["tree"]["url"]);
+        logger.debug(tree_data, ">>tree");
+        const tree_obj = {
+         "base_tree": tree_data["sha"],
+         "tree": [
+           {
+             "path": filename,
+             "mode": "100644",
+             "type": "blob",
+             "sha": blob_data["sha"]
+           }
+         ]
+        };
+
+        const newtree_data = await github(token, "post", `${git}trees`, tree_obj);
+        logger.debug(newtree_data, ">>new tree");
+        const newcom_obj = {
+         "message": message,
+         "author": author,
+         "committer": committer,
+         "parents": [head_data["object"]["sha"]],
+         "tree": newtree_data["sha"],
+        };
+
+        const newcom_data = await github(token, "post", `${git}commits`, newcom_obj);
+        logger.debug(newcom_data, ">>new commit");
+        const patch_obj = {
+         "sha": newcom_data["sha"],
+         "force": true
+        };
+
+        const newhead_data = await github(token, "patch", head_url, patch_obj);
+        logger.debug(newhead_data, ">>new head");
+        sha = newhead_data["object"]["sha"];
+        commit_url = `https://github.com/${owner}/${repo}/commit/${sha}`;
+        logger.debug(commit_url);
+
+      }
+      return({"url": commit_url, "sha": sha});
 
  }  catch (e) {
 
@@ -361,6 +397,20 @@ module.exports = app => {
      logger.info("getting content from", content_owner);
      const content_url =  `/repos/${content_owner}/${repo}/contents/${filepath}`;
      logger.info("content url", content_url);
+
+     // Github throws an error when one requests a file bigger than 1 Mb
+     // so it is not reasonable to try with Contents API
+     // (it is not ok to ignore errors)
+     //
+     // const file_data = await github(token, "get", content_url);
+     // logger.debug(file_data, "file data");
+     // if (file_data.hasOwnProperty("message")){
+     //   logger.warn(file_data.message)
+     // }
+     // let content = Buffer.from(file_data.content, 'base64').toString('utf8');
+     //
+     // I call it a day on using only Data API for all files.
+
      const content_dir = content_url.substr(0, content_url.lastIndexOf("/"));
      logger.info("content dir url", content_dir);
 
@@ -394,8 +444,8 @@ module.exports = app => {
             cfg.corpora.insert([owner, repo, branch, req.session.username, req.body.url,
               filepath, filepath, blob["size"], blob["sha"], treebank], (err, data) => {
               if (err){
-                // throw err;
                 logger.info("Error saving user data in database");
+                throw err;
               }
 
               if (req.body.hasOwnProperty("src") && req.body["src"] === "main"){
@@ -463,10 +513,13 @@ module.exports = app => {
     const token = req.session.token;
     try {
         const body = await github(token, "get", "/user");
+        logger.debug(body, "github user info");
         const username = body.login;
 
         cfg.users.update({
-          username: username
+          username: username,
+          email: body.email,
+          realname: body.name
         }, {
           token: token
         }, (err, data) => {
@@ -523,7 +576,7 @@ module.exports = app => {
       res.json({ error: 'Not implemented' });
   });
 
-  app.post('/commit', is_logged_in, async (req, res) => {
+  app.post('/commit', get_user, is_logged_in, async (req, res) => {
     logger.debug("commit item click");
     if (req.body.hasOwnProperty("corpus")
           && req.body.hasOwnProperty("message")
@@ -532,21 +585,29 @@ module.exports = app => {
           // logger.info(req.body.corpus);
           // const treebank = req.query.treebank_id||req.session.treebank;
           const treebank = req.body.treebank;
-          cfg.corpora.query(treebank, (err, data) => {
-            if (err || !data){
-              // throw(err)
-              logger.error("Error with database", treebank, data);
+        cfg.corpora.query(treebank, (err, data) => {
+          if (err || !data){
+            // throw(err)
+            logger.error("Error with database", treebank, data);
+            return res.json({"error": "Error with database"});
+          }
+          logger.debug(data, "data for commit", treebank);
+
+          cfg.users.query({username: data.username }, (err, userdata) => {
+            if (err || !userdata){
+              logger.error("Error with database", data.username);
               return res.json({"error": "Error with database"});
             }
-            logger.debug("data for commit", treebank, data);
+            logger.debug(userdata, "user data");
 
             (async() => {
 
-              const result  = await commit(req.session.token, data.username, data.repo, data.branch, req.body.corpus, data.filepath, req.body.message);
+              const result  = await commit(req.session.token, data.username, data.repo, data.branch, req.body.corpus, data.filepath, req.body.message, data.sha, treebank, userdata);
 
               if (result.hasOwnProperty("url")){
-                cfg.corpora.update(treebank, "committed_at", (err, data) => {
+                cfg.corpora.update_commit(treebank, result.sha, (err, data) => {
                   if (err){
+                    logger.error("Error on saving commit data", treebank, sha);
                     throw(err)
                   }
                 });
@@ -556,18 +617,20 @@ module.exports = app => {
             })();
 
             });
+          });
 
     } else {
       res.json({"error": "Error of retrieving corpus from browser"});
     }
   });
 
-  app.post('/pullcheck', get_treebank, is_logged_in, (req, res) => {
+  app.post('/pullcheck', get_treebank, get_user, is_logged_in, (req, res) => {
 
     const token = req.session.token;
     const treebank = req.body.treebank_id;
     cfg.corpora.query(treebank, (err, data) => {
       if (err){
+        logger.error("Error with database", treebank);
         throw(err)
       }
 
@@ -610,7 +673,7 @@ module.exports = app => {
     });
   });
 
-  app.post('/pullreq', get_treebank, is_logged_in, (req, res) => {
+  app.post('/pullreq', get_treebank, get_user, is_logged_in, (req, res) => {
     const token = req.session.token;
 
     logger.info("pull request is clicked");
@@ -629,6 +692,7 @@ module.exports = app => {
 
       cfg.corpora.query(treebank, (err, data) => {
         if (err){
+          logger.error("Error with database", treebank);
           throw(err)
         }
 
@@ -650,8 +714,9 @@ module.exports = app => {
 
         if (pr_data.hasOwnProperty("html_url")){
 
-          cfg.corpora.update(treebank, "pr_at", (err, data) => {
+          cfg.corpora.update_pr(treebank, true, (err, data) => {
             if (err){
+              logger.error("Error with database", treebank);
               throw(err)
             }
 

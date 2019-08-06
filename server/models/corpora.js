@@ -88,7 +88,33 @@ class CorporaDB {
   }
 
 
-  update(treebank_id, column, next) {
+  update_commit(treebank_id, sha, next) {
+    open(this.path, (err, db) => {
+      if (err) {
+        return next(new DBError(err), null);
+      }
+
+      if (!treebank_id || !sha) {
+        return next(new DBError('Missing required arguments: treebank_id AND sha'), null);
+        }
+
+        db.run("UPDATE corpora SET committed_at=datetime('now'), sha=? WHERE treebank_id=?",
+          sha,
+          treebank_id,
+          function (err) {
+            if (err){
+              return next(new DBError(err), null);
+            }
+
+            next(null, { id: this.lastID, changes: this.changes });
+          }
+        );
+
+    });
+  }
+
+
+  update_pr(treebank_id, state, next) {
     open(this.path, (err, db) => {
       if (err) {
         return next(new DBError(err), null);
@@ -96,10 +122,10 @@ class CorporaDB {
 
       if (!treebank_id || !column) {
         return next(new DBError('Missing required arguments: treebank_id AND column'), null);
-        }
+      }
 
-        const col  = (column === "committed_at") ? column : "pr_at";
-        db.run("UPDATE corpora SET " + col + " = datetime('now') WHERE treebank_id=?",
+        const pr_val  = state ? "datetime('now')" : "NULL";
+        db.run("UPDATE corpora SET pr_at = " + pr_val + " WHERE treebank_id=?",
           treebank_id,
           function (err) {
             if (err){
