@@ -7,7 +7,7 @@
     <link rel="icon" href="../favicon.png" sizes="230x230" type="image/png">
     <title>UD Annotatrix</title>
     <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css" />
-    <!-- <link rel="stylesheet" type="text/css" href="../css/font-awesome.min.css" /> -->
+    <link rel="stylesheet" type="text/css" href="../css/fontawesome.all.min.css" />
     <link rel="stylesheet" type="text/css" href="../css/style.css" />
     <style>
         body {
@@ -157,9 +157,14 @@
                                 <button type="button" class="btn btn-secondary btn-sm actmode" data-id="<%= treebank.id %>">Edit</button>
                                 <!-- </a> -->
                             </td>
-                            <td><a href="<%= url %>">
+                            <td class="<% if (treebank.username) { if (github) { if (treebank.username == github) { %>mine<% } else { %>others<% } } else  { %>others<% } } %>"><a href="<%= url %>">
+                                    <% if (treebank.username) { %>
+                                        <i class="fab fa-github" title="<%= treebank.username %>"></i>
+                                    <% } %>
+
                                     <%= treebank.filename || " " %>
-                                </a></td>
+                                </a>
+                            </td>
                             <td><a href="<%= url %>">
                                     <%= treebank.sentences %>
                                 </a></td>

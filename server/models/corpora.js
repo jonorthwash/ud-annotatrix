@@ -64,6 +64,31 @@ class CorporaDB {
   }
 
 
+  all(next) {
+    open(this.path, (err, db) => {
+      if (err) {
+        return next(new DBError(err), null);
+      }
+
+      db.all('SELECT * FROM corpora', (err, data) => {
+
+          if (err) {
+            return next(new DBError(err), null);
+          }
+
+          data.forEach(x => (
+              x.database_id = x.id,
+              x.id  = x.treebank_id
+            )
+         );
+
+          next(null, data);
+      });
+
+    });
+  }
+
+
   query(params, next) {
     open(this.path, (err, db) => {
       if (err)

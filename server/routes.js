@@ -247,16 +247,52 @@ module.exports = app => {
     res.redirect('/');
   });
   app.get('/', get_user, (req, res) => {
-    getTreebanksList((err, treebanks) => {
-      res.render('index.ejs', {
-        // base: `${cfg.protocol}://${cfg.host}:${cfg.port}`,
-        // leave relative path instead absolute one
-        // for correct urls when it works behind a frontend proxy
-        base: '',
-        error: err,
-        treebanks: treebanks,
-        github: req.session.username,
+    getTreebanksList((err, treebanks_from_files) => {
+
+      cfg.corpora.all((err, treebanks_from_db) => {
+        if (err){
+          logger.error("Error with corpora database");
+          throw err;
+        }
+        const treebanks_merged = [];
+
+        treebanks_from_files.forEach(x => {
+          let pushed = false;
+          treebanks_from_db.forEach(y => {
+            if (x.id === y.id) {
+              treebanks_merged.push({ ...x, ...y });
+              pushed = true;
+            }
+          });
+          if (!pushed){
+              treebanks_merged.push(x);
+          }
+        });
+
+        // logger.debug(treebanks_merged, "treebanks listed for " + (req.session.username||"all") );
+
+        res.render('index.ejs', {
+          // base: `${cfg.protocol}://${cfg.host}:${cfg.port}`,
+          // leave relative path instead absolute one
+          // for correct urls when it works behind a frontend proxy
+          base: '',
+          error: err,
+          treebanks: treebanks_merged,
+          github: req.session.username,
+        });
+
+
+        // logger.info("This file in database" + (data ? ': ID is '+ data.id : " does not exist"));
+        // logger.debug(data, "data");
+        // let msg  = "";
+        // if (data){
+        //     msg = data.pr_at? "PR": data.committed_at ? "commited": "fork";
+        // }
+        // res.set("git", msg)
+        // // to make the app more responsive
+        // res.sendFile(path.join(__dirname, "..", cfg.corpora_path, req.treebank+".json"));
       });
+
     });
   });
   app.get('/help(.html)?', (req, res) => res.render('help.ejs'));

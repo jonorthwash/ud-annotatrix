@@ -1363,6 +1363,13 @@ th.column-hide span.col-name {
   width: 40ch;
 }
 
+.others {
+	background-color: #FFFF00;
+}
+
+.mine{
+	background-color: #9ff2b3;
+}
 
 .custom-file-label, .nav-link{
 	font-size:1rem;
@@ -1476,4 +1483,6 @@ only screen and (max-width: 760px),
 		padding-left: 120px !important;
 		color: black;
 	}
+	
+	
 }
