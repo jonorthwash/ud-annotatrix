@@ -281,16 +281,6 @@ module.exports = app => {
           github: req.session.username,
         });
 
-
-        // logger.info("This file in database" + (data ? ': ID is '+ data.id : " does not exist"));
-        // logger.debug(data, "data");
-        // let msg  = "";
-        // if (data){
-        //     msg = data.pr_at? "PR": data.committed_at ? "commited": "fork";
-        // }
-        // res.set("git", msg)
-        // // to make the app more responsive
-        // res.sendFile(path.join(__dirname, "..", cfg.corpora_path, req.treebank+".json"));
       });
 
     });
@@ -771,17 +761,31 @@ module.exports = app => {
    }
   });
 
-  app.get('/settings', get_treebank, /*is_logged_in,*/ (req, res) => {
-    CorpusDB(req.treebank).load((err, data) => {
-      if (err)
+  app.get('/settings', get_treebank, get_user, /*is_logged_in,*/ (req, res) => {
+    cfg.corpora.query(req.treebank, (err, data) => {
+      if (err){
         throw err;
+      }
+
+      logger.debug(data, "treebank data");
 
       res.render('settings.ejs', {
         treebank: req.treebank,
         username: req.session.username,
-        meta: data.meta
+        data: data
       });
+
     });
+    // CorpusDB(req.treebank).load((err, data) => {
+    //   if (err)
+    //     throw err;
+    //
+    //   res.render('settings.ejs', {
+    //     treebank: req.treebank,
+    //     username: req.session.username,
+    //     meta: data.meta
+    //   });
+    // });
   });
 
   app.post('/settings', get_treebank, /*is_logged_in,*/ (req, res) => {

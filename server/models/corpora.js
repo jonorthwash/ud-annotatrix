@@ -26,7 +26,8 @@ function open(filename, next) {
               treebank_id TEXT UNIQUE,
               created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
               committed_at TIMESTAMP,
-              pr_at TIMESTAMP
+              pr_at TIMESTAMP,
+              access_mode INTEGER
     )`, err => next(err, db));
 
 }
@@ -50,7 +51,7 @@ class CorporaDB {
       if (!Array.isArray(params) || !params.length)
         return next(new DBError('Missing required param: username OR token'), null);
 
-      db.run('INSERT INTO corpora (owner, repo, branch, username, url, filepath, filename, filesize, sha, treebank_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', params, function (err) {
+      db.run('INSERT INTO corpora (owner, repo, branch, username, url, filepath, filename, filesize, sha, treebank_id, access_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)', params, function (err) {
           if (err)
             return next(new DBError(err), null);
 
