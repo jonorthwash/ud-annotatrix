@@ -61,5 +61,6 @@ cfg.users_db_path = process.env.ANNOTATRIX_USERS_DB_PATH
   || '.users';
 cfg.users = require('./models/users')(cfg.users_db_path);
 cfg.corpora = require('./models/corpora')(cfg.users_db_path);
+cfg.access = require('./models/access')(cfg.users_db_path);
 
 module.exports = cfg;

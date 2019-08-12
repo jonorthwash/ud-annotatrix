@@ -767,12 +767,20 @@ module.exports = app => {
         throw err;
       }
 
-      logger.debug(data, "treebank data");
+      cfg.access.list(req.treebank, (err, acl) => {
+        if (err){
+          throw err;
+        }
 
-      res.render('settings.ejs', {
-        treebank: req.treebank,
-        username: req.session.username,
-        data: data
+        logger.debug(data, "treebank data");
+        logger.debug(acl, "treebank acl");
+
+        res.render('settings.ejs', {
+          treebank: req.treebank,
+          username: req.session.username,
+          data: data,
+          access: acl
+        });
       });
 
     });
@@ -788,8 +796,33 @@ module.exports = app => {
     // });
   });
 
-  app.post('/settings', get_treebank, /*is_logged_in,*/ (req, res) => {
-    res.json(req.body);
+  app.post('/settings', get_user, (req, res) => {
+    // if (req.body.hasOwnProperty("corpus")
+    logger.debug(req.body);
+    // )
+if (req.body.hasOwnProperty("treebank") && req.body.treebank.length) {
+    if (req.body.hasOwnProperty("open_access")) {
+      cfg.corpora.change_access(req.body.treebank, req.body.open_access, (err, data) => {
+        if (err){
+          return res.json({ error: "Error with database" });
+        }
+
+        res.json({ success: true });
+      });
+    } else if(req.body.hasOwnProperty("editor")) {
+      cfg.access.arrange(req.body.treebank, req.body.editor, req.body.mode, (err, data) => {
+        if (err){
+          return res.json({ error: "Error with database" });
+        }
+
+        res.json({ success: true });
+      });
+    }
+  } else {
+    res.json({ error: "Treebank ID was not provided" });
+  }
+    // logger.warn("default");
+    // res.json(req.body);
   });
 
   // ---------------------------

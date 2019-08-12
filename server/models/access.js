@@ -13,7 +13,8 @@ function open(filename, next) {
     db.run(`
       CREATE TABLE IF NOT EXISTS access (
         treebank_id TEXT,
-        username TEXT
+        username TEXT,
+        UNIQUE(treebank_id, username)
       )`, err => next(err, db));
 
 }
@@ -50,13 +51,13 @@ class AccessDB {
   }
 
 
-  get_access(treebank_id, next) {
+  list(treebank_id, next) {
     open(this.path, (err, db) => {
       if (err) {
         return next(new DBError(err), null);
       }
 
-      db.get('SELECT * FROM access WHERE treebank_id =?', treebank_id, (err, data) => {
+      db.all('SELECT username FROM access WHERE treebank_id =?', treebank_id, (err, data) => {
           if (err) {
             return next(new DBError(err), null);
           }
@@ -72,19 +73,21 @@ class AccessDB {
 
 
 
-  arrange(grant_access_flag, corpus_id, username, next) {
+  arrange(treebank_id, username, grant_access_flag, next) {
     open(this.path, (err, db) => {
-      if (err)
+      if (err) {
         return next(new DBError(err), null);
+      }
 
-      if (!corpus_id || !username)
-        return next(new DBError('Missing required argument: corpus and username'), null);
+      if (!treebank_id || !username){
+        return next(new DBError('Missing required argument: treebank_id and username'), null);
+      }
 
       const sql = grant_access_flag ?
-            'INSERT INTO access (corpus_id, username) VALUES (?, ?)' :
-            'DELETE FROM access WHERE corpus_id=? AND username = ?';
-            
-      db.run(sql, corpus_id, username, function (err) {
+            'INSERT OR REPLACE INTO access (treebank_id, username) VALUES (?, ?)' :
+            'DELETE FROM access WHERE treebank_id=? AND username = ?';
+
+      db.run(sql, treebank_id, username, function (err) {
           if (err) {
             return next(new DBError(err), null);
           }

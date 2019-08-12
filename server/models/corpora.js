@@ -27,7 +27,7 @@ function open(filename, next) {
               created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
               committed_at TIMESTAMP,
               pr_at TIMESTAMP,
-              access_mode INTEGER
+              open_access INTEGER
     )`, err => next(err, db));
 
 }
@@ -112,6 +112,33 @@ class CorporaDB {
 
     });
   }
+
+
+  change_access(treebank_id, mode, next) {
+    open(this.path, (err, db) => {
+      if (err) {
+        return next(new DBError(err), null);
+      }
+
+      if (!treebank_id || !mode) {
+        return next(new DBError('Missing required arguments: treebank_id AND mode'), null);
+        }
+
+        db.run("UPDATE corpora SET open_access=? WHERE treebank_id=?",
+          mode?1:0,
+          treebank_id,
+          function (err) {
+            if (err){
+              return next(new DBError(err), null);
+            }
+
+            next(null, { id: this.lastID, changes: this.changes });
+          }
+        );
+
+    });
+  }
+
 
 
   update_commit(treebank_id, sha, next) {

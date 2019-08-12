@@ -11,6 +11,7 @@
   <link rel="stylesheet" type="text/css" href="../css/settings.css" />
   <script src="../js/jquery.min.js"></script>
   <script src="../js/bootstrap.bundle.js"></script>
+  <script src="../js/settings.js"></script>
 </head>
 
 <body>
@@ -27,7 +28,7 @@
     <div class="container">
       <div class="py-5 text-center">
         <h3>
-          Settings for treebank <span class="settings-group-name"><%= treebank %></span>
+          Treebank <span class="settings-group-name" id="treebank"><%= treebank %></span>
         </h3>
         <p class="lead">This is a treebank
 
@@ -42,47 +43,47 @@
       </div>
 
       <div class="row">
-        <% if (data) { %>
+        <% if (data && access) { %>
         <div class="col-md-4 order-md-2 mb-4">
           <h4 class="d-flex justify-content-between align-items-center mb-3">
             <span class="text-muted">Editors</span>
-            <span class="badge badge-secondary badge-pill">3</span>
+            <span class="badge badge-secondary badge-pill"><%= access.length+1 %></span>
           </h4>
           <ul class="list-group mb-3">
-            <li class="list-group-item d-flex justify-content-between lh-condensed">
-              <div>
-                <h6 class="my-0">Editor</h6>
-                <small class="text-muted">Name Surname</small>
-              </div>
-              <span class="text-muted"><i class="fab fa-github" title=""></i></span>
-            </li>
-            <li class="list-group-item d-flex justify-content-between lh-condensed">
-              <div>
-                <h6 class="my-0">Editor</h6>
-                <small class="text-muted">Name Surname</small>
-              </div>
-              <span class="text-muted"><i class="fab fa-github" title=""></i></span>
-            </li>
-            <% if (data) { %>
+
+            <% access.forEach(row => { %>
+              <li class="list-group-item d-flex justify-content-between lh-condensed">
+                <div>
+                  <h6 class="my-0">@<%= row.username %></h6>
+                  <small class="text-muted">Editor</small>
+                </div>
+                <span class="text-muted">
+                  <button type="button" class="btn btn-default">
+                    <i class="fa fa-times" title=""></i>
+                  </button>
+
+                </span>
+              </li>
+            <% }); %>
+
+
             <li class="list-group-item d-flex justify-content-between bg-light">
               <div class="text-success">
-                <h6 class="my-0">Owner</h6>
-                <small>@<%= data.username %></small>
+                <h6 class="my-0">@<%= data.username %></h6>
+                <small>Owner</small>
               </div>
-              <span class="text-success"><i class="fab fa-github" title=""></i></span>
+              <!-- <span class="text-success"><i class="fab fa-github" title=""></i></span> -->
             </li>
-            <% } %>
+
           </ul>
 
-
-          <form class="card p-2">
-            <div class="input-group">
-              <input type="text" class="form-control" placeholder="Github username">
-              <div class="input-group-append">
-                <button type="submit" class="btn btn-secondary">Add an editor</button>
-              </div>
+          <div class="input-group">
+            <input type="text" id="github_user" class="form-control" placeholder="Github username" <% if (!username) { %>disabled<% } %>>
+            <div class="input-group-append">
+              <button type="submit" class="btn btn-secondary" id="grant" <% if (!username) { %>disabled<% } %>>Add an editor</button>
             </div>
-          </form>
+          </div>
+
 
         </div>
         <% } %>
@@ -138,12 +139,12 @@
 
             <div class="d-block my-3">
               <div class="custom-control custom-radio">
-                <input id="accessEditor" name="accessRepo" type="radio" class="custom-control-input" required>
+                <input id="accessEditor" name="accessRepo" type="radio" class="custom-control-input access"  <% if (!data.open_access) { %>checked<% } %> required <% if (!username) { %>disabled<% } %> value="0">
                 <label class="custom-control-label" for="accessEditor">Users from editors list (have to be logged in)</label>
               </div>
 
               <div class="custom-control custom-radio">
-                <input id="accessAny" name="accessRepo" type="radio" class="custom-control-input" checked required>
+                <input id="accessAny" name="accessRepo" type="radio" class="custom-control-input access" <% if (data.open_access) { %>checked<% } %> required <% if (!username) { %>disabled<% } %> value="1">
                 <label class="custom-control-label" for="accessAny">Anyone</label>
               </div>
 
