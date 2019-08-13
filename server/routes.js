@@ -797,32 +797,52 @@ module.exports = app => {
   });
 
   app.post('/settings', get_user, (req, res) => {
-    // if (req.body.hasOwnProperty("corpus")
-    logger.debug(req.body);
-    // )
-if (req.body.hasOwnProperty("treebank") && req.body.treebank.length) {
-    if (req.body.hasOwnProperty("open_access")) {
-      cfg.corpora.change_access(req.body.treebank, req.body.open_access, (err, data) => {
-        if (err){
-          return res.json({ error: "Error with database" });
+
+      if (req.body.hasOwnProperty("treebank") && req.body.treebank.length) {
+        cfg.corpora.query(req.body.treebank, (err, data) => {
+          if (err){
+            throw err;
+          }
+          cfg.access.list(req.body.treebank, (err, acl) => {
+            if (err){
+              throw err;
+            }
+
+              if ((req.session.username === data.username) || acl.filter (item => item.username == req.session.username).length){
+                if (req.body.hasOwnProperty("open_access")) {
+                  cfg.corpora.change_access(req.body.treebank, req.body.open_access, (err, data) => {
+                    if (err){
+                      return res.json({ error: "Error with database" });
+                    }
+
+                    res.json({ success: true });
+                  });
+                } else if(req.body.hasOwnProperty("editor")) {
+                  const editor = req.body.editor.replace(/\s/g, '');
+                  // source: https://github.com/shinnn/github-username-regex
+                  if (editor.match(/^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i)){
+                    cfg.access.arrange(req.body.treebank, editor, parseInt(req.body.mode), (err, data) => {
+                      if (err){
+                        return res.json({ error: "Error with database" });
+                      }
+
+                      res.json({ success: true });
+                    });
+                  } else {
+                    res.json({ error: "Not valid Github username" });
+                  }
+
+                }
+              } else {
+                res.json({ error: "Access denied" });
+              }
+
+            });
+          });
+        } else {
+          res.json({ error: "Treebank ID was not provided" });
         }
 
-        res.json({ success: true });
-      });
-    } else if(req.body.hasOwnProperty("editor")) {
-      cfg.access.arrange(req.body.treebank, req.body.editor, req.body.mode, (err, data) => {
-        if (err){
-          return res.json({ error: "Error with database" });
-        }
-
-        res.json({ success: true });
-      });
-    }
-  } else {
-    res.json({ error: "Treebank ID was not provided" });
-  }
-    // logger.warn("default");
-    // res.json(req.body);
   });
 
   // ---------------------------

@@ -41,15 +41,32 @@
           </p>
 
       </div>
-
+      <% var isAllowed = false; %>
+      <% if (access && data && ((username === data.username) || access.filter (item => item.username == username).length)) { %>
+      <% isAllowed = true %>
+      <% } %>
       <div class="row">
         <% if (data && access) { %>
-        <div class="col-md-4 order-md-2 mb-4">
+        <div class="col-md-4 order-md-2 mb-4" id="editorslist">
           <h4 class="d-flex justify-content-between align-items-center mb-3">
             <span class="text-muted">Editors</span>
-            <span class="badge badge-secondary badge-pill"><%= access.length+1 %></span>
+            <span class="badge badge-secondary badge-pill" id="usernum"><%= access.length+1 %></span>
           </h4>
           <ul class="list-group mb-3">
+
+            <li class="list-group-item justify-content-between lh-condensed d-none">
+              <div class="text-info">
+                <h6 class="my-0"></h6>
+                <small>Editor</small>
+              </div>
+              <span class="text-muted">
+                <button type="button" data-user="" class="btn btn-default remove">
+                  <i class="fa fa-times" title=""></i>
+                </button>
+
+              </span>
+            </li>
+
 
             <% access.forEach(row => { %>
               <li class="list-group-item d-flex justify-content-between lh-condensed">
@@ -58,7 +75,7 @@
                   <small class="text-muted">Editor</small>
                 </div>
                 <span class="text-muted">
-                  <button type="button" class="btn btn-default">
+                  <button type="button" data-user="<%= row.username %>" class="btn btn-default remove">
                     <i class="fa fa-times" title=""></i>
                   </button>
 
@@ -67,7 +84,7 @@
             <% }); %>
 
 
-            <li class="list-group-item d-flex justify-content-between bg-light">
+            <li class="list-group-item d-flex justify-content-between bg-light" id="owner">
               <div class="text-success">
                 <h6 class="my-0">@<%= data.username %></h6>
                 <small>Owner</small>
@@ -78,9 +95,9 @@
           </ul>
 
           <div class="input-group">
-            <input type="text" id="github_user" class="form-control" placeholder="Github username" <% if (!username) { %>disabled<% } %>>
+            <input type="text" id="github_user" class="form-control" placeholder="Github username" <% if (!isAllowed) { %>disabled<% } %>>
             <div class="input-group-append">
-              <button type="submit" class="btn btn-secondary" id="grant" <% if (!username) { %>disabled<% } %>>Add an editor</button>
+              <button type="submit" class="btn btn-secondary" id="grant" <% if (!isAllowed) { %>disabled<% } %>>Add an editor</button>
             </div>
           </div>
 
@@ -139,12 +156,12 @@
 
             <div class="d-block my-3">
               <div class="custom-control custom-radio">
-                <input id="accessEditor" name="accessRepo" type="radio" class="custom-control-input access"  <% if (!data.open_access) { %>checked<% } %> required <% if (!username) { %>disabled<% } %> value="0">
+                <input id="accessEditor" name="accessRepo" type="radio" class="custom-control-input access"  <% if (!data.open_access) { %>checked<% } %> required <% if (!isAllowed) { %>disabled<% } %> value="0">
                 <label class="custom-control-label" for="accessEditor">Users from editors list (have to be logged in)</label>
               </div>
 
               <div class="custom-control custom-radio">
-                <input id="accessAny" name="accessRepo" type="radio" class="custom-control-input access" <% if (data.open_access) { %>checked<% } %> required <% if (!username) { %>disabled<% } %> value="1">
+                <input id="accessAny" name="accessRepo" type="radio" class="custom-control-input access" <% if (data.open_access) { %>checked<% } %> required <% if (!isAllowed) { %>disabled<% } %> value="1">
                 <label class="custom-control-label" for="accessAny">Anyone</label>
               </div>
 
@@ -153,13 +170,20 @@
             <% if (username) { %>
             <!-- <button class="btn btn-primary btn-lg btn-block">Save settings</button> -->
             <!-- <p><small>Shown for  <%= '@'+username || "non-logged in user. Log in to change properties of the treebank" %>.</small></p> -->
-            <div class="alert alert-secondary">You are logged in as <%= '@'+username %></div>
+            <div class="alert alert-secondary">
+              You are logged in as <%= '@'+username %>.
+              <% if (isAllowed) { %>
+                You have access to edit the treebank.
+              <% } else { %>
+                  You DO NOT have access to edit the treebank.
+              <% } %>
+            </div>
             <% } else { %>
               <div class="alert alert-warning"><a href="/oauth/login?treebank_id=<%= treebank || "" %>">Log in</a> to change settings</div>
             <% } %>
 
           <% } %>
-
+          <div class="alert alert-danger d-none" id="error"></div>
         </div>
       </div>
 
