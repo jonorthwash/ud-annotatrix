@@ -42,7 +42,8 @@
 
       </div>
       <% var isAllowed = false; %>
-      <% if (access && data && ((username === data.username) || access.filter (item => item.username == username).length)) { %>
+      <% var isOwner = (username === data.username); %>
+      <% if (access && data && (isOwner || access.filter (item => item.username == username).length)) { %>
       <% isAllowed = true %>
       <% } %>
       <div class="row">
@@ -94,12 +95,15 @@
 
           </ul>
 
+
           <div class="input-group">
             <input type="text" id="github_user" class="form-control" placeholder="Github username" <% if (!isAllowed) { %>disabled<% } %>>
-            <div class="input-group-append">
+            <div class="input-group-append mb-1">
               <button type="submit" class="btn btn-secondary" id="grant" <% if (!isAllowed) { %>disabled<% } %>>Add an editor</button>
             </div>
+            <small class="text-muted mx-auto">Only editors can change this list</small>
           </div>
+
 
 
         </div>
@@ -152,16 +156,19 @@
             </div> -->
             <hr class="mb-4">
 
-            <h4 class="mb-3">Access to editing the treebank</h4>
+            <h4 class="mb-0">Access to editing the treebank</h4>
+            <small class="text-muted">Only owner can change this property</small>
+
+
 
             <div class="d-block my-3">
               <div class="custom-control custom-radio">
-                <input id="accessEditor" name="accessRepo" type="radio" class="custom-control-input access"  <% if (!data.open_access) { %>checked<% } %> required <% if (!isAllowed) { %>disabled<% } %> value="0">
+                <input id="accessEditor" name="accessRepo" type="radio" class="custom-control-input access"  <% if (!data.open_access) { %>checked<% } %> required <% if (!isOwner) { %>disabled<% } %> value="0">
                 <label class="custom-control-label" for="accessEditor">Users from editors list (have to be logged in)</label>
               </div>
 
               <div class="custom-control custom-radio">
-                <input id="accessAny" name="accessRepo" type="radio" class="custom-control-input access" <% if (data.open_access) { %>checked<% } %> required <% if (!isAllowed) { %>disabled<% } %> value="1">
+                <input id="accessAny" name="accessRepo" type="radio" class="custom-control-input access" <% if (data.open_access) { %>checked<% } %> required <% if (!isOwner) { %>disabled<% } %> value="1">
                 <label class="custom-control-label" for="accessAny">Anyone</label>
               </div>
 
@@ -171,12 +178,17 @@
             <!-- <button class="btn btn-primary btn-lg btn-block">Save settings</button> -->
             <!-- <p><small>Shown for  <%= '@'+username || "non-logged in user. Log in to change properties of the treebank" %>.</small></p> -->
             <div class="alert alert-secondary">
-              You are logged in as <%= '@'+username %>.
+              <p class="mb-0">You are logged in as <strong><%= '@'+username %></strong>.</p>
+              <p class="mb-0">
               <% if (isAllowed) { %>
-                You have access to edit the treebank.
+                You have access to edit the treebank (annotate) and change editors list.
               <% } else { %>
                   You DO NOT have access to edit the treebank.
               <% } %>
+              </p>
+              <% if (isOwner) { %>
+                <p class="mb-0">As owner, you can change access settings of the treebank and perform Github-related actions (make commit and pull request).</p>
+              <% }  %>
             </div>
             <% } else { %>
               <div class="alert alert-warning"><a href="/oauth/login?treebank_id=<%= treebank || "" %>">Log in</a> to change settings</div>

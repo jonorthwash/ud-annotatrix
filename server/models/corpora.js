@@ -51,7 +51,7 @@ class CorporaDB {
       if (!Array.isArray(params) || !params.length)
         return next(new DBError('Missing required param: username OR token'), null);
 
-      db.run('INSERT INTO corpora (owner, repo, branch, username, url, filepath, filename, filesize, sha, treebank_id, access_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)', params, function (err) {
+      db.run('INSERT INTO corpora (owner, repo, branch, username, url, filepath, filename, filesize, sha, treebank_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', params, function (err) {
           if (err)
             return next(new DBError(err), null);
 
@@ -125,7 +125,7 @@ class CorporaDB {
         }
 
         db.run("UPDATE corpora SET open_access=? WHERE treebank_id=?",
-          mode?1:0,
+          mode,
           treebank_id,
           function (err) {
             if (err){

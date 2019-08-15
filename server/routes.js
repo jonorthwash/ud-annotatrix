@@ -254,32 +254,50 @@ module.exports = app => {
           logger.error("Error with corpora database");
           throw err;
         }
-        const treebanks_merged = [];
-
-        treebanks_from_files.forEach(x => {
-          let pushed = false;
-          treebanks_from_db.forEach(y => {
-            if (x.id === y.id) {
-              treebanks_merged.push({ ...x, ...y });
-              pushed = true;
-            }
-          });
-          if (!pushed){
-              treebanks_merged.push(x);
+        cfg.access.list(null, (err, acl) => {
+          if (err){
+            throw err;
           }
+
+          const treebanks_merged = [];
+
+          treebanks_from_files.forEach(x => {
+            let isPushed = false;
+            treebanks_from_db.forEach(y => {
+              if (x.id === y.id) {
+                let isAllowed = req.session.username === y.username;
+                if (!isAllowed) {
+                   isAllowed  = y.open_access;
+                }
+                if (!isAllowed) {
+                  for (let z of Object.values(acl)){
+                    if (z.treebank_id === y.treebank_id && z.username === y.username) {
+                      isAllowed = true;
+                      break;
+                    }
+                  }
+                }
+                treebanks_merged.push({ ...x, ...y, "allowed": isAllowed });
+                isPushed = true;
+              }
+            });
+            if (!isPushed){
+                treebanks_merged.push({ ...x, "allowed": true });
+            }
+            });
+            logger.debug(treebanks_merged, "merged");
+            res.render('index.ejs', {
+              // base: `${cfg.protocol}://${cfg.host}:${cfg.port}`,
+              // leave relative path instead absolute one
+              // for correct urls when it works behind a frontend proxy
+              base: '',
+              error: err,
+              treebanks: treebanks_merged,
+              github: req.session.username,
+            });
         });
 
         // logger.debug(treebanks_merged, "treebanks listed for " + (req.session.username||"all") );
-
-        res.render('index.ejs', {
-          // base: `${cfg.protocol}://${cfg.host}:${cfg.port}`,
-          // leave relative path instead absolute one
-          // for correct urls when it works behind a frontend proxy
-          base: '',
-          error: err,
-          treebanks: treebanks_merged,
-          github: req.session.username,
-        });
 
       });
 
@@ -300,11 +318,29 @@ module.exports = app => {
 
       req.session.treebank_id = treebank;
 
-      res.render('annotatrix', {
-        modalPath: 'modals',
-        github_configured: !!cfg.github, // object or null
-        username: req.session.username,
-        path: path
+      cfg.corpora.query(treebank, (err, data) => {
+        if (err){
+          throw err;
+        }
+        cfg.access.list(treebank, (err, acl) => {
+          if (err){
+            throw err;
+          }
+
+          if (data && ((req.session.username !== data.username) && !acl.filter (item => item.username == req.session.username).length)) {
+            logger.info("access denied for " + req.session.username);
+            return res.redirect("/");
+          }
+
+          res.render('annotatrix', {
+            modalPath: 'modals',
+            github_configured: !!cfg.github, // object or null
+            username: req.session.username,
+            path: path,
+            owner: data?data.username:''
+          });
+
+        });
       });
 
     }
@@ -804,12 +840,12 @@ module.exports = app => {
             throw err;
           }
           cfg.access.list(req.body.treebank, (err, acl) => {
-            if (err){
-              throw err;
-            }
-
-              if ((req.session.username === data.username) || acl.filter (item => item.username == req.session.username).length){
-                if (req.body.hasOwnProperty("open_access")) {
+              if (err){
+                throw err;
+              }
+              if (req.body.hasOwnProperty("open_access")) {
+                if ((req.session.username === data.username)){
+                  logger.warn(req.body.open_access, "acc");
                   cfg.corpora.change_access(req.body.treebank, req.body.open_access, (err, data) => {
                     if (err){
                       return res.json({ error: "Error with database" });
@@ -817,7 +853,11 @@ module.exports = app => {
 
                     res.json({ success: true });
                   });
-                } else if(req.body.hasOwnProperty("editor")) {
+                } else {
+                  res.json({ error: "Access denied" });
+                }
+              } else if(req.body.hasOwnProperty("editor")) {
+                  if ((req.session.username === data.username) || acl.filter (item => item.username == req.session.username).length) {
                   const editor = req.body.editor.replace(/\s/g, '');
                   // source: https://github.com/shinnn/github-username-regex
                   if (editor.match(/^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i)){
@@ -831,12 +871,12 @@ module.exports = app => {
                   } else {
                     res.json({ error: "Not valid Github username" });
                   }
-
+                } else {
+                  res.json({ error: "Access denied" });
                 }
               } else {
-                res.json({ error: "Access denied" });
+                res.json({ error: "Unknown request" });
               }
-
             });
           });
         } else {

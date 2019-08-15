@@ -110,10 +110,11 @@
 						<a class="dropdown-group-item pinnable" href="#" name="fork-file">
 						<span class="dropdown-group-item-name">
 							<i class="fa fa-code-branch"></i>
-							Load and fork
+							Load (making fork)
 						</span>
 						<i class="pin fa fa-thumbtack" title="Pin to menu"></i>
 						</a>
+						<% if (owner && owner.length && owner === username) { %>
 						<a class="dropdown-group-item" href="#" name="commit-changes">
 							<span class="dropdown-group-item-name">
 							<i class="fa fa-share"></i>
@@ -126,6 +127,7 @@
 							Make pull request
 							</span>
 						</a>
+						<% } %>
 					<hr class="internal">
 					<% } %>
 					<a class="dropdown-group-item pinnable" href="#" name="upload-file">

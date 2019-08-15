@@ -1,3 +1,8 @@
+$(document).on('visibilitychange', function(event) {
+		if (!document.hidden) {
+			location.reload();
+		}
+});
 $(document).ready(function() {
 	var usernum = $('#usernum');
 	var qty = parseInt(usernum.text());
@@ -19,7 +24,7 @@ $(document).ready(function() {
 	$("#grant").on('click', function(event){
 		var user_input = $("#github_user");
 		var username = user_input.val();
-		
+
 		if (username && username.replace(/\s/g, '').length){
 			$.post( "/settings", { 'editor': username, 'treebank': $('#treebank').html(), 'mode': 1 }, function(data) {
 				if (data.hasOwnProperty("success") && data.success) {
@@ -34,8 +39,8 @@ $(document).ready(function() {
 				}
 			});
 		}
-	});	
-	
+	});
+
 	$('body').on('click', '.remove', function(event){
 		var item  = $(this).closest('li');
 
@@ -47,6 +52,6 @@ $(document).ready(function() {
 				showError(data);
 			}
 		});
-	});	
-	
+	});
+
 });

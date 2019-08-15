@@ -148,32 +148,56 @@
                         <% treebanks.forEach(treebank => {
                             const url = `${base}/annotatrix?treebank_id=${treebank.id}`; %>
                         <tr id="<%= treebank.id %>">
-                            <td><a href="<%= url %>" title="<%= treebank.modified %>">
+                            <td title="<%= treebank.modified %>">
                                     <%= treebank.modified_ago %>
-                                </a></td>
+                            </td>
                             <td>
                                 <!-- <a href="<%= url %>" title="<%= treebank.id %>"> -->
                                 <!-- <%= treebank.id.split('-')[0] %> -->
-                                <button type="button" class="btn btn-secondary btn-sm actmode" data-id="<%= treebank.id %>">Edit</button>
+                                <% if (treebank.allowed) { %>
+                                    <button type="button" class="btn btn-secondary btn-sm actmode" data-id="<%= treebank.id %>">Edit</button>
+                                <% } else { %>
+                                <% } %>
+
                                 <!-- </a> -->
                             </td>
-                            <td class="<% if (treebank.username) { if (github) { if (treebank.username == github) { %>mine<% } else { %>others<% } } else  { %>others<% } } %>"><a href="<%= url %>">
+                            <% var label = "";
+                             if (treebank.username){
+                                 if (github)
+                                     { if (treebank.username == github) {
+                                         label = "Github corpus. You are owner";
+                                      } else {
+                                          label = "Github corpus, created by " + treebank.username + "." + " You "+ (treebank.allowed?"":"DO NOT ")+"have access to edit it";
+                                      }
+                                   } else if (treebank.open_access == 1) {
+                                       label ="Github corpus, with open access to annotate text";
+                                   } else {
+                                        label = "Github corpus. Only logged-in editors can access";
+                                   }
+                                }
+                            else {
+                                label = "Standalone (local only) corpus";
+                            }
+                            %>
+
+                            <td class="" title="<%= label %>">
+                                <%- treebank.allowed?'<a href=" '+ url +'">':'' %>
                                     <% if (treebank.username) { %>
                                         <i class="fab fa-github" title="<%= treebank.username %>"></i>
                                     <% } %>
 
                                     <%= treebank.filename || " " %>
-                                </a>
+                                <%- treebank.allowed?'</a>':'' %>
                             </td>
-                            <td><a href="<%= url %>">
+                            <td>
                                     <%= treebank.sentences %>
-                                </a></td>
-                            <td><a href="<%= url %>">
+                            </td>
+                            <td>
                                     <%= treebank.errors %>
-                                </a></td>
-                            <td><a href="<%= url %>">
+                            </td>
+                            <td>
                                     <%= treebank.labels.map(label => `${label.name} (${label.size})`).join(', ') || " " %>
-                                </a></td>
+                            </td>
                         </tr>
                         </a>
                         <% }); %>

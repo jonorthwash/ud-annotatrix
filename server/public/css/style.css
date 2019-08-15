@@ -1070,7 +1070,7 @@ span.dropdown-group-item-name i {
   list-style: none;
 }
 
-#treebanks a {
+#treebanks tr,  #treebanks a{
   text-decoration: none;
   color: #868e96;
 }
@@ -1369,6 +1369,21 @@ th.column-hide span.col-name {
 
 .mine{
 	background-color: #9ff2b3;
+}
+
+.remote{
+	background-color: orange;	
+}
+
+.remote a {
+	color: #868e96; 
+}
+
+.open{
+	background-color: #4FC3F7;	
+}
+.open a {
+	color: white;
 }
 
 .custom-file-label, .nav-link{

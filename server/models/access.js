@@ -57,7 +57,11 @@ class AccessDB {
         return next(new DBError(err), null);
       }
 
-      db.all('SELECT username FROM access WHERE treebank_id =?', treebank_id, (err, data) => {
+      const args = treebank_id ?
+            ['SELECT * FROM access WHERE treebank_id =?', treebank_id]:
+            ['SELECT * FROM access'];
+
+      db.all(...args, (err, data) => {
           if (err) {
             return next(new DBError(err), null);
           }
