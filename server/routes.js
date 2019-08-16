@@ -52,6 +52,7 @@ function get_user(req, res, next) {
   // req.session.token = token;
   const token = req.session.token;
   const username = req.cookies.github;
+  logger.debug(username, "Github username");
   if (!token && username) {
     cfg.users.query({
       username: username,
@@ -141,18 +142,18 @@ async function github(token, method, url, data) {
 async function commit(token, owner, repo, branch, content, filename, message, filesha, treebank,userinfo){
   logger.info("in commit function");
   try {
-      let sha, commit_url;
+      let sha, size, commit_url;
       const author = {
         "name": userinfo.realname, "email": userinfo.email,
       };
       const committer = {
         "name": "UD Annotatrix", "email": "annotatrix@gmail.com",
       };
-      const filesize  = Buffer.byteLength(content, 'utf8');
-      logger.info(filename, filesize);
+      size  = Buffer.byteLength(content, 'utf8');
+      logger.info(filename, size);
       // if content file size is above 1 Mb one has to use low-level Tree API,
       // but, if possible, it is better to deal with simpler Contents API
-      if (filesize < 1000000) {
+      if (size < 1000000) {
 
         logger.debug("Commit via Contents API");
 
@@ -170,6 +171,7 @@ async function commit(token, owner, repo, branch, content, filename, message, fi
           return({"error": contents_data.message});
         }
         sha = contents_data["content"]["sha"];
+        size = contents_data["content"]["size"];
         commit_url = contents_data["commit"]["html_url"];
 
       } else {
@@ -228,7 +230,7 @@ async function commit(token, owner, repo, branch, content, filename, message, fi
         logger.debug(commit_url);
 
       }
-      return({"url": commit_url, "sha": sha});
+      return({"url": commit_url, "sha": sha, "size": size});
 
  }  catch (e) {
 
@@ -285,7 +287,7 @@ module.exports = app => {
                 treebanks_merged.push({ ...x, "allowed": true });
             }
             });
-            logger.debug(treebanks_merged, "merged");
+            // logger.debug(treebanks_merged, "merged");
             res.render('index.ejs', {
               // base: `${cfg.protocol}://${cfg.host}:${cfg.port}`,
               // leave relative path instead absolute one
@@ -327,8 +329,8 @@ module.exports = app => {
             throw err;
           }
 
-          if (data && ((req.session.username !== data.username) && !acl.filter (item => item.username == req.session.username).length)) {
-            logger.info("access denied for " + req.session.username);
+          if (data && ((req.session.username !== data.username) && !acl.filter (item => item.username == req.session.username).length) && !data.open_access) {
+            logger.error("access denied for " + req.session.username);
             return res.redirect("/");
           }
 
@@ -412,14 +414,13 @@ module.exports = app => {
   app.post('/fork', is_logged_in, async (req, res) => {
    const treebank = uuidv4();
    const token = req.session.token;
+   logger.info("fork item clicked");
 
    if (!(req.session.hasOwnProperty("username") && req.session.username)){
      return res.json({ error: 'Session info has no username' });
    }
 
    logger.debug("prepare fork by", req.session.username);
-
-   logger.info("fork item clicked");
 
    if (req.body.url) {
      const match = req.body.url.match(/^(https?:\/\/)?(github\.com|raw\.githubusercontent\.com)\/([\w\d]*)\/([^/]*)\/(tree\/|blob\/)?([^/]*)\/(.*)$/);
@@ -439,20 +440,25 @@ module.exports = app => {
      const fork_url = `/repos/${owner}/${repo}/forks`;
      logger.info("fork url", fork_url);
 
-     let isForked = false;
-     const forklist_data = await github(token, "get", fork_url);
-     logger.debug(forklist_data, "forklist data");
+     let isForked = owner === req.session.username;
 
-     for (let fork_num in forklist_data) {
-       logger.debug(fork_num);
-       logger.debug(forklist_data[fork_num]);
-
+     if (!isForked){
        const new_fork_url = `https://api.github.com/repos/${req.session.username}/${repo}`;
-       if (forklist_data[fork_num]["url"] === new_fork_url) {
-         logger.info("user already has repo forked");
-         isForked = true;
-         break;
+       const forklist_data = await github(token, "get", fork_url);
+       logger.debug(forklist_data, "forklist data");
+
+       for (let fork_num in forklist_data) {
+         logger.debug(fork_num);
+         logger.debug(forklist_data[fork_num]);
+
+         if (forklist_data[fork_num]["url"] === new_fork_url) {
+           logger.info("user already has repo forked");
+           isForked = true;
+           break;
+         }
        }
+     } else {
+       logger.info("getting own users's repository (no fork)");
      }
 
      const content_owner  = isForked ? req.session.username : owner;
@@ -667,7 +673,7 @@ module.exports = app => {
               const result  = await commit(req.session.token, data.username, data.repo, data.branch, req.body.corpus, data.filepath, req.body.message, data.sha, treebank, userdata);
 
               if (result.hasOwnProperty("url")){
-                cfg.corpora.update_commit(treebank, result.sha, (err, data) => {
+                cfg.corpora.update_commit(treebank, result.sha, result.size, (err, data) => {
                   if (err){
                     logger.error("Error on saving commit data", treebank, sha);
                     throw(err)

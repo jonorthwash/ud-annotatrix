@@ -141,18 +141,19 @@ class CorporaDB {
 
 
 
-  update_commit(treebank_id, sha, next) {
+  update_commit(treebank_id, sha, filesize, next) {
     open(this.path, (err, db) => {
       if (err) {
         return next(new DBError(err), null);
       }
 
       if (!treebank_id || !sha) {
-        return next(new DBError('Missing required arguments: treebank_id AND sha'), null);
+        return next(new DBError('Missing required arguments: treebank_id, sha AND filesize'), null);
         }
 
-        db.run("UPDATE corpora SET committed_at=datetime('now'), sha=? WHERE treebank_id=?",
+        db.run("UPDATE corpora SET committed_at=datetime('now'), sha=?, filesize=? WHERE treebank_id=?",
           sha,
+          filesize,
           treebank_id,
           function (err) {
             if (err){

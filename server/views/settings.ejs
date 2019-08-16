@@ -138,10 +138,37 @@
                 </div>
               </div>
               <div class="col-md-6 mb-3">
-                <div class="label">File</div>
+                <div class="label mb">Repository</div>
+                <div>
+                  <a href="https://github.com/<%=data.username%>/<%=data.repo%>" target="_blank"><%= data.repo %></a>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <div class="label">File name</div>
                 <div>
                   <a href="<%=data.url%>" target="_blank"><%= data.filename %></a>
                 </div>
+              </div>
+              <% /* https://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable-string */
+                function humanFileSize(size) {
+                    var i = Math.floor( Math.log(size) / Math.log(1024) );
+                    return ( size / Math.pow(1024, i) ).toFixed(2) * 1 + ' ' + ['B', 'kB', 'MB', 'GB', 'TB'][i];
+                };
+              %>
+              <div class="col-md-6 mb-3">
+                <div class="label mb">File size</div>
+                <div class="mb-0">
+                  <%= data.filesize %> bytes
+                  <% if (parseInt(data.filesize) > 1024) { %>
+                    <small class="text-muted mb">
+                      <%= humanFileSize(data.filesize) %>
+                   </small>
+                  <% } %>
+                </div>
+
               </div>
             </div>
 
