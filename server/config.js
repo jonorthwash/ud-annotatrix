@@ -28,7 +28,9 @@ cfg.secret = process.env.ANNOTATRIX_SECRET
 cfg.environment = process.env.ANNOTATRIX_ENV
   || process.env.NODE_ENV
   || 'development';
-
+cfg.expire = process.env.ANNOTATRIX_COOKIES_TIME
+    || process.env.COOKIES_TIME
+    ||  43200000; // 12 hours
 // oauth config
 cfg.github = {
   client_id: process.env.ANNOTATRIX_GH_CLIENT_ID

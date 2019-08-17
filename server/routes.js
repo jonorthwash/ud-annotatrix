@@ -68,6 +68,9 @@ function get_user(req, res, next) {
           logger.debug("token is in database");
           req.session.token = data.token;
           req.session.username = data.username;
+          res.cookie('github', data.username,
+           { path: '/', expires: new Date(Date.now() + cfg.expire), httpOnly: false }
+         );
         }
         next();
     });
@@ -595,7 +598,7 @@ module.exports = app => {
             throw err;
 
           logger.info('/login changes to Users:', data.changes);
-          res.cookie('github', username, { path: '/', expires: new Date(Date.now() + 9000000), httpOnly: false });
+          res.cookie('github', username, { path: '/', expires: new Date(Date.now() + cfg.expire), httpOnly: false });
           req.session.username = username;
           // req.session.treebank = req.treebank;
           logger.debug("treebank on login", req.treebank);

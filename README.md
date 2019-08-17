@@ -96,9 +96,31 @@ git clone https://github.com/jonorthwash/ud-annotatrix
 cd ud-annotatrix/
 npm install
 ```
-You can configure the environment in several ways by setting `KEY=VALUE` pairs in the `.env` file (see [the server configuration file](server/config.js)).
+#### Changing settings via configuration file
 
-To run the server, run `npm run dev-server` in the project directory root, then navigate your browser to `localhost:5316`.  If you would like to deploy your own copy of UD Annotatrix, you could alternately run `npm run server`.
+You can configure the environment in several ways by setting `KEY=VALUE` pairs in the `.env` file ([the server configuration file](server/config.js)).
+
+Add this line to change the port to *3000* instead of *5316* (default setting)
+
+`ANNOTATRIX_PORT=3000`
+
+Add this line to change the domain of the application to *example.com*
+
+`ANNOTATRIX_HOST=example.com`
+
+`ANNOTATRIX_PROTOCOL` may be `http` or `https` (first one is by default).
+
+If you run the application via SSL, but have not set up the protocol item in configuration file,  pages could be rendered garbled, and in Developer console you probably see an error message like this:
+
+```The resource from <domain> was blocked due to MIME type (“text/html”) mismatch (X-Content-Type-Options: nosniff)``
+
+`ANNOTATRIX_SECRET` option is used as a key to sign cookies (to encrypt the session), can be any random sequence of characters.
+
+`ANNOTATRIX_COOKIES_TIME` sets time span during which Github cookie stays active in browser (until the cookie is not expired, the application user remains connected to Github) after last user activity. Otherwise user has to login to Github via the application interface. This options is in milliseconds, default value is equal to 12 hours.
+
+#### Running the server
+
+To start the server, run `npm run dev-server` in the project directory root, then navigate your browser to `localhost:5316`.  If you would like to deploy your own copy of *UD Annotatrix*, you could alternately run `npm run server`.
 
 #### Github integration
 
@@ -121,15 +143,7 @@ http://127.0.0.1:5316/oauth/callback
 
 ***Note***: it is an example, those settings are correct for default Annotatrix setup, running on **local** machine. The application config is `.env` file in application root directory (as it was mentioned above).
 
-Add this line to change the port to *3000* instead of *5316*
-
-`ANNOTATRIX_PORT=3000`
-
-Add this line to change the domain of the application to *example.com*
-
-`ANNOTATRIX_HOST=example.com`
-
-If you change those settings, you have to appropriately change Github OAuth app setup (put real domain instead 127.0.0.1, change port, if needed). 
+If you change settings for ***port*** and ***host*** , you have to appropriately change Github OAuth app setup (put real domain instead 127.0.0.1, change port, if needed). 
 
 To make Github integration work with Annotatrix, you have to add two additional lines to `.env ` (without them, in application menu a caption *Github is not configured* is shown).
 
