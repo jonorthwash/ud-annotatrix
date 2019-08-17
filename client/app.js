@@ -86,7 +86,7 @@ const UndoManager = require('./undo-manager');
 
     // serialize the corpus
     let serial = this.corpus.serialize();
-    console.log("this.corpus.serialize", serial);
+    // console.log("this.corpus.serialize", serial);
     // add it to the undo/redo stack if it's an actual change
     this.undoer.push(serial)
 
