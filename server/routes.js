@@ -156,7 +156,7 @@ async function commit(token, owner, repo, branch, content, filename, message, fi
       logger.info(filename, size);
       // if content file size is above 1 Mb one has to use low-level Tree API,
       // but, if possible, it is better to deal with simpler Contents API
-      if (size < 1000000) {
+      if (size < 1000000 && userinfo.realname && userinfo.email) {
 
         logger.debug("Commit via Contents API");
 
@@ -213,11 +213,12 @@ async function commit(token, owner, repo, branch, content, filename, message, fi
         logger.debug(newtree_data, ">>new tree");
         const newcom_obj = {
          "message": message,
-         "author": author,
+         // "author": author,
          "committer": committer,
          "parents": [head_data["object"]["sha"]],
          "tree": newtree_data["sha"],
         };
+
 
         const newcom_data = await github(token, "post", `${git}commits`, newcom_obj);
         logger.debug(newcom_data, ">>new commit");
@@ -586,11 +587,24 @@ module.exports = app => {
         const body = await github(token, "get", "/user");
         logger.debug(body, "github user info");
         const username = body.login;
+        let email = "";
+        if (body.email) {
+          email = body.email
+        } else {
+          const emails_data = await github(token, "get", "/user/emails");
+          logger.debug(emails_data, "emails data");
+          const email1_data  = emails_data.filter(item => item.primary == true);
+          logger.debug(email1_data, "primary email");
+          if (email1_data && email1_data.hasOwnProperty("email")){
+              email = email1_data.email;
+              logger.debug(email, "primary email address");
+          }
+        }
 
         cfg.users.update({
           username: username,
-          email: body.email,
-          realname: body.name
+          email: email,
+          realname: body.name || ""
         }, {
           token: token
         }, (err, data) => {
@@ -911,7 +925,7 @@ module.exports = app => {
         client_id:  cfg.github.client_id,
         state:      cfg.github.state,
         // https://developer.github.com/apps/building-oauth-apps/understanding-scopes-for-oauth-apps/
-        scope: ['user', 'public_repo']
+        scope: 'user public_repo'
       });
     logger.info("redirect", url);
     res.redirect(url);
