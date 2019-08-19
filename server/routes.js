@@ -343,7 +343,7 @@ module.exports = app => {
             github_configured: !!cfg.github, // object or null
             username: req.session.username,
             path: path,
-            owner: data?data.username:''
+            data: data
           });
 
         });
