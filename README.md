@@ -90,12 +90,21 @@ Many of these methods require the `node` and `npm` executables.  To check if you
 
 ### serve dynamic files
 
-Run a copy of UD Annotatrix with server backend on your machine.  Uploaded databases will be saved directly to your hard drive.  This is the recommended method.  To install, run
+Run a copy of UD Annotatrix with server backend on your machine.  Uploaded databases will be saved directly to your hard drive.  This is the recommended method.
+
+There are two ways to get the application running.
+1. You have to have `git` installed.
+To install the application, run
 ```bash
 git clone https://github.com/jonorthwash/ud-annotatrix
 cd ud-annotatrix/
 npm install
 ```
+2. If you don't have `git`, you could just download [all files from the repository as a ZIP-archive](https://github.com/jonorthwash/ud-annotatrix/archive/master.zip), then unzip it into some folder, and do `npm install`.
+
+Obviously, [NodeJS](https://nodejs.org/en/download/) is obligatory environment for server setup of the application.
+
+
 #### Changing settings via configuration file
 
 You can configure the environment in several ways by setting `KEY=VALUE` pairs in the `.env` file ([the server configuration file](server/config.js)).
@@ -110,10 +119,6 @@ Add this line to change the domain of the application to *example.com*
 
 `ANNOTATRIX_PROTOCOL` may be `http` or `https` (first one is by default).
 
-If you run the application via SSL, but have not set up the protocol item in configuration file,  pages could be rendered garbled, and in Developer console you probably see an error message like this:
-
-```The resource from <domain> was blocked due to MIME type (“text/html”) mismatch (X-Content-Type-Options: nosniff)``
-
 `ANNOTATRIX_SECRET` option is used as a key to sign cookies (to encrypt the session), can be any random sequence of characters.
 
 `ANNOTATRIX_COOKIES_TIME` sets time span during which Github cookie stays active in browser (until the cookie is not expired, the application user remains connected to Github) after last user activity. Otherwise user has to login to Github via the application interface. This options is in milliseconds, default value is equal to 12 hours.
@@ -121,6 +126,23 @@ If you run the application via SSL, but have not set up the protocol item in con
 #### Running the server
 
 To start the server, run `npm run dev-server` in the project directory root, then navigate your browser to `localhost:5316`.  If you would like to deploy your own copy of *UD Annotatrix*, you could alternately run `npm run server`.
+
+#### Running behind frontend proxy
+
+As usual, the application is hardly could be only web application running on a whole server, if it's Internet accessible web-server. For example, if one has  an Apache2, configuration for host that is set up to interact with the application via `mod_proxy` would look like this:
+
+```apache2
+<VirtualHost *:443>
+	ServerName example.com 	
+	SSLEngine on
+	SSLCertificateFile     /some-key-dir/example.crt
+	SSLCertificateKeyFile /some-key-dir/example.key
+		
+	ProxyPass / http://localhost:5316/
+	ProxyPassReverse / http://localhost:5316/
+</VirtualHost>
+```
+In this example, domain is `example.com`, and Apache2 serves the application (started with default settings for port) via SSL.
 
 #### Github integration
 
@@ -132,18 +154,25 @@ Those features  are available, if user properly sets up Github account (OAuth ap
 
 Setting up a Github OAuth app in Github interface is described [here](https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/). The things one has to put are like this:
 
-<u>Application name:</u>
+<u>Application name:</u>  
 anything you want, may be *Annotatrix* or not
 
-<u>Homepage URL</u>
+<u>Homepage URL</u>  
 http://127.0.0.1:5316/oauth/login
 
-<u>Authorization callback URL</u>
+<u>Authorization callback URL</u>  
 http://127.0.0.1:5316/oauth/callback
 
 ***Note***: it is an example, those settings are correct for default Annotatrix setup, running on **local** machine. The application config is `.env` file in application root directory (as it was mentioned above).
 
 If you change settings for ***port*** and ***host*** , you have to appropriately change Github OAuth app setup (put real domain instead 127.0.0.1, change port, if needed). 
+
+As to host, port, protocol and URLs (login and callback), if settings for Github OAuth application and settings in `config.js` differ, you could experience some issues, e.g. pages could be rendered garbled, and in Developer console you probably see an error message like this:
+
+```
+The resource from <domain> was blocked due to MIME type (“text/html”) mismatch (X-Content-Type-Options: nosniff)
+```
+
 
 To make Github integration work with Annotatrix, you have to add two additional lines to `.env ` (without them, in application menu a caption *Github is not configured* is shown).
 
@@ -199,8 +228,8 @@ Non-global shortcuts work only when cursor (focus) is inside specific interface 
 |                                         | Ctrl + Shift + Page Down | Last sentence                                               |
 |                                         | Ctrl + Page Up           | Previous sentence                                           |
 |                                         | Ctrl + Shift + Page Down | First sentence                                              |
-|                                         | Ctrl + Shift + Z         | Undo                                                        |
-|                                         | Ctrl  Z + Y              | Redo                                                        |
+|                                         | Ctrl + Shift + Z         | Undo (**conflict with default input field hotkeys**)                                                       |
+|                                         | Ctrl  Z  or Y            | Redo (**conflict with default input field hotkeys**)                                                       |                                                        |
 |                                         | Ctrl + L                 | Focus on label input / **intercepted by a browser**         |
 |                                         | Ctrl  + (0...9)          | Zoom graph to the zoom level / **intercepted by a browser** |
 | ***Table view***                        | Enter                    | Toggle editing of a cell                                    |
@@ -245,7 +274,7 @@ Non-global shortcuts work only when cursor (focus) is inside specific interface 
 |                                         | Enter                    | Clear graph state                                           |
 |                                         | Esc                      | Clear graph state                                           |
 
-
+Discussion on hotkeys is [there](https://github.com/jonorthwash/ud-annotatrix/issues/135).
 
 ## Contributing
 
