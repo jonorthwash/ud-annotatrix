@@ -7,21 +7,18 @@ const DBError = require('../errors').DBError;
 
 
 function open(filename, next) {
-  if (fs.existsSync(filename)) {
-
-    next( null, new sqlite3.Database(filename) );
-
-  } else {
 
     const db = new sqlite3.Database(filename);
+
     db.run(`
-      CREATE TABLE users (
+      CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY,
         username UNIQUE,
+        email TEXT,
+        realname TEXT,
         token UNIQUE
       )`, err => next(err, db));
 
-  }
 }
 
 
@@ -43,9 +40,11 @@ class UsersDB {
       if (!params || (!params.username && !params.token))
         return next(new DBError('Missing required param: username OR token'), null);
 
-      db.run('INSERT INTO users (username, token) VALUES (?, ?)'
+      db.run('INSERT INTO users (username, token, email, realname) VALUES (?, ?, ?, ?)'
         , params.username || null
         , params.token || null
+        , params.email || null
+        , params.realname || null
         , function (err) { // don't use an anonymous function b/c we need this-binding
           if (err)
             return next(new DBError(err), null);
@@ -108,10 +107,14 @@ class UsersDB {
 
           db.run(`
             UPDATE users
-            SET username=IFNULL(?, username), token=IFNULL(?, username)
+            SET username=IFNULL(?, username), token=IFNULL(?, username),
+            email=IFNULL(?, email),
+            realname=IFNULL(?, realname)
             WHERE id=(?) OR username=(?) OR token=(?)`
             , values.username
             , values.token
+            , values.email
+            , values.realname
             , params.id
             , params.username
             , params.token
@@ -125,6 +128,8 @@ class UsersDB {
 
         } else { // insert new
           this.insert({
+            email: values.email || params.email,
+            realname: values.realname || params.realname,
             username: values.username || params.username,
             token: values.token || params.token
           }, next);

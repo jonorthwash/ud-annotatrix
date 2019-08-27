@@ -1,5 +1,7 @@
 'use strict';
 
+const logger = require('./logger');
+
 class UDAnnotatrixError extends Error {
   constructor(...args) {
     super(...args);
@@ -8,28 +10,28 @@ class UDAnnotatrixError extends Error {
 
 class ConfigError extends UDAnnotatrixError {
   constructor(...args) {
-    console.log('ConfigError:', ...args);
+    logger.error('ConfigError >>', ...args);
     super(...args);
   }
 }
 
 class DBError extends UDAnnotatrixError {
   constructor(...args) {
-    console.log('DBError:', ...args);
+    logger.error('DBError >>', ...args);
     super(...args);
   }
 }
 
 class UploadError extends UDAnnotatrixError {
   constructor(...args) {
-    console.log('UploadError:', ...args);
+    logger.error('UploadError >>', ...args);
     super(...args);
   }
 }
 
 class SocketError extends UDAnnotatrixError {
   constructor(...args) {
-    console.log('SocketError:', ...args);
+    logger.error('SocketError >>', ...args);
     super(...args);
   }
 }

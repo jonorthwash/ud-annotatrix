@@ -1,7 +1,16 @@
 $(document).on('change', '.custom-file-input', function(event) {
 	$(this).next('.custom-file-label').html(event.target.files[0].name);
 });
+$(document).on('visibilitychange', function(event) {
+		if (document.hidden) {
+			console.log("sleep", document.visibilityState);
+		} else  {
+			console.log("awake", document.visibilityState);
+			location.reload();
+		}
+});
 $(document).ready(function() {
+
 	if (location.protocol === "file:"){
 		window.location.href = './annotatrix.html';
 	} else {
@@ -98,7 +107,7 @@ $(document).ready(function() {
 	});
 	$("#webload").click(function() {
 	   $('.navbar-collapse').collapse('hide');
-		var url2load = $('#gitlink').val();
+		var url2load = $('#remotelink').val();
 		if (url2load) {
 			var formData = new FormData();
 			formData.append('url', url2load);
@@ -107,6 +116,34 @@ $(document).ready(function() {
 
 			$.ajax({
 				url: 'upload',
+				type: 'POST',
+				data: formData,
+				processData: false, // tell jQuery not to process the data
+				contentType: false, // tell jQuery not to set contentType
+				success: function(data) {
+					if (data.error) {
+						alert(data.error);
+					}
+					$('.spinner-border').addClass("d-none");
+					location.reload(true);
+				}
+			});
+		} else {
+			alert("No file selected!");
+		}
+		return false;
+	});
+	$("#gitload").click(function() {
+	   $('.navbar-collapse').collapse('hide');
+		var url2load = $('#gitlink').val();
+		if (url2load) {
+			var formData = new FormData();
+			formData.append('url', url2load);
+			formData.append('src', 'main');
+			$('.spinner-border').removeClass("d-none");
+
+			$.ajax({
+				url: 'fork',
 				type: 'POST',
 				data: formData,
 				processData: false, // tell jQuery not to process the data

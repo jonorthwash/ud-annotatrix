@@ -1,5 +1,6 @@
 'use strict';
 
+const logger = require('./logger');
 const Room = require('./room');
 const SocketError = require('./errors').SocketError;
 
@@ -55,8 +56,8 @@ module.exports = (sio, MemoryStore) => {
       const user = room.addUser(socket.request);
 
       // debugging stuff
-      console.log(`user:`, user);
-      console.log('rooms:', rooms);
+      logger.debug(user, 'user');
+      logger.debug(rooms, 'rooms');
 
       const response = Object.assign({}, user);
       response.room = { users: room.users };
@@ -73,8 +74,8 @@ module.exports = (sio, MemoryStore) => {
       const user = room.removeUser(socket.request);
 
       // debugging stuff
-      console.log(`user:`, user);
-      console.log('rooms:', rooms);
+      logger.debug(user, 'user');
+      logger.debug(rooms, 'rooms');
 
       const response = Object.assign({}, user);
       response.room = { users: room.users };
@@ -92,8 +93,8 @@ module.exports = (sio, MemoryStore) => {
       socket.broadcast.to(treebank).emit('modify corpus', data);
 
       // debugging stuff
-      //console.log(`Update treebank ${treebank}:`, data);
-      //console.log('room:', rooms[treebank]);
+      //logger.debug(`Update treebank ${treebank}:`, data);
+      //logger.debug('room:', rooms[treebank]);
     });
 
     socket.on('lock graph', locked => {
@@ -157,11 +158,11 @@ module.exports = (sio, MemoryStore) => {
       socket.broadcast.to(treebank).emit('modify index', response);
       socket.emit('modify index', response);
 
-      console.log('modify index packet', response)
+      logger.debug(response, 'modify index packet')
 
       // debugging stuff
-      //console.log(`Update treebank ${treebank}:`, data);
-      //console.log('room:', rooms[treebank]);
+      //logger.debug(`Update treebank ${treebank}:`, data);
+      //logger.debug('room:', rooms[treebank]);
 
     });
 
@@ -172,8 +173,8 @@ module.exports = (sio, MemoryStore) => {
       socket.broadcast.to(treebank).emit('new message', data);
 
       // debugging stuff
-      //console.log(`Update treebank ${treebank}:`, data);
-      //console.log('room:', rooms[treebank]);
+      //logger.debug(`Update treebank ${treebank}:`, data);
+      //logger.debug('room:', rooms[treebank]);
 
     });
 

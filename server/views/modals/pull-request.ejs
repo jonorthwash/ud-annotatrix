@@ -1,0 +1,46 @@
+<div class="modal custom-modal" id="pr-modal">
+  <div class="modal-dialog" role="document">
+    <form class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Send pull request to original repository</h5>
+        <button type="button" class="close" aria-label="Close" name="close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div id="pr-editor">
+          <span title="Put here title of your pull request">
+            <u>Enter title of pull request</u>
+            <input name="pr-title" id="pr-title" />
+          </span>
+          <div><small>It is title of your pull request. It cannot be empty.</small></div>
+          <hr/>
+          <div>
+            <span title="Put here description of your pull request">
+              <u>Put description of pull request</u>
+            </span>
+            <textarea rows="10" cols="60" name="pr-content" id="pr-content"></textarea>
+            <div><small>It is description of your pull request.</small></div>
+          </div>
+          <hr/>
+          <div>
+            <input type="checkbox" id="allow-modify" name="allow-modify" checked>
+            <label for="allow-modify">Allow maintainers to modify your pull request.</label>
+          </div>
+          <div>
+            <input type="checkbox" id="is-draft" name="is-draft">
+            <label for="is-draft">Make draft pull request.</label>
+          </div>
+        </div>
+        <div class=".d-none" id="pr-result">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" name="pr-button" id="pr-button" class="btn btn-primary">Submit</button>
+        <button type="button" name="close" class="btn btn-secondary">Close</button>
+      </div>
+    </form>
+  </div>
+</div>

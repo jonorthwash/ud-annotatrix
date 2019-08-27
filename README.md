@@ -100,15 +100,102 @@ Many of these methods require the `node` and `npm` executables.  To check if you
 
 ### serve dynamic files
 
-Run a copy of UD Annotatrix with server backend on your machine.  Uploaded databases will be saved directly to your hard drive.  This is the recommended method.  To install, run
+Run a copy of UD Annotatrix with server backend on your machine.  Uploaded databases will be saved directly to your hard drive.  This is the recommended method.
+
+There are two ways to get the application running.
+1. You have to have `git` installed.
+To install the application, run
 ```bash
 git clone https://github.com/jonorthwash/ud-annotatrix
 cd ud-annotatrix/
 npm install
 ```
-You can configure the environment in several ways by setting `KEY=VALUE` pairs in the `.env` file (see [the server configuration file](server/config.js)).
+2. If you don't have `git`, you could just download [all files from the repository as a ZIP-archive](https://github.com/jonorthwash/ud-annotatrix/archive/master.zip), then unzip it into some folder, and do `npm install`.
 
-To run the server, run `npm run dev-server` in the project directory root, then navigate your browser to `localhost:5316`.  If you would like to deploy your own copy of UD Annotatrix, you could alternately run `npm run server`.
+Obviously, [NodeJS](https://nodejs.org/en/download/) is obligatory environment for server setup of the application.
+
+
+#### Changing settings via configuration file
+
+You can configure the environment in several ways by setting `KEY=VALUE` pairs in the `.env` file ([the server configuration file](server/config.js)).
+
+Add this line to change the port to *3000* instead of *5316* (default setting)
+
+`ANNOTATRIX_PORT=3000`
+
+Add this line to change the domain of the application to *example.com*
+
+`ANNOTATRIX_HOST=example.com`
+
+`ANNOTATRIX_PROTOCOL` may be `http` or `https` (first one is by default).
+
+`ANNOTATRIX_SECRET` option is used as a key to sign cookies (to encrypt the session), can be any random sequence of characters.
+
+`ANNOTATRIX_COOKIES_TIME` sets time span during which Github cookie stays active in browser (until the cookie is not expired, the application user remains connected to Github) after last user activity. Otherwise user has to login to Github via the application interface. This options is in milliseconds, default value is equal to 12 hours.
+
+#### Running the server
+
+To start the server, run `npm run dev-server` in the project directory root, then navigate your browser to `localhost:5316`.  If you would like to deploy your own copy of *UD Annotatrix*, you could alternately run `npm run server`.
+
+#### Running behind frontend proxy
+
+As usual, the application is hardly could be only web application running on a whole server, if it's Internet accessible web-server. For example, if one has  an Apache2, configuration for host that is set up to interact with the application via `mod_proxy` would look like this:
+
+```apache2
+<VirtualHost *:443>
+	ServerName example.com 	
+	SSLEngine on
+	SSLCertificateFile     /some-key-dir/example.crt
+	SSLCertificateKeyFile /some-key-dir/example.key
+		
+	ProxyPass / http://localhost:5316/
+	ProxyPassReverse / http://localhost:5316/
+</VirtualHost>
+```
+In this example, domain is `example.com`, and Apache2 serves the application (started with default settings for port) via SSL.
+
+#### Github integration
+
+If a user connects the application to [Github](https://github.com/), it can provide functions to deal with corpora from Github repositories, without leaving the application.
+
+It means that one could provide a URL to a corpus file, and the application downloads content of the repository that contains the file, and forks the repository to user's Github account. After that, user is able to edit this corpus in the application and «commit» (upload) the changes to forked repository in own Github account. If at least one commit is made, one may create «pull request» (request to update source) by means of the interface of the application.
+
+Those features  are available, if user properly sets up Github account (OAuth application) and put the credentials into the application configuration file.
+
+Setting up a Github OAuth app in Github interface is described [here](https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/). The things one has to put are like this:
+
+<u>Application name:</u>  
+anything you want, may be *Annotatrix* or not
+
+<u>Homepage URL</u>  
+http://127.0.0.1:5316/oauth/login
+
+<u>Authorization callback URL</u>  
+http://127.0.0.1:5316/oauth/callback
+
+***Note***: it is an example, those settings are correct for default Annotatrix setup, running on **local** machine. The application config is `.env` file in application root directory (as it was mentioned above).
+
+If you change settings for ***port*** and ***host*** , you have to appropriately change Github OAuth app setup (put real domain instead 127.0.0.1, change port, if needed). 
+
+As to host, port, protocol and URLs (login and callback), if settings for Github OAuth application and settings in `config.js` differ, you could experience some issues, e.g. pages could be rendered garbled, and in Developer console you probably see an error message like this:
+
+```
+The resource from <domain> was blocked due to MIME type (“text/html”) mismatch (X-Content-Type-Options: nosniff)
+```
+
+
+To make Github integration work with Annotatrix, you have to add two additional lines to `.env ` (without them, in application menu a caption *Github is not configured* is shown).
+
+`ANNOTATRIX_GH_CLIENT_SECRET=941d8891d35a78316eb0d5ced674515fc688cfec`
+`ANNOTATRIX_GH_CLIENT_ID=6fa2d6934fd2af2df420`
+
+***Note***: you have to put after equal sign **your credentials** from your Github account, unless it won't work. Above are dummy secret and ID, they fail to work with Github.
+
+After setup, you have to run the application and login via its interface. You will be redirected to Github page which would require to confirm that this OAuth app, with those privileges is the app you trust. This is a last step of setting up Github integration for Annotatrix. 
+
+To start work with Github-hosted corpora, click *Corpus* ► *Load and fork.* You will see a window with text field where a link to a **file** of a corpus should be put. Be careful, it must be link to a file, not to a repository. The application gets all the information about the repository automatically, then it loads the file and forks (makes a copy) a whole repository in your Github account. Now you are able to save all the changes you make to this corpus file not only locally, but to your remote repository as well. To achieve this, click *Corpus* ► *Commit changes.* If this action is successful , all the changes are now in your remote repository.
+
+If you click *Corpus* ► *Make pull request*, fill in and submit the form that appears, you create pull request – a request to accept the changes you have made in your repository into the original repository (from which you downloaded the corpus file).
 
 ### remote (dynamic) server
 
@@ -139,6 +226,66 @@ Access a copy of the UD Annotatrix static site on another machine.  This version
 
 The basic user guide is available on the [help page](https://maryszmary.github.io/ud-annotatrix/standalone/help.html).
 
+## Keybindings
+
+Plus sign + means that keys have to be pressed simultaneously.
+
+Non-global shortcuts work only when cursor (focus) is inside specific interface element.
+
+| Scope                                   | Keys                     | Action                                                      |
+| --------------------------------------- | ------------------------ | ----------------------------------------------------------- |
+| ***Global***                            | Ctrl + Page Down         | Next sentence                                               |
+|                                         | Ctrl + Shift + Page Down | Last sentence                                               |
+|                                         | Ctrl + Page Up           | Previous sentence                                           |
+|                                         | Ctrl + Shift + Page Down | First sentence                                              |
+|                                         | Ctrl + Shift + Z         | Undo (**conflict with default input field hotkeys**)                                                       |
+|                                         | Ctrl  Z  or Y            | Redo (**conflict with default input field hotkeys**)                                                       |                                                        |
+|                                         | Ctrl + L                 | Focus on label input / **intercepted by a browser**         |
+|                                         | Ctrl  + (0...9)          | Zoom graph to the zoom level / **intercepted by a browser** |
+| ***Table view***                        | Enter                    | Toggle editing of a cell                                    |
+|                                         | Tab                      | Go right and toggle editing there                           |
+|                                         | Shift Tab                | Go left and toggle editing there                            |
+|                                         | Up                       | Go up                                                       |
+|                                         | Down                     | Go down                                                     |
+|                                         | Left Arrow               | Go left                                                     |
+|                                         | Right Arrow              | Go right                                                    |
+|                                         | Esc                      | Restore original cell value when editing a cell             |
+| ***Current sentence number***           | Enter                    | Set corpus index to current sentence                        |
+|                                         | Left Arrow               | Load previous sentence                                      |
+|                                         | J                        | Load previous sentence                                      |
+|                                         | Right Arrow              | Load next sentence                                          |
+|                                         | K                        | Load next sentence                                          |
+|                                         | -                        | Remove sentence                                             |
+|                                         | =                        | Insert sentence                                             |
+| ***Edit control of a text on a graph*** | Enter                    | Clear graph state                                           |
+|                                         | Tab                      | Next element                                                |
+|                                         | Shift + Tab              | Previous element                                            |
+|                                         | Esc                      | Clear graph state and exit the edit mode                    |
+| ***Textbox of a sentence***             | Esc                      | Unfocus                                                     |
+|                                         | Enter                    | **Not implemented**                                         |
+|                                         | Tab                      | Insert a tabulation                                         |
+| ***Chat window***                       | Enter                    | Send message                                                |
+|                                         | ?                        | Not implemented                                             |
+| ***Graph***                             | Del                      | Remove dependency                                           |
+|                                         | Backspace                | Remove dependency                                           |
+|                                         | X                        | Remove dependency                                           |
+|                                         | D                        | Switch moving mode for dependency                           |
+|                                         | P                        | Set punct (**Not implemented**)                             |
+|                                         | R                        | Set root                                                    |
+|                                         | S                        | Split token                                                 |
+|                                         | M                        | Merge tokens                                                |
+|                                         | C                        | Combine tokens                                              |
+|                                         | Left Arrow               | Combine with left token                                     |
+|                                         | Right Arrow              | Combine with right token                                    |
+|                                         | =                        | Fit graph to screen                                         |
+|                                         | Shift + =                | Zoom in                                                     |
+|                                         | -                        | Fit graph to screen                                         |
+|                                         | Shift + -                | Zoom out                                                    |
+|                                         | Enter                    | Clear graph state                                           |
+|                                         | Esc                      | Clear graph state                                           |
+
+Discussion on hotkeys is [there](https://github.com/jonorthwash/ud-annotatrix/issues/135).
+
 ## Contributing
 
 We welcome your pull requests!  To get started, fork this repository and run (where `$REPO` gives the fork's URL)
@@ -154,8 +301,7 @@ See also: the [API Documentation](documentation/README.md).
 
 ## Support
 
-Having a problem with UD Annotatrix? Want some one-on-one support? You can try to reach us on IRC at <tt>#\_u-dep</tt> on <tt>irc.freenode.net</tt> or
-join our [Telegram chat](https://t.me/joinchat/EWWgMhGXARzxvgO5AzI0ew).
+Having a problem with UD Annotatrix? Want some one-on-one support? You can try to reach us on IRC at <tt>#\_u-dep</tt> on <tt>irc.freenode.net</tt> or join our [Telegram chat](https://t.me/joinchat/EWWgMhGXARzxvgO5AzI0ew).
 
 ## Acknowledgements
 
@@ -187,4 +333,4 @@ If you use UD Annotatrix in your work, please cite:
 * Kevin Brubeck Unhammer ([@unhammer](https://github.com/unhammer))
 * Ethan Yang ([@thatprogrammer1](https://github.com/thatprogrammer1))
 
-See also: the [AUTHORS](AUTHORS) file.
+  See also: the [AUTHORS](AUTHORS) file.

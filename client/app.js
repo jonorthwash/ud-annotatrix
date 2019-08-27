@@ -86,7 +86,7 @@ const UndoManager = require('./undo-manager');
 
     // serialize the corpus
     let serial = this.corpus.serialize();
-    console.log("this.corpus.serialize", serial);
+    // console.log("this.corpus.serialize", serial);
     // add it to the undo/redo stack if it's an actual change
     this.undoer.push(serial)
 
@@ -136,7 +136,7 @@ const UndoManager = require('./undo-manager');
   /**
    * Download the contents of an application instance.
    */
-  download() {
+  download(toText) {
 
     const contents = this.corpus._corpus._sentences.map((sent, i) => {
       try {
@@ -146,9 +146,10 @@ const UndoManager = require('./undo-manager');
         return `[Unable to generate sentence #${i+1} in "${this.corpus.format}" format]`;
       }
     }).join('\n\n');
-
-    utils.download(`${this.corpus.filename}.conllu`, 'text/plain', contents);
-
+    console.log("format", this.corpus.format);
+    const format2ext = {"CG3": "cg", "CoNLL-U": "conllu", "SD": "sd", "Brackets": "brackets", "plain text": "txt"};
+    return toText ? contents:
+      utils.download(`${this.corpus.filename}.${format2ext[this.corpus.format]}`, 'text/plain', contents);
   }
 }
 

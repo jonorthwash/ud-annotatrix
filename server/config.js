@@ -1,9 +1,9 @@
 'use strict';
 
-const mkdirp = require('mkdirp');
 const errors = require('./errors');
 const crypto = require('crypto');
-
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
 let cfg = {};
@@ -28,7 +28,9 @@ cfg.secret = process.env.ANNOTATRIX_SECRET
 cfg.environment = process.env.ANNOTATRIX_ENV
   || process.env.NODE_ENV
   || 'development';
-
+cfg.expire = process.env.ANNOTATRIX_COOKIES_TIME
+    || process.env.COOKIES_TIME
+    ||  43200000; // 12 hours
 // oauth config
 cfg.github = {
   client_id: process.env.ANNOTATRIX_GH_CLIENT_ID
@@ -47,9 +49,20 @@ if (!cfg.github.client_secret) {
 }
 
 // database config
-mkdirp(cfg.corpora_path);
+// fs.mkdirSync(cfg.corpora_path, { recursive: true });
+
+cfg.corpora_path.split(path.sep).reduce((pre, dir) => {
+   const cur = path.join(pre, dir, path.sep);
+   if (!fs.existsSync(cur)){
+     fs.mkdirSync(cur);
+   }
+   return cur;
+ }, "");
+
 cfg.users_db_path = process.env.ANNOTATRIX_USERS_DB_PATH
   || '.users';
 cfg.users = require('./models/users')(cfg.users_db_path);
+cfg.corpora = require('./models/corpora')(cfg.users_db_path);
+cfg.access = require('./models/access')(cfg.users_db_path);
 
 module.exports = cfg;

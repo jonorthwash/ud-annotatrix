@@ -113,11 +113,18 @@ function formatUploadSize(fileSize) {
 
 function backup(value) {
 
-  if (!isAvailable())
+  if (!isAvailable()) {
     return null;
-
+  }
+  // https://developer.mozilla.org/en-US/docs/Web/API/Storage/setItem
   value = JSON.stringify(value);
-  return localStorage.setItem(KEY + "backup", value);
+
+  try {
+    localStorage.setItem(KEY + "backup", value);
+  } catch (e) {
+    console.log("Local Storage", e);
+  }
+
 }
 
 function restore() {

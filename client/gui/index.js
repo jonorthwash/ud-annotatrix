@@ -98,6 +98,9 @@ class GUI {
     this.textarea.bind();
 
     if (!this.app.online) {
+      $('[name="fork-file"]').hide();
+      $('[name="upload-url"]').hide();
+      $("span#username").html("N/A")
       $("#upload-filename").on("change", function(e){
         // console.log("changed", e.target.files);
         if (e.target.files.length > 0){

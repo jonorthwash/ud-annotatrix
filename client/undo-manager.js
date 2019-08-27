@@ -60,9 +60,9 @@ class UndoManager {
       return false;
 
     // do some comparisons here to change for changes
-    console.log("serial", serial) // updated
+    // console.log("serial", serial) // updated
     utils.storage.backup(serial);
-    console.log("current", this.current)
+    // console.log("current", this.current)
     //if (JSON.stringify(serial) === JSON.stringify(this.current))
       //return false;
 
