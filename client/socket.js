@@ -102,11 +102,14 @@ class Socket {
       // update the undo stack
       this.app.undoer.push(data.serial);
 
+      // save the current index
+      const currentIndex = app.corpus.index;
+
       // load the newest serialization
       this.app.load(data.serial);
 
       // navigate to the correct index
-      this.app.corpus.index = index;
+      this.app.corpus.index = currentIndex;
 
     });
 
