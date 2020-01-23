@@ -1,6 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1000" height="1000" viewBox="0 0 1000 1000">
   <defs>
     <style>
+      @import url('https://fonts.googleapis.com/css?family=Ubuntu');
+
       .cls-1 {
         fill: #252525;
         stroke: #171717;
@@ -38,12 +40,13 @@
       }
 
       .cls-5 {
-        font-size: 145.833px;
+        font-size: 126.796px;
       }
 
       .cls-5, .cls-6 {
         fill: #303030;
-        font-family: "Berlin Sans FB";
+        font-family: Ubuntu;
+        font-weight: 500;
       }
 
       .cls-6 {
@@ -67,7 +70,7 @@
   <path id="Rounded_Rectangle_3" data-name="Rounded Rectangle 3" class="cls-2" d="M49.255,15.742H956.708a35,35,0,0,1,35,35V269.1a35,35,0,0,1-35,35H49.255a35,35,0,0,1-35-35V50.742A35,35,0,0,1,49.255,15.742Z"/>
   <path id="Rounded_Rectangle_4" data-name="Rounded Rectangle 4" class="cls-3" d="M198.609,695.966H807.354a35,35,0,0,1,35,35V949.322a35,35,0,0,1-35,35H198.609a35,35,0,0,1-35-35V730.966A35,35,0,0,1,198.609,695.966Z"/>
   <text id="U" class="cls-4" transform="translate(190.79 641.252) scale(1.479)">U</text>
-  <text id="Annotate" class="cls-5" transform="translate(79.32 237.554) scale(1.479)">Annotate</text>
-  <text id="VERB" class="cls-6" transform="translate(246.225 914.048) scale(2.133)">VERB</text>
-  <text id="D" class="cls-7" transform="translate(549.52 641.295) scale(1.479)">D</text>
+  <text id="Annotate" class="cls-5" transform="translate(95.32 223.554) scale(1.479)">Annotate</text>
+  <text id="VERB" class="cls-6" transform="translate(229.225 910.048) scale(2.133)">VERB</text>
+  <text id="D" class="cls-7" transform="translate(545.52 641.295) scale(1.479)">D</text>
 </svg>
