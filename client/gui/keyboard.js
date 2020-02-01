@@ -229,7 +229,17 @@ function keyup(app, event) {
         gui.parseTimer = setTimeout(() => {
 
           if (gui.config.autoparsing) {
+            // Sometimes call Corpus::parse makes the cursor jump to the very end
+            // of the textarea.  If we detect that to be the case, we can just set
+            // the cursor back to its last known position.  This probably isn't
+            // perfect, but it is less bad than the current behavior :^)
+            const cursorBeforeParse = $('#text-data').prop('selectionStart');
             corpus.parse($('#text-data').val());
+            if ($('#text-data').prop('selectionStart') == $('#text-data').val().length) {
+              $('#text-data')
+                .prop('selectionStart', cursorBeforeParse)
+                .prop('selectionEnd', cursorBeforeParse);
+            }
           } else {
             if (corpus.current)
               corpus.current.input = $('#text-data').val();
