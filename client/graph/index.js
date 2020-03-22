@@ -287,9 +287,13 @@ class Graph {
             style: {
               'control-point-weights': '0.1 0.5 1',
               'target-endpoint': `0% -50%`,
-              'source-endpoint': token.indices.absolute < head.token.indices.absolute
-                ? `${-10 * config.edge_coeff}px -50%`
-                : `${10 * config.edge_coeff}px -50%`,
+              'source-endpoint': this.app.corpus.is_ltr
+                ? token.indices.absolute < head.token.indices.absolute
+                  ? `${-10 * config.edge_coeff}px -50%`
+                  : `${10 * config.edge_coeff}px -50%`
+                : token.indices.absolute < head.token.indices.absolute
+                  ? `${10 * config.edge_coeff}px -50%`
+                  : `${-10 * config.edge_coeff}px -50%`
             }
           });
         });
