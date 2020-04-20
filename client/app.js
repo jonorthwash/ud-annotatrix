@@ -140,7 +140,8 @@ const UndoManager = require('./undo-manager');
 
     const contents = this.corpus._corpus._sentences.map((sent, i) => {
       try {
-        return sent.to(this.corpus.format).output;
+        const format = this.corpus.format || "plain text";
+        return sent.to(format).output;
       } catch (e) {
         console.error(e);
         return `[Unable to generate sentence #${i+1} in "${this.corpus.format}" format]`;
