@@ -97,7 +97,7 @@ class GUI {
     this.status.bind();
     this.textarea.bind();
 
-    if (!this.app.online) {
+    if (!this.app.online || !this.app.server.is_running) {
       $("#upload-filename").on("change", function(e){
         // console.log("changed", e.target.files);
         if (e.target.files.length > 0){
