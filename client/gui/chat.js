@@ -16,7 +16,7 @@ class Chat {
   constructor(gui) {
 
     this.gui = gui;
-    this.is_visible = this.gui.app.online;
+    this.is_visible = false;
     this.is_minimized = true;
 
   }
