@@ -738,6 +738,7 @@ Abstraction over the cytoscape canvas.  Handles interaction between the graph
     * [.makeDependency(src, tar)](#Graph+makeDependency)
     * [.modifyDependency(ele, deprel)](#Graph+modifyDependency)
     * [.removeDependency(ele)](#Graph+removeDependency)
+    * [.toggleIsEmpty(ele)](#Graph+toggleIsEmpty)
     * [.setRoot(ele)](#Graph+setRoot)
     * [.splitToken(ele, index)](#Graph+splitToken)
     * [.splitSuperToken(ele)](#Graph+splitSuperToken)
@@ -845,6 +846,17 @@ Try to remove the dependency given by `ele`, save changes, and update graph.
 | Param | Type |
 | --- | --- |
 | ele | <code>CytoscapeEdge</code> | 
+
+<a name="Graph+toggleIsEmpty"></a>
+
+### graph.toggleIsEmpty(ele)
+Toggle whether `ele` is an empty node, save changes, and update the graph
+
+**Kind**: instance method of [<code>Graph</code>](#Graph)  
+
+| Param | Type |
+| --- | --- |
+| ele | <code>CytoscapeNode</code> | 
 
 <a name="Graph+setRoot"></a>
 

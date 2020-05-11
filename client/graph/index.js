@@ -861,6 +861,41 @@ class Graph {
   }
 
   /**
+   * Toggle whether `ele` is an empty node, save changes, and update the graph
+   *
+   * @param {CytoscapeNode} ele
+   */
+  toggleIsEmpty(ele) {
+
+    console.log("toggling isEmpty");
+    const sent = this.app.corpus.current;
+    ele = ele.data('token');
+    console.log(ele.isEmpty, ele);
+
+    try {
+
+      ele.setEmpty(!ele.isEmpty);
+      ele.addHead(sent.root, 'root');
+      this.unlock();
+      this.app.save({
+        type: 'set',
+        indices: [this.app.corpus.index],
+      });
+
+    } catch (e) {
+
+      if (e instanceof nx.NxError) {
+
+        this.app.gui.status.error(e.message);
+
+      } else {
+
+        throw e;
+      }
+    }
+  }
+
+  /**
    * Try to set `ele` as the root of the sentence, save changes, and update graph.
    *
    * @param {CytoscapeNode} ele

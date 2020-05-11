@@ -307,6 +307,12 @@ function keyup(app, event) {
         }
         break;
 
+      case (KEYS.N):
+        console.log("KEYS.N", graph.cy.$('node.form.activated'));
+        if (graph.cy.$('node.form.activated'))
+          graph.toggleIsEmpty(graph.cy.$('node.form.activated'));
+        break;
+
       case (KEYS.P):
         /* if (text not focused)
           setPunct();*/
