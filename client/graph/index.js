@@ -304,6 +304,8 @@ class Graph {
    * @return {Graph} (chaining)
    */
   draw() {
+    // cache a ref
+    const corpus = this.app.corpus;
 
     d3.select("#graph-svg").remove();
 
@@ -321,17 +323,97 @@ class Graph {
           .zoom()
           .scaleExtent([0.5, 5])
           .on("zoom", function () {
-            if ($("#edit").css("visibility") == "hidden") {
-              g.attr("transform", d3.event.transform);
-            }
+            g.attr("transform", d3.event.transform);
+            /*if ($("#edit").css("visibility") == "hidden") {
+              
+            }*/
           })
       )
       .on("dblclick.zoom", null);
 
     let g = svg.append("g");
+    let connecting = null;
+    let currentX = 200;
+    let spacing = 50;
+    let nodeHeight = 55;
+    console.log(this.eles);
+    this.eles.forEach((d, i) => {
+      if(d.classes != "form") {
+        return;
+      }
+      let transform = d3.zoomTransform(g.node());
+      let textElement = g
+        .append("text")
+        .attr("id", "text" + d.data.clump)
+        .text(d.data.form);
+      let txt = $("#text" + d.data.clump)[0];
+      let rectWidth = txt.getBoundingClientRect().width / transform.k + 10;
+      let rectHeight = txt.getBoundingClientRect().height / transform.k;
+      textElement.remove();
+      let nodeGroup = g
+        // we use svg as a instead of <g> because <g> can only use transform and not x/y attr.
+        // perfomance-wise, they are basically the same.
+        .append("svg") 
+        .attr("id", "group" + d.data.clump)
+        .attr("width", rectWidth)
+        .attr("height", nodeHeight)
+        .attr("class", "token")
+        .attr("x", currentX)
+        .attr("y", 400)
+        .style("overflow", "visible")
+        .style("cursor", "pointer")
+        .on("click", function () {
+          if (connecting != null) {
+            d3.select("#token" + connecting).style("fill", "#7FA1FF");
+            if (connecting == d.data.clump) {
+              connecting = null;
+              return;
+            }
+            console.log(connecting);
+            //graph.links.push({ source: connecting, target: d.id, label: "" });
+            //redrawDeprels();
+            connecting = null;
+            console.log(graph);
+          } else {
+            connecting = d.data.clump;
+            console.log("clicked on token");
+            d3.select("#token" + d.data.clump).style("fill", "#2653C9");
+          }
+          console.log(d);
+          clicked = "token";
+        });
 
-    // cache a ref
-    const corpus = this.app.corpus;
+      nodeGroup
+        .append("rect")
+        .attr("width", rectWidth)
+        .attr("height", nodeHeight)
+        .attr("rx", 8)
+        .attr("ry", 8)
+        .attr("id", function () {
+          return "token" + d.data.clump;
+        })
+        .style("fill", "#7FA1FF")
+        .style("stroke", "black")
+        .style("stroke-width", "2px");
+
+      nodeGroup
+        .append("text")
+        //.attr("id", "text" + d.id)
+        .text(d.data.form)
+        .attr("x", "50%")
+        .attr("y", 21)
+        .attr("text-anchor", "middle");
+      
+      nodeGroup
+      .append("text")
+      //.attr("id", "text" + d.id)
+      .text(i+1)
+      .attr("x", "50%")
+      .attr("y", 45)
+      .attr("text-anchor", "middle");
+
+      currentX += spacing + rectWidth;
+    });
 
     // extend our default cytoscape config based on current params
     this.options.layout = {
