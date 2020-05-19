@@ -305,6 +305,31 @@ class Graph {
    */
   draw() {
 
+    d3.select("#graph-svg").remove();
+
+    let svg = d3
+      .select("#graph-container")
+      .append("svg")
+      .attr("width", "100%")
+      .attr("height", "200px")
+      .attr("id", "graph-svg")
+      .style("background", "white")
+      .style("font-family", "Arial")
+      .style("font-size", "20")
+      .call(
+        d3
+          .zoom()
+          .scaleExtent([0.5, 5])
+          .on("zoom", function () {
+            if ($("#edit").css("visibility") == "hidden") {
+              g.attr("transform", d3.event.transform);
+            }
+          })
+      )
+      .on("dblclick.zoom", null);
+
+    let g = svg.append("g");
+
     // cache a ref
     const corpus = this.app.corpus;
 
