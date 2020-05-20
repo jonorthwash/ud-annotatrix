@@ -44,7 +44,7 @@ class Status {
 
       graphStatus = "uninitialised";
 
-    } else if (graph.cy.$(".splitting").length) {
+    } /*else if (graph.cy.$(".splitting").length) {
 
       graphStatus = "splitting node";
 
@@ -60,7 +60,7 @@ class Status {
 
       graphStatus = "editing " + graph.editing.data("name");
 
-    } else {
+    }*/ else {
 
       graphStatus = "viewing";
     }

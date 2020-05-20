@@ -313,7 +313,7 @@ class Graph {
       .select("#graph-container")
       .append("svg")
       .attr("width", "100%")
-      .attr("height", "200px")
+      .attr("height", "100%")
       .attr("id", "graph-svg")
       .style("background", "white")
       .style("font-family", "Arial")
@@ -359,7 +359,7 @@ class Graph {
         .attr("height", nodeHeight)
         .attr("class", "token")
         .attr("x", currentX)
-        .attr("y", 400)
+        .attr("y", 100)
         .style("overflow", "visible")
         .style("cursor", "pointer")
         .on("click", function () {
@@ -414,22 +414,6 @@ class Graph {
 
       currentX += spacing + rectWidth;
     });
-
-    // extend our default cytoscape config based on current params
-    this.options.layout = {
-      name: "tree",
-      padding: 0,
-      nodeDimensionsIncludeLabels: false,
-      cols: (corpus.is_vertical ? 2 : undefined),
-      rows: (corpus.is_vertical ? undefined : 2),
-      sort: (corpus.is_vertical ? sort.vertical : corpus.is_ltr ? sort.ltr : sort.rtl)
-    };
-
-    // set the cytoscape content
-    this.options.elements = corpus.isParsed ? this.eles : [];
-
-    // instantiate and recall zoom/pan
-    this.cy = cytoscape(this.options).minZoom(0.1).maxZoom(10.0).zoom(config.zoom).pan(config.pan);
 
     // see if we should calculate a zoom/pan or use our default
     this.zoom.checkFirst(this);

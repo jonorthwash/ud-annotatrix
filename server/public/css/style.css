@@ -1006,6 +1006,11 @@ span.dropdown-group-item-name i {
   text-decoration: none;
 }
 
+#graph-container {
+  position: absolute;
+  height: 100%;
+}
+
 #status-container {
 
   z-index: 5;
