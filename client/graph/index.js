@@ -306,7 +306,8 @@ class Graph {
   draw() {
     // cache a ref
     const corpus = this.app.corpus;
-
+    const self = this;
+    
     d3.select("#graph-svg").remove();
 
     let svg = d3
@@ -364,18 +365,18 @@ class Graph {
         .style("cursor", "pointer")
         .on("click", function () {
           if (connecting != null) {
-            d3.select("#token" + connecting).style("fill", "#7FA1FF");
+            d3.select("#token" + connecting.data.clump).style("fill", "#7FA1FF");
             if (connecting == d.data.clump) {
               connecting = null;
               return;
             }
             console.log(connecting);
+            self.makeDependency(connecting, d);
             //graph.links.push({ source: connecting, target: d.id, label: "" });
-            //redrawDeprels();
             connecting = null;
             console.log(graph);
           } else {
-            connecting = d.data.clump;
+            connecting = d;
             console.log("clicked on token");
             d3.select("#token" + d.data.clump).style("fill", "#2653C9");
           }
@@ -407,7 +408,7 @@ class Graph {
       nodeGroup
       .append("text")
       //.attr("id", "text" + d.id)
-      .text(i+1)
+      .text(d.data.clump+1)
       .attr("x", "50%")
       .attr("y", 45)
       .attr("text-anchor", "middle");
