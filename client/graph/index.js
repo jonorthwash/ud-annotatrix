@@ -267,13 +267,13 @@ class Graph {
     //this.setLocks();
 
     // check if we had something locked already before we redrew the graph
-    /*if (config.locked_index === this.app.corpus.index) {
+    if (config.locked_index === this.app.corpus.index) {
 
       // add the class to the element
-      const locked = this.cy.$("#" + config.locked_id);
+      const locked = $("#" + config.locked_id);
       locked.addClass(config.locked_classes);
 
-      if (config.locked_classes.indexOf("merge-source") > -1) {
+      /*if (config.locked_classes.indexOf("merge-source") > -1) {
 
         // add the classes to adjacent elements if we were merging
 
@@ -296,11 +296,11 @@ class Graph {
         const right = this.getNextForm();
         if (right && !right.hasClass("activated") && !right.hasClass("blocked") && right.data("type") === "token")
           right.addClass("neighbor combine-right");
-      }
+      }*/
 
       // make sure we lock it in the same way as if we had just clicked it
       this.lock(locked);
-    }*/
+    }
     // set event handler callbacks
     return this.bind();
   }

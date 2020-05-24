@@ -24,9 +24,11 @@ function run() {
 		.zoom()
 		.scaleExtent([0.5, 5])
 		.on("zoom", function () {
+			_g.attr("transform", d3.event.transform);
+		})
+		.on("end", function() {
 			_graph.config.zoom = d3.event.transform.k;
 			_graph.config.pan = {x: d3.event.transform.x, y: d3.event.transform.y};
-			_g.attr("transform", d3.event.transform);
 		});
 
 	let svg = d3
@@ -62,7 +64,8 @@ function drawNodes() {
 	let nodeHeight = 55;
 	_numNodes = 0;
 	console.log(_graph.eles);
-	_graph.eles.forEach((d) => {
+	let el = _graph.app.corpus.is_ltr ? _graph.eles.reverse() : _graph.eles;
+	el.forEach((d) => {
 		// Only want nodes
 	  if(!d.classes.includes("form")) {
 			return;
@@ -76,9 +79,12 @@ function drawNodes() {
 			.append("text")
 			.attr("id", "text" + num)
 			.text(d.form);
-	  let txt = $("#text" + num)[0];
-	  let rectWidth = txt.getBoundingClientRect().width / transform.k + 10;
-	  let rectHeight = txt.getBoundingClientRect().height / transform.k;
+		let txt = $("#text" + num)[0];
+		console.log();
+		//let rectWidth = txt.getBoundingClientRect().width / transform.k;
+		let rectWidth = textElement.node().getComputedTextLength() + 10;
+		console.log(rectWidth);
+	  //let rectHeight = txt.getBoundingClientRect().height / transform.k;
 		textElement.remove();
 
 		// we use <svg> as a instead of <g> because <g> can only use transform and not x/y attr.
@@ -186,7 +192,7 @@ function drawDeprels() {
 			.attr("id", "text" + d.id)
 			.text(d.label);
 		let txt = $("#text" + d.id)[0];
-		let rectWidth = txt.getBoundingClientRect().width / transform.k + 10;
+		let rectWidth = textElement.node().getComputedTextLength() + 10;
 		let rectHeight = txt.getBoundingClientRect().height / transform.k;
 		textElement.remove();
 
