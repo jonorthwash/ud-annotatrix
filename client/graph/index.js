@@ -168,6 +168,8 @@ class Graph {
 
         let parent = token.name === "SubToken" ? "multiword-" + getIndex(sent.getSuperToken(token), format) : undefined;
 
+        this.tokens[id] = token;
+
         eles.push(
           { // "form" node
             id: `form-${id}`,
@@ -228,9 +230,11 @@ class Graph {
             num: ++num,
             attr: `deprel`,
             deprel: deprel,
-            source: `form-${headId}`,
+            source: `group-${headId}`,
+            sourceNum: parseInt(headId),
             sourceToken: head.token,
-            target: `form-${id}`,
+            target: `group-${id}`,
+            targetNum: parseInt(id),
             targetToken: token,
             label: label,
             enhanced: i ? true: false,
@@ -311,8 +315,6 @@ class Graph {
     // avoid problems w/ `this`-rebinding in callbacks
     const self = this;
 
-    console.log("called bind");
-
     // Triggering a "background" click unless a node/edge intercepts it
     // Note: this triggers after everything else.
     $("#graph-svg").on("click", function() {
@@ -328,8 +330,8 @@ class Graph {
       console.log("clicked on token");
       let targetNum = $(this).attr('id').replace(/\D/g,'');
       console.log(targetNum);
-      // THIS is #group[id]. But we want #token[id].
-      let target = $("#token" + targetNum);
+      // THIS is #group[id]. But we want #form-[id].
+      let target = $("#form-" + targetNum);
       if (target.hasClass('locked'))
         return;
       if (self.moving_dependency) {
@@ -616,10 +618,6 @@ class Graph {
    */
   save() {
 
-    if (this.cy) {
-      config.zoom = this.cy.zoom();
-      config.pan = this.cy.pan();
-    }
     let serial = _.pick(config, "pan", "zoom", "locked_index", "locked_id", "locked_classes");
     serial = JSON.stringify(serial);
     utils.storage.setPrefs("graph", serial);

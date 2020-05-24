@@ -2,6 +2,7 @@
 
 let _g = null;
 let _graph = null;
+let _numNodes = 0;
 
 /**
  * Bind the elements to the internal reference.
@@ -18,7 +19,6 @@ function bind(graph) {
  */
 function run() {
 	d3.select("#graph-svg").remove();
-	console.log(_graph.config.zoom, _graph.config.pan);
 	// Create main svg which serves as a container
 	let zoom = d3
 		.zoom()
@@ -41,17 +41,7 @@ function run() {
 		.call(zoom)
 	  .on("dblclick.zoom", null);
 
-	console.log(svg);
-
-	/*$("#graph-svg").on("click", ".token", function() {
-		console.log("asdf", $(this).attr('id'));
-	});*/
-
 	// <g> will actually house all the elements
-	console.log("begin");
-	console.log(_graph.config.zoom);
-	console.log(_graph.config.pan);
-	console.log("begin2.0");
 	_g = svg
 		.append("g")
 		.attr("id", "graph-g")
@@ -70,6 +60,7 @@ function drawNodes() {
 	let currentX = 200;
 	let spacing = 50;
 	let nodeHeight = 55;
+	_numNodes = 0;
 	console.log(_graph.eles);
 	_graph.eles.forEach((d) => {
 		// Only want nodes
@@ -77,13 +68,15 @@ function drawNodes() {
 			return;
 		}
 
+		let num = d.id.replace(/\D/g,'');
+
 		// Find sizing of the node label
 		let transform = d3.zoomTransform(_g.node());
 	  let textElement = _g
 			.append("text")
-			.attr("id", "text" + d.clump)
+			.attr("id", "text" + num)
 			.text(d.form);
-	  let txt = $("#text" + d.clump)[0];
+	  let txt = $("#text" + num)[0];
 	  let rectWidth = txt.getBoundingClientRect().width / transform.k + 10;
 	  let rectHeight = txt.getBoundingClientRect().height / transform.k;
 		textElement.remove();
@@ -92,7 +85,7 @@ function drawNodes() {
 		// perfomance-wise, they are basically the same.
 	  let nodeGroup = _g
 			.append("svg") 
-			.attr("id", "group" + d.clump)
+			.attr("id", "group-" + num)
 			.attr("width", rectWidth)
 			.attr("height", nodeHeight)
 			.attr("class", "token")
@@ -101,8 +94,6 @@ function drawNodes() {
 			.style("overflow", "visible")
 			.style("cursor", "pointer");
 
-		_graph.tokens[d.clump] = d.token;
-
 		// Create node
 	  nodeGroup
 			.append("rect")
@@ -110,9 +101,7 @@ function drawNodes() {
 			.attr("height", nodeHeight)
 			.attr("rx", 8)
 			.attr("ry", 8)
-			.attr("id", function () {
-		  	return "token" + d.clump;
-			})
+			.attr("id", d.id)
 			.style("fill", "#7FA1FF")
 			.style("stroke", "black")
 			.style("stroke-width", "2px");
@@ -128,13 +117,14 @@ function drawNodes() {
 		// Add token number
 	  nodeGroup
 			.append("text")
-			.text(d.clump+1)
+			.text(num)
 			.attr("x", "50%")
 			.attr("y", 45)
 			.attr("text-anchor", "middle");
 
 		// Spacing of nodes
-	  currentX += spacing + rectWidth;
+		currentX += spacing + rectWidth;
+		_numNodes++;
 	});
 }
 
@@ -177,15 +167,32 @@ function drawDeprels() {
 	});
 
 	// Get heights for the deprels
-	//let heights = getHeights(deprels);
-
+	let heights = getHeights(deprels);
+	let edgeHeight = 65; // how high the height increments by at each level
 	deprels.forEach((d) => {
-		console.log(d);
-		/*let height = heights[d];
-		let mid = calculateMid(d, height);
+		let h = heights.get(d.id);
+		let xpos1 = parseInt($("#"+d.source).attr("x")) + parseInt($("#"+d.source).attr("width")) / 2;
+  	let ypos1 = parseInt($("#"+d.source).attr("y"));
+		let xpos2 = parseInt($("#"+d.target).attr("x")) + parseInt($("#"+d.target).attr("width")) / 2;
+		let dir = Math.sign(xpos1 - xpos2); // -1 if deprel going right, else 1
+		let initialOffset = xpos1 - dir * 20; // Deprel is offset a little when coming out of source
+		let height = h * edgeHeight; // actual height of deprel
+		let mid = (initialOffset + xpos2) / 2; // x-position of the middle of the deprel
+
+		// Calculate dimensions of text
+		let transform = d3.zoomTransform(_g.node());
+		let textElement = _g
+			.append("text")
+			.attr("id", "text" + d.id)
+			.text(d.label);
+		let txt = $("#text" + d.id)[0];
+		let rectWidth = txt.getBoundingClientRect().width / transform.k + 10;
+		let rectHeight = txt.getBoundingClientRect().height / transform.k;
+		textElement.remove();
+
 		let pathGroup = _g
 			.append("g")
-			.attr("id", "group" + id)
+			.attr("id", "group-" + d.id)
 			.attr("class", "deprel");
 
 		pathGroup
@@ -194,69 +201,41 @@ function drawDeprels() {
 			.style("stroke-width", "6px")
 			.style("fill", "none")
 			.attr("marker-end", "url(#end)")
-			.attr("d", leftCurve(d, rectWidth, height) + " " + rightCurve(d, rectWidth, height))
-			.attr("class", "deprel" + id);
+			.attr("d", curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height))
+			.attr("id", d.id);
 
 		pathGroup
 			.append("text")
-			.attr("id", "text" + id)
-			.text(text)
+			.attr("id", "text" + d.id)
+			.text(d.label)
 			.attr("x", dir < 0 ? 8 : 5) // left margin of embedded text
 			.attr("y", rectHeight / 2 + 4)
 			.style("cursor", "pointer")
 			.attr(
 				"transform",
 				"translate(" +
-					(mid[0] - rectWidth / 2) +
+					(mid - rectWidth / 2) +
 					"," +
-					(mid[1] - rectHeight / 2) +
+					((ypos1 - height) - rectHeight / 2) +
 					")"
-			);*/
+			);
 		});
 }
 
-function leftCurve(d, rectWidth, h) {
-  let xpos1 =
-    parseInt(d.source.attr("x")) + parseInt(d.source.attr("width")) / 2;
-  let ypos1 = parseInt(d.source.attr("y"));
-  let xpos2 =
-    parseInt(d.target.attr("x")) + parseInt(d.target.attr("width")) / 2;
-  let dir = calculateDirection(d);
-  let initialOffset = xpos1 - dir * 20;
-  let height = 65 * h;
-  let rectLeft = (initialOffset + xpos2) / 2 + (dir * rectWidth) / 2;
+function curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height) {
+	let rectLeft = (initialOffset + xpos2) / 2 + (dir * rectWidth) / 2;
   let slant = 0.15;
   let hor = h * 100;
-  let c1x = initialOffset - (dir * hor * slant) / 2;
+	let c1x = initialOffset - (dir * hor * slant) / 2;
   let c2x = initialOffset - dir * hor * slant;
   let c3x = c2x - dir * hor * slant * 0.7;
   let c4x = c3x - dir * hor * slant * 0.7;
   let c1y = ypos1 - height / 2;
   let c2y = ypos1 - height;
   let c3y = c2y;
-  let c4y = c2y;
-  return (
-    "M " + initialOffset + "," + ypos1 +
-    " L " + c1x + "," + c1y +
-    " C " + c2x + "," + c2y + " " + c3x + "," + c3y + " " + c4x + "," + c4y +
-    " L " + c4x + "," + c4y + " " + rectLeft + "," + c4y
-  );
-}
-
-function rightCurve(d, rectWidth, h) {
-  let xpos1 =
-    parseInt(d.source.attr("x")) + parseInt(d.source.attr("width")) / 2;
-  let ypos1 = parseInt(d.source.attr("y"));
-  let xpos2 =
-    parseInt(d.target.attr("x")) + parseInt(d.target.attr("width")) / 2;
-  let ypos2 = parseInt(d.target.attr("y"));
-  let dir = calculateDirection(d);
-  let initialOffset = xpos1 - dir * 20;
-  let height = 65 * h;
-  let rectRight = (initialOffset + xpos2) / 2 - (dir * rectWidth) / 2;
-  let slant = 0.15;
-  let hor = h * 100;
-  let d1x = xpos2 + (dir * hor * slant) / 2;
+	let c4y = c2y;
+	let rectRight = (initialOffset + xpos2) / 2 - (dir * rectWidth) / 2;
+	let d1x = xpos2 + (dir * hor * slant) / 2;
   let d2x = xpos2 + dir * hor * slant;
   let d3x = d2x + dir * hor * slant * 0.7;
   let d4x = d3x + dir * hor * slant * 0.7;
@@ -265,36 +244,19 @@ function rightCurve(d, rectWidth, h) {
   let d3y = d2y;
   let d4y = d2y;
   return (
-    "M " +
-    rectRight +
-    "," +
-    (ypos2 - height) +
-    " L " +
-    d4x +
-    "," +
-    d4y +
-    " C" +
-    d3x +
-    "," +
-    d3y +
-    " " +
-    d2x +
-    "," +
-    d2y +
-    " " +
-    d1x +
-    "," +
-    d1y +
-    " L" +
-    xpos2 +
-    "," +
-    (ypos2 - 8)
+    "M " + initialOffset + "," + ypos1 +
+    " L " + c1x + "," + c1y +
+    " C " + c2x + "," + c2y + " " + c3x + "," + c3y + " " + c4x + "," + c4y +
+		" L " + c4x + "," + c4y + " " + rectLeft + "," + c4y +
+		"M " + rectRight + "," + d2y + " L " + d4x + "," + d4y +
+    " C" + d3x + "," + d3y + " " + d2x + "," + d2y + " " + d1x + "," + d1y +
+    " L" + xpos2 + "," + (ypos1 - 8)
   );
 }
 
 function getHeights(deprels) {
   function dist(a) {
-    return Math.abs(a.source - a.target);
+    return Math.abs(a.sourceNum - a.targetNum);
   }
   deprels.sort((x, y) => {
     if (dist(x) > dist(y)) {
@@ -305,17 +267,16 @@ function getHeights(deprels) {
     }
     return 0;
   });
-  console.log(deprels);
   let heights = [];
   let finalHeights = new Map();
-  for (let i = 0; i < graph.nodes.length + 1; i++) {
+  for (let i = 0; i < _numNodes + 1; i++) {
     heights.push(0);
   }
-  for (let i = 0; i < graph.links.length; i++) {
-    let a = graph.links[i];
-    let dir = Math.sign(a.target - a.source);
+  for (let i = 0; i < deprels.length; i++) {
+    let a = deprels[i];
+    let dir = Math.sign(a.targetNum - a.sourceNum);
     let h = 0;
-    for (let j = a.source + dir; j != a.target; j += dir) {
+    for (let j = a.sourceNum + dir; j != a.targetNum; j += dir) {
       // todo: instead of just getting the maximum
       // if there is a lower height that is not taken
       // then take that height. this way we don't get super
@@ -323,17 +284,14 @@ function getHeights(deprels) {
       h = Math.max(h, heights[j]);
     }
     h++;
-    finalHeights.set(a, h);
-    console.log(a, h);
-    for (let j = a.source; ; j += dir) {
+    finalHeights.set(a.id, h);
+    for (let j = a.sourceNum; ; j += dir) {
       heights[j] = h;
-      if (j == a.target) {
+      if (j == a.targetNum) {
         break;
       }
     }
-    console.log(heights);
   }
-  console.log("FH: ", finalHeights);
   return finalHeights;
 }
 
