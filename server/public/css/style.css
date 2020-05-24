@@ -115,6 +115,10 @@ span.tt {
   z-index: 800;
 }
 
+rect.activated {
+  fill: #2653c9 !important;
+}
+
 #notebox {
   width:50%;
   margin:auto;

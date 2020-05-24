@@ -18,7 +18,7 @@ const zoom = require("./zoom");
  */
 class Graph {
   constructor(app) {
-
+    console.log("CONFIG:", config);
     // save refs
     this.app = app;
     this.config = config;
@@ -64,6 +64,14 @@ class Graph {
 
     // timer to enforce our mouse-move broadcast min-interval
     this.mouseBlocked = false;
+
+    // Stores the token objects corresponding to each form.
+    // We need to do this rather than just storing the token
+    // objects in the html object using .data() because
+    // apparently, if we set the data in visualiser.js,
+    // we won't be able to fetch it in here. So this is the
+    // only way really.
+    this.tokens = {};
 
     // load configuration prefs
     this.load();
@@ -161,40 +169,20 @@ class Graph {
         let parent = token.name === "SubToken" ? "multiword-" + getIndex(sent.getSuperToken(token), format) : undefined;
 
         eles.push(
-
-            {
-              // "number" node
-              data: {
-                id: `num-${id}`,
-                clump: clump,
-                name: "number",
-                label: id,
-                pos: pos,
-                parent: parent,
-                token: token,
-              },
-              classes: "number"
-            },
-
-            {
-              // "form" node
-              data: {
-                id: `form-${id}`,
-                num: ++num,
-                clump: clump,
-                name: "form",
-                attr: "form",
-                form: token.form,
-                label: token.form || "_",
-                length: `${
-                    (token.form || "_").length > 3 ? (token.form || "_").length * 0.7 : (token.form || "_").length}em`,
-                type: parent ? "subToken" : "token",
-                state: `normal`,
-                parent: `num-${id}`,
-                token: token,
-              },
-              classes: isRoot ? "form root" : "form",
-            },
+          { // "form" node
+            id: `form-${id}`,
+            num: ++num,
+            clump: clump,
+            name: 'form',
+            attr: 'form',
+            form: token.form,
+            label: token.form || '_',
+            type: parent ? 'subToken' : 'token',
+            state: `normal`,
+            parent: `num-${id}`,
+            token: token,
+            classes: isRoot ? 'form root' : 'form',
+          },
 
             {
               // "pos" node
@@ -211,41 +199,13 @@ class Graph {
               },
               classes: utils.validate.posNodeClasses(pos),
             },
-
-            {
-              // "pos" edge
-              data: {
-                id: `pos-edge-${id}`,
-                clump: clump,
-                name: `pos-edge`,
-                pos: pos,
-                source: `form-${id}`,
-                target: `pos-node-${id}`
-              },
-              classes: "pos"
-            });
+        );
 
         // iterate over the token's heads to get edges
         token.mapHeads((head, i) => {
           // if not enhanced, only draw the first dependency
           if (i && !sent.options.enhanced)
             return;
-
-          // TODO: improve this (basic) algorithm
-          function getEdgeHeight(corpus, src, tar) {
-
-            const diff = tar.indices.absolute - src.indices.absolute;
-
-            let edgeHeight = config.edge_height * diff;
-            if (corpus.is_ltr)
-              edgeHeight *= -1;
-            if (Math.abs(edgeHeight) !== 1)
-              edgeHeight *= config.edge_coeff;
-            if (corpus.is_vertical)
-              edgeHeight = 45;
-
-            return edgeHeight;
-          }
 
           this.progress.total += 1;
           if (head.deprel && head.deprel !== "_")
@@ -263,31 +223,18 @@ class Graph {
                             : token.indices.absolute > head.token.indices.absolute ? `⊲${deprel}` : `${deprel}⊳`;
 
           eles.push({
-            data: {
-              id: `dep_${id}_${headId}`,
-              name: `dependency`,
-              num: ++num,
-              attr: `deprel`,
-              deprel: deprel,
-              source: `form-${headId}`,
-              sourceToken: head.token,
-              target: `form-${id}`,
-              targetToken: token,
-              length: `${(deprel || "").length / 3}em`,
-              label: label,
-              ctrl: new Array(4).fill(getEdgeHeight(this.app.corpus, head.token, token)),
-            },
+            id: `dep_${id}_${headId}`,
+            name: `dependency`,
+            num: ++num,
+            attr: `deprel`,
+            deprel: deprel,
+            source: `form-${headId}`,
+            sourceToken: head.token,
+            target: `form-${id}`,
+            targetToken: token,
+            label: label,
+            enhanced: i ? true: false,
             classes: utils.validate.depEdgeClasses(sent, token, head),
-            style: {
-              "control-point-weights": "0.1 0.5 1",
-              "target-endpoint": `0% -50%`,
-              "source-endpoint": this.app.corpus.is_ltr ? token.indices.absolute < head.token.indices.absolute
-                                                              ? `${- 10 * config.edge_coeff}px -50%`
-                                                              : `${10 * config.edge_coeff}px -50%`
-                                                        : token.indices.absolute < head.token.indices.absolute
-                                                              ? `${10 * config.edge_coeff}px -50%`
-                                                              : `${- 10 * config.edge_coeff}px -50%`
-            }
           });
         });
       }
@@ -299,132 +246,24 @@ class Graph {
 
   /**
    * Create the cytoscape instance and populate it with the nodes and edges we
-   *  generate in `this.eles`.
+   * generate in `this.eles`.
    *
    * @return {Graph} (chaining)
    */
   draw() {
     // cache a ref
-    const corpus = this.app.corpus;
-    const self = this;
     
-    d3.select("#graph-svg").remove();
-
-    let svg = d3
-      .select("#graph-container")
-      .append("svg")
-      .attr("width", "100%")
-      .attr("height", "100%")
-      .attr("id", "graph-svg")
-      .style("background", "white")
-      .style("font-family", "Arial")
-      .style("font-size", "20")
-      .call(
-        d3
-          .zoom()
-          .scaleExtent([0.5, 5])
-          .on("zoom", function () {
-            g.attr("transform", d3.event.transform);
-            /*if ($("#edit").css("visibility") == "hidden") {
-              
-            }*/
-          })
-      )
-      .on("dblclick.zoom", null);
-
-    let g = svg.append("g");
-    let connecting = null;
-    let currentX = 200;
-    let spacing = 50;
-    let nodeHeight = 55;
-    console.log(this.eles);
-    this.eles.forEach((d, i) => {
-      if(d.classes != "form") {
-        return;
-      }
-      let transform = d3.zoomTransform(g.node());
-      let textElement = g
-        .append("text")
-        .attr("id", "text" + d.data.clump)
-        .text(d.data.form);
-      let txt = $("#text" + d.data.clump)[0];
-      let rectWidth = txt.getBoundingClientRect().width / transform.k + 10;
-      let rectHeight = txt.getBoundingClientRect().height / transform.k;
-      textElement.remove();
-      let nodeGroup = g
-        // we use svg as a instead of <g> because <g> can only use transform and not x/y attr.
-        // perfomance-wise, they are basically the same.
-        .append("svg") 
-        .attr("id", "group" + d.data.clump)
-        .attr("width", rectWidth)
-        .attr("height", nodeHeight)
-        .attr("class", "token")
-        .attr("x", currentX)
-        .attr("y", 100)
-        .style("overflow", "visible")
-        .style("cursor", "pointer")
-        .on("click", function () {
-          if (connecting != null) {
-            d3.select("#token" + connecting.data.clump).style("fill", "#7FA1FF");
-            if (connecting == d.data.clump) {
-              connecting = null;
-              return;
-            }
-            console.log(connecting);
-            self.makeDependency(connecting, d);
-            //graph.links.push({ source: connecting, target: d.id, label: "" });
-            connecting = null;
-            console.log(graph);
-          } else {
-            connecting = d;
-            console.log("clicked on token");
-            d3.select("#token" + d.data.clump).style("fill", "#2653C9");
-          }
-          console.log(d);
-          clicked = "token";
-        });
-
-      nodeGroup
-        .append("rect")
-        .attr("width", rectWidth)
-        .attr("height", nodeHeight)
-        .attr("rx", 8)
-        .attr("ry", 8)
-        .attr("id", function () {
-          return "token" + d.data.clump;
-        })
-        .style("fill", "#7FA1FF")
-        .style("stroke", "black")
-        .style("stroke-width", "2px");
-
-      nodeGroup
-        .append("text")
-        //.attr("id", "text" + d.id)
-        .text(d.data.form)
-        .attr("x", "50%")
-        .attr("y", 21)
-        .attr("text-anchor", "middle");
-      
-      nodeGroup
-      .append("text")
-      //.attr("id", "text" + d.id)
-      .text(d.data.clump+1)
-      .attr("x", "50%")
-      .attr("y", 45)
-      .attr("text-anchor", "middle");
-
-      currentX += spacing + rectWidth;
-    });
-
-    // see if we should calculate a zoom/pan or use our default
-    this.zoom.checkFirst(this);
+    const corpus = this.app.corpus;
+    v.bind(this);
+    v.run();
+    console.log(this.tokens);
 
     // add the mice and locks from `collab`
-    this.drawMice();
-    this.setLocks();
+    //this.drawMice();
+    //this.setLocks();
 
     // check if we had something locked already before we redrew the graph
-    if (config.locked_index === this.app.corpus.index) {
+    /*if (config.locked_index === this.app.corpus.index) {
 
       // add the class to the element
       const locked = this.cy.$("#" + config.locked_id);
@@ -457,8 +296,7 @@ class Graph {
 
       // make sure we lock it in the same way as if we had just clicked it
       this.lock(locked);
-    }
-
+    }*/
     // set event handler callbacks
     return this.bind();
   }
@@ -473,16 +311,95 @@ class Graph {
     // avoid problems w/ `this`-rebinding in callbacks
     const self = this;
 
-    // make sure zoom is bound to the correct cytoscape instance
-    this.zoom.bind(this);
+    console.log("called bind");
 
-    // set a countdown to triggering a "background" click unless a node/edge intercepts it
-    $("#cy canvas, #mute").mouseup(e => {
-      // force focus off our inputs/textarea
-      $(":focus").blur();
-      self.intercepted = false;
-      setTimeout(() => self.clear(), 100);
+    // Triggering a "background" click unless a node/edge intercepts it
+    // Note: this triggers after everything else.
+    $("#graph-svg").on("click", function() {
+      //$(':focus').blur();
       self.save();
+      self.intercepted = false;
+    });
+
+    // We can't use the event handler because if we click
+    // on text, it gives us the text as the target, not
+    // the rect which we want.
+    $("#graph-svg").on("click", ".token", function() {
+      console.log("clicked on token");
+      let targetNum = $(this).attr('id').replace(/\D/g,'');
+      console.log(targetNum);
+      // THIS is #group[id]. But we want #token[id].
+      let target = $("#token" + targetNum);
+      if (target.hasClass('locked'))
+        return;
+      if (self.moving_dependency) {
+
+        /*const dep = self.cy.$('.selected');
+        const source = self.cy.$('.arc-source');
+
+        // make a new dep, remove the old one
+        self.makeDependency(source, target);
+        self.removeDependency(dep);
+        self.cy.$('.moving').removeClass('moving');
+        self.moving_dependency = false;
+
+        const newEdge = self.cy.$(`#${source.attr('id')} -> #${target.attr('id')}`);
+
+        // right click the new edge and lock it
+        newEdge.trigger('cxttapend');
+        self.lock(newEdge);*/
+
+      } else {
+
+        // check if there's anything in-progress
+        //self.commit();
+
+        $('.arc-source').removeClass('arc-source');
+        $('.arc-target').removeClass('arc-target');
+        $('.selected').removeClass('selected');
+
+        // handle the click differently based on current state
+
+        if (target.hasClass('merge-right') || target.hasClass('merge-left')) {
+
+          // perform merge
+          //self.merge(self.cy.$('.merge-source').data('token'), target.data('token'));
+          //self.unlock();
+
+        } else if (target.hasClass('combine-right') || target.hasClass('combine-left')) {
+
+          // perform combine
+          //self.combine(self.cy.$('.combine-source').data('token'), target.data('token'));
+          //self.unlock();
+
+        } else if (target.hasClass('activated')) {
+
+          // de-activate
+          self.intercepted = false;
+          self.clear();
+
+        } else {
+
+          let source = $('.activated');
+          target.addClass('activated');
+
+          // if there was already an activated node
+          if (source.length === 1) {
+            // add a new edge
+            let sourceNum = source.attr('id').replace(/\D/g,'');
+            self.makeDependency(self.tokens[sourceNum], self.tokens[targetNum]);
+            source.removeClass('activated');
+            target.removeClass('activated');
+            self.unlock();
+
+          } else {
+
+            // activate it
+            self.lock(target);
+
+          }
+        }
+      }
     });
 
     // don't clear if we clicked inside #edit
@@ -502,7 +419,8 @@ class Graph {
     });
 
     // don't clear if we right- or left-click on an element
-    this.cy.on("click cxttapend", "*", e => {
+    /*this.cy.on("click cxttapend", "*"", e => {
+
       self.intercepted = true;
 
       // debugging
@@ -688,7 +606,7 @@ class Graph {
         target.addClass("selected");
         self.lock(target);
       }
-    });
+    });*/
 
     return this;
   }
@@ -725,7 +643,7 @@ class Graph {
    */
   commit() {
 
-    this.cy.$(".input").removeClass("input");
+    /*this.cy.$(".input").removeClass("input");
 
     if (this.editing === null)
       return; // nothing to do
@@ -756,7 +674,7 @@ class Graph {
           indices: [this.app.corpus.index],
         });
       }
-    }
+    }*/
 
     this.editing = null;
   }
@@ -773,10 +691,10 @@ class Graph {
 
     this.commit();
 
-    this.cy.$("*").removeClass("splitting activated multiword-active " +
-                               "multiword-selected arc-source arc-target selected moving neighbor " +
-                               "merge-source merge-left merge-right combine-source combine-left " +
-                               "combine-right");
+    $("*").removeClass("splitting activated multiword-active " +
+                      "multiword-selected arc-source arc-target selected moving neighbor " +
+                      "merge-source merge-left merge-right combine-source combine-left " +
+                      "combine-right");
 
     this.moving_dependency = false;
 
@@ -799,9 +717,8 @@ class Graph {
   makeDependency(src, tar) {
 
     try {
-
-      src = src.data("token");
-      tar = tar.data("token");
+      //src = src.data('token');
+      //tar = tar.data('token');
       tar.addHead(src);
       this.unlock();
       this.app.save({
@@ -1314,7 +1231,7 @@ class Graph {
    */
   setLocks() {
 
-    this.cy.$(".locked")
+    /*this.cy.$(".locked")
         .removeClass("locked")
         .data("locked_by", null)
         .css("background-color", "")
@@ -1326,7 +1243,7 @@ class Graph {
           .data("locked_by", lock.id)
           .css("background-color", "#" + lock.color)
           .css("line-color", "#" + lock.color);
-    });
+    });*/
   }
 
   /**
@@ -1342,15 +1259,16 @@ class Graph {
 
     this.locked = ele;
     config.locked_index = this.app.corpus.index;
-    config.locked_id = ele.id();
+    config.locked_id = ele.attr("id");
 
-    let keys = Object.keys(_.pick(ele[0]._private.classes._obj, value => !!value));
-    keys = _.intersection(keys, ["selected", "activated", "multiword-active", "merge-source", "combine-source"]);
+    let keys = ele.attr("class").split(/\s+/);
+    keys = _.intersection(keys, ["selected", "activated"
+      , "multiword-active", "merge-source", "combine-source"]);
 
     config.locked_classes = keys.join(" ");
     this.save();
-    if (this.app.online) {
-      this.app.socket.broadcast("lock graph", ele.id());
+    if(this.app.online) {
+      this.app.socket.broadcast("lock graph", ele.attr("id"));
     }
   }
 
