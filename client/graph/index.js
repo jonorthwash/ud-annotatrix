@@ -316,22 +316,33 @@ class Graph {
     const self = this;
 
     // Triggering a "background" click unless a node/edge intercepts it
-    // Note: this triggers after everything else.
-    $("#graph-svg").on("click", function() {
-      //$(':focus').blur();
+    // Note: this triggers after everything else. Also, we call unbind
+    // because event handlers would otherwise stack on #mute.
+    $('#graph-svg, #mute').unbind().on('click contextmenu', function(e) {
+      console.log(e.target);
+      console.log("svg clicked", self.intercepted);
       self.save();
+      self.clear();
       self.intercepted = false;
+      e.preventDefault();
+    });
+
+    // don't clear if we clicked inside #edit
+    $('#edit').click(function() {
+      console.log("nooooo");
+      self.intercepted = true;
     });
 
     // We can't use the event handler because if we click
     // on text, it gives us the text as the target, not
     // the rect which we want.
-    $("#graph-svg").on("click", ".token", function() {
+    $('.token').click(function() {
+      self.intercepted = true;
       console.log("clicked on token");
       let targetNum = $(this).attr('id').replace(/\D/g,'');
       console.log(targetNum);
       // THIS is #group[id]. But we want #form-[id].
-      let target = $("#form-" + targetNum);
+      let target = $('#form-' + targetNum);
       if (target.hasClass('locked'))
         return;
       if (self.moving_dependency) {
@@ -404,13 +415,7 @@ class Graph {
       }
     });
 
-    // don't clear if we clicked inside #edit
-    $("#edit").mouseup(e => { self.intercepted = true; });
-
-    // if we're dragging, don't clear; also save after we change the zoom
-    $("#cy canvas").mousemove(e => { self.intercepted = true; }).on("wheel", e => self.save());
-
-    this.cy.on("mousemove", e => {
+    /*this.cy.on("mousemove", e => {
       // send out a 'move mouse' event at most every `mouse_move_delay` msecs
       if (self.app.initialized && !self.mouseBlocked && self.app.online)
         self.app.socket.broadcast("move mouse", e.position);
@@ -420,94 +425,8 @@ class Graph {
       setTimeout(() => { self.mouseBlocked = false; }, config.mouse_move_delay);
     });
 
-    // don't clear if we right- or left-click on an element
-    /*this.cy.on("click cxttapend", "*"", e => {
+    self.cy.on('click', 'node.pos', e => {
 
-      self.intercepted = true;
-
-      // debugging
-      console.info(`clicked ${e.target.attr("id")}, data:`, e.target.data());
-    });
-
-    // bind the cy events
-    self.cy.on("click", "node.form", e => {
-      const target = e.target;
-
-      if (target.hasClass("locked"))
-        return;
-
-      self.cy.$(".multiword-active").removeClass("multiword-active");
-
-      if (self.moving_dependency) {
-
-        const dep = self.cy.$(".selected");
-        const source = self.cy.$(".arc-source");
-
-        // make a new dep, remove the old one
-        self.makeDependency(source, target);
-        self.removeDependency(dep);
-        self.cy.$(".moving").removeClass("moving");
-        self.moving_dependency = false;
-
-        const newEdge = self.cy.$(`#${source.attr("id")} -> #${target.attr("id")}`);
-
-        // right click the new edge and lock it
-        newEdge.trigger("cxttapend");
-        self.lock(newEdge);
-
-      } else {
-
-        // check if there's anything in-progress
-        self.commit();
-
-        self.cy.$(".arc-source").removeClass("arc-source");
-        self.cy.$(".arc-target").removeClass("arc-target");
-        self.cy.$(".selected").removeClass("selected");
-
-        // handle the click differently based on current state
-
-        if (target.hasClass("merge-right") || target.hasClass("merge-left")) {
-
-          // perform merge
-          self.merge(self.cy.$(".merge-source").data("token"), target.data("token"));
-          self.unlock();
-
-        } else if (target.hasClass("combine-right") || target.hasClass("combine-left")) {
-
-          // perform combine
-          self.combine(self.cy.$(".combine-source").data("token"), target.data("token"));
-          self.unlock();
-
-        } else if (target.hasClass("activated")) {
-
-          // de-activate
-          self.intercepted = false;
-          self.clear();
-
-        } else {
-
-          const source = self.cy.$(".activated");
-          target.addClass("activated");
-
-          // if there was already an activated node
-          if (source.length === 1) {
-
-            // add a new edge
-            self.makeDependency(source, target);
-            source.removeClass("activated");
-            target.removeClass("activated");
-            self.unlock();
-
-          } else {
-
-            // activate it
-            self.lock(target);
-          }
-        }
-      }
-    });
-
-    self.cy.on("click", "node.pos", e => {
       const target = e.target;
 
       if (target.hasClass("locked"))
@@ -546,7 +465,8 @@ class Graph {
       }
     });
 
-    self.cy.on("click", "edge.dependency", e => {
+    self.cy.on('cxttapend', 'node.form', e => {
+
       const target = e.target;
 
       if (target.hasClass("locked"))
@@ -562,53 +482,62 @@ class Graph {
 
       this.showEditLabelBox(target);
       self.lock(target);
-    });
-    self.cy.on("cxttapend", "node.form", e => {
-      const target = e.target;
 
-      if (target.hasClass("locked"))
+    });*/
+
+    $('.deprel').contextmenu(function(e) {
+      self.intercepted = true;
+      console.log(e.target);
+      const target = $(e.target);
+      let targetId = $(this).attr('id');
+      let arcSource = targetId.split('_')[2];
+      let arcTarget = targetId.split('_')[1];
+      if (target.hasClass('locked'))
         return;
+      //self.commit();
+      $('.activated').removeClass('activated');
+      if (target.hasClass('selected')) {
 
-      self.commit();
-      self.editing = target;
-
-      self.cy.$(".activated").removeClass("activated");
-      self.cy.$(".arc-source").removeClass("arc-source");
-      self.cy.$(".arc-target").removeClass("arc-target");
-      self.cy.$(".selected").removeClass("selected");
-
-      this.showEditLabelBox(target);
-      self.lock(target);
-    });
-    self.cy.on("cxttapend", "edge.dependency", e => {
-      const target = e.target;
-
-      if (target.hasClass("locked"))
-        return;
-
-      self.commit();
-      self.cy.$(".activated").removeClass("activated");
-
-      if (target.hasClass("selected")) {
-
-        self.cy.$(`#${target.data("source")}`).removeClass("arc-source");
-        self.cy.$(`#${target.data("target")}`).removeClass("arc-target");
-        target.removeClass("selected");
+        $('#form-' + arcSource).removeClass('arc-source');
+        $('#form-' + arcTarget).removeClass('arc-target');
+        target.removeClass('selected');
         self.unlock();
 
       } else {
 
-        self.cy.$(".arc-source").removeClass("arc-source");
-        self.cy.$(`#${target.data("source")}`).addClass("arc-source");
+        $(".arc-source").removeClass("arc-source");
+        $("#form-"+ arcSource).addClass("arc-source");
 
-        self.cy.$(".arc-target").removeClass("arc-target");
-        self.cy.$(`#${target.data("target")}`).addClass("arc-target");
+        $(".arc-target").removeClass("arc-target");
+        $("#form-" + arcTarget).addClass("arc-target");
 
-        self.cy.$(".selected").removeClass("selected");
+        $(".selected").removeClass("selected");
         target.addClass("selected");
         self.lock(target);
       }
-    });*/
+    });
+
+    $(".deprel, .deprel-label").on('click', function() {
+      self.intercepted = true;
+      console.log("clicked on deprel, editing now");
+      // If we click on the text, we want to convert it to the deprel id
+      let targetId = $(this).attr('id').replace('text-','');
+
+      const target = $('#' + targetId);
+      if (target.hasClass('locked')) {
+        return;
+      }
+      //self.commit();
+      self.editing = target;
+
+      $('.activated').removeClass('activated');
+      $('.arc-source').removeClass('arc-source');
+      $('.arc-target').removeClass('arc-target');
+      $('.selected').removeClass('selected');
+
+      self.showEditLabelBox(target);
+      self.lock(target);
+    });
 
     return this;
   }
@@ -688,6 +617,8 @@ class Graph {
       return;
 
     this.commit();
+
+    $(":focus").blur();
 
     $("*").removeClass("splitting activated multiword-active " +
                       "multiword-selected arc-source arc-target selected moving neighbor " +
@@ -1152,15 +1083,17 @@ class Graph {
   showEditLabelBox(target) {
 
     target.addClass("input");
-
+    console.log(target);
+    let textElement = $("#text-" + target.attr("id"));
+    console.log(textElement);
+    
     // get rid of direction arrows
-    const label = target.data("label").replace(/[⊳⊲]/, "");
-    target.data("label", label);
+    const label = textElement.text().replace(/[⊳⊲]/, "");
 
     // get bounding box
-    let bbox = target.renderedBoundingBox();
-    bbox.color = target.style("background-color");
-    if (target.data("name") === "dependency") {
+    /*let bbox = target.renderedBoundingBox();
+    bbox.color = target.style('background-color');
+    if (target.data('name') === 'dependency') {
       bbox.w = 100;
       bbox.h = this.cy.nodes()[0].renderedHeight();
       bbox.color = "white";
@@ -1171,36 +1104,47 @@ class Graph {
       } else {
         bbox.x1 += (bbox.x2 - bbox.x1) / 2 - 50;
       }
-    }
+    }*/
+    console.log(textElement[0].getBoundingClientRect())
+    let textBCR = textElement[0].getBoundingClientRect();
+    let offsetHeight = $("#graph-svg")[0].getBoundingClientRect().y;
 
     // TODO: rank the labels + make the style better
-    const autocompletes = target.data("name") === "pos-node"
-                              ? utils.validate.U_POS
-                              : target.data("name") === "dependency" ? utils.validate.U_DEPRELS : [];
+    const autocompletes = target.attr("id").includes("pos")
+      ? utils.validate.U_POS
+      : target.attr("id").includes("dep")
+        ? utils.validate.U_DEPRELS
+        : [];
 
     // add the edit input
     $("#edit")
-        .val("")
-        .focus()
-        .val(label)
-        .css("top", bbox.y1)
-        .css("left", bbox.x1)
-        .css("height", bbox.h)
-        .css("width", bbox.w + 5)
-        .attr("target", target.attr("id"))
-        .addClass("activated")
-        .selfcomplete(
-            {lookup: autocompletes, tabDisabled: false, autoSelectFirst: true, lookupLimit: 5, width: "flex"});
+      .val("")
+      .focus()
+      .val(label)
+      .css("top", textBCR.y - offsetHeight)
+      .css("left", textBCR.x)
+      .css("height", textBCR.height)
+      .css("width", textBCR.width)
+      .attr("target", target.attr("id"))
+      .addClass("activated")
+      .selfcomplete({
+        lookup: autocompletes,
+        tabDisabled: false,
+        autoSelectFirst: true,
+        lookupLimit: 5,
+        width: 'flex'
+      });
 
     // add the background-mute div
-    $("#mute").addClass("activated")
-    /*.css('height', this.app.corpus.is_vertical
-      ? `${this.length * 50}px`
-      : $(window).width() - 10);*/
+    $("#mute").addClass("activated");
+      /*.css('height', this.app.corpus.is_vertical
+        ? `${this.length * 50}px`
+        : $(window).width() - 10);*/
 
     $("#edit").focus(); // move cursor to the end
-    if (target.data("name") === "dependency")
+    if (target.attr("id").includes("dep")) {
       $("#edit").select(); // highlight the current contents
+    }
 
     this.lock(target);
     this.app.gui.status.refresh();
@@ -1257,7 +1201,7 @@ class Graph {
 
     this.locked = ele;
     config.locked_index = this.app.corpus.index;
-    config.locked_id = ele.attr("id");
+    config.locked_id = ele.attr('id');
 
     let keys = ele.attr("class").split(/\s+/);
     keys = _.intersection(keys, ["selected", "activated"

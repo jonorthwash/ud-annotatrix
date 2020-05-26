@@ -27,6 +27,7 @@ function run() {
 			_g.attr("transform", d3.event.transform);
 		})
 		.on("end", function() {
+			// Save settings to config.
 			_graph.config.zoom = d3.event.transform.k;
 			_graph.config.pan = {x: d3.event.transform.x, y: d3.event.transform.y};
 		});
@@ -64,7 +65,7 @@ function drawNodes() {
 	let nodeHeight = 55;
 	_numNodes = 0;
 	console.log(_graph.eles);
-	let el = _graph.app.corpus.is_ltr ? _graph.eles.reverse() : _graph.eles;
+	let el = _graph.app.corpus.is_ltr ? _graph.eles : _graph.eles.reverse();
 	el.forEach((d) => {
 		// Only want nodes
 	  if(!d.classes.includes("form")) {
@@ -80,10 +81,8 @@ function drawNodes() {
 			.attr("id", "text" + num)
 			.text(d.form);
 		let txt = $("#text" + num)[0];
-		console.log();
 		//let rectWidth = txt.getBoundingClientRect().width / transform.k;
-		let rectWidth = textElement.node().getComputedTextLength() + 10;
-		console.log(rectWidth);
+		let rectWidth = Math.max(40, textElement.node().getComputedTextLength() + 10);
 	  //let rectHeight = txt.getBoundingClientRect().height / transform.k;
 		textElement.remove();
 
@@ -133,7 +132,9 @@ function drawNodes() {
 		_numNodes++;
 	});
 }
-
+/**
+ * Draws deprels.
+ */
 function drawDeprels() {
 	// Ending arrowheads
 	let markerDef = _g.append("defs");
@@ -175,6 +176,57 @@ function drawDeprels() {
 	// Get heights for the deprels
 	let heights = getHeights(deprels);
 	let edgeHeight = 65; // how high the height increments by at each level
+
+	function shiftTokens(shift, target) {
+		while ($("#group-" + target).length) {
+			let curX = d3.select("#group-" + target).attr("x");
+			d3.select("#group-" + target).attr("x", parseInt(curX) + shift);
+			target++;
+		}
+	} 
+
+	function needShift(d, rectWidth, height) {
+		let xpos1 = parseInt($("#"+d.source).attr("x")) + parseInt($("#"+d.source).attr("width")) / 2;
+		let xpos2 = parseInt($("#"+d.target).attr("x")) + parseInt($("#"+d.target).attr("width")) / 2;
+		let slant = 0.15;
+		let hor = Math.min(tokenDist(d.id), height) * 100;
+		
+		let dir = Math.sign(xpos1 - xpos2);
+		let initialOffset = xpos1 - dir * 20;
+		let rectLeft = (initialOffset + xpos2) / 2 + (dir * rectWidth) / 2;
+		let c2x = initialOffset - dir * hor * slant;
+		let c3x = c2x - dir * hor * slant * 0.7;
+		let c4x = c3x - dir * hor * slant * 0.7;
+		let spacing = 20;
+		if (dir == -1) {
+			if (rectLeft < c4x) {
+				return c4x - rectLeft + spacing;
+			}
+		} else {
+			if (rectLeft > c4x) {
+				return rectLeft - c4x + spacing;
+			}
+		}
+		return 0;
+}
+
+	// We first need to deal with the necessary shifting of tokens
+	// in order for the labels to fit nicely in the deprels before
+	// actually drawing the deprels.
+	deprels.forEach((d) => {
+		// Calculate dimensions of text
+		let textElement = _g
+			.append("text")
+			.attr("id", "text-" + d.id)
+			.text(d.label);
+		let rectWidth = textElement.node().getComputedTextLength() + 10;
+		textElement.remove();
+		let shift = needShift(d, rectWidth, heights.get(d.id));
+		if(shift != 0) {
+			shiftTokens(shift, d.targetNum);
+		}
+	});
+
 	deprels.forEach((d) => {
 		let h = heights.get(d.id);
 		let xpos1 = parseInt($("#"+d.source).attr("x")) + parseInt($("#"+d.source).attr("width")) / 2;
@@ -196,26 +248,25 @@ function drawDeprels() {
 		let rectHeight = txt.getBoundingClientRect().height / transform.k;
 		textElement.remove();
 
-		let pathGroup = _g
-			.append("g")
-			.attr("id", "group-" + d.id)
-			.attr("class", "deprel");
-
-		pathGroup
+		// Add deprel
+		_g
 			.append("path")
+			.attr("class", "deprel")
 			.style("stroke", "#BEBEBE")
 			.style("stroke-width", "6px")
 			.style("fill", "none")
 			.attr("marker-end", "url(#end)")
-			.attr("d", curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height))
+			.attr("d", curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height, d.id))
 			.attr("id", d.id);
 
-		pathGroup
+		// Add deprel label
+		_g
 			.append("text")
-			.attr("id", "text" + d.id)
+			.attr("id", "text-" + d.id)
 			.text(d.label)
-			.attr("x", dir < 0 ? 8 : 5) // left margin of embedded text
+			.attr("x", 10) // left margin of embedded text
 			.attr("y", rectHeight / 2 + 4)
+			.attr("class", "deprel-label")
 			.style("cursor", "pointer")
 			.attr(
 				"transform",
@@ -224,14 +275,51 @@ function drawDeprels() {
 					"," +
 					((ypos1 - height) - rectHeight / 2) +
 					")"
-			);
+			)
+			.attr("text-anchor", "middle");
 		});
+
+		// We want the text to be on top of everything else
+		d3.selectAll(".deprel-label").raise();
+
+		//Lower supertokens
 }
 
-function curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height) {
+/**
+ * Returns the token distance for a deprel.
+ * @param {String} id dep_[num1]_[num2]
+ */
+function tokenDist(id) {
+	let sourceNum = parseInt(id.split('_')[1]);
+	let targetNum = parseInt(id.split('_')[2]);
+	return Math.abs(sourceNum - targetNum);
+}
+
+/**
+ * Generates curve for deprel.
+ * The curve starts at initialOffset (M) and consists of a
+ * straight line (L) that goes into a cubic curve (C) which
+ * then goes into a straight line (L) to rectLeft. Then we
+ * leave a gap for the label and start the other half at
+ * rectRight (M) and the same idea follows again.
+ * Here, • denotes a control point used.
+ *         •   •   • label •   •   •
+ *
+ *       •                           •
+ *
+ *     •                                •
+ * @param {int} initialOffset x-position of source (offset)
+ * @param {int} ypos1 y-position of tokens
+ * @param {int} xpos2 x-position of target
+ * @param {int} dir -1 or 1
+ * @param {int} rectWidth width of label
+ * @param {int} h scaled height of deprel
+ * @param {int} height actual height of the deprel
+ */
+function curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height, id) {
 	let rectLeft = (initialOffset + xpos2) / 2 + (dir * rectWidth) / 2;
-  let slant = 0.15;
-  let hor = h * 100;
+  let slant = 0.15; // Angle of ascent/descent in the beginning/end of the curve
+  let hor = Math.min(tokenDist(id), h) * 100; // How far the curved part of the curve goes
 	let c1x = initialOffset - (dir * hor * slant) / 2;
   let c2x = initialOffset - dir * hor * slant;
   let c3x = c2x - dir * hor * slant * 0.7;
@@ -260,6 +348,10 @@ function curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height) {
   );
 }
 
+/**
+ * Calculates the heights for each deprel.
+ * @param {Array} deprels Array of deprels
+ */
 function getHeights(deprels) {
   function dist(a) {
     return Math.abs(a.sourceNum - a.targetNum);
@@ -276,23 +368,28 @@ function getHeights(deprels) {
   let heights = [];
   let finalHeights = new Map();
   for (let i = 0; i < _numNodes + 1; i++) {
-    heights.push(0);
+    heights.push([0]);
   }
   for (let i = 0; i < deprels.length; i++) {
     let a = deprels[i];
     let dir = Math.sign(a.targetNum - a.sourceNum);
-    let h = 0;
+		let h = new Set();
     for (let j = a.sourceNum + dir; j != a.targetNum; j += dir) {
-      // todo: instead of just getting the maximum
-      // if there is a lower height that is not taken
-      // then take that height. this way we don't get super
-      // tall heights for no reason.
-      h = Math.max(h, heights[j]);
-    }
-    h++;
-    finalHeights.set(a.id, h);
+			for(let k = 0; k < heights[j].length; k++) {
+				h.add(heights[j][k]);
+			}
+      
+		}
+		// We basically find the lowest height that doesn't conflict
+		// which any other deprel.
+		console.log(h);
+		let ht = 1;
+    while(h.has(ht)) {
+			ht++;
+		}
+    finalHeights.set(a.id, ht);
     for (let j = a.sourceNum; ; j += dir) {
-      heights[j] = h;
+      heights[j].push(ht);
       if (j == a.targetNum) {
         break;
       }

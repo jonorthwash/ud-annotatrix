@@ -119,6 +119,14 @@ rect.activated {
   fill: #2653c9 !important;
 }
 
+rect.arc-source, rect.arc-target {
+  stroke: #cc22fc !important;
+}
+
+.deprel.selected {
+  stroke: #cc22fc !important;
+}
+
 #notebox {
   width:50%;
   margin:auto;
