@@ -177,17 +177,15 @@ function drawDeprels() {
 	let heights = getHeights(deprels);
 	let edgeHeight = 65; // how high the height increments by at each level
 
-	function shiftTokens(shift, target) {
+	function shiftTokens(shift, target, dir) {
 		while ($("#group-" + target).length) {
 			let curX = d3.select("#group-" + target).attr("x");
-			d3.select("#group-" + target).attr("x", parseInt(curX) + shift);
-			target++;
+			d3.select("#group-" + target).attr("x", parseInt(curX) - dir * shift);
+			target -= dir * (_graph.app.corpus.is_ltr ? 1 : -1);
 		}
 	} 
 
-	function needShift(d, rectWidth, height) {
-		let xpos1 = parseInt($("#"+d.source).attr("x")) + parseInt($("#"+d.source).attr("width")) / 2;
-		let xpos2 = parseInt($("#"+d.target).attr("x")) + parseInt($("#"+d.target).attr("width")) / 2;
+	function needShift(d, xpos1, xpos2, rectWidth, height) {
 		let slant = 0.15;
 		let hor = Math.min(tokenDist(d.id), height) * 100;
 		
@@ -221,9 +219,15 @@ function drawDeprels() {
 			.text(d.label);
 		let rectWidth = textElement.node().getComputedTextLength() + 10;
 		textElement.remove();
-		let shift = needShift(d, rectWidth, heights.get(d.id));
+
+		let xpos1 = parseInt($("#"+d.source).attr("x")) + parseInt($("#"+d.source).attr("width")) / 2;
+		let xpos2 = parseInt($("#"+d.target).attr("x")) + parseInt($("#"+d.target).attr("width")) / 2;
+		let dir = Math.sign(xpos1 - xpos2); // -1 if deprel going right, else 1
+
+		let shift = needShift(d, xpos1, xpos2, rectWidth, heights.get(d.id));
+		console.log(d, shift);
 		if(shift != 0) {
-			shiftTokens(shift, d.targetNum);
+				shiftTokens(shift, d.targetNum, dir);
 		}
 	});
 
@@ -382,7 +386,6 @@ function getHeights(deprels) {
 		}
 		// We basically find the lowest height that doesn't conflict
 		// which any other deprel.
-		console.log(h);
 		let ht = 1;
     while(h.has(ht)) {
 			ht++;
