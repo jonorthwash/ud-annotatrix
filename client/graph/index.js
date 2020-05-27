@@ -361,7 +361,7 @@ class Graph {
       } else {
 
         // check if there's anything in-progress
-        //self.commit();
+        self.commit();
 
         $('.arc-source').removeClass('arc-source');
         $('.arc-target').removeClass('arc-target');
@@ -490,7 +490,7 @@ class Graph {
       let arcTarget = targetId.split('_')[1];
       if (target.hasClass('locked'))
         return;
-      //self.commit();
+      self.commit();
       $('.activated').removeClass('activated');
       if (target.hasClass('selected')) {
 
@@ -523,7 +523,7 @@ class Graph {
       if (target.hasClass('locked')) {
         return;
       }
-      //self.commit();
+      self.commit();
       self.editing = target;
 
       $('.activated').removeClass('activated');
@@ -566,12 +566,12 @@ class Graph {
    */
   commit() {
 
-    /*this.cy.$(".input").removeClass("input");
+    $(".input").removeClass("input");
 
     if (this.editing === null)
       return; // nothing to do
 
-    if (this.cy.$(".splitting").length) {
+    if ($(".splitting").length) {
 
       const value = $("#edit").val();
       let index = value.indexOf(" ");
@@ -581,23 +581,23 @@ class Graph {
 
     } else {
 
-      const token = this.editing.data("token") || this.editing.data("targetToken"), attr = this.editing.data("attr"),
-            value = utils.validate.attrValue(attr, $("#edit").val());
+      const attr = this.editing.attr("attr"),
+        value = utils.validate.attrValue(attr, $("#edit").val());
 
-      if (attr === "deprel") {
+      if (attr == "deprel") {
 
         this.modifyDependency(this.editing, value);
 
       } else {
-
-        token[attr] = value;
+        const tokenNum = this.editing.attr("id").replace(/\D/g,'');
+        tokens[tokenNum][attr] = value;
         this.editing = null;
         this.app.save({
           type: "set",
           indices: [this.app.corpus.index],
         });
       }
-    }*/
+    }
 
     this.editing = null;
   }
@@ -699,8 +699,11 @@ class Graph {
 
     try {
 
-      let src = ele.data("sourceToken");
-      let tar = ele.data("targetToken");
+      let id = ele.attr("id");
+      let sourceNum = parseInt(id.split("_")[2]);
+	    let targetNum = parseInt(id.split("_")[1]);
+      let src = this.tokens[sourceNum];
+      let tar = this.tokens[targetNum];
       tar.modifyHead(src, deprel);
       this.unlock();
       this.app.save({

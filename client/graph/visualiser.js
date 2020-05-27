@@ -107,6 +107,7 @@ function drawNodes() {
 			.attr("rx", 8)
 			.attr("ry", 8)
 			.attr("id", d.id)
+			.attr("attr", d.attr)
 			.attr("class", d.classes);
 
 		// Add text
@@ -214,7 +215,8 @@ function drawDeprels() {
 		let textElement = _g
 			.append("text")
 			.attr("id", "text-" + d.id)
-			.text(d.label);
+			.text(d.label)
+			.attr('class', 'deprel-label');
 		let rectWidth = textElement.node().getComputedTextLength() + 10;
 		textElement.remove();
 
@@ -244,7 +246,8 @@ function drawDeprels() {
 		let textElement = _g
 			.append("text")
 			.attr("id", "text" + d.id)
-			.text(d.label);
+			.text(d.label)
+			.attr('class', 'deprel-label');
 		let txt = $("#text" + d.id)[0];
 		let rectWidth = textElement.node().getComputedTextLength() + 10;
 		let rectHeight = txt.getBoundingClientRect().height / transform.k;
@@ -254,6 +257,7 @@ function drawDeprels() {
 		_g
 			.append("path")
 			.attr("class", d.classes)
+			.attr("attr", d.attr)
 			.style("stroke-width", "6px")
 			.style("fill", "none")
 			.attr("marker-end", "url(#end)")
