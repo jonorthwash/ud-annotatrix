@@ -710,6 +710,7 @@ th i {
 
 #progress-container {
   height: 5px;
+  z-index: 1;
 }
 
 #progress-bar {
