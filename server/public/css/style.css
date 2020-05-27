@@ -115,16 +115,47 @@ span.tt {
   z-index: 800;
 }
 
-rect.activated {
-  fill: #2653c9 !important;
+.form {
+  fill: #7FA1FF;
+  stroke: black;
+  stroke-width: 2px;
 }
 
-rect.arc-source, rect.arc-target {
-  stroke: #cc22fc !important;
+.form.root {
+  stroke-width: 4px;
 }
 
-.deprel.selected {
-  stroke: #cc22fc !important;
+.form.activated {
+  fill: #2653c9;
+}
+
+.form.arc-source, .form.arc-target {
+  stroke: #cc22fc;
+}
+
+.dependency {
+  stroke: #111;
+  opacity: 0.766;
+}
+
+.dependency.selected.moving {
+  stroke: #00f;
+}
+
+.dependency.incomplete {
+  stroke: #BEBEBE;
+}
+
+.dependency.error {
+  stroke: #d11;
+}
+
+.dependency.selected {
+  stroke: #cc22fc;
+}
+
+.deprel-label {
+  text-shadow: 2px 2px 11px #fff;
 }
 
 #notebox {

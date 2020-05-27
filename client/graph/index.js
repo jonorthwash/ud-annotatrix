@@ -37,20 +37,6 @@ class Graph {
     this.editing = null;
     this.moving_dependency = null;
 
-    // default options for the cytoscape canvas
-    this.options = {
-      container: this.app.gui.config.is_browser ? $("#cy") : null,
-      boxSelectionEnabled: false,
-      autounselectify: true,
-      autoungrabify: true,
-      zoomingEnabled: true,
-      userZoomingEnabled: true,
-      wheelSensitivity: 0.1,
-      style: require("./cy-style"),
-      layout: null,
-      elements: []
-    };
-
     // total number of elements in the graph
     this.length = 0;
 
@@ -224,6 +210,7 @@ class Graph {
                             ? token.indices.absolute > head.token.indices.absolute ? `${deprel}⊳` : `⊲${deprel}`
                             : token.indices.absolute > head.token.indices.absolute ? `⊲${deprel}` : `${deprel}⊳`;
 
+
           eles.push({
             id: `dep_${id}_${headId}`,
             name: `dependency`,
@@ -333,6 +320,14 @@ class Graph {
       self.intercepted = true;
     });
 
+    $('#graph-svg').on('click contextmenu', '*', e => {
+
+      self.intercepted = true;
+
+      // debugging
+      //console.info(`clicked ${e.target.attr('id')}, data:`, e.target.data());
+    });
+
     // We can't use the event handler because if we click
     // on text, it gives us the text as the target, not
     // the rect which we want.
@@ -347,20 +342,21 @@ class Graph {
         return;
       if (self.moving_dependency) {
 
-        /*const dep = self.cy.$('.selected');
-        const source = self.cy.$('.arc-source');
+        const dep = $('.selected');
+        const sourceNum = $('.arc-source').attr('id').replace(/\D/g,'');;
 
         // make a new dep, remove the old one
-        self.makeDependency(source, target);
+        self.makeDependency(self.tokens[sourceNum], self.tokens[targetNum]);
         self.removeDependency(dep);
-        self.cy.$('.moving').removeClass('moving');
+        $('.moving').removeClass('moving');
         self.moving_dependency = false;
 
-        const newEdge = self.cy.$(`#${source.attr('id')} -> #${target.attr('id')}`);
-
+        const newEdge = $('#dep_' + targetNum + '_' + sourceNum);
+        console.log('#dep_' + targetNum + '_' + sourceNum);
         // right click the new edge and lock it
-        newEdge.trigger('cxttapend');
-        self.lock(newEdge);*/
+        newEdge.trigger('contextmenu');
+        self.moving_dependency = true;
+        self.lock(newEdge);
 
       } else {
 
@@ -485,7 +481,7 @@ class Graph {
 
     });*/
 
-    $('.deprel').contextmenu(function(e) {
+    $('.dependency').contextmenu(function(e) {
       self.intercepted = true;
       console.log(e.target);
       const target = $(e.target);
@@ -517,7 +513,7 @@ class Graph {
       }
     });
 
-    $(".deprel, .deprel-label").on('click', function() {
+    $(".dependency, .deprel-label").on('click', function() {
       self.intercepted = true;
       console.log("clicked on deprel, editing now");
       // If we click on the text, we want to convert it to the deprel id
@@ -733,9 +729,11 @@ class Graph {
   removeDependency(ele) {
 
     try {
-
-      let src = ele.data("sourceToken");
-      let tar = ele.data("targetToken");
+      let id = ele.attr("id");
+      let sourceNum = parseInt(id.split("_")[2]);
+	    let targetNum = parseInt(id.split("_")[1]);
+      let src = this.tokens[sourceNum];
+      let tar = this.tokens[targetNum];
       tar.removeHead(src);
       this.unlock();
       this.app.save({
@@ -831,7 +829,8 @@ class Graph {
   setRoot(ele) {
 
     const sent = this.app.corpus.current;
-    ele = ele.data("token");
+    let eleNum = ele.attr("id").replace(/\D/g, "");
+    ele = this.tokens[eleNum];
 
     try {
 

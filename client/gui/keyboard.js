@@ -275,22 +275,21 @@ function keyup(app, event) {
     return;
   }
 
-  if (graph.cy)
+  if (true)
     switch (event.which) {
     case (KEYS.DELETE):
     case (KEYS.BACKSPACE):
     case (KEYS.X):
-      if (graph.cy.$(".selected").length) {
-        graph.removeDependency(graph.cy.$(".selected"));
-        $("#graph").focus();
-      } /* else if (graph.cy.$('.supAct').length) {
-         removeSup(st);
-       }*/
+      if ($(".selected").length) {
+        graph.removeDependency($(".selected"));
+      }/* else if (graph.cy.$('.supAct').length) {
+        removeSup(st);
+      }*/
       break;
 
     case (KEYS.D):
-      if (graph.cy.$(".selected").length) {
-        graph.cy.$(".selected").toggleClass("moving");
+      if ($(".selected").length) {
+        $(".selected").toggleClass("moving");
         graph.moving_dependency = !graph.moving_dependency;
       }
       break;
@@ -304,7 +303,7 @@ function keyup(app, event) {
     case (KEYS.N):
       console.log("KEYS.N", graph.cy.$("node.form.activated"));
       if (graph.cy.$("node.form.activated"))
-        graph.insertEmptyTokenAfter(graph.cy.$("node.form.activated"));
+        graph.toggleIsEmpty(graph.cy.$("node.form.activated"));
       break;
 
     case (KEYS.P):
@@ -314,14 +313,14 @@ function keyup(app, event) {
       break;
 
     case (KEYS.R):
-      if (graph.cy.$("node.form.activated"))
-        graph.setRoot(graph.cy.$("node.form.activated"));
+      if ($(".activated").length)
+        graph.setRoot($(".activated"));
       break;
 
     case (KEYS.S):
 
-      const token = graph.cy.$(".activated");
-      const superToken = graph.cy.$(".multiword-active");
+      const token = $(".activated");
+      const superToken = $(".multiword-active");
 
       if (token.length) {
 

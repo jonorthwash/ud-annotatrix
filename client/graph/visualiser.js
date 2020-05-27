@@ -40,7 +40,7 @@ function run() {
 		.attr("id", "graph-svg")
 	  .style("background", "white")
 	  .style("font-family", "Arial")
-	  .style("font-size", "20")
+	  .style("font-size", "25")
 		.call(zoom)
 	  .on("dblclick.zoom", null);
 
@@ -107,9 +107,7 @@ function drawNodes() {
 			.attr("rx", 8)
 			.attr("ry", 8)
 			.attr("id", d.id)
-			.style("fill", "#7FA1FF")
-			.style("stroke", "black")
-			.style("stroke-width", "2px");
+			.attr("class", d.classes);
 
 		// Add text
 	  nodeGroup
@@ -147,7 +145,7 @@ function drawDeprels() {
 		.attr("markerWidth", "15")
 		.attr("markerHeight", "15")
 		.attr("orient", "auto")
-		.style("fill", "#494949")
+		.style("fill", "#111")
 		.append("path")
 		.attr("d", "M 1 1 L 3 2 L 1 3 Z");
 
@@ -190,12 +188,12 @@ function drawDeprels() {
 		let hor = Math.min(tokenDist(d.id), height) * 100;
 		
 		let dir = Math.sign(xpos1 - xpos2);
-		let initialOffset = xpos1 - dir * 20;
+		let initialOffset = xpos1 - dir * 15;
 		let rectLeft = (initialOffset + xpos2) / 2 + (dir * rectWidth) / 2;
 		let c2x = initialOffset - dir * hor * slant;
 		let c3x = c2x - dir * hor * slant * 0.7;
 		let c4x = c3x - dir * hor * slant * 0.7;
-		let spacing = 20;
+		let spacing = 30;
 		if (dir == -1) {
 			if (rectLeft < c4x) {
 				return c4x - rectLeft + spacing;
@@ -237,7 +235,7 @@ function drawDeprels() {
   	let ypos1 = parseInt($("#"+d.source).attr("y"));
 		let xpos2 = parseInt($("#"+d.target).attr("x")) + parseInt($("#"+d.target).attr("width")) / 2;
 		let dir = Math.sign(xpos1 - xpos2); // -1 if deprel going right, else 1
-		let initialOffset = xpos1 - dir * 20; // Deprel is offset a little when coming out of source
+		let initialOffset = xpos1 - dir * 15; // Deprel is offset a little when coming out of source
 		let height = h * edgeHeight; // actual height of deprel
 		let mid = (initialOffset + xpos2) / 2; // x-position of the middle of the deprel
 
@@ -255,8 +253,7 @@ function drawDeprels() {
 		// Add deprel
 		_g
 			.append("path")
-			.attr("class", "deprel")
-			.style("stroke", "#BEBEBE")
+			.attr("class", d.classes)
 			.style("stroke-width", "6px")
 			.style("fill", "none")
 			.attr("marker-end", "url(#end)")
@@ -268,19 +265,18 @@ function drawDeprels() {
 			.append("text")
 			.attr("id", "text-" + d.id)
 			.text(d.label)
-			.attr("x", 10) // left margin of embedded text
-			.attr("y", rectHeight / 2 + 4)
 			.attr("class", "deprel-label")
 			.style("cursor", "pointer")
 			.attr(
 				"transform",
 				"translate(" +
-					(mid - rectWidth / 2) +
+					(mid) +
 					"," +
-					((ypos1 - height) - rectHeight / 2) +
+					((ypos1 - height)) +
 					")"
 			)
-			.attr("text-anchor", "middle");
+			.attr("text-anchor", "middle")
+			.attr("dominant-baseline", "central");
 		});
 
 		// We want the text to be on top of everything else
