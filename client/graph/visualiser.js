@@ -73,31 +73,34 @@ function drawNodes() {
 		}
 
 		let num = d.id.replace(/\D/g,'');
+		let textClass = 'form-label' + d.classes.replace('form', '');
 
 		// Find sizing of the node label
-		let transform = d3.zoomTransform(_g.node());
 	  let textElement = _g
 			.append("text")
 			.attr("id", "text" + num)
-			.text(d.form);
-		let txt = $("#text" + num)[0];
-		//let rectWidth = txt.getBoundingClientRect().width / transform.k;
+			.text(d.form)
+			.attr("class", textClass);
 		let rectWidth = Math.max(40, textElement.node().getComputedTextLength() + 10);
-	  //let rectHeight = txt.getBoundingClientRect().height / transform.k;
 		textElement.remove();
 
 		// we use <svg> as a instead of <g> because <g> can only use transform and not x/y attr.
 		// perfomance-wise, they are basically the same.
-	  let nodeGroup = _g
+		let tokenGroup = _g
 			.append("svg") 
-			.attr("id", "group-" + num)
+			.attr("id", "token-" + num)
 			.attr("width", rectWidth)
 			.attr("height", nodeHeight)
-			.attr("class", "token")
+			//.attr("class", "token")
 			.attr("x", currentX)
 			.attr("y", 100)
 			.style("overflow", "visible")
 			.style("cursor", "pointer");
+
+	  let nodeGroup = tokenGroup
+			.append("g")
+			.attr("id", "group-" + num)
+			.attr("class", "token");
 
 		// Create node
 	  nodeGroup
@@ -116,7 +119,9 @@ function drawNodes() {
 			.text(d.form)
 			.attr("x", "50%")
 			.attr("y", 21)
-			.attr("text-anchor", "middle");
+			.attr("text-anchor", "middle")
+			.attr("id", "text-" + d.id)
+			.attr("class", textClass);
 		
 		// Add token number
 	  nodeGroup
@@ -125,6 +130,49 @@ function drawNodes() {
 			.attr("x", "50%")
 			.attr("y", 45)
 			.attr("text-anchor", "middle");
+
+		let posTextElement = _g
+			.append("text")
+			.attr("id", "text" + num)
+			.text(d.posLabel);
+
+		let posWidth = Math.max(20, posTextElement.node().getComputedTextLength() + 10);
+		posTextElement.remove();
+
+		let posGroup = tokenGroup
+			.append("svg")
+			.attr("x", rectWidth/2-posWidth/2)
+			.attr("y", nodeHeight + 10)
+			.attr("width", posWidth)
+			.attr("height", 30)
+			.style("overflow", "visible");
+
+		posGroup
+			.append("rect")
+			.attr("width", posWidth)
+			.attr("height", 30)
+			.attr("class", d.posClasses)
+			.attr("attr", d.posAttr)
+			.attr("rx", 5)
+			.attr("ry", 5);
+
+		posGroup
+			.append("text")
+			.attr("x", "50%")
+			.attr("y", "50%")
+			.text(d.posLabel)
+			.attr("text-anchor", "middle")
+			.attr("dominant-baseline", "central");
+
+		tokenGroup
+			.append("line")
+			.attr("x1", rectWidth/2)
+			.attr("y1", nodeHeight)
+			.attr("x2", rectWidth/2)
+			.attr("y2", nodeHeight + 15)
+			.attr("class", "pos-edge")
+			.style("stroke", "#484848")
+			.style("stroke-width", 3);
 
 		// Spacing of nodes
 		currentX += spacing + rectWidth;
@@ -177,9 +225,9 @@ function drawDeprels() {
 	let edgeHeight = 65; // how high the height increments by at each level
 
 	function shiftTokens(shift, target, dir) {
-		while ($("#group-" + target).length) {
-			let curX = d3.select("#group-" + target).attr("x");
-			d3.select("#group-" + target).attr("x", parseInt(curX) - dir * shift);
+		while ($("#token-" + target).length) {
+			let curX = d3.select("#token-" + target).attr("x");
+			d3.select("#token-" + target).attr("x", parseInt(curX) - dir * shift);
 			target -= dir * (_graph.app.corpus.is_ltr ? 1 : -1);
 		}
 	} 
@@ -282,6 +330,9 @@ function drawDeprels() {
 			.attr("text-anchor", "middle")
 			.attr("dominant-baseline", "central");
 		});
+
+		// Lower the pos-edge below the token and the pos label
+		d3.selectAll(".pos-edge").lower();
 
 		// We want the text to be on top of everything else
 		d3.selectAll(".deprel-label").raise();

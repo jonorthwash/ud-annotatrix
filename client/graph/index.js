@@ -170,23 +170,10 @@ class Graph {
             parent: `num-${id}`,
             token: token,
             classes: isRoot ? 'form root' : 'form',
+            posClasses: utils.validate.posNodeClasses(pos),
+            posAttr: format === 'CG3' ? `xpostag` : `upostag`,
+            posLabel: pos || '',
           },
-
-            {
-              // "pos" node
-              data: {
-                id: `pos-node-${id}`,
-                num: ++num,
-                clump: clump,
-                name: `pos-node`,
-                attr: format === "CG3" ? `xpostag` : `upostag`,
-                pos: pos,
-                label: pos || "",
-                length: `${(pos || "").length * 0.7 + 1}em`,
-                token: token,
-              },
-              classes: utils.validate.posNodeClasses(pos),
-            },
         );
 
         // iterate over the token's heads to get edges
@@ -217,10 +204,10 @@ class Graph {
             num: ++num,
             attr: `deprel`,
             deprel: deprel,
-            source: `group-${headId}`,
+            source: `token-${headId}`,
             sourceNum: parseInt(headId),
             sourceToken: head.token,
-            target: `group-${id}`,
+            target: `token-${id}`,
             targetNum: parseInt(id),
             targetToken: token,
             label: label,
@@ -336,7 +323,7 @@ class Graph {
       console.log("clicked on token");
       let targetNum = $(this).attr('id').replace(/\D/g,'');
       console.log(targetNum);
-      // THIS is #group[id]. But we want #form-[id].
+      // THIS is #group-[id]. But we want #form-[id].
       let target = $('#form-' + targetNum);
       if (target.hasClass('locked'))
         return;

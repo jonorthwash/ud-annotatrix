@@ -158,6 +158,20 @@ span.tt {
   text-shadow: 2px 2px 5px #575757;
 }
 
+.form-label.root {
+  font-weight: bold;
+}
+
+.pos {
+  fill: #afa2ff;
+  stroke: black;
+  stroke-width: 2px;
+}
+
+.pos.error {
+  stroke: #d11;
+}
+
 #notebox {
   width:50%;
   margin:auto;
