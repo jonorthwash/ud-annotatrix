@@ -92,7 +92,6 @@ function drawNodes() {
 			.attr("width", rectWidth)
 			.attr("height", nodeHeight)
 			//.attr("class", "token")
-			.attr("x", currentX)
 			.attr("y", 100)
 			.style("overflow", "visible")
 			.style("cursor", "pointer");
@@ -175,7 +174,9 @@ function drawNodes() {
 			.style("stroke-width", 3);
 
 		// Spacing of nodes
-		currentX += spacing + rectWidth;
+		currentX += (posWidth > rectWidth ? ((posWidth - rectWidth) / 2) : 0)
+		tokenGroup.attr("x", currentX);
+		currentX += spacing + (posWidth > rectWidth ? ((rectWidth + posWidth) / 2) : rectWidth);
 		_numNodes++;
 	});
 }
