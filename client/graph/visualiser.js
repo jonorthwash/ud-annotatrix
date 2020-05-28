@@ -150,6 +150,7 @@ function drawNodes() {
 			.append("rect")
 			.attr("width", posWidth)
 			.attr("height", 30)
+			.attr("id", "pos" + num)
 			.attr("class", d.posClasses)
 			.attr("attr", d.posAttr)
 			.attr("rx", 5)
@@ -159,6 +160,8 @@ function drawNodes() {
 			.append("text")
 			.attr("x", "50%")
 			.attr("y", "50%")
+			.attr("class", "pos-label")
+			.attr("id", "text-pos" + num)
 			.text(d.posLabel)
 			.attr("text-anchor", "middle")
 			.attr("dominant-baseline", "central");
@@ -174,6 +177,7 @@ function drawNodes() {
 			.style("stroke-width", 3);
 
 		// Spacing of nodes
+		// We need to shift the current node if pos node is too long
 		currentX += (posWidth > rectWidth ? ((posWidth - rectWidth) / 2) : 0)
 		tokenGroup.attr("x", currentX);
 		currentX += spacing + (posWidth > rectWidth ? ((rectWidth + posWidth) / 2) : rectWidth);

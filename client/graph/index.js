@@ -308,11 +308,7 @@ class Graph {
     });
 
     $('#graph-svg').on('click contextmenu', '*', e => {
-
       self.intercepted = true;
-
-      // debugging
-      //console.info(`clicked ${e.target.attr('id')}, data:`, e.target.data());
     });
 
     // We can't use the event handler because if we click
@@ -406,11 +402,16 @@ class Graph {
       // enforce the delay
       self.mouseBlocked = true;
       setTimeout(() => { self.mouseBlocked = false; }, config.mouse_move_delay);
-    });
 
-    self.cy.on('click', 'node.pos', e => {
+    });*/
 
-      const target = e.target;
+    $(".pos, .pos-label").on('click', function() {
+      self.intercepted = true;
+      console.log("clicked on deprel, editing now");
+      // If we click on the text, we want to convert it to the deprel id
+      let targetId = $(this).attr('id').replace('text-','');
+
+      const target = $('#' + targetId);
 
       if (target.hasClass("locked"))
         return;
@@ -418,16 +419,16 @@ class Graph {
       self.commit();
       self.editing = target;
 
-      self.cy.$(".activated").removeClass("activated");
-      self.cy.$(".arc-source").removeClass("arc-source");
-      self.cy.$(".arc-target").removeClass("arc-target");
-      self.cy.$(".selected").removeClass("selected");
+      $(".activated").removeClass("activated");
+      $(".arc-source").removeClass("arc-source");
+      $(".arc-target").removeClass("arc-target");
+      $(".selected").removeClass("selected");
 
-      this.showEditLabelBox(target);
+      self.showEditLabelBox(target);
       self.lock(target);
     });
 
-    self.cy.on("click", "$node > node", e => {
+    /*self.cy.on("click", "$node > node", e => {
       const target = e.target;
 
       if (target.hasClass("locked"))
@@ -576,8 +577,8 @@ class Graph {
         this.modifyDependency(this.editing, value);
 
       } else {
-        const tokenNum = this.editing.attr("id").replace(/\D/g,'');
-        tokens[tokenNum][attr] = value;
+        const tokenNum = this.editing.attr("id").replace(/\D/g,"");
+        this.tokens[tokenNum][attr] = value;
         this.editing = null;
         this.app.save({
           type: "set",
