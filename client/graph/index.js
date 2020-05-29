@@ -1074,30 +1074,32 @@ class Graph {
 
     target.addClass("input");
     console.log(target);
-    let textElement = $("#text-" + target.attr("id"));
-    console.log(textElement);
+    let textX, textY, textWidth, textHeight, textLabel;
+    if(target.attr("id").includes("pos")) {
+      let textElement = $("#text-" + target.attr("id"));
+      textLabel = textElement.text();
+      let textBCR = target[0].getBoundingClientRect();
+      let offsetHeight = $("#graph-svg")[0].getBoundingClientRect().y;
+      textX = textBCR.x;
+      textY = textBCR.y - offsetHeight;
+      console.log(textBCR);
+      textWidth = textBCR.width;
+      textHeight = textBCR.height;
+    }
+    else if(target.attr("id").includes("dep")) {
+      let textElement = $("#text-" + target.attr("id"));
+      
+      // get rid of direction arrows
+      textLabel = textElement.text().replace(/[⊳⊲]/, "");
+
+      let textBCR = textElement[0].getBoundingClientRect();
+      let offsetHeight = $("#graph-svg")[0].getBoundingClientRect().y;
+      textX = textBCR.x;
+      textY = textBCR.y - offsetHeight;
+      textWidth = textBCR.width;
+      textHeight = textBCR.height;
+    }
     
-    // get rid of direction arrows
-    const label = textElement.text().replace(/[⊳⊲]/, "");
-
-    // get bounding box
-    /*let bbox = target.renderedBoundingBox();
-    bbox.color = target.style('background-color');
-    if (target.data('name') === 'dependency') {
-      bbox.w = 100;
-      bbox.h = this.cy.nodes()[0].renderedHeight();
-      bbox.color = "white";
-
-      if (this.app.corpus.is_vertical) {
-        bbox.y1 += (bbox.y2 - bbox.y1) / 2 - 15;
-        bbox.x1 = bbox.x2 - 70;
-      } else {
-        bbox.x1 += (bbox.x2 - bbox.x1) / 2 - 50;
-      }
-    }*/
-    console.log(textElement[0].getBoundingClientRect())
-    let textBCR = textElement[0].getBoundingClientRect();
-    let offsetHeight = $("#graph-svg")[0].getBoundingClientRect().y;
 
     // TODO: rank the labels + make the style better
     const autocompletes = target.attr("id").includes("pos")
@@ -1110,11 +1112,11 @@ class Graph {
     $("#edit")
       .val("")
       .focus()
-      .val(label)
-      .css("top", textBCR.y - offsetHeight)
-      .css("left", textBCR.x)
-      .css("height", textBCR.height)
-      .css("width", textBCR.width)
+      .val(textLabel)
+      .css("top", textY)
+      .css("left", textX)
+      .css("height", textHeight)
+      .css("width", textWidth)
       .attr("target", target.attr("id"))
       .addClass("activated")
       .selfcomplete({
@@ -1122,7 +1124,7 @@ class Graph {
         tabDisabled: false,
         autoSelectFirst: true,
         lookupLimit: 5,
-        width: 'flex'
+        width: "flex"
       });
 
     // add the background-mute div

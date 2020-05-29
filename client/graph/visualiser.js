@@ -150,7 +150,7 @@ function drawNodes() {
 			.append("rect")
 			.attr("width", posWidth)
 			.attr("height", 30)
-			.attr("id", "pos" + num)
+			.attr("id", "pos-" + num)
 			.attr("class", d.posClasses)
 			.attr("attr", d.posAttr)
 			.attr("rx", 5)
@@ -161,7 +161,7 @@ function drawNodes() {
 			.attr("x", "50%")
 			.attr("y", "50%")
 			.attr("class", "pos-label")
-			.attr("id", "text-pos" + num)
+			.attr("id", "text-pos-" + num)
 			.text(d.posLabel)
 			.attr("text-anchor", "middle")
 			.attr("dominant-baseline", "central");
