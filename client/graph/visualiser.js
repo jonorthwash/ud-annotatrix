@@ -19,8 +19,7 @@ function bind(graph) {
  */
 function run() {
 	d3.select("#graph-svg").remove();
-	$("#graph-svg").data("test", "asdf");
-	console.log("data set");
+
 	// Create main svg which serves as a container
 	let zoom = d3
 		.zoom()

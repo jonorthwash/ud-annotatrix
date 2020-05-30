@@ -234,8 +234,6 @@ class Graph {
     const corpus = this.app.corpus;
     v.bind(this);
     v.run();
-    console.log("data test");
-    console.log($("#graph-svg").data("test"));
     console.log(this.tokens);
 
     // add the mice and locks from `collab`
@@ -261,18 +259,18 @@ class Graph {
         if (right && !right.hasClass("activated") && !right.hasClass("blocked") && right.attr('id').includes('form'))
           right.addClass("neighbor merge-right");
 
-      } /*else if (config.locked_classes.indexOf("combine-source") > -1) {
+      } else if (config.locked_classes.indexOf("combine-source") > -1) {
 
         // add the classes to the adjacent elements if we were combining
 
         const left = this.getPrevForm();
-        if (left && !left.hasClass("activated") && !left.hasClass("blocked") && left.data("type") === "token")
+        if (left && !left.hasClass("activated") && !left.hasClass("blocked") && left.attr('id').includes('form'))
           left.addClass("neighbor combine-left");
 
         const right = this.getNextForm();
-        if (right && !right.hasClass("activated") && !right.hasClass("blocked") && right.data("type") === "token")
+        if (right && !right.hasClass("activated") && !right.hasClass("blocked") && right.attr('id').includes('form'))
           right.addClass("neighbor combine-right");
-      }*/
+      }
 
       // make sure we lock it in the same way as if we had just clicked it
       this.lock(locked);
@@ -305,7 +303,6 @@ class Graph {
 
     // don't clear if we clicked inside #edit
     $('#edit').click(function() {
-      console.log("nooooo");
       self.intercepted = true;
     });
 
@@ -364,8 +361,9 @@ class Graph {
         } else if (target.hasClass('combine-right') || target.hasClass('combine-left')) {
 
           // perform combine
-          //self.combine(self.cy.$('.combine-source').data('token'), target.data('token'));
-          //self.unlock();
+          let sourceNum = $('.combine-source').attr('id').replace(/\D/g,'');
+          self.combine(self.tokens[sourceNum], self.tokens[targetNum]);
+          self.unlock();
 
         } else if (target.hasClass('activated')) {
 
@@ -633,8 +631,6 @@ class Graph {
   makeDependency(src, tar) {
 
     try {
-      //src = src.data('token');
-      //tar = tar.data('token');
       tar.addHead(src);
       this.unlock();
       this.app.save({

@@ -370,34 +370,34 @@ function keyup(app, event) {
 
     case (KEYS.C):
 
-      graph.cy.$(".form").removeClass("merge-source merge-left merge-right");
+      $(".form").removeClass("merge-source merge-left merge-right");
 
-      if (graph.cy.$(".combine-source").length) {
+      if ($(".combine-source").length) {
 
-        graph.cy.$(".neighbor").removeClass("combine-left combine-right neighbor");
+        $(".neighbor").removeClass("combine-left combine-right neighbor");
 
-        graph.cy.$(".combine-source").removeClass("combine-source").addClass("activated");
+        $(".combine-source").removeClass("combine-source").addClass("activated");
 
-        graph.lock(graph.cy.$(".activated"));
+        graph.lock($(".activated"));
 
-      } else if (graph.cy.$(".activated").length) {
+      } else if ($(".activated").length) {
 
-        if (graph.cy.$(".activated").data("type") !== "token")
+        if (!$(".activated").attr("id").includes("form"))
           break;
 
-        graph.cy.$(".activated").addClass("combine-source");
+        $(".activated").addClass("combine-source");
 
-        graph.cy.$(".neighbor").removeClass("neighbor merge-source merge-left merge-right")
+        $(".neighbor").removeClass("neighbor merge-source merge-left merge-right")
 
         const left = graph.getPrevForm();
-        if (!left.hasClass("activated") && !left.hasClass("blocked") && left.data("type") === "token")
+        if (left.length && !left.hasClass("activated") && !left.hasClass("blocked") && left.attr("id").includes("form"))
           left.addClass("neighbor combine-left");
 
         const right = graph.getNextForm();
-        if (!right.hasClass("activated") && !right.hasClass("blocked") && right.data("type") === "token")
+        if (right.length && !right.hasClass("activated") && !right.hasClass("blocked") && right.attr("id").includes("form"))
           right.addClass("neighbor combine-right");
 
-        graph.lock(graph.cy.$(".activated"));
+        graph.lock($(".activated"));
       }
       gui.status.refresh();
       break;
