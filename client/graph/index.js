@@ -234,6 +234,8 @@ class Graph {
     const corpus = this.app.corpus;
     v.bind(this);
     v.run();
+    console.log("data test");
+    console.log($("#graph-svg").data("test"));
     console.log(this.tokens);
 
     // add the mice and locks from `collab`
@@ -247,19 +249,19 @@ class Graph {
       const locked = $("#" + config.locked_id);
       locked.addClass(config.locked_classes);
 
-      /*if (config.locked_classes.indexOf("merge-source") > -1) {
+      if (config.locked_classes.indexOf("merge-source") > -1) {
 
         // add the classes to adjacent elements if we were merging
 
         const left = this.getPrevForm();
-        if (left && !left.hasClass("activated") && !left.hasClass("blocked") && left.data("type") === "token")
+        if (left && !left.hasClass("activated") && !left.hasClass("blocked") && left.attr('id').includes('form'))
           left.addClass("neighbor merge-left");
 
         const right = this.getNextForm();
-        if (right && !right.hasClass("activated") && !right.hasClass("blocked") && right.data("type") === "token")
+        if (right && !right.hasClass("activated") && !right.hasClass("blocked") && right.attr('id').includes('form'))
           right.addClass("neighbor merge-right");
 
-      } else if (config.locked_classes.indexOf("combine-source") > -1) {
+      } /*else if (config.locked_classes.indexOf("combine-source") > -1) {
 
         // add the classes to the adjacent elements if we were combining
 
@@ -326,7 +328,7 @@ class Graph {
       if (self.moving_dependency) {
 
         const dep = $('.selected');
-        const sourceNum = $('.arc-source').attr('id').replace(/\D/g,'');;
+        const sourceNum = $('.arc-source').attr('id').replace(/\D/g,'');
 
         // make a new dep, remove the old one
         self.makeDependency(self.tokens[sourceNum], self.tokens[targetNum]);
@@ -355,8 +357,9 @@ class Graph {
         if (target.hasClass('merge-right') || target.hasClass('merge-left')) {
 
           // perform merge
-          //self.merge(self.cy.$('.merge-source').data('token'), target.data('token'));
-          //self.unlock();
+          let sourceNum = $('.merge-source').attr('id').replace(/\D/g,'');
+          self.merge(self.tokens[sourceNum], self.tokens[targetNum]);
+          self.unlock();
 
         } else if (target.hasClass('combine-right') || target.hasClass('combine-left')) {
 
@@ -983,13 +986,13 @@ class Graph {
    */
   getPrevForm() {
 
-    let clump = this.cy.$(".activated").data("clump");
+    let clump = parseInt($(".activated").attr("id").replace(/\D/g,""));
     if (clump === undefined)
       return;
 
     clump -= 1;
 
-    return this.cy.$(`.form[clump = ${clump}]`);
+    return $("#form-" + clump);
   }
 
   /**
@@ -1002,13 +1005,13 @@ class Graph {
    */
   getNextForm() {
 
-    let clump = this.cy.$(".activated").data("clump");
+    let clump = parseInt($(".activated").attr("id").replace(/\D/g,""));
     if (clump === undefined)
       return;
 
     clump += 1;
 
-    return this.cy.$(`.form[clump = ${clump}]`);
+    return $("#form-" + clump);
   }
 
   /**
@@ -1119,13 +1122,8 @@ class Graph {
       .css("width", textWidth)
       .attr("target", target.attr("id"))
       .addClass("activated")
-      .selfcomplete({
-        lookup: autocompletes,
-        tabDisabled: false,
-        autoSelectFirst: true,
-        lookupLimit: 5,
-        width: "flex"
-      });
+      .selfcomplete(
+        {lookup: autocompletes, tabDisabled: false, autoSelectFirst: true, lookupLimit: 5, width: "flex"});
 
     // add the background-mute div
     $("#mute").addClass("activated");

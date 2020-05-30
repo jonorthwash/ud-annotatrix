@@ -335,37 +335,38 @@ function keyup(app, event) {
 
     case (KEYS.M):
 
-      graph.cy.$(".form").removeClass("combine-source combine-left combine-right");
+      $(".form").removeClass("combine-source combine-left combine-right");
 
-      if (graph.cy.$(".merge-source").length) {
+      if ($(".merge-source").length) {
 
-        graph.cy.$(".neighbor").removeClass("merge-left merge-right neighbor");
+        $(".neighbor").removeClass("merge-left merge-right neighbor");
 
-        graph.cy.$(".merge-source").removeClass("merge-source").addClass("activated");
+        $(".merge-source").removeClass("merge-source").addClass("activated");
 
-        graph.lock(graph.cy.$(".activated"));
+        graph.lock($(".activated"));
 
-      } else if (graph.cy.$(".activated").length) {
+      } else if ($(".activated").length) {
 
-        if (graph.cy.$(".activated").data("type") !== "token")
+        if (!$(".activated").attr("id").includes("form"))
           break;
 
-        graph.cy.$(".activated").addClass("merge-source");
+        $(".activated").addClass("merge-source");
 
-        graph.cy.$(".neighbor").removeClass("neighbor combine-source combine-left combine-right")
+        $(".neighbor").removeClass("neighbor combine-source combine-left combine-right")
 
         const left = graph.getPrevForm();
-        if (!left.hasClass("activated") && !left.hasClass("blocked") && left.data("type") === "token")
+        if (left.length && !left.hasClass("activated") && !left.hasClass("blocked") && left.attr("id").includes("form"))
           left.addClass("neighbor").addClass("merge-left");
 
         const right = graph.getNextForm();
-        if (!right.hasClass("activated") && !right.hasClass("blocked") && right.data("type") === "token")
+        if (right.length && !right.hasClass("activated") && !right.hasClass("blocked") && right.attr("id").includes("form"))
           right.addClass("neighbor").addClass("merge-right");
 
-        graph.lock(graph.cy.$(".activated"));
+        graph.lock($(".activated"));
       }
       gui.status.refresh();
       break;
+      
 
     case (KEYS.C):
 

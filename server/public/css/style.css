@@ -133,6 +133,10 @@ span.tt {
   stroke: #cc22fc;
 }
 
+.form.neighbor {
+  fill: #0b2;
+}
+
 .dependency {
   stroke: #111;
   opacity: 0.766;
