@@ -295,6 +295,7 @@ function keyup(app, event) {
       case (KEYS.X):
         if (graph.cy.$('.selected').length) {
           graph.removeDependency(graph.cy.$('.selected'));
+          $("#graph").focus();
         }/* else if (graph.cy.$('.supAct').length) {
           removeSup(st);
         }*/
