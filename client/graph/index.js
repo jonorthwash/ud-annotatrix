@@ -864,6 +864,42 @@ class Graph {
     }
   }
 
+  insertEmptyTokenAfter(ele) {
+    const sent = this.app.corpus.current;
+    ele = ele.data("token");
+    console.log("inserting empty token after", ele);
+
+    try {
+
+      const newToken = new nx.Token(sent, {
+        form: "_",
+        isEmpty: true,
+      });
+
+      const index = ele.indices.sup;
+      // insert the new token after it
+      sent.tokens = sent.tokens.slice(0, index + 1)
+            .concat(newToken)
+            .concat(sent.tokens.slice(index + 1));
+
+      this.app.graph.intercepted = false;
+      this.app.graph.clear();
+      this.app.gui.refresh();
+
+    } catch (e) {
+
+      if (e instanceof nx.NxError) {
+
+        this.app.gui.status.error(e.message);
+
+      } else {
+
+        throw e;
+
+      }
+    }
+  }
+
   /**
    * Toggle whether `ele` is an empty node, save changes, and update the graph
    *
