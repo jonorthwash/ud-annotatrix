@@ -879,7 +879,6 @@ class Graph {
     try {
 
       ele.setEmpty(!ele.isEmpty);
-      ele.addHead(sent.root, 'root');
       this.unlock();
       this.app.save({
         type: 'set',
