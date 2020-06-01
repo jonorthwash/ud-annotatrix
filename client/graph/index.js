@@ -1,14 +1,13 @@
-'use strict';
+"use strict";
 
-const _ = require('underscore');
-const $ = require('jquery');
-const config = require('./config');
-const cytoscape = require('./cytoscape/cytoscape.min');
-const nx = require('notatrix');
-const sort = require('./sort');
-const utils = require('../utils');
-const zoom = require('./zoom');
-
+const _ = require("underscore");
+const $ = require("jquery");
+const config = require("./config");
+const cytoscape = require("./cytoscape/cytoscape.min");
+const nx = require("notatrix");
+const sort = require("./sort");
+const utils = require("../utils");
+const zoom = require("./zoom");
 
 /**
  * Abstraction over the cytoscape canvas.  Handles interaction between the graph
@@ -40,14 +39,14 @@ class Graph {
 
     // default options for the cytoscape canvas
     this.options = {
-      container: this.app.gui.config.is_browser ? $('#cy') : null,
+      container: this.app.gui.config.is_browser ? $("#cy") : null,
       boxSelectionEnabled: false,
       autounselectify: true,
       autoungrabify: true,
       zoomingEnabled: true,
       userZoomingEnabled: true,
       wheelSensitivity: 0.1,
-      style: require('./cy-style'),
+      style: require("./cy-style"),
       layout: null,
       elements: []
     };
@@ -70,8 +69,6 @@ class Graph {
     this.load();
   }
 
-
-
   // ---------------------------------------------------------------------------
   // core functionality
 
@@ -85,24 +82,32 @@ class Graph {
 
     // helper function to get subscripted index numbers for superTokens
     function toSubscript(str) {
-      const subscripts = { 0:'₀', 1:'₁', 2:'₂', 3:'₃', 4:'₄', 5:'₅',
-        6:'₆', 7:'₇', 8:'₈', 9:'₉', '-':'₋', '(':'₍', ')':'₎' };
+      const subscripts = {
+        0: "₀",
+        1: "₁",
+        2: "₂",
+        3: "₃",
+        4: "₄",
+        5: "₅",
+        6: "₆",
+        7: "₇",
+        8: "₈",
+        9: "₉",
+        "-": "₋",
+        "(": "₍",
+        ")": "₎"
+      };
 
-      if (str == 'null')
-        return '';
+      if (str == "null")
+        return "";
 
-      return str.split('').map((char) => {
-        return (subscripts[char] || char);
-      }).join('');
+      return str.split("").map((char) => { return (subscripts[char] || char); }).join("");
     }
 
     // helper function to get index numbers for a particular format
     function getIndex(token, format) {
-      return format === 'CoNLL-U'
-        ? token.indices.conllu
-        : format === 'CG3'
-          ? token.indices.cg3
-          : token.indices.absolute;
+      return format === "CoNLL-U" ? token.indices.conllu
+                                  : format === "CG3" ? token.indices.cg3 : token.indices.absolute;
     }
 
     // reset our progress tracker
@@ -110,15 +115,13 @@ class Graph {
     this.progress.total = 0;
 
     // cache these
-    const sent = this.app.corpus.current,
-      format = this.app.corpus.format;
+    const sent = this.app.corpus.current, format = this.app.corpus.format;
 
     // num is like clump except not including superTokens, eles in the list
     let num = 0, eles = [];
 
     // walk over all the tokens
     sent.index().iterate(token => {
-
       // don't draw other analyses
       if (token.indices.cytoscape == null && !token.isSuperToken)
         return;
@@ -126,9 +129,7 @@ class Graph {
       // cache some values
       let id = getIndex(token, format);
       let clump = token.indices.cytoscape;
-      let pos = format === 'CG3'
-        ? token.xpostag || token.upostag
-        : token.upostag || token.xpostag;
+      let pos = format === "CG3" ? token.xpostag || token.upostag : token.upostag || token.xpostag;
       let isRoot = sent.root.dependents.has(token);
 
       // after iteration, this will just be the max
@@ -136,98 +137,96 @@ class Graph {
 
       if (token.isSuperToken) {
 
-        eles.push({ // multiword label
+        eles.push({
+          // multiword label
           data: {
             id: `multiword-${id}`,
             clump: clump,
             name: `multiword`,
             label: `${token.form} ${toSubscript(`${id}`)}`,
-            length: `${token.form.length > 3
-              ? token.form.length * 0.7
-              : token.form.length}em`,
+            length: `${token.form.length > 3 ? token.form.length * 0.7 : token.form.length}em`,
             token: token,
           },
-          classes: 'multiword'
+          classes: "multiword"
         });
 
       } else {
 
         this.progress.total += 2;
-        if (pos && pos !== '_')
+        if (pos && pos !== "_")
           this.progress.done += 1;
         if (token.heads.length)
           this.progress.done += 1;
 
-        let parent = token.name === 'SubToken'
-          ? 'multiword-' + getIndex(sent.getSuperToken(token), format)
-          : undefined;
+        let parent = token.name === "SubToken" ? "multiword-" + getIndex(sent.getSuperToken(token), format) : undefined;
 
         eles.push(
 
-          { // "number" node
-            data: {
-              id: `num-${id}`,
-              clump: clump,
-              name: 'number',
-              label: id,
-              pos: pos,
-              parent: parent,
-              token: token,
+            {
+              // "number" node
+              data: {
+                id: `num-${id}`,
+                clump: clump,
+                name: "number",
+                label: id,
+                pos: pos,
+                parent: parent,
+                token: token,
+              },
+              classes: "number"
             },
-            classes: 'number'
-          },
 
-          { // "form" node
-            data: {
-              id: `form-${id}`,
-              num: ++num,
-              clump: clump,
-              name: 'form',
-              attr: 'form',
-              form: token.form,
-              label: token.form || '_',
-              length: `${(token.form || '_').length > 3
-                ? (token.form || '_').length * 0.7
-                : (token.form || '_').length}em`,
-              type: parent ? 'subToken' : 'token',
-              state: `normal`,
-              parent: `num-${id}`,
-              token: token,
+            {
+              // "form" node
+              data: {
+                id: `form-${id}`,
+                num: ++num,
+                clump: clump,
+                name: "form",
+                attr: "form",
+                form: token.form,
+                label: token.form || "_",
+                length: `${
+                    (token.form || "_").length > 3 ? (token.form || "_").length * 0.7 : (token.form || "_").length}em`,
+                type: parent ? "subToken" : "token",
+                state: `normal`,
+                parent: `num-${id}`,
+                token: token,
+              },
+              classes: isRoot ? "form root" : "form",
             },
-            classes: isRoot ? 'form root' : 'form',
-          },
 
-          { // "pos" node
-            data: {
-              id: `pos-node-${id}`,
-              num: ++num,
-              clump: clump,
-              name: `pos-node`,
-              attr: format === 'CG3' ? `xpostag` : `upostag`,
-              pos: pos,
-              label: pos || '',
-              length: `${(pos || '').length * 0.7 + 1}em`,
-              token: token,
+            {
+              // "pos" node
+              data: {
+                id: `pos-node-${id}`,
+                num: ++num,
+                clump: clump,
+                name: `pos-node`,
+                attr: format === "CG3" ? `xpostag` : `upostag`,
+                pos: pos,
+                label: pos || "",
+                length: `${(pos || "").length * 0.7 + 1}em`,
+                token: token,
+              },
+              classes: utils.validate.posNodeClasses(pos),
             },
-            classes: utils.validate.posNodeClasses(pos),
-          },
 
-          { // "pos" edge
-            data: {
-              id: `pos-edge-${id}`,
-              clump: clump,
-              name: `pos-edge`,
-              pos: pos,
-              source: `form-${id}`,
-              target: `pos-node-${id}`
-            },
-            classes: 'pos'
-          }
-        );
+            {
+              // "pos" edge
+              data: {
+                id: `pos-edge-${id}`,
+                clump: clump,
+                name: `pos-edge`,
+                pos: pos,
+                source: `form-${id}`,
+                target: `pos-node-${id}`
+              },
+              classes: "pos"
+            });
 
         // iterate over the token's heads to get edges
         token.mapHeads((head, i) => {
-
           // if not enhanced, only draw the first dependency
           if (i && !sent.options.enhanced)
             return;
@@ -249,24 +248,19 @@ class Graph {
           }
 
           this.progress.total += 1;
-          if (head.deprel && head.deprel !== '_')
+          if (head.deprel && head.deprel !== "_")
             this.progress.done += 1;
 
           // roots don't get edges drawn (just bolded)
-          if (head.token.name === 'RootToken')
+          if (head.token.name === "RootToken")
             return;
 
-          let deprel = head.deprel || '';
+          let deprel = head.deprel || "";
 
-          const id = getIndex(token, format),
-            headId = getIndex(head.token, format),
-            label = this.app.corpus.is_ltr
-              ? token.indices.absolute > head.token.indices.absolute
-                ? `${deprel}⊳`
-                : `⊲${deprel}`
-              : token.indices.absolute > head.token.indices.absolute
-                ? `⊲${deprel}`
-                : `${deprel}⊳`;
+          const id = getIndex(token, format), headId = getIndex(head.token, format),
+                label = this.app.corpus.is_ltr
+                            ? token.indices.absolute > head.token.indices.absolute ? `${deprel}⊳` : `⊲${deprel}`
+                            : token.indices.absolute > head.token.indices.absolute ? `⊲${deprel}` : `${deprel}⊳`;
 
           eles.push({
             data: {
@@ -279,21 +273,20 @@ class Graph {
               sourceToken: head.token,
               target: `form-${id}`,
               targetToken: token,
-              length: `${(deprel || '').length / 3}em`,
+              length: `${(deprel || "").length / 3}em`,
               label: label,
               ctrl: new Array(4).fill(getEdgeHeight(this.app.corpus, head.token, token)),
             },
             classes: utils.validate.depEdgeClasses(sent, token, head),
             style: {
-              'control-point-weights': '0.1 0.5 1',
-              'target-endpoint': `0% -50%`,
-              'source-endpoint': this.app.corpus.is_ltr
-                ? token.indices.absolute < head.token.indices.absolute
-                  ? `${-10 * config.edge_coeff}px -50%`
-                  : `${10 * config.edge_coeff}px -50%`
-                : token.indices.absolute < head.token.indices.absolute
-                  ? `${10 * config.edge_coeff}px -50%`
-                  : `${-10 * config.edge_coeff}px -50%`
+              "control-point-weights": "0.1 0.5 1",
+              "target-endpoint": `0% -50%`,
+              "source-endpoint": this.app.corpus.is_ltr ? token.indices.absolute < head.token.indices.absolute
+                                                              ? `${- 10 * config.edge_coeff}px -50%`
+                                                              : `${10 * config.edge_coeff}px -50%`
+                                                        : token.indices.absolute < head.token.indices.absolute
+                                                              ? `${10 * config.edge_coeff}px -50%`
+                                                              : `${- 10 * config.edge_coeff}px -50%`
             }
           });
         });
@@ -317,27 +310,19 @@ class Graph {
 
     // extend our default cytoscape config based on current params
     this.options.layout = {
-      name: 'tree',
+      name: "tree",
       padding: 0,
       nodeDimensionsIncludeLabels: false,
       cols: (corpus.is_vertical ? 2 : undefined),
       rows: (corpus.is_vertical ? undefined : 2),
-      sort: (corpus.is_vertical
-        ? sort.vertical
-        : corpus.is_ltr
-          ? sort.ltr
-          : sort.rtl)
+      sort: (corpus.is_vertical ? sort.vertical : corpus.is_ltr ? sort.ltr : sort.rtl)
     };
 
     // set the cytoscape content
     this.options.elements = corpus.isParsed ? this.eles : [];
 
     // instantiate and recall zoom/pan
-    this.cy = cytoscape(this.options)
-      .minZoom(0.1)
-      .maxZoom(10.0)
-      .zoom(config.zoom)
-      .pan(config.pan);
+    this.cy = cytoscape(this.options).minZoom(0.1).maxZoom(10.0).zoom(config.zoom).pan(config.pan);
 
     // see if we should calculate a zoom/pan or use our default
     this.zoom.checkFirst(this);
@@ -350,36 +335,32 @@ class Graph {
     if (config.locked_index === this.app.corpus.index) {
 
       // add the class to the element
-      const locked = this.cy.$('#' + config.locked_id);
+      const locked = this.cy.$("#" + config.locked_id);
       locked.addClass(config.locked_classes);
 
-      if (config.locked_classes.indexOf('merge-source') > -1) {
+      if (config.locked_classes.indexOf("merge-source") > -1) {
 
         // add the classes to adjacent elements if we were merging
 
         const left = this.getPrevForm();
-        if (left && !left.hasClass('activated') && !left.hasClass('blocked') && left.data('type') === 'token')
-          left
-            .addClass('neighbor merge-left');
+        if (left && !left.hasClass("activated") && !left.hasClass("blocked") && left.data("type") === "token")
+          left.addClass("neighbor merge-left");
 
         const right = this.getNextForm();
-        if (right && !right.hasClass('activated') && !right.hasClass('blocked') && right.data('type') === 'token')
-          right
-            .addClass('neighbor merge-right');
+        if (right && !right.hasClass("activated") && !right.hasClass("blocked") && right.data("type") === "token")
+          right.addClass("neighbor merge-right");
 
-      } else if (config.locked_classes.indexOf('combine-source') > -1) {
+      } else if (config.locked_classes.indexOf("combine-source") > -1) {
 
         // add the classes to the adjacent elements if we were combining
 
         const left = this.getPrevForm();
-        if (left && !left.hasClass('activated') && !left.hasClass('blocked') && left.data('type') === 'token')
-          left
-            .addClass('neighbor combine-left');
+        if (left && !left.hasClass("activated") && !left.hasClass("blocked") && left.data("type") === "token")
+          left.addClass("neighbor combine-left");
 
         const right = this.getNextForm();
-        if (right && !right.hasClass('activated') && !right.hasClass('blocked') && right.data('type') === 'token')
-          right
-            .addClass('neighbor combine-right');
+        if (right && !right.hasClass("activated") && !right.hasClass("blocked") && right.data("type") === "token")
+          right.addClass("neighbor combine-right");
       }
 
       // make sure we lock it in the same way as if we had just clicked it
@@ -404,70 +385,62 @@ class Graph {
     this.zoom.bind(this);
 
     // set a countdown to triggering a "background" click unless a node/edge intercepts it
-    $('#cy canvas, #mute').mouseup(e => {
-
+    $("#cy canvas, #mute").mouseup(e => {
       // force focus off our inputs/textarea
-      $(':focus').blur();
+      $(":focus").blur();
       self.intercepted = false;
       setTimeout(() => self.clear(), 100);
       self.save();
-
     });
 
     // don't clear if we clicked inside #edit
-    $('#edit').mouseup(e => { self.intercepted = true; });
+    $("#edit").mouseup(e => { self.intercepted = true; });
 
     // if we're dragging, don't clear; also save after we change the zoom
-    $('#cy canvas')
-      .mousemove(e => { self.intercepted = true; })
-      .on('wheel', e => self.save());
+    $("#cy canvas").mousemove(e => { self.intercepted = true; }).on("wheel", e => self.save());
 
-    this.cy.on('mousemove', e => {
-
+    this.cy.on("mousemove", e => {
       // send out a 'move mouse' event at most every `mouse_move_delay` msecs
       if (self.app.initialized && !self.mouseBlocked && self.app.online)
-        self.app.socket.broadcast('move mouse', e.position);
+        self.app.socket.broadcast("move mouse", e.position);
 
       // enforce the delay
       self.mouseBlocked = true;
       setTimeout(() => { self.mouseBlocked = false; }, config.mouse_move_delay);
-
     });
 
     // don't clear if we right- or left-click on an element
-    this.cy.on('click cxttapend', '*', e => {
-
+    this.cy.on("click cxttapend", "*", e => {
       self.intercepted = true;
 
       // debugging
-      console.info(`clicked ${e.target.attr('id')}, data:`, e.target.data());
+      console.info(`clicked ${e.target.attr("id")}, data:`, e.target.data());
     });
 
     // bind the cy events
-    self.cy.on('click', 'node.form', e => {
-
+    self.cy.on("click", "node.form", e => {
       const target = e.target;
 
-      if (target.hasClass('locked'))
+      if (target.hasClass("locked"))
         return;
 
-      self.cy.$('.multiword-active').removeClass('multiword-active');
+      self.cy.$(".multiword-active").removeClass("multiword-active");
 
       if (self.moving_dependency) {
 
-        const dep = self.cy.$('.selected');
-        const source = self.cy.$('.arc-source');
+        const dep = self.cy.$(".selected");
+        const source = self.cy.$(".arc-source");
 
         // make a new dep, remove the old one
         self.makeDependency(source, target);
         self.removeDependency(dep);
-        self.cy.$('.moving').removeClass('moving');
+        self.cy.$(".moving").removeClass("moving");
         self.moving_dependency = false;
 
-        const newEdge = self.cy.$(`#${source.attr('id')} -> #${target.attr('id')}`);
+        const newEdge = self.cy.$(`#${source.attr("id")} -> #${target.attr("id")}`);
 
         // right click the new edge and lock it
-        newEdge.trigger('cxttapend');
+        newEdge.trigger("cxttapend");
         self.lock(newEdge);
 
       } else {
@@ -475,25 +448,25 @@ class Graph {
         // check if there's anything in-progress
         self.commit();
 
-        self.cy.$('.arc-source').removeClass('arc-source');
-        self.cy.$('.arc-target').removeClass('arc-target');
-        self.cy.$('.selected').removeClass('selected');
+        self.cy.$(".arc-source").removeClass("arc-source");
+        self.cy.$(".arc-target").removeClass("arc-target");
+        self.cy.$(".selected").removeClass("selected");
 
         // handle the click differently based on current state
 
-        if (target.hasClass('merge-right') || target.hasClass('merge-left')) {
+        if (target.hasClass("merge-right") || target.hasClass("merge-left")) {
 
           // perform merge
-          self.merge(self.cy.$('.merge-source').data('token'), target.data('token'));
+          self.merge(self.cy.$(".merge-source").data("token"), target.data("token"));
           self.unlock();
 
-        } else if (target.hasClass('combine-right') || target.hasClass('combine-left')) {
+        } else if (target.hasClass("combine-right") || target.hasClass("combine-left")) {
 
           // perform combine
-          self.combine(self.cy.$('.combine-source').data('token'), target.data('token'));
+          self.combine(self.cy.$(".combine-source").data("token"), target.data("token"));
           self.unlock();
 
-        } else if (target.hasClass('activated')) {
+        } else if (target.hasClass("activated")) {
 
           // de-activate
           self.intercepted = false;
@@ -501,138 +474,127 @@ class Graph {
 
         } else {
 
-          const source = self.cy.$('.activated');
-          target.addClass('activated');
+          const source = self.cy.$(".activated");
+          target.addClass("activated");
 
           // if there was already an activated node
           if (source.length === 1) {
 
             // add a new edge
             self.makeDependency(source, target);
-            source.removeClass('activated');
-            target.removeClass('activated');
+            source.removeClass("activated");
+            target.removeClass("activated");
             self.unlock();
 
           } else {
 
             // activate it
             self.lock(target);
-
           }
         }
       }
     });
 
-    self.cy.on('click', 'node.pos', e => {
-
+    self.cy.on("click", "node.pos", e => {
       const target = e.target;
 
-      if (target.hasClass('locked'))
+      if (target.hasClass("locked"))
         return;
 
       self.commit();
       self.editing = target;
 
-      self.cy.$('.activated').removeClass('activated');
-      self.cy.$('.arc-source').removeClass('arc-source');
-      self.cy.$('.arc-target').removeClass('arc-target');
-      self.cy.$('.selected').removeClass('selected');
+      self.cy.$(".activated").removeClass("activated");
+      self.cy.$(".arc-source").removeClass("arc-source");
+      self.cy.$(".arc-target").removeClass("arc-target");
+      self.cy.$(".selected").removeClass("selected");
 
       this.showEditLabelBox(target);
       self.lock(target);
-
     });
 
-    self.cy.on('click', '$node > node', e => {
-
+    self.cy.on("click", "$node > node", e => {
       const target = e.target;
 
-      if (target.hasClass('locked'))
+      if (target.hasClass("locked"))
         return;
 
-      self.cy.$('.activated').removeClass('activated');
+      self.cy.$(".activated").removeClass("activated");
 
-      if (target.hasClass('multiword-active')) {
+      if (target.hasClass("multiword-active")) {
 
-        target.removeClass('multiword-active');
+        target.removeClass("multiword-active");
         self.unlock();
 
       } else {
 
-        self.cy.$('.multiword-active').removeClass('multiword-active');
-        target.addClass('multiword-active');
+        self.cy.$(".multiword-active").removeClass("multiword-active");
+        target.addClass("multiword-active");
         self.lock(target);
-
       }
     });
 
-    self.cy.on('click', 'edge.dependency', e => {
-
+    self.cy.on("click", "edge.dependency", e => {
       const target = e.target;
 
-      if (target.hasClass('locked'))
+      if (target.hasClass("locked"))
         return;
 
       self.commit();
       self.editing = target;
 
-      self.cy.$('.activated').removeClass('activated');
-      self.cy.$('.arc-source').removeClass('arc-source');
-      self.cy.$('.arc-target').removeClass('arc-target');
-      self.cy.$('.selected').removeClass('selected');
+      self.cy.$(".activated").removeClass("activated");
+      self.cy.$(".arc-source").removeClass("arc-source");
+      self.cy.$(".arc-target").removeClass("arc-target");
+      self.cy.$(".selected").removeClass("selected");
 
       this.showEditLabelBox(target);
       self.lock(target);
-
     });
-    self.cy.on('cxttapend', 'node.form', e => {
-
+    self.cy.on("cxttapend", "node.form", e => {
       const target = e.target;
 
-      if (target.hasClass('locked'))
+      if (target.hasClass("locked"))
         return;
 
       self.commit();
       self.editing = target;
 
-      self.cy.$('.activated').removeClass('activated');
-      self.cy.$('.arc-source').removeClass('arc-source');
-      self.cy.$('.arc-target').removeClass('arc-target');
-      self.cy.$('.selected').removeClass('selected');
+      self.cy.$(".activated").removeClass("activated");
+      self.cy.$(".arc-source").removeClass("arc-source");
+      self.cy.$(".arc-target").removeClass("arc-target");
+      self.cy.$(".selected").removeClass("selected");
 
       this.showEditLabelBox(target);
       self.lock(target);
-
     });
-    self.cy.on('cxttapend', 'edge.dependency', e => {
-
+    self.cy.on("cxttapend", "edge.dependency", e => {
       const target = e.target;
 
-      if (target.hasClass('locked'))
+      if (target.hasClass("locked"))
         return;
 
       self.commit();
-      self.cy.$('.activated').removeClass('activated');
+      self.cy.$(".activated").removeClass("activated");
 
-      if (target.hasClass('selected')) {
+      if (target.hasClass("selected")) {
 
-        self.cy.$(`#${target.data('source')}`).removeClass('arc-source');
-        self.cy.$(`#${target.data('target')}`).removeClass('arc-target');
-        target.removeClass('selected');
+        self.cy.$(`#${target.data("source")}`).removeClass("arc-source");
+        self.cy.$(`#${target.data("target")}`).removeClass("arc-target");
+        target.removeClass("selected");
         self.unlock();
 
       } else {
 
-        self.cy.$('.arc-source').removeClass('arc-source');
-        self.cy.$(`#${target.data('source')}`).addClass('arc-source');
+        self.cy.$(".arc-source").removeClass("arc-source");
+        self.cy.$(`#${target.data("source")}`).addClass("arc-source");
 
-        self.cy.$('.arc-target').removeClass('arc-target');
-        self.cy.$(`#${target.data('target')}`).addClass('arc-target');
+        self.cy.$(".arc-target").removeClass("arc-target");
+        self.cy.$(`#${target.data("target")}`).addClass("arc-target");
 
-        self.cy.$('.selected').removeClass('selected');
-        target.addClass('selected');
+        self.cy.$(".selected").removeClass("selected");
+        target.addClass("selected");
         self.lock(target);
-
       }
     });
 
@@ -648,11 +610,9 @@ class Graph {
       config.zoom = this.cy.zoom();
       config.pan = this.cy.pan();
     }
-    let serial = _.pick(config, 'pan', 'zoom', 'locked_index'
-      , 'locked_id', 'locked_classes');
+    let serial = _.pick(config, "pan", "zoom", "locked_index", "locked_id", "locked_classes");
     serial = JSON.stringify(serial);
-    utils.storage.setPrefs('graph', serial);
-
+    utils.storage.setPrefs("graph", serial);
   }
 
   /**
@@ -660,13 +620,12 @@ class Graph {
    */
   load() {
 
-    let serial = utils.storage.getPrefs('graph');
+    let serial = utils.storage.getPrefs("graph");
     if (!serial)
-        return;
+      return;
 
     serial = JSON.parse(serial);
     config.set(serial);
-
   }
 
   /**
@@ -674,26 +633,25 @@ class Graph {
    */
   commit() {
 
-    this.cy.$('.input').removeClass('input');
+    this.cy.$(".input").removeClass("input");
 
     if (this.editing === null)
       return; // nothing to do
 
-    if (this.cy.$('.splitting').length) {
+    if (this.cy.$(".splitting").length) {
 
-      const value = $('#edit').val();
-      let index = value.indexOf(' ');
+      const value = $("#edit").val();
+      let index = value.indexOf(" ");
       index = index < 0 ? value.length : index;
 
       this.splitToken(this.editing, index);
 
     } else {
 
-      const token = this.editing.data('token') || this.editing.data('targetToken'),
-        attr = this.editing.data('attr'),
-        value = utils.validate.attrValue(attr, $('#edit').val());
+      const token = this.editing.data("token") || this.editing.data("targetToken"), attr = this.editing.data("attr"),
+            value = utils.validate.attrValue(attr, $("#edit").val());
 
-      if (attr === 'deprel') {
+      if (attr === "deprel") {
 
         this.modifyDependency(this.editing, value);
 
@@ -702,10 +660,9 @@ class Graph {
         token[attr] = value;
         this.editing = null;
         this.app.save({
-          type: 'set',
+          type: "set",
           indices: [this.app.corpus.index],
         });
-
       }
     }
 
@@ -724,22 +681,19 @@ class Graph {
 
     this.commit();
 
-    this.cy.$('*').removeClass('splitting activated multiword-active '
-      + 'multiword-selected arc-source arc-target selected moving neighbor '
-      + 'merge-source merge-left merge-right combine-source combine-left '
-      + 'combine-right');
+    this.cy.$("*").removeClass("splitting activated multiword-active " +
+                               "multiword-selected arc-source arc-target selected moving neighbor " +
+                               "merge-source merge-left merge-right combine-source combine-left " +
+                               "combine-right");
 
     this.moving_dependency = false;
 
-    $('#mute').removeClass('activated');
-    $('#edit').removeClass('activated');
+    $("#mute").removeClass("activated");
+    $("#edit").removeClass("activated");
 
     this.app.gui.status.refresh();
     this.unlock();
-
   }
-
-
 
   // ---------------------------------------------------------------------------
   // abstractions over modifying the corpus
@@ -754,12 +708,12 @@ class Graph {
 
     try {
 
-      src = src.data('token');
-      tar = tar.data('token');
+      src = src.data("token");
+      tar = tar.data("token");
       tar.addHead(src);
       this.unlock();
       this.app.save({
-        type: 'set',
+        type: "set",
         indices: [this.app.corpus.index],
       });
 
@@ -811,12 +765,12 @@ class Graph {
 
     try {
 
-      let src = ele.data('sourceToken');
-      let tar = ele.data('targetToken');
+      let src = ele.data("sourceToken");
+      let tar = ele.data("targetToken");
       tar.modifyHead(src, deprel);
       this.unlock();
       this.app.save({
-        type: 'set',
+        type: "set",
         indices: [this.app.corpus.index],
       });
 
@@ -842,12 +796,12 @@ class Graph {
 
     try {
 
-      let src = ele.data('sourceToken');
-      let tar = ele.data('targetToken');
+      let src = ele.data("sourceToken");
+      let tar = ele.data("targetToken");
       tar.removeHead(src);
       this.unlock();
       this.app.save({
-        type: 'set',
+        type: "set",
         indices: [this.app.corpus.index],
       });
 
@@ -878,9 +832,7 @@ class Graph {
 
       const index = ele.indices.sup;
       // insert the new token after it
-      sent.tokens = sent.tokens.slice(0, index + 1)
-            .concat(newToken)
-            .concat(sent.tokens.slice(index + 1));
+      sent.tokens = sent.tokens.slice(0, index + 1).concat(newToken).concat(sent.tokens.slice(index + 1));
 
       this.app.graph.intercepted = false;
       this.app.graph.clear();
@@ -895,7 +847,6 @@ class Graph {
       } else {
 
         throw e;
-
       }
     }
   }
@@ -909,7 +860,7 @@ class Graph {
 
     console.log("toggling isEmpty");
     const sent = this.app.corpus.current;
-    ele = ele.data('token');
+    ele = ele.data("token");
     console.log(ele.isEmpty, ele);
 
     try {
@@ -917,7 +868,7 @@ class Graph {
       ele.setEmpty(!ele.isEmpty);
       this.unlock();
       this.app.save({
-        type: 'set',
+        type: "set",
         indices: [this.app.corpus.index],
       });
 
@@ -942,17 +893,17 @@ class Graph {
   setRoot(ele) {
 
     const sent = this.app.corpus.current;
-    ele = ele.data('token');
+    ele = ele.data("token");
 
     try {
 
       if (!this.app.corpus.enhanced)
         sent.root.dependents.clear();
 
-      ele.addHead(sent.root, 'root');
+      ele.addHead(sent.root, "root");
       this.unlock();
       this.app.save({
-        type: 'set',
+        type: "set",
         indices: [this.app.corpus.index],
       });
 
@@ -979,10 +930,10 @@ class Graph {
 
     try {
 
-      this.app.corpus.current.split(ele.data('token'), index);
+      this.app.corpus.current.split(ele.data("token"), index);
       this.unlock();
       this.app.save({
-        type: 'set',
+        type: "set",
         indices: [this.app.corpus.index],
       });
 
@@ -1009,10 +960,10 @@ class Graph {
 
     try {
 
-      this.app.corpus.current.split(ele.data('token'));
+      this.app.corpus.current.split(ele.data("token"));
       this.unlock();
       this.app.save({
-        type: 'set',
+        type: "set",
         indices: [this.app.corpus.index],
       });
 
@@ -1043,7 +994,7 @@ class Graph {
       this.app.corpus.current.combine(src, tar);
       this.unlock();
       this.app.save({
-        type: 'set',
+        type: "set",
         indices: [this.app.corpus.index],
       });
 
@@ -1074,7 +1025,7 @@ class Graph {
       this.app.corpus.current.merge(src, tar);
       this.unlock();
       this.app.save({
-        type: 'set',
+        type: "set",
         indices: [this.app.corpus.index],
       });
 
@@ -1091,8 +1042,6 @@ class Graph {
     }
   }
 
-
-
   // ---------------------------------------------------------------------------
   // methods for traversing the graph
 
@@ -1106,7 +1055,7 @@ class Graph {
    */
   getPrevForm() {
 
-    let clump = this.cy.$('.activated').data('clump');
+    let clump = this.cy.$(".activated").data("clump");
     if (clump === undefined)
       return;
 
@@ -1125,7 +1074,7 @@ class Graph {
    */
   getNextForm() {
 
-    let clump = this.cy.$('.activated').data('clump');
+    let clump = this.cy.$(".activated").data("clump");
     if (clump === undefined)
       return;
 
@@ -1140,7 +1089,7 @@ class Graph {
    */
   selectPrevEle() {
 
-    let num = this.cy.$('.input').data('num');
+    let num = this.cy.$(".input").data("num");
     this.intercepted = false;
     this.clear();
 
@@ -1154,7 +1103,6 @@ class Graph {
     this.editing = ele;
     if (ele.length)
       this.showEditLabelBox(ele);
-
   }
 
   /**
@@ -1163,7 +1111,7 @@ class Graph {
    */
   selectNextEle() {
 
-    let num = this.cy.$('.input').data('num');
+    let num = this.cy.$(".input").data("num");
     this.intercepted = false;
     this.clear();
 
@@ -1177,7 +1125,6 @@ class Graph {
     this.editing = ele;
     if (ele.length)
       this.showEditLabelBox(ele);
-
   }
 
   /**
@@ -1186,10 +1133,9 @@ class Graph {
    */
   flashTokenSplitInput(ele) {
 
-    ele.addClass('splitting');
+    ele.addClass("splitting");
     this.editing = ele;
     this.showEditLabelBox(ele);
-
   }
 
   /**
@@ -1198,69 +1144,60 @@ class Graph {
    */
   showEditLabelBox(target) {
 
-    target.addClass('input');
+    target.addClass("input");
 
     // get rid of direction arrows
-    const label = target.data('label').replace(/[⊳⊲]/, '');
-    target.data('label', label);
+    const label = target.data("label").replace(/[⊳⊲]/, "");
+    target.data("label", label);
 
     // get bounding box
     let bbox = target.renderedBoundingBox();
-    bbox.color = target.style('background-color');
-    if (target.data('name') === 'dependency') {
+    bbox.color = target.style("background-color");
+    if (target.data("name") === "dependency") {
       bbox.w = 100;
       bbox.h = this.cy.nodes()[0].renderedHeight();
-      bbox.color = 'white';
+      bbox.color = "white";
 
       if (this.app.corpus.is_vertical) {
-        bbox.y1 += (bbox.y2 - bbox.y1)/2 - 15;
-        bbox.x1  = bbox.x2 - 70;
+        bbox.y1 += (bbox.y2 - bbox.y1) / 2 - 15;
+        bbox.x1 = bbox.x2 - 70;
       } else {
-        bbox.x1 += (bbox.x2 - bbox.x1)/2 - 50;
+        bbox.x1 += (bbox.x2 - bbox.x1) / 2 - 50;
       }
     }
 
     // TODO: rank the labels + make the style better
-    const autocompletes = target.data('name') === 'pos-node'
-      ? utils.validate.U_POS
-      : target.data('name') === 'dependency'
-        ? utils.validate.U_DEPRELS
-        : [];
+    const autocompletes = target.data("name") === "pos-node"
+                              ? utils.validate.U_POS
+                              : target.data("name") === "dependency" ? utils.validate.U_DEPRELS : [];
 
     // add the edit input
-    $('#edit')
-      .val('')
-      .focus()
-      .val(label)
-      .css('top', bbox.y1)
-      .css('left', bbox.x1)
-      .css('height', bbox.h)
-      .css('width', bbox.w + 5)
-      .attr('target', target.attr('id'))
-      .addClass('activated')
-      .selfcomplete({
-        lookup: autocompletes,
-        tabDisabled: false,
-        autoSelectFirst: true,
-        lookupLimit: 5,
-        width: 'flex'
-      });
+    $("#edit")
+        .val("")
+        .focus()
+        .val(label)
+        .css("top", bbox.y1)
+        .css("left", bbox.x1)
+        .css("height", bbox.h)
+        .css("width", bbox.w + 5)
+        .attr("target", target.attr("id"))
+        .addClass("activated")
+        .selfcomplete(
+            {lookup: autocompletes, tabDisabled: false, autoSelectFirst: true, lookupLimit: 5, width: "flex"});
 
     // add the background-mute div
-    $('#mute').addClass('activated')
-      /*.css('height', this.app.corpus.is_vertical
-        ? `${this.length * 50}px`
-        : $(window).width() - 10);*/
+    $("#mute").addClass("activated")
+    /*.css('height', this.app.corpus.is_vertical
+      ? `${this.length * 50}px`
+      : $(window).width() - 10);*/
 
-    $('#edit').focus(); // move cursor to the end
-    if (target.data('name') === 'dependency')
-      $('#edit').select(); // highlight the current contents
+    $("#edit").focus(); // move cursor to the end
+    if (target.data("name") === "dependency")
+      $("#edit").select(); // highlight the current contents
 
     this.lock(target);
     this.app.gui.status.refresh();
   }
-
-
 
   // ---------------------------------------------------------------------------
   // methods for collaboration
@@ -1270,19 +1207,12 @@ class Graph {
    */
   drawMice() {
     this.app.collab.getMouseNodes().forEach(mouse => {
-
-      const id = mouse.id.replace(/[#:]/g, '_');
+      const id = mouse.id.replace(/[#:]/g, "_");
 
       if (!this.cy.$(`#${id}.mouse`).length)
-        this.cy.add({
-          data: { id: id },
-          classes: 'mouse'
-        });
+        this.cy.add({data: {id: id}, classes: "mouse"});
 
-      this.cy.$(`#${id}.mouse`)
-        .position(mouse.position)
-        .css('background-color', '#' + mouse.color);
-
+      this.cy.$(`#${id}.mouse`).position(mouse.position).css("background-color", "#" + mouse.color);
     });
   }
 
@@ -1292,20 +1222,18 @@ class Graph {
    */
   setLocks() {
 
-    this.cy.$('.locked')
-      .removeClass('locked')
-      .data('locked_by', null)
-      .css('background-color', '')
-      .css('line-color', '');
+    this.cy.$(".locked")
+        .removeClass("locked")
+        .data("locked_by", null)
+        .css("background-color", "")
+        .css("line-color", "");
 
     this.app.collab.getLocks().forEach(lock => {
-
-      this.cy.$('#' + lock.locked)
-        .addClass('locked')
-        .data('locked_by', lock.id)
-        .css('background-color', '#' + lock.color)
-        .css('line-color', '#' + lock.color);
-
+      this.cy.$("#" + lock.locked)
+          .addClass("locked")
+          .data("locked_by", lock.id)
+          .css("background-color", "#" + lock.color)
+          .css("line-color", "#" + lock.color);
     });
   }
 
@@ -1325,15 +1253,13 @@ class Graph {
     config.locked_id = ele.id();
 
     let keys = Object.keys(_.pick(ele[0]._private.classes._obj, value => !!value));
-    keys = _.intersection(keys, ['selected', 'activated'
-      , 'multiword-active', 'merge-source', 'combine-source']);
+    keys = _.intersection(keys, ["selected", "activated", "multiword-active", "merge-source", "combine-source"]);
 
-    config.locked_classes = keys.join(' ');
+    config.locked_classes = keys.join(" ");
     this.save();
-    if(this.app.online) {
-      this.app.socket.broadcast('lock graph', ele.id());
+    if (this.app.online) {
+      this.app.socket.broadcast("lock graph", ele.id());
     }
-
   }
 
   /**
@@ -1346,15 +1272,10 @@ class Graph {
     config.locked_id = null;
     config.locked_classes = null;
     this.save();
-    if(this.app.online) {
-      this.app.socket.broadcast('unlock graph');
+    if (this.app.online) {
+      this.app.socket.broadcast("unlock graph");
     }
-
   }
-
 }
-
-
-
 
 module.exports = Graph;

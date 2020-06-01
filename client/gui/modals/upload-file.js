@@ -1,41 +1,31 @@
-'use strict';
+"use strict";
 
-const $ = require('jquery');
+const $ = require("jquery");
 var _gui = null;
 
 /**
  * Show the modal.
  */
 function show() {
-  console.log('show')
+  console.log("show")
   console.trace();
-  $('#upload-file-modal')
-    .show()
-    .find('[type="submit"]')
-      .prop('disabled', !_gui.app.server.is_running);
+  $("#upload-file-modal").show().find("[type=\"submit\"]").prop("disabled", !_gui.app.server.is_running);
 }
 
 /**
  * Hide the modal.
  */
 function hide() {
-  $('#upload-file-modal').hide();
-  $('#upload-filename').val(null);
+  $("#upload-file-modal").hide();
+  $("#upload-filename").val(null);
 }
 
 /**
  * Bind the click-handler.
  */
-function bind() {
-
-  $('#upload-file-modal')
-    .find('[name="close"]')
-    .click(hide);
-
-}
+function bind() { $("#upload-file-modal").find("[name=\"close\"]").click(hide); }
 
 module.exports = gui => {
-
   _gui = gui;
   bind();
 

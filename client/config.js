@@ -1,14 +1,13 @@
-const _ = require('underscore');
-const utils = require('./utils');
-
+const _ = require("underscore");
+const utils = require("./utils");
 
 var _config = {
 
-	version: '0.0.0',
-	treebank_id: utils.getTreebankId(),
+  version: "0.0.0",
+  treebank_id: utils.getTreebankId(),
 
-	graph: require('./graph/config'),
-	gui: require('./gui/config'),
+  graph: require("./graph/config"),
+  gui: require("./gui/config"),
 
 };
 

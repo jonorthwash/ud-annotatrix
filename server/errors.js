@@ -1,35 +1,33 @@
-'use strict';
+"use strict";
 
 class UDAnnotatrixError extends Error {
-  constructor(...args) {
-    super(...args);
-  }
+  constructor(...args) { super(...args); }
 }
 
 class ConfigError extends UDAnnotatrixError {
   constructor(...args) {
-    console.log('ConfigError:', ...args);
+    console.log("ConfigError:", ...args);
     super(...args);
   }
 }
 
 class DBError extends UDAnnotatrixError {
   constructor(...args) {
-    console.log('DBError:', ...args);
+    console.log("DBError:", ...args);
     super(...args);
   }
 }
 
 class UploadError extends UDAnnotatrixError {
   constructor(...args) {
-    console.log('UploadError:', ...args);
+    console.log("UploadError:", ...args);
     super(...args);
   }
 }
 
 class SocketError extends UDAnnotatrixError {
   constructor(...args) {
-    console.log('SocketError:', ...args);
+    console.log("SocketError:", ...args);
     super(...args);
   }
 }

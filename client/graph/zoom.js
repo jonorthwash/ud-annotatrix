@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 var _graph = null;
 
@@ -7,9 +7,7 @@ var _graph = null;
  *
  * @param {Graph} graph
  */
-function bind(graph) {
-  _graph = graph;
-}
+function bind(graph) { _graph = graph; }
 
 /**
  * Zoom in and save changes.
@@ -79,13 +77,12 @@ function checkFirst(graph) {
     graph.config.zoom = graph.cy.zoom();
     graph.config.pan = graph.cy.pan();
     graph.config.drawn_sentence = true;
-
   }
 }
 
 module.exports = {
   bind,
-  'in': _in, // 'in' is a reserved keyword
+  "in": _in, // 'in' is a reserved keyword
   out,
   to,
   fit,

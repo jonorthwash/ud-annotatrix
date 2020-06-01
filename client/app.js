@@ -1,24 +1,24 @@
-'use strict';
+"use strict";
 
-const _ = require('underscore');
-const utils = require('./utils');
-const nx = require('notatrix');
+const _ = require("underscore");
+const utils = require("./utils");
+const nx = require("notatrix");
 
-const CollaborationInterface = require('./collaboration');
-const config = require('./config');
-const Corpus = require('./corpus');
-const Graph = require('./graph');
-const GUI = require('./gui');
-const Server = require('./server');
-const Socket = require('./socket');
-const UndoManager = require('./undo-manager');
+const CollaborationInterface = require("./collaboration");
+const config = require("./config");
+const Corpus = require("./corpus");
+const Graph = require("./graph");
+const GUI = require("./gui");
+const Server = require("./server");
+const Socket = require("./socket");
+const UndoManager = require("./undo-manager");
 
 /**
  * Wrapper class to hold references to all of our actual client objects (e.g.
  *  CollaborationInterface, Corpus, GUI, Graph, Server, Socket, UndoManager).
  *  This class should be instantiated at the beginning of a session.
  */
- class App {
+class App {
   constructor(args) {
 
     // console.log("oloo", args);
@@ -47,21 +47,19 @@ const UndoManager = require('./undo-manager');
     this.graph = new Graph(this);
     this.initialized = true;
 
-    console.log("mode:", this.online?"online":"offline");
+    console.log("mode:", this.online ? "online" : "offline");
 
     // jump to sentence from frag id
     setTimeout(() => {
-
       const hash = window.location.hash.substring(1);
       this.corpus.index = parseInt(hash) - 1;
-
     }, 500);
     if (this.online) {
-        this.server.connect();
-        this.socket.connect();
+      this.server.connect();
+      this.socket.connect();
     } else {
-      let backup  = utils.storage.restore();
-      if(!$.isEmptyObject(backup)) {
+      let backup = utils.storage.restore();
+      if (!$.isEmptyObject(backup)) {
         console.log("backup", backup);
         this.corpus = new Corpus(this, backup);
       }
@@ -78,7 +76,7 @@ const UndoManager = require('./undo-manager');
     if (!this.initialized || this.undoer.active)
       return;
 
-    this.gui.status.normal('saving...');
+    this.gui.status.normal("saving...");
 
     // save local preference stuff
     this.gui.save();
@@ -91,7 +89,7 @@ const UndoManager = require('./undo-manager');
     this.undoer.push(serial)
 
     if (message && this.online) {
-      this.socket.broadcast('modify corpus', {
+      this.socket.broadcast("modify corpus", {
         type: message.type,
         indices: message.indices,
         serial: serial,
@@ -107,7 +105,6 @@ const UndoManager = require('./undo-manager');
 
     // refresh the gui stuff
     this.gui.refresh();
-
   }
 
   /**
@@ -115,10 +112,9 @@ const UndoManager = require('./undo-manager');
    */
   load(serial) {
 
-    //this.gui.status.normal('loading...')
+    // this.gui.status.normal('loading...')
     this.corpus = new Corpus(this, serial);
     this.gui.refresh();
-
   }
 
   /**
@@ -130,7 +126,6 @@ const UndoManager = require('./undo-manager');
     this.save();
     this.gui.menu.is_visible = false;
     this.gui.refresh();
-
   }
 
   /**
@@ -138,20 +133,20 @@ const UndoManager = require('./undo-manager');
    */
   download() {
 
-    const contents = this.corpus._corpus._sentences.map((sent, i) => {
-      try {
-        const format = this.corpus.format || "plain text";
-        return sent.to(format).output;
-      } catch (e) {
-        console.error(e);
-        return `[Unable to generate sentence #${i+1} in "${this.corpus.format}" format]`;
-      }
-    }).join('\n\n');
+    const contents = this.corpus._corpus._sentences
+                         .map((sent, i) => {
+                           try {
+                             const format = this.corpus.format || "plain text";
+                             return sent.to(format).output;
+                           } catch (e) {
+                             console.error(e);
+                             return `[Unable to generate sentence #${i + 1} in "${this.corpus.format}" format]`;
+                           }
+                         })
+                         .join("\n\n");
 
-    utils.download(`${this.corpus.filename}.conllu`, 'text/plain', contents);
-
+    utils.download(`${this.corpus.filename}.conllu`, "text/plain", contents);
   }
 }
-
 
 module.exports = App;

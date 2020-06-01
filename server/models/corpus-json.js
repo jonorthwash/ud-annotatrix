@@ -1,20 +1,19 @@
-'use strict';
+"use strict";
 
-const _ = require('underscore');
-const cfg = require('../config');
-const sanitize = require('./sanitize');
-const parse = require('./parse');
-const path = require('path');
-const fs = require('fs');
-const DBError = require('../errors').DBError;
-
+const _ = require("underscore");
+const cfg = require("../config");
+const sanitize = require("./sanitize");
+const parse = require("./parse");
+const path = require("path");
+const fs = require("fs");
+const DBError = require("../errors").DBError;
 
 class CorpusDB {
   constructor(filename) {
     if (!filename)
-      throw new DBError('Missing required argument: filename');
+      throw new DBError("Missing required argument: filename");
 
-    this.path = path.join(cfg.corpora_path, filename + '.json');
+    this.path = path.join(cfg.corpora_path, filename + ".json");
   }
 
   getSentence(id, next) {
@@ -289,9 +288,6 @@ class CorpusDB {
       });
     });*/
   }
-
 }
-
-
 
 module.exports = filename => new CorpusDB(filename);

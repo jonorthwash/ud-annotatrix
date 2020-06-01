@@ -1,20 +1,20 @@
-'use strict';
+"use strict";
 
-const $ = require('jquery');
-const _ = require('underscore');
-const utils = require('../utils');
-const Chat = require('./chat');
-const config = require('./config');
-const corpus = require('../corpus');
-const GraphMenu = require('./graph-menu');
-const keys = require('./keyboard');
-const Labeler = require('./labeler');
-const Menu = require('./menu');
-const modalFactory = require('./modals');
-const Status = require('./status');
-const Table = require('./table');
-const Textarea = require('./textarea');
-const nx = require('notatrix');
+const $ = require("jquery");
+const _ = require("underscore");
+const utils = require("../utils");
+const Chat = require("./chat");
+const config = require("./config");
+const corpus = require("../corpus");
+const GraphMenu = require("./graph-menu");
+const keys = require("./keyboard");
+const Labeler = require("./labeler");
+const Menu = require("./menu");
+const modalFactory = require("./modals");
+const Status = require("./status");
+const Table = require("./table");
+const Textarea = require("./textarea");
+const nx = require("notatrix");
 
 /**
  * Abstraction over the user interface.  Handles interaction between user via
@@ -49,17 +49,10 @@ class GUI {
    */
   save() {
 
-    let serial = _.pick(this.config
-      , 'column_visibilities'
-      , 'is_label_bar_visible'
-      , 'is_table_visible'
-      , 'is_textarea_visible'
-      , 'pinned_menu_items'
-      , 'textarea_height'
-      , 'autoparsing' );
+    let serial = _.pick(this.config, "column_visibilities", "is_label_bar_visible", "is_table_visible",
+                        "is_textarea_visible", "pinned_menu_items", "textarea_height", "autoparsing");
     serial = JSON.stringify(serial);
-    utils.storage.setPrefs('gui', serial);
-
+    utils.storage.setPrefs("gui", serial);
   }
 
   /**
@@ -67,7 +60,7 @@ class GUI {
    */
   load() {
 
-    let serial = utils.storage.getPrefs('gui');
+    let serial = utils.storage.getPrefs("gui");
     if (!serial)
       return;
 
@@ -75,7 +68,6 @@ class GUI {
     serial.pinned_menu_items = new Set(serial.pinned_menu_items || []);
 
     this.config.set(serial);
-
   }
 
   /**
@@ -90,7 +82,7 @@ class GUI {
     const self = this;
 
     // bind all subelements
-    require('./selfcomplete');
+    require("./selfcomplete");
     this.chat.bind();
     this.graphMenu.bind();
     this.menu.bind();
@@ -98,46 +90,44 @@ class GUI {
     this.textarea.bind();
 
     if (!this.app.online || !this.app.server.is_running) {
-      $("#upload-filename").on("change", function(e){
+      $("#upload-filename").on("change", function(e) {
         // console.log("changed", e.target.files);
-        if (e.target.files.length > 0){
+        if (e.target.files.length > 0) {
           let reader = new FileReader();
-          reader.onload = (function(theFile) {
-            return function(d) {
-              self.uploaded = {"name":theFile.name, "text": d.target.result};
-            }
-          })(e.target.files[0]);
+          reader.onload = (function(
+              theFile) { return function(d) { self.uploaded = {"name": theFile.name, "text": d.target.result}; } })(
+              e.target.files[0]);
           reader.readAsText(e.target.files[0]);
         }
       });
-      $('#uploadform').on("submit",function(e) {
-         e.preventDefault(); // cancel the actual submit
-         if (window.File && window.FileReader && window.FileList && window.Blob){
-           // console.log("FileAPI OK");
-           if (self.hasOwnProperty("uploaded") && self.uploaded.hasOwnProperty("text")) {
-             let upcorpus = nx.Corpus.fromString(self.uploaded["text"]);
-             upcorpus.filename = self.uploaded["name"];;
-             console.log(upcorpus.serialize());
-             self.app.corpus = new corpus(self.app, upcorpus.serialize());
-             $('#upload-file-modal').hide();
-             $('#upload-filename').val(null);
-             self.refresh();
-           }
-         } else {
-           alert("Your browser does not support FileAPI");
-         }
-       });
-     }
+      $("#uploadform").on("submit", function(e) {
+        e.preventDefault(); // cancel the actual submit
+        if (window.File && window.FileReader && window.FileList && window.Blob) {
+          // console.log("FileAPI OK");
+          if (self.hasOwnProperty("uploaded") && self.uploaded.hasOwnProperty("text")) {
+            let upcorpus = nx.Corpus.fromString(self.uploaded["text"]);
+            upcorpus.filename = self.uploaded["name"];
+            ;
+            console.log(upcorpus.serialize());
+            self.app.corpus = new corpus(self.app, upcorpus.serialize());
+            $("#upload-file-modal").hide();
+            $("#upload-filename").val(null);
+            self.refresh();
+          }
+        } else {
+          alert("Your browser does not support FileAPI");
+        }
+      });
+    }
 
     // graph interception stuff
-    $('.controls').click(e => $(':focus:not(#edit)').blur());
-    $('#edit').click(e => { self.app.graph.intercepted = true; });
+    $(".controls").click(e => $(":focus:not(#edit)").blur());
+    $("#edit").click(e => { self.app.graph.intercepted = true; });
 
     // keystroke handling & such
     window.onkeyup = e => self.keys.up(self.app, e);
     window.onkeydown = e => self.keys.down(self.app, e);
     window.onbeforeunload = e => self.app.save();
-
   }
 
   /**
@@ -162,15 +152,11 @@ class GUI {
     this.app.graph.draw();
 
     // show the completeness
-    const percent = 100 * (this.app.graph.progress.total
-      ? this.app.graph.progress.done / this.app.graph.progress.total
-      : 0);
+    const percent =
+        100 * (this.app.graph.progress.total ? this.app.graph.progress.done / this.app.graph.progress.total : 0);
 
-    $('#progress-bar')
-      .css('width', `${percent}%`);
-
+    $("#progress-bar").css("width", `${percent}%`);
   }
 }
-
 
 module.exports = GUI;

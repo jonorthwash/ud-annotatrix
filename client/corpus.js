@@ -1,19 +1,19 @@
-'use strict';
+"use strict";
 
-const _ = require('underscore');
-const nx = require('notatrix');
-const utils = require('./utils');
+const _ = require("underscore");
+const nx = require("notatrix");
+const utils = require("./utils");
 
 // for when we're editing a corpus that isn't from /upload
-const default_filename = 'ud-annotatrix-corpus';
+const default_filename = "ud-annotatrix-corpus";
 
 // use these formats in order in case of ambiguity (rare)
 const format_preferences = [
-  'CoNLL-U',
-  'CG3',
-  'SD',
-  'plain text',
-  'Brackets',
+  "CoNLL-U",
+  "CG3",
+  "SD",
+  "plain text",
+  "Brackets",
 ];
 
 /**
@@ -27,17 +27,15 @@ const format_preferences = [
 function detectFormat(serial) {
 
   // do the detecting under the hood
-  let formats = serial
-    ? nx.detect(serial)
-    : [ 'plain text' ];
+  let formats = serial ? nx.detect(serial) : ["plain text"];
 
   // check if we found nothing
   if (formats.length === 0)
     return null;
 
   // or found something lossless
-  if (formats.indexOf('notatrix serial') > -1)
-    return 'notatrix serial';
+  if (formats.indexOf("notatrix serial") > -1)
+    return "notatrix serial";
 
   // or found just one thing
   if (formats.length === 1)
@@ -45,7 +43,6 @@ function detectFormat(serial) {
 
   // or found one of the formats we like
   format_preferences.forEach(pref => {
-
     if (formats.indexOf(pref) > -1)
       return pref;
   });
@@ -53,7 +50,6 @@ function detectFormat(serial) {
   // just take whatever's left (safety valve, hopefully never hit this case)
   return formats[0];
 }
-
 
 /**
  * Abstraction over the nx.Corpus to handle some extra metadata (filename, text
@@ -63,15 +59,13 @@ function detectFormat(serial) {
  * @param {(String|Object)} serial a serial representation of an nx.Corpus in any format
  */
 class Corpus {
-  constructor(app, serial='') {
+  constructor(app, serial = "") {
 
     // save a reference to the parent
     this.app = app;
 
     // get the nx.Corpus data structure (with some corpus-wide metadata)
-    this._corpus = serial
-      ? nx.Corpus.deserialize(serial)
-      : new nx.Corpus();
+    this._corpus = serial ? nx.Corpus.deserialize(serial) : new nx.Corpus();
     this._corpus._meta = _.defaults(this._corpus._meta, {
 
       filename: default_filename,
@@ -81,13 +75,11 @@ class Corpus {
     });
 
     // add some metadata
-    this._corpus._sentences.forEach((sent, i) => {
-      sent._meta.format = detectFormat(sent.input);
-    });
+    this._corpus._sentences.forEach((sent, i) => { sent._meta.format = detectFormat(sent.input); });
 
     // make sure we always have at least one sentence
     if (this._corpus.length === 0)
-      this.insertSentence(0, '', false);
+      this.insertSentence(0, "", false);
 
     // keep undo stack up to date
     this.app.undoer.current = this.serialize();
@@ -95,7 +87,6 @@ class Corpus {
     // update hash
     this.afterModifyIndex();
   }
-
 
   // ---------------------------------------------------------------------------
   // Getters & Setters for corpus- and sentence-wide metadata
@@ -113,11 +104,8 @@ class Corpus {
   get format() {
 
     // if not parsed, format is always null
-    return this.isParsed
-      ? this.current._meta.format === 'notatrix serial'
-        ? 'plain text'
-        : this.current._meta.format
-      : null;
+    return this.isParsed ? this.current._meta.format === "notatrix serial" ? "plain text" : this.current._meta.format
+                         : null;
   }
 
   /**
@@ -125,45 +113,35 @@ class Corpus {
    *
    * @param {String} format
    */
-  set format(format) {
-    this.current._meta.format = format;
-  }
+  set format(format) { this.current._meta.format = format; }
 
   /**
    * Get whether the corpus orientation is Left-to-Right (important for the Graph).
    *
    * @return {Boolean}
    */
-  get is_ltr() {
-    return this._corpus._meta.is_ltr;
-  }
+  get is_ltr() { return this._corpus._meta.is_ltr; }
 
   /**
    * Set whether the corpus orientation is Left-to-Right (important for the Graph).
    *
    * @param {Boolean} bool
    */
-  set is_ltr(bool) {
-    this._corpus._meta.is_ltr = bool;
-  }
+  set is_ltr(bool) { this._corpus._meta.is_ltr = bool; }
 
   /**
    * Get whether the corpus orientation is Top-to-Bottom (important for the Graph).
    *
    * @return {Boolean}
    */
-  get is_vertical() {
-    return this._corpus._meta.is_vertical;
-  }
+  get is_vertical() { return this._corpus._meta.is_vertical; }
 
   /**
    * Set whether the corpus orientation is Top-to-Bottom (important for the Graph).
    *
    * @param {Boolean} bool
    */
-  set is_vertical(bool) {
-    this._corpus._meta.is_vertical = bool;
-  }
+  set is_vertical(bool) { this._corpus._meta.is_vertical = bool; }
 
   /**
    * Get whether the corpus is in 'enhanced' mode (i.e. should display and allow
@@ -171,29 +149,21 @@ class Corpus {
    *
    * @return {Boolean}
    */
-  get is_enhanced() {
-    return this.current.options.enhanced;
-  }
+  get is_enhanced() { return this.current.options.enhanced; }
 
   /**
    * Get the filename associated with the corpus.
    *
    * @return {String}
    */
-  get filename() {
-    return this._corpus._meta.filename;
-  }
+  get filename() { return this._corpus._meta.filename; }
 
   /**
    * Set the filename associated with the corpus.
    *
    * @param {String} filename
    */
-  set filename(filename) {
-    this._corpus._meta.filename = filename;
-  }
-
-
+  set filename(filename) { this._corpus._meta.filename = filename; }
 
   // ---------------------------------------------------------------------------
   // Helper functions for the GUI sentence navigation
@@ -205,11 +175,7 @@ class Corpus {
    */
   get textdata() {
 
-    return this.isParsed
-      ? this.convertTo(this.format)
-      : this.current.input
-          .replace(/\\n/g, '\n')
-          .replace(/\\t/g, '\t');
+    return this.isParsed ? this.convertTo(this.format) : this.current.input.replace(/\\n/g, "\n").replace(/\\t/g, "\t");
   }
 
   /**
@@ -225,13 +191,9 @@ class Corpus {
 
     return {
       current: this.index + 1,
-      total: filtered.length
-        ? `${filtered.length} (total: ${this.length})`
-        : `${this.length}`,
+      total: filtered.length ? `${filtered.length} (total: ${this.length})` : `${this.length}`,
     };
   }
-
-
 
   // ---------------------------------------------------------------------------
   // General helper functions
@@ -242,29 +204,21 @@ class Corpus {
    *
    * @return {Object}
    */
-  serialize() {
-    return this._corpus.serialize();
-  }
+  serialize() { return this._corpus.serialize(); }
 
   /**
    * Checks whether the current sentence is parsed
    *
    * @return {Boolean}
    */
-  get isParsed() {
-    return this.current ? this.current.isParsed : false;
-  }
+  get isParsed() { return this.current ? this.current.isParsed : false; }
 
   /**
    * Returns the unparsed content of the current sentence
    *
    * @return {(String|null)}
    */
-  get unparsed() {
-    return this.isParsed
-      ? null
-      : this.current.input;
-  }
+  get unparsed() { return this.isParsed ? null : this.current.input; }
 
   /**
    * Get a representation of the current sentence in <format>, ignoring lossiness.
@@ -274,9 +228,7 @@ class Corpus {
    * @param {String} format
    * @return {String}
    */
-  convertTo(format) {
-    return this.current.to(format).output;
-  }
+  convertTo(format) { return this.current.to(format).output; }
 
   /**
    * Helper function to handle broadcasting index modifications and hash updates.
@@ -287,19 +239,15 @@ class Corpus {
     // possibly update the view and send something over the wire
     if (this.app.initialized) {
       this.app.gui.refresh();
-      if(this.app.online) {
-        this.app.socket.broadcast('modify index', this.index);
+      if (this.app.online) {
+        this.app.socket.broadcast("modify index", this.index);
       }
     }
 
     // update the fragment identifier (the stuff after '#' in the url)
     if (utils.check_if_browser())
-      setTimeout(() => {
-        window.location.hash = (this.index + 1);
-      }, 1000);
+      setTimeout(() => { window.location.hash = (this.index + 1); }, 1000);
   }
-
-
 
   // ---------------------------------------------------------------------------
   // Wrappers for nx.Corpus methods
@@ -309,9 +257,7 @@ class Corpus {
    *
    * @return {Number}
    */
-  get length() {
-    return this._corpus.length;
-  }
+  get length() { return this._corpus.length; }
 
   /**
    * Returns the currently-focused sentence.  This is useful if another method
@@ -320,9 +266,7 @@ class Corpus {
    *
    * @return {(nx.Sentence|null)}
    */
-  get current() {
-    return this.getSentence(this.index);
-  }
+  get current() { return this.getSentence(this.index); }
 
   /**
    * Returns the index of the current sentence in the nx.Corpus.  If there are
@@ -330,9 +274,7 @@ class Corpus {
    *
    * @return {(Number|null)}
    */
-  get index() {
-    return this._corpus.index;
-  }
+  get index() { return this._corpus.index; }
 
   /**
    * Modify the current index to <index>.
@@ -382,9 +324,7 @@ class Corpus {
    * @param {Number} index
    * @return {(nx.Sentence|null)}
    */
-  getSentence(index) {
-    return this._corpus.getSentence(index);
-  }
+  getSentence(index) { return this._corpus.getSentence(index); }
 
   /**
    * Set a serial value for the nx.Sentence at <index>.
@@ -394,7 +334,7 @@ class Corpus {
    * @param {Boolean} main whether or not to broadcast updates
    * @return {nx.Sentence}
    */
-  setSentence(index, text, main=true) {
+  setSentence(index, text, main = true) {
 
     // do the work under the hood
     const sent = this._corpus.setSentence(index, text);
@@ -405,7 +345,7 @@ class Corpus {
     // maybe broadcast stuff
     if (main) {
       this.app.save({
-        type: 'set',
+        type: "set",
         indices: [index || this.index],
       });
       this.afterModifyIndex();
@@ -423,7 +363,7 @@ class Corpus {
    * @param {Boolean} main whether or not to broadcast updates
    * @return {nx.Sentence}
    */
-  insertSentence(index, text, main=true) {
+  insertSentence(index, text, main = true) {
 
     // do the work under the hood
     const sent = this._corpus.insertSentence(index, text);
@@ -434,7 +374,7 @@ class Corpus {
     // maybe broadcast stuff
     if (main) {
       this.app.save({
-        type: 'insert',
+        type: "insert",
         indices: [index || this.index],
       });
       this.afterModifyIndex();
@@ -451,7 +391,7 @@ class Corpus {
    * @param {Boolean} main whether or not to broadcast updates
    * @return {nx.Sentence}
    */
-  removeSentence(index, main=true) {
+  removeSentence(index, main = true) {
 
     // do the work under the hood
     const sent = this._corpus.removeSentence(index);
@@ -459,7 +399,7 @@ class Corpus {
     // maybe broadcast stuff
     if (main) {
       this.app.save({
-        type: 'remove',
+        type: "remove",
         indices: [index || this.index],
       });
       this.afterModifyIndex();
@@ -478,7 +418,7 @@ class Corpus {
    * @param {Boolean} main whether or not to broadcast updates
    * @return {nx.Sentence}
    */
-  parse(text, main=true) {
+  parse(text, main = true) {
 
     // split under the hood
     const splitted = nx.split(text, this._corpus.options);
@@ -488,7 +428,6 @@ class Corpus {
 
     // iterate over all the pieces, get a list of affected indices
     const sents = splitted.map((split, i) => {
-
       if (i) { // insert *after* the first one
         this.insertSentence(index + i, split, false);
       } else { // overwrite the first  one
@@ -501,7 +440,7 @@ class Corpus {
     // maybe broadcast stuff
     if (main) {
       this.app.save({
-        type: 'parse',
+        type: "parse",
         indices: [index || this.index],
       });
       this.afterModifyIndex();
@@ -511,6 +450,5 @@ class Corpus {
     return sents;
   }
 }
-
 
 module.exports = Corpus;

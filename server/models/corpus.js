@@ -1,37 +1,33 @@
-'use strict';
+"use strict";
 
-const cfg = require('../config');
-const init = require('./corpus-init');
-const sanitize = require('./sanitize');
-const parse = require('./parse');
-const sqlite3 = require('sqlite3');
-const path = require('path');
-const fs = require('fs');
-const DBError = require('../errors').DBError;
-
+const cfg = require("../config");
+const init = require("./corpus-init");
+const sanitize = require("./sanitize");
+const parse = require("./parse");
+const sqlite3 = require("sqlite3");
+const path = require("path");
+const fs = require("fs");
+const DBError = require("../errors").DBError;
 
 function open(filename, next) {
 
   if (fs.existsSync(filename)) {
 
-    next( null, new sqlite3.Database(filename) );
+    next(null, new sqlite3.Database(filename));
 
   } else {
 
     const db = new sqlite3.Database(filename);
     db.exec(init, err => next(err, db));
-
   }
 }
-
-
 
 class CorpusDB {
   constructor(filename) {
     if (!filename)
-      throw new DBError('Missing required argument: filename');
+      throw new DBError("Missing required argument: filename");
 
-    this.path = path.join(cfg.corpora_path, filename + '.db');
+    this.path = path.join(cfg.corpora_path, filename + ".db");
   }
 
   getSentence(id, next) {
@@ -46,13 +42,13 @@ class CorpusDB {
           is_table_view,
           input,
           nx
-        FROM corpus WHERE rowid = (?)`, id, (err, data) => {
-          if (err)
-            return next(new DBError(err), null);
+        FROM corpus WHERE rowid = (?)`,
+             id, (err, data) => {
+               if (err)
+                 return next(new DBError(err), null);
 
-          next(null, parse(data));
-        }
-      );
+               next(null, parse(data));
+             });
     });
   }
 
@@ -78,20 +74,14 @@ class CorpusDB {
                 is_table_view= (?),
                 input= (?),
                 nx = (?)
-              WHERE rowid = (?)`
-              , sentence.column_visibilities
-              , sentence.format
-              , sentence.is_table_view
-              , sentence.input
-              , sentence.nx
-              , id
-              , function (err) {
-                if (err)
-                  return next(new DBError(err), null);
+              WHERE rowid = (?)`,
+                   sentence.column_visibilities, sentence.format, sentence.is_table_view, sentence.input, sentence.nx,
+                   id, function(err) {
+                     if (err)
+                       return next(new DBError(err), null);
 
-                next(null, { id: this.lastID, changes: this.changes });
-              }
-            );
+                     next(null, {id: this.lastID, changes: this.changes});
+                   });
 
           } else { // insert new
 
@@ -102,28 +92,23 @@ class CorpusDB {
                 is_table_view,
                 input,
                 nx
-              ) VALUES (?, ?, ?, ?, ?)`
-              , sentence.column_visibilities
-              , sentence.format
-              , sentence.is_table_view
-              , sentence.input
-              , sentence.nx
-              , function (err) {
-                if (err)
-                  return next(new DBError(err), null);
+              ) VALUES (?, ?, ?, ?, ?)`,
+                   sentence.column_visibilities, sentence.format, sentence.is_table_view, sentence.input, sentence.nx,
+                   function(err) {
+                     if (err)
+                       return next(new DBError(err), null);
 
-                if (isNaN(parseInt(this.lastID)))
-                  return next(new DBError('Unable to insert'), null);
+                     if (isNaN(parseInt(this.lastID)))
+                       return next(new DBError("Unable to insert"), null);
 
-                next(null, { id: this.lastID, changes: this.changes });
-              }
-            );
+                     next(null, {id: this.lastID, changes: this.changes});
+                   });
           }
         });
 
       } else { // remove it
 
-        db.run(`DELETE FROM corpus WHERE rowid = (?)`, id, function (err) {
+        db.run(`DELETE FROM corpus WHERE rowid = (?)`, id, function(err) {
           if (err)
             return next(new DBError(err), null);
 
@@ -131,10 +116,9 @@ class CorpusDB {
             if (err)
               return next(new DBError(err), null);
 
-            next(null, { id: this.lastID, changes: this.changes });
+            next(null, {id: this.lastID, changes: this.changes});
           });
         });
-
       }
     });
   }
@@ -151,12 +135,13 @@ class CorpusDB {
           is_table_view,
           input,
           nx
-        FROM corpus`, (err, data) => {
-        if (err)
-          return next(new DBError(err), null);
+        FROM corpus`,
+             (err, data) => {
+               if (err)
+                 return next(new DBError(err), null);
 
-        next(null, data.map(sentence => parse(sentence)));
-      });
+               next(null, data.map(sentence => parse(sentence)));
+             });
     });
   }
 
@@ -176,18 +161,14 @@ class CorpusDB {
 
           counter++;
           if (counter === sentences.length)
-            return next(null, {
-              id: sentences.length,
-              changes: sentences.length
-            });
+            return next(null, {id: sentences.length, changes: sentences.length});
         };
 
         sentences.forEach(sentence => {
-
-          //console.log('pre', sentence);
+          // console.log('pre', sentence);
           sentence = sanitize.sentence(sentence);
-          //console.log('post', sentence);
-          //console.log();
+          // console.log('post', sentence);
+          // console.log();
 
           db.run(`
             INSERT INTO corpus (
@@ -196,13 +177,9 @@ class CorpusDB {
               is_table_view,
               input,
               nx
-            ) VALUES (?, ?, ?, ?, ?)`
-            , sentence.column_visibilities
-            , sentence.format
-            , sentence.is_table_view
-            , sentence.input
-            , sentence.nx
-            , callback);
+            ) VALUES (?, ?, ?, ?, ?)`,
+                 sentence.column_visibilities, sentence.format, sentence.is_table_view, sentence.input, sentence.nx,
+                 callback);
         });
       });
     });
@@ -222,13 +199,13 @@ class CorpusDB {
           labeler,
           permissions,
           editors
-        FROM meta`, (err, data) => {
-          if (err)
-            return next(new DBError(err), null);
+        FROM meta`,
+             (err, data) => {
+               if (err)
+                 return next(new DBError(err), null);
 
-          next(null, parse(data));
-        }
-      );
+               next(null, parse(data));
+             });
     });
   }
 
@@ -248,21 +225,14 @@ class CorpusDB {
           gui = IFNULL(?, gui),
           labeler = IFNULL(?, labeler),
           permissions = IFNULL(?, permissions),
-          editors = IFNULL(?, editors)`
-        , params.current_index
-        , params.owner
-        , params.github_url
-        , params.gui
-        , params.labeler
-        , params.permissions
-        , params.editors
-        , function (err) {
-          if (err)
-            return next(new DBError(err), null);
+          editors = IFNULL(?, editors)`,
+             params.current_index, params.owner, params.github_url, params.gui, params.labeler, params.permissions,
+             params.editors, function(err) {
+               if (err)
+                 return next(new DBError(err), null);
 
-          next(null, { id: this.lastID, changes: this.changes });
-        }
-      );
+               next(null, {id: this.lastID, changes: this.changes});
+             });
     });
   }
 
@@ -275,7 +245,7 @@ class CorpusDB {
         if (err)
           return next(new DBError(err), null);
 
-        next(null, { meta: meta, sentences: sentences });
+        next(null, {meta: meta, sentences: sentences});
       });
     });
   }
@@ -294,9 +264,6 @@ class CorpusDB {
       });
     });
   }
-
 }
-
-
 
 module.exports = filename => new CorpusDB(filename);

@@ -1,32 +1,20 @@
-'use strict';
+"use strict";
 
-const Corpus = require('./corpus')
-const utils = require('./utils');
+const Corpus = require("./corpus")
+const utils = require("./utils");
 
 class Stack {
-  constructor() {
-    this._items = [];
-  }
+  constructor() { this._items = []; }
 
-  get length() {
-    return this._items.length;
-  }
+  get length() { return this._items.length; }
 
-  push(item) {
-    this._items.push(item);
-  }
+  push(item) { this._items.push(item); }
 
-  pop() {
-    return this._items.pop()
-  }
+  pop() { return this._items.pop() }
 
-  peek() {
-    return this._items.slice(-1)[0];
-  }
+  peek() { return this._items.slice(-1)[0]; }
 
-  clear() {
-    this._items = [];
-  }
+  clear() { this._items = []; }
 }
 
 class UndoManager {
@@ -36,23 +24,17 @@ class UndoManager {
     this.active = false;
     this.current = null;
     this.reset();
-
   }
 
   reset() {
 
     this.undoStack = new Stack();
     this.redoStack = new Stack();
-
   }
 
-  hasUndo() {
-    return !!this.undoStack.length;
-  }
+  hasUndo() { return !!this.undoStack.length; }
 
-  hasRedo() {
-    return !!this.redoStack.length;
-  }
+  hasRedo() { return !!this.redoStack.length; }
 
   push(serial) {
 
@@ -62,11 +44,12 @@ class UndoManager {
     // do some comparisons here to change for changes
     console.log("serial", serial) // updated
     utils.storage.backup(serial);
-    console.log("current", this.current)
-    //if (JSON.stringify(serial) === JSON.stringify(this.current))
-      //return false;
+    console
+        .log("current", this.current)
+        // if (JSON.stringify(serial) === JSON.stringify(this.current))
+        // return false;
 
-    this.undoStack.push(this.current);
+        this.undoStack.push(this.current);
     this.redoStack.clear();
     this.current = serial;
 
@@ -85,8 +68,8 @@ class UndoManager {
 
     let undo = this.undoStack.pop();
     this.app.corpus = new Corpus(this.app, undo);
-    this.app.socket.broadcast('modify corpus', {
-      type: 'undo',
+    this.app.socket.broadcast("modify corpus", {
+      type: "undo",
       serial: undo,
     });
     this.app.save();
@@ -108,8 +91,8 @@ class UndoManager {
 
     let redo = this.redoStack.pop();
     this.app.corpus = new Corpus(this.app, redo);
-    this.app.socket.broadcast('modify corpus', {
-      type: 'redo',
+    this.app.socket.broadcast("modify corpus", {
+      type: "redo",
       serial: redo,
     });
     this.app.save();
@@ -119,6 +102,5 @@ class UndoManager {
     return true;
   }
 }
-
 
 module.exports = UndoManager;

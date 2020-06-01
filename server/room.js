@@ -1,14 +1,9 @@
-'use strict';
+"use strict";
 
-const _ = require('underscore');
-
+const _ = require("underscore");
 
 class Room {
-  constructor() {
-
-    this.users = {};
-
-  }
+  constructor() { this.users = {}; }
 
   serialize() {
     return {
@@ -34,9 +29,7 @@ class Room {
   editUser(socketData, fields) {
 
     const user = this.users[socketData.id] || this.addUser(socketData);
-    _.each(fields, (value, key) => {
-      user[key] = value;
-    });
+    _.each(fields, (value, key) => { user[key] = value; });
 
     return user;
   }
@@ -49,6 +42,5 @@ class Room {
     return user;
   }
 }
-
 
 module.exports = Room;

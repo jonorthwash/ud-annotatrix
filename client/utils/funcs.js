@@ -1,9 +1,8 @@
-'use strict';
+"use strict";
 
-const _ = require('underscore');
-const $ = require('jquery');
-const uuidv4 = require('uuid/v4');
-
+const _ = require("underscore");
+const $ = require("jquery");
+const uuidv4 = require("uuid/v4");
 
 function check_if_browser() {
   try {
@@ -13,23 +12,20 @@ function check_if_browser() {
   }
 }
 
-
 module.exports = {
 
   check_if_browser,
 
   download: (filename, mimetype, uriComponent) => {
-
-    const link = $('<a>')
-      .attr('download', filename)
-      .attr('href', `data:${mimetype}; charset=utf-8,${encodeURIComponent(uriComponent)}`);
-    $('body').append(link);
+    const link = $("<a>")
+                     .attr("download", filename)
+                     .attr("href", `data:${mimetype}; charset=utf-8,${encodeURIComponent(uriComponent)}`);
+    $("body").append(link);
     link[0].click();
     return true;
   },
 
   getTreebankId: () => {
-
     if (!check_if_browser())
       return null;
 
@@ -39,14 +35,12 @@ module.exports = {
 
   getRootPath: () => {
     let pageURL = window.location.href;
-    return pageURL.substr(0, pageURL.lastIndexOf('/') + 1);
+    return pageURL.substr(0, pageURL.lastIndexOf("/") + 1);
   },
 
-  link: (href, target='_blank') => {
-    const link = $('<a>')
-      .attr('href', href)
-      .attr('target', target);
-    $('body').append(link);
+  link: (href, target = "_blank") => {
+    const link = $("<a>").attr("href", href).attr("target", target);
+    $("body").append(link);
     console.log(href, target);
     link[0].click();
   },
@@ -55,12 +49,9 @@ module.exports = {
 
   thin: arg => !!arg ? arg : undefined,
 
-  getPresentUsers: room => {
-    return Object.keys(room.users).length;
-  },
+  getPresentUsers: room => { return Object.keys(room.users).length; },
 
   dedup: (master, slave) => {
-
     let dedup = {};
 
     _.each(slave, (value, key) => {
@@ -71,7 +62,5 @@ module.exports = {
     return dedup;
   },
 
-  forEachFormat: callback => {
-    ['Brackets', 'CG3', 'CoNLL-U', 'plain text', 'SD'].forEach(callback);
-  },
+  forEachFormat: callback => { ["Brackets", "CG3", "CoNLL-U", "plain text", "SD"].forEach(callback); },
 };

@@ -1,10 +1,10 @@
-const _ = require('underscore');
-const funcs = require('./funcs');
+const _ = require("underscore");
+const funcs = require("./funcs");
 
 module.exports = _.extend(funcs, {
 
-  export: require('./export'),
-  storage: require('./local-storage'),
-  validate: require('./validate'),
+  export: require("./export"),
+  storage: require("./local-storage"),
+  validate: require("./validate"),
 
 });

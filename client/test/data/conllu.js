@@ -1,5 +1,5 @@
 module.exports = {
-labels_1: `# text = "This is a simple sentence."
+  labels_1: `# text = "This is a simple sentence."
 # labels = label1 another_label a-third-label
 1	This	This	_	_	_	_	_	_	_
 2	is	is	_	_	_	_	_	_	_
@@ -8,17 +8,17 @@ labels_1: `# text = "This is a simple sentence."
 5	sentence	sentence	_	_	_	_	_	_	_
 6	.	.	PUNCT	PUNCT	_	_	_	_	_`,
 
-labels_2: `# labels = one_label second third-label
+  labels_2: `# labels = one_label second third-label
 # labels = row_2 again:here this, that
 1	This	This	_	_	_	_	_	_	_`,
 
-labels_3: `# tags = this-is-a-tag test testing test
+  labels_3: `# tags = this-is-a-tag test testing test
 1	This	This	_	_	_	_	_	_	_`,
 
-labels_4: `# labels = new label1 one_label this-is-a-tag
+  labels_4: `# labels = new label1 one_label this-is-a-tag
 1	Hullo	hello	_	_	_	_	_	_	_`,
 
-nested_2: `# text = ab cde f h
+  nested_2: `# text = ab cde f h
 1-2	ab	_	_	_	_	_	_	_	_
 1	a	A	_	_	_	_	_	_	_
 2	b	B	_	_	_	_	_	_	_
@@ -30,7 +30,7 @@ nested_2: `# text = ab cde f h
 6.1	silent_g	G	_	_	_	_	_	_	_
 7	h	H	_	_	_	_	_	_	_`,
 
-t: `# testing :)
+  t: `# testing :)
 1-3	He	_	_	_	_	_	_	_	_
 1	boued	boued	n	_	m|sg	4	obj	_	_
 2	e	e	vpart	_	obj	4	aux	_	_
@@ -38,7 +38,7 @@ t: `# testing :)
 4	doob	doobie	np	_	_	3	_	_	_
 5	Mona	Mona	np	_	ant|f|sg	4	nsubj	_	_`,
 
-empty: `1      Sue       Sue       _       _       _       _       _       _       _
+  empty: `1      Sue       Sue       _       _       _       _       _       _       _
 2      likes     like       _       _       _       _       _       _       _
 3      coffee    coffee       _       _       _       _       _       _       _
 4      and       and       _       _       _       _       _       _       _
@@ -46,19 +46,20 @@ empty: `1      Sue       Sue       _       _       _       _       _       _    
 5.1    likes     like       _       _       _       _       _       _       _
 6      tea       tea       _       _       _       _       _       _       _`,
 
-0: `# sent_id = _
+  0: `# sent_id = _
 # text = this is a test
 1	this	_	_	_	_	_	_	_	_
 2	is	_	_	_	_	_	_	_	_
 3	a	_	_	_	_	_	_	_	_
 4	test	_	_	_	_	_	_	_	_`,
 
-1: `1	this	_	_	_	_	_	_	_	_
+  1: `1	this	_	_	_	_	_	_	_	_
 2	is	_	_	_	_	_	_	_	_
 3	a	_	_	_	_	_	_	_	_
 4	test	_	_	_	_	_	_	_	_`,
 
-cat_ancora: `# url = https://raw.githubusercontent.com/UniversalDependencies/UD_Catalan-AnCora/dev/ca_ancora-ud-test.conllu
+  cat_ancora:
+      `# url = https://raw.githubusercontent.com/UniversalDependencies/UD_Catalan-AnCora/dev/ca_ancora-ud-test.conllu
 # sent_id = test-s1
 # text = El darrer número de l'Observatori del Mercat de Treball d'Osona inclou un informe especial sobre la contractació a través de les empreses de treball temporal, les ETT.
 # orig_file_sentence 001#1
@@ -94,7 +95,7 @@ cat_ancora: `# url = https://raw.githubusercontent.com/UniversalDependencies/UD_
 30	ETT	ETT	PROPN	PROPN	_	24	appos	_	SpaceAfter=No
 31	.	.	PUNCT	PUNCT	PunctType=Peri	13	punct	_	_`,
 
-with_tabs: `# sent_id = chapID01:paragID1:sentID1
+  with_tabs: `# sent_id = chapID01:paragID1:sentID1
 # text = Кечаень сыргозтизь налкставтыця карвот .
 # text[eng] = Kechai was awoken by annoying flies.
 1	Кечаень	Кечай	N	N	Sem/Ant_Mal|Prop|SP|Gen|Indef	2	obj	_	Кечаень
@@ -103,7 +104,7 @@ with_tabs: `# sent_id = chapID01:paragID1:sentID1
 4	карвот	карво	N	N	Sem/Ani|N|Pl|Nom|Indef	2	nsubj	_	карвот
 5	.	.	CLB	CLB	CLB	2	punct	_	.`,
 
-without_tabs: `# sent_id = chapID01:paragID1:sentID1
+  without_tabs: `# sent_id = chapID01:paragID1:sentID1
 # text = Кечаень сыргозтизь налкставтыця карвот .
 # text[eng] = Kechai was awoken by annoying flies.
 1 Кечаень Кечай N N Sem/Ant_Mal|Prop|SP|Gen|Indef 2 obj _ Кечаень
@@ -112,7 +113,7 @@ without_tabs: `# sent_id = chapID01:paragID1:sentID1
 4 карвот карво N N Sem/Ani|N|Pl|Nom|Indef 2 nsubj _ карвот
 5 . . CLB CLB CLB 2 punct _ .`,
 
-from_cg3_with_semicolumn: `1	Siedzieliśmy	siedzieć	vblex	_	impf|past|p1|m|pl	_	_	_	_
+  from_cg3_with_semicolumn: `1	Siedzieliśmy	siedzieć	vblex	_	impf|past|p1|m|pl	_	_	_	_
 2	w	w	pr	_	_	_	_	_	_
 3	moim	mój	prn	_	pos|mi|sg|loc	_	_	_	_
 4	pokoju	pokój	n	_	mi|sg|loc	_	_	_	_
@@ -138,7 +139,7 @@ from_cg3_with_semicolumn: `1	Siedzieliśmy	siedzieć	vblex	_	impf|past|p1|m|pl	_
 24	naturalnie	naturalnie	adv	_	sint	_	_	_	_
 25	.	.	sent	_	_	_	_	_	_`,
 
-from_cg3_simple: `1	Патшамен	патша	n	_	ins	3	nmod	_	_
+  from_cg3_simple: `1	Патшамен	патша	n	_	ins	3	nmod	_	_
 2	соғыс	соғыс	n	_	nom	3	obj	_	_
 3	ашқанда	аш	v	_	tv|ger_past|loc	12	advcl	_	_
 4	,	,	cm	_	_	12	punct	_	_
@@ -153,7 +154,7 @@ from_cg3_simple: `1	Патшамен	патша	n	_	ins	3	nmod	_	_
 13	.	.	sent	_	_	12	punct	_	_
 `,
 
-from_cg3_with_spans: `# text = He boued e tebr Mona er gegin.
+  from_cg3_with_spans: `# text = He boued e tebr Mona er gegin.
 # text[eng] = Mona eats her food here in the kitchen.
 # labels = press_1986 ch_syntax p_197 to_check
 1	He	he	det	_	pos|f|sp	2	det	_	_
@@ -168,7 +169,7 @@ from_cg3_with_spans: `# text = He boued e tebr Mona er gegin.
 9	.	.	sent	_	_	4	punct	_	_
 `,
 
-rueter_long: `# sent_id = BryzhinskijMixail_Kirdazht_manu:3859
+  rueter_long: `# sent_id = BryzhinskijMixail_Kirdazht_manu:3859
 # text = Но зярс валгсь , зярс панжтнесь ды мекев парсте пекстнесь веле кенкшенть , кужо кенкшенть , куро кенкшенть ды эсест юртс совамо кенкшенть эрьва лисицянтень совицянтень те свал тейнема , кенкштне свал пекстазь улезт ; панжтнесызь келес ансяк валске марто ды чопоньбелев — ракшань ливтема совавтома шкане , куймесь таго стакалгадсь .
 # text_en = But by the time he got down the hill, opened and closed the village gate, the lane gate, the cluster gate and the one to their own home (something everyone coming or going had to do, so the gates would always be closed; they were only opened in the morning and at dusk for taking out and letting in the cattle), the wicker of clay had grown heavy again.
 # text_fi = Kun Ketšai tuli mäeltä alas, avasi ja sulki huolellisesti kyläveräjänsä, ??aukio/kenttäveräjän, kujaveräjän ja oman kotiveräjän, savikontti ehti taas alkaa painaa hänen selkäänsä. (Kaikkien kävijöiden tulee tehdä näin, jotta veräjät olisivat aina kiinni, veräjäthän pidetään selkosen selällään vain aamulla ja illansuussa, kun karjaa ajetaan laitumelle tai kotiin.)
@@ -225,7 +226,7 @@ rueter_long: `# sent_id = BryzhinskijMixail_Kirdazht_manu:3859
 51 стакалгадсь стакалгадомс VERB V|Ind|Prt1|ScSg3 Mood=Ind|Number[subj]=Sing|Person[subj]=3|Tense=Prt1 0 root _ SpaceAfter=No
 52 . . PUNCT CLB _ 51 punct _ _`,
 
-katya_aplonova_large_arrows: `# sent_id = html/meyer_gorog-contes_bambara_10amadu_tara.dis.html:16
+  katya_aplonova_large_arrows: `# sent_id = html/meyer_gorog-contes_bambara_10amadu_tara.dis.html:16
 # text = ko ni i sera ka jiri nin bulu sòrò ka na ni a ye, ko cèkòròba bè se ka furakè o la.
 1	ko	kó	PART	cop	_	4	discourse	_	Gloss=QUOT
 2	ni	ní	SCONJ	conj	_	4	mark	_	Gloss=si
@@ -253,7 +254,7 @@ katya_aplonova_large_arrows: `# sent_id = html/meyer_gorog-contes_bambara_10amad
 24	.	.	PUNCT	_	_	19	punct	_	Gloss=.
 `,
 
-katya_aplonova_long: `# sent_id = html/meyer_gorog-contes_bambara_10amadu_tara.dis.html:19
+  katya_aplonova_long: `# sent_id = html/meyer_gorog-contes_bambara_10amadu_tara.dis.html:19
 # text = ko u ye mògò nyini a ye, min bè a furakè sisan ko cè ye furakèli cogoya bèè fò, ko fura nin sòrò ka gèlèn ko epi ko ni o ye a sòrò u ye ale den de ye, ni min bè sa de furanyini fè a ka sa nin min bè balo o ka balo ko u kònòntò bèè ka taga fura nin nyini, ko u kònòntò bèè ka taga ko nin min seginna ka a sòrò fura ma na, ko a bè o den nin haramuya ka o gèn, ka a bè a ba fana gèn ko u ka a filè u yèrè ni min ma sòn fana ko a bè o gèn, o ni a ba bèè.
 # label = too_long_to_cut
 1	ko	kó	PART	cop	_	5	discourse	_	Gloss=QUOT
@@ -385,21 +386,22 @@ katya_aplonova_long: `# sent_id = html/meyer_gorog-contes_bambara_10amadu_tara.d
 127	bèè	bɛ́ɛ	DET	dtm	_	_	_	_	Gloss=tout
 128	.	.	PUNCT	_	_	_	_	_	Gloss=.`,
 
-ud_example_tabs: `1	They	they	PRON	PRP	Case=Nom|Number=Plur	2	nsubj	2:nsubj|4:nsubj	_
+  ud_example_tabs: `1	They	they	PRON	PRP	Case=Nom|Number=Plur	2	nsubj	2:nsubj|4:nsubj	_
 2	buy	buy	VERB	VBP	Number=Plur|Person=3|Tense=Pres	0	root	_	_
 3	and	and	CONJ	CC	_	4	cc	4:cc	_
 4	sell	sell	VERB	VBP	Number=Plur|Person=3|Tense=Pres	2	conj	2:conj	_
 5	books	book	NOUN	NNS	Number=Plur	2	obj	2:obj|4:obj	_
 6	.	.	PUNCT	.	_	2	punct	2:punct	_`,
 
-ud_example_spaces: `1    They     they    PRON    PRP    Case=Nom|Number=Plur               2    nsubj    2:nsubj|4:nsubj _
+  ud_example_spaces:
+      `1    They     they    PRON    PRP    Case=Nom|Number=Plur               2    nsubj    2:nsubj|4:nsubj _
 2    buy      buy     VERB    VBP    Number=Plur|Person=3|Tense=Pres    0    root     _          _
 3    and      and     CONJ    CC     _                                  4    cc       4:cc            _
 4    sell     sell    VERB    VBP    Number=Plur|Person=3|Tense=Pres    2    conj     2:conj   _
 5    books    book    NOUN    NNS    Number=Plur                        2    obj      2:obj|4:obj     _
 6    .        .       PUNCT   .      _                                  2    punct    2:punct         _`,
 
-ud_example_modified: `1	They	they	PRON	PRP	Case=Nom|Number=Plur	2	nsubj	2:nsubj|4:nsubj	_
+  ud_example_modified: `1	They	they	PRON	PRP	Case=Nom|Number=Plur	2	nsubj	2:nsubj|4:nsubj	_
 2	buy	buy	VERB	VBP	Number=Plur|Person=3|Tense=Presroot	0:root	_	_	_
 3	and	and	CONJ	CC	_	4	cc	4:cc	_
 4	sell	sell	VERB	VBP	Number=Plur|Person=3|Tense=Presconj	0:root|2:conj	_	_	_

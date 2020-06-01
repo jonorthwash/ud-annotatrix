@@ -1,26 +1,29 @@
-'use strict'
+"use strict"
 
-const $ = require('jquery');
-const _ = require('underscore');
+const $ = require("jquery");
+const _ = require("underscore");
 
-const U_DEPRELS = ['acl', 'advcl', 'advmod', 'amod', 'appos', 'aux', 'case',
-  'cc', 'ccomp', 'clf', 'compound', 'conj', 'cop', 'csubj', 'dep', 'det',
-  'discourse', 'dislocated', 'expl', 'fixed', 'flat', 'goeswith', 'iobj',
-  'list', 'mark', 'nmod', 'nsubj', 'nummod', 'obj', 'obl', 'orphan',
-  'parataxis', 'punct', 'reparandum', 'root', 'vocative', 'xcomp'];
-const U_POS = ['ADJ', 'ADP', 'ADV', 'AUX', 'CCONJ', 'DET', 'INTJ', 'NOUN',
-  'NUM', 'PART', 'PRON', 'PROPN', 'PUNCT', 'SCONJ', 'SYM', 'VERB', 'X'];
+const U_DEPRELS = [
+  "acl",      "advcl",     "advmod", "amod",       "appos", "aux",      "case",      "cc",         "ccomp", "clf",
+  "compound", "conj",      "cop",    "csubj",      "dep",   "det",      "discourse", "dislocated", "expl",  "fixed",
+  "flat",     "goeswith",  "iobj",   "list",       "mark",  "nmod",     "nsubj",     "nummod",     "obj",   "obl",
+  "orphan",   "parataxis", "punct",  "reparandum", "root",  "vocative", "xcomp"
+];
+const U_POS = [
+  "ADJ", "ADP", "ADV", "AUX", "CCONJ", "DET", "INTJ", "NOUN", "NUM", "PART", "PRON", "PROPN", "PUNCT", "SCONJ", "SYM",
+  "VERB", "X"
+];
 
 // TODO: Make this more clever, e.g. CCONJ can have a dependent in certain
 // circumstances, e.g. and / or
-const U_POS_LEAF = ['AUX', 'CCONJ', 'PART', 'PUNCT', 'SCONJ']; // no ADP
+const U_POS_LEAF = ["AUX", "CCONJ", "PART", "PUNCT", "SCONJ"]; // no ADP
 
 function is_upos(s) {
 
   // Checks if a relation is in the list of valid parts of speech
   // @s = the input relation
   // returns a bool
-  s = (s || '').toUpperCase();
+  s = (s || "").toUpperCase();
 
   let is_upos = false;
   U_POS.forEach(u_pos => {
@@ -31,7 +34,6 @@ function is_upos(s) {
   return is_upos;
 }
 
-
 function is_udeprel(s) {
 
   // Checks if a relation is in the list of valid relations
@@ -39,7 +41,7 @@ function is_udeprel(s) {
   // returns a bool
 
   // Language-specific relations are `${universal_relation}:${some_string}`
-  s = (s || '').split(':')[0].toLowerCase();
+  s = (s || "").split(":")[0].toLowerCase();
 
   let is_deprel = false;
   U_DEPRELS.forEach(u_deprel => {
@@ -68,7 +70,8 @@ function is_leaf(s, t) {
   // @s = part of speech tag
 
   // http://universaldependencies.org/u/dep/punct.html
-  // Tokens with the relation punct always attach to content words (except in cases of ellipsis) and can never have dependents.
+  // Tokens with the relation punct always attach to content words (except in cases of ellipsis) and can never have
+  // dependents.
 
   return is_upos_leaf(t.upostag || t.xpostag) && is_upos_leaf(s.upostag || s.xpostag);
 }
@@ -98,8 +101,8 @@ function is_projective_nodes(tree, nodeList) {
     $.each(nodes, (j, node) => {
       const head = heads[node];
 
-      log.debug(`is_projective_nodes(): checking (node: ${nodeToCheck}, head: ${headToCheck}) against (node: ${node}, head: ${head})`);
-      if (node > nodeToCheck && node < headToCheck
+      log.debug(`is_projective_nodes(): checking (node: ${nodeToCheck}, head: ${headToCheck}) against (node: ${node},
+head: ${head})`); if (node > nodeToCheck && node < headToCheck
         && (head > headToCheck || head < nodeToCheck))
         return false;
       if (node > headToCheck && node < nodeToCheck
@@ -265,11 +268,8 @@ function is_cycle(sent, src, tar) {
       if (i && !sent.options.enhanced)
         return;
 
-      is_cycle = head.token === tar
-        ? true // got back to original node
-        : seen.has(head.token)
-          ? false
-          : is_cycle_util(sent, head.token, tar); // recurse
+      is_cycle = head.token === tar ? true // got back to original node
+                                    : seen.has(head.token) ? false : is_cycle_util(sent, head.token, tar); // recurse
     });
 
     return is_cycle;
@@ -282,32 +282,26 @@ function is_cycle(sent, src, tar) {
 
 function depEdgeClasses(sent, token, head) {
 
-  let classes = new Set([ 'dependency' ]);
+  let classes = new Set(["dependency"]);
 
   if (is_leaf(head.token, token))
-    classes.add('error');
+    classes.add("error");
 
   if (is_cycle(sent, head.token, token))
-    classes.add('error');
+    classes.add("error");
 
-  if (!head.deprel || head.deprel === '_') {
-    classes.add('incomplete');
+  if (!head.deprel || head.deprel === "_") {
+    classes.add("incomplete");
   } else if (!is_udeprel(head.deprel)) {
-    classes.add('error');
+    classes.add("error");
   }
 
-  return Array.from(classes).join(' ');
+  return Array.from(classes).join(" ");
 }
 
-function posNodeClasses(pos) {
-  return is_upos(pos)
-    ? 'pos'
-    : 'pos error';
-}
+function posNodeClasses(pos) { return is_upos(pos) ? "pos" : "pos error"; }
 
-function attrValue(attr, value) {
-  return value;
-}
+function attrValue(attr, value) { return value; }
 
 module.exports = {
   U_DEPRELS,

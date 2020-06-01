@@ -1,7 +1,7 @@
-'use strict';
+"use strict";
 
 module.exports = {
-nested: `# sent_id = wikipedia:Poyvi_Paraguái:11
+  nested: `# sent_id = wikipedia:Poyvi_Paraguái:11
 # text = Poyvi peteĩha ñane retãmegua niko ojepuru’ypýkuri 15 jasypo guive 16 jasypoteĩ meve ary 1811-pe.
 # text[spa] = Bandera uno nosotros de-de _ él-se-utilizó-_ 15 maio desde 16 junio hasta año 1811-en.
 "<Poyvi>"
@@ -61,19 +61,19 @@ nested: `# sent_id = wikipedia:Poyvi_Paraguái:11
 	"1811" num
 		"pe" post @case`,
 
-/*nested_2: `"<ab>"
-	"A" #1->
-		"B" #2->
-"<cde>"
-	"C" #3->
-		"D" #4->
-			"E" #5->
-"<f>"
-	"F" #6->
-"<h>"
-	"H" #7->`,*/
+  /*nested_2: `"<ab>"
+    "A" #1->
+      "B" #2->
+  "<cde>"
+    "C" #3->
+      "D" #4->
+        "E" #5->
+  "<f>"
+    "F" #6->
+  "<h>"
+    "H" #7->`,*/
 
-kdt_tagged_1: `# https://github.com/apertium/apertium-kaz/blob/master/texts/kdt.tagged.txt
+  kdt_tagged_1: `# https://github.com/apertium/apertium-kaz/blob/master/texts/kdt.tagged.txt
 "<Өскеменнің>"
 	"Өскемен" np top gen @nmod:poss #1->3
 "<ар>"
@@ -100,13 +100,13 @@ kdt_tagged_1: `# https://github.com/apertium/apertium-kaz/blob/master/texts/kdt.
 "<.>"
 	"." sent @punct #13->11`,
 
-kdt_tagged_2: `# https://github.com/apertium/apertium-kaz/blob/master/texts/kdt.tagged.txt
+  kdt_tagged_2: `# https://github.com/apertium/apertium-kaz/blob/master/texts/kdt.tagged.txt
 "<Аттан>"
 	"аттан" v iv imp p2 sg @root #1->0
 "<!>"
 	"!" sent @punct #2->1`,
 
-kdt_tagged_3: `# https://github.com/apertium/apertium-kaz/blob/master/texts/kdt.tagged.txt
+  kdt_tagged_3: `# https://github.com/apertium/apertium-kaz/blob/master/texts/kdt.tagged.txt
 "<Манағы>"
 	"манағы" det dem @det #1->3
 "<ала>"
@@ -119,7 +119,7 @@ kdt_tagged_3: `# https://github.com/apertium/apertium-kaz/blob/master/texts/kdt.
 "<?>"
 	"?" sent @punct #6->4`,
 
-0: `"<Патшамен>"
+  0: `"<Патшамен>"
 	"патша" n ins @nmod #1->3
 "<соғыс>"
 	"соғыс" n nom @obj #2->3
@@ -146,7 +146,7 @@ kdt_tagged_3: `# https://github.com/apertium/apertium-kaz/blob/master/texts/kdt.
 "<.>"
 	"." sent @punct #13->12`,
 
-1: `# text = He boued e tebr Mona er gegin.
+  1: `# text = He boued e tebr Mona er gegin.
 # text[eng] = Mona eats her food here in the kitchen.
 # labels = press_1986 ch_syntax p_197 to_check
 "<He>"
@@ -167,7 +167,7 @@ kdt_tagged_3: `# https://github.com/apertium/apertium-kaz/blob/master/texts/kdt.
 "<.>"
 	"." sent @punct #9->4`,
 
-2: `# text = He boued e tebr Mona er gegin.
+  2: `# text = He boued e tebr Mona er gegin.
 # text[eng] = Mona eats her food here in the kitchen.
 # labels = press_1986 ch_syntax p_197 to_check
 "<He>"
@@ -189,7 +189,7 @@ kdt_tagged_3: `# https://github.com/apertium/apertium-kaz/blob/master/texts/kdt.
 "<.>"
 	"." sent @punct #10->4`, // note: changed line `"kegin" n f pl @obl #8->4`
 
-with_semicolumn: `
+  with_semicolumn: `
 "<Siedzieliśmy>"
 	"siedzieć" vblex impf past p1 m pl
 "<w>"
@@ -241,7 +241,7 @@ with_semicolumn: `
 "<.>"
 	"." sent`,
 
-simple: `"<Патшамен>"
+  simple: `"<Патшамен>"
 	"патша" n ins @nmod #1->3
 "<соғыс>"
 	"соғыс" n nom @obj #2->3
@@ -268,7 +268,7 @@ simple: `"<Патшамен>"
 "<.>"
 	"." sent @punct #13->12`,
 
-simple_with_comments: `# comment #1
+  simple_with_comments: `# comment #1
 # comment #2
 "<Патшамен>"
 	"патша" n ins @nmod #1->3
@@ -297,7 +297,7 @@ simple_with_comments: `# comment #1
 "<.>"
 	"." sent @punct #13->12`,
 
-with_spans: `# text = He boued e tebr Mona er gegin.
+  with_spans: `# text = He boued e tebr Mona er gegin.
 # text[eng] = Mona eats her food here in the kitchen.
 # labels = press_1986 ch_syntax p_197 to_check
 "<He>"
@@ -318,7 +318,7 @@ with_spans: `# text = He boued e tebr Mona er gegin.
 "<.>"
 	"." sent @punct #9->4`,
 
-apertium_kaz_1: `# https://bpaste.net/show/be7c03e6213e
+  apertium_kaz_1: `# https://bpaste.net/show/be7c03e6213e
 "<Чау>"
 	"*Чау"
 "<->"
@@ -354,7 +354,7 @@ apertium_kaz_1: `# https://bpaste.net/show/be7c03e6213e
 "<.>"
 	"." sent`,
 
-apertium_kaz_2: `# https://bpaste.net/show/be7c03e6213e
+  apertium_kaz_2: `# https://bpaste.net/show/be7c03e6213e
 "<Қанында>"
 	"қан" n px3sp loc
 ;	"қан" n px3sp loc

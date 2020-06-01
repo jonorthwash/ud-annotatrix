@@ -1,29 +1,23 @@
-'use strict';
+"use strict";
 
-const _ = require('underscore');
-const $ = require('jquery');
-const config = require('./config');
-const nx = require('notatrix');
-const utils = require('../utils');
+const _ = require("underscore");
+const $ = require("jquery");
+const config = require("./config");
+const nx = require("notatrix");
+const utils = require("../utils");
 
 class Textarea {
-  constructor(gui) {
-
-    this.gui = gui;
-
-  }
+  constructor(gui) { this.gui = gui; }
 
   bind() {
 
     const self = this;
 
     // textarea resizing
-    $('#text-data').mouseup(e => {
-
-      config.textarea_height = $(e.target).css('height');
+    $("#text-data").mouseup(e => {
+      config.textarea_height = $(e.target).css("height");
       self.gui.app.graph.draw();
       self.gui.save();
-
     });
   }
 
@@ -34,30 +28,24 @@ class Textarea {
     // show the data
     if (config.is_textarea_visible) {
 
-      if (corpus.format !== 'CoNLL-U')
+      if (corpus.format !== "CoNLL-U")
         config.is_table_visible = false;
 
       if (config.is_table_visible) {
 
-        $('#table-data').show();
-        $('#text-data').hide();
+        $("#table-data").show();
+        $("#text-data").hide();
         this.gui.table.rebuild();
 
       } else {
 
-        $('#table-data').hide();
-        $('#text-data')
-          .val(corpus.textdata)
-          .css('height', config.textarea_height)
-          .show();
+        $("#table-data").hide();
+        $("#text-data").val(corpus.textdata).css("height", config.textarea_height).show();
       }
     }
 
     // show errors and warnings
-    $('.format-tab')
-      .removeClass('disabled')
-      .find('.tab-warning, .tab-error')
-        .hide();
+    $(".format-tab").removeClass("disabled").find(".tab-warning, .tab-error").hide();
     utils.forEachFormat(format => {
       if (corpus.current.isParsed) {
 
@@ -65,10 +53,7 @@ class Textarea {
 
           const loss = corpus.current.to(format).loss;
           if (loss.length)
-            $(`.format-tab[name="${format}"] .tab-warning`)
-              .show()
-              .attr('title',
-                `Unable to encode ${loss.join(', ')}`);
+            $(`.format-tab[name="${format}"] .tab-warning`).show().attr("title", `Unable to encode ${loss.join(", ")}`);
 
         } else {
           try {
@@ -77,28 +62,22 @@ class Textarea {
 
           } catch (e) {
 
-            console.log('error', format);
-            $(`.format-tab[name="${format}"]`)
-              .addClass('disabled')
-              .find(`.tab-error`)
-                .show()
-                .attr('title', e.message);
+            console.log("error", format);
+            $(`.format-tab[name="${format}"]`).addClass("disabled").find(`.tab-error`).show().attr("title", e.message);
           }
         }
       } else {
 
-        const s = new nx.Sentence(corpus.textdata, { interpretAs: format });
+        const s = new nx.Sentence(corpus.textdata, {interpretAs: format});
         if (s.Error)
           $(`.format-tab[name="${format}"]`)
-            .addClass('disabled')
-            .find(`.tab-error`)
+              .addClass("disabled")
+              .find(`.tab-error`)
               .show()
-              .attr('title', s.Error.message);
+              .attr("title", s.Error.message);
       }
     });
-
   }
 }
-
 
 module.exports = Textarea;

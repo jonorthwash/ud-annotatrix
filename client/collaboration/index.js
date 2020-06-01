@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
-const _ = require('underscore');
-const utils = require('../utils');
-const User = require('./user');
+const _ = require("underscore");
+const utils = require("../utils");
+const User = require("./user");
 
 /**
  * Abstraction to help with handling multiple users collaborating on a document.
@@ -26,7 +26,6 @@ class CollaborationInterface {
 
     // a list of users on this document
     this._users = {};
-
   }
 
   /**
@@ -34,9 +33,7 @@ class CollaborationInterface {
    *
    * @return {Number}
    */
-  get size() {
-    return Object.keys(this._users).length;
-  }
+  get size() { return Object.keys(this._users).length; }
 
   /**
    * Save data about the current user.  This method is called after we establish
@@ -48,7 +45,7 @@ class CollaborationInterface {
 
     // make a User object from the data
     const self = new User(data);
-    self.name = self.name === 'anonymous' ? 'me' : self.name;
+    self.name = self.name === "anonymous" ? "me" : self.name;
 
     // don't overwrite if already set
     if (JSON.stringify(self) === JSON.stringify(this.self))
@@ -56,9 +53,7 @@ class CollaborationInterface {
 
     // iterate over all the users in the room and add them (this way, even
     //  connections that aren't the first will have an accurate list)
-    _.each(data.room.users, user => {
-      this.addUser(user, user.id !== self.id);
-    });
+    _.each(data.room.users, user => { this.addUser(user, user.id !== self.id); });
 
     // save the reference
     this.self = self;
@@ -69,7 +64,6 @@ class CollaborationInterface {
     // draw the mice and locks for everyone in the room
     this.app.graph.drawMice();
     this.app.graph.setLocks();
-
   }
 
   /**
@@ -78,9 +72,7 @@ class CollaborationInterface {
    * @param {String} id
    * @return {User}
    */
-  getUser(id) {
-    return this._users[id];
-  }
+  getUser(id) { return this._users[id]; }
 
   /**
    * Add a User to our list.
@@ -88,7 +80,7 @@ class CollaborationInterface {
    * @param {Object} data the data to pass on to the User constructor
    * @param {Boolean} alert (optional, default=true) whether we should log to chat
    */
-  addUser(data, alert=true) {
+  addUser(data, alert = true) {
 
     const user = new User(data);
     this._users[data.id] = user;
@@ -105,7 +97,7 @@ class CollaborationInterface {
    * @param {Object} data the data get the User by
    * @param {Boolean} alert (optional, default=true) whether we should log to chat
    */
-  removeUser(data, alert=true) {
+  removeUser(data, alert = true) {
 
     const user = this.getUser(data.id);
     delete this._users[data.id];
@@ -126,21 +118,22 @@ class CollaborationInterface {
   getMouseNodes() {
 
     // map over the users
-    return _.map(this._users, user => {
+    return _
+        .map(this._users,
+             user => {
+               // if not self and on same index
+               if (user.id !== this.self.id && user._viewing === this.app.corpus.index)
 
-      // if not self and on same index
-      if (user.id !== this.self.id
-        && user._viewing === this.app.corpus.index)
+                 // return some info
+                 return {
+                   id: user.id,
+                   position: user.mouse,
+                   color: user.color,
+                 };
 
-        // return some info
-        return {
-          id: user.id,
-          position: user.mouse,
-          color: user.color,
-        };
-
-    // filter out things that didn't match our condition
-    }).filter(utils.thin);
+               // filter out things that didn't match our condition
+             })
+        .filter(utils.thin);
   }
 
   /**
@@ -153,24 +146,23 @@ class CollaborationInterface {
   getLocks() {
 
     // map over the users
-    return _.map(this._users, user => {
+    return _
+        .map(this._users,
+             user => {
+               // if not self and on same index and locking something
+               if (user.id !== this.self.id && user._viewing === this.app.corpus.index && user.locked)
 
-      // if not self and on same index and locking something
-      if (user.id !== this.self.id
-        && user._viewing === this.app.corpus.index
-        && user.locked)
+                 // return some info
+                 return {
+                   id: user.id,
+                   locked: user.locked,
+                   color: user.color,
+                 };
 
-        // return some info
-        return {
-          id: user.id,
-          locked: user.locked,
-          color: user.color,
-        };
-
-    // filter out things that didn't match our condition
-    }).filter(utils.thin);
+               // filter out things that didn't match our condition
+             })
+        .filter(utils.thin);
   }
 }
-
 
 module.exports = CollaborationInterface;

@@ -8,18 +8,18 @@
  *  allow clients to open the UD Annotatrix without a server.
  */
 
-'use strict';
+"use strict";
 
-const ejs = require('ejs');
-const fs = require('fs');
-const path = require('path');
+const ejs = require("ejs");
+const fs = require("fs");
+const path = require("path");
 
-const mkdirp = require('mkdirp');
-const html_base_path = path.join('server', 'public', 'html');
+const mkdirp = require("mkdirp");
+const html_base_path = path.join("server", "public", "html");
 
 function render(filename, args) {
-  const ejs_path = path.join('server', 'views', `${filename}.ejs`);
-  const html_path = path.join('server', 'public', 'html', `${filename}.html`);
+  const ejs_path = path.join("server", "views", `${filename}.ejs`);
+  const html_path = path.join("server", "public", "html", `${filename}.html`);
 
   fs.readFile(ejs_path, (err, contents) => {
     if (err)
@@ -39,22 +39,16 @@ function render_all() {
 
   mkdirp(html_base_path);
 
-  render('annotatrix', {
+  render("annotatrix", {
     // `${__dirname}/../server/views/modals`
-    modalPath:  path.join(__dirname, '../', 'server', 'views', 'modals'),
+    modalPath: path.join(__dirname, "../", "server", "views", "modals"),
     github_configured: false,
     username: null,
     path: path
   });
-  render('help', {});
-  render('index', {
-    base: null,
-    error: null,
-    treebanks: []
-  });
-
+  render("help", {});
+  render("index", {base: null, error: null, treebanks: []});
 }
-
 
 if (require.main === module)
   render_all();

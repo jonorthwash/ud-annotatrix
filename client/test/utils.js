@@ -1,40 +1,32 @@
-'use strict';
+"use strict";
 
-const _ = require('underscore');
-const data = require('./data/index');
+const _ = require("underscore");
+const data = require("./data/index");
 
 function noop() {}
 
 // regex
-const punct = /([.?!])/,
-  puncts = /([.?!]+)/g;
+const punct = /([.?!])/, puncts = /([.?!]+)/g;
 
 module.exports = {
   noop,
 
   setupLogger: () => {
-
     if (global.log)
       return;
 
-    const Log = require('../node-logger');
-    global.log = new Log('ERROR');
-
+    const Log = require("../node-logger");
+    global.log = new Log("ERROR");
   },
 
   forEachText: (callback) => {
-
     callback = callback || noop;
 
-    _.each(data, (texts, format) => {
-      _.each(texts, (text, name) => {
-        callback(text, format, name);
-      });
-    });
+    _.each(data, (texts, format) => { _.each(texts, (text, name) => { callback(text, format, name); }); });
   },
 
   reformatParsedText: (text) => {
-    return text.trim()//.replace(puncts, ' $1').replace(/(\s)+/g, ' ').trim();
+    return text.trim() //.replace(puncts, ' $1').replace(/(\s)+/g, ' ').trim();
   },
 
   randomInt: (min, max) => {

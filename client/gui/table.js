@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
-const $ = require('jquery');
-const _ = require('underscore');
-const utils = require('../utils');
+const $ = require("jquery");
+const _ = require("underscore");
+const utils = require("../utils");
 
 class Table {
   constructor(gui) {
@@ -12,29 +12,25 @@ class Table {
     this.cols = 10;
     this.row = 0;
     this.rows = 0;
-
   }
 
-  get editing() {
-    return $('#table-data .editing').length;
-  }
+  get editing() { return $("#table-data .editing").length; }
 
   toConllu() {
 
     let rows = [];
-    for (let i=0; i<=this.rows; i++) {
+    for (let i = 0; i <= this.rows; i++) {
 
       let row = [];
-      for (let j=0; j<10; j++) {
+      for (let j = 0; j < 10; j++) {
 
-        row.push($(`[row-id="${i}"][col-id="${j}"]`).text() || '_');
-
+        row.push($(`[row-id="${i}"][col-id="${j}"]`).text() || "_");
       }
 
-      rows.push(row.join('\t'));
+      rows.push(row.join("\t"));
     }
 
-    return rows.join('\n');
+    return rows.join("\n");
   }
 
   goRight(wrap) {
@@ -51,13 +47,11 @@ class Table {
 
     this.col += 1;
 
-    $('#table-data .editing').blur();
-    $('.focused').removeClass('focused')
+    $("#table-data .editing").blur();
+    $(".focused").removeClass("focused")
 
-    const td = $(`[col-id="${this.col}"][row-id="${this.row}"]`)
-      .addClass('focused')
-      .prop('contenteditable', false)
-      .focus();
+    const td =
+        $(`[col-id="${this.col}"][row-id="${this.row}"]`).addClass("focused").prop("contenteditable", false).focus();
   }
 
   goLeft(wrap) {
@@ -74,13 +68,11 @@ class Table {
 
     this.col -= 1;
 
-    $('#table-data .editing').blur();
-    $('.focused').removeClass('focused')
+    $("#table-data .editing").blur();
+    $(".focused").removeClass("focused")
 
-    const td = $(`[col-id="${this.col}"][row-id="${this.row}"]`)
-      .addClass('focused')
-      .prop('contenteditable', false)
-      .focus();
+    const td =
+        $(`[col-id="${this.col}"][row-id="${this.row}"]`).addClass("focused").prop("contenteditable", false).focus();
   }
 
   goUp() {
@@ -90,13 +82,11 @@ class Table {
 
     this.row -= 1;
 
-    $('#table-data .editing').blur();
-    $('.focused').removeClass('focused')
+    $("#table-data .editing").blur();
+    $(".focused").removeClass("focused")
 
-    const td = $(`[col-id="${this.col}"][row-id="${this.row}"]`)
-      .addClass('focused')
-      .prop('contenteditable', false)
-      .focus();
+    const td =
+        $(`[col-id="${this.col}"][row-id="${this.row}"]`).addClass("focused").prop("contenteditable", false).focus();
   }
 
   goDown() {
@@ -106,158 +96,117 @@ class Table {
 
     this.row += 1;
 
-    $('#table-data .editing').blur();
-    $('.focused').removeClass('focused')
+    $("#table-data .editing").blur();
+    $(".focused").removeClass("focused")
 
-    const td = $(`[col-id="${this.col}"][row-id="${this.row}"]`)
-      .addClass('focused')
-      .prop('contenteditable', false)
-      .focus();
+    const td =
+        $(`[col-id="${this.col}"][row-id="${this.row}"]`).addClass("focused").prop("contenteditable", false).focus();
   }
 
   toggleEditing(toggle) {
 
-    const td = $(`[col-id="${this.col}"][row-id="${this.row}"]`)
-      .toggleClass('editing', toggle);
+    const td = $(`[col-id="${this.col}"][row-id="${this.row}"]`).toggleClass("editing", toggle);
 
-    if (td.hasClass('editing')) {
+    if (td.hasClass("editing")) {
 
-      td
-        .prop('contenteditable', true)
-        .focus();
+      td.prop("contenteditable", true).focus();
 
     } else {
 
       td.blur()
-      $(`[col-id="${this.col}"][row-id="${this.row}"]`)
-        .addClass('focused')
-        .focus();
-
+      $(`[col-id="${this.col}"][row-id="${this.row}"]`).addClass("focused").focus();
     }
 
-    console.log(td.prop('contenteditable'))
+    console.log(td.prop("contenteditable"))
   }
 
   bind() {
 
     const self = this;
 
-    $('#table-data th').click(e => {
+    $("#table-data th").click(e => {
+      const target = $(e.target), col = target.attr("col-id"), columns = self.gui.config.column_visibilities;
 
-      const target = $(e.target),
-        col = target.attr('col-id'),
-        columns = self.gui.config.column_visibilities;
-
-      if (!target.hasClass('hideable'))
+      if (!target.hasClass("hideable"))
         return;
 
       columns[col] = !columns[col];
       self.refresh();
     });
 
-    $('#table-data td')
-      .click(e => {
+    $("#table-data td")
+        .click(e => {
+          const target = $(e.target);
+          self.row = parseInt(target.attr("row-id"));
+          self.col = parseInt(target.attr("col-id"));
 
-        const target = $(e.target);
-        self.row = parseInt(target.attr('row-id'));
-        self.col = parseInt(target.attr('col-id'));
+          $(".focused").removeClass("focused").blur();
+          target.addClass("focused");
 
+          self.toggleEditing(true);
+        })
+        .blur(e => {
+          const target = $(e.target), uuid = target.attr("uuid"),
+                token = self.gui.app.corpus.current.query(t => t.uuid === uuid)[0], field = target.attr("field"),
+                originalValue = target.attr("original-value") || "", value = target.text() || "";
 
-        $('.focused')
-          .removeClass('focused')
-          .blur();
-        target
-          .addClass('focused');
+          target.prop("contenteditable", false).removeClass("editing").removeClass("focused");
 
-        self.toggleEditing(true);
+          if (value === originalValue)
+            return;
 
-      })
-      .blur(e => {
-
-        const target = $(e.target),
-          uuid = target.attr('uuid'),
-          token = self.gui.app.corpus.current.query(t => t.uuid === uuid)[0],
-          field = target.attr('field'),
-          originalValue = target.attr('original-value') || '',
-          value = target.text() || '';
-
-        target.prop('contenteditable', false)
-          .removeClass('editing')
-          .removeClass('focused');
-
-        if (value === originalValue)
-          return;
-
-        self.gui.app.corpus.parse(self.toConllu());
-      });
-
+          self.gui.app.corpus.parse(self.toConllu());
+        });
   }
 
   refresh() {
 
-    $('#table-data th')
-      .removeClass('column-show column-hide')
-      .find('.fa')
-        .removeClass('fa-angle-double-left fa-angle-double-right');
+    $("#table-data th")
+        .removeClass("column-show column-hide")
+        .find(".fa")
+        .removeClass("fa-angle-double-left fa-angle-double-right");
 
-    console.log('refresh table')
-    this.gui.config.column_visibilities.forEach((vis, i) => {
-
+    console.log("refresh table") this.gui.config.column_visibilities.forEach((vis, i) => {
       const column = $(`#table-data [col-id="${i}"]`);
 
-
       console.log(i, vis, column)
-      column
-        .filter('th')
-        .addClass(vis ? 'column-show' : 'column-hide')
-        .find('.fa')
-          .addClass(vis ? 'fa-angle-double-left' : 'fa-angle-double-right');
+      column.filter("th")
+          .addClass(vis ? "column-show" : "column-hide")
+          .find(".fa")
+          .addClass(vis ? "fa-angle-double-left" : "fa-angle-double-right");
 
-      column
-        .filter('td')
-        .removeClass('column-show column-hide')
-        .addClass(vis ? 'column-show' : 'column-hide');
+      column.filter("td").removeClass("column-show column-hide").addClass(vis ? "column-show" : "column-hide");
     });
-
   }
 
   rebuild() {
 
-    $('#table-data tbody').empty();
+    $("#table-data tbody").empty();
 
     let i = 0;
     this.gui.app.corpus.current.iterate(token => {
-      let tr = $('<tr>')
-        .attr('tabindex', '-1')
-        .attr('id', `table_${i}`);
+      let tr = $("<tr>").attr("tabindex", "-1").attr("id", `table_${i}`);
 
-      ['id', 'form', 'lemma', 'upostag', 'xpostag',
-        'feats', 'head', 'deprel', 'deps', 'misc'].forEach((field, j) => {
+      ["id", "form", "lemma", "upostag", "xpostag", "feats", "head", "deprel", "deps", "misc"].forEach((field, j) => {
+        const value = field === "id" ? token.indices.conllu
+                                     : field === "head" && token.heads._items.length
+                                           ? token.heads._items[0].token.indices.conllu
+                                           : field === "deprel" && token.heads._items.length
+                                                 ? token.heads._items[0].deprel
+                                                 : field === "deps" && token.heads._items.length ? function() {
+                                                     var val = "";
+                                                     token.mapHeads((head, i) => {
+                                                       if (i != 0)
+                                                         val += "|";
+                                                       val += head.token.indices.conllu + ":" + head.deprel
+                                                     })
+                                                     return val;
+                                                   } : token[field];
 
-        const value = field === 'id'
-          ? token.indices.conllu
-          : field === 'head' && token.heads._items.length
-            ? token.heads._items[0].token.indices.conllu
-            : field === 'deprel' && token.heads._items.length
-              ? token.heads._items[0].deprel
-              : field === 'deps' && token.heads._items.length
-                ? function () {
-                  var val = '';
-                  token.mapHeads((head, i) => {
-                    if (i != 0)
-                      val += '|';
-                    val += head.token.indices.conllu + ':' + head.deprel
-                    })
-                    return val;
-                  }
-                : token[field];
+        let valid = {}, td = $("<td>"), inputSpan = $("<span>").attr("name", "input"),
+            errorSpan = $("<span>").attr("name", "error");
 
-        let valid = {},
-          td = $('<td>'),
-          inputSpan = $('<span>').attr('name', 'input'),
-          errorSpan = $('<span>').attr('name', 'error');
-
-        if (value !== '_') {
+        if (value !== "_") {
           if (j === 3)
             valid = utils.validate.is_upos(value);
           if (j === 7)
@@ -266,16 +215,16 @@ class Table {
 
         const visibilities = this.gui.config.column_visibilities;
 
-        td.addClass('conllu-table')
-          .attr('tabindex', '-1')
-          .attr('row-id', i)
-          .attr('col-id', j)
-          .attr('num', 10*i + j)
-          .attr('uuid', token.uuid)
-          .attr('field', field)
-          .attr('original-value', value)
-          .attr('name', j === 0 ? 'index' : 'content')
-          .css('visibility', visibilities[j] ? 'visible' : 'hidden');
+        td.addClass("conllu-table")
+            .attr("tabindex", "-1")
+            .attr("row-id", i)
+            .attr("col-id", j)
+            .attr("num", 10 * i + j)
+            .attr("uuid", token.uuid)
+            .attr("field", field)
+            .attr("original-value", value)
+            .attr("name", j === 0 ? "index" : "content")
+            .css("visibility", visibilities[j] ? "visible" : "hidden");
 
         inputSpan.text(value);
 
@@ -289,10 +238,10 @@ class Table {
           });
         */
 
-        tr.append( td.append(inputSpan).append(errorSpan) );
+        tr.append(td.append(inputSpan).append(errorSpan));
       });
 
-      $('#table-data tbody').append(tr);
+      $("#table-data tbody").append(tr);
       this.rows = i;
       i++;
     });
