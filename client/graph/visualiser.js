@@ -55,6 +55,14 @@ function run() {
 
 	drawNodes();
 	drawDeprels();
+
+	// Lower the pos-edge below the token and the pos label
+	d3.selectAll(".pos-edge").lower();
+
+	// We want the text to be on top of everything else
+	d3.selectAll(".deprel-label").raise();
+
+	//Lower supertokens
 }
 
 /**
@@ -137,7 +145,7 @@ function drawNodes() {
 			.attr("id", "text" + d.subId)
 			.text(d.posLabel);
 
-		let posWidth = Math.max(20, posTextElement.node().getComputedTextLength() + 10);
+		let posWidth = Math.max(40, posTextElement.node().getComputedTextLength() + 10);
 		posTextElement.remove();
 
 		let posGroup = tokenGroup
@@ -291,11 +299,11 @@ function drawDeprels() {
 	deprels.forEach((d) => {
 		let h = heights.get(d.id);
 		let xpos1 = parseInt($("#"+d.source).attr("x")) + parseInt($("#"+d.source).attr("width")) / 2;
-  	let ypos1 = parseInt($("#"+d.source).attr("y"));
+  	let ypos1 = 100 + (d.enhanced ? 95 : 0)
 		let xpos2 = parseInt($("#"+d.target).attr("x")) + parseInt($("#"+d.target).attr("width")) / 2;
 		let dir = Math.sign(xpos1 - xpos2); // -1 if deprel going right, else 1
 		let initialOffset = xpos1 - dir * 15; // Deprel is offset a little when coming out of source
-		let height = h * edgeHeight; // actual height of deprel
+		let height = (d.enhanced ? -1 : 1) * h * edgeHeight; // actual height of deprel
 		let mid = (initialOffset + xpos2) / 2; // x-position of the middle of the deprel
 
 		// Calculate dimensions of text
@@ -318,7 +326,7 @@ function drawDeprels() {
 			.style("stroke-width", "6px")
 			.style("fill", "none")
 			.attr("marker-end", "url(#end)")
-			.attr("d", curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height, d.id))
+			.attr("d", curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height, d.id, d.enhanced))
 			.attr("id", d.id);
 
 		// Add deprel label
@@ -339,14 +347,6 @@ function drawDeprels() {
 			.attr("text-anchor", "middle")
 			.attr("dominant-baseline", "central");
 		});
-
-		// Lower the pos-edge below the token and the pos label
-		d3.selectAll(".pos-edge").lower();
-
-		// We want the text to be on top of everything else
-		d3.selectAll(".deprel-label").raise();
-
-		//Lower supertokens
 }
 
 /**
@@ -380,7 +380,7 @@ function tokenDist(id) {
  * @param {int} h scaled height of deprel
  * @param {int} height actual height of the deprel
  */
-function curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height, id) {
+function curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height, id, enhanced) {
 	let rectLeft = (initialOffset + xpos2) / 2 + (dir * rectWidth) / 2;
   let slant = 0.15; // Angle of ascent/descent in the beginning/end of the curve
   let hor = Math.min(tokenDist(id), h) * 100; // How far the curved part of the curve goes
@@ -408,7 +408,7 @@ function curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height, id) {
 		" L " + c4x + "," + c4y + " " + rectLeft + "," + c4y +
 		"M " + rectRight + "," + d2y + " L " + d4x + "," + d4y +
     " C" + d3x + "," + d3y + " " + d2x + "," + d2y + " " + d1x + "," + d1y +
-    " L" + xpos2 + "," + (ypos1 - 8)
+    " L" + xpos2 + "," + (ypos1 - (enhanced ? -1 : 1) * 8)
   );
 }
 
