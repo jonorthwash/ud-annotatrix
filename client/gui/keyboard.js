@@ -408,14 +408,11 @@ function keyup(app, event) {
       if (event.preventDefault)
         event.preventDefault();
 
-      if (graph.cy.$(".merge-left").length) {
+      if ($(".merge-left").length) {
+        const tar = $(".merge-left");
+        tar.click();
 
-        const src = graph.cy.$(".merge-source");
-        const tar = graph.cy.$(".merge-left");
-        if (!tar.hasClass("locked"))
-          graph.merge(src.data("token"), tar.data("token"));
-
-      } else if (graph.cy.$(".combine-left").length) {
+      } else if ($(".combine-left").length) {
 
         const src = graph.cy.$(".combine-source");
         const tar = graph.cy.$(".combine-left");

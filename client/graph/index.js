@@ -59,6 +59,9 @@ class Graph {
     // only way really.
     this.tokens = {};
 
+    // Maps local token numbers to global token numbers
+    this.presentationId = {};
+
     // load configuration prefs
     this.load();
   }
@@ -114,6 +117,9 @@ class Graph {
     // num is like clump except not including superTokens, eles in the list
     let num = 0, eles = [];
 
+    // tokenNum counts just normal tokens (no supertokens and dependencies)
+    let tokenNum = 0;
+
     // walk over all the tokens
     sent.index().iterate(token => {
       // don't draw other analyses
@@ -154,11 +160,15 @@ class Graph {
 
         let parent = token.name === "SubToken" ? "multiword-" + getIndex(sent.getSuperToken(token), format) : undefined;
 
-        this.tokens[id] = token;
+        this.tokens[tokenNum] = token;
 
+		    this.presentationId[id] = tokenNum;
+        
         eles.push(
           { // "form" node
-            id: `form-${id}`,
+            id: `form-${tokenNum}`,
+            subId: tokenNum,
+            conlluId: id,
             num: ++num,
             clump: clump,
             name: 'form',
@@ -167,7 +177,7 @@ class Graph {
             label: token.form || '_',
             type: parent ? 'subToken' : 'token',
             state: `normal`,
-            parent: `num-${id}`,
+            parent: `num-${tokenNum}`,
             token: token,
             classes: isRoot ? 'form root' : 'form',
             posClasses: utils.validate.posNodeClasses(pos),
@@ -175,47 +185,58 @@ class Graph {
             posLabel: pos || '',
           },
         );
-
-        // iterate over the token's heads to get edges
-        token.mapHeads((head, i) => {
-          // if not enhanced, only draw the first dependency
-          if (i && !sent.options.enhanced)
-            return;
-
-          this.progress.total += 1;
-          if (head.deprel && head.deprel !== "_")
-            this.progress.done += 1;
-
-          // roots don't get edges drawn (just bolded)
-          if (head.token.name === "RootToken")
-            return;
-
-          let deprel = head.deprel || "";
-
-          const id = getIndex(token, format), headId = getIndex(head.token, format),
-                label = this.app.corpus.is_ltr
-                            ? token.indices.absolute > head.token.indices.absolute ? `${deprel}⊳` : `⊲${deprel}`
-                            : token.indices.absolute > head.token.indices.absolute ? `⊲${deprel}` : `${deprel}⊳`;
-
-
-          eles.push({
-            id: `dep_${id}_${headId}`,
-            name: `dependency`,
-            num: ++num,
-            attr: `deprel`,
-            deprel: deprel,
-            source: `token-${headId}`,
-            sourceNum: parseInt(headId),
-            sourceToken: head.token,
-            target: `token-${id}`,
-            targetNum: parseInt(id),
-            targetToken: token,
-            label: label,
-            enhanced: i ? true: false,
-            classes: utils.validate.depEdgeClasses(sent, token, head),
-          });
-        });
       }
+      tokenNum++;
+    });
+
+    sent.index().iterate(token => {
+      // iterate over the token's heads to get edges
+      token.mapHeads((head, i) => {
+
+        // if not enhanced, only draw the first dependency
+        if (i && !sent.options.enhanced)
+          return;
+
+        this.progress.total += 1;
+        if (head.deprel && head.deprel !== "_")
+          this.progress.done += 1;
+
+        // roots don't get edges drawn (just bolded)
+        if (head.token.name === "RootToken")
+          return;
+
+        let deprel = head.deprel || "";
+
+        const id = getIndex(token, format),
+          headId = getIndex(head.token, format),
+          label = this.app.corpus.is_ltr
+            ? token.indices.absolute > head.token.indices.absolute
+              ? `${deprel}⊳`
+              : `⊲${deprel}`
+            : token.indices.absolute > head.token.indices.absolute
+              ? `⊲${deprel}`
+              : `${deprel}⊳`;
+
+        const presentId = this.presentationId[id];
+        const presentHeadId = this.presentationId[headId];
+
+        eles.push({
+          id: `dep_${presentId}_${presentHeadId}`,
+          name: `dependency`,
+          num: ++num,
+          attr: `deprel`,
+          deprel: deprel,
+          source: `token-${presentHeadId}`,
+          sourceNum: parseInt(presentHeadId),
+          sourceToken: head.token,
+          target: `token-${presentId}`,
+          targetNum: parseInt(presentId),
+          targetToken: token,
+          label: label,
+          enhanced: i ? true: false,
+          classes: utils.validate.depEdgeClasses(sent, token, head),
+        });
+      });
     });
 
     this.length = num;
@@ -316,16 +337,17 @@ class Graph {
     $('.token').click(function() {
       self.intercepted = true;
       console.log("clicked on token");
-      let targetNum = $(this).attr('id').replace(/\D/g,'');
+      let targetNum = $(this).attr('subId');
       console.log(targetNum);
       // THIS is #group-[id]. But we want #form-[id].
       let target = $('#form-' + targetNum);
+      console.log(target);
       if (target.hasClass('locked'))
         return;
       if (self.moving_dependency) {
 
         const dep = $('.selected');
-        const sourceNum = $('.arc-source').attr('id').replace(/\D/g,'');
+        const sourceNum = $('.arc-source').attr('subId');
 
         // make a new dep, remove the old one
         self.makeDependency(self.tokens[sourceNum], self.tokens[targetNum]);
@@ -354,14 +376,14 @@ class Graph {
         if (target.hasClass('merge-right') || target.hasClass('merge-left')) {
 
           // perform merge
-          let sourceNum = $('.merge-source').attr('id').replace(/\D/g,'');
+          let sourceNum = $('.merge-source').attr('subId');
           self.merge(self.tokens[sourceNum], self.tokens[targetNum]);
           self.unlock();
 
         } else if (target.hasClass('combine-right') || target.hasClass('combine-left')) {
 
           // perform combine
-          let sourceNum = $('.combine-source').attr('id').replace(/\D/g,'');
+          let sourceNum = $('.combine-source').attr('subId');
           self.combine(self.tokens[sourceNum], self.tokens[targetNum]);
           self.unlock();
 
@@ -379,7 +401,7 @@ class Graph {
           // if there was already an activated node
           if (source.length === 1) {
             // add a new edge
-            let sourceNum = source.attr('id').replace(/\D/g,'');
+            let sourceNum = source.attr('subId');
             self.makeDependency(self.tokens[sourceNum], self.tokens[targetNum]);
             source.removeClass('activated');
             target.removeClass('activated');
@@ -578,7 +600,7 @@ class Graph {
         this.modifyDependency(this.editing, value);
 
       } else {
-        const tokenNum = this.editing.attr("id").replace(/\D/g,"");
+        const tokenNum = this.editing.attr("subId");
         this.tokens[tokenNum][attr] = value;
         this.editing = null;
         this.app.save({
@@ -819,7 +841,7 @@ class Graph {
   setRoot(ele) {
 
     const sent = this.app.corpus.current;
-    let eleNum = ele.attr("id").replace(/\D/g, "");
+    let eleNum = ele.attr("subId");
     ele = this.tokens[eleNum];
 
     try {
@@ -981,8 +1003,8 @@ class Graph {
    * @return {(CytoscapeCollection|undefined)}
    */
   getPrevForm() {
-
-    let clump = parseInt($(".activated").attr("id").replace(/\D/g,""));
+    
+    let clump = parseInt($(".activated").attr("subId"));
     if (clump === undefined)
       return;
 
@@ -1001,7 +1023,7 @@ class Graph {
    */
   getNextForm() {
 
-    let clump = parseInt($(".activated").attr("id").replace(/\D/g,""));
+    let clump = parseInt($(".activated").attr("subId"));
     if (clump === undefined)
       return;
 

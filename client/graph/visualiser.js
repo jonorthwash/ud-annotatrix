@@ -73,13 +73,12 @@ function drawNodes() {
 			return;
 		}
 
-		let num = d.id.replace(/\D/g,'');
 		let textClass = 'form-label' + d.classes.replace('form', '');
 
 		// Find sizing of the node label
 	  let textElement = _g
 			.append("text")
-			.attr("id", "text" + num)
+			.attr("id", "text" + d.subId)
 			.text(d.form)
 			.attr("class", textClass);
 		let rectWidth = Math.max(40, textElement.node().getComputedTextLength() + 10);
@@ -89,7 +88,7 @@ function drawNodes() {
 		// perfomance-wise, they are basically the same.
 		let tokenGroup = _g
 			.append("svg") 
-			.attr("id", "token-" + num)
+			.attr("id", "token-" + d.subId)
 			.attr("width", rectWidth)
 			.attr("height", nodeHeight)
 			//.attr("class", "token")
@@ -99,8 +98,9 @@ function drawNodes() {
 
 	  let nodeGroup = tokenGroup
 			.append("g")
-			.attr("id", "group-" + num)
-			.attr("class", "token");
+			.attr("id", "group-" + d.subId)
+			.attr("class", "token")
+			.attr("subId", d.subId);
 
 		// Create node
 	  nodeGroup
@@ -111,6 +111,7 @@ function drawNodes() {
 			.attr("ry", 8)
 			.attr("id", d.id)
 			.attr("attr", d.attr)
+			.attr("subId", d.subId)
 			.attr("class", d.classes);
 
 		// Add text
@@ -126,14 +127,14 @@ function drawNodes() {
 		// Add token number
 	  nodeGroup
 			.append("text")
-			.text(num)
+			.text(d.conlluId)
 			.attr("x", "50%")
 			.attr("y", 45)
 			.attr("text-anchor", "middle");
 
 		let posTextElement = _g
 			.append("text")
-			.attr("id", "text" + num)
+			.attr("id", "text" + d.subId)
 			.text(d.posLabel);
 
 		let posWidth = Math.max(20, posTextElement.node().getComputedTextLength() + 10);
@@ -151,9 +152,10 @@ function drawNodes() {
 			.append("rect")
 			.attr("width", posWidth)
 			.attr("height", 30)
-			.attr("id", "pos-" + num)
+			.attr("id", "pos-" + d.subId)
 			.attr("class", d.posClasses)
 			.attr("attr", d.posAttr)
+			.attr("subId", d.subId)
 			.attr("rx", 5)
 			.attr("ry", 5);
 
@@ -162,7 +164,7 @@ function drawNodes() {
 			.attr("x", "50%")
 			.attr("y", "50%")
 			.attr("class", "pos-label")
-			.attr("id", "text-pos-" + num)
+			.attr("id", "text-pos-" + d.subId)
 			.text(d.posLabel)
 			.attr("text-anchor", "middle")
 			.attr("dominant-baseline", "central");
@@ -231,6 +233,7 @@ function drawDeprels() {
 	let edgeHeight = 65; // how high the height increments by at each level
 
 	function shiftTokens(shift, target, dir) {
+		console.log(target);
 		while ($("#token-" + target).length) {
 			let curX = d3.select("#token-" + target).attr("x");
 			d3.select("#token-" + target).attr("x", parseInt(curX) - dir * shift);
@@ -284,7 +287,7 @@ function drawDeprels() {
 				shiftTokens(shift, d.targetNum, dir);
 		}
 	});
-
+	console.log("done shifting tokens");
 	deprels.forEach((d) => {
 		let h = heights.get(d.id);
 		let xpos1 = parseInt($("#"+d.source).attr("x")) + parseInt($("#"+d.source).attr("width")) / 2;
@@ -296,15 +299,15 @@ function drawDeprels() {
 		let mid = (initialOffset + xpos2) / 2; // x-position of the middle of the deprel
 
 		// Calculate dimensions of text
-		let transform = d3.zoomTransform(_g.node());
+		//let transform = d3.zoomTransform(_g.node());
 		let textElement = _g
 			.append("text")
 			.attr("id", "text" + d.id)
 			.text(d.label)
 			.attr('class', 'deprel-label');
-		let txt = $("#text" + d.id)[0];
+
 		let rectWidth = textElement.node().getComputedTextLength() + 10;
-		let rectHeight = txt.getBoundingClientRect().height / transform.k;
+		//let rectHeight = textElement.node().getBoundingClientRect().height / transform.k;
 		textElement.remove();
 
 		// Add deprel
@@ -415,7 +418,9 @@ function curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height, id) {
  */
 function getHeights(deprels) {
   function dist(a) {
-    return Math.abs(a.sourceNum - a.targetNum);
+		let s = a.sourceNum;
+		let t = a.targetNum;
+    return Math.abs(s - t);
   }
   deprels.sort((x, y) => {
     if (dist(x) > dist(y)) {
@@ -432,10 +437,12 @@ function getHeights(deprels) {
     heights.push([0]);
   }
   for (let i = 0; i < deprels.length; i++) {
-    let a = deprels[i];
-    let dir = Math.sign(a.targetNum - a.sourceNum);
+		let a = deprels[i];
+		let s = a.sourceNum;
+		let t = a.targetNum;
+    let dir = Math.sign(t - s);
 		let h = new Set();
-    for (let j = a.sourceNum + dir; j != a.targetNum; j += dir) {
+    for (let j = s + dir; j != t; j += dir) {
 			for(let k = 0; k < heights[j].length; k++) {
 				h.add(heights[j][k]);
 			}
@@ -448,9 +455,9 @@ function getHeights(deprels) {
 			ht++;
 		}
     finalHeights.set(a.id, ht);
-    for (let j = a.sourceNum; ; j += dir) {
+    for (let j = s; ; j += dir) {
       heights[j].push(ht);
-      if (j == a.targetNum) {
+      if (j == t) {
         break;
       }
     }
