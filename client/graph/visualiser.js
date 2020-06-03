@@ -55,6 +55,7 @@ function run() {
 
 	drawNodes();
 	drawDeprels();
+	drawSuperTokens();
 
 	// Lower the pos-edge below the token and the pos label
 	d3.selectAll(".pos-edge").lower();
@@ -63,6 +64,7 @@ function run() {
 	d3.selectAll(".deprel-label").raise();
 
 	//Lower supertokens
+	d3.selectAll(".multiword").lower();
 }
 
 /**
@@ -195,6 +197,7 @@ function drawNodes() {
 		_numNodes++;
 	});
 }
+
 /**
  * Draws deprels.
  */
@@ -229,15 +232,28 @@ function drawDeprels() {
 
 	// Create a list of deprels
 	let deprels = [];
+	let enhancedDeprels = [];
+	let nonEnhDeprels = []
 	_graph.eles.forEach((d) => {
 		if(!d.classes.includes("dependency")) {
 			return;
 		}
 		deprels.push(d);
+		if(d.enhanced) {
+			enhancedDeprels.push(d);
+		}
+		else {
+			nonEnhDeprels.push(d);
+		}
 	});
 
 	// Get heights for the deprels
-	let heights = getHeights(deprels);
+	// Since enhanced deprels go below
+	// we need to calculate the heights separately
+	let heights1 = getHeights(nonEnhDeprels);
+	let heights2 = getHeights(enhancedDeprels);
+	let heights = {...heights1, ...heights2};
+
 	let edgeHeight = 65; // how high the height increments by at each level
 
 	function shiftTokens(shift, target, dir) {
@@ -289,7 +305,7 @@ function drawDeprels() {
 		let xpos2 = parseInt($("#"+d.target).attr("x")) + parseInt($("#"+d.target).attr("width")) / 2;
 		let dir = Math.sign(xpos1 - xpos2); // -1 if deprel going right, else 1
 
-		let shift = needShift(d, xpos1, xpos2, rectWidth, heights.get(d.id));
+		let shift = needShift(d, xpos1, xpos2, rectWidth, heights[d.id]);
 		console.log(d, shift);
 		if(shift != 0) {
 				shiftTokens(shift, d.targetNum, dir);
@@ -297,7 +313,7 @@ function drawDeprels() {
 	});
 	console.log("done shifting tokens");
 	deprels.forEach((d) => {
-		let h = heights.get(d.id);
+		let h = heights[d.id];
 		let xpos1 = parseInt($("#"+d.source).attr("x")) + parseInt($("#"+d.source).attr("width")) / 2;
   	let ypos1 = 100 + (d.enhanced ? 95 : 0)
 		let xpos2 = parseInt($("#"+d.target).attr("x")) + parseInt($("#"+d.target).attr("width")) / 2;
@@ -432,7 +448,7 @@ function getHeights(deprels) {
     return 0;
   });
   let heights = [];
-  let finalHeights = new Map();
+  let finalHeights = {};
   for (let i = 0; i < _numNodes + 1; i++) {
     heights.push([0]);
   }
@@ -454,7 +470,7 @@ function getHeights(deprels) {
     while(h.has(ht)) {
 			ht++;
 		}
-    finalHeights.set(a.id, ht);
+    finalHeights[a.id] = ht;
     for (let j = s; ; j += dir) {
       heights[j].push(ht);
       if (j == t) {
@@ -465,4 +481,46 @@ function getHeights(deprels) {
   return finalHeights;
 }
 
+
+function drawSuperTokens() {
+	_graph.eles.forEach((d) => {
+		if(!d.classes.includes("multiword")) {
+			return;
+		}
+		let t1, t2;
+		let format = _graph.app.corpus.format;
+
+		if (format == "CoNLL-U") {
+			t1 = _graph.presentationId[d.conlluId.split('-')[0]];
+			t2 = _graph.presentationId[d.conlluId.split('-')[1]];
+		}
+		else {
+			t1 = _graph.presentationId[parseInt(d.absoluteId) + 1];
+			t2 = t1 + d.len - 1;
+		}
+		/*else {
+			
+		}*/
+		
+		console.log(t1, t2);
+
+		let x1 = parseInt($("#token-" + t1).attr("x")) - 20;
+		let x2 = parseInt($("#token-" + t2).attr("x")) + 20;
+		let width2 = parseInt($("#token-" + t2).attr("width"));
+		console.log(x1, x2);
+		_g
+			.append("rect")
+			.attr("width", x2 - x1 + width2)
+			.attr("height", 135)
+			.attr("x", x1)
+			.attr("y", 80)
+			//.attr("id", "pos-" + d.subId)
+			.attr("class", d.classes)
+			//.attr("attr", d.posAttr)
+			//.attr("subId", d.subId)
+			.attr("rx", 5)
+			.attr("ry", 5)
+			.style("cursor", "pointer");
+	});
+}
 module.exports = {bind, run};

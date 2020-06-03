@@ -413,11 +413,8 @@ function keyup(app, event) {
         tar.click();
 
       } else if ($(".combine-left").length) {
-
-        const src = graph.cy.$(".combine-source");
-        const tar = graph.cy.$(".combine-left");
-        if (!tar.hasClass("locked"))
-          graph.combine(src.data("token"), tar.data("token"));
+        const tar = $(".combine-left");
+        tar.click();
       }
       break;
 
@@ -427,19 +424,13 @@ function keyup(app, event) {
       if (event.preventDefault)
         event.preventDefault();
 
-      if (graph.cy.$(".merge-right").length) {
+      if ($(".merge-right").length) {
+        const tar = $(".merge-right");
+        tar.click();
 
-        const src = graph.cy.$(".merge-source");
-        const tar = graph.cy.$(".merge-right");
-        if (!tar.hasClass("locked"))
-          graph.merge(src.data("token"), tar.data("token"));
-
-      } else if (graph.cy.$(".combine-right").length) {
-
-        const src = graph.cy.$(".combine-source");
-        const tar = graph.cy.$(".combine-right");
-        if (!tar.hasClass("locked"))
-          graph.combine(src.data("token"), tar.data("token"));
+      } else if ($(".combine-right").length) {
+        const tar = $(".combine-right");
+        tar.click();
       }
       break;
 

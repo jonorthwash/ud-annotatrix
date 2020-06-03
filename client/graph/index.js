@@ -76,7 +76,7 @@ class Graph {
    * @return {Array} [{ data: Object, classes: String }]
    */
   get eles() {
-
+    this.presentationId = {};
     // helper function to get subscripted index numbers for superTokens
     function toSubscript(str) {
       const subscripts = {
@@ -137,18 +137,18 @@ class Graph {
 
       if (token.isSuperToken) {
 
-        eles.push({
-          // multiword label
-          data: {
-            id: `multiword-${id}`,
-            clump: clump,
-            name: `multiword`,
-            label: `${token.form} ${toSubscript(`${id}`)}`,
-            length: `${token.form.length > 3 ? token.form.length * 0.7 : token.form.length}em`,
-            token: token,
-          },
-          classes: "multiword"
+        eles.push({ // multiword label
+          id: `multiword-${id}`,
+          clump: clump,
+          name: `multiword`,
+          label: `${token.form} ${toSubscript(`${id}`)}`,
+          token: token,
+          conlluId: token.indices.conllu,
+          absoluteId: token.indices.absolute,
+          len: token._analyses[0]._subTokens.length,
+          classes: 'multiword'
         });
+        console.log("multiowrd", token);
 
       } else {
 
@@ -163,7 +163,7 @@ class Graph {
         this.tokens[tokenNum] = token;
 
 		    this.presentationId[id] = tokenNum;
-        
+
         eles.push(
           { // "form" node
             id: `form-${tokenNum}`,
@@ -185,8 +185,9 @@ class Graph {
             posLabel: pos || '',
           },
         );
+        tokenNum++;
       }
-      tokenNum++;
+      
     });
 
     sent.index().iterate(token => {
@@ -240,6 +241,7 @@ class Graph {
     });
 
     this.length = num;
+    console.log("PID: ", this.presentationId);
     return eles;
   }
 
@@ -273,11 +275,11 @@ class Graph {
         // add the classes to adjacent elements if we were merging
 
         const left = this.getPrevForm();
-        if (left && !left.hasClass("activated") && !left.hasClass("blocked") && left.attr('id').includes('form'))
+        if (left.length && !left.hasClass("activated") && !left.hasClass("blocked") && left.attr('id').includes('form'))
           left.addClass("neighbor merge-left");
 
         const right = this.getNextForm();
-        if (right && !right.hasClass("activated") && !right.hasClass("blocked") && right.attr('id').includes('form'))
+        if (right.length && !right.hasClass("activated") && !right.hasClass("blocked") && right.attr('id').includes('form'))
           right.addClass("neighbor merge-right");
 
       } else if (config.locked_classes.indexOf("combine-source") > -1) {
@@ -285,11 +287,11 @@ class Graph {
         // add the classes to the adjacent elements if we were combining
 
         const left = this.getPrevForm();
-        if (left && !left.hasClass("activated") && !left.hasClass("blocked") && left.attr('id').includes('form'))
+        if (left.length && !left.hasClass("activated") && !left.hasClass("blocked") && left.attr('id').includes('form'))
           left.addClass("neighbor combine-left");
 
         const right = this.getNextForm();
-        if (right && !right.hasClass("activated") && !right.hasClass("blocked") && right.attr('id').includes('form'))
+        if (right.length && !right.hasClass("activated") && !right.hasClass("blocked") && right.attr('id').includes('form'))
           right.addClass("neighbor combine-right");
       }
 
@@ -451,13 +453,14 @@ class Graph {
       self.lock(target);
     });
 
-    /*self.cy.on("click", "$node > node", e => {
-      const target = e.target;
+    $(".multiword").on("click", e => {
+
+      const target = $(e.target);
 
       if (target.hasClass("locked"))
         return;
 
-      self.cy.$(".activated").removeClass("activated");
+      $(".activated").removeClass("activated");
 
       if (target.hasClass("multiword-active")) {
 
@@ -466,13 +469,13 @@ class Graph {
 
       } else {
 
-        self.cy.$(".multiword-active").removeClass("multiword-active");
+        $(".multiword-active").removeClass("multiword-active");
         target.addClass("multiword-active");
         self.lock(target);
       }
     });
 
-    self.cy.on('cxttapend', 'node.form', e => {
+    /*self.cy.on('cxttapend', 'node.form', e => {
 
       const target = e.target;
 
