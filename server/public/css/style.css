@@ -186,6 +186,12 @@ span.tt {
   fill: #2653c9;
 }
 
+.multiword-label {
+  fill: #7FA1FF;
+	stroke: black;
+  stroke-width: 2px;
+}
+
 #notebox {
   width:50%;
   margin:auto;

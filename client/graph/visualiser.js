@@ -60,6 +60,8 @@ function run() {
 	// Lower the pos-edge below the token and the pos label
 	d3.selectAll(".pos-edge").lower();
 
+	d3.selectAll(".dependency").raise();
+
 	// We want the text to be on top of everything else
 	d3.selectAll(".deprel-label").raise();
 
@@ -88,9 +90,9 @@ function drawNodes() {
 		// Find sizing of the node label
 	  let textElement = _g
 			.append("text")
-			.attr("id", "text" + d.subId)
 			.text(d.form)
 			.attr("class", textClass);
+			
 		let rectWidth = Math.max(40, textElement.node().getComputedTextLength() + 10);
 		textElement.remove();
 
@@ -144,7 +146,6 @@ function drawNodes() {
 
 		let posTextElement = _g
 			.append("text")
-			.attr("id", "text" + d.subId)
 			.text(d.posLabel);
 
 		let posWidth = Math.max(40, posTextElement.node().getComputedTextLength() + 10);
@@ -508,19 +509,44 @@ function drawSuperTokens() {
 		let x2 = parseInt($("#token-" + t2).attr("x")) + 20;
 		let width2 = parseInt($("#token-" + t2).attr("width"));
 		console.log(x1, x2);
+		let end = x2 + width2;
+
+		let mwTextElement = _g
+			.append("text")
+			.text(d.label);
+
+		let mwWidth = mwTextElement.node().getComputedTextLength() + 10;
+		mwTextElement.remove();
+
 		_g
 			.append("rect")
-			.attr("width", x2 - x1 + width2)
+			.attr("width", end - x1)
 			.attr("height", 135)
 			.attr("x", x1)
 			.attr("y", 80)
-			//.attr("id", "pos-" + d.subId)
 			.attr("class", d.classes)
-			//.attr("attr", d.posAttr)
-			//.attr("subId", d.subId)
 			.attr("rx", 5)
 			.attr("ry", 5)
 			.style("cursor", "pointer");
+
+		let mwGroup = _g
+			.append("svg")
+			.attr("x", (end + x1 - mwWidth) / 2)
+			.attr("y", 60)
+			.attr("width", mwWidth)
+			.attr("height", 20);
+
+		mwGroup.append("rect")
+			.attr("width", mwWidth)
+			.attr("height", 20)
+			.attr("class", "multiword-label");
+
+		mwGroup.append("text")
+			.attr("x", "50%")
+			.attr("y", "50%")
+			.text(d.label)
+			.attr("text-anchor", "middle")
+			.attr("dominant-baseline", "central");
 	});
 }
 module.exports = {bind, run};
