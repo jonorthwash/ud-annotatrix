@@ -59,6 +59,8 @@ class Graph {
     // only way really.
     this.tokens = {};
 
+    this.mwTokens = {};
+
     // Maps local token numbers to global token numbers
     this.presentationId = {};
 
@@ -120,6 +122,8 @@ class Graph {
     // tokenNum counts just normal tokens (no supertokens and dependencies)
     let tokenNum = 0;
 
+    let mwTokenNum = 0;
+
     // walk over all the tokens
     sent.index().iterate(token => {
       // don't draw other analyses
@@ -146,8 +150,11 @@ class Graph {
           conlluId: token.indices.conllu,
           absoluteId: token.indices.absolute,
           len: token._analyses[0]._subTokens.length,
+          subId: mwTokenNum,
           classes: 'multiword'
         });
+
+        this.mwTokens[mwTokenNum] = token;
         console.log("multiowrd", token);
 
       } else {
@@ -911,8 +918,8 @@ class Graph {
   splitSuperToken(ele) {
 
     try {
-
-      this.app.corpus.current.split(ele.data("token"));
+      let eleNum = ele.attr("subId");
+      this.app.corpus.current.split(this.mwTokens[eleNum]);
       this.unlock();
       this.app.save({
         type: "set",

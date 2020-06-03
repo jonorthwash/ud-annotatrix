@@ -92,7 +92,7 @@ function drawNodes() {
 			.append("text")
 			.text(d.form)
 			.attr("class", textClass);
-			
+
 		let rectWidth = Math.max(40, textElement.node().getComputedTextLength() + 10);
 		textElement.remove();
 
@@ -525,6 +525,7 @@ function drawSuperTokens() {
 			.attr("x", x1)
 			.attr("y", 80)
 			.attr("class", d.classes)
+			.attr("subId", d.subId)
 			.attr("rx", 5)
 			.attr("ry", 5)
 			.style("cursor", "pointer");
@@ -534,7 +535,8 @@ function drawSuperTokens() {
 			.attr("x", (end + x1 - mwWidth) / 2)
 			.attr("y", 60)
 			.attr("width", mwWidth)
-			.attr("height", 20);
+			.attr("height", 20)
+			.style("overflow", "visible");
 
 		mwGroup.append("rect")
 			.attr("width", mwWidth)
