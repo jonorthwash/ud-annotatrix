@@ -3,11 +3,10 @@
 const _ = require("underscore");
 const $ = require("jquery");
 const config = require("./config");
-const cytoscape = require("./cytoscape/cytoscape.min");
 const nx = require("notatrix");
 const sort = require("./sort");
 const utils = require("../utils");
-const zoom = require("./zoom");
+const v = require("./visualiser.js");
 
 /**
  * Abstraction over the cytoscape canvas.  Handles interaction between the graph
@@ -1049,17 +1048,17 @@ class Graph {
    */
   selectPrevEle() {
 
-    let num = this.cy.$(".input").data("num");
+    let num = parseInt($(".input").attr("num"));
     this.intercepted = false;
     this.clear();
 
-    num += 1;
+    num -= 1;
     if (num === 0)
       num = this.length;
     if (num > this.length)
       num = 1;
 
-    const ele = this.cy.$(`[num = ${num}]`);
+    const ele = $(`[num = ${num}]`);
     this.editing = ele;
     if (ele.length)
       this.showEditLabelBox(ele);
@@ -1071,17 +1070,17 @@ class Graph {
    */
   selectNextEle() {
 
-    let num = this.cy.$(".input").data("num");
+    let num = parseInt($(".input").attr("num"));
     this.intercepted = false;
     this.clear();
 
-    num -= 1;
+    num += 1;
     if (num === 0)
       num = this.length;
     if (num > this.length)
       num = 1;
 
-    const ele = this.cy.$(`[num = ${num}]`);
+    const ele = $(`[num = ${num}]`);
     this.editing = ele;
     if (ele.length)
       this.showEditLabelBox(ele);
@@ -1108,7 +1107,12 @@ class Graph {
     console.log(target);
     let textElement = $('#text-' + target.attr('id'));
     let textLabel = textElement.text().replace(/[⊳⊲]/, '');
-    let textBCR = target[0].getBoundingClientRect();
+    let textBCR;
+    if(target.attr('id').includes('dep')) {
+      textBCR = textElement[0].getBoundingClientRect();
+    } else {
+      textBCR = target[0].getBoundingClientRect();
+    }
     let offsetHeight = $("#graph-svg")[0].getBoundingClientRect().y;
     let textX = textBCR.x;
     let textY = textBCR.y - offsetHeight;

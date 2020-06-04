@@ -125,7 +125,8 @@ function drawNodes() {
 			.attr("id", d.id)
 			.attr("attr", d.attr)
 			.attr("subId", d.subId)
-			.attr("class", d.classes);
+			.attr("class", d.classes)
+			.attr("num", d.num);
 
 		// Add text
 	  nodeGroup
@@ -345,7 +346,8 @@ function drawDeprels() {
 			.style("fill", "none")
 			.attr("marker-end", "url(#end)")
 			.attr("d", curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height, d.id, d.enhanced))
-			.attr("id", d.id);
+			.attr("id", d.id)
+			.attr("num", d.num);
 
 		// Add deprel label
 		_g
