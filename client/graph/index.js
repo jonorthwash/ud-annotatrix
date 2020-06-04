@@ -483,9 +483,11 @@ class Graph {
       }
     });
 
-    /*self.cy.on('cxttapend', 'node.form', e => {
-
-      const target = e.target;
+    $('.token').on('contextmenu', function() {
+      let targetNum = $(this).attr('subId');
+      console.log(targetNum);
+      // THIS is #group-[id]. But we want #form-[id].
+      let target = $('#form-' + targetNum);
 
       if (target.hasClass("locked"))
         return;
@@ -493,15 +495,15 @@ class Graph {
       self.commit();
       self.editing = target;
 
-      self.cy.$(".activated").removeClass("activated");
-      self.cy.$(".arc-source").removeClass("arc-source");
-      self.cy.$(".arc-target").removeClass("arc-target");
-      self.cy.$(".selected").removeClass("selected");
+      $(".activated").removeClass("activated");
+      $(".arc-source").removeClass("arc-source");
+      $(".arc-target").removeClass("arc-target");
+      $(".selected").removeClass("selected");
 
-      this.showEditLabelBox(target);
+      self.showEditLabelBox(target);
       self.lock(target);
 
-    });*/
+    });
 
     $('.dependency').contextmenu(function(e) {
       self.intercepted = true;
@@ -1106,6 +1108,7 @@ class Graph {
 
     target.addClass("input");
     console.log(target);
+<<<<<<< HEAD
     let textX, textY, textWidth, textHeight, textLabel;
     if(target.attr("id").includes("pos")) {
       let textElement = $("#text-" + target.attr("id"));
@@ -1131,6 +1134,16 @@ class Graph {
       textWidth = textBCR.width;
       textHeight = textBCR.height;
     }
+=======
+    let textElement = $('#text-' + target.attr('id'));
+    let textLabel = textElement.text().replace(/[⊳⊲]/, '');
+    let textBCR = target[0].getBoundingClientRect();
+    let offsetHeight = $("#graph-svg")[0].getBoundingClientRect().y;
+    let textX = textBCR.x;
+    let textY = textBCR.y - offsetHeight;
+    let textWidth = textBCR.width;
+    let textHeight = textBCR.height;
+>>>>>>> Added editing forms.
     
 
     // TODO: rank the labels + make the style better

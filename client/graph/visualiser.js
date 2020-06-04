@@ -101,7 +101,7 @@ function drawNodes() {
 			.append("svg") 
 			.attr("id", "token-" + d.subId)
 			.attr("width", rectWidth)
-			.attr("height", nodeHeight + "px")
+			.attr("height", nodeHeight)
 			//.attr("class", "token")
 			.attr("y", 100)
 			.style("overflow", "visible")
@@ -360,6 +360,7 @@ function drawDeprels() {
 					((ypos1 - height)) +
 					")"
 			)
+			.attr("y", (d.label.replace(/[⊳⊲]/, '') == '' ? -2 : -1))
 			.attr("text-anchor", "middle")
 			.attr("dominant-baseline", "central");
 		});
