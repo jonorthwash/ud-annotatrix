@@ -490,24 +490,34 @@ function drawSuperTokens() {
 		}
 		let t1, t2;
 		let format = _graph.app.corpus.format;
+		// Get the indices for beginning of the multiword
+		let index = d.token._analyses[0]._subTokens[0].indices;
 
 		if (format == "CoNLL-U") {
-			t1 = _graph.presentationId[d.conlluId.split('-')[0]];
-			t2 = _graph.presentationId[d.conlluId.split('-')[1]];
+			t1 = _graph.presentationId[index.conllu];
+			
+		}
+		else if (format == "CG3") {
+			t1 = _graph.presentationId[index.cg3];
 		}
 		else {
-			t1 = _graph.presentationId[parseInt(d.absoluteId) + 1];
-			t2 = t1 + d.len - 1;
+			t1 = _graph.presentationId[index.absolute];
 		}
-		/*else {
-			
-		}*/
-		
+
+		t2 = t1 + d.len - 1;
 		console.log(t1, t2);
 
-		let x1 = parseInt($("#token-" + t1).attr("x")) - 20;
-		let x2 = parseInt($("#token-" + t2).attr("x")) + 20;
-		let width2 = parseInt($("#token-" + t2).attr("width"));
+		let x1, x2, width2;
+		if(_graph.app.corpus.is_ltr) {
+			x1 = parseInt($("#token-" + t1).attr("x")) - 20;
+			x2 = parseInt($("#token-" + t2).attr("x")) + 20;
+			width2 = parseInt($("#token-" + t2).attr("width"));
+		}
+		else {
+			x1 = parseInt($("#token-" + t2).attr("x")) - 20;
+			x2 = parseInt($("#token-" + t1).attr("x")) + 20;
+			width2 = parseInt($("#token-" + t1).attr("width"));
+		}
 		console.log(x1, x2);
 		let end = x2 + width2;
 

@@ -149,6 +149,7 @@ class Graph {
           token: token,
           conlluId: token.indices.conllu,
           absoluteId: token.indices.absolute,
+          cg3Id: token.indices.cg3,
           len: token._analyses[0]._subTokens.length,
           subId: mwTokenNum,
           classes: 'multiword'
