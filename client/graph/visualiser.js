@@ -41,7 +41,6 @@ function run() {
 		.attr("id", "graph-svg")
 	  .style("background", "white")
 	  .style("font-family", "Arial")
-	  .style("font-size", "25")
 		.call(zoom)
 	  .on("dblclick.zoom", null);
 
@@ -102,7 +101,7 @@ function drawNodes() {
 			.append("svg") 
 			.attr("id", "token-" + d.subId)
 			.attr("width", rectWidth)
-			.attr("height", nodeHeight)
+			.attr("height", nodeHeight + "px")
 			//.attr("class", "token")
 			.attr("y", 100)
 			.style("overflow", "visible")

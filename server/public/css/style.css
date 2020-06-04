@@ -1087,6 +1087,8 @@ span.dropdown-group-item-name i {
 #graph-container {
   position: absolute;
   height: 100%;
+  width: 100%;
+  font-size: 14px;
 }
 
 #status-container {
