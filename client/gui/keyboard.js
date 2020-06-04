@@ -102,7 +102,7 @@ function keyup(app, event) {
     } else if (47 < event.which && event.which < 58) { // key in 0-9
 
       const num = event.which - 48;
-      graph.zoom.to(1.5 ** (num - 5));
+      graph.v.zoomTo(1.5 ** (num - 5));
       gui.refresh();
     }
 
@@ -437,18 +437,18 @@ function keyup(app, event) {
     case (KEYS.EQUALS):
     case (KEYS.EQUALS_):
       if (event.shiftKey) {
-        graph.zoom.in();
+        graph.v.zoomIn();
       } else {
-        graph.zoom.fit();
+        graph.v.resetZoom();
       }
       break;
 
     case (KEYS.MINUS):
     case (KEYS.MINUS_):
       if (event.shiftKey) {
-        graph.zoom.out();
+        graph.v.zoomOut();
       } else {
-        graph.zoom.fit();
+        graph.v.resetZoom();
       }
       break;
 

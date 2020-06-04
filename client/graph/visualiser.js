@@ -1,8 +1,10 @@
 'use strict';
 
+let svg = null;
 let _g = null;
 let _graph = null;
 let _numNodes = 0;
+let zoom = null;
 
 /**
  * Bind the elements to the internal reference.
@@ -21,7 +23,7 @@ function run() {
 	d3.select("#graph-svg").remove();
 
 	// Create main svg which serves as a container
-	let zoom = d3
+	zoom = d3
 		.zoom()
 		.scaleExtent([0.5, 5])
 		.on("zoom", function () {
@@ -33,7 +35,7 @@ function run() {
 			_graph.config.pan = {x: d3.event.transform.x, y: d3.event.transform.y};
 		});
 
-	let svg = d3
+	svg = d3
 		.select("#graph-container")
 		.append("svg")
 		.attr("width", "100%")
@@ -561,4 +563,35 @@ function drawSuperTokens() {
 			.attr("dominant-baseline", "central");
 	});
 }
-module.exports = {bind, run};
+
+function zoomIn() {
+	svg.call(zoom.scaleBy, 1.25);
+	saveZoom();
+}
+
+function zoomOut() {
+	svg.call(zoom.scaleBy, 0.8);
+	saveZoom();
+}
+
+function resetZoom() {
+	svg.call(
+    zoom.transform,
+    d3.zoomIdentity
+	);
+	saveZoom();
+}
+
+function zoomTo(s) {
+	svg.call(zoom.transform, d3.zoomIdentity.translate(_graph.config.pan.x, _graph.config.pan.y).scale(s));
+	saveZoom();
+}
+
+function saveZoom() {
+	let transform = d3.zoomTransform(_g.node());
+	_graph.config.zoom = transform.k;
+	_graph.config.pan = {x: transform.x, y: transform.y};
+	svg.call(zoom.transform, d3.zoomIdentity.translate(transform.x, transform.y).scale(transform.k))
+}
+
+module.exports = {bind, run, zoomIn, zoomOut, resetZoom, zoomTo};

@@ -23,8 +23,7 @@ class Graph {
     this.app = app;
     this.config = config;
 
-    // pull this complexity out into its own module
-    this.zoom = zoom;
+    this.v = v;
 
     // keep track for our progress bar
     this.progress = {
@@ -261,10 +260,9 @@ class Graph {
    */
   draw() {
     // cache a ref
-    
-    const corpus = this.app.corpus;
-    v.bind(this);
-    v.run();
+
+    this.v.bind(this);
+    this.v.run();
     console.log(this.tokens);
 
     // add the mice and locks from `collab`
@@ -1108,33 +1106,6 @@ class Graph {
 
     target.addClass("input");
     console.log(target);
-<<<<<<< HEAD
-    let textX, textY, textWidth, textHeight, textLabel;
-    if(target.attr("id").includes("pos")) {
-      let textElement = $("#text-" + target.attr("id"));
-      textLabel = textElement.text();
-      let textBCR = target[0].getBoundingClientRect();
-      let offsetHeight = $("#graph-svg")[0].getBoundingClientRect().y;
-      textX = textBCR.x;
-      textY = textBCR.y - offsetHeight;
-      console.log(textBCR);
-      textWidth = textBCR.width;
-      textHeight = textBCR.height;
-    }
-    else if(target.attr("id").includes("dep")) {
-      let textElement = $("#text-" + target.attr("id"));
-      
-      // get rid of direction arrows
-      textLabel = textElement.text().replace(/[⊳⊲]/, "");
-
-      let textBCR = textElement[0].getBoundingClientRect();
-      let offsetHeight = $("#graph-svg")[0].getBoundingClientRect().y;
-      textX = textBCR.x;
-      textY = textBCR.y - offsetHeight;
-      textWidth = textBCR.width;
-      textHeight = textBCR.height;
-    }
-=======
     let textElement = $('#text-' + target.attr('id'));
     let textLabel = textElement.text().replace(/[⊳⊲]/, '');
     let textBCR = target[0].getBoundingClientRect();
@@ -1143,7 +1114,6 @@ class Graph {
     let textY = textBCR.y - offsetHeight;
     let textWidth = textBCR.width;
     let textHeight = textBCR.height;
->>>>>>> Added editing forms.
     
 
     // TODO: rank the labels + make the style better
