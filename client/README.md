@@ -107,24 +107,6 @@ Here, • denotes a control point used.
 <dt><a href="#getHeights">getHeights(deprels)</a></dt>
 <dd><p>Calculates the heights for each deprel.</p>
 </dd>
-<dt><a href="#bind">bind(graph)</a></dt>
-<dd><p>Bind the cytoscape graph to the internal reference.</p>
-</dd>
-<dt><a href="#_in">_in()</a></dt>
-<dd><p>Zoom in and save changes.</p>
-</dd>
-<dt><a href="#out">out()</a></dt>
-<dd><p>Zoom out and save changes.</p>
-</dd>
-<dt><a href="#to">to(zoom)</a></dt>
-<dd><p>Zoom to a particular value and save changes.</p>
-</dd>
-<dt><a href="#fit">fit()</a></dt>
-<dd><p>Wrapper around the cytoscape zoom-fit function (and save).</p>
-</dd>
-<dt><a href="#checkFirst">checkFirst(graph)</a></dt>
-<dd><p>Check if we have any zoom/pan saved in the config.  If not, use a default one.</p>
-</dd>
 <dt><a href="#latex">latex(app)</a> ⇒ <code>String</code></dt>
 <dd><p>Export an application instance to LaTeX format.  The client will be prompted
  to download the file.</p>
@@ -1296,57 +1278,6 @@ Calculates the heights for each deprel.
 | Param | Type | Description |
 | --- | --- | --- |
 | deprels | <code>Array</code> | Array of deprels |
-
-<a name="bind"></a>
-
-## bind(graph)
-Bind the cytoscape graph to the internal reference.
-
-**Kind**: global function  
-
-| Param | Type |
-| --- | --- |
-| graph | [<code>Graph</code>](#Graph) | 
-
-<a name="_in"></a>
-
-## \_in()
-Zoom in and save changes.
-
-**Kind**: global function  
-<a name="out"></a>
-
-## out()
-Zoom out and save changes.
-
-**Kind**: global function  
-<a name="to"></a>
-
-## to(zoom)
-Zoom to a particular value and save changes.
-
-**Kind**: global function  
-
-| Param | Type |
-| --- | --- |
-| zoom | <code>Number</code> | 
-
-<a name="fit"></a>
-
-## fit()
-Wrapper around the cytoscape zoom-fit function (and save).
-
-**Kind**: global function  
-<a name="checkFirst"></a>
-
-## checkFirst(graph)
-Check if we have any zoom/pan saved in the config.  If not, use a default one.
-
-**Kind**: global function  
-
-| Param | Type |
-| --- | --- |
-| graph | [<code>Graph</code>](#Graph) | 
 
 <a name="latex"></a>
 
