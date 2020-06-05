@@ -76,6 +76,37 @@
 <dt><a href="#rtl">rtl(n1, n2)</a></dt>
 <dd><p>Function to sort nodes with right-to-left orientation.</p>
 </dd>
+<dt><a href="#bind">bind(eles)</a></dt>
+<dd><p>Bind the elements to the internal reference.</p>
+</dd>
+<dt><a href="#run">run()</a></dt>
+<dd><p>Main function that runs all of the
+subfunctions needed to generate the graph.</p>
+</dd>
+<dt><a href="#drawNodes">drawNodes()</a></dt>
+<dd><p>Draws the nodes on the svg.</p>
+</dd>
+<dt><a href="#drawDeprels">drawDeprels()</a></dt>
+<dd><p>Draws deprels.</p>
+</dd>
+<dt><a href="#tokenDist">tokenDist(id)</a></dt>
+<dd><p>Returns the token distance for a deprel.</p>
+</dd>
+<dt><a href="#curve">curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height)</a></dt>
+<dd><p>Generates curve for deprel.
+The curve starts at initialOffset (M) and consists of a
+straight line (L) that goes into a cubic curve (C) which
+then goes into a straight line (L) to rectLeft. Then we
+leave a gap for the label and start the other half at
+rectRight (M) and the same idea follows again.
+Here, • denotes a control point used.
+        •   •   • label •   •   •</p>
+<pre><code>  •                           •
+
+•                                •</code></pre></dd>
+<dt><a href="#getHeights">getHeights(deprels)</a></dt>
+<dd><p>Calculates the heights for each deprel.</p>
+</dd>
 <dt><a href="#bind">bind(graph)</a></dt>
 <dd><p>Bind the cytoscape graph to the internal reference.</p>
 </dd>
@@ -775,7 +806,7 @@ Build a list of cytoscape elements, both nodes and edges.  This function
 
 ### graph.draw() ⇒ [<code>Graph</code>](#Graph)
 Create the cytoscape instance and populate it with the nodes and edges we
- generate in `this.eles`.
+generate in `this.eles`.
 
 **Kind**: instance method of [<code>Graph</code>](#Graph)  
 **Returns**: [<code>Graph</code>](#Graph) - (chaining)  
@@ -1185,6 +1216,86 @@ Function to sort nodes with right-to-left orientation.
 | --- | --- |
 | n1 | <code>CytoscapeNode</code> | 
 | n2 | <code>CytoscapeNode</code> | 
+
+<a name="bind"></a>
+
+## bind(eles)
+Bind the elements to the internal reference.
+
+**Kind**: global function  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| eles | <code>Array</code> | List of both nodes and edges |
+
+<a name="run"></a>
+
+## run()
+Main function that runs all of the
+subfunctions needed to generate the graph.
+
+**Kind**: global function  
+<a name="drawNodes"></a>
+
+## drawNodes()
+Draws the nodes on the svg.
+
+**Kind**: global function  
+<a name="drawDeprels"></a>
+
+## drawDeprels()
+Draws deprels.
+
+**Kind**: global function  
+<a name="tokenDist"></a>
+
+## tokenDist(id)
+Returns the token distance for a deprel.
+
+**Kind**: global function  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| id | <code>String</code> | dep_[num1]_[num2] |
+
+<a name="curve"></a>
+
+## curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height)
+Generates curve for deprel.
+The curve starts at initialOffset (M) and consists of a
+straight line (L) that goes into a cubic curve (C) which
+then goes into a straight line (L) to rectLeft. Then we
+leave a gap for the label and start the other half at
+rectRight (M) and the same idea follows again.
+Here, • denotes a control point used.
+        •   •   • label •   •   •
+
+      •                           •
+
+    •                                •
+
+**Kind**: global function  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| initialOffset | <code>int</code> | x-position of source (offset) |
+| ypos1 | <code>int</code> | y-position of tokens |
+| xpos2 | <code>int</code> | x-position of target |
+| dir | <code>int</code> | 1 or 1 |
+| rectWidth | <code>int</code> | width of label |
+| h | <code>int</code> | scaled height of deprel |
+| height | <code>int</code> | actual height of the deprel |
+
+<a name="getHeights"></a>
+
+## getHeights(deprels)
+Calculates the heights for each deprel.
+
+**Kind**: global function  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| deprels | <code>Array</code> | Array of deprels |
 
 <a name="bind"></a>
 

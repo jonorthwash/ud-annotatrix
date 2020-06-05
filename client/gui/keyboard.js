@@ -295,15 +295,15 @@ function keyup(app, event) {
       break;
 
     case (KEYS.E):
-      console.log("KEYS.E", graph.cy.$("node.form.activated"));
-      if (graph.cy.$("node.form.activated"))
-        graph.toggleIsEmpty(graph.cy.$("node.form.activated"));
+      console.log("KEYS.E", $(".activated"));
+      if ($(".activated").length)
+        graph.toggleIsEmpty($(".activated"));
       break;
 
     case (KEYS.N):
-      console.log("KEYS.N", graph.cy.$("node.form.activated"));
-      if (graph.cy.$("node.form.activated"))
-        graph.toggleIsEmpty(graph.cy.$("node.form.activated"));
+      console.log("KEYS.N", $(".activated"));
+      if ($(".activated").length)
+        graph.insertEmptyTokenAfter($(".activated"));
       break;
 
     case (KEYS.P):

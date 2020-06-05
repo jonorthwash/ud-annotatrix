@@ -778,7 +778,8 @@ class Graph {
 
   insertEmptyTokenAfter(ele) {
     const sent = this.app.corpus.current;
-    ele = ele.data("token");
+    let eleNum = ele.attr("subId");
+    ele = this.tokens[eleNum];
     console.log("inserting empty token after", ele);
 
     try {
@@ -818,11 +819,12 @@ class Graph {
 
     console.log("toggling isEmpty");
     const sent = this.app.corpus.current;
-    ele = ele.data("token");
+    let eleNum = ele.attr("subId");
+    ele = this.tokens[eleNum];
     console.log(ele.isEmpty, ele);
 
     try {
-
+      console.log("test");
       ele.setEmpty(!ele.isEmpty);
       this.unlock();
       this.app.save({
