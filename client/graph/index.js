@@ -9,7 +9,7 @@ const utils = require("../utils");
 const v = require("./visualiser.js");
 
 /**
- * Abstraction over the cytoscape canvas.  Handles interaction between the graph
+ * Abstraction over the graph editor.  Handles interaction between the graph
  *  and the user.  For example, all the event handlers are here, the methods that
  *  draw the graph, and the methods that place the mice / locks.
  *
@@ -57,9 +57,11 @@ class Graph {
     // only way really.
     this.tokens = {};
 
+    // Same as above but for multiword tokens
     this.mwTokens = {};
 
     // Maps local token numbers to global token numbers
+    // Basically so empty nodes are easier to deal with
     this.presentationId = {};
 
     // load configuration prefs
@@ -70,10 +72,10 @@ class Graph {
   // core functionality
 
   /**
-   * Build a list of cytoscape elements, both nodes and edges.  This function
+   * Build a list of elements, both nodes and edges.  This function
    *  also validates all the elements.
    *
-   * @return {Array} [{ data: Object, classes: String }]
+   * @return {Array} [Object]
    */
   get eles() {
     this.presentationId = {};
@@ -120,6 +122,7 @@ class Graph {
     // tokenNum counts just normal tokens (no supertokens and dependencies)
     let tokenNum = 0;
 
+    // Counts just supertokens
     let mwTokenNum = 0;
 
     // walk over all the tokens
@@ -139,7 +142,7 @@ class Graph {
 
       if (token.isSuperToken) {
 
-        eles.push({ // multiword label
+        eles.push({ // multiword node
           id: `multiword-${id}`,
           clump: clump,
           name: `multiword`,
@@ -171,7 +174,7 @@ class Graph {
 		    this.presentationId[id] = tokenNum;
 
         eles.push(
-          { // "form" node
+          { // "form" node, including pos data
             id: `form-${tokenNum}`,
             subId: tokenNum,
             conlluId: id,
@@ -334,16 +337,15 @@ class Graph {
       self.intercepted = true;
     });
 
+    // If there is a click on an element, intercept.
     $('#graph-svg').on('click contextmenu', '*', e => {
       self.intercepted = true;
     });
 
-    // We can't use the event handler because if we click
-    // on text, it gives us the text as the target, not
-    // the rect which we want.
+    // Click on a form
     $('.token').click(function() {
       self.intercepted = true;
-      console.log("clicked on token");
+
       let targetNum = $(this).attr('subId');
       console.log(targetNum);
       // THIS is #group-[id]. But we want #form-[id].
@@ -425,6 +427,7 @@ class Graph {
     });
 
     d3.select("#graph-svg").on("mousemove", function() {
+      // Get mouse position and un"scale/pan" it
       let position = d3.mouse(this);
       position[0] = (position[0] - self.config.pan.x) / self.config.zoom;
       position[1] = (position[1] - self.config.pan.y) / self.config.zoom;
@@ -438,6 +441,7 @@ class Graph {
 
     });
 
+    // Handle click on pos nodes
     $(".pos, .pos-label").on('click', function() {
       self.intercepted = true;
       console.log("clicked on deprel, editing now");
@@ -461,6 +465,7 @@ class Graph {
       self.lock(target);
     });
 
+    // Handles click on multiword token
     $(".multiword").on("click", e => {
 
       const target = $(e.target);
@@ -483,6 +488,7 @@ class Graph {
       }
     });
 
+    // Handles editing of forms
     $('.token').on('contextmenu', function() {
       let targetNum = $(this).attr('subId');
       console.log(targetNum);
@@ -505,6 +511,7 @@ class Graph {
 
     });
 
+    // Selecting dependencies
     $('.dependency').contextmenu(function(e) {
       self.intercepted = true;
       console.log(e.target);
@@ -537,6 +544,7 @@ class Graph {
       }
     });
 
+    // Editing deprel labels.
     $(".dependency, .deprel-label").on('click', function() {
       self.intercepted = true;
       console.log("clicked on deprel, editing now");
@@ -660,8 +668,8 @@ class Graph {
   /**
    * Try to add `src` as a head for `tar`, save changes, and update graph.
    *
-   * @param {CytoscapeNode} src
-   * @param {CytoscapeNode} tar
+   * @param {BaseToken} src
+   * @param {BaseToken} tar
    */
   makeDependency(src, tar) {
 
@@ -714,7 +722,7 @@ class Graph {
    * Try to change the deprel for the dependency given by `ele` to `deprel`, save
    *  changes, and update graph.
    *
-   * @param {CytoscapeEdge} ele
+   * @param {PathObject} ele
    * @param {String} deprel
    */
   modifyDependency(ele, deprel) {
@@ -749,7 +757,7 @@ class Graph {
   /**
    * Try to remove the dependency given by `ele`, save changes, and update graph.
    *
-   * @param {CytoscapeEdge} ele
+   * @param {PathObject} ele
    */
   removeDependency(ele) {
 
@@ -816,7 +824,7 @@ class Graph {
   /**
    * Toggle whether `ele` is an empty node, save changes, and update the graph
    *
-   * @param {CytoscapeNode} ele
+   * @param {BaseToken} ele
    */
   toggleIsEmpty(ele) {
 
@@ -851,7 +859,7 @@ class Graph {
   /**
    * Try to set `ele` as the root of the sentence, save changes, and update graph.
    *
-   * @param {CytoscapeNode} ele
+   * @param {BaseToken} ele
    */
   setRoot(ele) {
 
@@ -887,14 +895,15 @@ class Graph {
   /**
    * Try to the token given by `ele` as `index`, save changes, and update graph.
    *
-   * @param {CytoscapeNode} ele
+   * @param {BaseToken} ele
    * @param {Number} index
    */
   splitToken(ele, index) {
 
     try {
-
-      this.app.corpus.current.split(ele.data("token"), index);
+      let eleNum = ele.attr("subId");
+      ele = this.tokens[eleNum];
+      this.app.corpus.current.split(ele, index);
       this.unlock();
       this.app.save({
         type: "set",
@@ -918,7 +927,7 @@ class Graph {
    * Try to the superToken given by `ele` into normal tokens save changes, and
    *  update graph.
    *
-   * @param {CytoscapeNode} ele
+   * @param {BaseToken} ele
    */
   splitSuperToken(ele) {
 
@@ -948,8 +957,8 @@ class Graph {
    * Try to combine `src` and `tar` into a superToken, save changes, and update
    *  graph.
    *
-   * @param {CytoscapeNode} src
-   * @param {CytoscapeNode} tar
+   * @param {BaseToken} src
+   * @param {BaseToken} tar
    */
   combine(src, tar) {
 
@@ -979,8 +988,8 @@ class Graph {
    * Try to merge `src` and `tar` into a single normal token, save changes, and
    *  update graph.
    *
-   * @param {CytoscapeNode} src
-   * @param {CytoscapeNode} tar
+   * @param {BaseToken} src
+   * @param {BaseToken} tar
    */
   merge(src, tar) {
 
@@ -1015,7 +1024,7 @@ class Graph {
    *  or combine).  The `previous` form is the `form-node` with `clump` one less.
    *  If there is no `previous` form, returns undefined.
    *
-   * @return {(CytoscapeCollection|undefined)}
+   * @return {(RectObject|undefined)}
    */
   getPrevForm() {
     
@@ -1034,7 +1043,7 @@ class Graph {
    *  or combine).  The `next` form is the `form-node` with `clump` one greater.
    *  If there is no `next` form, returns undefined.
    *
-   * @return {(CytoscapeCollection|undefined)}
+   * @return {(RectObject|undefined)}
    */
   getNextForm() {
 
@@ -1198,7 +1207,7 @@ class Graph {
    * Add a lock to `ele`, save it to the config, and broadcast it to the other
    *  users.
    *
-   * @param {(CytoscapeEdge|CytoscapeNode)}
+   * @param {(PathObject|RectObject)}
    */
   lock(ele) {
 

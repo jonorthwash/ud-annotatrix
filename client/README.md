@@ -44,7 +44,7 @@
 </ul>
 </dd>
 <dt><a href="#Graph">Graph</a></dt>
-<dd><p>Abstraction over the cytoscape canvas.  Handles interaction between the graph
+<dd><p>Abstraction over the graph editor.  Handles interaction between the graph
  and the user.  For example, all the event handlers are here, the methods that
  draw the graph, and the methods that place the mice / locks.</p>
 </dd>
@@ -733,7 +733,7 @@ NB: this looks a bit messy, but it should have this structure:
 <a name="Graph"></a>
 
 ## Graph
-Abstraction over the cytoscape canvas.  Handles interaction between the graph
+Abstraction over the graph editor.  Handles interaction between the graph
  and the user.  For example, all the event handlers are here, the methods that
  draw the graph, and the methods that place the mice / locks.
 
@@ -757,8 +757,8 @@ Abstraction over the cytoscape canvas.  Handles interaction between the graph
     * [.splitSuperToken(ele)](#Graph+splitSuperToken)
     * [.combine(src, tar)](#Graph+combine)
     * [.merge(src, tar)](#Graph+merge)
-    * [.getPrevForm()](#Graph+getPrevForm) ⇒ <code>CytoscapeCollection</code> \| <code>undefined</code>
-    * [.getNextForm()](#Graph+getNextForm) ⇒ <code>CytoscapeCollection</code> \| <code>undefined</code>
+    * [.getPrevForm()](#Graph+getPrevForm) ⇒ <code>RectObject</code> \| <code>undefined</code>
+    * [.getNextForm()](#Graph+getNextForm) ⇒ <code>RectObject</code> \| <code>undefined</code>
     * [.selectPrevEle()](#Graph+selectPrevEle)
     * [.selectNextEle()](#Graph+selectNextEle)
     * [.flashTokenSplitInput()](#Graph+flashTokenSplitInput)
@@ -779,11 +779,11 @@ Abstraction over the cytoscape canvas.  Handles interaction between the graph
 <a name="Graph+eles"></a>
 
 ### graph.eles ⇒ <code>Array</code>
-Build a list of cytoscape elements, both nodes and edges.  This function
+Build a list of elements, both nodes and edges.  This function
  also validates all the elements.
 
 **Kind**: instance property of [<code>Graph</code>](#Graph)  
-**Returns**: <code>Array</code> - [{ data: Object, classes: String }]  
+**Returns**: <code>Array</code> - [Object]  
 <a name="Graph+draw"></a>
 
 ### graph.draw() ⇒ [<code>Graph</code>](#Graph)
@@ -833,8 +833,8 @@ Try to add `src` as a head for `tar`, save changes, and update graph.
 
 | Param | Type |
 | --- | --- |
-| src | <code>CytoscapeNode</code> | 
-| tar | <code>CytoscapeNode</code> | 
+| src | <code>BaseToken</code> | 
+| tar | <code>BaseToken</code> | 
 
 <a name="Graph+modifyDependency"></a>
 
@@ -846,7 +846,7 @@ Try to change the deprel for the dependency given by `ele` to `deprel`, save
 
 | Param | Type |
 | --- | --- |
-| ele | <code>CytoscapeEdge</code> | 
+| ele | <code>PathObject</code> | 
 | deprel | <code>String</code> | 
 
 <a name="Graph+removeDependency"></a>
@@ -858,7 +858,7 @@ Try to remove the dependency given by `ele`, save changes, and update graph.
 
 | Param | Type |
 | --- | --- |
-| ele | <code>CytoscapeEdge</code> | 
+| ele | <code>PathObject</code> | 
 
 <a name="Graph+toggleIsEmpty"></a>
 
@@ -869,7 +869,7 @@ Toggle whether `ele` is an empty node, save changes, and update the graph
 
 | Param | Type |
 | --- | --- |
-| ele | <code>CytoscapeNode</code> | 
+| ele | <code>BaseToken</code> | 
 
 <a name="Graph+setRoot"></a>
 
@@ -880,7 +880,7 @@ Try to set `ele` as the root of the sentence, save changes, and update graph.
 
 | Param | Type |
 | --- | --- |
-| ele | <code>CytoscapeNode</code> | 
+| ele | <code>BaseToken</code> | 
 
 <a name="Graph+splitToken"></a>
 
@@ -891,7 +891,7 @@ Try to the token given by `ele` as `index`, save changes, and update graph.
 
 | Param | Type |
 | --- | --- |
-| ele | <code>CytoscapeNode</code> | 
+| ele | <code>BaseToken</code> | 
 | index | <code>Number</code> | 
 
 <a name="Graph+splitSuperToken"></a>
@@ -904,7 +904,7 @@ Try to the superToken given by `ele` into normal tokens save changes, and
 
 | Param | Type |
 | --- | --- |
-| ele | <code>CytoscapeNode</code> | 
+| ele | <code>BaseToken</code> | 
 
 <a name="Graph+combine"></a>
 
@@ -916,8 +916,8 @@ Try to combine `src` and `tar` into a superToken, save changes, and update
 
 | Param | Type |
 | --- | --- |
-| src | <code>CytoscapeNode</code> | 
-| tar | <code>CytoscapeNode</code> | 
+| src | <code>BaseToken</code> | 
+| tar | <code>BaseToken</code> | 
 
 <a name="Graph+merge"></a>
 
@@ -929,12 +929,12 @@ Try to merge `src` and `tar` into a single normal token, save changes, and
 
 | Param | Type |
 | --- | --- |
-| src | <code>CytoscapeNode</code> | 
-| tar | <code>CytoscapeNode</code> | 
+| src | <code>BaseToken</code> | 
+| tar | <code>BaseToken</code> | 
 
 <a name="Graph+getPrevForm"></a>
 
-### graph.getPrevForm() ⇒ <code>CytoscapeCollection</code> \| <code>undefined</code>
+### graph.getPrevForm() ⇒ <code>RectObject</code> \| <code>undefined</code>
 Get the `previous` form relative to the activated form (no wrapping).  This
  is useful for when we want to get the neighbors of a node (e.g. for merge
  or combine).  The `previous` form is the `form-node` with `clump` one less.
@@ -943,7 +943,7 @@ Get the `previous` form relative to the activated form (no wrapping).  This
 **Kind**: instance method of [<code>Graph</code>](#Graph)  
 <a name="Graph+getNextForm"></a>
 
-### graph.getNextForm() ⇒ <code>CytoscapeCollection</code> \| <code>undefined</code>
+### graph.getNextForm() ⇒ <code>RectObject</code> \| <code>undefined</code>
 Get the `next` form relative to the activated form (no wrapping).  This
  is useful for when we want to get the neighbors of a node (e.g. for merge
  or combine).  The `next` form is the `form-node` with `clump` one greater.
@@ -1001,7 +1001,7 @@ Add a lock to `ele`, save it to the config, and broadcast it to the other
 
 | Param | Type |
 | --- | --- |
-| ele | <code>CytoscapeEdge</code> \| <code>CytoscapeNode</code> | 
+| ele | <code>PathObject</code> \| <code>RectObject</code> | 
 
 <a name="Graph+unlock"></a>
 
