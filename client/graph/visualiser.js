@@ -276,13 +276,14 @@ function drawDeprels() {
 		let c3x = c2x - dir * hor * slant * 0.7;
 		let c4x = c3x - dir * hor * slant * 0.7;
 		let spacing = 30;
+		let shift = 2 * c4x - xpos2 - initialOffset - (dir * rectWidth);
 		if (dir == -1) {
 			if (rectLeft < c4x) {
-				return c4x - rectLeft + spacing;
+				return shift + spacing;
 			}
 		} else {
 			if (rectLeft > c4x) {
-				return rectLeft - c4x + spacing;
+				return -shift + spacing;
 			}
 		}
 		return 0;
@@ -306,6 +307,7 @@ function drawDeprels() {
 		let dir = Math.sign(xpos1 - xpos2); // -1 if deprel going right, else 1
 
 		let shift = needShift(d, xpos1, xpos2, rectWidth, heights[d.id]);
+		console.log(d, shift);
 		if(shift != 0) {
 				shiftTokens(shift, d.targetNum, dir);
 		}

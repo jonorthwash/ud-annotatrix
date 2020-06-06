@@ -75,19 +75,19 @@ function png(app) {
   console.log(html);
   let imgsrc = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(html)));
   console.log(imgsrc);
+  var canvas = document.createElement("canvas");
+  var context = canvas.getContext("2d");
   let image = new Image();
   image.src = imgsrc;
+  let w = d3.select("#graph-svg").node().clientWidth;
+  let h = d3.select("#graph-svg").node().clientHeight;
+  image.width = w;
+  image.height = h;
   image.onload = function () {
     console.log(image);
     console.log(image.width, image.height);
-    let w = d3.select("#graph-svg").node().clientWidth;
-    let h = d3.select("#graph-svg").node().clientHeight;
-    var canvas = document.createElement('canvas');
-    canvas.width = w;
-    canvas.height = h;
-    var context = canvas.getContext('2d');
     context.drawImage(image, 0, 0);
-    let href = canvas.toDataURL('image/png');
+    let href = canvas.toDataURL("image/png");
     console.log(href);
     const link = $("<a>").attr("download", `${app.corpus.filename}.png`).attr("href", href);
     $("body").append(link);
