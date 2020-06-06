@@ -157,7 +157,6 @@ class Graph {
         });
 
         this.mwTokens[mwTokenNum] = token;
-        console.log("multiowrd", token);
 
       } else {
 
@@ -250,7 +249,6 @@ class Graph {
     });
 
     this.length = num;
-    console.log("PID: ", this.presentationId);
     return eles;
   }
 
@@ -265,7 +263,6 @@ class Graph {
 
     this.v.bind(this);
     this.v.run();
-    console.log(this.tokens);
 
     // add the mice and locks from `collab`
     this.drawMice();
@@ -324,8 +321,6 @@ class Graph {
     // Note: this triggers after everything else. Also, we call unbind
     // because event handlers would otherwise stack on #mute.
     $('#graph-svg, #mute').unbind().on('click contextmenu', function(e) {
-      console.log(e.target);
-      console.log("svg clicked", self.intercepted);
       self.save();
       self.clear();
       self.intercepted = false;
@@ -347,10 +342,8 @@ class Graph {
       self.intercepted = true;
 
       let targetNum = $(this).attr('subId');
-      console.log(targetNum);
       // THIS is #group-[id]. But we want #form-[id].
       let target = $('#form-' + targetNum);
-      console.log(target);
       if (target.hasClass('locked'))
         return;
       if (self.moving_dependency) {
@@ -365,7 +358,6 @@ class Graph {
         self.moving_dependency = false;
 
         const newEdge = $('#dep_' + targetNum + '_' + sourceNum);
-        console.log('#dep_' + targetNum + '_' + sourceNum);
         // right click the new edge and lock it
         newEdge.trigger('contextmenu');
         self.moving_dependency = true;
@@ -444,7 +436,6 @@ class Graph {
     // Handle click on pos nodes
     $(".pos, .pos-label").on('click', function() {
       self.intercepted = true;
-      console.log("clicked on deprel, editing now");
       // If we click on the text, we want to convert it to the deprel id
       let targetId = $(this).attr('id').replace('text-','');
 
@@ -491,7 +482,6 @@ class Graph {
     // Handles editing of forms
     $('.token').on('contextmenu', function() {
       let targetNum = $(this).attr('subId');
-      console.log(targetNum);
       // THIS is #group-[id]. But we want #form-[id].
       let target = $('#form-' + targetNum);
 
@@ -514,7 +504,6 @@ class Graph {
     // Selecting dependencies
     $('.dependency').contextmenu(function(e) {
       self.intercepted = true;
-      console.log(e.target);
       const target = $(e.target);
       let targetId = $(this).attr('id');
       let arcSource = targetId.split('_')[2];
@@ -547,7 +536,6 @@ class Graph {
     // Editing deprel labels.
     $(".dependency, .deprel-label").on('click', function() {
       self.intercepted = true;
-      console.log("clicked on deprel, editing now");
       // If we click on the text, we want to convert it to the deprel id
       let targetId = $(this).attr('id').replace('text-','');
 
@@ -835,7 +823,6 @@ class Graph {
     console.log(ele.isEmpty, ele);
 
     try {
-      console.log("test");
       ele.setEmpty(!ele.isEmpty);
       this.unlock();
       this.app.save({
@@ -1118,7 +1105,6 @@ class Graph {
   showEditLabelBox(target) {
 
     target.addClass("input");
-    console.log(target);
     let textElement = $('#text-' + target.attr('id'));
     let textLabel = textElement.text().replace(/[⊳⊲]/, '');
     let textBCR;

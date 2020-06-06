@@ -22,7 +22,7 @@ function bind(graph) {
 function run() {
 	d3.select("#graph-svg").remove();
 
-	// Create main svg which serves as a container
+	// Create zoom object
 	zoom = d3
 		.zoom()
 		.scaleExtent([0.5, 5])
@@ -35,6 +35,7 @@ function run() {
 			_graph.config.pan = {x: d3.event.transform.x, y: d3.event.transform.y};
 		});
 
+	// Create main svg which serves as a container
 	svg = d3
 		.select("#graph-container")
 		.append("svg")
@@ -52,6 +53,7 @@ function run() {
 		.attr("id", "graph-g")
 		.attr("transform", "translate(" + _graph.config.pan.x + "," + _graph.config.pan.y + ") scale(" + _graph.config.zoom + ")");
 
+	// Align the current zoom to the saved zoom
 	svg.call(zoom.transform, d3.zoomIdentity.translate(_graph.config.pan.x, _graph.config.pan.y).scale(_graph.config.zoom))
 
 	drawNodes();
@@ -61,6 +63,7 @@ function run() {
 	// Lower the pos-edge below the token and the pos label
 	d3.selectAll(".pos-edge").lower();
 
+	// Raise dependencies above supertoken labels
 	d3.selectAll(".dependency").raise();
 
 	// We want the text to be on top of everything else
@@ -75,8 +78,8 @@ function run() {
  */
 function drawNodes() {
 	let currentX = 200;
-	let spacing = 50;
-	let nodeHeight = 55;
+	let spacing = 50; // How far nodes are aparts
+	let nodeHeight = 55; // Height of nodes
 	_numNodes = 0;
 	console.log(_graph.eles);
 	let el = _graph.app.corpus.is_ltr ? _graph.eles : _graph.eles.reverse();
@@ -85,7 +88,7 @@ function drawNodes() {
 	  if(!d.classes.includes("form")) {
 			return;
 		}
-
+		// Classes for form label
 		let textClass = 'form-label' + d.classes.replace('form', '');
 
 		// Find sizing of the node label
@@ -97,18 +100,17 @@ function drawNodes() {
 		let rectWidth = Math.max(40, textElement.node().getComputedTextLength() + 10);
 		textElement.remove();
 
-		// we use <svg> as a instead of <g> because <g> can only use transform and not x/y attr.
-		// perfomance-wise, they are basically the same.
+		// tokenGroup houses everything related to the current form
 		let tokenGroup = _g
 			.append("svg") 
 			.attr("id", "token-" + d.subId)
 			.attr("width", rectWidth)
 			.attr("height", nodeHeight)
-			//.attr("class", "token")
 			.attr("y", 100)
 			.style("overflow", "visible")
 			.style("cursor", "pointer");
 
+		// nodeGroup houses the form
 	  let nodeGroup = tokenGroup
 			.append("g")
 			.attr("id", "group-" + d.subId)
@@ -146,6 +148,7 @@ function drawNodes() {
 			.attr("y", 45)
 			.attr("text-anchor", "middle");
 
+		// Calculate sizing of pos label
 		let posTextElement = _g
 			.append("text")
 			.text(d.posLabel);
@@ -153,6 +156,7 @@ function drawNodes() {
 		let posWidth = Math.max(40, posTextElement.node().getComputedTextLength() + 10);
 		posTextElement.remove();
 
+		// posGroup houses the pos elements
 		let posGroup = tokenGroup
 			.append("svg")
 			.attr("x", rectWidth/2-posWidth/2)
@@ -161,6 +165,7 @@ function drawNodes() {
 			.attr("height", 30)
 			.style("overflow", "visible");
 
+		// Add pos form
 		posGroup
 			.append("rect")
 			.attr("width", posWidth)
@@ -172,6 +177,7 @@ function drawNodes() {
 			.attr("rx", 5)
 			.attr("ry", 5);
 
+		// Add pos text
 		posGroup
 			.append("text")
 			.attr("x", "50%")
@@ -182,6 +188,7 @@ function drawNodes() {
 			.attr("text-anchor", "middle")
 			.attr("dominant-baseline", "central");
 
+		// Add line connect form to pos
 		tokenGroup
 			.append("line")
 			.attr("x1", rectWidth/2)
@@ -220,23 +227,11 @@ function drawDeprels() {
 		.append("path")
 		.attr("d", "M 1 1 L 3 2 L 1 3 Z");
 
-	markerDef
-		.append("marker")
-		.attr("id", "selectedend")
-		.attr("viewBox", "0 -5 10 10")
-		.attr("refX", "2")
-		.attr("refY", "2")
-		.attr("markerWidth", "15")
-		.attr("markerHeight", "15")
-		.attr("orient", "auto")
-		.style("fill", "#D856FC")
-		.append("path")
-		.attr("d", "M 1 1 L 3 2 L 1 3 Z");
-
 	// Create a list of deprels
 	let deprels = [];
 	let enhancedDeprels = [];
 	let nonEnhDeprels = []
+
 	_graph.eles.forEach((d) => {
 		if(!d.classes.includes("dependency")) {
 			return;
@@ -259,8 +254,8 @@ function drawDeprels() {
 
 	let edgeHeight = 65; // how high the height increments by at each level
 
+	// Shift tokens in the direction of dir
 	function shiftTokens(shift, target, dir) {
-		console.log(target);
 		while ($("#token-" + target).length) {
 			let curX = d3.select("#token-" + target).attr("x");
 			d3.select("#token-" + target).attr("x", parseInt(curX) - dir * shift);
@@ -268,6 +263,8 @@ function drawDeprels() {
 		}
 	} 
 
+	// Calculate how much the ending token has to shift by
+	// to accomodate for the deprel.
 	function needShift(d, xpos1, xpos2, rectWidth, height) {
 		let slant = 0.15;
 		let hor = Math.min(tokenDist(d.id), height) * 100;
@@ -309,12 +306,11 @@ function drawDeprels() {
 		let dir = Math.sign(xpos1 - xpos2); // -1 if deprel going right, else 1
 
 		let shift = needShift(d, xpos1, xpos2, rectWidth, heights[d.id]);
-		console.log(d, shift);
 		if(shift != 0) {
 				shiftTokens(shift, d.targetNum, dir);
 		}
 	});
-	console.log("done shifting tokens");
+
 	deprels.forEach((d) => {
 		let h = heights[d.id];
 		let xpos1 = parseInt($("#"+d.source).attr("x")) + parseInt($("#"+d.source).attr("width")) / 2;
@@ -486,7 +482,9 @@ function getHeights(deprels) {
   return finalHeights;
 }
 
-
+/**
+ * Draw supertokens.
+ */
 function drawSuperTokens() {
 	_graph.eles.forEach((d) => {
 		if(!d.classes.includes("multiword")) {
@@ -509,9 +507,9 @@ function drawSuperTokens() {
 		}
 
 		t2 = t1 + d.len - 1;
-		console.log(t1, t2);
 
 		let x1, x2, width2;
+		// If ltr, we calculate the x-positions differently
 		if(_graph.app.corpus.is_ltr) {
 			x1 = parseInt($("#token-" + t1).attr("x")) - 20;
 			x2 = parseInt($("#token-" + t2).attr("x")) + 20;
@@ -522,9 +520,9 @@ function drawSuperTokens() {
 			x2 = parseInt($("#token-" + t1).attr("x")) + 20;
 			width2 = parseInt($("#token-" + t1).attr("width"));
 		}
-		console.log(x1, x2);
 		let end = x2 + width2;
 
+		// Calculate sizing of supertoken label
 		let mwTextElement = _g
 			.append("text")
 			.text(d.label);
@@ -532,6 +530,7 @@ function drawSuperTokens() {
 		let mwWidth = mwTextElement.node().getComputedTextLength() + 10;
 		mwTextElement.remove();
 
+		// Add supertoken
 		_g
 			.append("rect")
 			.attr("width", end - x1)
@@ -544,6 +543,7 @@ function drawSuperTokens() {
 			.attr("ry", 5)
 			.style("cursor", "pointer");
 
+		// mwGroup is houses the supertoken label elements
 		let mwGroup = _g
 			.append("svg")
 			.attr("x", (end + x1 - mwWidth) / 2)
@@ -552,11 +552,13 @@ function drawSuperTokens() {
 			.attr("height", 20)
 			.style("overflow", "visible");
 
+		// Add label
 		mwGroup.append("rect")
 			.attr("width", mwWidth)
 			.attr("height", 20)
 			.attr("class", "multiword-label");
 
+		// Add label text
 		mwGroup.append("text")
 			.attr("x", "50%")
 			.attr("y", "50%")
@@ -596,6 +598,10 @@ function saveZoom() {
 	svg.call(zoom.transform, d3.zoomIdentity.translate(transform.x, transform.y).scale(transform.k))
 }
 
+/**
+ * Draw mouse on the svg.
+ * @param {MouseObject} mouse 
+ */
 function drawMouse(mouse) {
 	const id = mouse.id.replace(/[#:]/g, "_");
 	if (!$(`#${id}.mouse`).length) {

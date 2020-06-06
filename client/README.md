@@ -107,6 +107,12 @@ Here, • denotes a control point used.
 <dt><a href="#getHeights">getHeights(deprels)</a></dt>
 <dd><p>Calculates the heights for each deprel.</p>
 </dd>
+<dt><a href="#drawSuperTokens">drawSuperTokens()</a></dt>
+<dd><p>Draw supertokens.</p>
+</dd>
+<dt><a href="#drawMouse">drawMouse(mouse)</a></dt>
+<dd><p>Draw mouse on the svg.</p>
+</dd>
 <dt><a href="#latex">latex(app)</a> ⇒ <code>String</code></dt>
 <dd><p>Export an application instance to LaTeX format.  The client will be prompted
  to download the file.</p>
@@ -1278,6 +1284,23 @@ Calculates the heights for each deprel.
 | Param | Type | Description |
 | --- | --- | --- |
 | deprels | <code>Array</code> | Array of deprels |
+
+<a name="drawSuperTokens"></a>
+
+## drawSuperTokens()
+Draw supertokens.
+
+**Kind**: global function  
+<a name="drawMouse"></a>
+
+## drawMouse(mouse)
+Draw mouse on the svg.
+
+**Kind**: global function  
+
+| Param | Type |
+| --- | --- |
+| mouse | <code>MouseObject</code> | 
 
 <a name="latex"></a>
 
