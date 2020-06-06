@@ -37,8 +37,8 @@ class Server {
           this.load();
         },
         error: data => {
-          console.info("AJAX connect failed with response:",
-                       data) this.app.gui.status.error("unable to connect to server");
+          console.info("AJAX connect failed with response:", data);
+          this.app.gui.status.error("unable to connect to server");
 
           const serial = utils.storage.load();
           if (serial)

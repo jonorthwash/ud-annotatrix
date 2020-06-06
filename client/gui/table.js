@@ -166,7 +166,8 @@ class Table {
         .find(".fa")
         .removeClass("fa-angle-double-left fa-angle-double-right");
 
-    console.log("refresh table") this.gui.config.column_visibilities.forEach((vis, i) => {
+    console.log("refresh table");
+    this.gui.config.column_visibilities.forEach((vis, i) => {
       const column = $(`#table-data [col-id="${i}"]`);
 
       console.log(i, vis, column)
