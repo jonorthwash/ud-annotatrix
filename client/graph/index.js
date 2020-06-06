@@ -266,7 +266,7 @@ class Graph {
 
     // add the mice and locks from `collab`
     this.drawMice();
-    //this.setLocks();
+    this.setLocks();
 
     // check if we had something locked already before we redrew the graph
     if (config.locked_index === this.app.corpus.index) {
@@ -425,7 +425,6 @@ class Graph {
     });
 
     d3.select("#graph-svg").on("mousemove", function() {
-      //console.log("mousemoving", e.pageX, e.pageY)
       let position = d3.mouse(this);
       position[0] = (position[0] - self.config.pan.x) / self.config.zoom;
       position[1] = (position[1] - self.config.pan.y) / self.config.zoom;
@@ -1180,19 +1179,19 @@ class Graph {
    */
   setLocks() {
 
-    /*this.cy.$(".locked")
-        .removeClass("locked")
-        .data("locked_by", null)
-        .css("background-color", "")
-        .css("line-color", "");
+    $(".locked")
+      .removeClass("locked")
+      .data("locked_by", null)
+      .css("background-color", "")
+      .css("line-color", "");
 
     this.app.collab.getLocks().forEach(lock => {
-      this.cy.$("#" + lock.locked)
-          .addClass("locked")
-          .data("locked_by", lock.id)
-          .css("background-color", "#" + lock.color)
-          .css("line-color", "#" + lock.color);
-    });*/
+      $("#" + lock.locked)
+        .addClass("locked")
+        .data("locked_by", lock.id)
+        .css("background-color", "#" + lock.color)
+        .css("line-color", "#" + lock.color);
+    });
   }
 
   /**
