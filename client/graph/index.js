@@ -265,7 +265,7 @@ class Graph {
     console.log(this.tokens);
 
     // add the mice and locks from `collab`
-    //this.drawMice();
+    this.drawMice();
     //this.setLocks();
 
     // check if we had something locked already before we redrew the graph
@@ -424,16 +424,20 @@ class Graph {
       }
     });
 
-    /*this.cy.on("mousemove", e => {
+    d3.select("#graph-svg").on("mousemove", function() {
+      //console.log("mousemoving", e.pageX, e.pageY)
+      let position = d3.mouse(this);
+      position[0] = (position[0] - self.config.pan.x) / self.config.zoom;
+      position[1] = (position[1] - self.config.pan.y) / self.config.zoom;
       // send out a 'move mouse' event at most every `mouse_move_delay` msecs
       if (self.app.initialized && !self.mouseBlocked && self.app.online)
-        self.app.socket.broadcast("move mouse", e.position);
+        self.app.socket.broadcast("move mouse", {"x": position[0], "y": position[1]});
 
       // enforce the delay
       self.mouseBlocked = true;
       setTimeout(() => { self.mouseBlocked = false; }, config.mouse_move_delay);
 
-    });*/
+    });
 
     $(".pos, .pos-label").on('click', function() {
       self.intercepted = true;
@@ -1166,12 +1170,7 @@ class Graph {
    */
   drawMice() {
     this.app.collab.getMouseNodes().forEach(mouse => {
-      const id = mouse.id.replace(/[#:]/g, "_");
-
-      if (!this.cy.$(`#${id}.mouse`).length)
-        this.cy.add({data: {id: id}, classes: "mouse"});
-
-      this.cy.$(`#${id}.mouse`).position(mouse.position).css("background-color", "#" + mouse.color);
+      this.v.drawMouse(mouse);
     });
   }
 
