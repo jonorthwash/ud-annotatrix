@@ -67,26 +67,25 @@ function png(app) {
     return;
 
   let imgsrc = getSVG();
-  var canvas = document.createElement("canvas");
-  var context = canvas.getContext("2d");
-  let image = new Image();
-  
+
   let w = d3.select("#graph-svg").node().clientWidth;
   let h = d3.select("#graph-svg").node().clientHeight;
-  canvas.width = w;
-  canvas.height = h;
-  console.log("test");
-  console.log(image);
+
+  let image = new Image(w, h);
+
   image.onload = function() {
-    context.clearRect(0, 0, w, h);
-    console.log(image.width, image.height);
-    context.drawImage(image, 0, 0);
-    let href = canvas.toDataURL("image/png");
+    var canvas = document.createElement("canvas");
+    var context = canvas.getContext("2d");
+    canvas.width = w;
+    canvas.height = h;
+    context.drawImage(image, 0, 0, w, h);
+    let href = canvas.toDataURL();
     console.log(href);
     const link = $("<a>").attr("download", `${app.corpus.filename}.png`).attr("href", href);
     $("body").append(link);
-    //link[0].click();
+    link[0].click();
   }
+
   image.src = imgsrc;
   console.log("end");
 }
