@@ -65,26 +65,20 @@ function png(app) {
 
   if (!app.graph.length)
     return;
-  console.log(d3);
 
-  let html = d3
-    .select("#graph-svg")
-    .attr("version", 1.1)
-    .attr("xmlns", "http://www.w3.org/2000/svg")
-    .node().parentNode.innerHTML;
-  console.log(html);
-  let imgsrc = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(html)));
-  console.log(imgsrc);
+  let imgsrc = getSVG();
   var canvas = document.createElement("canvas");
   var context = canvas.getContext("2d");
   let image = new Image();
-  image.src = imgsrc;
+  
   let w = d3.select("#graph-svg").node().clientWidth;
   let h = d3.select("#graph-svg").node().clientHeight;
-  image.width = w;
-  image.height = h;
-  image.onload = function () {
-    console.log(image);
+  canvas.width = w;
+  canvas.height = h;
+  console.log("test");
+  console.log(image);
+  image.onload = function() {
+    context.clearRect(0, 0, w, h);
     console.log(image.width, image.height);
     context.drawImage(image, 0, 0);
     let href = canvas.toDataURL("image/png");
@@ -93,8 +87,8 @@ function png(app) {
     $("body").append(link);
     //link[0].click();
   }
-  
-  return;
+  image.src = imgsrc;
+  console.log("end");
 }
 
 /**
@@ -105,13 +99,64 @@ function png(app) {
  */
 function svg(app) {
 
-  if (!app.graph.cy)
+  if (!app.graph.length)
     return;
+  let href = getSVG();
+  const link = $("<a>").attr("download", `${app.corpus.filename}.svg`).attr("href", href);
+  $("body").append(link);
+  link[0].click();
+}
 
-  const ctx = new C2S(app.graph.cy.width(), app.graph.cy.height());
-  app.graph.cy.renderer().renderTo(ctx); // DEBUG: this doesn't work
+/**
+ * 
+ */
+function getSVG() {
+  addInlineStyling([
+    {el: '.form', properties: ['fill', 'stroke', 'stroke-width']}, 
+    {el: '.form.root', properties: ['stroke-width']}, 
+    {el: '.form.activated', properties: ['fill']}, 
+    {el: '.form.arc-source', properties: ['stroke']},
+    {el: '.form.arc-target', properties: ['stroke']},  
+    {el: '.form.neighbor', properties: ['fill']}, 
+    {el: '.dependency', properties: ['stroke', 'opacity']}, 
+    {el: '.dependency.selected.moving', properties: ['stroke']}, 
+    {el: '.dependency.incomplete', properties: ['stroke']}, 
+    {el: '.dependency.error', properties: ['stroke']}, 
+    {el: '.dependency.selected', properties: ['stroke']}, 
+    {el: '.deprel-label', properties: ['text-shadow']}, 
+    {el: '.form-label.root', properties: ['font-weight']}, 
+    {el: '.pos', properties: ['fill', 'stroke', 'stroke-width']}, 
+    {el: '.pos.error', properties: ['stroke']}, 
+    {el: '.multiword', properties: ['fill', 'stroke', 'stroke-width']}, 
+    {el: '.multiword.multiword-active', properties: ['fill']}, 
+    {el: '.multiword-label', properties: ['fill', 'stroke', 'stroke-width']}, 
+  ]);
+  var s = new XMLSerializer().serializeToString(d3.select("#graph-svg").node())
+  var encodedData = window.btoa(unescape(encodeURIComponent(s)));
+  var base64Data = 'data:image/svg+xml;base64,' + encodedData;
+  console.log(base64Data);
+  return base64Data;
+}
 
-  funcs.download(`${app.corpus.filename}.svg`, "image/svg+xml", ctx.getSerializedSvg());
+/**
+ * Basically inserts the css as inline, so that
+ * when it gets exported, the css is maintained.
+ */
+function addInlineStyling(elements) {
+	if(elements && elements.length) {
+		elements.forEach(function(d) {
+    	d3.selectAll(d.el).each(function(){
+        var element = this;
+        if(d.properties && d.properties.length) {
+          d.properties.forEach(function(prop) {
+              var computedStyle = getComputedStyle(element, null),
+                value = computedStyle.getPropertyValue(prop);
+              element.style[prop] = value;
+          });
+        }
+       });
+    });
+  }
 }
 
 module.exports = {

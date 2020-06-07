@@ -44,7 +44,8 @@ function run() {
 	  .attr("height", "100%")
 		.attr("id", "graph-svg")
 	  .style("background", "white")
-	  .style("font-family", "Arial")
+		.style("font-family", "Arial")
+		.style("font-size", "14px")
 		.call(zoom)
 	  .on("dblclick.zoom", null);
 

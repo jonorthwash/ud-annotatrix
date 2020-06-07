@@ -125,6 +125,12 @@ Here, • denotes a control point used.
 <dd><p>Export an application instance to SVG format.  The client will be prompted to
  download the file.</p>
 </dd>
+<dt><a href="#getSVG">getSVG()</a></dt>
+<dd></dd>
+<dt><a href="#addInlineStyling">addInlineStyling()</a></dt>
+<dd><p>Basically inserts the css as inline, so that
+when it gets exported, the css is maintained.</p>
+</dd>
 </dl>
 
 <a name="App"></a>
@@ -1338,3 +1344,14 @@ Export an application instance to SVG format.  The client will be prompted to
 | --- | --- |
 | app | [<code>App</code>](#App) | 
 
+<a name="getSVG"></a>
+
+## getSVG()
+**Kind**: global function  
+<a name="addInlineStyling"></a>
+
+## addInlineStyling()
+Basically inserts the css as inline, so that
+when it gets exported, the css is maintained.
+
+**Kind**: global function  
