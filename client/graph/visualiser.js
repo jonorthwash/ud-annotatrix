@@ -5,6 +5,7 @@ let _g = null;
 let _graph = null;
 let _numNodes = 0;
 let zoom = null;
+let rootToken = null;
 
 /**
  * Bind the elements to the internal reference.
@@ -21,7 +22,7 @@ function bind(graph) {
  */
 function run() {
 	d3.select("#graph-svg").remove();
-
+	rootToken = null;
 	// Create zoom object
 	zoom = d3
 		.zoom()
@@ -65,6 +66,7 @@ function run() {
 
 	// Raise dependencies above supertoken labels
 	d3.selectAll(".dependency").raise();
+	d3.selectAll(".root-deprel").raise();
 
 	// We want the text to be on top of everything else
 	d3.selectAll(".deprel-label").raise();
@@ -87,6 +89,9 @@ function drawNodes() {
 		// Only want nodes
 	  if(!d.classes.includes("form")) {
 			return;
+		}
+		if(d.classes.includes("root")) {
+			rootToken = d.subId;
 		}
 		// Classes for form label
 		let textClass = 'form-label' + d.classes.replace('form', '');
@@ -251,7 +256,10 @@ function drawDeprels() {
 	let heights1 = getHeights(nonEnhDeprels);
 	let heights2 = getHeights(enhancedDeprels);
 	let heights = {...heights1, ...heights2};
-
+	let highest = 1;
+	Object.values(heights1).forEach(v => {
+		highest = Math.max(highest, v);
+	})
 	let edgeHeight = 65; // how high the height increments by at each level
 
 	// Shift tokens in the direction of dir
@@ -307,11 +315,38 @@ function drawDeprels() {
 		let dir = Math.sign(xpos1 - xpos2); // -1 if deprel going right, else 1
 
 		let shift = needShift(d, xpos1, xpos2, rectWidth, heights[d.id]);
-		console.log(d, shift);
+
 		if(shift != 0) {
 				shiftTokens(shift, d.targetNum, dir);
 		}
 	});
+
+	// Create root deprel
+	if(rootToken != null) {
+		let rootx = parseInt($("#token-"+rootToken).attr("x")) + parseInt($("#token-"+rootToken).attr("width")) / 2;
+		let level = 100 - edgeHeight * highest;
+		_g
+			.append("line")
+			.attr("x1", rootx)
+			.attr("y1", level)
+			.attr("x2", rootx)
+			.attr("y2", 90)
+			.attr("class", "root-deprel")
+			.attr("marker-end", "url(#end)")
+			.style("stroke", "#111")
+			.style("opacity", "0.766")
+			.style("stroke-width", 6);
+		_g
+			.append("text")
+			.text("ROOT")
+			.attr("x", rootx)
+			.attr("y", level - 10)
+			.attr("class", "deprel-label")
+			.attr("text-anchor", "middle")
+			.attr("dominant-baseline", "central");;
+	}
+	
+
 
 	deprels.forEach((d) => {
 		let h = heights[d.id];
