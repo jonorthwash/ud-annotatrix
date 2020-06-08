@@ -80,12 +80,6 @@ span.tt {
   left: 100px;
 }*/
 
-#cy {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-}
-
 #save {
   display: none;
 }
@@ -113,6 +107,83 @@ span.tt {
   display: block;
   background-color: rgba(0,0,0,0.25);;
   z-index: 800;
+}
+
+.form {
+  fill: #7FA1FF;
+  stroke: black;
+  stroke-width: 2px;
+}
+
+.form.root {
+  stroke-width: 4px;
+}
+
+.form.activated {
+  fill: #2653c9;
+}
+
+.form.arc-source, .form.arc-target {
+  stroke: #cc22fc;
+}
+
+.form.neighbor {
+  fill: #0b2;
+}
+
+.dependency {
+  stroke: #111;
+  opacity: 0.766;
+}
+
+.dependency.selected.moving {
+  stroke: #00f;
+}
+
+.dependency.incomplete {
+  stroke: #BEBEBE;
+}
+
+.dependency.error {
+  stroke: #d11;
+}
+
+.dependency.selected {
+  stroke: #cc22fc;
+}
+
+.deprel-label {
+  text-shadow: 2px 2px 5px #575757;
+}
+
+.form-label.root {
+  font-weight: bold;
+}
+
+.pos {
+  fill: #afa2ff;
+  stroke: black;
+  stroke-width: 2px;
+}
+
+.pos.error {
+  stroke: #d11;
+}
+
+.multiword {
+  fill: #bcd2ff;
+  stroke: black;
+  stroke-width: 2px;
+}
+
+.multiword.multiword-active {
+  fill: #2653c9;
+}
+
+.multiword-label {
+  fill: #7FA1FF;
+	stroke: black;
+  stroke-width: 2px;
 }
 
 #notebox {
@@ -544,10 +615,6 @@ h4, h5, h6 {
 	display: block ;
 }
 
-.cy {
-	clear: both ;
-}
-
 .controls {
 	clear: both ;
   flex-grow: 1;
@@ -667,6 +734,7 @@ th i {
 
 #progress-container {
   height: 5px;
+  z-index: 1;
 }
 
 #progress-bar {
@@ -1004,6 +1072,13 @@ span.dropdown-group-item-name i {
 
 .custom-modal h5 {
   text-decoration: none;
+}
+
+#graph-container {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  font-size: 14px;
 }
 
 #status-container {

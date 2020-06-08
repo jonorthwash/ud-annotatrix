@@ -102,7 +102,7 @@ function keyup(app, event) {
     } else if (47 < event.which && event.which < 58) { // key in 0-9
 
       const num = event.which - 48;
-      graph.zoom.to(1.5 ** (num - 5));
+      graph.v.zoomTo(1.5 ** (num - 5));
       gui.refresh();
     }
 
@@ -275,36 +275,35 @@ function keyup(app, event) {
     return;
   }
 
-  if (graph.cy)
+  if (true)
     switch (event.which) {
     case (KEYS.DELETE):
     case (KEYS.BACKSPACE):
     case (KEYS.X):
-      if (graph.cy.$(".selected").length) {
-        graph.removeDependency(graph.cy.$(".selected"));
-        $("#graph").focus();
-      } /* else if (graph.cy.$('.supAct').length) {
-         removeSup(st);
-       }*/
+      if ($(".selected").length) {
+        graph.removeDependency($(".selected"));
+      }/* else if (graph.cy.$('.supAct').length) {
+        removeSup(st);
+      }*/
       break;
 
     case (KEYS.D):
-      if (graph.cy.$(".selected").length) {
-        graph.cy.$(".selected").toggleClass("moving");
+      if ($(".selected").length) {
+        $(".selected").toggleClass("moving");
         graph.moving_dependency = !graph.moving_dependency;
       }
       break;
 
     case (KEYS.E):
-      console.log("KEYS.E", graph.cy.$("node.form.activated"));
-      if (graph.cy.$("node.form.activated"))
-        graph.toggleIsEmpty(graph.cy.$("node.form.activated"));
+      console.log("KEYS.E", $(".activated"));
+      if ($(".activated").length)
+        graph.toggleIsEmpty($(".activated"));
       break;
 
     case (KEYS.N):
-      console.log("KEYS.N", graph.cy.$("node.form.activated"));
-      if (graph.cy.$("node.form.activated"))
-        graph.insertEmptyTokenAfter(graph.cy.$("node.form.activated"));
+      console.log("KEYS.N", $(".activated"));
+      if ($(".activated").length)
+        graph.insertEmptyTokenAfter($(".activated"));
       break;
 
     case (KEYS.P):
@@ -314,14 +313,14 @@ function keyup(app, event) {
       break;
 
     case (KEYS.R):
-      if (graph.cy.$("node.form.activated"))
-        graph.setRoot(graph.cy.$("node.form.activated"));
+      if ($(".activated").length)
+        graph.setRoot($(".activated"));
       break;
 
     case (KEYS.S):
 
-      const token = graph.cy.$(".activated");
-      const superToken = graph.cy.$(".multiword-active");
+      const token = $(".activated");
+      const superToken = $(".multiword-active");
 
       if (token.length) {
 
@@ -336,68 +335,69 @@ function keyup(app, event) {
 
     case (KEYS.M):
 
-      graph.cy.$(".form").removeClass("combine-source combine-left combine-right");
+      $(".form").removeClass("combine-source combine-left combine-right");
 
-      if (graph.cy.$(".merge-source").length) {
+      if ($(".merge-source").length) {
 
-        graph.cy.$(".neighbor").removeClass("merge-left merge-right neighbor");
+        $(".neighbor").removeClass("merge-left merge-right neighbor");
 
-        graph.cy.$(".merge-source").removeClass("merge-source").addClass("activated");
+        $(".merge-source").removeClass("merge-source").addClass("activated");
 
-        graph.lock(graph.cy.$(".activated"));
+        graph.lock($(".activated"));
 
-      } else if (graph.cy.$(".activated").length) {
+      } else if ($(".activated").length) {
 
-        if (graph.cy.$(".activated").data("type") !== "token")
+        if (!$(".activated").attr("id").includes("form"))
           break;
 
-        graph.cy.$(".activated").addClass("merge-source");
+        $(".activated").addClass("merge-source");
 
-        graph.cy.$(".neighbor").removeClass("neighbor combine-source combine-left combine-right")
+        $(".neighbor").removeClass("neighbor combine-source combine-left combine-right")
 
         const left = graph.getPrevForm();
-        if (!left.hasClass("activated") && !left.hasClass("blocked") && left.data("type") === "token")
+        if (left.length && !left.hasClass("activated") && !left.hasClass("blocked") && left.attr("id").includes("form"))
           left.addClass("neighbor").addClass("merge-left");
 
         const right = graph.getNextForm();
-        if (!right.hasClass("activated") && !right.hasClass("blocked") && right.data("type") === "token")
+        if (right.length && !right.hasClass("activated") && !right.hasClass("blocked") && right.attr("id").includes("form"))
           right.addClass("neighbor").addClass("merge-right");
 
-        graph.lock(graph.cy.$(".activated"));
+        graph.lock($(".activated"));
       }
       gui.status.refresh();
       break;
+      
 
     case (KEYS.C):
 
-      graph.cy.$(".form").removeClass("merge-source merge-left merge-right");
+      $(".form").removeClass("merge-source merge-left merge-right");
 
-      if (graph.cy.$(".combine-source").length) {
+      if ($(".combine-source").length) {
 
-        graph.cy.$(".neighbor").removeClass("combine-left combine-right neighbor");
+        $(".neighbor").removeClass("combine-left combine-right neighbor");
 
-        graph.cy.$(".combine-source").removeClass("combine-source").addClass("activated");
+        $(".combine-source").removeClass("combine-source").addClass("activated");
 
-        graph.lock(graph.cy.$(".activated"));
+        graph.lock($(".activated"));
 
-      } else if (graph.cy.$(".activated").length) {
+      } else if ($(".activated").length) {
 
-        if (graph.cy.$(".activated").data("type") !== "token")
+        if (!$(".activated").attr("id").includes("form"))
           break;
 
-        graph.cy.$(".activated").addClass("combine-source");
+        $(".activated").addClass("combine-source");
 
-        graph.cy.$(".neighbor").removeClass("neighbor merge-source merge-left merge-right")
+        $(".neighbor").removeClass("neighbor merge-source merge-left merge-right")
 
         const left = graph.getPrevForm();
-        if (!left.hasClass("activated") && !left.hasClass("blocked") && left.data("type") === "token")
+        if (left.length && !left.hasClass("activated") && !left.hasClass("blocked") && left.attr("id").includes("form"))
           left.addClass("neighbor combine-left");
 
         const right = graph.getNextForm();
-        if (!right.hasClass("activated") && !right.hasClass("blocked") && right.data("type") === "token")
+        if (right.length && !right.hasClass("activated") && !right.hasClass("blocked") && right.attr("id").includes("form"))
           right.addClass("neighbor combine-right");
 
-        graph.lock(graph.cy.$(".activated"));
+        graph.lock($(".activated"));
       }
       gui.status.refresh();
       break;
@@ -408,19 +408,13 @@ function keyup(app, event) {
       if (event.preventDefault)
         event.preventDefault();
 
-      if (graph.cy.$(".merge-left").length) {
+      if ($(".merge-left").length) {
+        const tar = $(".merge-left");
+        tar.click();
 
-        const src = graph.cy.$(".merge-source");
-        const tar = graph.cy.$(".merge-left");
-        if (!tar.hasClass("locked"))
-          graph.merge(src.data("token"), tar.data("token"));
-
-      } else if (graph.cy.$(".combine-left").length) {
-
-        const src = graph.cy.$(".combine-source");
-        const tar = graph.cy.$(".combine-left");
-        if (!tar.hasClass("locked"))
-          graph.combine(src.data("token"), tar.data("token"));
+      } else if ($(".combine-left").length) {
+        const tar = $(".combine-left");
+        tar.click();
       }
       break;
 
@@ -430,37 +424,31 @@ function keyup(app, event) {
       if (event.preventDefault)
         event.preventDefault();
 
-      if (graph.cy.$(".merge-right").length) {
+      if ($(".merge-right").length) {
+        const tar = $(".merge-right");
+        tar.click();
 
-        const src = graph.cy.$(".merge-source");
-        const tar = graph.cy.$(".merge-right");
-        if (!tar.hasClass("locked"))
-          graph.merge(src.data("token"), tar.data("token"));
-
-      } else if (graph.cy.$(".combine-right").length) {
-
-        const src = graph.cy.$(".combine-source");
-        const tar = graph.cy.$(".combine-right");
-        if (!tar.hasClass("locked"))
-          graph.combine(src.data("token"), tar.data("token"));
+      } else if ($(".combine-right").length) {
+        const tar = $(".combine-right");
+        tar.click();
       }
       break;
 
     case (KEYS.EQUALS):
     case (KEYS.EQUALS_):
       if (event.shiftKey) {
-        graph.zoom.in();
+        graph.v.zoomIn();
       } else {
-        graph.zoom.fit();
+        graph.v.resetZoom();
       }
       break;
 
     case (KEYS.MINUS):
     case (KEYS.MINUS_):
       if (event.shiftKey) {
-        graph.zoom.out();
+        graph.v.zoomOut();
       } else {
-        graph.zoom.fit();
+        graph.v.resetZoom();
       }
       break;
 

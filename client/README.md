@@ -44,7 +44,7 @@
 </ul>
 </dd>
 <dt><a href="#Graph">Graph</a></dt>
-<dd><p>Abstraction over the cytoscape canvas.  Handles interaction between the graph
+<dd><p>Abstraction over the graph editor.  Handles interaction between the graph
  and the user.  For example, all the event handlers are here, the methods that
  draw the graph, and the methods that place the mice / locks.</p>
 </dd>
@@ -67,32 +67,42 @@
  string/object.  If it can&#39;t detect one, it returns null.  If it detects one
  or more, it follows a simple resolution algorithm to pick one.</p>
 </dd>
-<dt><a href="#vertical">vertical(n1, n2)</a></dt>
-<dd><p>Function to sort nodes with vertical orientation.</p>
+<dt><a href="#bind">bind(eles)</a></dt>
+<dd><p>Bind the elements to the internal reference.</p>
 </dd>
-<dt><a href="#ltr">ltr(n1, n2)</a></dt>
-<dd><p>Function to sort nodes with left-to-right orientation.</p>
+<dt><a href="#run">run()</a></dt>
+<dd><p>Main function that runs all of the
+subfunctions needed to generate the graph.</p>
 </dd>
-<dt><a href="#rtl">rtl(n1, n2)</a></dt>
-<dd><p>Function to sort nodes with right-to-left orientation.</p>
+<dt><a href="#drawNodes">drawNodes()</a></dt>
+<dd><p>Draws the nodes on the svg.</p>
 </dd>
-<dt><a href="#bind">bind(graph)</a></dt>
-<dd><p>Bind the cytoscape graph to the internal reference.</p>
+<dt><a href="#drawDeprels">drawDeprels()</a></dt>
+<dd><p>Draws deprels.</p>
 </dd>
-<dt><a href="#_in">_in()</a></dt>
-<dd><p>Zoom in and save changes.</p>
+<dt><a href="#tokenDist">tokenDist(id)</a></dt>
+<dd><p>Returns the token distance for a deprel.</p>
 </dd>
-<dt><a href="#out">out()</a></dt>
-<dd><p>Zoom out and save changes.</p>
+<dt><a href="#curve">curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height)</a></dt>
+<dd><p>Generates curve for deprel.
+The curve starts at initialOffset (M) and consists of a
+straight line (L) that goes into a cubic curve (C) which
+then goes into a straight line (L) to rectLeft. Then we
+leave a gap for the label and start the other half at
+rectRight (M) and the same idea follows again.
+Here, • denotes a control point used.
+        •   •   • label •   •   •</p>
+<pre><code>  •                           •
+
+•                                •</code></pre></dd>
+<dt><a href="#getHeights">getHeights(deprels)</a></dt>
+<dd><p>Calculates the heights for each deprel.</p>
 </dd>
-<dt><a href="#to">to(zoom)</a></dt>
-<dd><p>Zoom to a particular value and save changes.</p>
+<dt><a href="#drawSuperTokens">drawSuperTokens()</a></dt>
+<dd><p>Draw supertokens.</p>
 </dd>
-<dt><a href="#fit">fit()</a></dt>
-<dd><p>Wrapper around the cytoscape zoom-fit function (and save).</p>
-</dd>
-<dt><a href="#checkFirst">checkFirst(graph)</a></dt>
-<dd><p>Check if we have any zoom/pan saved in the config.  If not, use a default one.</p>
+<dt><a href="#drawMouse">drawMouse(mouse)</a></dt>
+<dd><p>Draw mouse on the svg.</p>
 </dd>
 <dt><a href="#latex">latex(app)</a> ⇒ <code>String</code></dt>
 <dd><p>Export an application instance to LaTeX format.  The client will be prompted
@@ -105,6 +115,12 @@
 <dt><a href="#svg">svg(app)</a></dt>
 <dd><p>Export an application instance to SVG format.  The client will be prompted to
  download the file.</p>
+</dd>
+<dt><a href="#getSVG">getSVG()</a></dt>
+<dd></dd>
+<dt><a href="#addInlineStyling">addInlineStyling()</a></dt>
+<dd><p>Basically inserts the css as inline, so that
+when it gets exported, the css is maintained.</p>
 </dd>
 </dl>
 
@@ -720,7 +736,7 @@ NB: this looks a bit messy, but it should have this structure:
 <a name="Graph"></a>
 
 ## Graph
-Abstraction over the cytoscape canvas.  Handles interaction between the graph
+Abstraction over the graph editor.  Handles interaction between the graph
  and the user.  For example, all the event handlers are here, the methods that
  draw the graph, and the methods that place the mice / locks.
 
@@ -744,8 +760,8 @@ Abstraction over the cytoscape canvas.  Handles interaction between the graph
     * [.splitSuperToken(ele)](#Graph+splitSuperToken)
     * [.combine(src, tar)](#Graph+combine)
     * [.merge(src, tar)](#Graph+merge)
-    * [.getPrevForm()](#Graph+getPrevForm) ⇒ <code>CytoscapeCollection</code> \| <code>undefined</code>
-    * [.getNextForm()](#Graph+getNextForm) ⇒ <code>CytoscapeCollection</code> \| <code>undefined</code>
+    * [.getPrevForm()](#Graph+getPrevForm) ⇒ <code>RectObject</code> \| <code>undefined</code>
+    * [.getNextForm()](#Graph+getNextForm) ⇒ <code>RectObject</code> \| <code>undefined</code>
     * [.selectPrevEle()](#Graph+selectPrevEle)
     * [.selectNextEle()](#Graph+selectNextEle)
     * [.flashTokenSplitInput()](#Graph+flashTokenSplitInput)
@@ -766,16 +782,16 @@ Abstraction over the cytoscape canvas.  Handles interaction between the graph
 <a name="Graph+eles"></a>
 
 ### graph.eles ⇒ <code>Array</code>
-Build a list of cytoscape elements, both nodes and edges.  This function
+Build a list of elements, both nodes and edges.  This function
  also validates all the elements.
 
 **Kind**: instance property of [<code>Graph</code>](#Graph)  
-**Returns**: <code>Array</code> - [{ data: Object, classes: String }]  
+**Returns**: <code>Array</code> - [Object]  
 <a name="Graph+draw"></a>
 
 ### graph.draw() ⇒ [<code>Graph</code>](#Graph)
 Create the cytoscape instance and populate it with the nodes and edges we
- generate in `this.eles`.
+generate in `this.eles`.
 
 **Kind**: instance method of [<code>Graph</code>](#Graph)  
 **Returns**: [<code>Graph</code>](#Graph) - (chaining)  
@@ -820,8 +836,8 @@ Try to add `src` as a head for `tar`, save changes, and update graph.
 
 | Param | Type |
 | --- | --- |
-| src | <code>CytoscapeNode</code> | 
-| tar | <code>CytoscapeNode</code> | 
+| src | <code>BaseToken</code> | 
+| tar | <code>BaseToken</code> | 
 
 <a name="Graph+modifyDependency"></a>
 
@@ -833,7 +849,7 @@ Try to change the deprel for the dependency given by `ele` to `deprel`, save
 
 | Param | Type |
 | --- | --- |
-| ele | <code>CytoscapeEdge</code> | 
+| ele | <code>PathObject</code> | 
 | deprel | <code>String</code> | 
 
 <a name="Graph+removeDependency"></a>
@@ -845,7 +861,7 @@ Try to remove the dependency given by `ele`, save changes, and update graph.
 
 | Param | Type |
 | --- | --- |
-| ele | <code>CytoscapeEdge</code> | 
+| ele | <code>PathObject</code> | 
 
 <a name="Graph+toggleIsEmpty"></a>
 
@@ -856,7 +872,7 @@ Toggle whether `ele` is an empty node, save changes, and update the graph
 
 | Param | Type |
 | --- | --- |
-| ele | <code>CytoscapeNode</code> | 
+| ele | <code>BaseToken</code> | 
 
 <a name="Graph+setRoot"></a>
 
@@ -867,7 +883,7 @@ Try to set `ele` as the root of the sentence, save changes, and update graph.
 
 | Param | Type |
 | --- | --- |
-| ele | <code>CytoscapeNode</code> | 
+| ele | <code>BaseToken</code> | 
 
 <a name="Graph+splitToken"></a>
 
@@ -878,7 +894,7 @@ Try to the token given by `ele` as `index`, save changes, and update graph.
 
 | Param | Type |
 | --- | --- |
-| ele | <code>CytoscapeNode</code> | 
+| ele | <code>BaseToken</code> | 
 | index | <code>Number</code> | 
 
 <a name="Graph+splitSuperToken"></a>
@@ -891,7 +907,7 @@ Try to the superToken given by `ele` into normal tokens save changes, and
 
 | Param | Type |
 | --- | --- |
-| ele | <code>CytoscapeNode</code> | 
+| ele | <code>BaseToken</code> | 
 
 <a name="Graph+combine"></a>
 
@@ -903,8 +919,8 @@ Try to combine `src` and `tar` into a superToken, save changes, and update
 
 | Param | Type |
 | --- | --- |
-| src | <code>CytoscapeNode</code> | 
-| tar | <code>CytoscapeNode</code> | 
+| src | <code>BaseToken</code> | 
+| tar | <code>BaseToken</code> | 
 
 <a name="Graph+merge"></a>
 
@@ -916,12 +932,12 @@ Try to merge `src` and `tar` into a single normal token, save changes, and
 
 | Param | Type |
 | --- | --- |
-| src | <code>CytoscapeNode</code> | 
-| tar | <code>CytoscapeNode</code> | 
+| src | <code>BaseToken</code> | 
+| tar | <code>BaseToken</code> | 
 
 <a name="Graph+getPrevForm"></a>
 
-### graph.getPrevForm() ⇒ <code>CytoscapeCollection</code> \| <code>undefined</code>
+### graph.getPrevForm() ⇒ <code>RectObject</code> \| <code>undefined</code>
 Get the `previous` form relative to the activated form (no wrapping).  This
  is useful for when we want to get the neighbors of a node (e.g. for merge
  or combine).  The `previous` form is the `form-node` with `clump` one less.
@@ -930,7 +946,7 @@ Get the `previous` form relative to the activated form (no wrapping).  This
 **Kind**: instance method of [<code>Graph</code>](#Graph)  
 <a name="Graph+getNextForm"></a>
 
-### graph.getNextForm() ⇒ <code>CytoscapeCollection</code> \| <code>undefined</code>
+### graph.getNextForm() ⇒ <code>RectObject</code> \| <code>undefined</code>
 Get the `next` form relative to the activated form (no wrapping).  This
  is useful for when we want to get the neighbors of a node (e.g. for merge
  or combine).  The `next` form is the `form-node` with `clump` one greater.
@@ -988,7 +1004,7 @@ Add a lock to `ele`, save it to the config, and broadcast it to the other
 
 | Param | Type |
 | --- | --- |
-| ele | <code>CytoscapeEdge</code> \| <code>CytoscapeNode</code> | 
+| ele | <code>PathObject</code> \| <code>RectObject</code> | 
 
 <a name="Graph+unlock"></a>
 
@@ -1150,92 +1166,102 @@ Helper function for Corpus.  Attempts to detect the format of a given serial
 | --- | --- |
 | serial | <code>String</code> \| <code>Object</code> | 
 
-<a name="vertical"></a>
-
-## vertical(n1, n2)
-Function to sort nodes with vertical orientation.
-
-**Kind**: global function  
-
-| Param | Type |
-| --- | --- |
-| n1 | <code>CytoscapeNode</code> | 
-| n2 | <code>CytoscapeNode</code> | 
-
-<a name="ltr"></a>
-
-## ltr(n1, n2)
-Function to sort nodes with left-to-right orientation.
-
-**Kind**: global function  
-
-| Param | Type |
-| --- | --- |
-| n1 | <code>CytoscapeNode</code> | 
-| n2 | <code>CytoscapeNode</code> | 
-
-<a name="rtl"></a>
-
-## rtl(n1, n2)
-Function to sort nodes with right-to-left orientation.
-
-**Kind**: global function  
-
-| Param | Type |
-| --- | --- |
-| n1 | <code>CytoscapeNode</code> | 
-| n2 | <code>CytoscapeNode</code> | 
-
 <a name="bind"></a>
 
-## bind(graph)
-Bind the cytoscape graph to the internal reference.
+## bind(eles)
+Bind the elements to the internal reference.
+
+**Kind**: global function  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| eles | <code>Array</code> | List of both nodes and edges |
+
+<a name="run"></a>
+
+## run()
+Main function that runs all of the
+subfunctions needed to generate the graph.
+
+**Kind**: global function  
+<a name="drawNodes"></a>
+
+## drawNodes()
+Draws the nodes on the svg.
+
+**Kind**: global function  
+<a name="drawDeprels"></a>
+
+## drawDeprels()
+Draws deprels.
+
+**Kind**: global function  
+<a name="tokenDist"></a>
+
+## tokenDist(id)
+Returns the token distance for a deprel.
+
+**Kind**: global function  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| id | <code>String</code> | dep_[num1]_[num2] |
+
+<a name="curve"></a>
+
+## curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height)
+Generates curve for deprel.
+The curve starts at initialOffset (M) and consists of a
+straight line (L) that goes into a cubic curve (C) which
+then goes into a straight line (L) to rectLeft. Then we
+leave a gap for the label and start the other half at
+rectRight (M) and the same idea follows again.
+Here, • denotes a control point used.
+        •   •   • label •   •   •
+
+      •                           •
+
+    •                                •
+
+**Kind**: global function  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| initialOffset | <code>int</code> | x-position of source (offset) |
+| ypos1 | <code>int</code> | y-position of tokens |
+| xpos2 | <code>int</code> | x-position of target |
+| dir | <code>int</code> | 1 or 1 |
+| rectWidth | <code>int</code> | width of label |
+| h | <code>int</code> | scaled height of deprel |
+| height | <code>int</code> | actual height of the deprel |
+
+<a name="getHeights"></a>
+
+## getHeights(deprels)
+Calculates the heights for each deprel.
+
+**Kind**: global function  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| deprels | <code>Array</code> | Array of deprels |
+
+<a name="drawSuperTokens"></a>
+
+## drawSuperTokens()
+Draw supertokens.
+
+**Kind**: global function  
+<a name="drawMouse"></a>
+
+## drawMouse(mouse)
+Draw mouse on the svg.
 
 **Kind**: global function  
 
 | Param | Type |
 | --- | --- |
-| graph | [<code>Graph</code>](#Graph) | 
-
-<a name="_in"></a>
-
-## \_in()
-Zoom in and save changes.
-
-**Kind**: global function  
-<a name="out"></a>
-
-## out()
-Zoom out and save changes.
-
-**Kind**: global function  
-<a name="to"></a>
-
-## to(zoom)
-Zoom to a particular value and save changes.
-
-**Kind**: global function  
-
-| Param | Type |
-| --- | --- |
-| zoom | <code>Number</code> | 
-
-<a name="fit"></a>
-
-## fit()
-Wrapper around the cytoscape zoom-fit function (and save).
-
-**Kind**: global function  
-<a name="checkFirst"></a>
-
-## checkFirst(graph)
-Check if we have any zoom/pan saved in the config.  If not, use a default one.
-
-**Kind**: global function  
-
-| Param | Type |
-| --- | --- |
-| graph | [<code>Graph</code>](#Graph) | 
+| mouse | <code>MouseObject</code> | 
 
 <a name="latex"></a>
 
@@ -1273,3 +1299,14 @@ Export an application instance to SVG format.  The client will be prompted to
 | --- | --- |
 | app | [<code>App</code>](#App) | 
 
+<a name="getSVG"></a>
+
+## getSVG()
+**Kind**: global function  
+<a name="addInlineStyling"></a>
+
+## addInlineStyling()
+Basically inserts the css as inline, so that
+when it gets exported, the css is maintained.
+
+**Kind**: global function  

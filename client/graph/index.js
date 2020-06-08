@@ -3,14 +3,12 @@
 const _ = require("underscore");
 const $ = require("jquery");
 const config = require("./config");
-const cytoscape = require("./cytoscape/cytoscape.min");
 const nx = require("notatrix");
-const sort = require("./sort");
 const utils = require("../utils");
-const zoom = require("./zoom");
+const v = require("./visualiser.js");
 
 /**
- * Abstraction over the cytoscape canvas.  Handles interaction between the graph
+ * Abstraction over the graph editor.  Handles interaction between the graph
  *  and the user.  For example, all the event handlers are here, the methods that
  *  draw the graph, and the methods that place the mice / locks.
  *
@@ -18,13 +16,12 @@ const zoom = require("./zoom");
  */
 class Graph {
   constructor(app) {
-
+    console.log("CONFIG:", config);
     // save refs
     this.app = app;
     this.config = config;
 
-    // pull this complexity out into its own module
-    this.zoom = zoom;
+    this.v = v;
 
     // keep track for our progress bar
     this.progress = {
@@ -36,20 +33,6 @@ class Graph {
     this.intercepted = false;
     this.editing = null;
     this.moving_dependency = null;
-
-    // default options for the cytoscape canvas
-    this.options = {
-      container: this.app.gui.config.is_browser ? $("#cy") : null,
-      boxSelectionEnabled: false,
-      autounselectify: true,
-      autoungrabify: true,
-      zoomingEnabled: true,
-      userZoomingEnabled: true,
-      wheelSensitivity: 0.1,
-      style: require("./cy-style"),
-      layout: null,
-      elements: []
-    };
 
     // total number of elements in the graph
     this.length = 0;
@@ -65,6 +48,21 @@ class Graph {
     // timer to enforce our mouse-move broadcast min-interval
     this.mouseBlocked = false;
 
+    // Stores the token objects corresponding to each form.
+    // We need to do this rather than just storing the token
+    // objects in the html object using .data() because
+    // apparently, if we set the data in visualiser.js,
+    // we won't be able to fetch it in here. So this is the
+    // only way really.
+    this.tokens = {};
+
+    // Same as above but for multiword tokens
+    this.mwTokens = {};
+
+    // Maps local token numbers to global token numbers
+    // Basically so empty nodes are easier to deal with
+    this.presentationId = {};
+
     // load configuration prefs
     this.load();
   }
@@ -73,13 +71,13 @@ class Graph {
   // core functionality
 
   /**
-   * Build a list of cytoscape elements, both nodes and edges.  This function
+   * Build a list of elements, both nodes and edges.  This function
    *  also validates all the elements.
    *
-   * @return {Array} [{ data: Object, classes: String }]
+   * @return {Array} [Object]
    */
   get eles() {
-
+    this.presentationId = {};
     // helper function to get subscripted index numbers for superTokens
     function toSubscript(str) {
       const subscripts = {
@@ -120,6 +118,12 @@ class Graph {
     // num is like clump except not including superTokens, eles in the list
     let num = 0, eles = [];
 
+    // tokenNum counts just normal tokens (no supertokens and dependencies)
+    let tokenNum = 0;
+
+    // Counts just supertokens
+    let mwTokenNum = 0;
+
     // walk over all the tokens
     sent.index().iterate(token => {
       // don't draw other analyses
@@ -137,18 +141,21 @@ class Graph {
 
       if (token.isSuperToken) {
 
-        eles.push({
-          // multiword label
-          data: {
-            id: `multiword-${id}`,
-            clump: clump,
-            name: `multiword`,
-            label: `${token.form} ${toSubscript(`${id}`)}`,
-            length: `${token.form.length > 3 ? token.form.length * 0.7 : token.form.length}em`,
-            token: token,
-          },
-          classes: "multiword"
+        eles.push({ // multiword node
+          id: `multiword-${id}`,
+          clump: clump,
+          name: `multiword`,
+          label: `${token.form} ${toSubscript(`${id}`)}`,
+          token: token,
+          conlluId: token.indices.conllu,
+          absoluteId: token.indices.absolute,
+          cg3Id: token.indices.cg3,
+          len: token._analyses[0]._subTokens.length,
+          subId: mwTokenNum,
+          classes: 'multiword'
         });
+
+        this.mwTokens[mwTokenNum] = token;
 
       } else {
 
@@ -160,137 +167,84 @@ class Graph {
 
         let parent = token.name === "SubToken" ? "multiword-" + getIndex(sent.getSuperToken(token), format) : undefined;
 
+        this.tokens[tokenNum] = token;
+
+		    this.presentationId[id] = tokenNum;
+
         eles.push(
-
-            {
-              // "number" node
-              data: {
-                id: `num-${id}`,
-                clump: clump,
-                name: "number",
-                label: id,
-                pos: pos,
-                parent: parent,
-                token: token,
-              },
-              classes: "number"
-            },
-
-            {
-              // "form" node
-              data: {
-                id: `form-${id}`,
-                num: ++num,
-                clump: clump,
-                name: "form",
-                attr: "form",
-                form: token.form,
-                label: token.form || "_",
-                length: `${
-                    (token.form || "_").length > 3 ? (token.form || "_").length * 0.7 : (token.form || "_").length}em`,
-                type: parent ? "subToken" : "token",
-                state: `normal`,
-                parent: `num-${id}`,
-                token: token,
-              },
-              classes: isRoot ? "form root" : "form",
-            },
-
-            {
-              // "pos" node
-              data: {
-                id: `pos-node-${id}`,
-                num: ++num,
-                clump: clump,
-                name: `pos-node`,
-                attr: format === "CG3" ? `xpostag` : `upostag`,
-                pos: pos,
-                label: pos || "",
-                length: `${(pos || "").length * 0.7 + 1}em`,
-                token: token,
-              },
-              classes: utils.validate.posNodeClasses(pos),
-            },
-
-            {
-              // "pos" edge
-              data: {
-                id: `pos-edge-${id}`,
-                clump: clump,
-                name: `pos-edge`,
-                pos: pos,
-                source: `form-${id}`,
-                target: `pos-node-${id}`
-              },
-              classes: "pos"
-            });
-
-        // iterate over the token's heads to get edges
-        token.mapHeads((head, i) => {
-          // if not enhanced, only draw the first dependency
-          if (i && !sent.options.enhanced)
-            return;
-
-          // TODO: improve this (basic) algorithm
-          function getEdgeHeight(corpus, src, tar) {
-
-            const diff = tar.indices.absolute - src.indices.absolute;
-
-            let edgeHeight = config.edge_height * diff;
-            if (corpus.is_ltr)
-              edgeHeight *= -1;
-            if (Math.abs(edgeHeight) !== 1)
-              edgeHeight *= config.edge_coeff;
-            if (corpus.is_vertical)
-              edgeHeight = 45;
-
-            return edgeHeight;
-          }
-
-          this.progress.total += 1;
-          if (head.deprel && head.deprel !== "_")
-            this.progress.done += 1;
-
-          // roots don't get edges drawn (just bolded)
-          if (head.token.name === "RootToken")
-            return;
-
-          let deprel = head.deprel || "";
-
-          const id = getIndex(token, format), headId = getIndex(head.token, format),
-                label = this.app.corpus.is_ltr
-                            ? token.indices.absolute > head.token.indices.absolute ? `${deprel}⊳` : `⊲${deprel}`
-                            : token.indices.absolute > head.token.indices.absolute ? `⊲${deprel}` : `${deprel}⊳`;
-
-          eles.push({
-            data: {
-              id: `dep_${id}_${headId}`,
-              name: `dependency`,
-              num: ++num,
-              attr: `deprel`,
-              deprel: deprel,
-              source: `form-${headId}`,
-              sourceToken: head.token,
-              target: `form-${id}`,
-              targetToken: token,
-              length: `${(deprel || "").length / 3}em`,
-              label: label,
-              ctrl: new Array(4).fill(getEdgeHeight(this.app.corpus, head.token, token)),
-            },
-            classes: utils.validate.depEdgeClasses(sent, token, head),
-            style: {
-              "control-point-weights": "0.1 0.5 1",
-              "target-endpoint": `0% -50%`,
-              "source-endpoint": this.app.corpus.is_ltr ? token.indices.absolute < head.token.indices.absolute
-                                                              ? `${- 10 * config.edge_coeff}px -50%`
-                                                              : `${10 * config.edge_coeff}px -50%`
-                                                        : token.indices.absolute < head.token.indices.absolute
-                                                              ? `${10 * config.edge_coeff}px -50%`
-                                                              : `${- 10 * config.edge_coeff}px -50%`
-            }
-          });
-        });
+          { // "form" node, including pos data
+            id: `form-${tokenNum}`,
+            subId: tokenNum,
+            conlluId: id,
+            num: ++num,
+            clump: clump,
+            name: 'form',
+            attr: 'form',
+            form: token.form,
+            label: token.form || '_',
+            type: parent ? 'subToken' : 'token',
+            state: `normal`,
+            parent: `num-${tokenNum}`,
+            token: token,
+            classes: isRoot ? 'form root' : 'form',
+            posClasses: utils.validate.posNodeClasses(pos),
+            posAttr: format === 'CG3' ? `xpostag` : `upostag`,
+            posLabel: pos || '',
+          },
+        );
+        tokenNum++;
       }
+      
+    });
+
+    sent.index().iterate(token => {
+      // iterate over the token's heads to get edges
+      token.mapHeads((head, i) => {
+
+        // if not enhanced, only draw the first dependency
+        if (i && !sent.options.enhanced)
+          return;
+
+        this.progress.total += 1;
+        if (head.deprel && head.deprel !== "_")
+          this.progress.done += 1;
+
+        // roots don't get edges drawn (just bolded)
+        if (head.token.name === "RootToken")
+          return;
+
+        let deprel = head.deprel || "";
+
+        const id = getIndex(token, format),
+          headId = getIndex(head.token, format),
+          label = this.app.corpus.is_ltr
+            ? token.indices.absolute > head.token.indices.absolute
+              ? `${deprel}⊳`
+              : `⊲${deprel}`
+            : token.indices.absolute > head.token.indices.absolute
+              ? `⊲${deprel}`
+              : `${deprel}⊳`;
+
+        const presentId = this.presentationId[id];
+        const presentHeadId = this.presentationId[headId];
+
+        eles.push({
+          id: `dep_${presentId}_${presentHeadId}`,
+          name: `dependency`,
+          num: ++num,
+          attr: `deprel`,
+          deprel: deprel,
+          source: `token-${presentHeadId}`,
+          sourceNum: parseInt(presentHeadId),
+          sourceToken: head.token,
+          target: `token-${presentId}`,
+          targetNum: parseInt(presentId),
+          targetToken: token,
+          label: label,
+          enhanced: i ? true: false,
+          classes: utils.validate.depEdgeClasses(sent, token, head),
+        });
+      });
     });
 
     this.length = num;
@@ -299,33 +253,15 @@ class Graph {
 
   /**
    * Create the cytoscape instance and populate it with the nodes and edges we
-   *  generate in `this.eles`.
+   * generate in `this.eles`.
    *
    * @return {Graph} (chaining)
    */
   draw() {
-
     // cache a ref
-    const corpus = this.app.corpus;
 
-    // extend our default cytoscape config based on current params
-    this.options.layout = {
-      name: "tree",
-      padding: 0,
-      nodeDimensionsIncludeLabels: false,
-      cols: (corpus.is_vertical ? 2 : undefined),
-      rows: (corpus.is_vertical ? undefined : 2),
-      sort: (corpus.is_vertical ? sort.vertical : corpus.is_ltr ? sort.ltr : sort.rtl)
-    };
-
-    // set the cytoscape content
-    this.options.elements = corpus.isParsed ? this.eles : [];
-
-    // instantiate and recall zoom/pan
-    this.cy = cytoscape(this.options).minZoom(0.1).maxZoom(10.0).zoom(config.zoom).pan(config.pan);
-
-    // see if we should calculate a zoom/pan or use our default
-    this.zoom.checkFirst(this);
+    this.v.bind(this);
+    this.v.run();
 
     // add the mice and locks from `collab`
     this.drawMice();
@@ -335,7 +271,7 @@ class Graph {
     if (config.locked_index === this.app.corpus.index) {
 
       // add the class to the element
-      const locked = this.cy.$("#" + config.locked_id);
+      const locked = $("#" + config.locked_id);
       locked.addClass(config.locked_classes);
 
       if (config.locked_classes.indexOf("merge-source") > -1) {
@@ -343,11 +279,11 @@ class Graph {
         // add the classes to adjacent elements if we were merging
 
         const left = this.getPrevForm();
-        if (left && !left.hasClass("activated") && !left.hasClass("blocked") && left.data("type") === "token")
+        if (left.length && !left.hasClass("activated") && !left.hasClass("blocked") && left.attr('id').includes('form'))
           left.addClass("neighbor merge-left");
 
         const right = this.getNextForm();
-        if (right && !right.hasClass("activated") && !right.hasClass("blocked") && right.data("type") === "token")
+        if (right.length && !right.hasClass("activated") && !right.hasClass("blocked") && right.attr('id').includes('form'))
           right.addClass("neighbor merge-right");
 
       } else if (config.locked_classes.indexOf("combine-source") > -1) {
@@ -355,18 +291,17 @@ class Graph {
         // add the classes to the adjacent elements if we were combining
 
         const left = this.getPrevForm();
-        if (left && !left.hasClass("activated") && !left.hasClass("blocked") && left.data("type") === "token")
+        if (left.length && !left.hasClass("activated") && !left.hasClass("blocked") && left.attr('id').includes('form'))
           left.addClass("neighbor combine-left");
 
         const right = this.getNextForm();
-        if (right && !right.hasClass("activated") && !right.hasClass("blocked") && right.data("type") === "token")
+        if (right.length && !right.hasClass("activated") && !right.hasClass("blocked") && right.attr('id').includes('form'))
           right.addClass("neighbor combine-right");
       }
 
       // make sure we lock it in the same way as if we had just clicked it
       this.lock(locked);
     }
-
     // set event handler callbacks
     return this.bind();
   }
@@ -381,66 +316,50 @@ class Graph {
     // avoid problems w/ `this`-rebinding in callbacks
     const self = this;
 
-    // make sure zoom is bound to the correct cytoscape instance
-    this.zoom.bind(this);
-
-    // set a countdown to triggering a "background" click unless a node/edge intercepts it
-    $("#cy canvas, #mute").mouseup(e => {
-      // force focus off our inputs/textarea
-      $(":focus").blur();
-      self.intercepted = false;
-      setTimeout(() => self.clear(), 100);
+    // Triggering a "background" click unless a node/edge intercepts it
+    // Note: this triggers after everything else. Also, we call unbind
+    // because event handlers would otherwise stack on #mute.
+    $('#graph-svg, #mute').unbind().on('click contextmenu', function(e) {
       self.save();
+      self.clear();
+      self.intercepted = false;
+      e.preventDefault();
     });
 
     // don't clear if we clicked inside #edit
-    $("#edit").mouseup(e => { self.intercepted = true; });
-
-    // if we're dragging, don't clear; also save after we change the zoom
-    $("#cy canvas").mousemove(e => { self.intercepted = true; }).on("wheel", e => self.save());
-
-    this.cy.on("mousemove", e => {
-      // send out a 'move mouse' event at most every `mouse_move_delay` msecs
-      if (self.app.initialized && !self.mouseBlocked && self.app.online)
-        self.app.socket.broadcast("move mouse", e.position);
-
-      // enforce the delay
-      self.mouseBlocked = true;
-      setTimeout(() => { self.mouseBlocked = false; }, config.mouse_move_delay);
+    $('#edit').click(function() {
+      self.intercepted = true;
     });
 
-    // don't clear if we right- or left-click on an element
-    this.cy.on("click cxttapend", "*", e => {
+    // If there is a click on an element, intercept.
+    $('#graph-svg').on('click contextmenu', '*', e => {
+      self.intercepted = true;
+    });
+
+    // Click on a form
+    $('.token').click(function() {
       self.intercepted = true;
 
-      // debugging
-      console.info(`clicked ${e.target.attr("id")}, data:`, e.target.data());
-    });
-
-    // bind the cy events
-    self.cy.on("click", "node.form", e => {
-      const target = e.target;
-
-      if (target.hasClass("locked"))
+      let targetNum = $(this).attr('subId');
+      // THIS is #group-[id]. But we want #form-[id].
+      let target = $('#form-' + targetNum);
+      if (target.hasClass('locked'))
         return;
-
-      self.cy.$(".multiword-active").removeClass("multiword-active");
-
       if (self.moving_dependency) {
 
-        const dep = self.cy.$(".selected");
-        const source = self.cy.$(".arc-source");
+        const dep = $('.selected');
+        const sourceNum = $('.arc-source').attr('subId');
 
         // make a new dep, remove the old one
-        self.makeDependency(source, target);
+        self.makeDependency(self.tokens[sourceNum], self.tokens[targetNum]);
         self.removeDependency(dep);
-        self.cy.$(".moving").removeClass("moving");
+        $('.moving').removeClass('moving');
         self.moving_dependency = false;
 
-        const newEdge = self.cy.$(`#${source.attr("id")} -> #${target.attr("id")}`);
-
+        const newEdge = $('#dep_' + targetNum + '_' + sourceNum);
         // right click the new edge and lock it
-        newEdge.trigger("cxttapend");
+        newEdge.trigger('contextmenu');
+        self.moving_dependency = true;
         self.lock(newEdge);
 
       } else {
@@ -448,25 +367,27 @@ class Graph {
         // check if there's anything in-progress
         self.commit();
 
-        self.cy.$(".arc-source").removeClass("arc-source");
-        self.cy.$(".arc-target").removeClass("arc-target");
-        self.cy.$(".selected").removeClass("selected");
+        $('.arc-source').removeClass('arc-source');
+        $('.arc-target').removeClass('arc-target');
+        $('.selected').removeClass('selected');
 
         // handle the click differently based on current state
 
-        if (target.hasClass("merge-right") || target.hasClass("merge-left")) {
+        if (target.hasClass('merge-right') || target.hasClass('merge-left')) {
 
           // perform merge
-          self.merge(self.cy.$(".merge-source").data("token"), target.data("token"));
+          let sourceNum = $('.merge-source').attr('subId');
+          self.merge(self.tokens[sourceNum], self.tokens[targetNum]);
           self.unlock();
 
-        } else if (target.hasClass("combine-right") || target.hasClass("combine-left")) {
+        } else if (target.hasClass('combine-right') || target.hasClass('combine-left')) {
 
           // perform combine
-          self.combine(self.cy.$(".combine-source").data("token"), target.data("token"));
+          let sourceNum = $('.combine-source').attr('subId');
+          self.combine(self.tokens[sourceNum], self.tokens[targetNum]);
           self.unlock();
 
-        } else if (target.hasClass("activated")) {
+        } else if (target.hasClass('activated')) {
 
           // de-activate
           self.intercepted = false;
@@ -474,29 +395,50 @@ class Graph {
 
         } else {
 
-          const source = self.cy.$(".activated");
-          target.addClass("activated");
+          let source = $('.activated');
+          target.addClass('activated');
 
           // if there was already an activated node
           if (source.length === 1) {
-
             // add a new edge
-            self.makeDependency(source, target);
-            source.removeClass("activated");
-            target.removeClass("activated");
+            let sourceNum = source.attr('subId');
+            self.makeDependency(self.tokens[sourceNum], self.tokens[targetNum]);
+            source.removeClass('activated');
+            target.removeClass('activated');
             self.unlock();
 
           } else {
 
             // activate it
             self.lock(target);
+
           }
         }
       }
     });
 
-    self.cy.on("click", "node.pos", e => {
-      const target = e.target;
+    d3.select("#graph-svg").on("mousemove", function() {
+      // Get mouse position and un"scale/pan" it
+      let position = d3.mouse(this);
+      position[0] = (position[0] - self.config.pan.x) / self.config.zoom;
+      position[1] = (position[1] - self.config.pan.y) / self.config.zoom;
+      // send out a 'move mouse' event at most every `mouse_move_delay` msecs
+      if (self.app.initialized && !self.mouseBlocked && self.app.online)
+        self.app.socket.broadcast("move mouse", {"x": position[0], "y": position[1]});
+
+      // enforce the delay
+      self.mouseBlocked = true;
+      setTimeout(() => { self.mouseBlocked = false; }, config.mouse_move_delay);
+
+    });
+
+    // Handle click on pos nodes
+    $(".pos, .pos-label").on('click', function() {
+      self.intercepted = true;
+      // If we click on the text, we want to convert it to the deprel id
+      let targetId = $(this).attr('id').replace('text-','');
+
+      const target = $('#' + targetId);
 
       if (target.hasClass("locked"))
         return;
@@ -504,22 +446,24 @@ class Graph {
       self.commit();
       self.editing = target;
 
-      self.cy.$(".activated").removeClass("activated");
-      self.cy.$(".arc-source").removeClass("arc-source");
-      self.cy.$(".arc-target").removeClass("arc-target");
-      self.cy.$(".selected").removeClass("selected");
+      $(".activated").removeClass("activated");
+      $(".arc-source").removeClass("arc-source");
+      $(".arc-target").removeClass("arc-target");
+      $(".selected").removeClass("selected");
 
-      this.showEditLabelBox(target);
+      self.showEditLabelBox(target);
       self.lock(target);
     });
 
-    self.cy.on("click", "$node > node", e => {
-      const target = e.target;
+    // Handles click on multiword token
+    $(".multiword").on("click", e => {
+
+      const target = $(e.target);
 
       if (target.hasClass("locked"))
         return;
 
-      self.cy.$(".activated").removeClass("activated");
+      $(".activated").removeClass("activated");
 
       if (target.hasClass("multiword-active")) {
 
@@ -528,14 +472,17 @@ class Graph {
 
       } else {
 
-        self.cy.$(".multiword-active").removeClass("multiword-active");
+        $(".multiword-active").removeClass("multiword-active");
         target.addClass("multiword-active");
         self.lock(target);
       }
     });
 
-    self.cy.on("click", "edge.dependency", e => {
-      const target = e.target;
+    // Handles editing of forms
+    $('.token').on('contextmenu', function() {
+      let targetNum = $(this).attr('subId');
+      // THIS is #group-[id]. But we want #form-[id].
+      let target = $('#form-' + targetNum);
 
       if (target.hasClass("locked"))
         return;
@@ -543,59 +490,68 @@ class Graph {
       self.commit();
       self.editing = target;
 
-      self.cy.$(".activated").removeClass("activated");
-      self.cy.$(".arc-source").removeClass("arc-source");
-      self.cy.$(".arc-target").removeClass("arc-target");
-      self.cy.$(".selected").removeClass("selected");
+      $(".activated").removeClass("activated");
+      $(".arc-source").removeClass("arc-source");
+      $(".arc-target").removeClass("arc-target");
+      $(".selected").removeClass("selected");
 
-      this.showEditLabelBox(target);
+      self.showEditLabelBox(target);
       self.lock(target);
+
     });
-    self.cy.on("cxttapend", "node.form", e => {
-      const target = e.target;
 
-      if (target.hasClass("locked"))
+    // Selecting dependencies
+    $('.dependency').contextmenu(function(e) {
+      self.intercepted = true;
+      const target = $(e.target);
+      let targetId = $(this).attr('id');
+      let arcSource = targetId.split('_')[2];
+      let arcTarget = targetId.split('_')[1];
+      if (target.hasClass('locked'))
         return;
-
       self.commit();
-      self.editing = target;
+      $('.activated').removeClass('activated');
+      if (target.hasClass('selected')) {
 
-      self.cy.$(".activated").removeClass("activated");
-      self.cy.$(".arc-source").removeClass("arc-source");
-      self.cy.$(".arc-target").removeClass("arc-target");
-      self.cy.$(".selected").removeClass("selected");
-
-      this.showEditLabelBox(target);
-      self.lock(target);
-    });
-    self.cy.on("cxttapend", "edge.dependency", e => {
-      const target = e.target;
-
-      if (target.hasClass("locked"))
-        return;
-
-      self.commit();
-      self.cy.$(".activated").removeClass("activated");
-
-      if (target.hasClass("selected")) {
-
-        self.cy.$(`#${target.data("source")}`).removeClass("arc-source");
-        self.cy.$(`#${target.data("target")}`).removeClass("arc-target");
-        target.removeClass("selected");
+        $('#form-' + arcSource).removeClass('arc-source');
+        $('#form-' + arcTarget).removeClass('arc-target');
+        target.removeClass('selected');
         self.unlock();
 
       } else {
 
-        self.cy.$(".arc-source").removeClass("arc-source");
-        self.cy.$(`#${target.data("source")}`).addClass("arc-source");
+        $(".arc-source").removeClass("arc-source");
+        $("#form-"+ arcSource).addClass("arc-source");
 
-        self.cy.$(".arc-target").removeClass("arc-target");
-        self.cy.$(`#${target.data("target")}`).addClass("arc-target");
+        $(".arc-target").removeClass("arc-target");
+        $("#form-" + arcTarget).addClass("arc-target");
 
-        self.cy.$(".selected").removeClass("selected");
+        $(".selected").removeClass("selected");
         target.addClass("selected");
         self.lock(target);
       }
+    });
+
+    // Editing deprel labels.
+    $(".dependency, .deprel-label").on('click', function() {
+      self.intercepted = true;
+      // If we click on the text, we want to convert it to the deprel id
+      let targetId = $(this).attr('id').replace('text-','');
+
+      const target = $('#' + targetId);
+      if (target.hasClass('locked')) {
+        return;
+      }
+      self.commit();
+      self.editing = target;
+
+      $('.activated').removeClass('activated');
+      $('.arc-source').removeClass('arc-source');
+      $('.arc-target').removeClass('arc-target');
+      $('.selected').removeClass('selected');
+
+      self.showEditLabelBox(target);
+      self.lock(target);
     });
 
     return this;
@@ -606,10 +562,6 @@ class Graph {
    */
   save() {
 
-    if (this.cy) {
-      config.zoom = this.cy.zoom();
-      config.pan = this.cy.pan();
-    }
     let serial = _.pick(config, "pan", "zoom", "locked_index", "locked_id", "locked_classes");
     serial = JSON.stringify(serial);
     utils.storage.setPrefs("graph", serial);
@@ -633,12 +585,12 @@ class Graph {
    */
   commit() {
 
-    this.cy.$(".input").removeClass("input");
+    $(".input").removeClass("input");
 
     if (this.editing === null)
       return; // nothing to do
 
-    if (this.cy.$(".splitting").length) {
+    if ($(".splitting").length) {
 
       const value = $("#edit").val();
       let index = value.indexOf(" ");
@@ -648,16 +600,16 @@ class Graph {
 
     } else {
 
-      const token = this.editing.data("token") || this.editing.data("targetToken"), attr = this.editing.data("attr"),
-            value = utils.validate.attrValue(attr, $("#edit").val());
+      const attr = this.editing.attr("attr"),
+        value = utils.validate.attrValue(attr, $("#edit").val());
 
-      if (attr === "deprel") {
+      if (attr == "deprel") {
 
         this.modifyDependency(this.editing, value);
 
       } else {
-
-        token[attr] = value;
+        const tokenNum = this.editing.attr("subId");
+        this.tokens[tokenNum][attr] = value;
         this.editing = null;
         this.app.save({
           type: "set",
@@ -681,10 +633,12 @@ class Graph {
 
     this.commit();
 
-    this.cy.$("*").removeClass("splitting activated multiword-active " +
-                               "multiword-selected arc-source arc-target selected moving neighbor " +
-                               "merge-source merge-left merge-right combine-source combine-left " +
-                               "combine-right");
+    $(":focus").blur();
+
+    $("*").removeClass("splitting activated multiword-active " +
+                      "multiword-selected arc-source arc-target selected moving neighbor " +
+                      "merge-source merge-left merge-right combine-source combine-left " +
+                      "combine-right");
 
     this.moving_dependency = false;
 
@@ -701,15 +655,12 @@ class Graph {
   /**
    * Try to add `src` as a head for `tar`, save changes, and update graph.
    *
-   * @param {CytoscapeNode} src
-   * @param {CytoscapeNode} tar
+   * @param {BaseToken} src
+   * @param {BaseToken} tar
    */
   makeDependency(src, tar) {
 
     try {
-
-      src = src.data("token");
-      tar = tar.data("token");
       tar.addHead(src);
       this.unlock();
       this.app.save({
@@ -758,15 +709,18 @@ class Graph {
    * Try to change the deprel for the dependency given by `ele` to `deprel`, save
    *  changes, and update graph.
    *
-   * @param {CytoscapeEdge} ele
+   * @param {PathObject} ele
    * @param {String} deprel
    */
   modifyDependency(ele, deprel) {
 
     try {
 
-      let src = ele.data("sourceToken");
-      let tar = ele.data("targetToken");
+      let id = ele.attr("id");
+      let sourceNum = parseInt(id.split("_")[2]);
+	    let targetNum = parseInt(id.split("_")[1]);
+      let src = this.tokens[sourceNum];
+      let tar = this.tokens[targetNum];
       tar.modifyHead(src, deprel);
       this.unlock();
       this.app.save({
@@ -790,14 +744,16 @@ class Graph {
   /**
    * Try to remove the dependency given by `ele`, save changes, and update graph.
    *
-   * @param {CytoscapeEdge} ele
+   * @param {PathObject} ele
    */
   removeDependency(ele) {
 
     try {
-
-      let src = ele.data("sourceToken");
-      let tar = ele.data("targetToken");
+      let id = ele.attr("id");
+      let sourceNum = parseInt(id.split("_")[2]);
+	    let targetNum = parseInt(id.split("_")[1]);
+      let src = this.tokens[sourceNum];
+      let tar = this.tokens[targetNum];
       tar.removeHead(src);
       this.unlock();
       this.app.save({
@@ -820,7 +776,8 @@ class Graph {
 
   insertEmptyTokenAfter(ele) {
     const sent = this.app.corpus.current;
-    ele = ele.data("token");
+    let eleNum = ele.attr("subId");
+    ele = this.tokens[eleNum];
     console.log("inserting empty token after", ele);
 
     try {
@@ -854,17 +811,17 @@ class Graph {
   /**
    * Toggle whether `ele` is an empty node, save changes, and update the graph
    *
-   * @param {CytoscapeNode} ele
+   * @param {BaseToken} ele
    */
   toggleIsEmpty(ele) {
 
     console.log("toggling isEmpty");
     const sent = this.app.corpus.current;
-    ele = ele.data("token");
+    let eleNum = ele.attr("subId");
+    ele = this.tokens[eleNum];
     console.log(ele.isEmpty, ele);
 
     try {
-
       ele.setEmpty(!ele.isEmpty);
       this.unlock();
       this.app.save({
@@ -888,12 +845,13 @@ class Graph {
   /**
    * Try to set `ele` as the root of the sentence, save changes, and update graph.
    *
-   * @param {CytoscapeNode} ele
+   * @param {BaseToken} ele
    */
   setRoot(ele) {
 
     const sent = this.app.corpus.current;
-    ele = ele.data("token");
+    let eleNum = ele.attr("subId");
+    ele = this.tokens[eleNum];
 
     try {
 
@@ -923,14 +881,15 @@ class Graph {
   /**
    * Try to the token given by `ele` as `index`, save changes, and update graph.
    *
-   * @param {CytoscapeNode} ele
+   * @param {BaseToken} ele
    * @param {Number} index
    */
   splitToken(ele, index) {
 
     try {
-
-      this.app.corpus.current.split(ele.data("token"), index);
+      let eleNum = ele.attr("subId");
+      ele = this.tokens[eleNum];
+      this.app.corpus.current.split(ele, index);
       this.unlock();
       this.app.save({
         type: "set",
@@ -954,13 +913,13 @@ class Graph {
    * Try to the superToken given by `ele` into normal tokens save changes, and
    *  update graph.
    *
-   * @param {CytoscapeNode} ele
+   * @param {BaseToken} ele
    */
   splitSuperToken(ele) {
 
     try {
-
-      this.app.corpus.current.split(ele.data("token"));
+      let eleNum = ele.attr("subId");
+      this.app.corpus.current.split(this.mwTokens[eleNum]);
       this.unlock();
       this.app.save({
         type: "set",
@@ -984,8 +943,8 @@ class Graph {
    * Try to combine `src` and `tar` into a superToken, save changes, and update
    *  graph.
    *
-   * @param {CytoscapeNode} src
-   * @param {CytoscapeNode} tar
+   * @param {BaseToken} src
+   * @param {BaseToken} tar
    */
   combine(src, tar) {
 
@@ -1015,8 +974,8 @@ class Graph {
    * Try to merge `src` and `tar` into a single normal token, save changes, and
    *  update graph.
    *
-   * @param {CytoscapeNode} src
-   * @param {CytoscapeNode} tar
+   * @param {BaseToken} src
+   * @param {BaseToken} tar
    */
   merge(src, tar) {
 
@@ -1051,17 +1010,17 @@ class Graph {
    *  or combine).  The `previous` form is the `form-node` with `clump` one less.
    *  If there is no `previous` form, returns undefined.
    *
-   * @return {(CytoscapeCollection|undefined)}
+   * @return {(RectObject|undefined)}
    */
   getPrevForm() {
-
-    let clump = this.cy.$(".activated").data("clump");
+    
+    let clump = parseInt($(".activated").attr("subId"));
     if (clump === undefined)
       return;
 
     clump -= 1;
 
-    return this.cy.$(`.form[clump = ${clump}]`);
+    return $("#form-" + clump);
   }
 
   /**
@@ -1070,17 +1029,17 @@ class Graph {
    *  or combine).  The `next` form is the `form-node` with `clump` one greater.
    *  If there is no `next` form, returns undefined.
    *
-   * @return {(CytoscapeCollection|undefined)}
+   * @return {(RectObject|undefined)}
    */
   getNextForm() {
 
-    let clump = this.cy.$(".activated").data("clump");
+    let clump = parseInt($(".activated").attr("subId"));
     if (clump === undefined)
       return;
 
     clump += 1;
 
-    return this.cy.$(`.form[clump = ${clump}]`);
+    return $("#form-" + clump);
   }
 
   /**
@@ -1089,17 +1048,17 @@ class Graph {
    */
   selectPrevEle() {
 
-    let num = this.cy.$(".input").data("num");
+    let num = parseInt($(".input").attr("num"));
     this.intercepted = false;
     this.clear();
 
-    num += 1;
+    num -= 1;
     if (num === 0)
       num = this.length;
     if (num > this.length)
       num = 1;
 
-    const ele = this.cy.$(`[num = ${num}]`);
+    const ele = $(`[num = ${num}]`);
     this.editing = ele;
     if (ele.length)
       this.showEditLabelBox(ele);
@@ -1111,17 +1070,17 @@ class Graph {
    */
   selectNextEle() {
 
-    let num = this.cy.$(".input").data("num");
+    let num = parseInt($(".input").attr("num"));
     this.intercepted = false;
     this.clear();
 
-    num -= 1;
+    num += 1;
     if (num === 0)
       num = this.length;
     if (num > this.length)
       num = 1;
 
-    const ele = this.cy.$(`[num = ${num}]`);
+    const ele = $(`[num = ${num}]`);
     this.editing = ele;
     if (ele.length)
       this.showEditLabelBox(ele);
@@ -1145,55 +1104,52 @@ class Graph {
   showEditLabelBox(target) {
 
     target.addClass("input");
-
-    // get rid of direction arrows
-    const label = target.data("label").replace(/[⊳⊲]/, "");
-    target.data("label", label);
-
-    // get bounding box
-    let bbox = target.renderedBoundingBox();
-    bbox.color = target.style("background-color");
-    if (target.data("name") === "dependency") {
-      bbox.w = 100;
-      bbox.h = this.cy.nodes()[0].renderedHeight();
-      bbox.color = "white";
-
-      if (this.app.corpus.is_vertical) {
-        bbox.y1 += (bbox.y2 - bbox.y1) / 2 - 15;
-        bbox.x1 = bbox.x2 - 70;
-      } else {
-        bbox.x1 += (bbox.x2 - bbox.x1) / 2 - 50;
-      }
+    let textElement = $('#text-' + target.attr('id'));
+    let textLabel = textElement.text().replace(/[⊳⊲]/, '');
+    let textBCR;
+    if(target.attr('id').includes('dep')) {
+      textBCR = textElement[0].getBoundingClientRect();
+    } else {
+      textBCR = target[0].getBoundingClientRect();
     }
+    let offsetHeight = $("#graph-svg")[0].getBoundingClientRect().y;
+    let textX = textBCR.x;
+    let textY = textBCR.y - offsetHeight;
+    let textWidth = textBCR.width;
+    let textHeight = textBCR.height;
+    
 
     // TODO: rank the labels + make the style better
-    const autocompletes = target.data("name") === "pos-node"
-                              ? utils.validate.U_POS
-                              : target.data("name") === "dependency" ? utils.validate.U_DEPRELS : [];
+    const autocompletes = target.attr("id").includes("pos")
+      ? utils.validate.U_POS
+      : target.attr("id").includes("dep")
+        ? utils.validate.U_DEPRELS
+        : [];
 
     // add the edit input
     $("#edit")
-        .val("")
-        .focus()
-        .val(label)
-        .css("top", bbox.y1)
-        .css("left", bbox.x1)
-        .css("height", bbox.h)
-        .css("width", bbox.w + 5)
-        .attr("target", target.attr("id"))
-        .addClass("activated")
-        .selfcomplete(
-            {lookup: autocompletes, tabDisabled: false, autoSelectFirst: true, lookupLimit: 5, width: "flex"});
+      .val("")
+      .focus()
+      .val(textLabel)
+      .css("top", textY)
+      .css("left", textX)
+      .css("height", textHeight)
+      .css("width", textWidth)
+      .attr("target", target.attr("id"))
+      .addClass("activated")
+      .selfcomplete(
+        {lookup: autocompletes, tabDisabled: false, autoSelectFirst: true, lookupLimit: 5, width: "flex"});
 
     // add the background-mute div
-    $("#mute").addClass("activated")
-    /*.css('height', this.app.corpus.is_vertical
-      ? `${this.length * 50}px`
-      : $(window).width() - 10);*/
+    $("#mute").addClass("activated");
+      /*.css('height', this.app.corpus.is_vertical
+        ? `${this.length * 50}px`
+        : $(window).width() - 10);*/
 
     $("#edit").focus(); // move cursor to the end
-    if (target.data("name") === "dependency")
+    if (target.attr("id").includes("dep")) {
       $("#edit").select(); // highlight the current contents
+    }
 
     this.lock(target);
     this.app.gui.status.refresh();
@@ -1207,12 +1163,7 @@ class Graph {
    */
   drawMice() {
     this.app.collab.getMouseNodes().forEach(mouse => {
-      const id = mouse.id.replace(/[#:]/g, "_");
-
-      if (!this.cy.$(`#${id}.mouse`).length)
-        this.cy.add({data: {id: id}, classes: "mouse"});
-
-      this.cy.$(`#${id}.mouse`).position(mouse.position).css("background-color", "#" + mouse.color);
+      this.v.drawMouse(mouse);
     });
   }
 
@@ -1222,18 +1173,18 @@ class Graph {
    */
   setLocks() {
 
-    this.cy.$(".locked")
-        .removeClass("locked")
-        .data("locked_by", null)
-        .css("background-color", "")
-        .css("line-color", "");
+    $(".locked")
+      .removeClass("locked")
+      .data("locked_by", null)
+      .css("background-color", "")
+      .css("line-color", "");
 
     this.app.collab.getLocks().forEach(lock => {
-      this.cy.$("#" + lock.locked)
-          .addClass("locked")
-          .data("locked_by", lock.id)
-          .css("background-color", "#" + lock.color)
-          .css("line-color", "#" + lock.color);
+      $("#" + lock.locked)
+        .addClass("locked")
+        .data("locked_by", lock.id)
+        .css("background-color", "#" + lock.color)
+        .css("line-color", "#" + lock.color);
     });
   }
 
@@ -1241,7 +1192,7 @@ class Graph {
    * Add a lock to `ele`, save it to the config, and broadcast it to the other
    *  users.
    *
-   * @param {(CytoscapeEdge|CytoscapeNode)}
+   * @param {(PathObject|RectObject)}
    */
   lock(ele) {
 
@@ -1250,15 +1201,16 @@ class Graph {
 
     this.locked = ele;
     config.locked_index = this.app.corpus.index;
-    config.locked_id = ele.id();
+    config.locked_id = ele.attr('id');
 
-    let keys = Object.keys(_.pick(ele[0]._private.classes._obj, value => !!value));
-    keys = _.intersection(keys, ["selected", "activated", "multiword-active", "merge-source", "combine-source"]);
+    let keys = ele.attr("class").split(/\s+/);
+    keys = _.intersection(keys, ["selected", "activated"
+      , "multiword-active", "merge-source", "combine-source"]);
 
     config.locked_classes = keys.join(" ");
     this.save();
-    if (this.app.online) {
-      this.app.socket.broadcast("lock graph", ele.id());
+    if(this.app.online) {
+      this.app.socket.broadcast("lock graph", ele.attr("id"));
     }
   }
 

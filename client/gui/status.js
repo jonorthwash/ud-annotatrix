@@ -44,15 +44,15 @@ class Status {
 
       graphStatus = "uninitialised";
 
-    } else if (graph.cy.$(".splitting").length) {
+    } else if ($(".splitting").length) {
 
       graphStatus = "splitting node";
 
-    } else if (graph.cy.$(".merge-source").length) {
+    } else if ($(".merge-source").length) {
 
       graphStatus = "merging tokens";
 
-    } else if (graph.cy.$(".combine-source").length) {
+    } else if ($(".combine-source").length) {
 
       graphStatus = "forming multiword token";
 
