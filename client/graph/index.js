@@ -4,7 +4,6 @@ const _ = require("underscore");
 const $ = require("jquery");
 const config = require("./config");
 const nx = require("notatrix");
-const sort = require("./sort");
 const utils = require("../utils");
 const v = require("./visualiser.js");
 

@@ -71,7 +71,8 @@ function run() {
 
 	// We want the text to be on top of everything else
 	d3.selectAll(".deprel-label").raise();
-
+	d3.selectAll(".root-deprel-label").raise();
+	
 	//Lower supertokens
 	d3.selectAll(".multiword").lower();
 }
@@ -342,9 +343,10 @@ function drawDeprels() {
 			.text("ROOT")
 			.attr("x", rootx)
 			.attr("y", level - 10)
-			.attr("class", "deprel-label")
+			.attr("class", "root-deprel-label")
 			.attr("text-anchor", "middle")
-			.attr("dominant-baseline", "central");;
+			.attr("dominant-baseline", "central")
+			.style("text-shadow", "2px 2px 5px #575757");
 	}
 	
 

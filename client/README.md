@@ -67,15 +67,6 @@
  string/object.  If it can&#39;t detect one, it returns null.  If it detects one
  or more, it follows a simple resolution algorithm to pick one.</p>
 </dd>
-<dt><a href="#vertical">vertical(n1, n2)</a></dt>
-<dd><p>Function to sort nodes with vertical orientation.</p>
-</dd>
-<dt><a href="#ltr">ltr(n1, n2)</a></dt>
-<dd><p>Function to sort nodes with left-to-right orientation.</p>
-</dd>
-<dt><a href="#rtl">rtl(n1, n2)</a></dt>
-<dd><p>Function to sort nodes with right-to-left orientation.</p>
-</dd>
 <dt><a href="#bind">bind(eles)</a></dt>
 <dd><p>Bind the elements to the internal reference.</p>
 </dd>
@@ -1174,42 +1165,6 @@ Helper function for Corpus.  Attempts to detect the format of a given serial
 | Param | Type |
 | --- | --- |
 | serial | <code>String</code> \| <code>Object</code> | 
-
-<a name="vertical"></a>
-
-## vertical(n1, n2)
-Function to sort nodes with vertical orientation.
-
-**Kind**: global function  
-
-| Param | Type |
-| --- | --- |
-| n1 | <code>CytoscapeNode</code> | 
-| n2 | <code>CytoscapeNode</code> | 
-
-<a name="ltr"></a>
-
-## ltr(n1, n2)
-Function to sort nodes with left-to-right orientation.
-
-**Kind**: global function  
-
-| Param | Type |
-| --- | --- |
-| n1 | <code>CytoscapeNode</code> | 
-| n2 | <code>CytoscapeNode</code> | 
-
-<a name="rtl"></a>
-
-## rtl(n1, n2)
-Function to sort nodes with right-to-left orientation.
-
-**Kind**: global function  
-
-| Param | Type |
-| --- | --- |
-| n1 | <code>CytoscapeNode</code> | 
-| n2 | <code>CytoscapeNode</code> | 
 
 <a name="bind"></a>
 
