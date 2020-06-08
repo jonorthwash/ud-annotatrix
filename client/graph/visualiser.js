@@ -7,6 +7,11 @@ let _numNodes = 0;
 let zoom = null;
 let rootToken = null;
 
+const curveDist = 70;
+const nodeHeight = 30; // Height of nodes
+const yLevel = 100; // y-position of all forms
+const lineLen = 10; // Length of line between form and pos 
+
 /**
  * Bind the elements to the internal reference.
  * 
@@ -45,7 +50,7 @@ function run() {
 		.attr("id", "graph-svg")
 	  .style("background", "white")
 		.style("font-family", "Arial")
-		.style("font-size", "14px")
+		.style("font-size", "20px")
 		.call(zoom)
 	  .on("dblclick.zoom", null);
 
@@ -83,7 +88,6 @@ function run() {
 function drawNodes() {
 	let currentX = 200;
 	let spacing = 50; // How far nodes are aparts
-	let nodeHeight = 55; // Height of nodes
 	_numNodes = 0;
 	console.log(_graph.eles);
 	let el = _graph.app.corpus.is_ltr ? _graph.eles : _graph.eles.reverse();
@@ -104,33 +108,63 @@ function drawNodes() {
 			.text(d.form)
 			.attr("class", textClass);
 
-		let rectWidth = Math.max(40, textElement.node().getComputedTextLength() + 10);
+		let rectWidth = Math.max(20, textElement.node().getComputedTextLength() + 10);
 		textElement.remove();
+
+		// Find sizing of token number
+		textElement = _g
+			.append("text")
+			.text(d.conlluId)
+			.attr("class", textClass);
+
+		let tokenNumWidth = textElement.node().getComputedTextLength() + 10;
+		textElement.remove();
+
+		function rightRoundedRect(x, y, width, height, radius) {
+			return "M" + x + "," + y
+					 + "h" + (width - radius)
+					 + "a" + radius + "," + radius + " 0 0 1 " + radius + "," + radius
+					 + "v" + (height - 2 * radius)
+					 + "a" + radius + "," + radius + " 0 0 1 " + -radius + "," + radius
+					 + "h" + (radius - width)
+					 + "z";
+		}
+
+		function leftRoundedRect(x, y, width, height, radius) {
+			return "M" + (x+width) + "," + y
+					 + "h" + (-width + radius)
+					 + "a" + radius + "," + radius + " 1 0 0 " + -radius + "," + radius
+					 + "v" + (height - 2 * radius)
+					 + "a" + radius + "," + radius + " 1 0 0 " + radius + "," + radius
+					 + "h" + (width - radius)
+					 + "z";
+		}
+
+		let width = rectWidth + tokenNumWidth;
 
 		// tokenGroup houses everything related to the current form
 		let tokenGroup = _g
 			.append("svg") 
 			.attr("id", "token-" + d.subId)
-			.attr("width", rectWidth)
+			.attr("width", width)
 			.attr("height", nodeHeight)
-			.attr("y", 100)
+			.attr("y", yLevel)
 			.style("overflow", "visible")
 			.style("cursor", "pointer");
 
 		// nodeGroup houses the form
 	  let nodeGroup = tokenGroup
-			.append("g")
+			.append("svg")
+			.attr("width", rectWidth)
 			.attr("id", "group-" + d.subId)
 			.attr("class", "token")
-			.attr("subId", d.subId);
+			.attr("subId", d.subId)
+			.style("overflow", "visible");
 
 		// Create node
-	  nodeGroup
-			.append("rect")
-			.attr("width", rectWidth)
-			.attr("height", nodeHeight)
-			.attr("rx", 8)
-			.attr("ry", 8)
+		nodeGroup
+			.append("path")
+			.attr("d", leftRoundedRect(0, 0, rectWidth, nodeHeight, 5))
 			.attr("id", d.id)
 			.attr("attr", d.attr)
 			.attr("subId", d.subId)
@@ -142,18 +176,33 @@ function drawNodes() {
 			.append("text")
 			.text(d.form)
 			.attr("x", "50%")
-			.attr("y", 21)
+			.attr("y", "50%")
 			.attr("text-anchor", "middle")
+			.attr("dominant-baseline", "central")
 			.attr("id", "text-" + d.id)
 			.attr("class", textClass);
 		
+		let tokenNumGroup = tokenGroup
+			.append("svg")
+			.attr("x", rectWidth)
+			.attr("width", tokenNumWidth)
+			.style("overflow", "visible");
+
+	  tokenNumGroup
+			.append("path")
+			.attr("d", rightRoundedRect(0, 0, tokenNumWidth, nodeHeight, 5))
+			.style("fill", "#afa2ff")
+			.style("stroke", "black")
+			.style("stroke-width", "2px");
+
 		// Add token number
-	  nodeGroup
+	  tokenNumGroup
 			.append("text")
 			.text(d.conlluId)
 			.attr("x", "50%")
-			.attr("y", 45)
-			.attr("text-anchor", "middle");
+			.attr("y", "50%")
+			.attr("text-anchor", "middle")
+			.attr("dominant-baseline", "central");
 
 		// Calculate sizing of pos label
 		let posTextElement = _g
@@ -166,17 +215,17 @@ function drawNodes() {
 		// posGroup houses the pos elements
 		let posGroup = tokenGroup
 			.append("svg")
-			.attr("x", rectWidth/2-posWidth/2)
-			.attr("y", nodeHeight + 10)
+			.attr("x", width/2-posWidth/2)
+			.attr("y", nodeHeight + lineLen)
 			.attr("width", posWidth)
-			.attr("height", 30)
+			.attr("height", nodeHeight)
 			.style("overflow", "visible");
 
 		// Add pos form
 		posGroup
 			.append("rect")
 			.attr("width", posWidth)
-			.attr("height", 30)
+			.attr("height", nodeHeight)
 			.attr("id", "pos-" + d.subId)
 			.attr("class", d.posClasses)
 			.attr("attr", d.posAttr)
@@ -198,19 +247,19 @@ function drawNodes() {
 		// Add line connect form to pos
 		tokenGroup
 			.append("line")
-			.attr("x1", rectWidth/2)
+			.attr("x1", width/2)
 			.attr("y1", nodeHeight)
-			.attr("x2", rectWidth/2)
-			.attr("y2", nodeHeight + 15)
+			.attr("x2", width/2)
+			.attr("y2", nodeHeight + lineLen)
 			.attr("class", "pos-edge")
 			.style("stroke", "#484848")
 			.style("stroke-width", 3);
 
 		// Spacing of nodes
 		// We need to shift the current node if pos node is too long
-		currentX += (posWidth > rectWidth ? ((posWidth - rectWidth) / 2) : 0)
+		currentX += (posWidth > width ? ((posWidth - width) / 2) : 0)
 		tokenGroup.attr("x", currentX);
-		currentX += spacing + (posWidth > rectWidth ? ((rectWidth + posWidth) / 2) : rectWidth);
+		currentX += spacing + (posWidth > width ? ((width + posWidth) / 2) : width);
 		_numNodes++;
 	});
 }
@@ -277,7 +326,7 @@ function drawDeprels() {
 	// to accomodate for the deprel.
 	function needShift(d, xpos1, xpos2, rectWidth, height) {
 		let slant = 0.15;
-		let hor = Math.min(tokenDist(d.id), height) * 100;
+		let hor = Math.min(tokenDist(d.id), height) * curveDist;
 		
 		let dir = Math.sign(xpos1 - xpos2);
 		let initialOffset = xpos1 - dir * 15;
@@ -326,18 +375,18 @@ function drawDeprels() {
 	// Create root deprel
 	if(rootToken != null) {
 		let rootx = parseInt($("#token-"+rootToken).attr("x")) + parseInt($("#token-"+rootToken).attr("width")) / 2;
-		let level = 100 - edgeHeight * highest;
+		let level = yLevel - edgeHeight * highest;
 		_g
 			.append("line")
 			.attr("x1", rootx)
 			.attr("y1", level)
 			.attr("x2", rootx)
-			.attr("y2", 90)
+			.attr("y2", yLevel - 7)
 			.attr("class", "root-deprel")
 			.attr("marker-end", "url(#end)")
 			.style("stroke", "#111")
 			.style("opacity", "0.766")
-			.style("stroke-width", 6);
+			.style("stroke-width", "4px");
 		_g
 			.append("text")
 			.text("ROOT")
@@ -354,7 +403,7 @@ function drawDeprels() {
 	deprels.forEach((d) => {
 		let h = heights[d.id];
 		let xpos1 = parseInt($("#"+d.source).attr("x")) + parseInt($("#"+d.source).attr("width")) / 2;
-  	let ypos1 = 100 + (d.enhanced ? 95 : 0)
+  	let ypos1 = yLevel + (d.enhanced ? (2 * nodeHeight + lineLen) : 0)
 		let xpos2 = parseInt($("#"+d.target).attr("x")) + parseInt($("#"+d.target).attr("width")) / 2;
 		let dir = Math.sign(xpos1 - xpos2); // -1 if deprel going right, else 1
 		let initialOffset = xpos1 - dir * 15; // Deprel is offset a little when coming out of source
@@ -378,7 +427,7 @@ function drawDeprels() {
 			.append("path")
 			.attr("class", d.classes)
 			.attr("attr", d.attr)
-			.style("stroke-width", "6px")
+			.style("stroke-width", "4px")
 			.style("fill", "none")
 			.attr("marker-end", "url(#end)")
 			.attr("d", curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height, d.id, d.enhanced))
@@ -440,7 +489,7 @@ function tokenDist(id) {
 function curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height, id, enhanced) {
 	let rectLeft = (initialOffset + xpos2) / 2 + (dir * rectWidth) / 2;
   let slant = 0.15; // Angle of ascent/descent in the beginning/end of the curve
-  let hor = Math.min(tokenDist(id), h) * 100; // How far the curved part of the curve goes
+  let hor = Math.min(tokenDist(id), h) * curveDist; // How far the curved part of the curve goes
 	let c1x = initialOffset - (dir * hor * slant) / 2;
   let c2x = initialOffset - dir * hor * slant;
   let c3x = c2x - dir * hor * slant * 0.7;
@@ -465,7 +514,7 @@ function curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height, id, enhan
 		" L " + c4x + "," + c4y + " " + rectLeft + "," + c4y +
 		"M " + rectRight + "," + d2y + " L " + d4x + "," + d4y +
     " C" + d3x + "," + d3y + " " + d2x + "," + d2y + " " + d1x + "," + d1y +
-    " L" + xpos2 + "," + (ypos1 - (enhanced ? -1 : 1) * 8)
+    " L" + xpos2 + "," + (ypos1 - (enhanced ? -1 : 1) * 6)
   );
 }
 
@@ -570,13 +619,15 @@ function drawSuperTokens() {
 		let mwWidth = mwTextElement.node().getComputedTextLength() + 10;
 		mwTextElement.remove();
 
+		let mwSpacing = 20;
+
 		// Add supertoken
 		_g
 			.append("rect")
 			.attr("width", end - x1)
-			.attr("height", 135)
+			.attr("height", 2 * nodeHeight + lineLen + 2 * mwSpacing)
 			.attr("x", x1)
-			.attr("y", 80)
+			.attr("y", yLevel - 20)
 			.attr("class", d.classes)
 			.attr("subId", d.subId)
 			.attr("rx", 5)
@@ -587,15 +638,15 @@ function drawSuperTokens() {
 		let mwGroup = _g
 			.append("svg")
 			.attr("x", (end + x1 - mwWidth) / 2)
-			.attr("y", 60)
+			.attr("y", yLevel - mwSpacing - nodeHeight)
 			.attr("width", mwWidth)
-			.attr("height", 20)
+			.attr("height", nodeHeight)
 			.style("overflow", "visible");
 
 		// Add label
 		mwGroup.append("rect")
 			.attr("width", mwWidth)
-			.attr("height", 20)
+			.attr("height", nodeHeight)
 			.attr("class", "multiword-label");
 
 		// Add label text
