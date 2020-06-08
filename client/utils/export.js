@@ -70,7 +70,7 @@ function png(app) {
 
   let w = d3.select("#graph-svg").node().clientWidth;
   let h = d3.select("#graph-svg").node().clientHeight;
-
+  
   let image = new Image(w, h);
 
   image.onload = function() {
@@ -130,10 +130,18 @@ function getSVG() {
     {el: '.multiword.multiword-active', properties: ['fill']}, 
     {el: '.multiword-label', properties: ['fill', 'stroke', 'stroke-width']}, 
   ]);
+  let w = d3.select("#graph-svg").node().clientWidth;
+  let h = d3.select("#graph-svg").node().clientHeight;
+  // Firefox has a bug that require the root svg node to have
+  // an explicit width and height in order to be drawn onto a canvas.
+  d3.select("#graph-svg").attr("width", w);
+  d3.select("#graph-svg").attr("height", h);
   var s = new XMLSerializer().serializeToString(d3.select("#graph-svg").node())
   var encodedData = window.btoa(unescape(encodeURIComponent(s)));
   var base64Data = 'data:image/svg+xml;base64,' + encodedData;
   console.log(base64Data);
+  d3.select("#graph-svg").attr("width", "100%");
+  d3.select("#graph-svg").attr("height", "100%");
   return base64Data;
 }
 

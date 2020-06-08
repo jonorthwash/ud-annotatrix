@@ -237,8 +237,6 @@ class Menu {
     $("[name=\"chat\"]").toggleClass("disabled", !this.gui.app.online).prop("disabled", !this.gui.app.online);
 
     $(".export-button").toggleClass("disabled", !this.gui.app.graph.length);
-    $("[name=\"export-as-png\"]") // TODO: until PNG is fixed
-        .addClass("disabled");
     $("[name=\"show-table\"]").toggleClass("disabled", corpus.format !== "CoNLL-U");
 
     $("#btnUndo").prop("disabled", !this.gui.app.undoer.hasUndo());
