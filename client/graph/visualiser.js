@@ -7,7 +7,7 @@ let _numNodes = 0;
 let zoom = null;
 let rootToken = null;
 
-const curveDist = 70;
+const curveDist = 70; // Distance of the curved part of the deprel
 const nodeHeight = 30; // Height of nodes
 const yLevel = 100; // y-position of all forms
 const lineLen = 10; // Length of line between form and pos 
@@ -31,7 +31,7 @@ function run() {
 	// Create zoom object
 	zoom = d3
 		.zoom()
-		.scaleExtent([0.5, 5])
+		.scaleExtent([0.1, 5])
 		.on("zoom", function () {
 			_g.attr("transform", d3.event.transform);
 		})
@@ -87,7 +87,7 @@ function run() {
  */
 function drawNodes() {
 	let currentX = 200;
-	let spacing = 50; // How far nodes are aparts
+	let spacing = 30; // How far nodes are aparts
 	_numNodes = 0;
 	console.log(_graph.eles);
 	let el = _graph.app.corpus.is_ltr ? _graph.eles : _graph.eles.reverse();
@@ -335,7 +335,7 @@ function drawDeprels() {
 		let c2x = initialOffset - dir * hor * slant;
 		let c3x = c2x - dir * hor * slant * 0.7;
 		let c4x = c3x - dir * hor * slant * 0.7;
-		let spacing = 30;
+		let spacing = 10; // Extra buffer around label
 		let shift = 2 * c4x - xpos2 - initialOffset - (dir * rectWidth);
 		if (dir == -1) {
 			if (rectLeft < c4x) {
@@ -671,9 +671,21 @@ function zoomOut() {
 }
 
 function resetZoom() {
+	var bounds = d3.select("#graph-g").node().getBBox();
+	let w = d3.select("#graph-svg").node().clientWidth;
+	let h = d3.select("#graph-svg").node().clientHeight;
+	var width = bounds.width,
+	    height = bounds.height;
+	var midX = bounds.x + width / 2,
+	    midY = bounds.y + height / 2;
+	if (width == 0 || height == 0) return; // nothing to fit
+	var scale = (0.95) / Math.max(width / w, height / h);
+	var translateX = w / 2 - scale * midX;
+	var translateY = h / 2 - scale * midY;
+
 	svg.call(
     zoom.transform,
-    d3.zoomIdentity
+    d3.zoomIdentity.translate(translateX, translateY).scale(scale)
 	);
 	saveZoom();
 }
