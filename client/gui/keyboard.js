@@ -439,7 +439,7 @@ function keyup(app, event) {
       if (event.shiftKey) {
         graph.v.zoomIn();
       } else {
-        graph.v.resetZoom();
+        graph.v.zoomIn();
       }
       break;
 
@@ -448,9 +448,13 @@ function keyup(app, event) {
       if (event.shiftKey) {
         graph.v.zoomOut();
       } else {
-        graph.v.resetZoom();
+        graph.v.zoomOut();
       }
       break;
+
+      case (KEYS[0]):
+        graph.v.resetZoom();
+        break;
 
     case (KEYS.ENTER):
       graph.intercepted = false;
