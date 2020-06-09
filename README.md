@@ -7,6 +7,8 @@ UD Annotatrix is a client-side, browser-only, language-independent tool for edit
  - SDParse
  - plain text
 
+![UD Annotatrix Screenshot](https://github.com/jonorthwash/ud-annotatrix/raw/master/screenshot.png)
+
 Note: [brat](http://brat.nlplab.org) is a similar corpus annotation tool, but we're aiming for a simpler, cleaner, faster interface optimized for Universal Dependencies with an optional server-side component.
 
 ##### Contents
