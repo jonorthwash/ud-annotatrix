@@ -128,7 +128,10 @@ function getSVG() {
     {el: '.pos.error', properties: ['stroke']}, 
     {el: '.multiword', properties: ['fill', 'stroke', 'stroke-width']}, 
     {el: '.multiword.multiword-active', properties: ['fill']}, 
-    {el: '.multiword-label', properties: ['fill', 'stroke', 'stroke-width']}, 
+    {el: '.multiword-label', properties: ['fill', 'stroke', 'stroke-width']},
+    {el: ".tokenNum", properties: ['fill', 'stroke', 'stroke-width']},
+    {el: ".tokenNum.root", properties: ['stroke-width']},
+    {el: ".tokenNum-label.root", properties: ['font-weight']},
   ]);
   let w = d3.select("#graph-svg").node().clientWidth;
   let h = d3.select("#graph-svg").node().clientHeight;
