@@ -100,13 +100,13 @@ function drawNodes() {
 			rootToken = d.subId;
 		}
 		// Classes for form label
-		let textClass = 'form-label' + d.classes.replace('form', '');
+		let textClass = d.classes.replace('form', '');
 
 		// Find sizing of the node label
 	  let textElement = _g
 			.append("text")
 			.text(d.form)
-			.attr("class", textClass);
+			.attr("class", 'form-label' + textClass);
 
 		let rectWidth = Math.max(20, textElement.node().getComputedTextLength() + 10);
 		textElement.remove();
@@ -115,7 +115,7 @@ function drawNodes() {
 		textElement = _g
 			.append("text")
 			.text(d.conlluId)
-			.attr("class", textClass);
+			.attr("class", 'tokenNum-label' + textClass);
 
 		let tokenNumWidth = textElement.node().getComputedTextLength() + 10;
 		textElement.remove();
@@ -180,7 +180,7 @@ function drawNodes() {
 			.attr("text-anchor", "middle")
 			.attr("dominant-baseline", "central")
 			.attr("id", "text-" + d.id)
-			.attr("class", textClass);
+			.attr("class", 'form-label' + textClass);
 		
 		let tokenNumGroup = tokenGroup
 			.append("svg")
@@ -191,18 +191,19 @@ function drawNodes() {
 	  tokenNumGroup
 			.append("path")
 			.attr("d", rightRoundedRect(0, 0, tokenNumWidth, nodeHeight, 5))
-			.style("fill", "#afa2ff")
-			.style("stroke", "black")
-			.style("stroke-width", "2px");
+			.attr("class", "tokenNum" + textClass);
 
 		// Add token number
 	  tokenNumGroup
 			.append("text")
 			.text(d.conlluId)
+			.attr("class", "tokenNum-label" + textClass)
 			.attr("x", "50%")
 			.attr("y", "50%")
 			.attr("text-anchor", "middle")
 			.attr("dominant-baseline", "central");
+
+		nodeGroup.raise();
 
 		// Calculate sizing of pos label
 		let posTextElement = _g
