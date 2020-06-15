@@ -1,16 +1,17 @@
 'use strict';
 
+const utils = require("./utils.js");
+
 let svg = null;
 let _g = null;
 let _graph = null;
-let _numNodes = 0;
 let zoom = null;
 let rootToken = null;
 
 const curveDist = 70; // Distance of the curved part of the deprel
-const nodeHeight = 30; // Height of nodes
+const spacing = 30; // How far nodes are aparts
 const yLevel = 100; // y-position of all forms
-const lineLen = 10; // Length of line between form and pos 
+
 
 /**
  * Bind the elements to the internal reference.
@@ -46,13 +47,13 @@ function run() {
 		.select("#graph-container")
 		.append("svg")
 		.attr("width", "100%")
-	  .attr("height", "100%")
+		.attr("height", "100%")
 		.attr("id", "graph-svg")
-	  .style("background", "white")
+		.style("background", "white")
 		.style("font-family", "Arial")
 		.style("font-size", "20px")
 		.call(zoom)
-	  .on("dblclick.zoom", null);
+		.on("dblclick.zoom", null);
 
 	// <g> will actually house all the elements
 	_g = svg
@@ -63,7 +64,13 @@ function run() {
 	// Align the current zoom to the saved zoom
 	svg.call(zoom.transform, d3.zoomIdentity.translate(_graph.config.pan.x, _graph.config.pan.y).scale(_graph.config.zoom))
 
-	drawNodes();
+	let el = _graph.app.corpus.is_ltr ? _graph.eles : _graph.eles.reverse();
+	// All nodes are at height yLevel
+	let heights = [];
+	for(let i = 0; i < _graph.numTokens; i++) {
+		heights.push(yLevel);
+	}
+	rootToken = utils.drawNodes(_g, el, heights, spacing);
 	drawDeprels();
 	drawSuperTokens();
 
@@ -80,189 +87,6 @@ function run() {
 	
 	//Lower supertokens
 	d3.selectAll(".multiword").lower();
-}
-
-/**
- * Draws the nodes on the svg.
- */
-function drawNodes() {
-	let currentX = 200;
-	let spacing = 30; // How far nodes are aparts
-	_numNodes = 0;
-	console.log(_graph.eles);
-	let el = _graph.app.corpus.is_ltr ? _graph.eles : _graph.eles.reverse();
-	el.forEach((d) => {
-		// Only want nodes
-	  if(!d.classes.includes("form")) {
-			return;
-		}
-		if(d.classes.includes("root")) {
-			rootToken = d.subId;
-		}
-		// Classes for form label
-		let textClass = d.classes.replace('form', '');
-
-		// Find sizing of the node label
-	  let textElement = _g
-			.append("text")
-			.text(d.form)
-			.attr("class", 'form-label' + textClass);
-
-		let rectWidth = Math.max(20, textElement.node().getComputedTextLength() + 10);
-		textElement.remove();
-
-		// Find sizing of token number
-		textElement = _g
-			.append("text")
-			.text(d.conlluId)
-			.attr("class", 'tokenNum-label' + textClass);
-
-		let tokenNumWidth = textElement.node().getComputedTextLength() + 10;
-		textElement.remove();
-
-		function rightRoundedRect(x, y, width, height, radius) {
-			return "M" + x + "," + y
-					 + "h" + (width - radius)
-					 + "a" + radius + "," + radius + " 0 0 1 " + radius + "," + radius
-					 + "v" + (height - 2 * radius)
-					 + "a" + radius + "," + radius + " 0 0 1 " + -radius + "," + radius
-					 + "h" + (radius - width)
-					 + "z";
-		}
-
-		function leftRoundedRect(x, y, width, height, radius) {
-			return "M" + (x+width) + "," + y
-					 + "h" + (-width + radius)
-					 + "a" + radius + "," + radius + " 1 0 0 " + -radius + "," + radius
-					 + "v" + (height - 2 * radius)
-					 + "a" + radius + "," + radius + " 1 0 0 " + radius + "," + radius
-					 + "h" + (width - radius)
-					 + "z";
-		}
-
-		let width = rectWidth + tokenNumWidth;
-
-		// tokenGroup houses everything related to the current form
-		let tokenGroup = _g
-			.append("svg") 
-			.attr("id", "token-" + d.subId)
-			.attr("width", width)
-			.attr("height", nodeHeight)
-			.attr("y", yLevel)
-			.style("overflow", "visible")
-			.style("cursor", "pointer");
-
-		// nodeGroup houses the form
-	  let nodeGroup = tokenGroup
-			.append("svg")
-			.attr("width", rectWidth)
-			.attr("id", "group-" + d.subId)
-			.attr("class", "token")
-			.attr("subId", d.subId)
-			.style("overflow", "visible");
-
-		// Create node
-		nodeGroup
-			.append("path")
-			.attr("d", leftRoundedRect(0, 0, rectWidth, nodeHeight, 5))
-			.attr("id", d.id)
-			.attr("attr", d.attr)
-			.attr("subId", d.subId)
-			.attr("class", d.classes)
-			.attr("num", d.num);
-
-		// Add text
-	  nodeGroup
-			.append("text")
-			.text(d.form)
-			.attr("x", "50%")
-			.attr("y", "50%")
-			.attr("text-anchor", "middle")
-			.attr("dominant-baseline", "central")
-			.attr("id", "text-" + d.id)
-			.attr("class", 'form-label' + textClass);
-		
-		let tokenNumGroup = tokenGroup
-			.append("svg")
-			.attr("x", rectWidth)
-			.attr("width", tokenNumWidth)
-			.style("overflow", "visible");
-
-	  tokenNumGroup
-			.append("path")
-			.attr("d", rightRoundedRect(0, 0, tokenNumWidth, nodeHeight, 5))
-			.attr("class", "tokenNum" + textClass);
-
-		// Add token number
-	  tokenNumGroup
-			.append("text")
-			.text(d.conlluId)
-			.attr("class", "tokenNum-label" + textClass)
-			.attr("x", "50%")
-			.attr("y", "50%")
-			.attr("text-anchor", "middle")
-			.attr("dominant-baseline", "central");
-
-		nodeGroup.raise();
-
-		// Calculate sizing of pos label
-		let posTextElement = _g
-			.append("text")
-			.text(d.posLabel);
-
-		let posWidth = Math.max(40, posTextElement.node().getComputedTextLength() + 10);
-		posTextElement.remove();
-
-		// posGroup houses the pos elements
-		let posGroup = tokenGroup
-			.append("svg")
-			.attr("x", width/2-posWidth/2)
-			.attr("y", nodeHeight + lineLen)
-			.attr("width", posWidth)
-			.attr("height", nodeHeight)
-			.style("overflow", "visible");
-
-		// Add pos form
-		posGroup
-			.append("rect")
-			.attr("width", posWidth)
-			.attr("height", nodeHeight)
-			.attr("id", "pos-" + d.subId)
-			.attr("class", d.posClasses)
-			.attr("attr", d.posAttr)
-			.attr("subId", d.subId)
-			.attr("rx", 5)
-			.attr("ry", 5);
-
-		// Add pos text
-		posGroup
-			.append("text")
-			.attr("x", "50%")
-			.attr("y", "50%")
-			.attr("class", "pos-label")
-			.attr("id", "text-pos-" + d.subId)
-			.text(d.posLabel)
-			.attr("text-anchor", "middle")
-			.attr("dominant-baseline", "central");
-
-		// Add line connect form to pos
-		tokenGroup
-			.append("line")
-			.attr("x1", width/2)
-			.attr("y1", nodeHeight)
-			.attr("x2", width/2)
-			.attr("y2", nodeHeight + lineLen)
-			.attr("class", "pos-edge")
-			.style("stroke", "#484848")
-			.style("stroke-width", 3);
-
-		// Spacing of nodes
-		// We need to shift the current node if pos node is too long
-		currentX += (posWidth > width ? ((posWidth - width) / 2) : 0)
-		tokenGroup.attr("x", currentX);
-		currentX += spacing + (posWidth > width ? ((width + posWidth) / 2) : width);
-		_numNodes++;
-	});
 }
 
 /**
@@ -396,7 +220,7 @@ function drawDeprels() {
 			.attr("class", "root-deprel-label")
 			.attr("text-anchor", "middle")
 			.attr("dominant-baseline", "central")
-			.style("text-shadow", "2px 2px 5px #575757");
+			.style("text-shadow", "1px 1px 5px #fff");
 	}
 	
 
@@ -404,7 +228,7 @@ function drawDeprels() {
 	deprels.forEach((d) => {
 		let h = heights[d.id];
 		let xpos1 = parseInt($("#"+d.source).attr("x")) + parseInt($("#"+d.source).attr("width")) / 2;
-  	let ypos1 = yLevel + (d.enhanced ? (2 * nodeHeight + lineLen) : 0)
+		let ypos1 = yLevel + (d.enhanced ? (2 * utils.nodeHeight + utils.lineLen) : 0)
 		let xpos2 = parseInt($("#"+d.target).attr("x")) + parseInt($("#"+d.target).attr("width")) / 2;
 		let dir = Math.sign(xpos1 - xpos2); // -1 if deprel going right, else 1
 		let initialOffset = xpos1 - dir * 15; // Deprel is offset a little when coming out of source
@@ -489,34 +313,34 @@ function tokenDist(id) {
  */
 function curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height, id, enhanced) {
 	let rectLeft = (initialOffset + xpos2) / 2 + (dir * rectWidth) / 2;
-  let slant = 0.15; // Angle of ascent/descent in the beginning/end of the curve
-  let hor = Math.min(tokenDist(id), h) * curveDist; // How far the curved part of the curve goes
+	let slant = 0.15; // Angle of ascent/descent in the beginning/end of the curve
+	let hor = Math.min(tokenDist(id), h) * curveDist; // How far the curved part of the curve goes
 	let c1x = initialOffset - (dir * hor * slant) / 2;
-  let c2x = initialOffset - dir * hor * slant;
-  let c3x = c2x - dir * hor * slant * 0.7;
-  let c4x = c3x - dir * hor * slant * 0.7;
-  let c1y = ypos1 - height / 2;
-  let c2y = ypos1 - height;
-  let c3y = c2y;
+	let c2x = initialOffset - dir * hor * slant;
+	let c3x = c2x - dir * hor * slant * 0.7;
+	let c4x = c3x - dir * hor * slant * 0.7;
+	let c1y = ypos1 - height / 2;
+	let c2y = ypos1 - height;
+	let c3y = c2y;
 	let c4y = c2y;
 	let rectRight = (initialOffset + xpos2) / 2 - (dir * rectWidth) / 2;
 	let d1x = xpos2 + (dir * hor * slant) / 2;
-  let d2x = xpos2 + dir * hor * slant;
-  let d3x = d2x + dir * hor * slant * 0.7;
-  let d4x = d3x + dir * hor * slant * 0.7;
-  let d1y = ypos1 - height / 2;
-  let d2y = ypos1 - height;
-  let d3y = d2y;
-  let d4y = d2y;
-  return (
-    "M " + initialOffset + "," + ypos1 +
-    " L " + c1x + "," + c1y +
-    " C " + c2x + "," + c2y + " " + c3x + "," + c3y + " " + c4x + "," + c4y +
+	let d2x = xpos2 + dir * hor * slant;
+	let d3x = d2x + dir * hor * slant * 0.7;
+	let d4x = d3x + dir * hor * slant * 0.7;
+	let d1y = ypos1 - height / 2;
+	let d2y = ypos1 - height;
+	let d3y = d2y;
+	let d4y = d2y;
+	return (
+		"M " + initialOffset + "," + ypos1 +
+		" L " + c1x + "," + c1y +
+		" C " + c2x + "," + c2y + " " + c3x + "," + c3y + " " + c4x + "," + c4y +
 		" L " + c4x + "," + c4y + " " + rectLeft + "," + c4y +
 		"M " + rectRight + "," + d2y + " L " + d4x + "," + d4y +
-    " C" + d3x + "," + d3y + " " + d2x + "," + d2y + " " + d1x + "," + d1y +
-    " L" + xpos2 + "," + (ypos1 - (enhanced ? -1 : 1) * 6)
-  );
+		" C" + d3x + "," + d3y + " " + d2x + "," + d2y + " " + d1x + "," + d1y +
+		" L" + xpos2 + "," + (ypos1 - (enhanced ? -1 : 1) * 6)
+	);
 }
 
 /**
@@ -524,52 +348,52 @@ function curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height, id, enhan
  * @param {Array} deprels Array of deprels
  */
 function getHeights(deprels) {
-  function dist(a) {
+	function dist(a) {
 		let s = a.sourceNum;
 		let t = a.targetNum;
-    return Math.abs(s - t);
-  }
-  deprels.sort((x, y) => {
-    if (dist(x) > dist(y)) {
-      return 1;
-    }
-    if (dist(x) < dist(y)) {
-      return -1;
-    }
-    return 0;
-  });
-  let heights = [];
-  let finalHeights = {};
-  for (let i = 0; i < _numNodes + 1; i++) {
-    heights.push([0]);
-  }
-  for (let i = 0; i < deprels.length; i++) {
+		return Math.abs(s - t);
+	}
+	deprels.sort((x, y) => {
+		if (dist(x) > dist(y)) {
+			return 1;
+		}
+		if (dist(x) < dist(y)) {
+			return -1;
+		}
+		return 0;
+	});
+	let heights = [];
+	let finalHeights = {};
+	for (let i = 0; i < _graph.numTokens + 1; i++) {
+		heights.push([0]);
+	}
+	for (let i = 0; i < deprels.length; i++) {
 		let a = deprels[i];
 		let s = a.sourceNum;
 		let t = a.targetNum;
-    let dir = Math.sign(t - s);
+		let dir = Math.sign(t - s);
 		let h = new Set();
-    for (let j = s + dir; j != t; j += dir) {
+		for (let j = s + dir; j != t; j += dir) {
 			for(let k = 0; k < heights[j].length; k++) {
 				h.add(heights[j][k]);
 			}
-      
+			
 		}
 		// We basically find the lowest height that doesn't conflict
 		// which any other deprel.
 		let ht = 1;
-    while(h.has(ht)) {
+		while(h.has(ht)) {
 			ht++;
 		}
-    finalHeights[a.id] = ht;
-    for (let j = s; ; j += dir) {
-      heights[j].push(ht);
-      if (j == t) {
-        break;
-      }
-    }
-  }
-  return finalHeights;
+		finalHeights[a.id] = ht;
+		for (let j = s; ; j += dir) {
+			heights[j].push(ht);
+			if (j == t) {
+				break;
+			}
+		}
+	}
+	return finalHeights;
 }
 
 /**
@@ -620,13 +444,14 @@ function drawSuperTokens() {
 		let mwWidth = mwTextElement.node().getComputedTextLength() + 10;
 		mwTextElement.remove();
 
+		// Padding of multiword token around tokens
 		let mwSpacing = 20;
 
 		// Add supertoken
 		_g
 			.append("rect")
 			.attr("width", end - x1)
-			.attr("height", 2 * nodeHeight + lineLen + 2 * mwSpacing)
+			.attr("height", 2 * utils.nodeHeight + utils.lineLen + 2 * mwSpacing)
 			.attr("x", x1)
 			.attr("y", yLevel - 20)
 			.attr("class", d.classes)
@@ -639,15 +464,15 @@ function drawSuperTokens() {
 		let mwGroup = _g
 			.append("svg")
 			.attr("x", (end + x1 - mwWidth) / 2)
-			.attr("y", yLevel - mwSpacing - nodeHeight)
+			.attr("y", yLevel - mwSpacing - utils.nodeHeight)
 			.attr("width", mwWidth)
-			.attr("height", nodeHeight)
+			.attr("height", utils.nodeHeight)
 			.style("overflow", "visible");
 
 		// Add label
 		mwGroup.append("rect")
 			.attr("width", mwWidth)
-			.attr("height", nodeHeight)
+			.attr("height", utils.nodeHeight)
 			.attr("class", "multiword-label");
 
 		// Add label text
@@ -675,17 +500,17 @@ function resetZoom() {
 	let w = d3.select("#graph-svg").node().clientWidth;
 	let h = d3.select("#graph-svg").node().clientHeight;
 	var width = bounds.width,
-	    height = bounds.height;
+			height = bounds.height;
 	var midX = bounds.x + width / 2,
-	    midY = bounds.y + height / 2;
+			midY = bounds.y + height / 2;
 	if (width == 0 || height == 0) return; // nothing to fit
 	var scale = (0.95) / Math.max(width / w, height / h);
 	var translateX = w / 2 - scale * midX;
 	var translateY = h / 2 - scale * midY;
 
 	svg.call(
-    zoom.transform,
-    d3.zoomIdentity.translate(translateX, translateY).scale(scale)
+		zoom.transform,
+		d3.zoomIdentity.translate(translateX, translateY).scale(scale)
 	);
 	saveZoom();
 }
