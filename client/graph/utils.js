@@ -34,7 +34,6 @@ function leftRoundedRect(x, y, width, height, radius) {
 function drawNodes(_g, el, heights, spacing) {
 	let currentX = 200;
 	let rootToken = null;
-	console.log("ASDFASDFASDF", heights);
 	el.forEach(d => {
 		// Only want nodes
 	  if(!d.classes.includes("form")) {
