@@ -10,7 +10,7 @@
     "dotenv": "^7.0.0",
     "ejs": "^2.6.2",
     "express": "^4.16.4",
-    "express-fileupload": "^1.1.4",
+    "express-fileupload": "^1.1.9",
     "express-session": "^1.16.2",
     "jquery": "^3.5.0",
     "mkdirp": "^0.5.1",
