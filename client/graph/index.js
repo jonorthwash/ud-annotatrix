@@ -264,7 +264,7 @@ class Graph {
 
         const presentId = this.presentationId[id];
         const presentHeadId = this.presentationId[headId];
-        const depClasses = utils.validate.depEdgeClasses(sent, token, head);
+        let depClasses = utils.validate.depEdgeClasses(sent, token, head);
         if (!(presentHeadId in this.connections)) {
           this.connections[presentHeadId] = [];
         }
@@ -273,7 +273,9 @@ class Graph {
         if(depClasses.includes("cycle")) {
           this.treeBlocked = true;
         }
-
+        if(String(id).includes('.') || String(headId).includes('.')) {
+          depClasses += " dotted";
+        }
         eles.push({
           id: `dep_${presentId}_${presentHeadId}`,
           name: `dependency`,
