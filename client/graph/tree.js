@@ -257,4 +257,25 @@ function drawMouse(mouse) {
   
 }
 
-module.exports = {bind, run, zoomIn, zoomOut, resetZoom, zoomTo, drawMouse};
+function displayError() {
+  let t = d3.transition()
+    .delay(750)
+    .duration(500)
+    .ease(d3.easeLinear);
+  d3
+    .select("#graph-container")
+    .append("div")
+    .text("Warning: Graph contains a cycle or needs a root. Unable to show vertical view.")
+    .style("position", "absolute")
+    .style("top", "50%")
+    .style("left", "0")
+    .style("right", "0")
+    .style("text-align", "center")
+    .style("font-weight", "bold")
+    .style("text-shadow", "1px 1px 2px black")
+    .style("color", "red")
+    .style("font-size", "20px")
+    .transition(t).style("opacity", "0").remove();
+}
+
+module.exports = {bind, run, zoomIn, zoomOut, resetZoom, zoomTo, drawMouse, displayError};

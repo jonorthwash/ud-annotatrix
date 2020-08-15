@@ -316,6 +316,7 @@ class Graph {
       this.grapher.run();
     }
     else {
+      this.grapher.displayError();
       console.log("Graph contains a cycle or needs a root.");
     }
     
