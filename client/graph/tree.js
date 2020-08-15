@@ -55,6 +55,7 @@ function run() {
 
   // Lower the pos-edge below the token and the pos label
   d3.selectAll(".pos-edge").lower();
+  d3.selectAll(".dependency").lower();
 }
 
 function drawNodes() {

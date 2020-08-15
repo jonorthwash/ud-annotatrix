@@ -200,7 +200,7 @@ function drawDeprels() {
   // Create root deprel
   if(rootToken != null) {
     let rootx = parseInt($("#token-"+rootToken).attr("x")) + parseInt($("#token-"+rootToken).attr("width")) / 2;
-    let level = yLevel - edgeHeight * highest;
+    let level = yLevel - edgeHeight * (highest+0.5);
     _g
       .append("line")
       .attr("x1", rootx)
@@ -216,7 +216,7 @@ function drawDeprels() {
       .append("text")
       .text("ROOT")
       .attr("x", rootx)
-      .attr("y", level - 10)
+      .attr("y", level - 11)
       .attr("class", "root-deprel-label")
       .attr("text-anchor", "middle")
       .attr("dominant-baseline", "central")
