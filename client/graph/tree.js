@@ -7,7 +7,7 @@ let _g = null;
 let zoom = null;
 let svg = null;
 
-const spacing = 50;
+const spacing = 10;
 
 function bind(graph) {
   _graph = graph;
@@ -260,9 +260,10 @@ function drawMouse(mouse) {
 
 function displayError() {
   let t = d3.transition()
-    .delay(750)
+    .delay(2000)
     .duration(500)
     .ease(d3.easeLinear);
+
   d3
     .select("#graph-container")
     .append("div")
@@ -272,10 +273,9 @@ function displayError() {
     .style("left", "0")
     .style("right", "0")
     .style("text-align", "center")
-    .style("font-weight", "bold")
-    .style("text-shadow", "1px 1px 2px black")
     .style("color", "red")
-    .style("font-size", "20px")
+    .style("font-size", "25px")
+    .style("text-shadow", "1px 1px 0px black")
     .transition(t).style("opacity", "0").remove();
 }
 

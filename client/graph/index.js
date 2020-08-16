@@ -320,6 +320,7 @@ class Graph {
     else {
       this.grapher.displayError();
       console.log("Graph contains a cycle or needs a root.");
+      $("#vertical").click();
     }
     
 
