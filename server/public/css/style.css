@@ -162,8 +162,12 @@ span.tt {
   stroke: #cc22fc;
 }
 
+.dependency.dotted {
+  stroke-dasharray: 6,2;
+}
+
 .deprel-label {
-  text-shadow: 2px 2px 5px #575757;
+  text-shadow: 1px 1px 5px #fff;
 }
 
 .form-label.root {

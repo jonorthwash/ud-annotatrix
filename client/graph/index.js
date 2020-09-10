@@ -6,6 +6,7 @@ const config = require("./config");
 const nx = require("notatrix");
 const utils = require("../utils");
 const v = require("./visualiser.js");
+const tree = require("./tree.js");
 
 /**
  * Abstraction over the graph editor.  Handles interaction between the graph
@@ -21,7 +22,13 @@ class Graph {
     this.app = app;
     this.config = config;
 
-    this.v = v;
+    if (this.app.corpus.is_vertical) {
+      this.grapher = tree;
+    }
+    else {
+      this.grapher = v;
+    }
+    
 
     // keep track for our progress bar
     this.progress = {
@@ -63,6 +70,17 @@ class Graph {
     // Basically so empty nodes are easier to deal with
     this.presentationId = {};
 
+    // We want to block the tree view if there is no root
+    // or if there exists a cycle.
+    this.treeBlocked = false;
+
+    // Holds all connections between nodes, making it easier
+    // to traverse the tree.
+    this.connections = {};
+
+    // Total number of forms (not counting supertokens)
+    this.numTokens = 0;
+
     // load configuration prefs
     this.load();
   }
@@ -77,7 +95,11 @@ class Graph {
    * @return {Array} [Object]
    */
   get eles() {
+    // reset variables
     this.presentationId = {};
+    this.connections = {};
+    this.numTokens = 0;
+
     // helper function to get subscripted index numbers for superTokens
     function toSubscript(str) {
       const subscripts = {
@@ -112,6 +134,9 @@ class Graph {
     this.progress.done = 0;
     this.progress.total = 0;
 
+    // reset tree blocked
+    this.treeBlocked = false;
+
     // cache these
     const sent = this.app.corpus.current, format = this.app.corpus.format;
 
@@ -124,6 +149,8 @@ class Graph {
     // Counts just supertokens
     let mwTokenNum = 0;
 
+    let rootFound = false;
+
     // walk over all the tokens
     sent.index().iterate(token => {
       // don't draw other analyses
@@ -135,6 +162,10 @@ class Graph {
       let clump = token.indices.cytoscape;
       let pos = format === "CG3" ? token.xpostag || token.upostag : token.upostag || token.xpostag;
       let isRoot = sent.root.dependents.has(token);
+
+      if(isRoot) {
+        rootFound = true;
+      }
 
       // after iteration, this will just be the max
       this.clumps = clump;
@@ -169,7 +200,7 @@ class Graph {
 
         this.tokens[tokenNum] = token;
 
-		    this.presentationId[id] = tokenNum;
+        this.presentationId[id] = tokenNum;
 
         eles.push(
           { // "form" node, including pos data
@@ -193,16 +224,22 @@ class Graph {
           },
         );
         tokenNum++;
+        this.numTokens++;
       }
       
     });
+
+    if(!rootFound) {
+      this.treeBlocked = true;
+    }
 
     sent.index().iterate(token => {
       // iterate over the token's heads to get edges
       token.mapHeads((head, i) => {
 
-        // if not enhanced, only draw the first dependency
-        if (i && !sent.options.enhanced)
+        // if not enhanced or is_vertical
+        // only draw the first dependency
+        if (i && (!sent.options.enhanced || this.app.corpus.is_vertical))
           return;
 
         this.progress.total += 1;
@@ -227,7 +264,18 @@ class Graph {
 
         const presentId = this.presentationId[id];
         const presentHeadId = this.presentationId[headId];
-
+        let depClasses = utils.validate.depEdgeClasses(sent, token, head);
+        if (!(presentHeadId in this.connections)) {
+          this.connections[presentHeadId] = [];
+        }
+        this.connections[presentHeadId].push(presentId);
+        
+        if(depClasses.includes("cycle")) {
+          this.treeBlocked = true;
+        }
+        if(String(id).includes('.') || String(headId).includes('.')) {
+          depClasses += " dotted";
+        }
         eles.push({
           id: `dep_${presentId}_${presentHeadId}`,
           name: `dependency`,
@@ -242,7 +290,7 @@ class Graph {
           targetToken: token,
           label: label,
           enhanced: i ? true: false,
-          classes: utils.validate.depEdgeClasses(sent, token, head),
+          classes: depClasses,
         });
       });
     });
@@ -258,10 +306,23 @@ class Graph {
    * @return {Graph} (chaining)
    */
   draw() {
-    // cache a ref
+    if (this.app.corpus.is_vertical) {
+      this.grapher = tree;
+    }
+    else {
+      this.grapher = v;
+    }
 
-    this.v.bind(this);
-    this.v.run();
+    if (!this.app.corpus.is_vertical || !this.treeBlocked) {
+      this.grapher.bind(this);
+      this.grapher.run();
+    }
+    else {
+      this.grapher.displayError();
+      console.log("Graph contains a cycle or needs a root.");
+      $("#vertical").click();
+    }
+    
 
     // add the mice and locks from `collab`
     this.drawMice();
@@ -718,7 +779,7 @@ class Graph {
 
       let id = ele.attr("id");
       let sourceNum = parseInt(id.split("_")[2]);
-	    let targetNum = parseInt(id.split("_")[1]);
+      let targetNum = parseInt(id.split("_")[1]);
       let src = this.tokens[sourceNum];
       let tar = this.tokens[targetNum];
       tar.modifyHead(src, deprel);
@@ -751,7 +812,7 @@ class Graph {
     try {
       let id = ele.attr("id");
       let sourceNum = parseInt(id.split("_")[2]);
-	    let targetNum = parseInt(id.split("_")[1]);
+      let targetNum = parseInt(id.split("_")[1]);
       let src = this.tokens[sourceNum];
       let tar = this.tokens[targetNum];
       tar.removeHead(src);
@@ -1106,6 +1167,9 @@ class Graph {
     target.addClass("input");
     let textElement = $('#text-' + target.attr('id'));
     let textLabel = textElement.text().replace(/[⊳⊲]/, '');
+    if(textElement.is("textPath")) {
+      textElement = $('#textContainer-' + target.attr('id'));
+    }
     let textBCR;
     if(target.attr('id').includes('dep')) {
       textBCR = textElement[0].getBoundingClientRect();
@@ -1163,7 +1227,7 @@ class Graph {
    */
   drawMice() {
     this.app.collab.getMouseNodes().forEach(mouse => {
-      this.v.drawMouse(mouse);
+      this.grapher.drawMouse(mouse);
     });
   }
 

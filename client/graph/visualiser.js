@@ -1,16 +1,17 @@
 'use strict';
 
+const utils = require("./utils.js");
+
 let svg = null;
 let _g = null;
 let _graph = null;
-let _numNodes = 0;
 let zoom = null;
 let rootToken = null;
 
 const curveDist = 70; // Distance of the curved part of the deprel
-const nodeHeight = 30; // Height of nodes
+const spacing = 30; // How far nodes are aparts
 const yLevel = 100; // y-position of all forms
-const lineLen = 10; // Length of line between form and pos 
+
 
 /**
  * Bind the elements to the internal reference.
@@ -18,7 +19,7 @@ const lineLen = 10; // Length of line between form and pos
  * @param {Array} eles List of both nodes and edges
  */
 function bind(graph) {
-	_graph = graph;
+  _graph = graph;
 }
 
 /**
@@ -26,434 +27,257 @@ function bind(graph) {
  * subfunctions needed to generate the graph.
  */
 function run() {
-	d3.select("#graph-svg").remove();
-	rootToken = null;
-	// Create zoom object
-	zoom = d3
-		.zoom()
-		.scaleExtent([0.1, 5])
-		.on("zoom", function () {
-			_g.attr("transform", d3.event.transform);
-		})
-		.on("end", function() {
-			// Save settings to config.
-			_graph.config.zoom = d3.event.transform.k;
-			_graph.config.pan = {x: d3.event.transform.x, y: d3.event.transform.y};
-		});
+  d3.select("#graph-svg").remove();
+  rootToken = null;
+  // Create zoom object
+  zoom = d3
+    .zoom()
+    .scaleExtent([0.1, 5])
+    .on("zoom", function () {
+      _g.attr("transform", d3.event.transform);
+    })
+    .on("end", function() {
+      // Save settings to config.
+      _graph.config.zoom = d3.event.transform.k;
+      _graph.config.pan = {x: d3.event.transform.x, y: d3.event.transform.y};
+    });
 
-	// Create main svg which serves as a container
-	svg = d3
-		.select("#graph-container")
-		.append("svg")
-		.attr("width", "100%")
-	  .attr("height", "100%")
-		.attr("id", "graph-svg")
-	  .style("background", "white")
-		.style("font-family", "Arial")
-		.style("font-size", "20px")
-		.call(zoom)
-	  .on("dblclick.zoom", null);
+  // Create main svg which serves as a container
+  svg = d3
+    .select("#graph-container")
+    .append("svg")
+    .attr("width", "100%")
+    .attr("height", "100%")
+    .attr("id", "graph-svg")
+    .style("background", "white")
+    .style("font-family", "Arial")
+    .style("font-size", "20px")
+    .call(zoom)
+    .on("dblclick.zoom", null);
 
-	// <g> will actually house all the elements
-	_g = svg
-		.append("g")
-		.attr("id", "graph-g")
-		.attr("transform", "translate(" + _graph.config.pan.x + "," + _graph.config.pan.y + ") scale(" + _graph.config.zoom + ")");
+  // <g> will actually house all the elements
+  _g = svg
+    .append("g")
+    .attr("id", "graph-g")
+    .attr("transform", "translate(" + _graph.config.pan.x + "," + _graph.config.pan.y + ") scale(" + _graph.config.zoom + ")");
 
-	// Align the current zoom to the saved zoom
-	svg.call(zoom.transform, d3.zoomIdentity.translate(_graph.config.pan.x, _graph.config.pan.y).scale(_graph.config.zoom))
+  // Align the current zoom to the saved zoom
+  svg.call(zoom.transform, d3.zoomIdentity.translate(_graph.config.pan.x, _graph.config.pan.y).scale(_graph.config.zoom))
 
-	drawNodes();
-	drawDeprels();
-	drawSuperTokens();
+  let el = _graph.app.corpus.is_ltr ? _graph.eles : _graph.eles.reverse();
+  // All nodes are at height yLevel
+  let heights = [];
+  for(let i = 0; i < _graph.numTokens; i++) {
+    heights.push(yLevel);
+  }
+  rootToken = utils.drawNodes(_g, el, heights, spacing);
+  drawDeprels();
+  drawSuperTokens();
 
-	// Lower the pos-edge below the token and the pos label
-	d3.selectAll(".pos-edge").lower();
+  // Lower the pos-edge below the token and the pos label
+  d3.selectAll(".pos-edge").lower();
 
-	// Raise dependencies above supertoken labels
-	d3.selectAll(".dependency").raise();
-	d3.selectAll(".root-deprel").raise();
+  // Raise dependencies above supertoken labels
+  d3.selectAll(".dependency").raise();
+  d3.selectAll(".root-deprel").raise();
 
-	// We want the text to be on top of everything else
-	d3.selectAll(".deprel-label").raise();
-	d3.selectAll(".root-deprel-label").raise();
-	
-	//Lower supertokens
-	d3.selectAll(".multiword").lower();
-}
-
-/**
- * Draws the nodes on the svg.
- */
-function drawNodes() {
-	let currentX = 200;
-	let spacing = 30; // How far nodes are aparts
-	_numNodes = 0;
-	console.log(_graph.eles);
-	let el = _graph.app.corpus.is_ltr ? _graph.eles : _graph.eles.reverse();
-	el.forEach((d) => {
-		// Only want nodes
-	  if(!d.classes.includes("form")) {
-			return;
-		}
-		if(d.classes.includes("root")) {
-			rootToken = d.subId;
-		}
-		// Classes for form label
-		let textClass = d.classes.replace('form', '');
-
-		// Find sizing of the node label
-	  let textElement = _g
-			.append("text")
-			.text(d.form)
-			.attr("class", 'form-label' + textClass);
-
-		let rectWidth = Math.max(20, textElement.node().getComputedTextLength() + 10);
-		textElement.remove();
-
-		// Find sizing of token number
-		textElement = _g
-			.append("text")
-			.text(d.conlluId)
-			.attr("class", 'tokenNum-label' + textClass);
-
-		let tokenNumWidth = textElement.node().getComputedTextLength() + 10;
-		textElement.remove();
-
-		function rightRoundedRect(x, y, width, height, radius) {
-			return "M" + x + "," + y
-					 + "h" + (width - radius)
-					 + "a" + radius + "," + radius + " 0 0 1 " + radius + "," + radius
-					 + "v" + (height - 2 * radius)
-					 + "a" + radius + "," + radius + " 0 0 1 " + -radius + "," + radius
-					 + "h" + (radius - width)
-					 + "z";
-		}
-
-		function leftRoundedRect(x, y, width, height, radius) {
-			return "M" + (x+width) + "," + y
-					 + "h" + (-width + radius)
-					 + "a" + radius + "," + radius + " 1 0 0 " + -radius + "," + radius
-					 + "v" + (height - 2 * radius)
-					 + "a" + radius + "," + radius + " 1 0 0 " + radius + "," + radius
-					 + "h" + (width - radius)
-					 + "z";
-		}
-
-		let width = rectWidth + tokenNumWidth;
-
-		// tokenGroup houses everything related to the current form
-		let tokenGroup = _g
-			.append("svg") 
-			.attr("id", "token-" + d.subId)
-			.attr("width", width)
-			.attr("height", nodeHeight)
-			.attr("y", yLevel)
-			.style("overflow", "visible")
-			.style("cursor", "pointer");
-
-		// nodeGroup houses the form
-	  let nodeGroup = tokenGroup
-			.append("svg")
-			.attr("width", rectWidth)
-			.attr("id", "group-" + d.subId)
-			.attr("class", "token")
-			.attr("subId", d.subId)
-			.style("overflow", "visible");
-
-		// Create node
-		nodeGroup
-			.append("path")
-			.attr("d", leftRoundedRect(0, 0, rectWidth, nodeHeight, 5))
-			.attr("id", d.id)
-			.attr("attr", d.attr)
-			.attr("subId", d.subId)
-			.attr("class", d.classes)
-			.attr("num", d.num);
-
-		// Add text
-	  nodeGroup
-			.append("text")
-			.text(d.form)
-			.attr("x", "50%")
-			.attr("y", "50%")
-			.attr("text-anchor", "middle")
-			.attr("dominant-baseline", "central")
-			.attr("id", "text-" + d.id)
-			.attr("class", 'form-label' + textClass);
-		
-		let tokenNumGroup = tokenGroup
-			.append("svg")
-			.attr("x", rectWidth)
-			.attr("width", tokenNumWidth)
-			.style("overflow", "visible");
-
-	  tokenNumGroup
-			.append("path")
-			.attr("d", rightRoundedRect(0, 0, tokenNumWidth, nodeHeight, 5))
-			.attr("class", "tokenNum" + textClass);
-
-		// Add token number
-	  tokenNumGroup
-			.append("text")
-			.text(d.conlluId)
-			.attr("class", "tokenNum-label" + textClass)
-			.attr("x", "50%")
-			.attr("y", "50%")
-			.attr("text-anchor", "middle")
-			.attr("dominant-baseline", "central");
-
-		nodeGroup.raise();
-
-		// Calculate sizing of pos label
-		let posTextElement = _g
-			.append("text")
-			.text(d.posLabel);
-
-		let posWidth = Math.max(40, posTextElement.node().getComputedTextLength() + 10);
-		posTextElement.remove();
-
-		// posGroup houses the pos elements
-		let posGroup = tokenGroup
-			.append("svg")
-			.attr("x", width/2-posWidth/2)
-			.attr("y", nodeHeight + lineLen)
-			.attr("width", posWidth)
-			.attr("height", nodeHeight)
-			.style("overflow", "visible");
-
-		// Add pos form
-		posGroup
-			.append("rect")
-			.attr("width", posWidth)
-			.attr("height", nodeHeight)
-			.attr("id", "pos-" + d.subId)
-			.attr("class", d.posClasses)
-			.attr("attr", d.posAttr)
-			.attr("subId", d.subId)
-			.attr("rx", 5)
-			.attr("ry", 5);
-
-		// Add pos text
-		posGroup
-			.append("text")
-			.attr("x", "50%")
-			.attr("y", "50%")
-			.attr("class", "pos-label")
-			.attr("id", "text-pos-" + d.subId)
-			.text(d.posLabel)
-			.attr("text-anchor", "middle")
-			.attr("dominant-baseline", "central");
-
-		// Add line connect form to pos
-		tokenGroup
-			.append("line")
-			.attr("x1", width/2)
-			.attr("y1", nodeHeight)
-			.attr("x2", width/2)
-			.attr("y2", nodeHeight + lineLen)
-			.attr("class", "pos-edge")
-			.style("stroke", "#484848")
-			.style("stroke-width", 3);
-
-		// Spacing of nodes
-		// We need to shift the current node if pos node is too long
-		currentX += (posWidth > width ? ((posWidth - width) / 2) : 0)
-		tokenGroup.attr("x", currentX);
-		currentX += spacing + (posWidth > width ? ((width + posWidth) / 2) : width);
-		_numNodes++;
-	});
+  // We want the text to be on top of everything else
+  d3.selectAll(".deprel-label").raise();
+  d3.selectAll(".root-deprel-label").raise();
+  
+  //Lower supertokens
+  d3.selectAll(".multiword").lower();
 }
 
 /**
  * Draws deprels.
  */
 function drawDeprels() {
-	// Ending arrowheads
-	let markerDef = _g.append("defs");
-	markerDef
-		.append("marker")
-		.attr("id", "end")
-		.attr("viewBox", "0 -5 10 10")
-		.attr("refX", "2")
-		.attr("refY", "2")
-		.attr("markerWidth", "15")
-		.attr("markerHeight", "15")
-		.attr("orient", "auto")
-		.style("fill", "#111")
-		.append("path")
-		.attr("d", "M 1 1 L 3 2 L 1 3 Z");
+  // Ending arrowheads
+  let markerDef = _g.append("defs");
+  markerDef
+    .append("marker")
+    .attr("id", "end")
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", "2")
+    .attr("refY", "2")
+    .attr("markerWidth", "15")
+    .attr("markerHeight", "15")
+    .attr("orient", "auto")
+    .style("fill", "#111")
+    .append("path")
+    .attr("d", "M 1 1 L 3 2 L 1 3 Z");
 
-	// Create a list of deprels
-	let deprels = [];
-	let enhancedDeprels = [];
-	let nonEnhDeprels = []
+  // Create a list of deprels
+  let deprels = [];
+  let enhancedDeprels = [];
+  let nonEnhDeprels = []
 
-	_graph.eles.forEach((d) => {
-		if(!d.classes.includes("dependency")) {
-			return;
-		}
-		deprels.push(d);
-		if(d.enhanced) {
-			enhancedDeprels.push(d);
-		}
-		else {
-			nonEnhDeprels.push(d);
-		}
-	});
+  _graph.eles.forEach((d) => {
+    if(!d.classes.includes("dependency")) {
+      return;
+    }
+    deprels.push(d);
+    if(d.enhanced) {
+      enhancedDeprels.push(d);
+    }
+    else {
+      nonEnhDeprels.push(d);
+    }
+  });
 
-	// Get heights for the deprels
-	// Since enhanced deprels go below
-	// we need to calculate the heights separately
-	let heights1 = getHeights(nonEnhDeprels);
-	let heights2 = getHeights(enhancedDeprels);
-	let heights = {...heights1, ...heights2};
-	let highest = 1;
-	Object.values(heights1).forEach(v => {
-		highest = Math.max(highest, v);
-	})
-	let edgeHeight = 65; // how high the height increments by at each level
+  // Get heights for the deprels
+  // Since enhanced deprels go below
+  // we need to calculate the heights separately
+  let heights1 = getHeights(nonEnhDeprels);
+  let heights2 = getHeights(enhancedDeprels);
+  let heights = {...heights1, ...heights2};
+  let highest = 1;
+  Object.values(heights1).forEach(v => {
+    highest = Math.max(highest, v);
+  })
+  let edgeHeight = 65; // how high the height increments by at each level
 
-	// Shift tokens in the direction of dir
-	function shiftTokens(shift, target, dir) {
-		while ($("#token-" + target).length) {
-			let curX = d3.select("#token-" + target).attr("x");
-			d3.select("#token-" + target).attr("x", parseInt(curX) - dir * shift);
-			target -= dir * (_graph.app.corpus.is_ltr ? 1 : -1);
-		}
-	} 
+  // Shift tokens in the direction of dir
+  function shiftTokens(shift, target, dir) {
+    while ($("#token-" + target).length) {
+      let curX = d3.select("#token-" + target).attr("x");
+      d3.select("#token-" + target).attr("x", parseInt(curX) - dir * shift);
+      target -= dir * (_graph.app.corpus.is_ltr ? 1 : -1);
+    }
+  } 
 
-	// Calculate how much the ending token has to shift by
-	// to accomodate for the deprel.
-	function needShift(d, xpos1, xpos2, rectWidth, height) {
-		let slant = 0.15;
-		let hor = Math.min(tokenDist(d.id), height) * curveDist;
-		
-		let dir = Math.sign(xpos1 - xpos2);
-		let initialOffset = xpos1 - dir * 15;
-		let rectLeft = (initialOffset + xpos2) / 2 + (dir * rectWidth) / 2;
-		let c2x = initialOffset - dir * hor * slant;
-		let c3x = c2x - dir * hor * slant * 0.7;
-		let c4x = c3x - dir * hor * slant * 0.7;
-		let spacing = 10; // Extra buffer around label
-		let shift = 2 * c4x - xpos2 - initialOffset - (dir * rectWidth);
-		if (dir == -1) {
-			if (rectLeft < c4x) {
-				return shift + spacing;
-			}
-		} else {
-			if (rectLeft > c4x) {
-				return -shift + spacing;
-			}
-		}
-		return 0;
+  // Calculate how much the ending token has to shift by
+  // to accomodate for the deprel.
+  function needShift(d, xpos1, xpos2, rectWidth, height) {
+    let slant = 0.15;
+    let hor = Math.min(tokenDist(d.id), height) * curveDist;
+    
+    let dir = Math.sign(xpos1 - xpos2);
+    let initialOffset = xpos1 - dir * 15;
+    let rectLeft = (initialOffset + xpos2) / 2 + (dir * rectWidth) / 2;
+    let c2x = initialOffset - dir * hor * slant;
+    let c3x = c2x - dir * hor * slant * 0.7;
+    let c4x = c3x - dir * hor * slant * 0.7;
+    let spacing = 10; // Extra buffer around label
+    let shift = 2 * c4x - xpos2 - initialOffset - (dir * rectWidth);
+    if (dir == -1) {
+      if (rectLeft < c4x) {
+        return shift + spacing;
+      }
+    } else {
+      if (rectLeft > c4x) {
+        return -shift + spacing;
+      }
+    }
+    return 0;
 }
 
-	// We first need to deal with the necessary shifting of tokens
-	// in order for the labels to fit nicely in the deprels before
-	// actually drawing the deprels.
-	deprels.forEach((d) => {
-		// Calculate dimensions of text
-		let textElement = _g
-			.append("text")
-			.attr("id", "text-" + d.id)
-			.text(d.label)
-			.attr('class', 'deprel-label');
-		let rectWidth = textElement.node().getComputedTextLength() + 10;
-		textElement.remove();
+  // We first need to deal with the necessary shifting of tokens
+  // in order for the labels to fit nicely in the deprels before
+  // actually drawing the deprels.
+  deprels.forEach((d) => {
+    // Calculate dimensions of text
+    let textElement = _g
+      .append("text")
+      .attr("id", "text-" + d.id)
+      .text(d.label)
+      .attr('class', 'deprel-label');
+    let rectWidth = textElement.node().getComputedTextLength() + 10;
+    textElement.remove();
 
-		let xpos1 = parseInt($("#"+d.source).attr("x")) + parseInt($("#"+d.source).attr("width")) / 2;
-		let xpos2 = parseInt($("#"+d.target).attr("x")) + parseInt($("#"+d.target).attr("width")) / 2;
-		let dir = Math.sign(xpos1 - xpos2); // -1 if deprel going right, else 1
+    let xpos1 = parseInt($("#"+d.source).attr("x")) + parseInt($("#"+d.source).attr("width")) / 2;
+    let xpos2 = parseInt($("#"+d.target).attr("x")) + parseInt($("#"+d.target).attr("width")) / 2;
+    let dir = Math.sign(xpos1 - xpos2); // -1 if deprel going right, else 1
 
-		let shift = needShift(d, xpos1, xpos2, rectWidth, heights[d.id]);
+    let shift = needShift(d, xpos1, xpos2, rectWidth, heights[d.id]);
 
-		if(shift != 0) {
-				shiftTokens(shift, d.targetNum, dir);
-		}
-	});
+    if(shift != 0) {
+        shiftTokens(shift, d.targetNum, dir);
+    }
+  });
 
-	// Create root deprel
-	if(rootToken != null) {
-		let rootx = parseInt($("#token-"+rootToken).attr("x")) + parseInt($("#token-"+rootToken).attr("width")) / 2;
-		let level = yLevel - edgeHeight * highest;
-		_g
-			.append("line")
-			.attr("x1", rootx)
-			.attr("y1", level)
-			.attr("x2", rootx)
-			.attr("y2", yLevel - 7)
-			.attr("class", "root-deprel")
-			.attr("marker-end", "url(#end)")
-			.style("stroke", "#111")
-			.style("opacity", "0.766")
-			.style("stroke-width", "4px");
-		_g
-			.append("text")
-			.text("ROOT")
-			.attr("x", rootx)
-			.attr("y", level - 10)
-			.attr("class", "root-deprel-label")
-			.attr("text-anchor", "middle")
-			.attr("dominant-baseline", "central")
-			.style("text-shadow", "2px 2px 5px #575757");
-	}
-	
+  // Create root deprel
+  if(rootToken != null) {
+    let rootx = parseInt($("#token-"+rootToken).attr("x")) + parseInt($("#token-"+rootToken).attr("width")) / 2;
+    let level = yLevel - edgeHeight * (highest+0.5);
+    _g
+      .append("line")
+      .attr("x1", rootx)
+      .attr("y1", level)
+      .attr("x2", rootx)
+      .attr("y2", yLevel - 7)
+      .attr("class", "root-deprel")
+      .attr("marker-end", "url(#end)")
+      .style("stroke", "#111")
+      .style("opacity", "0.766")
+      .style("stroke-width", "4px");
+    _g
+      .append("text")
+      .text("ROOT")
+      .attr("x", rootx)
+      .attr("y", level - 11)
+      .attr("class", "root-deprel-label")
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "central")
+      .style("text-shadow", "1px 1px 5px #fff");
+  }
+  
 
 
-	deprels.forEach((d) => {
-		let h = heights[d.id];
-		let xpos1 = parseInt($("#"+d.source).attr("x")) + parseInt($("#"+d.source).attr("width")) / 2;
-  	let ypos1 = yLevel + (d.enhanced ? (2 * nodeHeight + lineLen) : 0)
-		let xpos2 = parseInt($("#"+d.target).attr("x")) + parseInt($("#"+d.target).attr("width")) / 2;
-		let dir = Math.sign(xpos1 - xpos2); // -1 if deprel going right, else 1
-		let initialOffset = xpos1 - dir * 15; // Deprel is offset a little when coming out of source
-		let height = (d.enhanced ? -1 : 1) * h * edgeHeight; // actual height of deprel
-		let mid = (initialOffset + xpos2) / 2; // x-position of the middle of the deprel
+  deprels.forEach((d) => {
+    let h = heights[d.id];
+    let xpos1 = parseInt($("#"+d.source).attr("x")) + parseInt($("#"+d.source).attr("width")) / 2;
+    let ypos1 = yLevel + (d.enhanced ? (2 * utils.nodeHeight + utils.lineLen) : 0)
+    let xpos2 = parseInt($("#"+d.target).attr("x")) + parseInt($("#"+d.target).attr("width")) / 2;
+    let dir = Math.sign(xpos1 - xpos2); // -1 if deprel going right, else 1
+    let initialOffset = xpos1 - dir * 15; // Deprel is offset a little when coming out of source
+    let height = (d.enhanced ? -1 : 1) * h * edgeHeight; // actual height of deprel
+    let mid = (initialOffset + xpos2) / 2; // x-position of the middle of the deprel
 
-		// Calculate dimensions of text
-		//let transform = d3.zoomTransform(_g.node());
-		let textElement = _g
-			.append("text")
-			.attr("id", "text" + d.id)
-			.text(d.label)
-			.attr('class', 'deprel-label');
+    // Calculate dimensions of text
+    //let transform = d3.zoomTransform(_g.node());
+    let textElement = _g
+      .append("text")
+      .attr("id", "text" + d.id)
+      .text(d.label)
+      .attr('class', 'deprel-label');
 
-		let rectWidth = textElement.node().getComputedTextLength() + 10;
-		//let rectHeight = textElement.node().getBoundingClientRect().height / transform.k;
-		textElement.remove();
+    let rectWidth = textElement.node().getComputedTextLength() + 10;
+    //let rectHeight = textElement.node().getBoundingClientRect().height / transform.k;
+    textElement.remove();
 
-		// Add deprel
-		_g
-			.append("path")
-			.attr("class", d.classes)
-			.attr("attr", d.attr)
-			.style("stroke-width", "4px")
-			.style("fill", "none")
-			.attr("marker-end", "url(#end)")
-			.attr("d", curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height, d.id, d.enhanced))
-			.attr("id", d.id)
-			.attr("num", d.num);
+    // Add deprel
+    _g
+      .append("path")
+      .attr("class", d.classes)
+      .attr("attr", d.attr)
+      .style("stroke-width", "4px")
+      .style("fill", "none")
+      .attr("marker-end", "url(#end)")
+      .attr("d", curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height, d.id, d.enhanced))
+      .attr("id", d.id)
+      .attr("num", d.num);
 
-		// Add deprel label
-		_g
-			.append("text")
-			.attr("id", "text-" + d.id)
-			.text(d.label)
-			.attr("class", "deprel-label")
-			.style("cursor", "pointer")
-			.attr(
-				"transform",
-				"translate(" +
-					(mid) +
-					"," +
-					((ypos1 - height)) +
-					")"
-			)
-			.attr("y", (d.label.replace(/[⊳⊲]/, '') == '' ? -2 : -1))
-			.attr("text-anchor", "middle")
-			.attr("dominant-baseline", "central");
-		});
+    // Add deprel label
+    _g
+      .append("text")
+      .attr("id", "text-" + d.id)
+      .text(d.label)
+      .attr("class", "deprel-label")
+      .style("cursor", "pointer")
+      .attr(
+        "transform",
+        "translate(" +
+          (mid) +
+          "," +
+          ((ypos1 - height)) +
+          ")"
+      )
+      .attr("y", (d.label.replace(/[⊳⊲]/, '') == '' ? -2 : -1))
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "central");
+    });
 }
 
 /**
@@ -461,9 +285,9 @@ function drawDeprels() {
  * @param {String} id dep_[num1]_[num2]
  */
 function tokenDist(id) {
-	let sourceNum = parseInt(id.split('_')[1]);
-	let targetNum = parseInt(id.split('_')[2]);
-	return Math.abs(sourceNum - targetNum);
+  let sourceNum = parseInt(id.split('_')[1]);
+  let targetNum = parseInt(id.split('_')[2]);
+  return Math.abs(sourceNum - targetNum);
 }
 
 /**
@@ -488,19 +312,19 @@ function tokenDist(id) {
  * @param {int} height actual height of the deprel
  */
 function curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height, id, enhanced) {
-	let rectLeft = (initialOffset + xpos2) / 2 + (dir * rectWidth) / 2;
+  let rectLeft = (initialOffset + xpos2) / 2 + (dir * rectWidth) / 2;
   let slant = 0.15; // Angle of ascent/descent in the beginning/end of the curve
   let hor = Math.min(tokenDist(id), h) * curveDist; // How far the curved part of the curve goes
-	let c1x = initialOffset - (dir * hor * slant) / 2;
+  let c1x = initialOffset - (dir * hor * slant) / 2;
   let c2x = initialOffset - dir * hor * slant;
   let c3x = c2x - dir * hor * slant * 0.7;
   let c4x = c3x - dir * hor * slant * 0.7;
   let c1y = ypos1 - height / 2;
   let c2y = ypos1 - height;
   let c3y = c2y;
-	let c4y = c2y;
-	let rectRight = (initialOffset + xpos2) / 2 - (dir * rectWidth) / 2;
-	let d1x = xpos2 + (dir * hor * slant) / 2;
+  let c4y = c2y;
+  let rectRight = (initialOffset + xpos2) / 2 - (dir * rectWidth) / 2;
+  let d1x = xpos2 + (dir * hor * slant) / 2;
   let d2x = xpos2 + dir * hor * slant;
   let d3x = d2x + dir * hor * slant * 0.7;
   let d4x = d3x + dir * hor * slant * 0.7;
@@ -512,8 +336,8 @@ function curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height, id, enhan
     "M " + initialOffset + "," + ypos1 +
     " L " + c1x + "," + c1y +
     " C " + c2x + "," + c2y + " " + c3x + "," + c3y + " " + c4x + "," + c4y +
-		" L " + c4x + "," + c4y + " " + rectLeft + "," + c4y +
-		"M " + rectRight + "," + d2y + " L " + d4x + "," + d4y +
+    " L " + c4x + "," + c4y + " " + rectLeft + "," + c4y +
+    "M " + rectRight + "," + d2y + " L " + d4x + "," + d4y +
     " C" + d3x + "," + d3y + " " + d2x + "," + d2y + " " + d1x + "," + d1y +
     " L" + xpos2 + "," + (ypos1 - (enhanced ? -1 : 1) * 6)
   );
@@ -525,8 +349,8 @@ function curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height, id, enhan
  */
 function getHeights(deprels) {
   function dist(a) {
-		let s = a.sourceNum;
-		let t = a.targetNum;
+    let s = a.sourceNum;
+    let t = a.targetNum;
     return Math.abs(s - t);
   }
   deprels.sort((x, y) => {
@@ -540,27 +364,27 @@ function getHeights(deprels) {
   });
   let heights = [];
   let finalHeights = {};
-  for (let i = 0; i < _numNodes + 1; i++) {
+  for (let i = 0; i < _graph.numTokens + 1; i++) {
     heights.push([0]);
   }
   for (let i = 0; i < deprels.length; i++) {
-		let a = deprels[i];
-		let s = a.sourceNum;
-		let t = a.targetNum;
+    let a = deprels[i];
+    let s = a.sourceNum;
+    let t = a.targetNum;
     let dir = Math.sign(t - s);
-		let h = new Set();
+    let h = new Set();
     for (let j = s + dir; j != t; j += dir) {
-			for(let k = 0; k < heights[j].length; k++) {
-				h.add(heights[j][k]);
-			}
+      for(let k = 0; k < heights[j].length; k++) {
+        h.add(heights[j][k]);
+      }
       
-		}
-		// We basically find the lowest height that doesn't conflict
-		// which any other deprel.
-		let ht = 1;
+    }
+    // We basically find the lowest height that doesn't conflict
+    // which any other deprel.
+    let ht = 1;
     while(h.has(ht)) {
-			ht++;
-		}
+      ht++;
+    }
     finalHeights[a.id] = ht;
     for (let j = s; ; j += dir) {
       heights[j].push(ht);
@@ -576,130 +400,131 @@ function getHeights(deprels) {
  * Draw supertokens.
  */
 function drawSuperTokens() {
-	_graph.eles.forEach((d) => {
-		if(!d.classes.includes("multiword")) {
-			return;
-		}
-		let t1, t2;
-		let format = _graph.app.corpus.format;
-		// Get the indices for beginning of the multiword
-		let index = d.token._analyses[0]._subTokens[0].indices;
+  _graph.eles.forEach((d) => {
+    if(!d.classes.includes("multiword")) {
+      return;
+    }
+    let t1, t2;
+    let format = _graph.app.corpus.format;
+    // Get the indices for beginning of the multiword
+    let index = d.token._analyses[0]._subTokens[0].indices;
 
-		if (format == "CoNLL-U") {
-			t1 = _graph.presentationId[index.conllu];
-			
-		}
-		else if (format == "CG3") {
-			t1 = _graph.presentationId[index.cg3];
-		}
-		else {
-			t1 = _graph.presentationId[index.absolute];
-		}
+    if (format == "CoNLL-U") {
+      t1 = _graph.presentationId[index.conllu];
+      
+    }
+    else if (format == "CG3") {
+      t1 = _graph.presentationId[index.cg3];
+    }
+    else {
+      t1 = _graph.presentationId[index.absolute];
+    }
 
-		t2 = t1 + d.len - 1;
+    t2 = t1 + d.len - 1;
 
-		let x1, x2, width2;
-		// If ltr, we calculate the x-positions differently
-		if(_graph.app.corpus.is_ltr) {
-			x1 = parseInt($("#token-" + t1).attr("x")) - 20;
-			x2 = parseInt($("#token-" + t2).attr("x")) + 20;
-			width2 = parseInt($("#token-" + t2).attr("width"));
-		}
-		else {
-			x1 = parseInt($("#token-" + t2).attr("x")) - 20;
-			x2 = parseInt($("#token-" + t1).attr("x")) + 20;
-			width2 = parseInt($("#token-" + t1).attr("width"));
-		}
-		let end = x2 + width2;
+    let x1, x2, width2;
+    // If ltr, we calculate the x-positions differently
+    if(_graph.app.corpus.is_ltr) {
+      x1 = parseInt($("#token-" + t1).attr("x")) - 20;
+      x2 = parseInt($("#token-" + t2).attr("x")) + 20;
+      width2 = parseInt($("#token-" + t2).attr("width"));
+    }
+    else {
+      x1 = parseInt($("#token-" + t2).attr("x")) - 20;
+      x2 = parseInt($("#token-" + t1).attr("x")) + 20;
+      width2 = parseInt($("#token-" + t1).attr("width"));
+    }
+    let end = x2 + width2;
 
-		// Calculate sizing of supertoken label
-		let mwTextElement = _g
-			.append("text")
-			.text(d.label);
+    // Calculate sizing of supertoken label
+    let mwTextElement = _g
+      .append("text")
+      .text(d.label);
 
-		let mwWidth = mwTextElement.node().getComputedTextLength() + 10;
-		mwTextElement.remove();
+    let mwWidth = mwTextElement.node().getComputedTextLength() + 10;
+    mwTextElement.remove();
 
-		let mwSpacing = 20;
+    // Padding of multiword token around tokens
+    let mwSpacing = 20;
 
-		// Add supertoken
-		_g
-			.append("rect")
-			.attr("width", end - x1)
-			.attr("height", 2 * nodeHeight + lineLen + 2 * mwSpacing)
-			.attr("x", x1)
-			.attr("y", yLevel - 20)
-			.attr("class", d.classes)
-			.attr("subId", d.subId)
-			.attr("rx", 5)
-			.attr("ry", 5)
-			.style("cursor", "pointer");
+    // Add supertoken
+    _g
+      .append("rect")
+      .attr("width", end - x1)
+      .attr("height", 2 * utils.nodeHeight + utils.lineLen + 2 * mwSpacing)
+      .attr("x", x1)
+      .attr("y", yLevel - 20)
+      .attr("class", d.classes)
+      .attr("subId", d.subId)
+      .attr("rx", 5)
+      .attr("ry", 5)
+      .style("cursor", "pointer");
 
-		// mwGroup is houses the supertoken label elements
-		let mwGroup = _g
-			.append("svg")
-			.attr("x", (end + x1 - mwWidth) / 2)
-			.attr("y", yLevel - mwSpacing - nodeHeight)
-			.attr("width", mwWidth)
-			.attr("height", nodeHeight)
-			.style("overflow", "visible");
+    // mwGroup is houses the supertoken label elements
+    let mwGroup = _g
+      .append("svg")
+      .attr("x", (end + x1 - mwWidth) / 2)
+      .attr("y", yLevel - mwSpacing - utils.nodeHeight)
+      .attr("width", mwWidth)
+      .attr("height", utils.nodeHeight)
+      .style("overflow", "visible");
 
-		// Add label
-		mwGroup.append("rect")
-			.attr("width", mwWidth)
-			.attr("height", nodeHeight)
-			.attr("class", "multiword-label");
+    // Add label
+    mwGroup.append("rect")
+      .attr("width", mwWidth)
+      .attr("height", utils.nodeHeight)
+      .attr("class", "multiword-label");
 
-		// Add label text
-		mwGroup.append("text")
-			.attr("x", "50%")
-			.attr("y", "50%")
-			.text(d.label)
-			.attr("text-anchor", "middle")
-			.attr("dominant-baseline", "central");
-	});
+    // Add label text
+    mwGroup.append("text")
+      .attr("x", "50%")
+      .attr("y", "50%")
+      .text(d.label)
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "central");
+  });
 }
 
 function zoomIn() {
-	svg.call(zoom.scaleBy, 1.25);
-	saveZoom();
+  svg.call(zoom.scaleBy, 1.25);
+  saveZoom();
 }
 
 function zoomOut() {
-	svg.call(zoom.scaleBy, 0.8);
-	saveZoom();
+  svg.call(zoom.scaleBy, 0.8);
+  saveZoom();
 }
 
 function resetZoom() {
-	var bounds = d3.select("#graph-g").node().getBBox();
-	let w = d3.select("#graph-svg").node().clientWidth;
-	let h = d3.select("#graph-svg").node().clientHeight;
-	var width = bounds.width,
-	    height = bounds.height;
-	var midX = bounds.x + width / 2,
-	    midY = bounds.y + height / 2;
-	if (width == 0 || height == 0) return; // nothing to fit
-	var scale = (0.95) / Math.max(width / w, height / h);
-	var translateX = w / 2 - scale * midX;
-	var translateY = h / 2 - scale * midY;
+  var bounds = d3.select("#graph-g").node().getBBox();
+  let w = d3.select("#graph-svg").node().clientWidth;
+  let h = d3.select("#graph-svg").node().clientHeight;
+  var width = bounds.width,
+      height = bounds.height;
+  var midX = bounds.x + width / 2,
+      midY = bounds.y + height / 2;
+  if (width == 0 || height == 0) return; // nothing to fit
+  var scale = (0.95) / Math.max(width / w, height / h);
+  var translateX = w / 2 - scale * midX;
+  var translateY = h / 2 - scale * midY;
 
-	svg.call(
+  svg.call(
     zoom.transform,
     d3.zoomIdentity.translate(translateX, translateY).scale(scale)
-	);
-	saveZoom();
+  );
+  saveZoom();
 }
 
 function zoomTo(s) {
-	svg.call(zoom.transform, d3.zoomIdentity.translate(_graph.config.pan.x, _graph.config.pan.y).scale(s));
-	saveZoom();
+  svg.call(zoom.transform, d3.zoomIdentity.translate(_graph.config.pan.x, _graph.config.pan.y).scale(s));
+  saveZoom();
 }
 
 function saveZoom() {
-	let transform = d3.zoomTransform(_g.node());
-	_graph.config.zoom = transform.k;
-	_graph.config.pan = {x: transform.x, y: transform.y};
-	svg.call(zoom.transform, d3.zoomIdentity.translate(transform.x, transform.y).scale(transform.k))
+  let transform = d3.zoomTransform(_g.node());
+  _graph.config.zoom = transform.k;
+  _graph.config.pan = {x: transform.x, y: transform.y};
+  svg.call(zoom.transform, d3.zoomIdentity.translate(transform.x, transform.y).scale(transform.k))
 }
 
 /**
@@ -707,21 +532,21 @@ function saveZoom() {
  * @param {MouseObject} mouse 
  */
 function drawMouse(mouse) {
-	const id = mouse.id.replace(/[#:]/g, "_");
-	if (!$(`#${id}.mouse`).length) {
-		_g.append("rect")
-			.attr("id", id)
-			.attr("class", "mouse")
-			.attr("width", 5)
-			.attr("height", 5);
-	}
-	if(mouse.position) {
-		d3.select(`#${id}.mouse`)
-			.attr("x", mouse.position.x)
-			.attr("y", mouse.position.y)
-			.style("fill", "#" + mouse.color);
-	}
-	
+  const id = mouse.id.replace(/[#:]/g, "_");
+  if (!$(`#${id}.mouse`).length) {
+    _g.append("rect")
+      .attr("id", id)
+      .attr("class", "mouse")
+      .attr("width", 5)
+      .attr("height", 5);
+  }
+  if(mouse.position) {
+    d3.select(`#${id}.mouse`)
+      .attr("x", mouse.position.x)
+      .attr("y", mouse.position.y)
+      .style("fill", "#" + mouse.color);
+  }
+  
 }
 
 module.exports = {bind, run, zoomIn, zoomOut, resetZoom, zoomTo, drawMouse};

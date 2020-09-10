@@ -287,8 +287,10 @@ function depEdgeClasses(sent, token, head) {
   if (is_leaf(head.token, token))
     classes.add("error");
 
-  if (is_cycle(sent, head.token, token))
+  if (is_cycle(sent, head.token, token)) {
     classes.add("error");
+    classes.add("cycle");
+  }
 
   if (!head.deprel || head.deprel === "_") {
     classes.add("incomplete");
