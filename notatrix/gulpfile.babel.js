@@ -13,7 +13,7 @@ gulp.task("js", () => {
   return browserify("src/index.js", {standalone: "nx"})
       .transform(
           "babelify",
-          {presets: ["env"], plugins: ["transform-es5-property-mutators"]})
+          {presets: ["@babel/preset-env"], plugins: ["transform-es5-property-mutators"]})
       .bundle()
       .pipe(source("notatrix.js"))
       .pipe(buffer())
@@ -24,7 +24,7 @@ gulp.task("uglify", () => {
   return browserify("src/index.js", {standalone: "nx"})
       .transform(
           "babelify",
-          {presets: ["env"], plugins: ["transform-es5-property-mutators"]})
+          {presets: ["@babel/preset-env"], plugins: ["transform-es5-property-mutators"]})
       .bundle()
       .pipe(source("notatrix.js"))
       .pipe(buffer())
