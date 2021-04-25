@@ -1,0 +1,126 @@
+#!/usr/bin/env node
+
+'use strict';
+
+const _ = require('underscore');
+const fs = require('fs');
+const minimist = require('minimist');
+const nx = require('..');
+const readline = require('readline');
+
+function formats() {
+  let formats = new Set();
+  _.each(nx.formats, format => formats.add(format.name));
+  return Array.from(formats).sort();
+}
+
+function usage() {
+
+  process.stderr.write(`
+reads a corpus from <file> and outputs the data in <format> to <file>
+
+usage: ${process.argv[1]} -f <format> [OPTIONS]
+
+OPTIONS:
+  -f, --format [REQUIRED] (default: notatrix serial)
+    format to output parsed text
+    available formats: ${formats().join(', ')}
+  -h, --help
+    show this output and exit
+  -i, --input <file> (default: stdin)
+    read from <file>
+  -o, --output <file> (default: stdout)
+    write to <file>
+  -t, --treebank <treebank_id> (default: <automatically generated>)
+  -v, --version
+    print version info and exit
+
+`);
+  process.exit(0);
+}
+
+function version() {
+
+  process.stderr.write(`
+Notatrix
+notational utility for parsing and converting Universal Dependency treebanks
+
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+`);
+  process.exit(0);
+}
+
+(() => { // main
+
+  const argv = minimist(process.argv.slice(2));
+  let params = {
+    format: argv.f || argv.format,
+    in_file: argv.i || argv.input,
+    out_file: argv.o || argv.output,
+    treebank: argv.t || argv.treebank,
+  };
+
+  if (argv.h !== undefined || argv.help !== undefined)
+    usage();
+
+  if (argv.v !== undefined || argv.version !== undefined)
+    version();
+
+  if (!params.format) {
+    process.stderr.write(`missing required argument: <format>\n`);
+    usage();
+  }
+
+  if (!nx.formats[params.format]) {
+    process.stderr.write(`invalid format: ${params.format}`);
+    usage();
+  }
+
+  if (params.in_file) {
+
+    process.stderr.write(`reading from file ${params.in_file}\n`);
+
+    nx.Corpus.fromFile(params.in_file, corpus => {
+
+      if (params.treebank)
+        corpus.treebank_id = params.treebank;
+
+      if (params.out_file) {
+        corpus.writeFile(params.format, params.outfile);
+      } else {
+        process.stdout.write(JSON.stringify(corpus.serialize()));
+      }
+    });
+
+  } else {
+
+    process.stderr.write('reading from stdin\n');
+
+    let lines = [];
+    readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+      terminal: false
+    }).on('line', line => {
+      lines.push(line);
+    }).on('close', data => {
+      lines = lines.join('\n');
+
+      nx.Corpus.fromString(lines, corpus => {
+
+        if (params.treebank)
+          corpus.treebank_id = params.treebank;
+
+        if (params.out_file) {
+          corpus.writeFile(params.format, params.outfile);
+        } else {
+          process.stdout.write(JSON.stringify(corpus.serialize()));
+        }
+      });
+    });
+
+  }
+})();
