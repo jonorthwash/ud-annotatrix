@@ -1,4 +1,3 @@
 {
-  "presets": ["@babel/preset-env"],
-  "plugins": ["transform-es5-property-mutators"]
+  "presets": ["@babel/preset-env"]
 }
