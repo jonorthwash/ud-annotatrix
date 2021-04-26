@@ -1,0 +1,10 @@
+# node stuff
+node_modules
+
+# vim stuff
+*~
+
+# istanbul/nyc output
+.nyc_output
+.env
+old

@@ -1,0 +1,47 @@
+{
+  "name": "notatrix",
+  "version": "2.3.2",
+  "description": "experimental notational system for ud-annotatrix, combines CoNLL-U and CG3",
+  "main": "src",
+  "scripts": {
+    "test": "mocha --max-old-space-size=8192 test/index.js",
+    "coverage": "nyc mocha --max-old-space-size=8192 test/index.js",
+    "document": "jsdoc2md src/*.js > build/docs.md",
+    "build": "gulp",
+    "build-watch": "gulp && gulp watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/keggsmurph21/notatrix.git"
+  },
+  "author": "Kevin Murphy",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/keggsmurph21/notatrix/issues"
+  },
+  "homepage": "https://github.com/keggsmurph21/notatrix#readme",
+  "dependencies": {
+    "minimist": "^1.2.0",
+    "underscore": "^1.9.1",
+    "uuid": "^3.3.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.13.16",
+    "@babel/preset-env": "^7.13.15",
+    "@babel/register": "^7.13.16",
+    "babelify": "^10.0.0",
+    "browserify": "^16.2.3",
+    "chai": "^4.1.2",
+    "gulp": "^4.0.0",
+    "gulp-rename": "^1.2.3",
+    "gulp-sourcemaps": "^2.6.4",
+    "gulp-uglify": "^3.0.2",
+    "istanbul": "^0.4.5",
+    "jsdoc-to-markdown": "^4.0.1",
+    "mocha": "^5.2.0",
+    "nyc": "^12.0.2",
+    "sinon": "^5.1.1",
+    "vinyl-buffer": "^1.0.1",
+    "vinyl-source-stream": "^2.0.0"
+  }
+}
