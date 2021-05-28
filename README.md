@@ -161,8 +161,7 @@ See also: the [API Documentation](documentation/README.md).
 
 ## Support
 
-Having a problem with UD Annotatrix? Want some one-on-one support? You can try to reach us on IRC at <tt>#\_u-dep</tt> on <tt>irc.freenode.net</tt> or
-join our [Telegram chat](https://t.me/joinchat/EWWgMhGXARzxvgO5AzI0ew).
+Having a problem with UD Annotatrix? Want some one-on-one support? You can try to reach us on IRC at <tt>#\_u-dep</tt> on <tt>irc.oftc.net</tt>, on [Matrix](https://app.element.io/#/room/#_u-dep:matrix.org) or join our [Telegram chat](https://t.me/joinchat/EWWgMhGXARzxvgO5AzI0ew).
 
 ## Acknowledgements
 
