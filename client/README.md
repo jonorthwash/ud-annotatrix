@@ -67,15 +67,21 @@
  string/object.  If it can&#39;t detect one, it returns null.  If it detects one
  or more, it follows a simple resolution algorithm to pick one.</p>
 </dd>
+<dt><a href="#traverseTree">traverseTree(token, heights)</a></dt>
+<dd><p>BFS to set the heights of the tree, starting from a root token</p>
+</dd>
+<dt><a href="#drawMouse">drawMouse(mouse)</a></dt>
+<dd><p>Draw mouse on the svg.</p>
+</dd>
+<dt><a href="#drawNodes">drawNodes(_g, el, heights, spacing)</a> ⇒</dt>
+<dd><p>Draws the nodes on the svg.</p>
+</dd>
 <dt><a href="#bind">bind(eles)</a></dt>
 <dd><p>Bind the elements to the internal reference.</p>
 </dd>
 <dt><a href="#run">run()</a></dt>
 <dd><p>Main function that runs all of the
 subfunctions needed to generate the graph.</p>
-</dd>
-<dt><a href="#drawNodes">drawNodes()</a></dt>
-<dd><p>Draws the nodes on the svg.</p>
 </dd>
 <dt><a href="#drawDeprels">drawDeprels()</a></dt>
 <dd><p>Draws deprels.</p>
@@ -1166,6 +1172,44 @@ Helper function for Corpus.  Attempts to detect the format of a given serial
 | --- | --- |
 | serial | <code>String</code> \| <code>Object</code> | 
 
+<a name="traverseTree"></a>
+
+## traverseTree(token, heights)
+BFS to set the heights of the tree, starting from a root token
+
+**Kind**: global function  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| token | <code>Integer</code> | current token |
+| heights | <code>Array</code> | holds the heights of the tokens |
+
+<a name="drawMouse"></a>
+
+## drawMouse(mouse)
+Draw mouse on the svg.
+
+**Kind**: global function  
+
+| Param | Type |
+| --- | --- |
+| mouse | <code>MouseObject</code> | 
+
+<a name="drawNodes"></a>
+
+## drawNodes(_g, el, heights, spacing) ⇒
+Draws the nodes on the svg.
+
+**Kind**: global function  
+**Returns**: token number of root  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| _g | <code>g</code> | <g> element to draw on |
+| el | <code>Array</code> | array of nodes |
+| heights | <code>Array</code> | heights of each node |
+| spacing | <code>Integer</code> | how far nodes are apart |
+
 <a name="bind"></a>
 
 ## bind(eles)
@@ -1182,12 +1226,6 @@ Bind the elements to the internal reference.
 ## run()
 Main function that runs all of the
 subfunctions needed to generate the graph.
-
-**Kind**: global function  
-<a name="drawNodes"></a>
-
-## drawNodes()
-Draws the nodes on the svg.
 
 **Kind**: global function  
 <a name="drawDeprels"></a>

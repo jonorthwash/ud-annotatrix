@@ -131,6 +131,16 @@ span.tt {
   fill: #0b2;
 }
 
+.tokenNum {
+  fill: #afa2ff;
+  stroke: black;
+	stroke-width: 2px;
+}
+
+.tokenNum.root {
+  stroke-width: 4px;
+}
+
 .dependency {
   stroke: #111;
   opacity: 0.766;
@@ -152,11 +162,19 @@ span.tt {
   stroke: #cc22fc;
 }
 
+.dependency.dotted {
+  stroke-dasharray: 6,2;
+}
+
 .deprel-label {
-  text-shadow: 2px 2px 5px #575757;
+  text-shadow: 1px 1px 5px #fff;
 }
 
 .form-label.root {
+  font-weight: bold;
+}
+
+.tokenNum-label.root {
   font-weight: bold;
 }
 
