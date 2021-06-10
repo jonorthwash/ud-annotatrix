@@ -17,6 +17,6 @@ module.exports = {
   SD: require("./sd"),
   sd: require("./sd"),
 
-  corpora: require("./corpora"),
+//  corpora: require("./corpora"),
 
 };

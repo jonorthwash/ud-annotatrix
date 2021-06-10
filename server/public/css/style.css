@@ -876,17 +876,18 @@ td .parse-error {
 #label-container {
 
   background-color: #fff;
-  display: flex;
+/*  display: flex;*/
   padding: 0;
   overflow-x: auto;
-
+  display: none;
 }
 
 #labels-horiz {
   list-style: none;
   margin: 0 0.5em;
   padding: 0;
-  display: flex;
+  /*display: flex;*/
+  display: none;
 }
 
 #label-controller .label-text {

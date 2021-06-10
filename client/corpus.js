@@ -425,6 +425,8 @@ class Corpus {
 
     // get the index to start at
     const index = this.index || 0;
+ 
+    console.log('parse() INDEX', index);
 
     // iterate over all the pieces, get a list of affected indices
     const sents = splitted.map((split, i) => {
