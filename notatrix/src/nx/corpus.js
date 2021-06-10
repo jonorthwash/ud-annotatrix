@@ -260,10 +260,13 @@ class Corpus extends NxBaseClass {
   parse(string) {
     const splitted = split(string, this.options); // might throw errors
     const index = this.index || 0;
+    console.log('parse() ' + index);
 
     splitted.forEach((split, i) => {
       // console.log(i, split);
-      this.insertSentence(index + i, split, false);
+      //this.insertSentence(index + i, split, false);
+      this.pushSentence(split);
+      console.log('pushSentence() ' + i); 
     });
 
     return this;
@@ -272,6 +275,7 @@ class Corpus extends NxBaseClass {
   static fromString(string, options) {
     const corpus = new Corpus(options);
     corpus.parse(string);
+    corpus.index = 0;
     return corpus;
   }
 
