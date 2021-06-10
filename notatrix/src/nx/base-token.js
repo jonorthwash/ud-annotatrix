@@ -58,6 +58,9 @@ class BaseToken extends NxBaseClass {
     if (typeof deprel !== "string" && deprel != null)
       throw new NxError("deprel must be a string, null, or undefined");
 
+    if(this.upostag == "PUNCT" && deprel == null)
+      deprel = "punct";
+
     // if we're not enhanced, only can have 1 head at a time
     if (!this.sent.options.enhanced)
       this.heads.clear();
