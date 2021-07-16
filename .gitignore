@@ -1,0 +1,25 @@
+# environment stuff
+.env
+ud-env
+
+# python compiled files
+__pycache__
+*.pyc
+
+# db files
+corpora
+.users.db
+
+# log stuff
+logs
+
+# vim swap files
+*.swp
+
+# node stuff
+node_modules
+build
+.nyc_output
+
+# ubuntu process files
+.nfs*

@@ -1,0 +1,39 @@
+<div class="modal fade" id="fileModal" tabindex="-1" role="dialog" aria-labelledby="fileModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title" id="fileModalLabel">Import corpus</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- This message can be removed when we have better error handling. -->
+        <p>
+          This will upload your treebank to your browser's local storage. If there is not
+          enough space then the file will not be uploaded successfully. The amount of
+          available space according to your browser is reported below.
+        </p>
+        <span title="Select a file to upload into the interface">
+          <u>Choose and upload file</u>
+        </span>:
+        <input type="file" id="filename" />
+        <progress id="fileUploadProgressBar" value="0" max="100"></progress>
+        <div id="uploadFileSize">Size:</div>
+        <div id="errorUploadFileSize">ERROR: File exceeds local storage quota.</div>
+        <div>
+          Treebank size: <span id="treebankSize"></span>
+          Available space: <span id="localStorageAvailable"></span>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="uploadFileButton" type="button" class="btn btn-primary" data-dismiss="modal" disabled>Upload</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <!-- button type="button" class="btn btn-primary">Save changes</button -->
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,3 +1,0 @@
-2-3	haven't	_	_	_	_	_	_	_	_
-2	have	have	VERB	VBP	Number=Sing|Person=1|Tense=Pres	0	root	_	_
-3	not	not	PART	RB	Negative=Neg	2	neg	_	_

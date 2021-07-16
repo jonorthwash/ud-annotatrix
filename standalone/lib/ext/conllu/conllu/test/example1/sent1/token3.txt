@@ -1,1 +1,0 @@
-5	clue	clue	NOUN	NN	Number=Sing	2	dobj	_	SpaceAfter=No

@@ -1,0 +1,80 @@
+[root [nsubj I] have [obj [amod [advmod too] many] commitments] [advmod right now] [punct .]]
+
+# sent_id = wikipedia:Poyvi_Paraguái:11
+# text = Poyvi peteĩha ñane retãmegua niko ojepuru’ypýkuri 15 jasypo guive 16 jasypoteĩ meve ary 1811-pe.
+# text[spa] = Bandera uno nosotros de-de _ él-se-utilizó-_ 15 maio desde 16 junio hasta año 1811-en.
+"<Poyvi>"
+	"poyvi" n
+"<peteĩha>"
+	"pete" n incp
+		"ĩ" v tv pres
+			"ha" subs
+	"peteĩha" num
+"<ñane>"
+	"ñandé" prn pers p1 incl pl
+"<retãmegua>"
+	"*retãmegua"
+"<niko>"
+	"*niko"
+"<ojepuruʼypýkuri>"
+	"*ojepuruʼypýkuri"
+"<15>"
+	"15" num @amod
+"<jasypo>"
+	"ja" n incp
+		"sy" n incp
+			"po" n
+	"ja" n incp
+		"sy" n incp
+			"po" v iv pres
+	"ja" n incp
+		"sy" n incp
+			"po" v tv pres
+	"ja" prn p1 pl
+		"sy" n incp
+			"po" n
+	"ja" prn p1 pl
+		"sy" n incp
+			"po" v iv pres
+	"ja" prn p1 pl
+		"sy" n incp
+			"po" v tv pres
+	"jasy" n incp
+		"po" n
+	"jasy" n incp
+		"po" v iv pres
+	"jasy" n incp
+		"po" v tv pres
+	"jasypo" n
+"<guive>"
+	"guive" post @case
+"<16>"
+	"16" num @amod
+"<jasypoteĩ>"
+	"jasypoteĩ" n
+"<meve>"
+	"peve" post @case
+"<ary>"
+	"ary" n
+"<1811-pe>"
+	"1811" num
+		"pe" post @case
+
+# text = "This is a simple sentence."
+# labels = label1 another_label a-third-label
+1	This	This	_	_	_	_	_	_	_
+2	is	is	_	_	_	_	_	_	_
+3	a	a	_	_	_	_	_	_	_
+4	simple	simple	_	_	_	_	_	_	_
+5	sentence	sentence	_	_	_	_	_	_	_
+6	.	.	PUNCT	PUNCT	_	_	_	_	_
+
+Дәүләтләрнең, шул исәптән Русиянең дә, диңгез чикләре ярдан 12 миль (яки 22,2 км) ераклыкта узуы килешенгән
+
+ROOT And Robert the fourth place .
+root(ROOT, Robert)
+cc(Robert, And)
+orphan(Robert, place)
+punct(Robert, .)
+amod(place, fourth)
+det(place, the)

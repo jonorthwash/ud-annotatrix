@@ -1,1 +1,0 @@
-2	buy	buy	VERB	VBP	Number=Plur|Person=3|Tense=Pres	0	root	_	_

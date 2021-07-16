@@ -1,1 +1,0 @@
-1	I	I	PRON	PRP	Case=Nom|Number=Sing|Person=1	2	nsubj	_	_
