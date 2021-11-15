@@ -55,7 +55,7 @@ gulp.task("docs", done => {
 gulp.task("ico", function() { return gulp.src(["./client/favicon.png"]).pipe(gulp.dest("./server/public")); });
 
 gulp.task("watch", () => {
-  gulp.watch(["client/*.js", "client/*/*.js", "server/views/*.ejs"], gulp.parallel("js", "html", "docs"));
+  gulp.watch(["client/**/*.js", "notatrix/**/*.js", "server/views/**/*.ejs"], gulp.parallel("js", "html", "docs"));
 });
 
 gulp.task("default", gulp.parallel("js", "html", "docs", "ico"));
