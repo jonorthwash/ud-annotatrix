@@ -367,7 +367,7 @@ class Sentence extends NxBaseClass {
     if (src.isSuperToken || tar.isSuperToken)
       throw new NxError("unable to combine: cannot combine superTokens");
 
-    if (src.name === "SubToken" || tar.name === "SuperToken")
+    if (src.name === "SubToken" || tar.name === "SuperToken" || tar.name === "SubToken")
       throw new NxError("unable to combine: cannot combine subTokens");
 
     if (Math.abs(tar.indices.absolute - src.indices.absolute) > 1)
