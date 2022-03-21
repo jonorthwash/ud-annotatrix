@@ -145,33 +145,34 @@ class BaseToken extends NxBaseClass {
     return this.heads.first.deprel;
   }
 
+  static getTokenIndex(token, format) {
+    if (format === "CoNLL-U")
+      return token.indices.conllu;
+
+    if (format === "CG3")
+      return token.indices.cg3;
+
+    return token.indices.absolute;
+  }
+
   _getDeps(format) {
-    function getIndex(token) {
-      if (format === "CoNLL-U")
-        return token.indices.conllu;
-
-      if (format === "CG3")
-        return token.indices.cg3;
-
-      return token.indices.absolute;
-    }
-
     if (!this.heads.length || !this.sent.options.enhanced)
       return [];
 
     return this.mapHeads(utils.noop)
         .sort((x, y) => {
-          if (getIndex(x.token) < getIndex(y.token))
+          if (BaseToken.getTokenIndex(x.token) < BaseToken.getTokenIndex(y.token))
             return -1;
 
-          if (getIndex(x.token) > getIndex(y.token))
+          if (BaseToken.getTokenIndex(x.token) > BaseToken.getTokenIndex(y.token))
             return 1;
 
           return 0;
         })
         .map(head => {
-          return head.deprel ? `${getIndex(head.token)}:${head.deprel}`
-                             : `${getIndex(head.token)}`;
+          const headIndex = BaseToken.getTokenIndex(head.token, format);
+          return head.deprel ? `${headIndex}:${head.deprel}`
+                             : `${headIndex}`;
         });
   }
 
