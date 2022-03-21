@@ -220,7 +220,6 @@ class Sentence extends NxBaseClass {
   }
 
   attach() {
-    console.log('attach()');
     this.iterate(token => {
       (token._heads || []).forEach((dependency, i) => {
         if (i)
