@@ -124,12 +124,6 @@ class Graph {
       return str.split("").map((char) => { return (subscripts[char] || char); }).join("");
     }
 
-    // helper function to get index numbers for a particular format
-    function getIndex(token, format) {
-      return format === "CoNLL-U" ? token.indices.conllu
-                                  : format === "CG3" ? token.indices.cg3 : token.indices.absolute;
-    }
-
     // reset our progress tracker
     this.progress.done = 0;
     this.progress.total = 0;
@@ -158,7 +152,7 @@ class Graph {
         return;
 
       // cache some values
-      let id = getIndex(token, format);
+      let id = nx.BaseToken.getTokenIndex(token, format);
       let clump = token.indices.cytoscape;
       let pos = format === "CG3" ? token.xpostag || token.upostag : token.upostag || token.xpostag;
       let isRoot = sent.root.dependents.has(token);
@@ -196,7 +190,7 @@ class Graph {
         if (token.heads.length)
           this.progress.done += 1;
 
-        let parent = token.name === "SubToken" ? "multiword-" + getIndex(sent.getSuperToken(token), format) : undefined;
+        let parent = token.name === "SubToken" ? "multiword-" + nx.BaseToken.getTokenIndex(sent.getSuperToken(token), format) : undefined;
 
         this.tokens[tokenNum] = token;
 
@@ -252,8 +246,8 @@ class Graph {
 
         let deprel = head.deprel || "";
 
-        const id = getIndex(token, format),
-          headId = getIndex(head.token, format),
+        const id = nx.BaseToken.getTokenIndex(token, format),
+          headId = nx.BaseToken.getTokenIndex(head.token, format),
           label = this.app.corpus.is_ltr
             ? token.indices.absolute > head.token.indices.absolute
               ? `${deprel}⊳`
