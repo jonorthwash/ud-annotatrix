@@ -155,20 +155,22 @@ class BaseToken extends NxBaseClass {
     return token.indices.absolute;
   }
 
+  static compareTokenIndices(x, y, format) {
+    if (BaseToken.getTokenIndex(x, format) < BaseToken.getTokenIndex(y, format))
+      return -1;
+
+    if (BaseToken.getTokenIndex(x, format) > BaseToken.getTokenIndex(y, format))
+      return 1;
+
+    return 0;
+  }
+
   _getDeps(format) {
     if (!this.heads.length || !this.sent.options.enhanced)
       return [];
 
     return this.mapHeads(utils.noop)
-        .sort((x, y) => {
-          if (BaseToken.getTokenIndex(x.token) < BaseToken.getTokenIndex(y.token))
-            return -1;
-
-          if (BaseToken.getTokenIndex(x.token) > BaseToken.getTokenIndex(y.token))
-            return 1;
-
-          return 0;
-        })
+        .sort((x, y) => BaseToken.compareTokenIndices(x.token, y.token, format))
         .map(head => {
           const headIndex = BaseToken.getTokenIndex(head.token, format);
           return head.deprel ? `${headIndex}:${head.deprel}`
