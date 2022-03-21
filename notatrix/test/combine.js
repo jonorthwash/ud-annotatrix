@@ -110,7 +110,7 @@ describe("combine", () => {
 
     expect(sent.size).to.equal(6);
     expect(sent.tokens.length).to.equal(4);
-    expect(sent.to("conllu").output).to.equal(`1-2	isthis	_	_	_	_	_	_	_	_
+    expect(sent.to("conllu").output).to.equal(`1-2	thisis	_	_	_	_	_	_	_	_
 1	this	_	_	_	_	_	_	_	_
 2	is	_	_	_	_	_	_	_	_
 3	a	_	_	_	_	_	_	_	_
@@ -238,7 +238,7 @@ describe("combine", () => {
 6-7	er	_	_	_	_	_	_	_	_
 6	_	e	pr	_	_	8	case	_	_
 7	_	an	det	_	def|sp	8	det	_	_
-8-9	.gegin	_	_	_	_	_	_	_	_
+8-9	gegin.	_	_	_	_	_	_	_	_
 8	gegin	kegin	n	_	f|sg	4	obl	_	_
 9	.	.	sent	_	_	4	punct	_	_`);
   });

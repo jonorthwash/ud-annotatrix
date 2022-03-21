@@ -97,7 +97,7 @@ describe("merge", () => {
 
     sent.merge(tok1, tok0);
     expect(sent.to("params").output).to.deep.equal([
-      {form: "isthis"},
+      {form: "thisis"},
       {form: "a"},
       {form: "simple"},
       {form: "sentence"},
@@ -229,6 +229,6 @@ describe("merge", () => {
 6-7	er	_	_	_	_	_	_	_	_
 6	_	e	pr	_	_	8	case	_	_
 7	_	an	det	_	def|sp	8	det	_	_
-8	.gegin	.	sent	_	f|sg	4	punct	_	_`);
+8	gegin.	kegin	n	_	f|sg	4	obl	_	_`);
   });
 });

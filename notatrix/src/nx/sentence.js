@@ -318,37 +318,39 @@ class Sentence extends NxBaseClass {
     if (Math.abs(tar.indices.absolute - src.indices.absolute) > 1)
       throw new NxError("unable to merge: tokens too far apart");
 
+    const [left, right] = BaseToken.sortTokenPair(src, tar, "CoNLL-U"); // TODO: We probably shouldn't hard-code the format here ...
+
     // basic copying
-    src.semicolon = src.semicolon || tar.semicolon;
-    src.isEmpty = src.isEmpty || tar.isEmpty;
-    src.form = (src.form || "") + (tar.form || "") || null;
-    src.lemma = src.lemma || tar.lemma;
-    src.upostag = src.upostag || tar.upostag;
-    src.xpostag = src.xpostag || tar.xpostag;
+    left.semicolon = left.semicolon || right.semicolon;
+    left.isEmpty = left.isEmpty || right.isEmpty;
+    left.form = (left.form || "") + (right.form || "") || null;
+    left.lemma = left.lemma || right.lemma;
+    left.upostag = left.upostag || right.upostag;
+    left.xpostag = left.xpostag || right.xpostag;
 
     // array-type copying
-    src._feats_init = src._feats_init || tar._feats_init;
-    src._feats = src._feats_init ? (src._feats || []).concat(tar._feats || [])
-                                 : undefined;
-    src._misc_init = src._misc_init || tar._misc_init;
-    src._misc =
-        src._misc_init ? (src._misc || []).concat(tar._misc || []) : undefined;
+    left._feats_init = left._feats_init || right._feats_init;
+    left._feats = left._feats_init ? (left._feats || []).concat(right._feats || [])
+                                  : undefined;
+    left._misc_init = left._misc_init || right._misc_init;
+    left._misc =
+        left._misc_init ? (left._misc || []).concat(right._misc || []) : undefined;
 
     // make sure they don't depend on each other
-    src.removeHead(tar);
-    tar.removeHead(src);
+    left.removeHead(right);
+    right.removeHead(left);
 
     // migrate dependent things to the new token
-    tar.mapDependents(dep => {
-      dep.token.removeHead(tar);
-      dep.token.addHead(src, dep.deprel);
+    right.mapDependents(dep => {
+      dep.token.removeHead(right);
+      dep.token.addHead(left, dep.deprel);
     });
 
     // remove heads from the old token
-    tar.removeAllHeads();
+    right.removeAllHeads();
 
     // now that all references are gone, safe to splice the target out
-    this.tokens.splice(tar.indices.sup, 1);
+    this.tokens.splice(right.indices.sup, 1);
 
     return this.index();
   }
@@ -378,7 +380,8 @@ class Sentence extends NxBaseClass {
     superToken._i = 0;
 
     // get the new superToken form from the subTokens
-    superToken.form = (src.form || "") + (tar.form || "") || null;
+    const [left, right] = BaseToken.sortTokenPair(src, tar, "CoNLL-U"); // TODO: We probably shouldn't hard-code the format here ...
+    superToken.form = (left.form || "") + (right.form || "") || null;
 
     // make new subToken objects from src and tar
     let _src = new SubToken(this, {});

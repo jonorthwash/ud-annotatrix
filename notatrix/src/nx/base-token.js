@@ -165,6 +165,15 @@ class BaseToken extends NxBaseClass {
     return 0;
   }
 
+  static sortTokenPair(x, y, format) {
+    const comparison = BaseToken.compareTokenIndices(x, y, format);
+    if (comparison === -1)
+      return [x, y];
+    if (comparison === 1)
+      return [y, x];
+    throw new NxError("unable to sortTokenPair: tokens have the same index!");
+  }
+
   _getDeps(format) {
     if (!this.heads.length || !this.sent.options.enhanced)
       return [];
