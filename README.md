@@ -12,8 +12,6 @@ UD Annotatrix is a client-side, browser-only, language-independent tool for edit
  - SDParse
  - plain text
 
-![UD Annotatrix Screenshot](https://github.com/jonorthwash/ud-annotatrix/raw/master/screenshot.png)
-
 Note: [brat](http://brat.nlplab.org) and [CoNLLUEditor](https://github.com/Orange-OpenSource/conllueditor) are similar corpus annotation tools, but UD Annotatrix aims to be a simple(r), clean(er), fast(er) interface optimized for Universal Dependencies with an optional server-side component.
 
 ##### Contents
@@ -180,7 +178,7 @@ If you use UD Annotatrix in your work, please cite:
 ## Contributors
 
 * Jonathan North Washington ([@jonorthwash](https://github.com/jonorthwash))
-* Kevin Murphy ([@keggsmurph21](https://github.com/keggsmurph21); [documentation of the changes](https://gist.github.com/keggsmurph21))
+* Kevin Murphy ([@keggsmurph21](https://github.com/keggsmurph21); [documentation of the changes](https://gist.github.com/keggsmurph21/4cce74eb0542373417b2e0366ab9394d#file-gsoc-md))
 * Mariya Sheyanova ([@maryszmary](https://github.com/maryszmary); [documentation of the changes](http://wiki.apertium.org/wiki/UD_annotatrix/UD_annotatrix_at_GSoC_2017))
 * Tai Vongsathorn Warner ([@MidasDoas](https://github.com/MidasDoas); [documentation of the changes](https://wikis.swarthmore.edu/ling073/User:Twarner2/Final_project))
 * Francis Tyers ([@ftyers](https://github.com/ftyers))
@@ -192,5 +190,6 @@ If you use UD Annotatrix in your work, please cite:
 * Sushain Cherivirala ([@sushain97](https://github.com/sushain97))
 * Kevin Brubeck Unhammer ([@unhammer](https://github.com/unhammer))
 * Ethan Yang ([@thatprogrammer1](https://github.com/thatprogrammer1))
+* Daniel Swanson ([@mr-martian](https://github.com/mr-martian))
 
 See also: the [AUTHORS](AUTHORS) file.
