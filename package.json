@@ -14,7 +14,7 @@
     "express-session": "^1.16.2",
     "jquery": "^3.5.0",
     "mkdirp": "^0.5.1",
-    "moment": "^2.24.0",
+    "moment": "^2.29.4",
     "morgan": "^1.9.1",
     "nocache": "^2.0.0",
     "notatrix": "file:notatrix",
