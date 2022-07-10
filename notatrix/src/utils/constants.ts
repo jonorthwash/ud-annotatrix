@@ -37,4 +37,4 @@ export const nxAllOptions = {
 
 export const fallback = "_";
 
-export const hexConstant = 16777215; // = 0xffffff
+export const hexConstant = 0xffffff;
