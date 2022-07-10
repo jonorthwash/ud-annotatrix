@@ -8,9 +8,11 @@ const uglify = require("gulp-uglify");
 const sourcemaps = require("gulp-sourcemaps");
 const jsdoc2md = require("jsdoc-to-markdown");
 const fs = require("fs");
+const tsify = require("tsify");
 
 gulp.task("js", () => {
   return browserify("src/index.js", {standalone: "nx"})
+      .plugin(tsify)
       .transform(
           "babelify",
           {presets: ["@babel/preset-env"]})
@@ -22,6 +24,7 @@ gulp.task("js", () => {
 
 gulp.task("uglify", () => {
   return browserify("src/index.js", {standalone: "nx"})
+      .plugin(tsify)
       .transform(
           "babelify",
           {presets: ["@babel/preset-env"]})
