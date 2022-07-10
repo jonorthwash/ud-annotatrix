@@ -1,10 +1,13 @@
 "use strict";
 
-class NotatrixError extends Error {};
+export class NotatrixError extends Error {}
 
-class ToolError extends NotatrixError {};
+export class ToolError extends NotatrixError {}
 
-class SplitterError extends ToolError {
+export class SplitterError extends ToolError {
+  text: string
+  options: any
+
   constructor(message, text, options) {
     super(message);
 
@@ -16,7 +19,10 @@ class SplitterError extends ToolError {
   }
 }
 
-class DetectorError extends ToolError {
+export class DetectorError extends ToolError {
+  text: string
+  options: any
+
   constructor(message, text, options) {
     super(message);
 
@@ -28,7 +34,10 @@ class DetectorError extends ToolError {
   }
 }
 
-class ParserError extends ToolError {
+export class ParserError extends ToolError {
+  text: string
+  options: any
+
   constructor(message, text, options) {
     super(message);
 
@@ -40,7 +49,10 @@ class ParserError extends ToolError {
   }
 }
 
-class GeneratorError extends ToolError {
+export class GeneratorError extends ToolError {
+  nx: string
+  options: any
+
   constructor(message, nx, options) {
     super(message);
 
@@ -52,7 +64,7 @@ class GeneratorError extends ToolError {
   }
 }
 
-class ConverterError extends ToolError {
+export class ConverterError extends ToolError {
   constructor(message) {
     super(message);
 
@@ -62,7 +74,7 @@ class ConverterError extends ToolError {
   }
 }
 
-class NxError extends NotatrixError {
+export class NxError extends NotatrixError {
   constructor(...args) {
     super(...args);
     this.name = "NxError";
@@ -71,20 +83,4 @@ class NxError extends NotatrixError {
   }
 }
 
-class DBError extends NotatrixError {};
-
-module.exports = {
-
-  NotatrixError,
-
-  ToolError,
-  SplitterError,
-  DetectorError,
-  ParserError,
-  GeneratorError,
-  ConverterError,
-
-  NxError,
-  DBError,
-
-};
+export class DBError extends NotatrixError {}
