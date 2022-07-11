@@ -4,8 +4,8 @@
   "description": "experimental notational system for ud-annotatrix, combines CoNLL-U and CG3",
   "main": "build/js/src",
   "scripts": {
-    "test": "mocha --max-old-space-size=8192 test/index.js",
-    "coverage": "nyc mocha --max-old-space-size=8192 test/index.js",
+    "test": "mocha -r ts-node/register --max-old-space-size=8192 test/index.js",
+    "coverage": "nyc mocha -r ts-node/register --max-old-space-size=8192 test/index.js",
     "document": "jsdoc2md src/*.js > build/docs.md",
     "build": "gulp",
     "build-watch": "gulp && gulp watch"
@@ -41,6 +41,7 @@
     "mocha": "^5.2.0",
     "nyc": "^12.0.2",
     "sinon": "^5.1.1",
+    "ts-node": "^10.8.2",
     "typescript": "^4.7.4",
     "vinyl-buffer": "^1.0.1",
     "vinyl-source-stream": "^2.0.0"
