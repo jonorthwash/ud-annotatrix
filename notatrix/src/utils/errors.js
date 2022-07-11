@@ -11,6 +11,8 @@ class SplitterError extends ToolError {
     this.name = "SplitterError";
     this.text = text;
     this.options = options;
+
+    Object.setPrototypeOf(this, SplitterError.prototype);
   }
 }
 
@@ -21,6 +23,8 @@ class DetectorError extends ToolError {
     this.name = "DetectorError";
     this.text = text;
     this.options = options;
+
+    Object.setPrototypeOf(this, DetectorError.prototype);
   }
 }
 
@@ -31,6 +35,8 @@ class ParserError extends ToolError {
     this.name = "ParserError";
     this.text = text;
     this.options = options;
+
+    Object.setPrototypeOf(this, ParserError.prototype);
   }
 }
 
@@ -41,6 +47,8 @@ class GeneratorError extends ToolError {
     this.name = "GeneratorError";
     this.nx = nx;
     this.options = options;
+
+    Object.setPrototypeOf(this, GeneratorError.prototype);
   }
 }
 
@@ -49,6 +57,8 @@ class ConverterError extends ToolError {
     super(message);
 
     this.name = "ConverterError";
+
+    Object.setPrototypeOf(this, ConverterError.prototype);
   }
 }
 
@@ -56,6 +66,8 @@ class NxError extends NotatrixError {
   constructor(...args) {
     super(...args);
     this.name = "NxError";
+
+    Object.setPrototypeOf(this, NxError.prototype);
   }
 }
 

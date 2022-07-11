@@ -103,7 +103,7 @@ describe("generator", () => {
               expect(Array.isArray(generated.loss)).to.equal(true);
 
             } catch (e) {
-              if (e instanceof utils.GeneratorError) {
+              if (e instanceof nx.GeneratorError) {
                 // console.log(e.message);
               } else {
                 throw e;
