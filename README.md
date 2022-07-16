@@ -153,7 +153,17 @@ cd ud-annotatrix
 npm install
 ```
 
-Whenever you make changes, you will need to regenerate some of the source files.  You can compile by running `npm run build`.  Alternatively, you could run `npm run build-watch` to compile and then listen for changes.
+Whenever you make changes, you will need to regenerate some of the source files.  You can do that with
+```bash
+npm run build        # just build everything once
+npm run build-watch  # build now watch the source code for changes
+```
+
+If you make changes to any of the files in the [`notatrix/`](notatrix/) directory, you'll need to recompile the TypeScript files as well.  You can do that with
+```bash
+npm --prefix notatrix/ run build        # just build everything once
+npm --prefix notatrix/ run build-watch  # build now watch the source code for changes
+```
 
 See also: the [API Documentation](documentation/README.md).
 
