@@ -7,8 +7,8 @@
     "test": "mocha -r ts-node/register --max-old-space-size=8192 test/index.js",
     "coverage": "nyc mocha -r ts-node/register --max-old-space-size=8192 test/index.js",
     "document": "jsdoc2md src/*.js > build/docs.md",
-    "build": "gulp",
-    "build-watch": "gulp && gulp watch"
+    "build": "tsc",
+    "build-watch": "tsc --watch"
   },
   "repository": {
     "type": "git",
