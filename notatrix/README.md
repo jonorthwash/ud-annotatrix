@@ -9,62 +9,22 @@ Experimental notational system for <a href="https://github.com/jonorthwash/ud-an
  - <a href="#Contributing">Contributing</a>
  - <a href="#Related">Related projects</a>
  
-## <a id="Install" href="#Install">Installation</a>
+## Usage
 
-For basic usage, just reference the [main file](build/notatrix.js) from a [CDN](https://www.jsdelivr.com/?docs=gh) in an HTML script tag.
-
-For example:
-```html
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/keggsmurph21/notatrix/build/notatrix.js"></script>
-<script>
-
-  text = 'this is a test';
-  sent = new nx.Sentence(text);
-  conllu = sent.to('conllu');
-  console.log(conllu.output);
-
-</script>
-```
-
-Or, just clone the repository!
-
-```bash
-$ cd ~/src
-$ git clone https://github.com/keggsmurph21/notatrix notatrix
-```
-
-Then, you can test it out directly in the browser by including a path to `notatrix/build/notatrix.js` in a script tag of an HTML document.  All of the `notatrix` methods will be available on a global `nx` object.
-
-For example:
-```html
-<script type="text/javascript" src="file:///home/keggsmurph21/src/notatrix/build/notatrix.js"></script>
-<script>
-
-  text = 'this is a test';
-  sent = new nx.Sentence(text);
-  conllu = sent.to('conllu');
-  console.log(conllu.output);
-
-</script>
-```
-
-Alternatively, you can use this package in Node.js.  To install the package and all its dependencies:
-
-```bash
-$ cd ~/src/some/existing/project
-$ npm install notatrix
-$ node # NOTE: this command opens the Node.js REPL
-```
-
-Then `notatrix` is available as a module via
-
+Basic usage:
 ```js
-> const nx = require('notatrix');
+> const nx = require('./notatrix');
+> const text = "This is a sentence";
+> const sent = new nx.Sentence(text);
+> const conllu = sent.to("conllu");
+> console.log(conllu.output);
+1	This	_	_	_	_	_	_	_	_
+2	is	_	_	_	_	_	_	_	_
+3	a	_	_	_	_	_	_	_	_
+4	sentence	_	_	_	_	_	_	_	_
 ```
 
-## <a id="Usage" href="#Usage">Basic usage</a>
-
-### <a id="initializing" href="#initializing">Initializing</a>
+### Initializing
 
 The basic unit of `notatrix` is the [`notatrix.Sentence`](build/docs.md#Sentence).  Instances of this class hold format-agnostic information about sentences, and can be constructed from
 - <a href="#from_brackets">Brackets</a>
@@ -239,41 +199,31 @@ const toSD = sent.to('sd');
 
 ```
 
+## Contributing
 
-## <a id="Contributing" href="#Contributing">Contributing</a>
+Feel free to submit GitHub issues for any bugs or feature requests!
 
-Feel free to submit GitHub issues for any bugs or feature requests!  To get started, clone the repository, install the dependencies, and run tests:
+To get started, clone the `ud-annotatrix` repository and install the dependencies:
+
 ```bash
-$ cd ~/src
-$ git clone https://github.com/keggsmurph21/notatrix.git notatrix
-$ cd notatrix
-$ npm install
-$ npm test
+$ cd path/to/ud-annotatrix
+$ npm --prefix notatrix/ install
 ```
 
 If you plan on submitting a pull request, make sure that all the tests pass and that the project still compiles!
 
 #### Testing
 ```bash
-$ npm test
+$ npm --prefix notatrix/ test
 ```
 
-#### Recompiling bundled and minified files (for browser)
+#### Recompiling TypeScript
 ```bash
-$ npm run build
+$ npm --prefix notatrix/ run build
 ```
 
-#### Executing in the Node.js REPL
+#### Running in the REPL
 ```bash
-$ cd ~/src/notatrix
-$ node
+$ npx --prefix notatrix/ ts-node
+> const nx = require('./notatrix');
 ```
-```js
-> const nx = require('.');
-```
-
-## <a id="Related" href="#Related">Related projects</a>
-
-- [UD Annotatrix](https://github.com/jonorthwash/ud-annotatrix) is a client-side, browser-only, language-independent tool for editing dependency trees
-- [Notatrix Utils](https://github.com/keggsmurph21/notatrix-utils) is a collection of utilities for working with the `notatrix` format, including a database, a basic server, a web scraper, and (other stuff coming soon)
-
