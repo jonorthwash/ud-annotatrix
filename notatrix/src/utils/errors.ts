@@ -1,14 +1,17 @@
 "use strict";
 
+import type {Options} from "../nx/options";
+import type {Sentence} from "../nx/sentence";
+
 export class NotatrixError extends Error {}
 
 export class ToolError extends NotatrixError {}
 
 export class SplitterError extends ToolError {
-  text: string
-  options: any
+  text: string;
+  options: Options;
 
-  constructor(message, text, options) {
+  constructor(message: string, text: string, options: Options) {
     super(message);
 
     this.name = "SplitterError";
@@ -20,10 +23,10 @@ export class SplitterError extends ToolError {
 }
 
 export class DetectorError extends ToolError {
-  text: string
-  options: any
+  text: string;
+  options: Options;
 
-  constructor(message, text, options) {
+  constructor(message: string, text: string, options: Options) {
     super(message);
 
     this.name = "DetectorError";
@@ -35,10 +38,10 @@ export class DetectorError extends ToolError {
 }
 
 export class ParserError extends ToolError {
-  text: string
-  options: any
+  text: string;
+  options: Options;
 
-  constructor(message, text, options) {
+  constructor(message: string, text: string, options: Options) {
     super(message);
 
     this.name = "ParserError";
@@ -50,10 +53,10 @@ export class ParserError extends ToolError {
 }
 
 export class GeneratorError extends ToolError {
-  nx: string
-  options: any
+  nx: Sentence;
+  options: Options;
 
-  constructor(message, nx, options) {
+  constructor(message: string, nx: Sentence, options: Options) {
     super(message);
 
     this.name = "GeneratorError";
@@ -65,7 +68,7 @@ export class GeneratorError extends ToolError {
 }
 
 export class ConverterError extends ToolError {
-  constructor(message) {
+  constructor(message: string) {
     super(message);
 
     this.name = "ConverterError";
@@ -75,8 +78,8 @@ export class ConverterError extends ToolError {
 }
 
 export class NxError extends NotatrixError {
-  constructor(...args) {
-    super(...args);
+  constructor(message: string) {
+    super(message);
     this.name = "NxError";
 
     Object.setPrototypeOf(this, NxError.prototype);
