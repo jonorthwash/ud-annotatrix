@@ -7,6 +7,6 @@ module.exports = {
   split: require("./splitter").split,
   detect: require("./detector"),
   parse: require("./parser"),
-  generate: require("./generator"),
+  generate: require("./generator").generate,
 
 };

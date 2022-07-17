@@ -1,13 +1,12 @@
-"use strict";
+import * as _ from "underscore";
+import {generate as generateText} from "../plain-text/generator";
+import {GenerateResult} from "../base";
+import {GeneratorError} from "../../utils/errors";
+import {getLoss} from "./get-loss";
+import type {Options} from "../../nx/options";
+import type {Sentence} from "../../nx/sentence";
 
-const _ = require("underscore");
-
-const utils = require("../../utils");
-const GeneratorError = utils.GeneratorError;
-const generateText = require("../plain-text").generate;
-const getLoss = require("./get-loss").getLoss;
-
-module.exports = (sent, options) => {
+export function generate(sent: Sentence, options: Options): GenerateResult<string> {
   if (!sent.isParsed)
     return {
       output: null,
@@ -28,7 +27,7 @@ module.exports = (sent, options) => {
   let lines = [];
   sent.comments.forEach(comment => { lines.push("# " + comment.body); });
 
-  lines.push(generateText(sent).output);
+  lines.push(generateText(sent, {}).output);
 
   [sent.root].concat(sent.tokens).forEach(token => {
     token.mapDependents(dependent => {
@@ -54,4 +53,4 @@ module.exports = (sent, options) => {
     output: lines.join("\n"),
     loss: getLoss(sent),
   };
-};
+}
