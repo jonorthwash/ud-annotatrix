@@ -4,7 +4,7 @@ const _ = require("underscore");
 
 const utils = require("../../utils");
 const ParserError = utils.ParserError;
-const detect = require("./detector");
+const detect = require("./detector").detect;
 
 module.exports = (obj, options) => {
   try {

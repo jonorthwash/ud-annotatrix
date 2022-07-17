@@ -1,16 +1,17 @@
-"use strict";
+import * as _ from "underscore";
 
-const _ = require("underscore");
+import * as re from "../../utils/regex";
+import {DetectorError} from "../../utils/errors";
+import {isJSONSerializable} from "../../utils/funcs";
+import type {Options} from "../../nx/options";
 
-const utils = require("../../utils");
-const DetectorError = utils.DetectorError;
-
-module.exports = (text, options) => {
-  options = _.defaults(options, {
+export function detect(text: string, options: Options): string {
+  options = {
     allowEmptyString: true,
     allowNewlines: false,
-    bracketsAllowanceTreshold: 0.2, // set to <0 or >1 to avoid
-  });
+    bracketsAllowanceTreshold: 0.2,  // set to <0 or >1 to avoid
+    ...options,
+  };
 
   /*
   if (!text && !options.allowEmptyString)
@@ -18,7 +19,7 @@ module.exports = (text, options) => {
   options);
     */
 
-  if (utils.isJSONSerializable(text))
+  if (isJSONSerializable(text))
     throw new DetectorError(`Illegal plain text: JSON object`, text, options);
 
   if (/\n/.test(text) && !options.allowNewlines)
@@ -26,7 +27,7 @@ module.exports = (text, options) => {
                             options);
 
   if (options.bracketsAllowanceTreshold >= 0) {
-    const numWords = text.split(utils.re.whitespace).length;
+    const numWords = text.split(re.whitespace).length;
     const numBrackets = (text.match(/[\[\]]/g) || []).length;
     const ratio = numBrackets / numWords;
 
@@ -37,4 +38,4 @@ module.exports = (text, options) => {
   }
 
   return "plain text";
-};
+}

@@ -1,21 +1,22 @@
-"use strict";
+import * as _ from "underscore";
 
-const _ = require("underscore");
+import {DetectorError} from "../../utils/errors";
+import {isJSONSerializable} from "../../utils/funcs";
+import {fields} from "../../utils/constants";
+import type {Options} from "../../nx/options";
 
-const utils = require("../../utils");
-const DetectorError = utils.DetectorError;
-
-module.exports = (obj, options) => {
-  options = _.defaults(options, {
+export function detect(textOrArray: string|any[], options: Options): string {
+  options = {
     allowEmptyList: false,
     allowTrailingWhitespace: true,
-    allowLeadingWhitespace: true
-  });
+    allowLeadingWhitespace: true,
+    ...options,
+  };
 
-  if (!utils.isJSONSerializable(obj))
-    throw new DetectorError(`Illegal Params: not JSON object`, obj, options);
+  if (!isJSONSerializable(textOrArray))
+    throw new DetectorError(`Illegal Params: not JSON object`, textOrArray, options);
 
-  obj = typeof obj === "string" ? JSON.parse(obj) : obj;
+  const obj: any[] = typeof textOrArray === "string" ? JSON.parse(textOrArray) : textOrArray;
 
   if (Array.isArray(obj)) {
     if (!obj.length && !options.allowEmptyList)
@@ -23,13 +24,13 @@ module.exports = (obj, options) => {
                               options);
 
     obj.forEach(obj => {
-      const omitted = Object.keys(_.omit(obj, utils.fields));
+      const omitted = Object.keys(_.omit(obj, fields));
       if (omitted.length)
         throw new DetectorError(
             `Illegal Params: contains illegal keys (${omitted.join(", ")})`,
             obj, options);
 
-      const picked = Object.keys(_.pick(obj, utils.fields));
+      const picked = Object.keys(_.pick(obj, fields));
       if (!picked.length)
         throw new DetectorError(`Illegal Params: missing required keys`, obj,
                                 options);
@@ -42,4 +43,4 @@ module.exports = (obj, options) => {
   }
 
   return "Params";
-};
+}

@@ -5,7 +5,7 @@ module.exports = {
   name: "notatrix serial",
   fields: require("./fields"),
   split: require("./splitter").split,
-  detect: require("./detector"),
+  detect: require("./detector").detect,
   parse: require("./parser"),
   generate: require("./generator").generate,
 

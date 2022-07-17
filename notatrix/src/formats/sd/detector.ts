@@ -1,29 +1,30 @@
-"use strict";
+import * as _ from "underscore";
 
-const _ = require("underscore");
+import * as re from "../../utils/regex";
+import {DetectorError} from "../../utils/errors";
+import {isJSONSerializable} from "../../utils/funcs";
+import type {Options} from "../../nx/options";
 
-const utils = require("../../utils");
-const DetectorError = utils.DetectorError;
-
-module.exports = (text, options) => {
-  options = _.defaults(options, {
+export function detect(text: string, options: Options): string {
+  options = {
     allowEmptyString: false,
     allowLeadingWhitespace: true,
     allowBookendWhitespace: true,
     allowTrailingWhitespace: true,
     allowNoDependencies: false,
-  });
+    ...options,
+  };
 
   if (!text && !options.allowEmptyString)
     throw new DetectorError(`Illegal SD: empty string`, text, options);
 
-  if (utils.isJSONSerializable(text))
+  if (isJSONSerializable(text))
     throw new DetectorError(`Illegal SD: JSON object`, text, options);
 
   // be more or less strict about whitespace
   const dependencyRegex = options.allowBookendWhitespace
-                              ? utils.re.sdDependency
-                              : utils.re.sdDependencyNoWhitespace;
+                              ? re.sdDependency
+                              : re.sdDependencyNoWhitespace;
 
   // internal stuff
   let parsingDeps = false;
@@ -32,7 +33,7 @@ module.exports = (text, options) => {
 
   const lines = text.split(/\n/);
   lines.forEach((line, i) => {
-    if (utils.re.whiteline.test(line)) {
+    if (re.whiteline.test(line)) {
       if (parsingDeps) {
         if (!options.allowTrailingWhitespace)
           throw new DetectorError(`Illegal SD: contains trailing whitespace`,
@@ -45,7 +46,7 @@ module.exports = (text, options) => {
       }
     }
 
-    if (utils.re.comment.test(line)) {
+    if (re.comment.test(line)) {
     } else if (!parsingDeps) {
       if (dependencyRegex.test(line))
         throw new DetectorError(`Illegal SD: missing text line`, text, options);
@@ -66,4 +67,4 @@ module.exports = (text, options) => {
                             options);
 
   return "SD";
-};
+}
