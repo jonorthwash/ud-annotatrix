@@ -3,6 +3,7 @@ import * as _ from "underscore";
 import {DetectorError} from "../../utils/errors";
 import {isJSONSerializable} from "../../utils/funcs";
 import {nxSentenceFields, nxSentenceTokensFields} from "../../utils/constants";
+import type {Input} from "../../base";
 import type {Options} from "../../nx/options";
 import type {SentenceSerial} from "../../nx/sentence";
 import type {TokenSerial} from "../../nx/base-token";
@@ -16,12 +17,12 @@ export function detect(textOrSerial: string|SentenceSerial, options: Options): s
 
   function restrict<O = SentenceSerial|TokenSerial>(obj: O, fields: {[fieldName: string]: string}, allowUndefined: boolean = false): void {
     if (obj === undefined)
-      throw new DetectorError(`Illegal notatrix serial: missing field`, obj,
+      throw new DetectorError(`Illegal notatrix serial: missing field`, obj as unknown as Input,
                               options);
 
     // @ts-ignore: This is (probably) never true, since `omit()` returns an Object, not an Array.
     if (_.omit(obj, Object.keys(fields)).length)
-      throw new DetectorError(`Illegal notatrix serial: unexpected field`, obj,
+      throw new DetectorError(`Illegal notatrix serial: unexpected field`, obj as unknown as Input,
                               options);
 
     _.each(fields, (fieldType: string, fieldName: string) => {
@@ -33,7 +34,7 @@ export function detect(textOrSerial: string|SentenceSerial, options: Options): s
           if (isNaN(parseFloat(value as unknown as string)))
             throw new DetectorError(
                 `Illegal notatrix serial: could not parse ${value} as float`,
-                obj, options);
+                obj as unknown as Input, options);
         break;
 
       case ("string"):
@@ -42,7 +43,7 @@ export function detect(textOrSerial: string|SentenceSerial, options: Options): s
             throw new DetectorError(
                 `Illegal notatrix serial: expected 'string', got ${
                     typeof value}`,
-                obj, options);
+                obj as unknown as Input, options);
         break;
 
       case ("string*"):
@@ -51,7 +52,7 @@ export function detect(textOrSerial: string|SentenceSerial, options: Options): s
             throw new DetectorError(
                 `Illegal notatrix serial: expected 'string', got ${
                     typeof value}`,
-                obj, options);
+                obj as unknown as Input, options);
         break;
 
       case ("object"):
@@ -63,7 +64,7 @@ export function detect(textOrSerial: string|SentenceSerial, options: Options): s
           if (!Array.isArray(value))
             throw new DetectorError(
                 `Illegal notatrix serial: expected Array, got ${typeof value}`,
-                obj, options);
+                obj as unknown as Input, options);
         break;
       }
     });

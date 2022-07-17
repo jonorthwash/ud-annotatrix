@@ -6,15 +6,14 @@ import {NxError, ToolError} from "../utils/errors";
 import {Analysis} from "./analysis";
 import {BaseToken, TokenSerial} from "./base-token";
 import {Comment} from "./comment";
+import {GENERATE_BY_NAME as generate} from "../generator";
 import {NxBaseClass} from "./base-class";
 import {Options} from "./options";
+import {PARSE_BY_NAME, parse} from "../parser";
 import {RootToken} from "./root-token";
 import {SubToken} from "./sub-token";
 import {Token} from "./token";
 import type {Corpus} from "./corpus";
-
-const parse: any = require("../parser");
-const generate: any = require("../generator");
 
 export interface SentenceSerial {
   meta?: SentenceMeta;
@@ -80,16 +79,17 @@ export class Sentence extends NxBaseClass {
       let parsed: SentenceSerial;
       if (options.interpretAs) {
         // interpret as a particular format if passed option
-        parsed = parse.as [options.interpretAs](serial, options);
+        parsed = PARSE_BY_NAME[options.interpretAs](serial, options) as SentenceSerial;
       } else {
         // otherwise, get an array of possible interpretations
         let parseds = parse(serial, options);
+        parseds = Array.isArray(parseds) ? parseds : [parseds];
 
         // choose one of them if possible
         if (parseds.length === 0) {
           throw new NxError("Unable to parse: unrecognized format");
         } else if (parseds.length === 1) {
-          parsed = parseds[0];
+          parsed = parseds[0] as SentenceSerial;
         } else {
           throw new NxError(`Unable to parse: ambiguous format (${parseds.join(", ")})`);
         }
@@ -126,7 +126,9 @@ export class Sentence extends NxBaseClass {
    * @param {String} format
    * @param {Object} options
    */
-  to(format: string, options: Options): any { return generate[format](this, options); }
+  to(format: string, options: Options): any {
+    return generate[format](this, options);
+  }
 
   /**
    * Output Sentence to a notatrix-serial string

@@ -82,7 +82,7 @@ describe("generator", () => {
 
         const sent = new nx.Sentence(text, options);
         const generated = nx.generate[format](sent, options);
-        const detected = nx.detect.as [format](generated.output);
+        const detected = nx.detectAs[format](generated.output);
 
         expect(detected).to.equal(format);
         expect(clean(generated.output)).to.equal(clean(text));
@@ -133,7 +133,7 @@ describe("generator", () => {
         const possibilities = nx.parse(text, options);
         _.each(possibilities, possibility => {
           expect(() =>
-  nx.detect.as.notatrixSerial(possibility)).to.not.throw();
+  nx.detectAs.notatrixSerial(possibility)).to.not.throw();
         });
 
       });

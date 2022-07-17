@@ -19,8 +19,13 @@ export interface Options {
   interpretAs?: string;
   omitIndices?: boolean;
   requireOne?: boolean;
+  requireOneMatch?: boolean;
   requireTenParams?: boolean;
+  returnAllMatches?: boolean;
+  returnAllPossibilities?: boolean;
   spacesPerTab?: null,
+  suppressDetectorErrors?: boolean;
+  suppressParserErrors?: boolean;
   trimChunks?: boolean;
   useTabIndent?: boolean;
 }

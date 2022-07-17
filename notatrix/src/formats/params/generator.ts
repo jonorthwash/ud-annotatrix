@@ -1,19 +1,9 @@
 import * as _ from "underscore";
-import {GenerateResult} from "../base";
 import {GeneratorError} from "../../utils/errors";
 import {getLoss} from "./get-loss";
+import type {GenerateResult, ParamsOutput} from "../../base";
 import type {Options} from "../../nx/options";
 import type {Sentence} from "../../nx/sentence";
-
-interface ParamsOutput {
-  form: string;
-  lemma: string;
-  upostag: string;
-  xpostag: string;
-  feats: string|null|undefined;
-  misc: string|null|undefined;
-  head: string;
-}
 
 export function generate(sent: Sentence, options: Options): GenerateResult<Partial<ParamsOutput>[]> {
   if (!sent.isParsed)

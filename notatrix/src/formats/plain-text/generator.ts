@@ -1,8 +1,8 @@
 import * as _ from "underscore";
 import * as re from "../../utils/regex";
-import {GenerateResult} from "../base";
 import {GeneratorError} from "../../utils/errors";
 import {getLoss} from "./get-loss";
+import type {GenerateResult} from "../../base";
 import type {Options} from "../../nx/options";
 import type {Sentence} from "../../nx/sentence";
 
