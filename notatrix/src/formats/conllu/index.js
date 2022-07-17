@@ -4,7 +4,7 @@ module.exports = {
 
   name: "CoNLL-U",
   fields: require("./fields"),
-  split: require("../default-splitter"),
+  split: require("../default-splitter").split,
   detect: require("./detector"),
   parse: require("./parser"),
   generate: require("./generator"),

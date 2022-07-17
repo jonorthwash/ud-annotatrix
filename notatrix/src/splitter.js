@@ -3,7 +3,7 @@
 const _ = require("underscore");
 
 const utils = require("./utils");
-const defaultSplitter = require("./formats/default-splitter");
+const defaultSplitter = require("./formats/default-splitter").split;
 const detector = require("./detector");
 const SplitterError = utils.SplitterError;
 
