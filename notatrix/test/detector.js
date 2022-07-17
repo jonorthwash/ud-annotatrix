@@ -11,7 +11,7 @@ describe("detector", () => {
 
     utils.forEachText((text, format, name) => {
       it(`${format}:${name} is ${format}`, () => {
-        expect(nx.detect.as [format](text, options)).to.equal(format);
+        expect(nx.detectAs[format](text, options)).to.equal(format);
       });
     });
   });
@@ -23,7 +23,7 @@ describe("detector", () => {
       utils.forEachFormat(castedFormat => {
         if (format !== castedFormat)
           it(`${format}:${name} is not ${castedFormat}`, () => {
-            const cast = nx.detect.as [castedFormat];
+            const cast = nx.detectAs[castedFormat];
             expect(() => { cast(text, options); }).to.throw(nx.DetectorError);
           });
       });

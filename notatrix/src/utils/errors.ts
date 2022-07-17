@@ -3,6 +3,7 @@
 import type {Options} from "../nx/options";
 import type {Sentence, SentenceSerial} from "../nx/sentence";
 import type {TokenSerial} from "../nx/base-token";
+import type {Input} from "../base";
 
 export class NotatrixError extends Error {}
 
@@ -24,10 +25,10 @@ export class SplitterError extends ToolError {
 }
 
 export class DetectorError extends ToolError {
-  input: string|SentenceSerial|TokenSerial|any[];
+  input: Input;
   options: Options;
 
-  constructor(message: string, input: string|SentenceSerial|TokenSerial|any[], options: Options) {
+  constructor(message: string, input: Input, options: Options) {
     super(message);
 
     this.name = "DetectorError";
@@ -39,10 +40,10 @@ export class DetectorError extends ToolError {
 }
 
 export class ParserError extends ToolError {
-  input: string|SentenceSerial|TokenSerial|any[];
+  input: Input;
   options: Options;
 
-  constructor(message: string, input: string|SentenceSerial|TokenSerial|any[], options: Options) {
+  constructor(message: string, input: Input, options: Options) {
     super(message);
 
     this.name = "ParserError";

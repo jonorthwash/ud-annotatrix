@@ -10,12 +10,7 @@ import {NxBaseClass} from "./base-class";
 import {NxError} from "../utils/errors";
 import {Options} from "./options";
 import {Sentence, SentenceSerial} from "./sentence";
-
-const split: any = require("../splitter");
-const detect: any = require("../detector");
-const parse: any = require("../parser");
-const generate: any = require("../generator");
-const convert: any = require("../converter");
+import {split} from "../splitter";
 
 interface CorpusSerial {
   filename: string|null;
@@ -298,10 +293,10 @@ export class Corpus extends NxBaseClass {
     const index = this.index || 0;
     console.log('parse() ' + index);
 
-    splitted.forEach((split: string, i: number) => {
-      // console.log(i, split);
-      //this.insertSentence(index + i, split, false);
-      this.pushSentence(split);
+    (splitted || []).forEach((sentence: string, i: number) => {
+      // console.log(i, sentence);
+      //this.insertSentence(index + i, sentence, false);
+      this.pushSentence(sentence);
       console.log('pushSentence() ' + i);
     });
 

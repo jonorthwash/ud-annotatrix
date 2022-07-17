@@ -9,8 +9,8 @@ describe("parser", () => {
 
     utils.forEachText((text, format, name) => {
       it(`${format}:${name}`, () => {
-        const parsed = nx.parse.as [format](text, options);
-        expect(() => nx.detect.as.notatrixSerial(parsed)).to.not.throw();
+        const parsed = nx.parseAs[format](text, options);
+        expect(() => nx.detectAs.notatrixSerial(parsed)).to.not.throw();
       });
     });
   });
@@ -22,7 +22,7 @@ describe("parser", () => {
       it(`${format}:${name}`, () => {
         const possibilities = nx.parse(text, options);
         _.each(possibilities, possibility => {
-          expect(() => nx.detect.as.notatrixSerial(possibility)).to.not.throw();
+          expect(() => nx.detectAs.notatrixSerial(possibility)).to.not.throw();
         });
       });
     });

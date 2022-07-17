@@ -30,7 +30,7 @@ describe("Sentence", () => {
         const serial = (new nx.Sentence(parsed)).serialize();
 
         // get some sort of notatrix serial output
-        expect(() => { nx.detect.as.notatrixSerial(serial); }).to.not.throw();
+        expect(() => { nx.detectAs.notatrixSerial(serial); }).to.not.throw();
 
         // in fact, get the same exact notatrix serial
         const clean = serial => {
