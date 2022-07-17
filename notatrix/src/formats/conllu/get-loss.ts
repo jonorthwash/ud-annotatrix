@@ -1,19 +1,18 @@
-"use strict";
+import * as _ from "underscore";
 
-const _ = require("underscore");
+import {FIELDS} from "./fields";
+import type {Sentence} from "../../nx/sentence";
+import type {TokenSerial} from "../../nx/base-token";
 
-const utils = require("../../utils");
-const fields = require("./fields");
-
-module.exports = sent => {
+export function getLoss(sent: Sentence): string[] {
   const serial = sent.serialize();
-  let losses = new Set();
+  let losses: Set<string> = new Set();
 
-  const tokenCalcLoss = token => {
+  const tokenCalcLoss = (token: TokenSerial) => {
     if (token.heads.length > 1 && !sent.options.enhanced)
       losses.add("enhanced dependencies");
 
-    Object.keys(_.omit(token, fields.FIELDS)).forEach(field => {
+    Object.keys(_.omit(token, FIELDS)).forEach(field => {
       switch (field) {
       case ("uuid"):
       case ("index"):
@@ -44,4 +43,4 @@ module.exports = sent => {
   serial.tokens.map(tokenCalcLoss);
 
   return Array.from(losses);
-};
+}

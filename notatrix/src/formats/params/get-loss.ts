@@ -1,19 +1,17 @@
-"use strict";
+import * as _ from "underscore";
 
-const _ = require("underscore");
+import {FIELDS} from "./fields";
+import type {Sentence} from "../../nx/sentence";
 
-const utils = require("../../utils");
-const fields = require("./fields");
-
-module.exports = sent => {
+export function getLoss(sent: Sentence): string[] {
   const serial = sent.serialize();
-  let losses = new Set();
+  let losses: Set<string> = new Set();
 
   if (serial.comments.length)
     losses.add("comments");
 
   serial.tokens.forEach(
-      token => {Object.keys(_.omit(token, fields.FIELDS)).forEach(field => {
+      token => {Object.keys(_.omit(token, FIELDS)).forEach(field => {
         switch (field) {
         case ("uuid"):
         case ("index"):
@@ -30,4 +28,4 @@ module.exports = sent => {
       })});
 
   return Array.from(losses);
-};
+}
