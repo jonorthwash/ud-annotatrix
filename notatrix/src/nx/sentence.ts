@@ -1,27 +1,58 @@
 "use strict";
 
-const _ = require("underscore");
+import * as _ from "underscore";
+import {NxError, ToolError} from "../utils/errors";
 
-const utils = require("../utils");
-const NxError = utils.NxError;
-const ToolError = utils.ToolError;
-const parse = require("../parser");
-const generate = require("../generator");
+import {Analysis} from "./analysis";
+import {BaseToken, TokenSerial} from "./base-token";
+import {Comment} from "./comment";
+import {NxBaseClass} from "./base-class";
+import {Options} from "./options";
+import {RootToken} from "./root-token";
+import {SubToken} from "./sub-token";
+import {Token} from "./token";
+import type {Corpus} from "./corpus";
 
-const NxBaseClass = require("./base-class");
-const Comment = require("./comment");
-const BaseToken = require("./base-token");
-const Token = require("./token");
-const RootToken = require("./root-token");
-const Analysis = require("./analysis");
-const SubToken = require("./sub-token");
+const parse: any = require("../parser");
+const generate: any = require("../generator");
+
+export interface SentenceSerial {
+  meta: SentenceMeta;
+  input: string;
+  isParsed: boolean;
+  options: Options;
+  comments: string[];
+  tokens: TokenSerial[];
+}
+
+interface SentenceMeta {
+}
+
+interface SuperToken {
+  token: Token;
+  start: string|number|null;
+  stop: string|number|null;
+  analysis: number|null;
+}
 
 /**
  * Abstraction over a Sentence.  Holds an array of comments and of tokens,
  *  plus some metadata.
  */
-class Sentence extends NxBaseClass {
-  constructor(serial, options) {
+export class Sentence extends NxBaseClass {
+  _meta: SentenceMeta;
+  input: string|undefined;
+  isParsed: boolean;
+  Error: Error|null;
+  options: Options;
+  root: RootToken;
+  comments: Comment[];
+  tokens: Token[];
+  size: number;
+  _index: number|undefined;
+  corpus: Corpus|undefined;
+
+  constructor(serial: SentenceSerial|string, options: Options) {
     super("Sentence");
 
     this._meta = {};
@@ -38,45 +69,47 @@ class Sentence extends NxBaseClass {
       autoAddPunct: true,
     });
 
-    this.input = serial.input == null ? serial : serial.input;
+    this.input = (serial as SentenceSerial).input == null
+      ? (serial as string)
+      : (serial as SentenceSerial).input;
+
     this.isParsed = false;
     this.Error = null;
 
     try {
+      let parsed: SentenceSerial;
       if (options.interpretAs) {
         // interpret as a particular format if passed option
-        serial = parse.as [options.interpretAs](serial, options);
-
+        parsed = parse.as [options.interpretAs](serial, options);
       } else {
         // otherwise, get an array of possible interpretations
-        serial = parse(serial, options);
+        let parseds = parse(serial, options);
 
         // choose one of them if possible
-        if (serial.length === 0) {
-          throw new NxError("Unable to parse: unrecognized format", this);
-        } else if (serial.length === 1) {
-          serial = serial[0];
+        if (parseds.length === 0) {
+          throw new NxError("Unable to parse: unrecognized format");
+        } else if (parseds.length === 1) {
+          parsed = parseds[0];
         } else {
-          throw new NxError(
-              `Unable to parse: ambiguous format (${serial.join(", ")})`, this);
+          throw new NxError(`Unable to parse: ambiguous format (${parseds.join(", ")})`);
         }
 
-        if (serial.isParsed === false)
+        if (parsed.isParsed === false)
           throw new NxError("Cannot parse explicitly unparsed serial");
       }
 
-      this.options = serial.options;
+      this.options = parsed.options;
 
       this.root = new RootToken(this);
-      this.comments = serial.comments.map(com => new Comment(this, com));
-      this.tokens = serial.tokens.map(tok => new Token(this, tok));
+      this.comments = parsed.comments.map(com => new Comment(this, com));
+      this.tokens = parsed.tokens.map(tok => new Token(this, tok));
 
       this.attach();
       this.isParsed = true;
 
     } catch (e) {
       if ((e instanceof NxError || e instanceof ToolError)) {
-        this.options = serial.options || options;
+        this.options = (serial as SentenceSerial).options || options;
         this.comments = [];
         this.tokens = [];
         this.Error = e;
@@ -93,12 +126,12 @@ class Sentence extends NxBaseClass {
    * @param {String} format
    * @param {Object} options
    */
-  to(format, options) { return generate[format](this, options); }
+  to(format: string, options: Options): any { return generate[format](this, options); }
 
   /**
    * Output Sentence to a notatrix-serial string
    */
-  serialize(optionsToOmit = {}) {
+  serialize(optionsToOmit: Options = {}): SentenceSerial {
 
     // Create a copy of 'options' where we skip all the key/value pairs
     // for which 'optionsToOmit' has the same values.  This way, we can
@@ -106,7 +139,7 @@ class Sentence extends NxBaseClass {
     const options = Object.fromEntries(
         Object
           .entries(this.options)
-          .filter(([key, value]) => optionsToOmit[key] !== value));
+          .filter(([key, value]) => optionsToOmit[key as keyof Options] !== value));
 
     return {
       meta: this._meta,
@@ -120,10 +153,8 @@ class Sentence extends NxBaseClass {
 
   /**
    * Apply a callback function for every token in the sentence
-   *
-   * @param {Function} callback
    */
-  iterate(callback) {
+  iterate(callback: (token: BaseToken, sup?: number, ana?: number|null, sub?: number|null) => void): void {
     for (let i = 0; i < this.tokens.length; i++) {
       const token = this.tokens[i];
       callback(token, i, null, null);
@@ -140,19 +171,24 @@ class Sentence extends NxBaseClass {
   /**
    * Return all tokens where `predicate(token)` is truth-y
    */
-  query(predicate) {
-    let matches = [];
+  query(predicate: (token: BaseToken) => boolean): BaseToken[] {
+    let matches: BaseToken[] = [];
     this.iterate(token => {
       if (predicate(token))
         matches.push(token);
     });
-
     return matches;
   }
 
-  index() {
-    let absolute = 0, majorToken = null, superToken = null, empty = 0,
-        conllu = 0, cg3 = 0, cytoscape = -1;
+  index(): Sentence {
+    let absolute = 0
+    let majorToken: Token|null = null
+    let superToken: SuperToken|null = null
+    let empty = 0
+
+    let conllu = 0
+    let cg3 = 0
+    let cytoscape = -1;
 
     this.iterate((token, i, j, k) => {
       token.indices.sup = i;
@@ -163,14 +199,16 @@ class Sentence extends NxBaseClass {
       if (!token._analyses || !token._analyses.length)
         token.indices.cg3 = ++cg3;
 
+      // @ts-ignore: `'Analysis' and 'number' have no overlap`
       if (!token.isSuperToken && superToken && superToken.analysis === j)
         token.indices.cytoscape = ++cytoscape;
 
-      if (token.subTokens && token.subTokens.length === 0)
+      if ((token as Token).subTokens && (token as Token).subTokens.length === 0)
         token.indices.cytoscape = ++cytoscape;
 
       if (j === null || k === null) {
-        majorToken = token;
+        let castedToken = token as Token;
+        majorToken = castedToken;
 
         if (superToken) {
           superToken.token.indices.conllu =
@@ -178,22 +216,22 @@ class Sentence extends NxBaseClass {
           superToken = null;
         }
 
-        if (token.subTokens.length) {
+        if (castedToken.subTokens.length) {
           superToken = {
-            token: token,
+            token: castedToken,
             start: null,
             stop: null,
-            analysis: token._i,
+            analysis: castedToken._i,
           };
         } else {
-          if (token.isEmpty) {
+          if (castedToken.isEmpty) {
             empty += 1;
           } else {
             empty = 0;
             conllu += 1;
           }
 
-          token.indices.conllu = empty ? conllu + "." + empty : conllu;
+          castedToken.indices.conllu = empty ? conllu + "." + empty : conllu;
         }
 
       } else {
@@ -228,12 +266,13 @@ class Sentence extends NxBaseClass {
     return this;
   }
 
-  attach() {
+  attach(): Sentence {
     this.iterate(token => {
       (token._heads || []).forEach((dependency, i) => {
         if (i)
           token.sent.options.enhanced = true;
 
+        // @ts-ignore: This should probably be `0`, not `"0"`...
         if (dependency.index == "0") {
           token.addHead(token.sent.root, "root");
 
@@ -259,13 +298,17 @@ class Sentence extends NxBaseClass {
   /**
    * Tell Sentence to output in enhanced dependency format
    */
-  enhance() {
+  enhance(): Sentence {
     this.options.enhanced = true;
 
     this.iterate(token => {
+      // @ts-ignore: There is no `_head` property anymore: it was removed in [1].
+      //
+      // [1] https://github.com/keggsmurph21/notatrix/commit/5322a353c1ad35b353d4c7692d3d071459136819
       if (!token._head)
         return;
 
+      // @ts-ignore: Unreachable because of the bug directly above..
       token.addDep(token._head, token.deprel);
     });
 
@@ -275,18 +318,15 @@ class Sentence extends NxBaseClass {
   /**
    * Tell Sentence to stop outputting in enhanced dependency format
    */
-  unenhance() {
+  unenhance(): Sentence {
     this.options.enhanced = false;
     return this;
   }
 
   /**
    * Get the superToken for a given token
-   *
-   * @param {BaseToken} token
-   * @return {BaseToken}
    */
-  getSuperToken(token) {
+  getSuperToken(token: BaseToken): BaseToken|null {
     let superToken = null;
 
     this.iterate(tok => {
@@ -309,11 +349,8 @@ class Sentence extends NxBaseClass {
 
   /**
    * Merge tokens into a single, regular token
-   *
-   * @param {BaseToken} src
-   * @param {BaseToken} tar
    */
-  merge(src, tar) {
+  merge(src: BaseToken, tar: BaseToken): Sentence {
     if (!(src instanceof BaseToken) || !(tar instanceof BaseToken))
       throw new NxError("unable to merge: src and tar must both be tokens");
 
@@ -365,11 +402,8 @@ class Sentence extends NxBaseClass {
 
   /**
    * Combine tokens into subTokens of some superToken
-   *
-   * @param {BaseToken} src
-   * @param {BaseToken} tar
    */
-  combine(src, tar) {
+  combine(src: BaseToken, tar: BaseToken): Sentence {
     if (!(src instanceof BaseToken) || !(tar instanceof BaseToken))
       throw new NxError("unable to combine: src and tar must both be tokens");
 
@@ -471,16 +505,13 @@ class Sentence extends NxBaseClass {
    *  superToken, make each of its subTokens into a regular token and
    *  delete the superToken.  Otherwise, split the token at the given
    *  index.
-   *
-   * @param {BaseToken} src
-   * @param {Number} splitAtIndex
    */
-  split(src, splitAtIndex) {
+  split(src: BaseToken, splitAtIndexInput: string): Sentence {
     if (!(src instanceof BaseToken))
       throw new NxError("unable to split: src must be a token");
 
     if (src.isSuperToken) {
-      const tokens = src.subTokens.map(subToken => {
+      const tokens = (src as Token).subTokens.map(subToken => {
         let token = new Token(this, {});
 
         // basic copying
@@ -521,7 +552,7 @@ class Sentence extends NxBaseClass {
           this.tokens.slice(index));
 
     } else if (src.name === "SubToken") {
-      splitAtIndex = parseInt(splitAtIndex);
+      let splitAtIndex = parseInt(splitAtIndexInput);
       if (isNaN(splitAtIndex))
         throw new NxError(
             `unable to split: cannot split at index ${splitAtIndex}`);
@@ -545,7 +576,7 @@ class Sentence extends NxBaseClass {
               .concat(subTokens.slice(index + 1));
 
     } else {
-      splitAtIndex = parseInt(splitAtIndex);
+      let splitAtIndex = parseInt(splitAtIndexInput);
       if (isNaN(splitAtIndex))
         throw new NxError(
             `unable to split: cannot split at index ${splitAtIndex}`);
@@ -569,5 +600,3 @@ class Sentence extends NxBaseClass {
     return this.index();
   }
 }
-
-module.exports = Sentence;

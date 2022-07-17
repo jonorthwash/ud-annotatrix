@@ -1,25 +1,37 @@
 "use strict";
 
-const _ = require("underscore");
+import {getContrastingColor, hashStringToHex} from "../utils/funcs";
+import {NxBaseClass} from "./base-class";
+import type {Sentence} from "./sentence";
 
-const utils = require("../utils");
-const NxBaseClass = require("./base-class");
+export interface LabelSerial {
+  name: string;
+  bColor: string;
+  tColor: string;
+  desc: string;
+}
 
 /**
  * Allows us to extract labels from "field = value"-type comments, so that
  *  we can filter a corpus by Label and arbitrarily apply that label to
  *  multiple Sentences.
  */
-class Label extends NxBaseClass {
-  constructor(name) {
+export class Label extends NxBaseClass {
+  name: string;
+  bColor: string;
+  tColor: string;
+  desc: string;
+  _sents?: Set<Sentence>|undefined;
+
+  constructor(name: string) {
     super("Label");
     this.name = name;
-    this.bColor = utils.hashStringToHex(name);
-    this.tColor = utils.getContrastingColor(this.bColor);
+    this.bColor = hashStringToHex(name);
+    this.tColor = getContrastingColor(this.bColor);
     this.desc = "";
   }
 
-  serialize() {
+  serialize(): LabelSerial {
     return {
       name: this.name,
       desc: this.desc,
@@ -28,7 +40,7 @@ class Label extends NxBaseClass {
     };
   }
 
-  static deserialize(serial) {
+  static deserialize(serial: LabelSerial): Label {
     const label = new Label(serial.name);
     label.desc = serial.desc;
     label.bColor = serial.bColor;
@@ -164,5 +176,3 @@ class Label extends NxBaseClass {
   }
   */
 }
-
-module.exports = Label;

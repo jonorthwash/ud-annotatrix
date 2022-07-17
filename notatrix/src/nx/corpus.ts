@@ -1,29 +1,57 @@
 "use strict";
 
-const _ = require("underscore");
-const fs = require("fs");
-const path = require("path");
-const uuid = require("uuid/v4");
+import * as _ from "underscore";
+import * as fs from "fs";
+import * as path from "path";
+import { v4 as uuid } from "uuid";
 
-const utils = require("../utils");
-const NxError = utils.NxError;
+import {Labeler, LabelerSerial, SortedLabel} from "./labeler";
+import {NxBaseClass} from "./base-class";
+import {NxError} from "../utils/errors";
+import {Options} from "./options";
+import {Sentence, SentenceSerial} from "./sentence";
 
-const split = require("../splitter");
-const detect = require("../detector");
-const parse = require("../parser");
-const generate = require("../generator");
-const convert = require("../converter");
+const split: any = require("../splitter");
+const detect: any = require("../detector");
+const parse: any = require("../parser");
+const generate: any = require("../generator");
+const convert: any = require("../converter");
 
-const NxBaseClass = require("./base-class");
-const Labeler = require("./labeler");
-const Sentence = require("./sentence");
+interface CorpusSerial {
+  filename: string|null;
+  meta: CorpusMeta;
+  options: Options;
+  labeler: LabelerSerial;
+  sentences: SentenceSerial[];
+  index: number;
+}
+
+interface CorpusMeta {
+}
+
+interface CorpusSnapshot {
+  filename: string|null;
+  sentences: number;
+  errors: number;
+  labels: SortedLabel[];
+}
 
 /**
  * Abstraction over a collection of Sentences.  NOTE: this class is
  *  out-of-date and will be replaced soon :)
  */
-class Corpus extends NxBaseClass {
-  constructor(options) {
+export class Corpus extends NxBaseClass {
+  treebank_id: string;
+  filename: string|null;
+  options: Options;
+  sources: string[];
+  _labeler: Labeler;
+  _sentences: Sentence[];
+  _index: number;
+  _meta: CorpusMeta;
+  _filterIndex: number;
+
+  constructor(options: Options) {
     super("Corpus");
     this.treebank_id = uuid();
 
@@ -41,7 +69,7 @@ class Corpus extends NxBaseClass {
     this._filterIndex = -1;
   }
 
-  get snapshot() {
+  get snapshot(): CorpusSnapshot {
     return {
       filename: this.filename,
       sentences: this.length,
@@ -50,18 +78,13 @@ class Corpus extends NxBaseClass {
     };
   }
 
-  get length() { return this._sentences.length; }
+  get length(): number { return this._sentences.length; }
 
-  get errors() {
-    return this._sentences.filter(sent => {
-      if (!sent.isParsed)
-        return sent;
-    });
+  get errors(): Sentence[] {
+    return this._sentences.filter(sent => !sent.isParsed);
   }
 
-  get topLabels() { return this._labeler.top; }
-
-  serialize() {
+  serialize(): CorpusSerial {
     return {
       filename: this.filename,
       meta: this._meta,
@@ -72,7 +95,7 @@ class Corpus extends NxBaseClass {
     };
   }
 
-  static deserialize(serial) {
+  static deserialize(serial: CorpusSerial): Corpus {
     const corpus = new Corpus(serial.options);
     corpus.filename = serial.filename || null;
     corpus._meta = serial.meta;
@@ -93,21 +116,21 @@ class Corpus extends NxBaseClass {
     return corpus;
   }
 
-  get sentence() { return this.index < 0 ? null : this._sentences[this.index]; }
+  get sentence(): Sentence|null { return this.index < 0 ? null : this._sentences[this.index]; }
 
-  get filtered() {
+  get filtered(): Sentence[] {
     return this._labeler._filter.size
                ? this._sentences.filter(
                      sent => this._labeler.sentenceInFilter(sent))
                : [];
   }
 
-  get index() { return this._index; }
+  get index(): number { return this._index; }
 
-  set index(index) {
+  set index(index: number) {
     const filtered = this.filtered, total = filtered.length || this.length;
 
-    index = parseInt(index);
+    index = parseInt(index as unknown as string);
     if (isNaN(index)) {
       index = filtered.length ? this._filterIndex : this.index;
 
@@ -125,19 +148,18 @@ class Corpus extends NxBaseClass {
       this._filterIndex = -1;
       this._index = index;
     }
-
-    return this.index;
   }
 
-  reindex() {
+  reindex(): void {
     this._sentences.forEach((sent, i) => { sent._index = i; });
   }
 
-  first() {
+  first(): Corpus {
     this.index = this.length ? 0 : -1;
     return this;
   }
-  prev() {
+
+  prev(): Corpus|null {
     if (!this.length)
       return null;
 
@@ -150,13 +172,14 @@ class Corpus extends NxBaseClass {
     this.index = --index;
     return this;
   }
-  next() {
+
+  next(): Corpus|null {
     if (!this.length)
       return null;
 
     const filtered = this.filtered;
     let index = filtered.length ? this._filterIndex : this._index;
-    let total = filtered.length ? filtered.length - 1 : this._length - 1;
+    let total = filtered.length ? filtered.length - 1 : this.length - 1;
 
     if (index === total)
       return null;
@@ -164,14 +187,15 @@ class Corpus extends NxBaseClass {
     this.index = ++index;
     return this;
   }
-  last() {
+
+  last(): Corpus|null {
     const filtered = this.filtered;
     this.index = filtered.length ? filtered.length - 1 : this.length - 1;
 
     return this;
   }
 
-  getSentence(index) {
+  getSentence(index: number): Sentence|null {
     if (index == undefined)
       index = this.index;
 
@@ -181,13 +205,19 @@ class Corpus extends NxBaseClass {
     return this._sentences[index] || null;
   }
 
-  setSentence(index, text) {
-    if (text === null || text === undefined) { // if only passed 1 arg
-      text = index || "";
+  setSentence(indexParam: string|number, textParam?: string): Sentence {
+    let index: number;
+    let text: string;
+
+    if (textParam === null || textParam === undefined) { // if only passed 1 arg
+      text = (indexParam as string) || "";
       index = this.index;
+    } else {
+      text = textParam;
+      index = indexParam as number;
     }
 
-    index = parseInt(index)
+    index = parseInt(index as unknown as string);
     if (isNaN(index) || this.getSentence(index) === null)
     throw new NxError(`cannot set sentence at index ${index}`);
 
@@ -202,17 +232,23 @@ class Corpus extends NxBaseClass {
     return sent;
   }
 
-  insertSentence(index, text) {
-    if (text === null || text === undefined) { // if only passed 1 arg
-      text = index || "";
+  insertSentence(indexParam?: string|number, textParam?: string): Sentence {
+    let index: number;
+    let text: string;
+
+    if (textParam === null || textParam === undefined) { // if only passed 1 arg
+      text = (indexParam as string) || "";
       index = this.index + 1;
+    } else {
+      text = textParam;
+      index = indexParam as number;
     }
 
-    index = parseFloat(index);
+    index = parseFloat(index as unknown as string);
     if (isNaN(index))
       throw new NxError(`cannot insert sentence at index ${index}`);
 
-    index = index < 0 ? 0 : index > this.length ? this.length : parseInt(index);
+    index = index < 0 ? 0 : index > this.length ? this.length : parseInt(index as unknown as string);
 
     const sent = new Sentence(text, this.options);
     sent.corpus = this;
@@ -226,20 +262,20 @@ class Corpus extends NxBaseClass {
     return sent;
   }
 
-  removeSentence(index) {
+  removeSentence(index: number|undefined): Sentence|null {
     if (!this.length)
       return null;
 
     if (index === undefined) // if not passed args
       index = this.index;
 
-    index = parseFloat(index);
+    index = parseFloat(index as unknown as string);
     if (isNaN(index))
       throw new NxError(`cannot remove sentence at index ${index}`);
 
     index = index < 0
                 ? 0
-                : index > this.length - 1 ? this.length - 1 : parseInt(index);
+                : index > this.length - 1 ? this.length - 1 : parseInt(index as unknown as string);
 
     const removed = this._sentences.splice(index, 1)[0];
     if (!this.length)
@@ -253,33 +289,33 @@ class Corpus extends NxBaseClass {
     return removed;
   }
 
-  pushSentence(text) { return this.insertSentence(Infinity, text); }
+  pushSentence(text: string): Sentence { return this.insertSentence(Infinity, text); }
 
-  popSentence(text) { return this.removeSentence(Infinity); }
+  popSentence(): Sentence { return this.removeSentence(Infinity); }
 
-  parse(string) {
-    const splitted = split(string, this.options); // might throw errors
+  parse(s: string): Corpus {
+    const splitted = split(s, this.options); // might throw errors
     const index = this.index || 0;
     console.log('parse() ' + index);
 
-    splitted.forEach((split, i) => {
+    splitted.forEach((split: string, i: number) => {
       // console.log(i, split);
       //this.insertSentence(index + i, split, false);
       this.pushSentence(split);
-      console.log('pushSentence() ' + i); 
+      console.log('pushSentence() ' + i);
     });
 
     return this;
   }
 
-  static fromString(string, options) {
+  static fromString(s: string, options: Options): Corpus {
     const corpus = new Corpus(options);
-    corpus.parse(string);
+    corpus.parse(s);
     corpus.index = 0;
     return corpus;
   }
 
-  readFile(filepath, next) {
+  readFile(filepath: string, next: (corpus: Corpus) => void): void {
     fs.exists(filepath, exists => {
       if (!exists)
         throw new NxError(`cannot read file: cannot find path ${filepath}`);
@@ -288,8 +324,8 @@ class Corpus extends NxBaseClass {
         if (err)
           throw err;
 
-        data = data.toString();
-        this.parse(data);
+        const contents = data.toString();
+        this.parse(contents);
         this.sources.push(filepath);
         this.filename = path.basename(filepath);
 
@@ -299,22 +335,22 @@ class Corpus extends NxBaseClass {
     });
   }
 
-  static fromFile(filepath, options, next) {
+  static fromFile(filepath: string, options: Options|((corpus: Corpus) => void), next?: (corpus: Corpus) => void): typeof Corpus {
     if (next === undefined) {
-      next = options;
+      next = options as (corpus: Corpus) => void;
       options = {};
     }
-    const corpus = new Corpus(options);
+    const corpus = new Corpus(options as Options);
     corpus.readFile(filepath, next);
 
-    return this;
+    return this;  // 'this' is the class, not the instance..
   }
 
-  writeFile(format, filepath) {
+  writeFile(format: string, filepath: string): Corpus {
     filepath = this.getWritePath(filepath);
 
     const contents = this.serialize();
-    fs.writeFile(filepath, contents, err => {
+    fs.writeFile(filepath, JSON.stringify(contents), err => {
       if (err)
         throw err;
     });
@@ -322,7 +358,7 @@ class Corpus extends NxBaseClass {
     return this;
   }
 
-  getWritePath(filepath) {
+  getWritePath(filepath: string|null): string {
     if (filepath)
       return filepath;
 
@@ -330,5 +366,3 @@ class Corpus extends NxBaseClass {
     return (lastSource || "export") + ".nxcorpus";
   }
 }
-
-module.exports = Corpus;

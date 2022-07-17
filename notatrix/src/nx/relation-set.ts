@@ -1,25 +1,34 @@
 "use strict";
 
-const _ = require("underscore");
+import {NxBaseClass} from "./base-class";
+import type {BaseToken} from "./base-token";
 
-const utils = require("../utils");
-const NxBaseClass = require("./base-class");
+export interface RelationItem {
+  token: BaseToken;
+  deprel: string;
+}
 
-class RelationSet extends NxBaseClass {
-  constructor(token, partner) {
+type PartnerKind = "heads"|"dependents";
+
+export class RelationSet extends NxBaseClass {
+  token: BaseToken;
+  partner: PartnerKind;
+  _items: RelationItem[];
+
+  constructor(token: BaseToken, partner: PartnerKind) {
     super("RelationSet");
     this.token = token;
     this.partner = partner;
     this._items = [];
   }
 
-  get length() { return this._items.length; }
+  get length(): number { return this._items.length; }
 
-  get first() { return this._items[0] || null; }
+  get first(): RelationItem|null { return this._items[0] || null; }
 
-  map(callback) { return this._items.map(callback); }
+  map<T>(callback: (item: RelationItem, index?: number) => T): T[] { return this._items.map(callback); }
 
-  has(token) {
+  has(token: BaseToken): boolean {
     let has = false;
     this.map(item => {
       if (item.token === token)
@@ -29,7 +38,7 @@ class RelationSet extends NxBaseClass {
     return has;
   }
 
-  add(token, deprel, origin = true) {
+  add(token: BaseToken, deprel: string, origin: boolean = true): boolean {
     if (this.has(token)) {
       this.modify(token, deprel);
       return false;
@@ -41,12 +50,12 @@ class RelationSet extends NxBaseClass {
     });
 
     if (origin)
-      token[this.partner].add(this.token, deprel, false);
+      (token[this.partner] as RelationSet).add(this.token, deprel, false);
 
     return true;
   }
 
-  modify(token, deprel, origin = true) {
+  modify(token: BaseToken, deprel: string, origin: boolean = true): boolean {
     if (!this.has(token))
       return false;
 
@@ -64,7 +73,7 @@ class RelationSet extends NxBaseClass {
     return ret;
   }
 
-  remove(token, origin = true) {
+  remove(token: BaseToken, origin: boolean = true): RelationItem|null {
     let at = -1;
 
     this.map((item, i) => {
@@ -83,7 +92,7 @@ class RelationSet extends NxBaseClass {
     return removed || null;
   }
 
-  clear(origin = true) {
+  clear(origin: boolean = true): void {
     this.map(item => {
       if (origin)
         item.token[this.partner].remove(this.token)
@@ -91,5 +100,3 @@ class RelationSet extends NxBaseClass {
     this._items = [];
   }
 }
-
-module.exports = RelationSet;
