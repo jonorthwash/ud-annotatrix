@@ -29,7 +29,7 @@ interface Indices {
 }
 
 interface HeadSerial {
-  index: number;
+  index: number|string;
   deprel: string;
 }
 
@@ -37,7 +37,7 @@ export interface TokenSerial {
   uuid?: string;
   form?: string;
   lemma?: string;
-  index?: number;
+  index?: number|string;
   semicolon?: boolean;
   isEmpty?: boolean;
   upostag?: string;

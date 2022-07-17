@@ -1,14 +1,34 @@
-"use strict";
+import * as _ from "underscore";
 
-const _ = require("underscore");
+import * as re from "../../utils/regex";
+import {detect} from "./detector";
+import {DetectorError, ParserError} from "../../utils/errors";
+import {parse as parseText} from "../plain-text/parser";
+import type {Options} from "../../nx/options";
+import type {SentenceSerial} from "../../nx/sentence";
+import type {TokenSerial} from "../../nx/base-token";
 
-const utils = require("../../utils");
-const ParserError = utils.ParserError;
-const detect = require("./detector").detect;
-const parseText = require("../plain-text").parse;
+interface CommentChunk {
+  type: "comment";
+  body: string;
+}
 
-module.exports = (text, options) => {
-  function getTokenIndexFromString(tokens, token) {
+interface DependencyChunk {
+  type: "dependency";
+  deprel: string;
+  head: string;
+  dep: string;
+}
+
+interface TextChunk {
+  type: "text";
+  body: string;
+}
+
+type Chunk = CommentChunk|DependencyChunk|TextChunk;
+
+export function parse(text: string|undefined, options: Options): SentenceSerial {
+  function getTokenIndexFromString(tokens: TokenSerial[], token: string): number|null {
     for (let i = 0; i < tokens.length; i++) {
       if (tokens[i].form.toLowerCase() === token.toLowerCase())
         return i;
@@ -20,30 +40,31 @@ module.exports = (text, options) => {
   // console.log();
   // console.log(text);
 
-  options = _.defaults(options, {
+  options = {
     allowEmptyString: false,
     allowBookendWhitespace: true,
     allowWhiteLines: true,
-  });
+    ...options,
+  };
 
   try {
     detect(text, options);
   } catch (e) {
-    if (e instanceof utils.DetectorError)
-      throw new ParserError(e.message);
+    if (e instanceof DetectorError)
+      throw new ParserError(e.message, text, options);
 
     throw e;
   }
 
   const lines = text.split("\n");
   const depRegex = options.allowBookendWhitespace
-                       ? utils.re.sdDependencyNoWhitespace
-                       : utils.re.sdDependency;
+                       ? re.sdDependencyNoWhitespace
+                       : re.sdDependency;
 
-  let chunks = [];
+  let chunks: Chunk[] = [];
   lines.forEach(line => {
-    const whiteline = line.match(utils.re.whiteline),
-          comment = line.match(utils.re.comment), dep = line.match(depRegex);
+    const whiteline = line.match(re.whiteline),
+          comment = line.match(re.comment), dep = line.match(depRegex);
 
     if (whiteline) {
     } else if (comment) {
@@ -63,8 +84,8 @@ module.exports = (text, options) => {
 
   // console.log(chunks);
 
-  let tokens;
-  let comments = [];
+  let tokens: TokenSerial[];
+  let comments: string[] = [];
   let expecting = ["comment", "text"];
 
   chunks.forEach(chunk => {
@@ -77,7 +98,7 @@ module.exports = (text, options) => {
       expecting = ["comment", "text"];
 
     } else if (chunk.type === "text") {
-      tokens = parseText(chunk.body).tokens;
+      tokens = parseText(chunk.body, options).tokens;
       expecting = ["dependency"];
 
     } else if (chunk.type === "dependency") {
@@ -91,10 +112,6 @@ module.exports = (text, options) => {
         deprel: chunk.deprel,
       }];
       expecting = ["dependency"];
-
-    } else {
-      throw new ParserError(`unrecognized chunk type: ${chunk.type}`, text,
-                            options);
     }
   });
 
@@ -107,4 +124,4 @@ module.exports = (text, options) => {
     comments: comments,
     tokens: tokens,
   };
-};
+}

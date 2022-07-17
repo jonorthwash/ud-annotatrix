@@ -1,14 +1,74 @@
-"use strict";
+import * as _ from "underscore";
 
-const _ = require("underscore");
+import * as re from "../../utils/regex";
+import {detect} from "./detector";
+import {DetectorError, ParserError} from "../../utils/errors";
+import {thin} from "../../utils/funcs";
+import type {Options} from "../../nx/options";
+import type {SentenceSerial} from "../../nx/sentence";
+import type {TokenSerial} from "../../nx/base-token";
 
-const utils = require("../../utils");
-const ParserError = utils.ParserError;
-const detect = require("./detector").detect;
+interface Head {
+  index: number;
+  deprel: string|null;
+}
 
-module.exports = (text, options) => {
-  function getIndentNum(str, options) {
-    const count = (str, reg) => str.match(reg).length;
+interface CommentChunk {
+  type: "comment";
+  body: string;
+}
+
+interface FormChunk {
+  type: "form";
+  form: string;
+}
+
+interface ContentChunk {
+  type: "content";
+  semicolon: boolean;
+  indent: number;
+  lemma: string;
+  misc: string[];
+  heads?: Head[];
+  index?: number;
+}
+
+type Chunk = CommentChunk|FormChunk|ContentChunk;
+
+interface SubToken {
+  semicolon: boolean;
+  lemma: string|null;
+  heads: Head[]|null;
+  index: number|null;
+  xpostag: string|null;
+  misc: string[]|null;
+}
+
+interface Analysis {
+  subTokens: SubToken[];
+}
+
+interface Token {
+  form: string;
+  currentIndent?: number;
+  analyses: Analysis[];
+  index?: number;
+}
+
+export function parse(text: string, options: Options): SentenceSerial {
+  options = {
+    allowEmptyString: false,
+    allowMissingIndices: true,
+    coerceMultipleSpacesAfterSemicolonToTab: true,
+    equalizeWhitespace: true,
+    indentString: null,
+    spacesPerTab: null,
+    useTabIndent: false,
+    ...options,
+  };
+
+  function getIndentNum(str: string, options: Options): number {
+    const count = (str: string, reg: RegExp) => str.match(reg).length;
 
     if (options.indentString) {
       const regex = options.indentString instanceof RegExp
@@ -34,21 +94,11 @@ module.exports = (text, options) => {
     }
   }
 
-  options = _.defaults(options, {
-    allowEmptyString: false,
-    indentString: null,
-    useTabIndent: false,
-    spacesPerTab: null,
-    equalizeWhitespace: true,
-    coerceMultipleSpacesAfterSemicolonToTab: true,
-    allowMissingIndices: true,
-  });
-
   try {
     detect(text, options);
   } catch (e) {
-    if (e instanceof utils.DetectorError)
-      throw new ParserError(e.message);
+    if (e instanceof DetectorError)
+      throw new ParserError(e.message, text, options);
 
     throw e;
   }
@@ -57,13 +107,14 @@ module.exports = (text, options) => {
   // console.log(text);
 
   // "tokenize" into chunks
-  let i = 0, chunks = [];
+  let i = 0
+  let chunks: Chunk[] = [];
   while (i < text.length) {
     const remains = text.slice(i),
-          whiteline = remains.match(utils.re.whiteline),
-          comment = remains.match(utils.re.comment),
-          tokenStart = remains.match(utils.re.cg3TokenStart),
-          tokenContent = remains.match(utils.re.cg3TokenContent);
+          whiteline = remains.match(re.whiteline),
+          comment = remains.match(re.comment),
+          tokenStart = remains.match(re.cg3TokenStart),
+          tokenContent = remains.match(re.cg3TokenContent);
 
     if (whiteline) {
       i += whiteline[0].length;
@@ -76,7 +127,7 @@ module.exports = (text, options) => {
       chunks.push({type: "form", form: tokenStart[1]});
       i += tokenStart[0].length;
 
-      while (utils.re.whitespace.test(text[i]) && text[i] !== "\n")
+      while (re.whitespace.test(text[i]) && text[i] !== "\n")
         i++;
       i++;
 
@@ -88,7 +139,7 @@ module.exports = (text, options) => {
                                : tokenContent[2]
                          : tokenContent[2];
 
-      let chunk = {
+      let chunk: ContentChunk = {
         type: "content",
         semicolon: !!tokenContent[1],
         indent: getIndentNum(indent, options),
@@ -96,13 +147,13 @@ module.exports = (text, options) => {
         misc: [],
       };
 
-      const deprel = tokenContent[5].match(utils.re.cg3Deprel);
+      const deprel = tokenContent[5].match(re.cg3Deprel);
 
-      tokenContent[5].split(/\s+/).filter(utils.thin).forEach(subChunk => {
-        let dependency = subChunk.match(utils.re.cg3Dependency),
-            head = subChunk.match(utils.re.cg3Head),
-            index = subChunk.match(utils.re.cg3Index),
-            misc = subChunk.match(utils.re.cg3Other);
+      tokenContent[5].split(/\s+/).filter(thin).forEach(subChunk => {
+        let dependency = subChunk.match(re.cg3Dependency),
+            head = subChunk.match(re.cg3Head),
+            index = subChunk.match(re.cg3Index),
+            misc = subChunk.match(re.cg3Other);
 
         if (dependency && (head || index)) {
           if (head) {
@@ -110,11 +161,10 @@ module.exports = (text, options) => {
               throw new ParserError("unexpected subChunk, heads already set",
                                     text, options);
 
-            head = parseInt(head[1]);
-
-            if (!isNaN(head))
+            const headIndex = parseInt(head[1]);
+            if (!isNaN(headIndex))
               chunk.heads = [{
-                index: head,
+                index: headIndex,
                 deprel: deprel && deprel[1] ? deprel[1] : null,
               }];
 
@@ -147,11 +197,11 @@ module.exports = (text, options) => {
   // console.log(chunks);
 
   // turn the chunks into tokens and comments
-  let tokens = [];
-  let comments = [];
+  let tokens: Token[] = [];
+  let comments: string[] = [];
   let expecting = ["comment", "form"];
-  let token = null;
-  let analysis = null;
+  let token: Token|null = null;
+  let analysis: Analysis|null = null;
   let missingIndices = false;
 
   chunks.forEach(chunk => {
@@ -246,10 +296,6 @@ module.exports = (text, options) => {
 
       token.currentIndent = chunk.indent;
       expecting = ["content", "form"];
-
-    } else {
-      throw new ParserError(`unrecognized chunk type: ${chunk.type}`, text,
-                            options);
     }
   });
 
@@ -286,4 +332,4 @@ module.exports = (text, options) => {
     comments: comments,
     tokens: tokens,
   };
-};
+}
