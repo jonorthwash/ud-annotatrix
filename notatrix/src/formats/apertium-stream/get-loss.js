@@ -11,11 +11,11 @@ module.exports = sent => {
 
   let losses = new Set();
 
-  if (!fields.hasComments && serial.comments.length)
+  if (!fields.HAS_COMMENTS && serial.comments.length)
     losses.add("comments");
 
   serial.tokens.forEach(token => {
-    Object.keys(_.omit(token, fields)).forEach(field => {
+    Object.keys(_.omit(token, fields.FIELDS)).forEach(field => {
       switch (field) {
       case ("index"):
         break;

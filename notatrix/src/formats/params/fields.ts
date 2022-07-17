@@ -1,4 +1,4 @@
-module.exports = [
+export const FIELDS = [
   "isEmpty",
   "index",
   "form",
@@ -6,8 +6,9 @@ module.exports = [
   "upostag",
   "xpostag",
   "feats",
-  "heads",
+  "head",
+  "deprel",
+  "deps",
   "misc",
-  "subTokens",
 ];
-module.exports.hasComments = true;
+export const HAS_COMMENTS = false;

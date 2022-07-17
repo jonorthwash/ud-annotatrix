@@ -13,7 +13,7 @@ module.exports = sent => {
     if (token.heads.length > 1 && !sent.options.enhanced)
       losses.add("enhanced dependencies");
 
-    Object.keys(_.omit(token, fields)).forEach(field => {
+    Object.keys(_.omit(token, fields.FIELDS)).forEach(field => {
       switch (field) {
       case ("uuid"):
       case ("index"):
