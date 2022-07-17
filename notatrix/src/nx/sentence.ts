@@ -17,9 +17,9 @@ const parse: any = require("../parser");
 const generate: any = require("../generator");
 
 export interface SentenceSerial {
-  meta: SentenceMeta;
+  meta?: SentenceMeta;
   input: string;
-  isParsed: boolean;
+  isParsed?: boolean;
   options: Options;
   comments: string[];
   tokens: TokenSerial[];

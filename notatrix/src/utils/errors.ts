@@ -39,14 +39,14 @@ export class DetectorError extends ToolError {
 }
 
 export class ParserError extends ToolError {
-  text: string;
+  input: string|SentenceSerial|TokenSerial|any[];
   options: Options;
 
-  constructor(message: string, text: string, options: Options) {
+  constructor(message: string, input: string|SentenceSerial|TokenSerial|any[], options: Options) {
     super(message);
 
     this.name = "ParserError";
-    this.text = text;
+    this.input = input;
     this.options = options;
 
     Object.setPrototypeOf(this, ParserError.prototype);
