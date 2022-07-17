@@ -174,7 +174,7 @@ export class BaseToken extends NxBaseClass {
   /**
    * Get the head index for a given format
    */
-  getHead(format: string): string|null {
+  getHead(format?: string): string|null {
     if (!this.heads.length)
       return null;
 

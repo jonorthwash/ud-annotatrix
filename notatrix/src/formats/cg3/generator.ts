@@ -1,12 +1,14 @@
-"use strict";
+import * as _ from "underscore";
+import {fallback} from "../../utils/constants";
+import {GenerateResult} from "../base";
+import {GeneratorError} from "../../utils/errors";
+import {getLoss} from "./get-loss";
+import {thin} from "../../utils/funcs";
+import type {Options} from "../../nx/options";
+import type {Sentence} from "../../nx/sentence";
+import type {BaseToken} from "../../nx/base-token";
 
-const _ = require("underscore");
-
-const utils = require("../../utils");
-const GeneratorError = utils.GeneratorError;
-const getLoss = require("./get-loss").getLoss;
-
-module.exports = (sent, options) => {
+export function generate(sent: Sentence, options: Options): GenerateResult<string> {
   if (!sent.isParsed)
     return {
       output: null,
@@ -24,18 +26,18 @@ module.exports = (sent, options) => {
 
   sent.index();
 
-  let lines = [];
+  let lines: string[] = [];
   sent.comments.forEach(comment => lines.push("# " + comment.body));
   sent.tokens.forEach(token => {
     const isSet =
-        field => { return field && field !== utils.fallback ? field : null; };
+        (value: string) => { return value && value !== fallback ? value : null; };
 
-    const push = (token, indent) => {
+    const push = (token: BaseToken, indentLevel: number) => {
       if (!token.lemma && !options.allowMissingLemma)
         throw new GeneratorError(`Unable to generate, token has no lemma`, sent,
                                  options);
 
-      indent = (token.semicolon ? ";" : "") + "\t".repeat(indent);
+      const indent = (token.semicolon ? ";" : "") + "\t".repeat(indentLevel);
 
       const head = token.heads.first;
       const dependency =
@@ -44,19 +46,19 @@ module.exports = (sent, options) => {
               : "#" + token.indices.cg3 + "->" +
                     (head == undefined ? "" : head.token.indices.cg3);
 
-      let line =
-          [`"${isSet(token.lemma) || isSet(token.form) || utils.fallback}"`]
+      let lineParts =
+          [`"${isSet(token.lemma) || isSet(token.form) || fallback}"`]
               .concat(isSet(token.xpostag) || isSet(token.upostag))
               .concat((token._feats || []).join(" "))
               .concat((token._misc || []).join(" "))
               .concat(head && isSet(head.deprel) ? "@" + head.deprel : null)
               .concat(dependency);
 
-      line = indent + line.filter(utils.thin).join(" ");
+      const line = indent + lineParts.filter(thin).join(" ");
       lines.push(line);
     };
 
-    lines.push(`"<${token.form || utils.fallback}>"`);
+    lines.push(`"<${token.form || fallback}>"`);
 
     if (token._analyses && token._analyses.length) {
       token._analyses.forEach(analysis => {

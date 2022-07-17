@@ -1,12 +1,12 @@
-"use strict";
+import * as _ from "underscore";
+import * as re from "../../utils/regex";
+import {GenerateResult} from "../base";
+import {GeneratorError} from "../../utils/errors";
+import {getLoss} from "./get-loss";
+import type {Options} from "../../nx/options";
+import type {Sentence} from "../../nx/sentence";
 
-const _ = require("underscore");
-
-const utils = require("../../utils");
-const GeneratorError = utils.GeneratorError;
-const getLoss = require("./get-loss").getLoss;
-
-module.exports = (sent, options) => {
+export function generate(sent: Sentence, options: Options): GenerateResult<string> {
   if (!sent.isParsed)
     return {
       output: null,
@@ -33,10 +33,10 @@ module.exports = (sent, options) => {
                        : token.form;
           })
           .join(" ")
-          .replace(utils.re.spaceBeforePunctuation, "$1");
+          .replace(re.spaceBeforePunctuation, "$1");
 
   return {
     output: output,
     loss: getLoss(sent),
   };
-};
+}

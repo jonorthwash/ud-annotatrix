@@ -1,12 +1,16 @@
-"use strict";
+import * as _ from "underscore";
+import {GenerateResult} from "../base";
+import {GeneratorError} from "../../utils/errors";
+import {getLoss} from "./get-loss";
+import type {Options} from "../../nx/options";
+import type {Sentence} from "../../nx/sentence";
+import type {RelationItem} from "../../nx/relation-set";
 
-const _ = require("underscore");
+interface BracketsNode extends RelationItem {
+  deps: BracketsNode[];
+}
 
-const utils = require("../../utils");
-const GeneratorError = utils.GeneratorError;
-const getLoss = require("./get-loss").getLoss;
-
-module.exports = (sent, options) => {
+export function generate(sent: Sentence, options: Options): GenerateResult<string> {
   if (!sent.isParsed)
     return {
       output: null,
@@ -25,21 +29,21 @@ module.exports = (sent, options) => {
   sent.index();
 
   if (!sent.root)
-    throw new GeneratorError("Unable to generate, could not find root");
+    throw new GeneratorError("Unable to generate, could not find root", sent, options);
 
   // build the tree structure
   let seen = new Set([sent.root]);
-  let root = {
+  let root: BracketsNode = {
     token: sent.root,
     deprel: null,
     deps: [],
   };
 
-  const visit = node => {
-    node.token.mapDependents(dep => {
+  const visit = (node: BracketsNode) => {
+    node.token.mapDependents((dep: BracketsNode) => {
       if (seen.has(dep.token))
         throw new GeneratorError(
-            "Unable to generate, dependency structure non-linear");
+            "Unable to generate, dependency structure non-linear", sent, options);
 
       dep.deps = [];
       node.deps.push(dep);
@@ -53,11 +57,11 @@ module.exports = (sent, options) => {
 
   if (seen.size < sent.size + 1)
     throw new GeneratorError(
-        "Unable to generate, sentence not fully connected");
+        "Unable to generate, sentence not fully connected", sent, options);
 
   // parse the tree into a string
   let output = "";
-  const walk = node => {
+  const walk = (node: BracketsNode) => {
     output += "[" + (node.deprel || "_") + " ";
 
     node.deps.forEach(dep => {
@@ -67,7 +71,7 @@ module.exports = (sent, options) => {
 
     output += " " + node.token.form + " ";
 
-    node.deps.forEach(dep => {
+    node.deps.forEach((dep: BracketsNode) => {
       if (dep.token.indices.absolute > node.token.indices.absolute)
         walk(dep);
     });
@@ -89,4 +93,4 @@ module.exports = (sent, options) => {
     output: output,
     loss: getLoss(sent),
   };
-};
+}
