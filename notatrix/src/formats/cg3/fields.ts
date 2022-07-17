@@ -1,4 +1,4 @@
-module.exports = [
+export const FIELDS = [
   "semicolon",
   "index",
   "form",
@@ -8,4 +8,4 @@ module.exports = [
   "other",
   "analyses",
 ];
-module.exports.hasComments = true;
+export const HAS_COMMENTS = true;

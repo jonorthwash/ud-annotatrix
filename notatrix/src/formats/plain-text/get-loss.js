@@ -13,7 +13,7 @@ module.exports = sent => {
     losses.add("comments");
 
   serial.tokens.forEach(
-      token => {Object.keys(_.omit(token, fields)).forEach(field => {
+      token => {Object.keys(_.omit(token, fields.FIELDS)).forEach(field => {
         switch (field) {
         case ("uuid"):
         case ("index"):
