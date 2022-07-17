@@ -1,19 +1,77 @@
 "use strict";
 
-const _ = require("underscore");
-const uuid = require("uuid/v4");
+import * as _ from "underscore";
+import { v4 as uuid } from "uuid";
 
-const utils = require("../utils");
-const NxError = utils.NxError;
-const NxBaseClass = require("./base-class");
-const RelationSet = require("./relation-set");
+import {thin, noop} from "../utils/funcs";
+import {NxError} from "../utils/errors";
+import {NxBaseClass} from "./base-class";
+import {RelationItem, RelationSet} from "./relation-set";
+import type {Analysis, AnalysisSerial} from "./analysis";
+import type {Sentence} from "./sentence";
+import type {SubToken} from "./sub-token";
+
+// TODO: We need to clean these up...
+type ConlluIndex = unknown;
+type Cg3Index = unknown;
+type CytoscapeIndex = unknown;
+type SerialIndex = unknown;
+
+interface Indices {
+  absolute?: number;
+  conllu: ConlluIndex;
+  cg3: Cg3Index;
+  cytoscape: CytoscapeIndex;
+  serial?: SerialIndex;
+  sup?: number;
+  ana?: number;
+  sub?: number;
+}
+
+interface HeadSerial {
+  index: number;
+  deprel: string;
+}
+
+export interface TokenSerial {
+  uuid?: string;
+  form?: string;
+  lemma?: string;
+  index?: number;
+  semicolon?: boolean;
+  isEmpty?: boolean;
+  upostag?: string;
+  xpostag?: string
+  feats?: string[];
+  misc?: string[];
+  heads?: HeadSerial[];
+  analyses?: AnalysisSerial[];
+}
 
 /**
  * Ancestor of Token, SubToken, SuperToken.  Implements methods common
  *  to all three of them.
  */
-class BaseToken extends NxBaseClass {
-  constructor(sent, name, serial = {}) {
+export class BaseToken extends NxBaseClass {
+  sent: Sentence;
+  uuid: string;
+  semicolon: boolean;
+  isEmpty: boolean;
+  form: string;
+  lemma: string;
+  upostag: string;
+  xpostag: string;
+  _feats_init: boolean;
+  _feats: string[];
+  _misc_init: boolean;
+  _misc: string[];
+  _heads: HeadSerial[];
+  heads: RelationSet;
+  dependents: RelationSet;
+  indices: Indices;
+  _analyses: Analysis[]|undefined;
+
+  constructor(sent: Sentence, name: string, serial: TokenSerial = {}) {
     super(name);
 
     this.sent = sent;
@@ -44,11 +102,8 @@ class BaseToken extends NxBaseClass {
 
   /**
    * Add a head to a token with a dependency relation.
-   *
-   * @param {BaseToken} head
-   * @param {String} deprel
    */
-  addHead(head, deprel) {
+  addHead(head: BaseToken, deprel: string): boolean {
     if (!(head instanceof BaseToken))
       throw new NxError("cannot add head unless it is a token");
 
@@ -70,11 +125,8 @@ class BaseToken extends NxBaseClass {
 
   /**
    * Change the dependency relation for a given head.
-   *
-   * @param {BaseToken} head
-   * @param {String} deprel
    */
-  modifyHead(head, deprel) {
+  modifyHead(head: BaseToken, deprel: string): boolean {
     if (!(head instanceof BaseToken))
       throw new NxError("cannot add head unless it is a token");
 
@@ -86,10 +138,8 @@ class BaseToken extends NxBaseClass {
 
   /**
    * Remove a head and its dependency relation.
-   *
-   * @param {BaseToken} head
    */
-  removeHead(head) {
+  removeHead(head: BaseToken): RelationItem|null {
     if (!(head instanceof BaseToken))
       throw new NxError("cannot add head unless it is a token");
 
@@ -99,12 +149,12 @@ class BaseToken extends NxBaseClass {
   /**
    * Remove all heads
    */
-  removeAllHeads() { return this.heads.clear(); }
+  removeAllHeads(): void { return this.heads.clear(); }
 
   /**
    * Apply a callback to each of a token's heads
    */
-  mapHeads(callback) {
+  mapHeads<T>(callback: (item: RelationItem, index?: number) => T): T[] {
     // if (this.sent.options.enhanced) {
     return this.heads.map(callback);
     /*} else {
@@ -117,15 +167,14 @@ class BaseToken extends NxBaseClass {
   /**
    * Apply a callback to each of token's dependents
    */
-  mapDependents(callback) { return this.dependents.map(callback); }
+  mapDependents<T>(callback: (item: RelationItem, index?: number) => T): T[] {
+    return this.dependents.map(callback);
+  }
 
   /**
    * Get the head index for a given format
-   *
-   * @param {String} format
-   * @return {String}
    */
-  getHead(format) {
+  getHead(format: string): string|null {
     if (!this.heads.length)
       return null;
 
@@ -138,14 +187,14 @@ class BaseToken extends NxBaseClass {
     return `${this.heads.first.token.indices.absolute}`;
   }
 
-  _getDeprel() {
+  _getDeprel(): string|null {
     if (!this.heads.length)
       return null;
 
     return this.heads.first.deprel;
   }
 
-  static getTokenIndex(token, format) {
+  static getTokenIndex(token: BaseToken, format: string): ConlluIndex|Cg3Index|number|undefined {
     if (format === "CoNLL-U")
       return token.indices.conllu;
 
@@ -155,7 +204,7 @@ class BaseToken extends NxBaseClass {
     return token.indices.absolute;
   }
 
-  static compareTokenIndices(x, y, format) {
+  static compareTokenIndices(x: BaseToken, y: BaseToken, format: string): number {
     if (BaseToken.getTokenIndex(x, format) < BaseToken.getTokenIndex(y, format))
       return -1;
 
@@ -165,7 +214,7 @@ class BaseToken extends NxBaseClass {
     return 0;
   }
 
-  static sortTokenPair(x, y, format) {
+  static sortTokenPair(x: BaseToken, y: BaseToken, format: string): [BaseToken, BaseToken] {
     const comparison = BaseToken.compareTokenIndices(x, y, format);
     if (comparison === -1)
       return [x, y];
@@ -174,13 +223,13 @@ class BaseToken extends NxBaseClass {
     throw new NxError("unable to sortTokenPair: tokens have the same index!");
   }
 
-  _getDeps(format) {
+  _getDeps(format: string): string[] {
     if (!this.heads.length || !this.sent.options.enhanced)
       return [];
 
-    return this.mapHeads(utils.noop)
+    return this.mapHeads(noop)
         .sort((x, y) => BaseToken.compareTokenIndices(x.token, y.token, format))
-        .map(head => {
+        .map((head) => {
           const headIndex = BaseToken.getTokenIndex(head.token, format);
           return head.deprel ? `${headIndex}:${head.deprel}`
                              : `${headIndex}`;
@@ -189,17 +238,13 @@ class BaseToken extends NxBaseClass {
 
   /**
    * Mark this token as "empty" (aka "null")
-   *
-   * @param {boolean} isEmpty
    */
-  setEmpty(isEmpty) { this.isEmpty = isEmpty; }
+  setEmpty(isEmpty: boolean): void { this.isEmpty = isEmpty; }
 
   /**
    * Apply a callback to each of a token's analyses and subTokens
-   *
-   * @param {Function} callback
    */
-  walk(callback) {
+  walk<T>(callback: (token: SubToken, index: number) => T): T[][]|null {
     let i = 0;
     if (this._analyses)
       return this._analyses.map(analysis => {
@@ -211,52 +256,10 @@ class BaseToken extends NxBaseClass {
   }
 
   /**
-   * Hash a list of fields to a string
-   *
-   * @param {String[]} fields
-   * @return {String}
-   */
-  hashFields(...fields) {
-    fields = _.flatten(fields);
-
-    let hash = _.intersection(fields,
-                              [
-                                "form",
-                                "lemma",
-                                "upostag",
-                                "xpostag",
-                                "feats",
-                                "deprel",
-                                "misc",
-                                "isEmpty",
-                                "semicolon",
-                              ])
-                   .map(field => `<${this[field] || field}>`)
-                   .join("|");
-
-    if (fields.indexOf("indices") > -1)
-      hash += `|${_.map(this.indices, index => `{${index}}`).join("")}`;
-
-    if (fields.indexOf("head") > -1)
-      hash += `|(h:${this.head.token.indices.absolute}:${h.deprel})`;
-
-    if (fields.indexOf("deps") > -1)
-      hash += `|(d:${
-          this.mapDeps(d => `${d.token.indices.absolute}:${d.deprel}`)
-              .join("|") ||
-          ""})`;
-
-    if (fields.indexOf("analyses") > -1 || fields.indexOf("subTokens") > -1)
-      hash += `|[s:${this.walk(t => t.hashFields(fields)) || ""}]`;
-
-    return hash;
-  }
-
-  /**
    * Serialize a token to JSON format
    */
-  serialize() {
-    let serial = {
+  serialize(): TokenSerial {
+    let serial: TokenSerial = {
 
       uuid: this.uuid,
       form: this.form,
@@ -269,7 +272,7 @@ class BaseToken extends NxBaseClass {
       xpostag: this.xpostag,
       feats: this._feats,
       misc: this._misc,
-      heads: this.mapHeads(head => {
+      heads: this.mapHeads((head) => {
         return {
           index: head.token.indices.absolute,
           deprel: head.deprel,
@@ -289,20 +292,21 @@ class BaseToken extends NxBaseClass {
     return serial;
   }
 
-  get isSuperToken() {
+  get isSuperToken(): boolean {
     return !!(this._analyses || []).reduce((total, analysis) => {
       return total += analysis._subTokens.length;
     }, 0);
   }
 
-  get value() { return this.form || this.lemma; }
+  get value(): string { return this.form || this.lemma; }
 
-  get feats() {
+  // @ts-ignore: getter and setter should return same type
+  get feats(): string|null|undefined {
     return this._feats_init ? this._feats.length ? this._feats.join("|") : null
                             : undefined;
   }
 
-  set feats(feats) {
+  set feats(feats: string[]|undefined) {
     if (feats === undefined)
       return;
 
@@ -310,12 +314,13 @@ class BaseToken extends NxBaseClass {
     this._feats = feats || [];
   }
 
-  get misc() {
+  // @ts-ignore: getter and setter should return same type
+  get misc(): string|null|undefined {
     return this._misc_init ? this._misc.length ? this._misc.join("|") : null
                            : undefined;
   }
 
-  set misc(misc) { // [(serial.misc || ''), (serial.other ||
+  set misc(misc: string[]|undefined) { // [(serial.misc || ''), (serial.other ||
     // []).join('|')].join('|');
     if (misc === undefined)
       return;
@@ -324,7 +329,7 @@ class BaseToken extends NxBaseClass {
     this._misc = misc || [];
   }
 
-  set other(other) {
+  set other(other: string|string[]|undefined) {
     if (other === undefined)
       return;
 
@@ -332,8 +337,6 @@ class BaseToken extends NxBaseClass {
       other = [other];
 
     this._misc_init = true;
-    this._misc = (other || []).filter(utils.thin);
+    this._misc = (other || []).filter(thin);
   }
 }
-
-module.exports = BaseToken;
