@@ -4,7 +4,7 @@ import * as _ from "underscore";
 import * as constants from "./constants";
 import * as re from "./regex";
 
-export function combine(arr, k) {
+export function combine<T>(arr: T[], k: number): T[][] {
   if (k > arr.length || k <= 0)
     return [];
 
@@ -14,7 +14,7 @@ export function combine(arr, k) {
   if (k === 1)
     return arr.map(e => [e]);
 
-  let combs = [];
+  let combs: T[][] = [];
   for (let i = 0; i < arr.length - k + 1; i++) {
     const head = arr.slice(i, i + 1);
     const tailCombs = combine(arr.slice(i + 1), k - 1);
@@ -23,7 +23,7 @@ export function combine(arr, k) {
   return combs;
 }
 
-export function hexToRGB(hex) {
+export function hexToRGB(hex: string): [number, number, number]|undefined {
   const match = hex.match(re.hexColor);
 
   if (match)
@@ -34,7 +34,7 @@ export function hexToRGB(hex) {
   return undefined;
 }
 
-export function isJSONSerializable(obj) {
+export function isJSONSerializable(obj: any): boolean {
   if (typeof obj === "string") {
     try {
       JSON.parse(obj);
@@ -53,20 +53,16 @@ export function isJSONSerializable(obj) {
   return true;
 }
 
-export function noop(arg) {
-  return arg;
+export function noop<T>(t: T): T {
+  return t;
 }
 
-export function thin(arg) {
-  return !!arg ? arg : undefined;
+export function thin<T>(t: T): T|undefined {
+  return !!t ? t : undefined;
 }
 
-export function guessDeprel(dependent, head, context) {
-  return undefined;
-}
-
-export function dedup(master, slave) {
-  let dedup = {};
+export function dedup<T>(master: T, slave: T): T {
+  let dedup = {} as T;
 
   _.each(slave, (value, key) => {
     if (master[key] !== value)
@@ -76,10 +72,10 @@ export function dedup(master, slave) {
   return dedup;
 }
 
-export function hashStringToHex(string) {
+export function hashStringToHex(s: string): string {
   let hash = 0;
-  for (let i = 0; i < string.length; i++) {
-    hash = string.charCodeAt(i) + ((hash << 5) - hash);
+  for (let i = 0; i < s.length; i++) {
+    hash = s.charCodeAt(i) + ((hash << 5) - hash);
   }
 
   let hex = "";
@@ -90,7 +86,7 @@ export function hashStringToHex(string) {
   return hex;
 }
 
-export function getRandomHexColor() {
+export function getRandomHexColor(): string {
   let color = "";
   do {
     color = Math.floor(Math.random() * constants.hexConstant).toString(16);
@@ -99,7 +95,7 @@ export function getRandomHexColor() {
   return color;
 }
 
-export function getContrastingColor(background) {
+export function getContrastingColor(background: string): string {
   let color = "ffffff";
 
   const rgb = hexToRGB(background);
