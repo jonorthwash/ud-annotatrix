@@ -1,23 +1,22 @@
-"use strict";
+import * as re from "../../utils/regex";
+import {DetectorError} from "../../utils/errors";
+import {isJSONSerializable} from "../../utils/funcs";
+import type {Options} from "../../nx/options";
 
-const _ = require("underscore");
-
-const utils = require("../../utils");
-const DetectorError = utils.DetectorError;
-
-module.exports = (text, options) => {
-  options = _.defaults(options, {
+export function detect(text: string, options: Options): string {
+  options = {
     allowEmptyString: false,
     allowTrailingWhitespace: true,
     allowLeadingWhitespace: true,
     allowNoDependencies: false,
     allowNewlines: false,
-  });
+    ...options,
+  };
 
   if (!text && !options.allowEmptyString)
     throw new DetectorError("Illegal Brackets: empty string", text, options);
 
-  if (utils.isJSONSerializable(text))
+  if (isJSONSerializable(text))
     throw new DetectorError("Illegal Brackets: JSON object", text, options);
 
   if (/\n/.test(text) && !options.allowNewlines)
@@ -25,7 +24,7 @@ module.exports = (text, options) => {
                             options);
 
   // internal stuff
-  let parsing = null;
+  let parsing: string|null = null;
   let depth = 0;
   let sawBracket = false;
 
@@ -54,7 +53,7 @@ module.exports = (text, options) => {
     case ("\n"):
 
       if (!options.allowLeadingWhitespace) {
-        if (parsing !== null && !utils.re.whitespace.test(parsing))
+        if (parsing !== null && !re.whitespace.test(parsing))
           throw new DetectorError(
               "Illegal Brackets: contains leading whitespace", text, options);
       }
@@ -72,9 +71,9 @@ module.exports = (text, options) => {
     throw new DetectorError("Illegal Brackets: bracket mismatch", text,
                             options);
 
-  if (utils.re.whitespace.test(parsing) && !options.allowTrailingWhitespace)
+  if (re.whitespace.test(parsing) && !options.allowTrailingWhitespace)
     throw new DetectorError("Illegal Brackets: contains trailing whitespace",
                             text, options);
 
   return "Brackets";
-};
+}

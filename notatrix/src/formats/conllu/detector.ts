@@ -1,26 +1,25 @@
-"use strict";
+import * as re from "../../utils/regex";
+import {DetectorError} from "../../utils/errors";
+import {isJSONSerializable} from "../../utils/funcs";
+import type {Options} from "../../nx/options";
 
-const _ = require("underscore");
-
-const utils = require("../../utils");
-const DetectorError = utils.DetectorError;
-
-module.exports = (text, options) => {
-  options = _.defaults(options, {
+export function detect(text: string, options: Options): string {
+  options = {
     allowEmptyString: false,
     requireTenParams: false,
     allowTrailingWhitespace: true,
-  });
+    ...options,
+  };
 
   if (!text && !options.allowEmptyString)
     throw new DetectorError(`Illegal CoNLL-U: empty string`, text, options);
 
-  if (utils.isJSONSerializable(text))
+  if (isJSONSerializable(text))
     throw new DetectorError(`Illegal CoNLL-U: JSON object`, text, options);
 
   // be more or less strict about the fields we require being set
-  const tokenLine = options.requireTenParams ? utils.re.conlluTokenLineTenParams
-                                             : utils.re.conlluTokenLine;
+  const tokenLine = options.requireTenParams ? re.conlluTokenLineTenParams
+                                             : re.conlluTokenLine;
 
   // internal stuff
   let doneComments = false;
@@ -29,7 +28,7 @@ module.exports = (text, options) => {
   // iterate over the lines and check each one
   const lines = text.split(/\n/);
   lines.forEach((line, i) => {
-    if (utils.re.comment.test(line)) {
+    if (re.comment.test(line)) {
       // can only have comments at the beginning
       if (doneComments)
         throw new DetectorError(`Illegal CoNLL-U: misplaced comment`, text,
@@ -60,4 +59,4 @@ module.exports = (text, options) => {
   });
 
   return "CoNLL-U";
-};
+}

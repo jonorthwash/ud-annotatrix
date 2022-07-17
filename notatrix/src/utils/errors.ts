@@ -1,7 +1,8 @@
 "use strict";
 
 import type {Options} from "../nx/options";
-import type {Sentence} from "../nx/sentence";
+import type {Sentence, SentenceSerial} from "../nx/sentence";
+import type {TokenSerial} from "../nx/base-token";
 
 export class NotatrixError extends Error {}
 
@@ -23,14 +24,14 @@ export class SplitterError extends ToolError {
 }
 
 export class DetectorError extends ToolError {
-  text: string;
+  input: string|SentenceSerial|TokenSerial|any[];
   options: Options;
 
-  constructor(message: string, text: string, options: Options) {
+  constructor(message: string, input: string|SentenceSerial|TokenSerial|any[], options: Options) {
     super(message);
 
     this.name = "DetectorError";
-    this.text = text;
+    this.input = input;
     this.options = options;
 
     Object.setPrototypeOf(this, DetectorError.prototype);

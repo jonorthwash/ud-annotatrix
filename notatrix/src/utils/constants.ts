@@ -1,5 +1,7 @@
 "use strict";
 
+import type {SentenceSerial} from "../nx/sentence";
+
 export const fields = [
   "index", "form", "lemma", "upostag", "xpostag", "feats", "head", "deprel",
   "deps", "misc"
@@ -11,7 +13,8 @@ export const formats = [
   "SD"
 ];
 
-export const nxSentenceFields = {
+type _SentenceFields = {[k in keyof Partial<SentenceSerial>]: string};
+export const nxSentenceFields: _SentenceFields = {
   input: "string",
   options: "object",
   comments: "array",
