@@ -27,6 +27,8 @@
   },
   "devDependencies": {
     "@types/node": "^18.0.3",
+    "@types/underscore": "^1.11.4",
+    "@types/uuid": "^8.3.4",
     "chai": "^4.3.4",
     "istanbul": "^0.4.5",
     "jsdoc-to-markdown": "^7.0.1",
