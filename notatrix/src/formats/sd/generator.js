@@ -5,7 +5,7 @@ const _ = require("underscore");
 const utils = require("../../utils");
 const GeneratorError = utils.GeneratorError;
 const generateText = require("../plain-text").generate;
-const getLoss = require("./get-loss")
+const getLoss = require("./get-loss").getLoss;
 
 module.exports = (sent, options) => {
   if (!sent.isParsed)
