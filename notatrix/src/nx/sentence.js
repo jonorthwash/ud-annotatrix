@@ -98,12 +98,21 @@ class Sentence extends NxBaseClass {
   /**
    * Output Sentence to a notatrix-serial string
    */
-  serialize(master = {}) {
+  serialize(optionsToOmit = {}) {
+
+    // Create a copy of 'options' where we skip all the key/value pairs
+    // for which 'optionsToOmit' has the same values.  This way, we can
+    // avoid storing a ton of redundant options for each Sentence.
+    const options = Object.fromEntries(
+        Object
+          .entries(this.options)
+          .filter(([key, value]) => optionsToOmit[key] !== value));
+
     return {
       meta: this._meta,
       input: this.input,
       isParsed: this.isParsed,
-      options: utils.dedup(master, this.options),
+      options,
       comments: this.isParsed ? this.comments.map(com => com.serialize()) : [],
       tokens: this.isParsed ? this.tokens.map(token => token.serialize()) : [],
     };

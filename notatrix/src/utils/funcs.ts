@@ -61,17 +61,6 @@ export function thin<T>(t: T): T|undefined {
   return !!t ? t : undefined;
 }
 
-export function dedup<T>(master: T, slave: T): T {
-  let dedup = {} as T;
-
-  _.each(slave, (value, key) => {
-    if (master[key] !== value)
-      dedup[key] = value;
-  });
-
-  return dedup;
-}
-
 export function hashStringToHex(s: string): string {
   let hash = 0;
   for (let i = 0; i < s.length; i++) {
