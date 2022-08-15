@@ -6,8 +6,6 @@ const babelify = require("babelify");
 const rename = require("gulp-rename");
 const sourcemaps = require("gulp-sourcemaps");
 const compileEJS = require("./scripts/compile-ejs");
-const jsdoc2md = require("jsdoc-to-markdown");
-const fs = require("fs");
 const terser = require("gulp-terser");
 const size = require("gulp-size");
 const tsify = require("tsify");
@@ -37,27 +35,10 @@ gulp.task("html", function(done) {
   done();
 });
 
-gulp.task("docs", done => {
-  jsdoc2md
-      .render({
-        files: [
-          "client/*.js",
-          "client/*/*.js",
-        ]
-      })
-      .then(md => {
-        fs.writeFile("./client/README.md", md, err => {
-          if (err)
-            throw err;
-        });
-      });
-  done();
-});
-
 gulp.task("ico", function() { return gulp.src(["./client/favicon.png"]).pipe(gulp.dest("./server/public")); });
 
 gulp.task("watch", () => {
-  gulp.watch(["client/**/*.js", "notatrix/**/*.js", "server/views/**/*.ejs"], gulp.parallel("js", "html", "docs"));
+  gulp.watch(["client/**/*.js", "notatrix/**/*.js", "server/views/**/*.ejs"], gulp.parallel("js", "html"));
 });
 
-gulp.task("default", gulp.parallel("js", "html", "docs", "ico"));
+gulp.task("default", gulp.parallel("js", "html", "ico"));
