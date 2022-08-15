@@ -47,6 +47,7 @@
     "nodemon": "^1.18.11",
     "nyc": "^13.3.0",
     "sinon": "^7.3.1",
+    "typescript": "^4.7.4",
     "vinyl-buffer": "^1.0.1",
     "vinyl-source-stream": "^2.0.0"
   },
