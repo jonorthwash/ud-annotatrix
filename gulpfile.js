@@ -17,7 +17,7 @@ const gulp_mode = process.env.GULP_ENV || "development";
 console.log("Gulp runs in " + gulp_mode + " mode");
 
 gulp.task("js", function() {
-  let stream = browserify({entries: ["client/index.js"], debug: true})
+  let stream = browserify({entries: ["client/index.ts"], debug: true})
                    .plugin(tsify)
                    .transform(babelify, {global: true})
                    .bundle()
