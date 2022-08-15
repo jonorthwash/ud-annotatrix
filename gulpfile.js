@@ -10,6 +10,7 @@ const jsdoc2md = require("jsdoc-to-markdown");
 const fs = require("fs");
 const terser = require("gulp-terser");
 const size = require("gulp-size");
+const tsify = require("tsify");
 require("dotenv").config();
 
 const gulp_mode = process.env.GULP_ENV || "development";
@@ -17,6 +18,7 @@ console.log("Gulp runs in " + gulp_mode + " mode");
 
 gulp.task("js", function() {
   let stream = browserify({entries: ["client/index.js"], debug: true})
+                   .plugin(tsify)
                    .transform(babelify, {global: true})
                    .bundle()
                    .on("error", function(err) { console.error(err); })
