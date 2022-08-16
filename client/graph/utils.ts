@@ -1,7 +1,11 @@
+import * as d3 from "d3";
+
+import type {GraphNode, FormNode} from ".";
+
 export const nodeHeight = 30; // Height of nodes
 export const lineLen = 10; // Length of line between form and pos 
 
-function rightRoundedRect(x, y, width, height, radius) {
+function rightRoundedRect(x: number, y: number, width: number, height: number, radius: number) {
   return "M" + x + "," + y
        + "h" + (width - radius)
        + "a" + radius + "," + radius + " 0 0 1 " + radius + "," + radius
@@ -11,7 +15,7 @@ function rightRoundedRect(x, y, width, height, radius) {
        + "z";
 }
 
-function leftRoundedRect(x, y, width, height, radius) {
+function leftRoundedRect(x: number, y: number, width: number, height: number, radius: number) {
   return "M" + (x+width) + "," + y
        + "h" + (-width + radius)
        + "a" + radius + "," + radius + " 1 0 0 " + -radius + "," + radius
@@ -23,20 +27,21 @@ function leftRoundedRect(x, y, width, height, radius) {
 
 /**
  * Draws the nodes on the svg.
- * @param {g} _g <g> element to draw on
- * @param {Array} el array of nodes
- * @param {Array} heights heights of each node
- * @param {Integer} spacing how far nodes are apart
- * @returns token number of root
  */
-export function drawNodes(_g, el, heights, spacing) {
+export function drawNodes(
+  _g: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>,
+  eles: GraphNode[],
+  heights: number[],
+  spacing: number,
+): number {
   let currentX = 200;
   let rootToken = null;
-  el.forEach(d => {
+  eles.forEach(ele => {
     // Only want nodes
-    if(!d.classes.includes("form")) {
+    if(!ele.classes.includes("form")) {
       return;
     }
+    const d = ele as FormNode;
     if(d.classes.includes("root")) {
       rootToken = d.subId;
     }
@@ -55,7 +60,7 @@ export function drawNodes(_g, el, heights, spacing) {
     // Find sizing of token number
     textElement = _g
       .append("text")
-      .text(d.conlluId)
+      .text(d.conlluId as number)
       .attr("class", 'tokenNum-label' + textClass);
 
     let tokenNumWidth = textElement.node().getComputedTextLength() + 10;
@@ -120,7 +125,7 @@ export function drawNodes(_g, el, heights, spacing) {
     // Add token number
     tokenNumGroup
       .append("text")
-      .text(d.conlluId)
+      .text(d.conlluId as number)
       .attr("class", "tokenNum-label" + textClass)
       .attr("x", "50%")
       .attr("y", "50%")

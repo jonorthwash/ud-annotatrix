@@ -10,7 +10,7 @@ export class Table {
   private row: number;
   private rows: number;
 
-  constructor(gui) {
+  constructor(gui: GUI) {
 
     this.gui = gui;
     this.col = 1;
@@ -38,7 +38,7 @@ export class Table {
     return rows.join("\n");
   }
 
-  goRight(wrap) {
+  goRight(wrap: boolean) {
 
     if (this.col === this.cols - 1) {
       if (!wrap)
@@ -59,7 +59,7 @@ export class Table {
         $(`[col-id="${this.col}"][row-id="${this.row}"]`).addClass("focused").prop("contenteditable", false).focus();
   }
 
-  goLeft(wrap) {
+  goLeft(wrap: boolean) {
 
     if (this.col === 1) {
       if (!wrap)
@@ -108,7 +108,7 @@ export class Table {
         $(`[col-id="${this.col}"][row-id="${this.row}"]`).addClass("focused").prop("contenteditable", false).focus();
   }
 
-  toggleEditing(toggle) {
+  toggleEditing(toggle?: boolean) {
 
     const td = $(`[col-id="${this.col}"][row-id="${this.row}"]`).toggleClass("editing", toggle);
 
@@ -130,7 +130,9 @@ export class Table {
     const self = this;
 
     $("#table-data th").click(e => {
-      const target = $(e.target), col = target.attr("col-id"), columns = self.gui.config.column_visibilities;
+      const target = $(e.target);
+      const col = target.attr("col-id") as unknown as number;
+      const columns = self.gui.config.column_visibilities;
 
       if (!target.hasClass("hideable"))
         return;
@@ -151,9 +153,12 @@ export class Table {
           self.toggleEditing(true);
         })
         .blur(e => {
-          const target = $(e.target), uuid = target.attr("uuid"),
-                token = self.gui.app.corpus.current.query(t => t.uuid === uuid)[0], field = target.attr("field"),
-                originalValue = target.attr("original-value") || "", value = target.text() || "";
+          const target = $(e.target);
+          const uuid = target.attr("uuid");
+          const token = self.gui.app.corpus.current.query(t => t.uuid === uuid)[0];
+          const field = target.attr("field");
+          const originalValue = target.attr("original-value") || ""
+          const value = target.text() || "";
 
           target.prop("contenteditable", false).removeClass("editing").removeClass("focused");
 
@@ -207,7 +212,7 @@ export class Table {
                                                        val += head.token.indices.conllu + ":" + head.deprel
                                                      })
                                                      return val;
-                                                   } : token[field];
+                                                   } : (token as any)[field];
 
         let valid = {}, td = $("<td>"), inputSpan = $("<span>").attr("name", "input"),
             errorSpan = $("<span>").attr("name", "error");

@@ -1,5 +1,7 @@
 import * as $ from "jquery";
 
+import type {CollaborationInterface} from "../collaboration";
+import type {User} from "../collaboration/user";
 import type {GUI} from ".";
 
 /**
@@ -22,11 +24,8 @@ export class Chat {
    * Add an "alert" to the #chat.  Alert messages show up centrally aligned in
    *  the #chat.  This method also escapes '%u' strings in the message and
    *  replaces them with the `User::dom`.
-   *
-   * @param {String} message message to be alerted
-   * @param {Array} users [User] list of users to be interleaved
    */
-  alert(message, users = []) {
+  alert(message: string, users: User[] = []) {
 
     const messages = $("#chat-messages"), alert = $("<span>").addClass("message message-alert");
 
@@ -45,13 +44,12 @@ export class Chat {
   /**
    * Send a message from the current user to the chat.  Also broadcasts the
    *  message to the other users.
-   *
-   * @param {CollaborationInterface} collab
    */
-  sendMessage(collab) {
+  sendMessage(collab: CollaborationInterface) {
 
     // get the message
-    const input = $("#chat-input"), message = input.val().trim();
+    const input = $("#chat-input");
+    const message = (input.val() as string).trim();
 
     // don't send just whitespace
     if (!message)
@@ -75,12 +73,8 @@ export class Chat {
    * Add a message to #chat with content `text` from `user`.  If `self == true`,
    *  then the message will be right-aligned.  Otherwise, it will be left-
    *  aligned.
-   *
-   * @param {User} user
-   * @param {String} text
-   * @param {Boolean} self (optional, default = `false`)
    */
-  newMessage(user, text, self = false) {
+  newMessage(user: User, text: string, self: boolean = false) {
 
     const messages = $("#chat-messages");
     const dom =
@@ -91,7 +85,7 @@ export class Chat {
                         .addClass("message-content")
                         .append($("<div>").addClass("message-text").text(text))
                         .append($("<span>").addClass("message-timestamp meta").text((new Date()).toLocaleTimeString())))
-            .append($("<div>").addClass("message-sender meta").html(user.dom()));
+            .append($("<div>").addClass("message-sender meta").html(user.dom() as any));
 
     messages.append(dom).closest("div").scrollTop(messages.prop("scrollHeight"));
   }
@@ -99,10 +93,8 @@ export class Chat {
   /**
    * Scan through #chat and update each `.message-sender-info` span for the given
    *  `user` to use the most recent values of `user.name` and `user.viewing`.
-   *
-   * @param {User} user
    */
-  updateUser(user) {
+  updateUser(user: User) {
 
     const dom = $(`.message-sender-info[name="${user.id}"]`);
     dom.find(".message-sender-name").text(user.name);

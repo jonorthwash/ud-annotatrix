@@ -1,9 +1,18 @@
 import * as $ from "jquery";
 import * as nx from "notatrix";
 
-interface MousePosition {
+export interface MousePosition {
   x: number;
   y: number;
+}
+
+export interface UserData {
+  username: string|null;
+  id: string;
+  address: string;
+  index: number|null;
+  mouse: MousePosition|null;
+  locked: string|null; // cytoscape selector to locate the node currently being edited
 }
 
 /**
@@ -19,7 +28,7 @@ export class User {
   public mouse: MousePosition|null;
   public locked: string|null; // cytoscape selector to locate the node currently being edited
 
-  constructor(data) {
+  constructor(data: UserData) {
     this.name = data.username || "anonymous";
     this.id = data.id;
     this.ip = data.address;
@@ -67,7 +76,7 @@ export class User {
    *    </span>
    *  </span>
    */
-  dom(): HTMLElement {
+  dom(): JQuery<HTMLElement> {
     return $("<span>")
         .addClass("message-sender-info")
         .attr("name", this.id)

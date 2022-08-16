@@ -1,5 +1,6 @@
 import * as _ from "underscore";
 import * as $ from "jquery";
+import * as nx from "notatrix";
 
 export const U_DEPRELS = [
   "acl",      "advcl",     "advmod", "amod",       "appos", "aux",      "case",      "cc",         "ccomp", "clf",
@@ -16,11 +17,11 @@ export const U_POS = [
 // circumstances, e.g. and / or
 const U_POS_LEAF = ["AUX", "CCONJ", "PART", "PUNCT", "SCONJ"]; // no ADP
 
-export function is_upos(s) {
+/**
+ * Check if a relation is in the list of valid parts of speech.
+ */
+export function is_upos(s: string): boolean {
 
-  // Checks if a relation is in the list of valid parts of speech
-  // @s = the input relation
-  // returns a bool
   s = (s || "").toUpperCase();
 
   let is_upos = false;
@@ -32,11 +33,10 @@ export function is_upos(s) {
   return is_upos;
 }
 
-export function is_udeprel(s) {
-
-  // Checks if a relation is in the list of valid relations
-  // @s = the input relation
-  // returns a bool
+/**
+ * Check if a relation is in the list of valid relations.
+ */
+export function is_udeprel(s: string): boolean {
 
   // Language-specific relations are `${universal_relation}:${some_string}`
   s = (s || "").split(":")[0].toLowerCase();
@@ -50,9 +50,19 @@ export function is_udeprel(s) {
   return is_deprel;
 }
 
-function is_leaf(s, t) {
+/**
+ * Tokens with the relation punct always attach to content words
+ * (except in cases of ellipsis) and can never have dependents.
+ *
+ * See http://universaldependencies.org/u/dep/punct.html.
+ */
+function is_leaf(s: nx.Token, t: nx.Token) {
 
-  function is_upos_leaf(pos) {
+  /**
+   * Checks if a node is in the list of part-of-speech tags which
+   * are usually leaf nodes
+   */
+  function is_upos_leaf(pos: string) {
 
     let is_leaf = false;
     U_POS_LEAF.forEach(upos => {
@@ -62,14 +72,6 @@ function is_leaf(s, t) {
 
     return is_leaf;
   }
-
-  // Checks if a node is in the list of part-of-speech tags which
-  // are usually leaf nodes
-  // @s = part of speech tag
-
-  // http://universaldependencies.org/u/dep/punct.html
-  // Tokens with the relation punct always attach to content words (except in cases of ellipsis) and can never have
-  // dependents.
 
   return is_upos_leaf(t.upostag || t.xpostag) && is_upos_leaf(s.upostag || s.xpostag);
 }
@@ -251,10 +253,10 @@ function is_relation_conflict(tree) {
 }
 */
 
-function is_cycle(sent, src, tar) {
+function is_cycle(sent: nx.Sentence, src: nx.Token, tar: nx.Token) {
 
   // recursive DFS
-  function is_cycle_util(sent, src, tar) {
+  function is_cycle_util(sent: nx.Sentence, src: nx.Token, tar: nx.Token) {
 
     // visit node
     seen.add(src);
@@ -278,7 +280,7 @@ function is_cycle(sent, src, tar) {
   return is_cycle_util(sent, src, tar);
 }
 
-export function depEdgeClasses(sent, token, head) {
+export function depEdgeClasses(sent: nx.Sentence, token: nx.Token, head: nx.RelationItem) {
 
   let classes = new Set(["dependency"]);
 
@@ -299,6 +301,10 @@ export function depEdgeClasses(sent, token, head) {
   return Array.from(classes).join(" ");
 }
 
-export function posNodeClasses(pos) { return is_upos(pos) ? "pos" : "pos error"; }
+export function posNodeClasses(pos: string) {
+  return is_upos(pos) ? "pos" : "pos error";
+}
 
-export function attrValue(attr, value) { return value; }
+export function attrValue(attr: string, value: string): string {
+  return value;
+}

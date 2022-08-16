@@ -1,6 +1,8 @@
 import * as $ from "jquery";
 
-var _gui = null;
+import type {GUI} from "..";
+
+var _gui: GUI|null = null;
 
 /**
  * Show the modal.
@@ -24,7 +26,7 @@ function hide() {
  */
 function bind() { $("#upload-file-modal").find("[name=\"close\"]").click(hide); }
 
-export function uploadFile(gui: typeof _gui) {
+export function uploadFile(gui: GUI) {
   _gui = gui;
   bind();
   return {

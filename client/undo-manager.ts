@@ -8,7 +8,7 @@ class Stack<T> {
 
   get length() { return this._items.length; }
 
-  push(item) { this._items.push(item); }
+  push(item: T) { this._items.push(item); }
 
   pop() { return this._items.pop() }
 
@@ -20,11 +20,11 @@ class Stack<T> {
 export class UndoManager {
   private app: App;
   public active: boolean;
-  public current: unknown|null;
+  public current: any|null;
   private undoStack: Stack<string>;
   private redoStack: Stack<string>;
 
-  constructor(app) {
+  constructor(app: App) {
     this.app = app;
     this.active = false;
     this.current = null;
@@ -36,7 +36,7 @@ export class UndoManager {
 
   hasRedo() { return !!this.redoStack.length; }
 
-  push(serial) {
+  push(serial: any) {
 
     if (this.active)
       return false;

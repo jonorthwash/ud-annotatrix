@@ -4,8 +4,7 @@ import type {GUI} from ".";
 
 export class Status {
   private gui: GUI;
-
-  constructor(gui) { this.gui = gui; }
+  constructor(gui: GUI) { this.gui = gui; }
 
   bind() {
 
@@ -17,9 +16,9 @@ export class Status {
       gui.config.autoparsing = !gui.config.autoparsing;
 
       if (gui.config.autoparsing) {
-        self.gui.app.corpus.parse($("#text-data").val());
+        self.gui.app.corpus.parse($("#text-data").val() as string);
       } else {
-        self.gui.app.corpus.current.input = $("#text-data").val();
+        self.gui.app.corpus.current.input = $("#text-data").val() as string;
         self.gui.app.corpus.format = null;
       }
 
@@ -70,7 +69,7 @@ export class Status {
     $("#graph-status").removeClass("red green").addClass(corpus.isParsed ? "green" : "red").text(graphStatus);
   }
 
-  normal(message) {
+  normal(message: string) {
 
     const config = this.gui.config;
 
@@ -84,7 +83,7 @@ export class Status {
     setTimeout(() => div.detach(), config.statusNormalFadeout);
   }
 
-  error(message) {
+  error(message: string) {
 
     const config = this.gui.config;
 

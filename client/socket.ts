@@ -1,4 +1,10 @@
+// @ts-ignore: We don't have access to SocketIO types unless we upgrade to v3 :^)
 import * as _Socket from "socket.io-client";
+
+interface SocketIoClient {
+  on(channel: string, callback: (data: any) => void): void;
+  emit(channel: string, data: any): void;
+}
 
 import {check_if_browser} from "./utils/funcs";
 import type {App} from "./app";
@@ -12,11 +18,11 @@ import type {App} from "./app";
  */
 export class Socket {
   private app: App;
-  private _socket: _Socket|null;
+  private _socket: SocketIoClient|null;
   public initialized: boolean;
   private isOpen: boolean;
 
-  constructor(app) {
+  constructor(app: App) {
     this.app = app;
 
     // save some internal state to avoid loops and errors
@@ -39,7 +45,7 @@ export class Socket {
     const collab = this.app.collab, corpus = this.app.corpus, graph = this.app.graph, gui = this.app.gui;
 
     // request a server connection
-    this._socket = new _Socket();
+    this._socket = new _Socket() as SocketIoClient;
 
     // handle server approving our request for connection
     this._socket.on("initialization", data => {
@@ -142,11 +148,8 @@ export class Socket {
 
   /**
    * Broadcast (/emit) a packet of type <name> with arguments <data> to the server.
-   *
-   * @param {String} name the name of the event we want to notify the server of
-   * @param {Object} data any other arguments for the event
    */
-  broadcast(name, data?) {
+  broadcast(name: string, data?: any) {
 
     // debugging
     // console.log('broadcast', name, data);

@@ -7,7 +7,7 @@ import type {GUI} from ".";
 
 export class Textarea {
   private gui: GUI;
-  constructor(gui) { this.gui = gui; }
+  constructor(gui: GUI) { this.gui = gui; }
 
   bind() {
 
