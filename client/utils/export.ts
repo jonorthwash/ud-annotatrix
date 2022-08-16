@@ -1,26 +1,22 @@
 import * as _ from "underscore";
 import * as $ from "jquery";
-import * as C2S from "canvas2svg";
+import * as d3 from "d3";
 
 import {download} from "./funcs";
-
-// TODO: We should add a `.d.ts` file for this and add it to the `window`
-//       object.  See https://mariusschulz.com/blog/declaring-global-variables-in-typescript.
-const d3 = (window as any).d3;
+import type {App} from "../app";
 
 /**
  * Export an application instance to LaTeX format.  The client will be prompted
  *  to download the file.
- *
- * @param {App} app
- * @return {String}
  */
-export function latex(app): string|null {
+export function latex(app: App): string|null {
 
   if (!app.graph.length)
     return null;
 
-  let tokensLine = "", posLine = "", deprelLines = [];
+  let tokensLine = "";
+  let posLine = "";
+  const deprelLines: string[] = [];
 
   app.graph.eles.forEach(node => {
     if (node.name === "form") {
@@ -63,18 +59,16 @@ export function latex(app): string|null {
 /**
  * Export an application instance to PNG format.  The client will be prompted to
  *  download the file.
- *
- * @param {App} app
  */
-export function png(app) {
+export function png(app: App) {
 
   if (!app.graph.length)
     return;
 
   let imgsrc = getSVG();
 
-  let w = d3.select("#graph-svg").node().clientWidth;
-  let h = d3.select("#graph-svg").node().clientHeight;
+  let w = (d3.select("#graph-svg").node() as any).clientWidth as number;
+  let h = (d3.select("#graph-svg").node() as any).clientHeight as number;
   
   let image = new Image(w, h);
 
@@ -98,11 +92,8 @@ export function png(app) {
 /**
  * Export an application instance to SVG format.  The client will be prompted to
  *  download the file.
- *
- * @param {App} app
  */
-export function svg(app) {
-
+export function svg(app: App) {
   if (!app.graph.length)
     return;
   let href = getSVG();
@@ -115,7 +106,9 @@ export function svg(app) {
  * 
  */
 function getSVG() {
-  addInlineStyling([
+  // Basically just insert the CSS inline so that
+  // this info isn't lost when it gets exported.
+  [
     {el: '.form', properties: ['fill', 'stroke', 'stroke-width']},
     {el: '.form.root', properties: ['stroke-width']},
     {el: '.form.activated', properties: ['fill']},
@@ -138,39 +131,28 @@ function getSVG() {
     {el: ".tokenNum", properties: ['fill', 'stroke', 'stroke-width']},
     {el: ".tokenNum.root", properties: ['stroke-width']},
     {el: ".tokenNum-label.root", properties: ['font-weight']},
-  ]);
-  let w = d3.select("#graph-svg").node().clientWidth;
-  let h = d3.select("#graph-svg").node().clientHeight;
+  ].forEach(row => {
+    d3.selectAll(row.el).each(function() {
+      const element = this as HTMLElement;
+      row.properties.forEach(function(prop) {
+        const computedStyle = getComputedStyle(element, null),
+        value = computedStyle.getPropertyValue(prop);
+        (element.style as any)[prop] = value;
+      });
+    });
+  });
+
+  let w = (d3.select("#graph-svg").node() as any).clientWidth as number;
+  let h = (d3.select("#graph-svg").node() as any).clientHeight as number;
   // Firefox has a bug that require the root svg node to have
   // an explicit width and height in order to be drawn onto a canvas.
   d3.select("#graph-svg").attr("width", w);
   d3.select("#graph-svg").attr("height", h);
-  var s = new XMLSerializer().serializeToString(d3.select("#graph-svg").node())
+  var s = new XMLSerializer().serializeToString(d3.select("#graph-svg").node() as Node)
   var encodedData = window.btoa(unescape(encodeURIComponent(s)));
   var base64Data = 'data:image/svg+xml;base64,' + encodedData;
   console.log(base64Data);
   d3.select("#graph-svg").attr("width", "100%");
   d3.select("#graph-svg").attr("height", "100%");
   return base64Data;
-}
-
-/**
- * Basically inserts the css as inline, so that
- * when it gets exported, the css is maintained.
- */
-function addInlineStyling(elements) {
-	if(elements && elements.length) {
-		elements.forEach(function(d) {
-    	d3.selectAll(d.el).each(function(){
-        var element = this;
-        if(d.properties && d.properties.length) {
-          d.properties.forEach(function(prop) {
-              var computedStyle = getComputedStyle(element, null),
-                value = computedStyle.getPropertyValue(prop);
-              element.style[prop] = value;
-          });
-        }
-       });
-    });
-  }
 }

@@ -38,8 +38,9 @@ export class GUI {
   private textarea: Textarea;
   public root: unknown;
   private uploaded: Uploaded|null = null;
+  public parseTimer: ReturnType<typeof setTimeout>|null = null;;
 
-  constructor(app) {
+  constructor(app: App) {
 
     this.app = app;
 
@@ -106,12 +107,16 @@ export class GUI {
     if (!this.app.online || !this.app.server.is_running) {
       $("#upload-filename").on("change", function(e) {
         // console.log("changed", e.target.files);
-        if (e.target.files.length > 0) {
+        const target = e.target as HTMLInputElement;
+        if (target.files.length > 0) {
           let reader = new FileReader();
-          reader.onload = (function(
-              theFile) { return function(d) { self.uploaded = {"name": theFile.name, "text": d.target.result}; } })(
-              e.target.files[0]);
-          reader.readAsText(e.target.files[0]);
+          reader.onload = (d) => {
+            self.uploaded = {
+              name: target.files[0].name,
+              text: d.target.result,
+            };
+          };
+          reader.readAsText(target.files[0]);
         }
       });
       $("#uploadform").on("submit", function(e) {
@@ -119,9 +124,8 @@ export class GUI {
         if (window.File && window.FileReader && window.FileList && window.Blob) {
           // console.log("FileAPI OK");
           if (self.uploaded && self.uploaded.hasOwnProperty("text")) {
-            let upcorpus = nx.Corpus.fromString(self.uploaded["text"]);
-            upcorpus.filename = self.uploaded["name"];
-            ;
+            let upcorpus = nx.Corpus.fromString(self.uploaded["text"] as string);
+            upcorpus.filename = self.uploaded.name;
             console.log(upcorpus.serialize());
             self.app.corpus = new Corpus(self.app, upcorpus.serialize());
             $("#upload-file-modal").hide();

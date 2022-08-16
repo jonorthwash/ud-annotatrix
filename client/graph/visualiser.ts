@@ -1,27 +1,25 @@
 import * as $ from "jquery";
+import * as d3 from "d3";
+import * as nx from "notatrix";
 
-import * as utils from "./utils"
+import type {MouseNode} from "../collaboration";
+import * as utils from "./utils";
+import type {DependencyNode, MultiwordNode, Graph} from ".";
 
-let svg = null;
-let _g = null;
-let _graph = null;
-let zoom = null;
-let rootToken = null;
+let svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown>|null = null;
+let _g: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>|null = null;
+let _graph: Graph|null = null;
+let zoom: d3.ZoomBehavior<Element, unknown>|null = null;
+let rootToken: number|null = null;
 
 const curveDist = 70; // Distance of the curved part of the deprel
 const spacing = 30; // How far nodes are aparts
 const yLevel = 100; // y-position of all forms
 
-// TODO: We should add a `.d.ts` file for this and add it to the `window`
-//       object.  See https://mariusschulz.com/blog/declaring-global-variables-in-typescript.
-const d3 = (window as any).d3;
-
 /**
  * Bind the elements to the internal reference.
- * 
- * @param {Array} eles List of both nodes and edges
  */
-export function bind(graph) {
+export function bind(graph: Graph) {
   _graph = graph;
 }
 
@@ -112,14 +110,15 @@ function drawDeprels() {
     .attr("d", "M 1 1 L 3 2 L 1 3 Z");
 
   // Create a list of deprels
-  let deprels = [];
-  let enhancedDeprels = [];
-  let nonEnhDeprels = []
+  let deprels: DependencyNode[] = [];
+  let enhancedDeprels: DependencyNode[] = [];
+  let nonEnhDeprels: DependencyNode[] = []
 
-  _graph.eles.forEach((d) => {
-    if(!d.classes.includes("dependency")) {
+  _graph.eles.forEach((ele) => {
+    if(!ele.classes.includes("dependency")) {
       return;
     }
+    const d = ele as DependencyNode
     deprels.push(d);
     if(d.enhanced) {
       enhancedDeprels.push(d);
@@ -142,7 +141,7 @@ function drawDeprels() {
   let edgeHeight = 65; // how high the height increments by at each level
 
   // Shift tokens in the direction of dir
-  function shiftTokens(shift, target, dir) {
+  function shiftTokens(shift: number, target: number, dir: number) {
     while ($("#token-" + target).length) {
       let curX = d3.select("#token-" + target).attr("x");
       d3.select("#token-" + target).attr("x", parseInt(curX) - dir * shift);
@@ -152,7 +151,7 @@ function drawDeprels() {
 
   // Calculate how much the ending token has to shift by
   // to accomodate for the deprel.
-  function needShift(d, xpos1, xpos2, rectWidth, height) {
+  function needShift(d: DependencyNode, xpos1: number, xpos2: number, rectWidth: number, height: number): number {
     let slant = 0.15;
     let hor = Math.min(tokenDist(d.id), height) * curveDist;
     
@@ -174,7 +173,7 @@ function drawDeprels() {
       }
     }
     return 0;
-}
+  }
 
   // We first need to deal with the necessary shifting of tokens
   // in order for the labels to fit nicely in the deprels before
@@ -285,9 +284,8 @@ function drawDeprels() {
 
 /**
  * Returns the token distance for a deprel.
- * @param {String} id dep_[num1]_[num2]
  */
-function tokenDist(id) {
+function tokenDist(id: string) {  // id is like "dep_[num1]_[num2]"
   let sourceNum = parseInt(id.split('_')[1]);
   let targetNum = parseInt(id.split('_')[2]);
   return Math.abs(sourceNum - targetNum);
@@ -306,15 +304,18 @@ function tokenDist(id) {
  *       •                           •
  *
  *     •                                •
- * @param {int} initialOffset x-position of source (offset)
- * @param {int} ypos1 y-position of tokens
- * @param {int} xpos2 x-position of target
- * @param {int} dir -1 or 1
- * @param {int} rectWidth width of label
- * @param {int} h scaled height of deprel
- * @param {int} height actual height of the deprel
  */
-function curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height, id, enhanced) {
+function curve(
+  initialOffset: number,  // x-position of source (offset)
+  ypos1: number,          // y-position of tokens
+  xpos2: number,          // x-position of target
+  dir: number,            // -1 or 1
+  rectWidth: number,      // width of label
+  h: number,              // scaled height of deprel
+  height: number,         // actual height of deprel
+  id: string,
+  enhanced: boolean,
+): string {
   let rectLeft = (initialOffset + xpos2) / 2 + (dir * rectWidth) / 2;
   let slant = 0.15; // Angle of ascent/descent in the beginning/end of the curve
   let hor = Math.min(tokenDist(id), h) * curveDist; // How far the curved part of the curve goes
@@ -348,10 +349,9 @@ function curve(initialOffset, ypos1, xpos2, dir, rectWidth, h, height, id, enhan
 
 /**
  * Calculates the heights for each deprel.
- * @param {Array} deprels Array of deprels
  */
-function getHeights(deprels): {[deprel: string]: number} {
-  function dist(a) {
+function getHeights(deprels: DependencyNode[]): {[deprel: string]: number} {
+  function dist(a: DependencyNode) {
     let s = a.sourceNum;
     let t = a.targetNum;
     return Math.abs(s - t);
@@ -366,7 +366,7 @@ function getHeights(deprels): {[deprel: string]: number} {
     return 0;
   });
   let heights = [];
-  let finalHeights = {};
+  let finalHeights: {[deprel: string]: number} = {};
   for (let i = 0; i < _graph.numTokens + 1; i++) {
     heights.push([0]);
   }
@@ -403,21 +403,22 @@ function getHeights(deprels): {[deprel: string]: number} {
  * Draw supertokens.
  */
 function drawSuperTokens() {
-  _graph.eles.forEach((d) => {
-    if(!d.classes.includes("multiword")) {
+  _graph.eles.forEach((ele) => {
+    if(!ele.classes.includes("multiword")) {
       return;
     }
+    const d = ele as MultiwordNode;
     let t1, t2;
     let format = _graph.app.corpus.format;
     // Get the indices for beginning of the multiword
     let index = d.token._analyses[0]._subTokens[0].indices;
 
     if (format == "CoNLL-U") {
-      t1 = _graph.presentationId[index.conllu];
+      t1 = _graph.presentationId[index.conllu as number];
       
     }
     else if (format == "CG3") {
-      t1 = _graph.presentationId[index.cg3];
+      t1 = _graph.presentationId[index.cg3 as number];
     }
     else {
       t1 = _graph.presentationId[index.absolute];
@@ -499,9 +500,9 @@ export function zoomOut() {
 }
 
 export function resetZoom() {
-  var bounds = d3.select("#graph-g").node().getBBox();
-  let w = d3.select("#graph-svg").node().clientWidth;
-  let h = d3.select("#graph-svg").node().clientHeight;
+  var bounds = (d3.select("#graph-g").node() as any).getBBox() as SVGRect;
+  let w = (d3.select("#graph-svg").node() as any).clientWidth as number;
+  let h = (d3.select("#graph-svg").node() as any).clientHeight as number;
   var width = bounds.width,
       height = bounds.height;
   var midX = bounds.x + width / 2,
@@ -518,8 +519,8 @@ export function resetZoom() {
   saveZoom();
 }
 
-export function zoomTo(s) {
-  svg.call(zoom.transform, d3.zoomIdentity.translate(_graph.config.pan.x, _graph.config.pan.y).scale(s));
+export function zoomTo(zoomScale: number) {
+  svg.call(zoom.transform, d3.zoomIdentity.translate(_graph.config.pan.x, _graph.config.pan.y).scale(zoomScale));
   saveZoom();
 }
 
@@ -532,9 +533,8 @@ function saveZoom() {
 
 /**
  * Draw mouse on the svg.
- * @param {MouseObject} mouse 
  */
-export function drawMouse(mouse) {
+export function drawMouse(mouse: MouseNode) {
   const id = mouse.id.replace(/[#:]/g, "_");
   if (!$(`#${id}.mouse`).length) {
     _g.append("rect")

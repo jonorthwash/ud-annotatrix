@@ -1,19 +1,18 @@
 import * as $ from "jquery";
+import * as d3 from "d3";
 
 import * as utils from "./utils";
+import type {MouseNode} from "../collaboration";
+import type {Graph, DependencyNode} from ".";
 
-let _graph = null;
-let _g = null;
-let zoom = null;
-let svg = null;
+let _graph: Graph|null = null;
+let _g: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>|null = null;
+let zoom: d3.ZoomBehavior<Element, unknown>|null = null;
+let svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown>|null = null;
 
 const spacing = 10;
 
-// TODO: We should add a `.d.ts` file for this and add it to the `window`
-//       object.  See https://mariusschulz.com/blog/declaring-global-variables-in-typescript.
-const d3 = (window as any).d3;
-
-export function bind(graph) {
+export function bind(graph: Graph) {
   _graph = graph;
 }
 
@@ -84,7 +83,7 @@ function drawNodes() {
     if(!d.classes.includes("dependency")) {
       return;
     }
-    isRoot[d.targetNum] = false;
+    isRoot[(d as DependencyNode).targetNum] = false;
   });
 
   console.log(_graph.connections);
@@ -102,10 +101,8 @@ function drawNodes() {
 
 /**
  * BFS to set the heights of the tree, starting from a root token
- * @param {Integer} token current token
- * @param {Array} heights holds the heights of the tokens
  */
-function traverseTree(token, heights) {
+function traverseTree(token: number, heights: number[]) {
   let queue = [];
   queue.push([token, heights[token]]);
   while (queue.length > 0) {
@@ -149,10 +146,11 @@ function drawDeprels() {
     .attr("d", "M 3 1 L 1 2 L 3 3 Z");
     
 
-  _graph.eles.forEach((d) => {
-    if(!d.classes.includes("dependency")) {
+  _graph.eles.forEach((ele) => {
+    if(!ele.classes.includes("dependency")) {
       return;
     }
+    const d = ele as DependencyNode;
     // Bottom of source to top of target
     let xpos1 = parseInt($("#"+d.source).attr("x")) + parseInt($("#"+d.source).attr("width")) / 2;
     let ypos1 = parseInt($("#"+d.source).attr("y")) + parseInt($("#"+d.source).attr("height"));
@@ -209,9 +207,9 @@ export function zoomOut() {
 }
 
 export function resetZoom() {
-  var bounds = d3.select("#graph-g").node().getBBox();
-  let w = d3.select("#graph-svg").node().clientWidth;
-  let h = d3.select("#graph-svg").node().clientHeight;
+  var bounds = (d3.select("#graph-g").node() as any).getBBox() as SVGRect;
+  let w = (d3.select("#graph-svg").node() as any).clientWidth as number;
+  let h = (d3.select("#graph-svg").node() as any).clientHeight as number;
   var width = bounds.width,
       height = bounds.height;
   var midX = bounds.x + width / 2,
@@ -228,8 +226,8 @@ export function resetZoom() {
   saveZoom();
 }
 
-export function zoomTo(s) {
-  svg.call(zoom.transform, d3.zoomIdentity.translate(_graph.config.pan.x, _graph.config.pan.y).scale(s));
+export function zoomTo(zoomScale: number) {
+  svg.call(zoom.transform, d3.zoomIdentity.translate(_graph.config.pan.x, _graph.config.pan.y).scale(zoomScale));
   saveZoom();
 }
 
@@ -242,9 +240,8 @@ function saveZoom() {
 
 /**
  * Draw mouse on the svg.
- * @param {MouseObject} mouse 
  */
-export function drawMouse(mouse) {
+export function drawMouse(mouse: MouseNode) {
   const id = mouse.id.replace(/[#:]/g, "_");
   if (!$(`#${id}.mouse`).length) {
     _g.append("rect")

@@ -1,6 +1,7 @@
 import * as _ from "underscore";
 import * as $ from "jquery";
 import * as nx from "notatrix";
+import * as d3 from "d3";
 
 import * as storage from "../utils/local-storage";
 import * as validate from "../utils/validate";
@@ -10,42 +11,89 @@ import {_graph as config} from "./config";
 import * as v from "./visualiser";
 import * as tree from "./tree";
 
-// TODO: We should add a `.d.ts` file for this and add it to the `window`
-//       object.  See https://mariusschulz.com/blog/declaring-global-variables-in-typescript.
-const d3 = (window as any).d3;
-
 interface Progress {
   done: number;
   total: number;
 }
 
+export interface DependencyNode {
+  id: string;           // `dep_${id}_${headId}`
+  name: "dependency";
+  num: number;
+  attr: string;
+  deprel: string;
+  source: unknown;      // `token-${id}`
+  sourceNum: number;
+  sourceToken: nx.BaseToken;
+  target: unknown;      // `token-${id}`
+  targetNum: number;
+  targetToken: nx.BaseToken;
+  label: string;
+  enhanced: boolean;
+  classes: string;
+}
+
+export interface MultiwordNode {
+  id: string;           // `multiword-${id}`
+  clump: number;
+  name: "multiword";
+  label: string;        // `${form} ${subscript(id)}`
+  token: nx.BaseToken;
+  conlluId: nx.ConlluIndex;
+  absoluteId: number;
+  cg3Id: nx.Cg3Index;
+  len: number;
+  subId: number;
+  classes: string;
+}
+
+export interface FormNode {
+  id: string;           // `form-${tokenNum}`
+  subId: number;
+  conlluId: nx.ConlluIndex;
+  num: number;
+  clump: number;
+  name: "form";
+  attr: "form";
+  form: string;
+  label: string;
+  type: "subToken"|"token";
+  state: "normal";
+  parent: string;       // `num-${tokenNum}`
+  token: nx.BaseToken;
+  classes: string;
+  posClasses: string;
+  posAttr: "xpostag"|"upostag";
+  posLabel: string;
+}
+
+export type GraphNode = DependencyNode|MultiwordNode|FormNode;
+
 /**
  * Abstraction over the graph editor.  Handles interaction between the graph
  *  and the user.  For example, all the event handlers are here, the methods that
  *  draw the graph, and the methods that place the mice / locks.
- *
- * @param {App} app a reference to the parent of this module
  */
 export class Graph {
-  private app: App;
-  private config: typeof config;
-  private grapher: typeof tree|typeof v;
+  public app: App;
+  public config: typeof config;
+  public grapher: typeof tree|typeof v;
   public progress: Progress;
   public intercepted: boolean;
-  public editing: $.JQuery|null;
-  private moving_dependency: boolean;
+  public editing: JQuery<HTMLElement>|null;
+  public moving_dependency: boolean;
   public length: number;
   private clumps: number;
-  private locked: $.JQuery|null;
+  private locked: JQuery<HTMLElement>|null;
   private mouseBlocked: boolean;
-  private tokens: {[tokenId: number]: nx.Token};
-  private mwTokens: unknown;
-  private presentationId: {[tokenId: number]: number};
+  private tokens: {[tokenId: number]: nx.BaseToken};
+  private mwTokens: {[tokenId: number]: nx.BaseToken};
+  public presentationId: {[tokenId: number]: number};
   private treeBlocked: boolean;
-  private connections: {[headId: number]: number[]};
-  private numTokens: number;
+  public connections: {[headId: number]: number[]};
+  public numTokens: number;
 
-  constructor(app) {
+  constructor(app: App) {
     console.log("CONFIG:", config);
     // save refs
     this.app = app;
@@ -120,8 +168,6 @@ export class Graph {
   /**
    * Build a list of elements, both nodes and edges.  This function
    *  also validates all the elements.
-   *
-   * @return {Array} [Object]
    */
   get eles() {
     // reset variables
@@ -130,7 +176,7 @@ export class Graph {
     this.numTokens = 0;
 
     // helper function to get subscripted index numbers for superTokens
-    function toSubscript(str) {
+    function toSubscript(str: string) {
       const subscripts = {
         0: "₀",
         1: "₁",
@@ -150,7 +196,10 @@ export class Graph {
       if (str == "null")
         return "";
 
-      return str.split("").map((char) => { return (subscripts[char] || char); }).join("");
+      return str
+        .split("")
+        .map((ch) => ((subscripts as any)[ch] || ch))
+        .join("");
     }
 
     // reset our progress tracker
@@ -164,7 +213,8 @@ export class Graph {
     const sent = this.app.corpus.current, format = this.app.corpus.format;
 
     // num is like clump except not including superTokens, eles in the list
-    let num = 0, eles = [];
+    let num = 0;
+    const eles: GraphNode[] = [];
 
     // tokenNum counts just normal tokens (no supertokens and dependencies)
     let tokenNum = 0;
@@ -175,7 +225,7 @@ export class Graph {
     let rootFound = false;
 
     // walk over all the tokens
-    sent.index().iterate(token => {
+    sent.index().iterate((token: nx.BaseToken) => {
       // don't draw other analyses
       if (token.indices.cytoscape == null && !token.isSuperToken)
         return;
@@ -219,7 +269,9 @@ export class Graph {
         if (token.heads.length)
           this.progress.done += 1;
 
-        let parent = token.name === "SubToken" ? "multiword-" + nx.BaseToken.getTokenIndex(sent.getSuperToken(token), format) : undefined;
+        let parent = token.name === "SubToken"
+          ? "multiword-" + nx.BaseToken.getTokenIndex(sent.getSuperToken(token), format)
+          : undefined;
 
         this.tokens[tokenNum] = token;
 
@@ -256,7 +308,7 @@ export class Graph {
       this.treeBlocked = true;
     }
 
-    sent.index().iterate(token => {
+    sent.index().iterate((token: nx.BaseToken) => {
       // iterate over the token's heads to get edges
       token.mapHeads((head, i) => {
 
@@ -275,9 +327,9 @@ export class Graph {
 
         let deprel = head.deprel || "";
 
-        const id = nx.BaseToken.getTokenIndex(token, format),
-          headId = nx.BaseToken.getTokenIndex(head.token, format),
-          label = this.app.corpus.is_ltr
+        const id = nx.BaseToken.getTokenIndex(token, format);
+        const headId = nx.BaseToken.getTokenIndex(head.token, format);
+        const label = this.app.corpus.is_ltr
             ? token.indices.absolute > head.token.indices.absolute
               ? `${deprel}⊳`
               : `⊲${deprel}`
@@ -325,8 +377,6 @@ export class Graph {
   /**
    * Create the cytoscape instance and populate it with the nodes and edges we
    * generate in `this.eles`.
-   *
-   * @return {Graph} (chaining)
    */
   draw() {
     if (this.app.corpus.is_vertical) {
@@ -392,8 +442,6 @@ export class Graph {
 
   /**
    * Bind event handlers to the cytoscape elements and the enclosing canvas.
-   *
-   * @return {Graph} (chaining)
    */
   bind() {
 
@@ -424,7 +472,7 @@ export class Graph {
     $('.token').click(function() {
       self.intercepted = true;
 
-      let targetNum = $(this).attr('subId');
+      let targetNum = $(this).attr('subId') as unknown as number;
       // THIS is #group-[id]. But we want #form-[id].
       let target = $('#form-' + targetNum);
       if (target.hasClass('locked'))
@@ -432,7 +480,7 @@ export class Graph {
       if (self.moving_dependency) {
 
         const dep = $('.selected');
-        const sourceNum = $('.arc-source').attr('subId');
+        const sourceNum = $('.arc-source').attr('subId') as unknown as number;
 
         // make a new dep, remove the old one
         self.makeDependency(self.tokens[sourceNum], self.tokens[targetNum]);
@@ -460,14 +508,14 @@ export class Graph {
         if (target.hasClass('merge-right') || target.hasClass('merge-left')) {
 
           // perform merge
-          let sourceNum = $('.merge-source').attr('subId');
+          let sourceNum = $('.merge-source').attr('subId') as unknown as number;
           self.merge(self.tokens[sourceNum], self.tokens[targetNum]);
           self.unlock();
 
         } else if (target.hasClass('combine-right') || target.hasClass('combine-left')) {
 
           // perform combine
-          let sourceNum = $('.combine-source').attr('subId');
+          let sourceNum = $('.combine-source').attr('subId') as unknown as number;
           self.combine(self.tokens[sourceNum], self.tokens[targetNum]);
           self.unlock();
 
@@ -485,7 +533,7 @@ export class Graph {
           // if there was already an activated node
           if (source.length === 1) {
             // add a new edge
-            let sourceNum = source.attr('subId');
+            let sourceNum = source.attr('subId') as unknown as number;
             self.makeDependency(self.tokens[sourceNum], self.tokens[targetNum]);
             source.removeClass('activated');
             target.removeClass('activated');
@@ -503,7 +551,7 @@ export class Graph {
 
     d3.select("#graph-svg").on("mousemove", function() {
       // Get mouse position and un"scale/pan" it
-      let position = d3.mouse(this);
+      let position = d3.mouse(this as d3.ContainerElement);
       position[0] = (position[0] - self.config.pan.x) / self.config.zoom;
       position[1] = (position[1] - self.config.pan.y) / self.config.zoom;
       // send out a 'move mouse' event at most every `mouse_move_delay` msecs
@@ -655,13 +703,11 @@ export class Graph {
    * Load the graph config from `localStorage` if it exists.
    */
   load() {
-
     let serial = storage.getPrefs("graph");
     if (!serial)
       return;
-
-    serial = JSON.parse(serial);
-    config.set(serial);
+    const parsed = JSON.parse(serial);
+    config.set(parsed);
   }
 
   /**
@@ -676,7 +722,7 @@ export class Graph {
 
     if ($(".splitting").length) {
 
-      const value = $("#edit").val();
+      const value = $("#edit").val() as string;
       let index = value.indexOf(" ");
       index = index < 0 ? value.length : index;
 
@@ -684,16 +730,16 @@ export class Graph {
 
     } else {
 
-      const attr = this.editing.attr("attr"),
-        value = validate.attrValue(attr, $("#edit").val());
+      const attr = this.editing.attr("attr");
+      const value = validate.attrValue(attr, $("#edit").val() as string);
 
       if (attr == "deprel") {
 
         this.modifyDependency(this.editing, value);
 
       } else {
-        const tokenNum = this.editing.attr("subId");
-        this.tokens[tokenNum][attr] = value;
+        const tokenNum = this.editing.attr("subId") as unknown as number;
+        (this.tokens[tokenNum] as any)[attr] = value;
         this.editing = null;
         this.app.save({
           type: "set",
@@ -738,11 +784,8 @@ export class Graph {
 
   /**
    * Try to add `src` as a head for `tar`, save changes, and update graph.
-   *
-   * @param {BaseToken} src
-   * @param {BaseToken} tar
    */
-  makeDependency(src, tar) {
+  makeDependency(src: nx.BaseToken, tar: nx.BaseToken) {
 
     try {
       tar.addHead(src);
@@ -792,11 +835,8 @@ export class Graph {
   /**
    * Try to change the deprel for the dependency given by `ele` to `deprel`, save
    *  changes, and update graph.
-   *
-   * @param {PathObject} ele
-   * @param {String} deprel
    */
-  modifyDependency(ele, deprel) {
+  modifyDependency(ele: JQuery<HTMLElement>, deprel: string) {
 
     try {
 
@@ -827,10 +867,8 @@ export class Graph {
 
   /**
    * Try to remove the dependency given by `ele`, save changes, and update graph.
-   *
-   * @param {PathObject} ele
    */
-  removeDependency(ele) {
+  removeDependency(ele: JQuery<HTMLElement>) {
 
     try {
       let id = ele.attr("id");
@@ -858,11 +896,11 @@ export class Graph {
     }
   }
 
-  insertEmptyTokenAfter(ele) {
+  insertEmptyTokenAfter(ele: JQuery<HTMLElement>) {
     const sent = this.app.corpus.current;
-    let eleNum = ele.attr("subId");
-    ele = this.tokens[eleNum];
-    console.log("inserting empty token after", ele);
+    let eleNum = ele.attr("subId") as unknown as number;
+    const token = this.tokens[eleNum];
+    console.log("inserting empty token after", token);
 
     try {
 
@@ -871,7 +909,7 @@ export class Graph {
         isEmpty: true,
       });
 
-      const index = ele.indices.sup;
+      const index = token.indices.sup;
       // insert the new token after it
       sent.tokens = sent.tokens.slice(0, index + 1).concat(newToken).concat(sent.tokens.slice(index + 1));
 
@@ -894,19 +932,17 @@ export class Graph {
 
   /**
    * Toggle whether `ele` is an empty node, save changes, and update the graph
-   *
-   * @param {BaseToken} ele
    */
-  toggleIsEmpty(ele) {
+  toggleIsEmpty(ele: JQuery<HTMLElement>) {
 
     console.log("toggling isEmpty");
     const sent = this.app.corpus.current;
-    let eleNum = ele.attr("subId");
-    ele = this.tokens[eleNum];
-    console.log(ele.isEmpty, ele);
+    let eleNum = ele.attr("subId") as unknown as number;
+    const token = this.tokens[eleNum];
+    console.log(token.isEmpty, token);
 
     try {
-      ele.setEmpty(!ele.isEmpty);
+      token.setEmpty(!token.isEmpty);
       this.unlock();
       this.app.save({
         type: "set",
@@ -928,21 +964,19 @@ export class Graph {
 
   /**
    * Try to set `ele` as the root of the sentence, save changes, and update graph.
-   *
-   * @param {BaseToken} ele
    */
-  setRoot(ele) {
+  setRoot(ele: JQuery<HTMLElement>) {
 
     const sent = this.app.corpus.current;
-    let eleNum = ele.attr("subId");
-    ele = this.tokens[eleNum];
+    let eleNum = ele.attr("subId") as unknown as number;
+    const token = this.tokens[eleNum];
 
     try {
 
-      if (!this.app.corpus._corpus.enhanced)
+      if (!this.app.corpus._corpus.options.enhanced)
         sent.root.dependents.clear();
 
-      ele.addHead(sent.root, "root");
+      token.addHead(sent.root, "root");
       this.unlock();
       this.app.save({
         type: "set",
@@ -964,16 +998,13 @@ export class Graph {
 
   /**
    * Try to the token given by `ele` as `index`, save changes, and update graph.
-   *
-   * @param {BaseToken} ele
-   * @param {Number} index
    */
-  splitToken(ele, index) {
+  splitToken(ele: JQuery<HTMLElement>, index: number) {
 
     try {
-      let eleNum = ele.attr("subId");
-      ele = this.tokens[eleNum];
-      this.app.corpus.current.split(ele, index);
+      let eleNum = ele.attr("subId") as unknown as number;
+      const token = this.tokens[eleNum];
+      this.app.corpus.current.split(token, index);
       this.unlock();
       this.app.save({
         type: "set",
@@ -996,13 +1027,11 @@ export class Graph {
   /**
    * Try to the superToken given by `ele` into normal tokens save changes, and
    *  update graph.
-   *
-   * @param {BaseToken} ele
    */
-  splitSuperToken(ele) {
+  splitSuperToken(ele: JQuery<HTMLElement>) {
 
     try {
-      let eleNum = ele.attr("subId");
+      let eleNum = ele.attr("subId") as unknown as number;
       this.app.corpus.current.split(this.mwTokens[eleNum]);
       this.unlock();
       this.app.save({
@@ -1026,11 +1055,8 @@ export class Graph {
   /**
    * Try to combine `src` and `tar` into a superToken, save changes, and update
    *  graph.
-   *
-   * @param {BaseToken} src
-   * @param {BaseToken} tar
    */
-  combine(src, tar) {
+  combine(src: nx.BaseToken, tar: nx.BaseToken) {
 
     try {
 
@@ -1057,11 +1083,8 @@ export class Graph {
   /**
    * Try to merge `src` and `tar` into a single normal token, save changes, and
    *  update graph.
-   *
-   * @param {BaseToken} src
-   * @param {BaseToken} tar
    */
-  merge(src, tar) {
+  merge(src: nx.BaseToken, tar: nx.BaseToken) {
 
     try {
 
@@ -1093,18 +1116,16 @@ export class Graph {
    *  is useful for when we want to get the neighbors of a node (e.g. for merge
    *  or combine).  The `previous` form is the `form-node` with `clump` one less.
    *  If there is no `previous` form, returns undefined.
-   *
-   * @return {(RectObject|undefined)}
    */
-  getPrevForm() {
+  getPrevForm(): JQuery<SVGRectElement>|undefined {
     
     let clump = parseInt($(".activated").attr("subId"));
     if (clump === undefined)
-      return;
+      return undefined;
 
     clump -= 1;
 
-    return $("#form-" + clump);
+    return $("#form-" + clump) as unknown as JQuery<SVGRectElement>;
   }
 
   /**
@@ -1112,18 +1133,16 @@ export class Graph {
    *  is useful for when we want to get the neighbors of a node (e.g. for merge
    *  or combine).  The `next` form is the `form-node` with `clump` one greater.
    *  If there is no `next` form, returns undefined.
-   *
-   * @return {(RectObject|undefined)}
    */
-  getNextForm() {
+  getNextForm(): JQuery<SVGRectElement>|undefined {
 
     let clump = parseInt($(".activated").attr("subId"));
     if (clump === undefined)
-      return;
+      return undefined;
 
     clump += 1;
 
-    return $("#form-" + clump);
+    return $("#form-" + clump) as unknown as JQuery<SVGRectElement>;
   }
 
   /**
@@ -1174,7 +1193,7 @@ export class Graph {
    * Flash the #edit box, but stay in `splitting` mode (this affects what happens
    *  during `commit`).
    */
-  flashTokenSplitInput(ele) {
+  flashTokenSplitInput(ele: JQuery<HTMLElement>) {
 
     ele.addClass("splitting");
     this.editing = ele;
@@ -1185,7 +1204,7 @@ export class Graph {
    * Flash the #edit box around the current `input` node.  Also locks the target
    *  and flashes the #mute.
    */
-  showEditLabelBox(target) {
+  showEditLabelBox(target: JQuery<HTMLElement>) {
 
     target.addClass("input");
     let textElement = $('#text-' + target.attr('id'));
@@ -1214,7 +1233,7 @@ export class Graph {
         : [];
 
     // add the edit input
-    $("#edit")
+    const edit = $("#edit")
       .val("")
       .focus()
       .val(textLabel)
@@ -1223,8 +1242,11 @@ export class Graph {
       .css("height", textHeight)
       .css("width", textWidth)
       .attr("target", target.attr("id"))
-      .addClass("activated")
-      .selfcomplete(
+      .addClass("activated");
+
+    // NOTE: We need to cast this to 'any' because 'selfcomplete' works by
+    //       monkeypatching JQuery...
+    (edit as any).selfcomplete(
         {lookup: autocompletes, tabDisabled: false, autoSelectFirst: true, lookupLimit: 5, width: "flex"});
 
     // add the background-mute div
@@ -1278,10 +1300,8 @@ export class Graph {
   /**
    * Add a lock to `ele`, save it to the config, and broadcast it to the other
    *  users.
-   *
-   * @param {(PathObject|RectObject)}
    */
-  lock(ele) {
+  lock(ele: JQuery<HTMLElement>) {
 
     if (!ele || !ele.length)
       return this.unlock();

@@ -2,6 +2,7 @@
     "compilerOptions": {
         "allowJs": true,
         "noFallthroughCasesInSwitch": true,
+        "noImplicitAny": true,
         "noImplicitReturns": true,
         "outDir": "./build/js",
         "target": "es5"

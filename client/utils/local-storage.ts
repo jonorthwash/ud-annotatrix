@@ -34,23 +34,7 @@ function isAvailable() {
   }
 }
 
-function isQuotaExceeded(event) {
-
-  if (event && event.code === 22) {
-    return true;
-
-  } else if (event && event.code === 1014) {
-    return (event.name === "NS_ERROR_DOM_QUOTA_REACHED");
-
-  } else if (event) {
-    return (event.number === -2147024882); // IE8
-  }
-
-  return false;
-}
-
-function formatUploadSize(fileSize) {
-
+function formatUploadSize(fileSize: number) {
   if (fileSize < 1024)
     return `${fileSize} B`;
 
@@ -60,62 +44,48 @@ function formatUploadSize(fileSize) {
   return `${(fileSize / 1048576).toFixed(1)} mB`;
 }
 
-export function backup(value) {
-
+export function backup(value: any): void {
   if (!isAvailable())
-    return null;
-
-  value = JSON.stringify(value);
-  return localStorage.setItem(KEY + "backup", value);
+    return;
+  const serial = JSON.stringify(value);
+  localStorage.setItem(KEY + "backup", serial);
 }
 
-export function restore() {
-
+export function restore(): any {
   if (!isAvailable())
     return null;
-
   let serial = localStorage.getItem(KEY + "backup");
   return JSON.parse(serial);
 }
 
-export function save(value) {
-
+export function save(value: any): void {
   if (!isAvailable())
-    return null;
-
-  value = JSON.stringify(value);
-  return localStorage.setItem(getTreebankId(), value);
+    return;
+  const serial = JSON.stringify(value);
+  localStorage.setItem(getTreebankId(), serial);
 }
 
-export function load() {
-
+export function load(): any {
   if (!isAvailable())
     return null;
-
   let serial = localStorage.getItem(getTreebankId());
   return JSON.parse(serial);
 }
 
-export function clear() {
-
+export function clear(): void {
   if (!isAvailable())
-    return null;
-
-  return localStorage.removeItem(getTreebankId());
+    return;
+  localStorage.removeItem(getTreebankId());
 }
 
-export function setPrefs(item, prefs) {
-
+export function setPrefs(item: string, prefs: string): void {
   if (!isAvailable() || !item)
-    return null;
-
-  return localStorage.setItem(KEY + item, prefs);
+    return;
+  localStorage.setItem(KEY + item, prefs);
 }
 
-export function getPrefs(item) {
-
+export function getPrefs(item: string): string {
   if (!isAvailable() || !item)
     return null;
-
   return localStorage.getItem(KEY + item);
 }

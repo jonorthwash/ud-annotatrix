@@ -1,6 +1,6 @@
 import * as _ from "underscore";
 import * as $ from "jquery";
-import * as uuidv4 from "uuid/v4";
+import { v4 as uuidv4 } from "uuid";
 
 export function check_if_browser() {
   try {
@@ -10,13 +10,12 @@ export function check_if_browser() {
   }
 }
 
-export function download(filename, mimetype, uriComponent) {
+export function download(filename: string, mimetype: string, uriComponent: string) {
   const link = $("<a>")
                    .attr("download", filename)
                    .attr("href", `data:${mimetype}; charset=utf-8,${encodeURIComponent(uriComponent)}`);
   $("body").append(link);
   link[0].click();
-  return true;
 }
 
 export function getTreebankId(): string {
@@ -32,36 +31,21 @@ export function getRootPath() {
   return pageURL.substr(0, pageURL.lastIndexOf("/") + 1);
 }
 
-export function link(href, target = "_blank") {
+export function link(href: string, target: string = "_blank") {
   const link = $("<a>").attr("href", href).attr("target", target);
   $("body").append(link);
   console.log(href, target);
   link[0].click();
 }
 
-export function noop(arg) {
+export function noop<T>(arg: T): T {
   return arg;
 }
 
-export function thin(arg) {
+export function thin<T>(arg: T): T|undefined {
   return !!arg ? arg : undefined;
 }
 
-export function getPresentUsers(room) {
-  return Object.keys(room.users).length;
-}
-
-export function dedup(master, slave) {
-  let dedup = {};
-
-  _.each(slave, (value, key) => {
-    if (master[key] !== value)
-      dedup[key] = value;
-  });
-
-  return dedup;
-}
-
-export function forEachFormat(callback) {
+export function forEachFormat(callback: (format: string) => void) {
   ["Brackets", "CG3", "CoNLL-U", "plain text", "SD"].forEach(callback);
 }

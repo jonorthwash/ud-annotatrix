@@ -11,11 +11,8 @@ const default_filename = "ud-annotatrix-corpus";
  * Helper function for Corpus.  Attempts to detect the format of a given serial
  *  string/object.  If it can't detect one, it returns null.  If it detects one
  *  or more, it follows a simple resolution algorithm to pick one.
- *
- * @param {(String|Object)} serial
- * @return {(String|null)} the string name of the detected format
  */
-function detectFormat(serial) {
+function detectFormat(serial: nx.SentenceSerial|string): string|null {
 
   // do the detecting under the hood
   let formats = serial ? nx.detect(serial) : ["plain text"];
@@ -46,7 +43,7 @@ export class Corpus {
 
   constructor(
     app: App,
-    serial = "", // @param {(String|Object)} serial a serial representation of an nx.Corpus in any format
+    serial: nx.SentenceSerial|string = "",
   ) {
 
     // save a reference to the parent
@@ -55,11 +52,9 @@ export class Corpus {
     // get the nx.Corpus data structure (with some corpus-wide metadata)
     this._corpus = serial ? nx.Corpus.deserialize(serial) : new nx.Corpus();
     this._corpus._meta = _.defaults(this._corpus._meta, {
-
       filename: default_filename,
       is_ltr: true,
       is_vertical: false,
-
     });
 
     // add some metadata
@@ -86,70 +81,54 @@ export class Corpus {
    * NB: this will never return 'notatrix serial' as the format, even if this was
    *  most recent serial string given (because we never want the user to see this
    *  format, which is what we send over the wire).
-   *
-   * @return {(String|null)}
    */
   get format() {
-
     // if not parsed, format is always null
-    return this.isParsed ? this.current._meta.format === "notatrix serial" ? "plain text" : this.current._meta.format
-                         : null;
+    return this.isParsed
+      ? (this.current._meta.format === "notatrix serial"
+        ? "plain text"
+        : this.current._meta.format)
+      : null;
   }
 
   /**
    * Set the format of the current sentence (internal, not sanitized).
-   *
-   * @param {String} format
    */
   set format(format) { this.current._meta.format = format; }
 
   /**
    * Get whether the corpus orientation is Left-to-Right (important for the Graph).
-   *
-   * @return {Boolean}
    */
   get is_ltr() { return this._corpus._meta.is_ltr; }
 
   /**
    * Set whether the corpus orientation is Left-to-Right (important for the Graph).
-   *
-   * @param {Boolean} bool
    */
   set is_ltr(bool) { this._corpus._meta.is_ltr = bool; }
 
   /**
    * Get whether the corpus orientation is Top-to-Bottom (important for the Graph).
-   *
-   * @return {Boolean}
    */
   get is_vertical() { return this._corpus._meta.is_vertical; }
 
   /**
    * Set whether the corpus orientation is Top-to-Bottom (important for the Graph).
-   *
-   * @param {Boolean} bool
    */
   set is_vertical(bool) { this._corpus._meta.is_vertical = bool; }
 
   /**
    * Get whether the corpus is in 'enhanced' mode (i.e. should display and allow
    *  us to add multiple heads for each token).
-   *
-   * @return {Boolean}
    */
   get is_enhanced() { return this.current.options.enhanced; }
 
   /**
    * Get the filename associated with the corpus.
-   *
-   * @return {String}
    */
   get filename() { return this._corpus._meta.filename; }
 
   /**
    * Set the filename associated with the corpus.
-   *
-   * @param {String} filename
    */
   set filename(filename) { this._corpus._meta.filename = filename; }
 
@@ -158,19 +137,16 @@ export class Corpus {
 
   /**
    * Returns the string that we should set as the val() of #text-data
-   *
-   * @return {String}
    */
   get textdata() {
-
-    return this.isParsed ? this.convertTo(this.format) : this.current.input.replace(/\\n/g, "\n").replace(/\\t/g, "\t");
+    return this.isParsed
+      ? this.convertTo(this.format)
+      : this.current.input.replace(/\\n/g, "\n").replace(/\\t/g, "\t");
   }
 
   /**
    * Returns the two values that we should set to tell the user what our current
    *  index is. (current -> #current-sentence, total -> #total-sentences).
-   *
-   * @return {Object} { current: Number, total: String }
    */
   getIndices() {
 
@@ -179,7 +155,9 @@ export class Corpus {
 
     return {
       current: this.index + 1,
-      total: filtered.length ? `${filtered.length} (total: ${this.length})` : `${this.length}`,
+      total: filtered.length
+        ? `${filtered.length} (total: ${this.length})`
+        : `${this.length}`,
     };
   }
 
@@ -189,34 +167,31 @@ export class Corpus {
   /**
    * Get a serial representation of the nx.Corpus (useful for saving/sending
    *  over the wire).
-   *
-   * @return {Object}
    */
   serialize() { return this._corpus.serialize(); }
 
   /**
    * Checks whether the current sentence is parsed
-   *
-   * @return {Boolean}
    */
   get isParsed() { return this.current ? this.current.isParsed : false; }
 
   /**
    * Returns the unparsed content of the current sentence
-   *
-   * @return {(String|null)}
    */
-  get unparsed() { return this.isParsed ? null : this.current.input; }
+  get unparsed() {
+    return this.isParsed
+      ? null
+      : this.current.input;
+  }
 
   /**
    * Get a representation of the current sentence in <format>, ignoring lossiness.
    *  NB: this function *should* not throw errors because we already check if a
    *  given conversion will throw errors (in `gui/textarea.js::refresh`)
-   *
-   * @param {String} format
-   * @return {String}
    */
-  convertTo(format) { return this.current.to(format).output; }
+  convertTo(format: string) {
+    return this.current.to(format).output;
+  }
 
   /**
    * Helper function to handle broadcasting index modifications and hash updates.
@@ -233,8 +208,11 @@ export class Corpus {
     }
 
     // update the fragment identifier (the stuff after '#' in the url)
-    if (check_if_browser())
-      setTimeout(() => { window.location.hash = (this.index + 1); }, 1000);
+    if (check_if_browser()) {
+      setTimeout(() => {
+        window.location.hash = (this.index + 1).toString();
+      }, 1000);
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -242,8 +220,6 @@ export class Corpus {
 
   /**
    * Returns the number of sentences in the corpus
-   *
-   * @return {Number}
    */
   get length() { return this._corpus.length; }
 
@@ -251,23 +227,17 @@ export class Corpus {
    * Returns the currently-focused sentence.  This is useful if another method
    *  wants to access the internals of the nx.Sentence at this.index.  If there
    *  are no sentences, it returns null.
-   *
-   * @return {(nx.Sentence|null)}
    */
   get current() { return this.getSentence(this.index); }
 
   /**
    * Returns the index of the current sentence in the nx.Corpus.  If there are
    *  no sentences, it returns null.
-   *
-   * @return {(Number|null)}
    */
   get index() { return this._corpus.index; }
 
   /**
    * Modify the current index to <index>.
-   *
-   * @param {Number} index
    */
   set index(index) {
     this._corpus.index = index;
@@ -308,21 +278,15 @@ export class Corpus {
 
   /**
    * Get the nx.Sentence at <index>.
-   *
-   * @param {Number} index
-   * @return {(nx.Sentence|null)}
    */
-  getSentence(index) { return this._corpus.getSentence(index); }
+  getSentence(index: number) {
+    return this._corpus.getSentence(index);
+  }
 
   /**
    * Set a serial value for the nx.Sentence at <index>.
-   *
-   * @param {Number} index
-   * @param {(String|Object)} text
-   * @param {Boolean} main whether or not to broadcast updates
-   * @return {nx.Sentence}
    */
-  setSentence(index, text, main = true) {
+  setSentence(index: number, text: string, main: boolean = true) {
 
     // do the work under the hood
     const sent = this._corpus.setSentence(index, text);
@@ -345,13 +309,8 @@ export class Corpus {
 
   /**
    * Insert an nx.Sentence (with serial value <text>) after <index>.
-   *
-   * @param {Number} index
-   * @param {(String|Object)} text
-   * @param {Boolean} main whether or not to broadcast updates
-   * @return {nx.Sentence}
    */
-  insertSentence(index?, text?, main = true) {
+  insertSentence(index?: number, text?: string, main: boolean = true) {
 
     // do the work under the hood
     const sent = this._corpus.insertSentence(index, text);
@@ -374,12 +333,8 @@ export class Corpus {
 
   /**
    * Remove the nx.Sentence at <index>.
-   *
-   * @param {Number} index
-   * @param {Boolean} main whether or not to broadcast updates
-   * @return {nx.Sentence}
    */
-  removeSentence(index?, main = true) {
+  removeSentence(index?: number, main: boolean = true) {
 
     // do the work under the hood
     const sent = this._corpus.removeSentence(index);
@@ -401,12 +356,8 @@ export class Corpus {
    * Split the incoming text (on double newlines or punctuation).  The first
    *  item will overwrite the current sentence, with sentences inserted seqntially
    *  thereafter.
-   *
-   * @param {(String|Object)} text
-   * @param {Boolean} main whether or not to broadcast updates
-   * @return {nx.Sentence}
    */
-  parse(text, main = true) {
+  parse(text: string, main: boolean = true) {
 
     // split under the hood
     const splitted = nx.split(text, this._corpus.options);

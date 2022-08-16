@@ -1,6 +1,8 @@
 import * as _ from "underscore";
 import * as $ from "jquery";
 
+import type {App} from "../app";
+
 export const KEYS = {
   DELETE: 46,
   BACKSPACE: 8,
@@ -62,9 +64,11 @@ export const KEYS = {
 
 export var pressed = new Set();
 
-function name(which) { return _.invert(KEYS)[which]; }
+function name(which: number) {
+  return _.invert(KEYS)[which];
+}
 
-export function keyup(app, event) {
+export function keyup(app: App, event: KeyboardEvent) {
 
   const collab = app.collab, corpus = app.corpus, graph = app.graph, gui = app.gui;
 
@@ -143,12 +147,12 @@ export function keyup(app, event) {
 
     case (KEYS.LEFT):
       if (!table.editing)
-        table.goLeft();
+        table.goLeft(false);
       break;
 
     case (KEYS.RIGHT):
       if (!table.editing)
-        table.goRight();
+        table.goRight(false);
       break;
 
     case (KEYS.ESC):
@@ -164,7 +168,7 @@ export function keyup(app, event) {
 
     switch (event.which) {
     case (KEYS.ENTER):
-      corpus.index = parseInt($("#current-sentence").val()) - 1;
+      corpus.index = parseInt($("#current-sentence").val() as string) - 1;
       break;
 
     case (KEYS.LEFT):
@@ -229,8 +233,10 @@ export function keyup(app, event) {
 
     case (KEYS.TAB):
 
-      const cursor = $("#text-data").prop("selectionStart"), contents = $("#text-data").val(),
-            before = contents.substring(0, cursor), after = contents.substring(cursor, contents.length);
+      const cursor = $("#text-data").prop("selectionStart");
+      const contents = $("#text-data").val() as string;
+      const before = contents.substring(0, cursor);
+      const after = contents.substring(cursor, contents.length);
 
       $("#text-data").val(before + "\t" + after);
       break;
@@ -246,14 +252,17 @@ export function keyup(app, event) {
           // of the textarea.  If we detect that to be the case, we can just set
           // the cursor back to its last known position.  This probably isn't
           // perfect, but it is less bad than the current behavior :^)
-          const cursorBeforeParse = $("#text-data").prop("selectionStart");
-          corpus.parse($("#text-data").val());
-          if ($("#text-data").prop("selectionStart") == $("#text-data").val().length) {
-            $("#text-data").prop("selectionStart", cursorBeforeParse).prop("selectionEnd", cursorBeforeParse);
+          const textData = $("#text-data");
+          const cursorBeforeParse = textData.prop("selectionStart");
+          corpus.parse(textData.val() as string);
+          if (textData.prop("selectionStart") == (textData.val() as string).length) {
+            textData
+              .prop("selectionStart", cursorBeforeParse)
+              .prop("selectionEnd", cursorBeforeParse);
           }
         } else {
           if (corpus.current)
-            corpus.current.input = $("#text-data").val();
+            corpus.current.input = $("#text-data").val() as string;
         }
       }, 1000);
       break;
@@ -468,7 +477,7 @@ export function keyup(app, event) {
     }
 }
 
-export function keydown(app, event) {
+export function keydown(app: App, event: KeyboardEvent) {
 
   pressed.add(event.which);
   if (event.which === KEYS.TAB)

@@ -1,6 +1,25 @@
 import * as _ from "underscore";
 
-export const _graph = {
+import type {MousePosition} from "../collaboration/user";
+
+export interface GraphConfig {
+  pan: MousePosition;
+  zoom: number;
+  drawn_sentence: boolean;
+
+  edge_height: number;
+  edge_coeff: number;
+
+  mouse_move_delay: number;
+
+  locked_index: number|null;
+  locked_id: string|null;
+  locked_classes: string|null;
+
+  set: (params: {[key in keyof GraphConfig]: string}) => void;
+}
+
+export const _graph: GraphConfig = {
 
   // placeholders (get overwritten on first graph draw)
   pan: {x: 0, y: 0},
@@ -21,8 +40,8 @@ export const _graph = {
 
   set: params => _.each(params,
                         (value, key) => {
-                          if (_graph[key] !== undefined)
-                            _graph[key] = value;
+                          if ((_graph as any)[key] !== undefined)
+                            (_graph as any)[key] = value;
                         }),
 
 };

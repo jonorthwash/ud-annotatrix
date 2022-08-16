@@ -20,7 +20,7 @@ function flashDropdown(name: string, inputName?: string) {
 
 export class Labeler {
   private gui: GUI;
-  constructor(gui) { this.gui = gui; }
+  constructor(gui: GUI) { this.gui = gui; }
 
   get current() { return this.gui.app.corpus.current; }
 
@@ -36,9 +36,10 @@ export class Labeler {
         if (!self.current)
           return;
 
-        const target = $(e.target), names = target.val().trim().split(/\s+/);
+        const target = $(e.target);
+        const names = (target.val() as string).trim().split(/\s+/);
 
-        names.split(/\s+/).forEach(name => {
+        names.forEach(name => {
           if (self.labeler.get(name))
             return;
 
@@ -59,7 +60,7 @@ export class Labeler {
     $("#labels-horiz .label-text").click(e => {
       const target = $(e.target), name = target.closest("li").attr("name");
 
-      if (self.labeler.sentenceHasLabel(name)) {
+      if (self.labeler.sentenceHasLabel(self.current, name)) {
 
         self.gui.status.normal(`add-label-${name}`);
         self.labeler.addLabel(name, [self.current]);
@@ -77,15 +78,19 @@ export class Labeler {
     $("#labels-horiz .refresh-color").click(e => {
       const target = $(e.target), name = target.closest("li").attr("name");
 
-      self.labeler.get(name)._label.changeColor();
+      // TODO: This API doesn't exist anymore...
+      (self.labeler.get(name)._label as any).changeColor();
+
       self.refresh();
       flashDropdown(name);
     });
 
     $("#labels-horiz input[name=\"label-name\"]").keyup(e => {
-      if ((event as any).which === KEYS.ENTER) {
+      if (e.which === KEYS.ENTER) {
 
-        const target = $(e.target), oldName = target.closest("li").attr("name"), newName = target.val();
+        const target = $(e.target);
+        const oldName = target.closest("li").attr("name");
+        const newName = target.val() as string;
 
         self.labeler.changeLabelName(oldName, newName);
         (self.gui as any).update();
@@ -94,9 +99,11 @@ export class Labeler {
     });
 
     $("#labels-horiz input[name=\"label-desc\"]").keyup(e => {
-      if ((event as any).which === KEYS.ENTER) {
+      if (e.which === KEYS.ENTER) {
 
-        const target = $(e.target), name = target.closest("li").attr("name"), desc = target.val();
+        const target = $(e.target);
+        const name = target.closest("li").attr("name");
+        const desc = target.val() as string;
 
         self.labeler.changeLabelDesc(name, desc);
         (self.gui as any).update();
@@ -105,9 +112,11 @@ export class Labeler {
     });
 
     $("#labels-horiz input[name=\"label-color\"]").keyup(e => {
-      if ((event as any).which === KEYS.ENTER) {
+      if (e.which === KEYS.ENTER) {
 
-        const target = $(e.target), name = target.closest("li").attr("name"), color = target.val();
+        const target = $(e.target);
+        const name = target.closest("li").attr("name");
+        const color = target.val() as string;
 
         self.labeler.changeLabelColor(name, color);
         (self.gui as any).update();
@@ -116,7 +125,8 @@ export class Labeler {
     });
 
     $("#labels-horiz input[name=\"filtering\"]").click(e => {
-      const target = $(e.target), name = target.closest("li").attr("name");
+      const target = $(e.target);
+      const name = target.closest("li").attr("name");
 
       if (self.labeler._filter.has(name)) {
         self.labeler.removeFromFilter(name);
@@ -152,15 +162,15 @@ export class Labeler {
     $("#label-clear-filter .label-text").toggleClass("disabled", !!this.labeler._filter.size);
 
     $(".label.horiz").detach();
-    _.each(this.labeler._labels, label => {
-      label = label._label;
+    _.each(this.labeler._labels, labelWithSentences => {
+      const label = labelWithSentences._label;
 
       $(`#labels-horiz`)
           .append(
               $("<li>")
                   .attr("name", label.name)
                   .addClass("label horiz")
-                  .addClass(this.labeler.sentenceHasLabel(this.current) ? "in-comments" : "not-in-comments")
+                  .addClass(this.labeler.sentenceHasLabel(this.current, label.name) ? "in-comments" : "not-in-comments")
                   .addClass(this.labeler.sentenceInFilter(this.current) ? "filtering" : "not-filtering")
                   .append($("<div>")
                               .addClass("label-text")

@@ -14,7 +14,7 @@ export class Server {
   public is_running: boolean;
   private treebank_id: string;
 
-  constructor(app) {
+  constructor(app: App) {
 
     // save a reference to the parent
     this.app = app;
@@ -61,17 +61,14 @@ export class Server {
   /**
    * Save a JSON object containing a serial representation of the corpus to the
    *  server (if running).
-   *
-   * @param {Object} serial
    */
-  save(serial) {
-
+  save(obj: any) {
     if (!this.is_running)
-      return null;
+      return;
 
     try {
 
-      serial = JSON.stringify(serial);
+      const serial = JSON.stringify(obj);
 
       $.ajax({
         type: "POST",
@@ -107,7 +104,7 @@ export class Server {
   load() {
 
     if (!this.is_running)
-      return null;
+      return;
 
     try {
       $.ajax({

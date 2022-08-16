@@ -3,7 +3,17 @@ import * as _ from "underscore";
 import {thin} from "../utils/funcs";
 import type {App} from "../app";
 import type {Chat} from "../gui/chat";
-import {User} from "./user";
+import {MousePosition, User, UserData} from "./user";
+
+export interface SetSelfData extends UserData {
+  room: {users: UserData[]};
+}
+
+export interface MouseNode {
+  id: string;
+  position: MousePosition;
+  color: string;
+}
 
 /**
  * Abstraction to help with handling multiple users collaborating on a document.
@@ -14,7 +24,7 @@ import {User} from "./user";
  */
 export class CollaborationInterface {
   private app: App;
-  private self: User|null;
+  public self: User|null;
   private chat: Chat;
   private _users: {[id: string]: User};
 
@@ -34,18 +44,14 @@ export class CollaborationInterface {
 
   /**
    * Return the number of online users.
-   *
-   * @return {Number}
    */
   get size() { return Object.keys(this._users).length; }
 
   /**
    * Save data about the current user.  This method is called after we establish
    *  a connection with our socket server.
-   *
-   * @param {Object} data
    */
-  setSelf(data) {
+  setSelf(data: SetSelfData) {
 
     // make a User object from the data
     const self = new User(data);
@@ -72,24 +78,18 @@ export class CollaborationInterface {
 
   /**
    * Get a User object by <id>.
-   *
-   * @param {String} id
-   * @return {User}
    */
-  getUser(id) { return this._users[id]; }
+  getUser(id: string) { return this._users[id]; }
 
   /**
    * Add a User to our list.
-   *
-   * @param {Object} data the data to pass on to the User constructor
-   * @param {Boolean} alert (optional, default=true) whether we should log to chat
    */
-  addUser(data, alert = true) {
+  addUser(data: UserData, notifyChat: boolean = true) {
 
     const user = new User(data);
     this._users[data.id] = user;
 
-    if (alert)
+    if (notifyChat)
       this.chat.alert(`%u connected from ${user.ip}`, [user]);
 
     this.chat.refresh();
@@ -97,11 +97,8 @@ export class CollaborationInterface {
 
   /**
    * Remove a User from our list.
-   *
-   * @param {Object} data the data get the User by
-   * @param {Boolean} alert (optional, default=true) whether we should log to chat
    */
-  removeUser(data, alert = true) {
+  removeUser(data: UserData, notifyChat: boolean = true) {
 
     const user = this.getUser(data.id);
     delete this._users[data.id];
@@ -116,10 +113,8 @@ export class CollaborationInterface {
    * Get a list of mouse nodes (each with a user id, position (x & y coords), and
    *  hex color code), at most one per user.  Mice are only shown for users on
    *  the same page (i.e. same corpus index) as this.self.
-   *
-   * @return {Array} [{ id: String, position: { x: Number, y: Number }, color: String }]
    */
-  getMouseNodes() {
+  getMouseNodes(): MouseNode[] {
 
     // map over the users
     return _
@@ -145,8 +140,6 @@ export class CollaborationInterface {
    * Get a list of node locks (each with a user id, cytoscape selector, and
    *  hex color code), at most one per user.  Locks are only shown for users on
    *  the same page (i.e. same corpus index) as this.self.
-   *
-   * @return {Array} [{ id: String, locked: String, color: String }]
    */
   getLocks() {
 

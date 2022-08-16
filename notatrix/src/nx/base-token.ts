@@ -14,7 +14,7 @@ import type {SubToken} from "./sub-token";
 // TODO: We need to clean these up...
 type ConlluIndex = unknown;
 type Cg3Index = unknown;
-type CytoscapeIndex = unknown;
+type CytoscapeIndex = number;
 type SerialIndex = unknown;
 
 interface Indices {

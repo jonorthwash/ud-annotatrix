@@ -10,8 +10,7 @@ export class Menu {
   private gui: GUI;
   public is_visible: boolean;
 
-  constructor(gui) {
-
+  constructor(gui: GUI) {
     this.gui = gui;
     this.is_visible = false;
   }
@@ -37,7 +36,7 @@ export class Menu {
     $("#btnPrevSentence").click(e => self.gui.app.corpus.prev());
     $("#btnNextSentence").click(e => self.gui.app.corpus.next());
     $("#current-sentence").blur(e => {
-      const index = parseInt($("current-sentence").val()) - 1;
+      const index = parseInt($("current-sentence").val() as string) - 1;
       self.gui.app.corpus.index = index;
     });
     $("#btnRemoveSentence").click(e => self.gui.app.corpus.removeSentence());
@@ -195,20 +194,22 @@ export class Menu {
     });
 
     $(".btn-group .btn").css("border-radius", "0");
-    $(".btn-group").each((i, group) => {
-      group = $(group);
-      let visible = false, first = null, last = null;
+    $(".btn-group").each((i, htmlGroup) => {
+      const group = $(htmlGroup);
+      let visible = false;
+      let first: JQuery<HTMLElement>|null = null;
+      let last: JQuery<HTMLElement>|null = null;
 
-      group.children().each((j, btn) => {
-        btn = $(btn);
+      group.children().each((j, htmlButton) => {
+        const button = $(htmlButton);
 
-        if (!btn.hasClass("unpinned") && btn.hasClass("btn")) {
-          first = first || btn;
-          last = btn;
+        if (!button.hasClass("unpinned") && button.hasClass("btn")) {
+          first = first || button;
+          last = button;
         }
 
-        if (btn.hasClass("pinnable")) {
-          visible = visible || btn.hasClass("pinned");
+        if (button.hasClass("pinnable")) {
+          visible = visible || button.hasClass("pinned");
         } else {
           visible = true;
         }
