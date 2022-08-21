@@ -4,15 +4,11 @@ import * as nx from "notatrix";
 import * as path from "path";
 
 import {cfg} from "./config";
+import {Treebank} from "./models/treebank";
 
-interface Treebank {
-  id: string;
+interface Corpus {
+  path: string;
   modified: unknown;
-  modified_ago: unknown;
-  filename: string;
-  sentences: unknown;
-  errors: unknown;
-  labels: unknown[];
 }
 
 export function listTreebanks(next: (err: Error|null, treebanks: Treebank[]) => void) {
@@ -20,7 +16,7 @@ export function listTreebanks(next: (err: Error|null, treebanks: Treebank[]) => 
     if (err || (!dirs || !dirs.length))
       return next(err, []);
 
-    let corpora = [];
+    let corpora: Corpus[] = [];
     let touched = 0;
 
     dirs.forEach(dir => {

@@ -6,8 +6,10 @@ import * as http from "http";
 import * as morgan from "morgan";
 import * as nocache from "nocache";
 import * as session from "express-session";
-import * as socketIOCookieParser from "socket.io-cookie-parser";
 import * as socketIO from "socket.io";
+
+// @ts-ignore
+import * as socketIOCookieParser from "socket.io-cookie-parser";
 
 import {cfg} from "./config";
 import {configureRoutes} from "./routes";
@@ -20,7 +22,13 @@ app.use(bodyParser.json({limit: "500mb"}));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 app.use(fileUpload());
-app.use(session({store: MemoryStore, secret: cfg.secret, key: "express.sid", saveUninitialized: true, resave: false}));
+app.use(session({
+  store: MemoryStore,
+  secret: cfg.secret,
+  key: "express.sid",
+  saveUninitialized: true,
+  resave: false
+} as session.SessionOptions));
 if (cfg.environment === "development")
   app.use(nocache());
 app.set("view engine", "ejs");
@@ -40,5 +48,5 @@ const server = http.createServer(app).listen(cfg.port, () => {
 
 // set up sockets
 const sio = socketIO.listen(server);
-sio.use(socketIOCookieParser());
+sio.use((socketIOCookieParser as () => ((socket: socketIO.Socket) => void))());
 configureSocketIO(sio, MemoryStore);

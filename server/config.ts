@@ -1,5 +1,7 @@
 import * as crypto from "crypto";
 import * as mkdirp from "mkdirp";
+
+// @ts-ignore
 import {config as configureDotenv} from "dotenv";
 
 import {ConfigError} from "./errors";
@@ -51,7 +53,7 @@ if (!github.client_secret) {
 }
 
 // database config
-mkdirp(corpora_path);
+mkdirp(corpora_path, () => {});  // TODO: We should use the callback here!
 const users_db_path = process.env.ANNOTATRIX_USERS_DB_PATH || ".users";
 const users = UsersDB.create(users_db_path);
 

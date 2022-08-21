@@ -1,8 +1,11 @@
 import {v4 as uuidv4} from "uuid";
+import {Express, Request, Response} from "express";
 import * as request from "request";
 import * as querystring from "querystring";
 import * as path from "path";
 import * as fs from "fs";
+import {SessionData} from "express-session";
+import {UploadedFile} from "express-fileupload";
 
 import {cfg} from "./config"
 import {CorpusDB} from "./models/corpus-json";
@@ -10,18 +13,33 @@ import {fromFile, fromGitHub} from "./upload";
 import {listTreebanks} from "./list-treebanks";
 import {ConfigError} from "./errors";
 
+interface AnnotatrixSessionData extends SessionData {
+  token: unknown;
+  username: unknown;
+  treebank: string;
+  treebank_id: string;
+}
+
+// We need an intermediate interface because `session` has a different
+// type on `Request` (so we can't `extends` it).
+interface _AnnotatrixRequest {
+  treebank: string;
+  session: AnnotatrixSessionData;
+}
+type AnnotatrixRequest = _AnnotatrixRequest & Request;
+
 // --------------------------------------------------------------------------
 // middleware
-function get_treebank(req, res, next) {
+function get_treebank(req: AnnotatrixRequest, res: Response, next: () => {}) {
   const treebank = req.query.treebank_id;
   if (!treebank)
     res.json({error: "Missing required argument: treebank_id"});
 
-  req.treebank = treebank;
+  req.treebank = treebank as string;
   next();
 }
 
-function get_token(req, res, next) {
+function get_token(req: AnnotatrixRequest, res: Response, next: () => {}) {
   const token = req.query.token;
   if (!token)
     res.json({error: "Missing required argument: token"});
@@ -30,7 +48,7 @@ function get_token(req, res, next) {
   next();
 }
 
-function is_logged_in(req, res, next) {
+function is_logged_in(req: AnnotatrixRequest, res: Response, next: () => {}) {
   if (!req.session.token || !req.session.username)
     res.json({error: "You must be logged in to view this page"});
 
@@ -39,36 +57,36 @@ function is_logged_in(req, res, next) {
 
 // --------------------------------------------------------------------------
 // helper funcs
-function github_get(req, path, callback) {
+function github_get(req: AnnotatrixRequest, path: string, callback: (json: any) => void) {
   request.get({
     url: `https://api.github.com${path}`,
     headers: {"Authorization": `token ${req.session.token}`, "User-Agent": "UD-Annotatrix/Express 4.0"}
   },
               (err, _res, body) => {
-                body = JSON.parse(body);
-                callback(body);
+                const json = JSON.parse(body);
+                callback(json);
               });
 }
 
-function github_post(req, path, payload, callback) {
+function github_post(req: AnnotatrixRequest, path: string, payload: any, callback: (json: any) => void) {
   request.post({
     url: `https://api.github.com${path}`,
     json: payload,
     headers: {"Authorization": `token ${req.session.token}`, "User-Agent": "UD-Annotatrix/Express 4.0"}
   },
                (err, _res, body) => {
-                 body = JSON.parse(body);
-                 callback(body);
+                 const json = JSON.parse(body);
+                 callback(json);
                });
 }
 
 // --------------------------------------------------------------------------
 // urls
-export function configureRoutes(app) {
+export function configureRoutes(app: Express) {
   // ---------------------------
   // core
-  app.get("/index.html", (req, res) => { res.redirect("/"); });
-  app.get("/", (req, res) => {
+  app.get("/index.html", (req: AnnotatrixRequest, res) => { res.redirect("/"); });
+  app.get("/", (req: AnnotatrixRequest, res) => {
     listTreebanks((err, treebanks) => {
       res.render("index.ejs", {
         // base: `${cfg.protocol}://${cfg.host}:${cfg.port}`,
@@ -80,8 +98,8 @@ export function configureRoutes(app) {
       });
     });
   });
-  app.get("/help(.html)?", (req, res) => res.render("help.ejs"));
-  app.get("/annotatrix(.html)?", (req, res) => {
+  app.get("/help(.html)?", (req: AnnotatrixRequest, res) => res.render("help.ejs"));
+  app.get("/annotatrix(.html)?", (req: AnnotatrixRequest, res) => {
     let treebank = req.query.treebank_id;
     if (!treebank) {
 
@@ -92,7 +110,7 @@ export function configureRoutes(app) {
 
     } else {
 
-      req.session.treebank_id = treebank;
+      req.session.treebank_id = treebank as string;
 
       res.render("annotatrix",
                  {modalPath: "modals", github_configured: !!cfg.github, username: req.session.username, path: path});
@@ -101,18 +119,18 @@ export function configureRoutes(app) {
 
   // ---------------------------
   // AJAX
-  app.get("/running", (req, res) => res.json({status: "running"}));
+  app.get("/running", (req: AnnotatrixRequest, res) => res.json({status: "running"}));
 
-  app.post("/save", get_treebank, (req, res) => {
+  app.post("/save", get_treebank, (req: AnnotatrixRequest, res) => {
     CorpusDB.create(req.treebank).save(null, req.body, err => {
       if (err)
-        res.json({error: err.message});
+        res.json({error: (err as Error).message});
 
       res.json({success: true});
     });
   });
 
-  app.post("/delete", (req, res) => {
+  app.post("/delete", (req: AnnotatrixRequest, res) => {
     if (req.body.hasOwnProperty("id")) {
       const filepath = path.join(cfg.corpora_path, req.body.id + ".json");
       console.log("delete", filepath, req.body.id);
@@ -121,7 +139,7 @@ export function configureRoutes(app) {
   });
   //
 
-  app.get("/load", get_treebank, (req, res) => {
+  app.get("/load", get_treebank, (req: AnnotatrixRequest, res) => {
     CorpusDB.create(req.treebank).load((err, data) => {
       if (err)
         res.json({error: err.message});
@@ -130,13 +148,14 @@ export function configureRoutes(app) {
     });
   });
 
-  app.post("/upload", (req, res) => {
+  app.post("/upload", (req: AnnotatrixRequest, res) => {
     const treebank = uuidv4();
 
     if (req.files) {
-      fromFile(treebank, req.files.file, err => {
+      fromFile(treebank, req.files.file as UploadedFile, err => {
         if (err) {
-          return res.json({error: err.message});
+          res.json({error: err.message});
+          return;
         }
         if (req.body.hasOwnProperty("src") && req.body["src"] === "main") {
           res.json({success: "File is stored"});
@@ -150,9 +169,10 @@ export function configureRoutes(app) {
     } else if (req.body.url) {
 
       fromGitHub(treebank, req.body.url, err => {
-        if (err)
-          return res.json({error: err.message});
-
+        if (err) {
+          res.json({error: err.message});
+          return;
+        }
         res.redirect("/annotatrix?" + querystring.stringify({
           treebank_id: treebank,
         }));
@@ -165,7 +185,7 @@ export function configureRoutes(app) {
 
   // ---------------------------
   // user/account management
-  app.get("/login", get_token, get_treebank, (req, res) => {
+  app.get("/login", get_token, get_treebank, (req: AnnotatrixRequest, res) => {
     github_get(req, "/user", body => {
       const username = body.login;
 
@@ -180,7 +200,7 @@ export function configureRoutes(app) {
     });
   });
 
-  app.get("/logout", get_treebank, (req, res) => {
+  app.get("/logout", get_treebank, (req: AnnotatrixRequest, res) => {
     cfg.users.remove({
 
       username: req.session.username,
@@ -198,27 +218,27 @@ export function configureRoutes(app) {
                      });
   });
 
-  app.get("/repos", is_logged_in, (req, res) => {
+  app.get("/repos", is_logged_in, (req: AnnotatrixRequest, res) => {
     github_get(req, "/user/repos", body => {
       res.json(body);
     });
   });
 
-  app.get("/permissions", is_logged_in, (req, res) => { res.json({error: "Not implemented"}); });
+  app.get("/permissions", is_logged_in, (req: AnnotatrixRequest, res) => { res.json({error: "Not implemented"}); });
 
-  app.get("/settings", get_treebank, /*is_logged_in,*/ (req, res) => {
+  app.get("/settings", get_treebank, /*is_logged_in,*/ (req: AnnotatrixRequest, res) => {
     CorpusDB.create(req.treebank).load((err, data) => {
       if (err)
         throw err;
 
-      res.render("settings.ejs", {treebank: req.treebank, username: req.session.username, meta: data.meta});
+      res.render("settings.ejs", {treebank: req.treebank, username: req.session.username, meta: (data as any).meta});
     });
   });
-  app.post("/settings", get_treebank, /*is_logged_in,*/ (req, res) => { res.json(req.body); });
+  app.post("/settings", get_treebank, /*is_logged_in,*/ (req: AnnotatrixRequest, res) => { res.json(req.body); });
 
   // ---------------------------
   // GitHub OAuth
-  app.get("/oauth/login", get_treebank, (req, res) => {
+  app.get("/oauth/login", get_treebank, (req: AnnotatrixRequest, res) => {
     if (!cfg.github) {
       new ConfigError("Unable to use GitHub OAuth without client secret");
       res.redirect("/annotatrix");
@@ -231,32 +251,40 @@ export function configureRoutes(app) {
     res.redirect(url);
   });
 
-  app.get("/oauth/callback", (req, res) => {
+  app.get("/oauth/callback", (req: AnnotatrixRequest, res) => {
     if (!cfg.github) {
       new ConfigError("Unable to use GitHub OAuth without client secret");
       res.redirect("/annotatrix");
     }
 
-    if (cfg.github.state !== req.query.state)
-      return res.json({error: "Unable to authenticate: state mismatch"});
+    if (cfg.github.state !== req.query.state) {
+      res.json({error: "Unable to authenticate: state mismatch"});
+      return;
+    }
 
-    if (!req.query.code)
-      return res.json({error: "Unable to authenticate: no code provided"});
+    if (!req.query.code) {
+      res.json({error: "Unable to authenticate: no code provided"});
+      return;
+    }
 
     const url = "https://github.com/login/oauth/access_token?" + querystring.stringify({
       client_secret: cfg.github.client_secret,
       client_id: cfg.github.client_id,
       state: cfg.github.state,
-      code: req.query.code
+      code: req.query.code as string,
     });
 
     request.post(url, (err, _res, body) => {
-      if (err)
-        return res.json({error: `Unable to authenticate: invalid GitHub server response`});
+      if (err) {
+        res.json({error: `Unable to authenticate: invalid GitHub server response`});
+        return;
+      }
 
       const token = body.match(/access_token=([a-f0-9]{40})/);
-      if (!token)
-        return res.json({error: `Unable to authenticate: invalid GitHub server response`});
+      if (!token) {
+        res.json({error: `Unable to authenticate: invalid GitHub server response`});
+        return;
+      }
 
       res.redirect("/login?" + querystring.stringify({token: token[1], treebank_id: req.session.treebank}));
     });
