@@ -1,13 +1,11 @@
-"use strict";
+import * as _ from "underscore";
+import * as fs from "fs";
+import * as nx from "notatrix";
+import * as request from "request";
+import {v4 as uuidv4} from "uuid";
 
-const _ = require("underscore");
-const fs = require("fs");
-const uuidv4 = require("uuid/v4");
-const request = require("request");
-
-const UploadError = require("./errors").UploadError;
-const nx = require("notatrix");
-const CorpusDB = require("./models/corpus-json");
+import {UploadError} from "./errors";
+import {CorpusDB} from "./models/corpus-json";
 
 function upload(treebank, filename, contents, next) {
 
@@ -17,7 +15,7 @@ function upload(treebank, filename, contents, next) {
     const corpus = nx.Corpus.fromString(contents);
     // console.log(corpus);
     corpus.filename = filename;
-    return CorpusDB(treebank).save(filename, corpus.serialize(), next);
+    return CorpusDB.create(treebank).save(filename, corpus.serialize(), next);
 
   } catch (e) {
 
@@ -25,7 +23,7 @@ function upload(treebank, filename, contents, next) {
   }
 }
 
-function fromFile(treebank, file, next) {
+export function fromFile(treebank, file, next) {
 
   if (!file)
     return next(new UploadError(`No file provided.`));
@@ -34,7 +32,7 @@ function fromFile(treebank, file, next) {
   return upload(treebank, file.name, contents, next);
 }
 
-function fromGitHub(treebank, url, next) {
+export function fromGitHub(treebank, url, next) {
 
   if (!url)
     return next(new UploadError(`No URL provided.`));
@@ -57,8 +55,3 @@ function fromGitHub(treebank, url, next) {
     return upload(treebank, filename, body, next);
   });
 }
-
-module.exports = {
-  fromFile,
-  fromGitHub,
-};

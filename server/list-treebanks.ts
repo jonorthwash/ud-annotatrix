@@ -1,12 +1,21 @@
-"use strict";
+import * as fs from "fs";
+import * as moment from "moment";
+import * as nx from "notatrix";
+import * as path from "path";
 
-const fs = require("fs");
-const cfg = require("./config");
-const moment = require("moment");
-const nx = require("notatrix");
-const path = require("path");
+import {cfg} from "./config";
 
-module.exports = next => {
+interface Treebank {
+  id: string;
+  modified: unknown;
+  modified_ago: unknown;
+  filename: string;
+  sentences: unknown;
+  errors: unknown;
+  labels: unknown[];
+}
+
+export function listTreebanks(next: (err: Error|null, treebanks: Treebank[]) => void) {
   fs.readdir(cfg.corpora_path, (err, dirs) => {
     if (err || (!dirs || !dirs.length))
       return next(err, []);
@@ -41,11 +50,10 @@ module.exports = next => {
                                   return 0;
                                 })
                                 .map(info => {
-                                  let serial = fs.readFileSync(info.path);
-                                  serial = serial.toString();
-                                  serial = JSON.parse(serial);
-
-                                  const snapshot = nx.Corpus.deserialize(serial).snapshot;
+                                  const buffer = fs.readFileSync(info.path);
+                                  const serial = buffer.toString();
+                                  const parsed = JSON.parse(serial);
+                                  const snapshot = nx.Corpus.deserialize(parsed).snapshot;
 
                                   return {
                                     id: path.basename(info.path).slice(0, -5),
@@ -63,4 +71,4 @@ module.exports = next => {
       });
     });
   });
-};
+}

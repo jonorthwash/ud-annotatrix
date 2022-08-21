@@ -1,7 +1,5 @@
-"use strict";
-
-const Room = require("./room");
-const SocketError = require("./errors").SocketError;
+import {Room} from "./room";
+import {SocketError} from "./errors";
 
 function extractTreebank(url) {
   const match = url.match(/treebank_id=([0-9a-f-]{36})(#|\/|$|&)/);
@@ -14,7 +12,7 @@ function extractTreebank(url) {
 // room metadata
 var rooms = {};
 
-module.exports = (sio, MemoryStore) => {
+export function configureSocketIO(sio, MemoryStore) {
   sio.set("authorization", (request, next) => {
     if (!request.headers.cookie || !request.cookies["express.sid"])
       next(new SocketError(`AuthorizationError: unable to find cookie`), false);
@@ -158,4 +156,4 @@ module.exports = (sio, MemoryStore) => {
       // console.log('room:', rooms[treebank]);
     });
   });
-};
+}

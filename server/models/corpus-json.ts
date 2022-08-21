@@ -1,19 +1,22 @@
-"use strict";
+import * as _ from "underscore";
+import * as path from "path";
+import * as fs from "fs";
 
-const _ = require("underscore");
-const cfg = require("../config");
-const sanitize = require("./sanitize");
-const parse = require("./parse");
-const path = require("path");
-const fs = require("fs");
-const DBError = require("../errors").DBError;
+import {cfg} from "../config";
+import {DBError} from "../errors";
 
-class CorpusDB {
-  constructor(filename) {
+export class CorpusDB {
+  private path: string;
+
+  private constructor(filename) {
     if (!filename)
       throw new DBError("Missing required argument: filename");
 
     this.path = path.join(cfg.corpora_path, filename + ".json");
+  }
+
+  public static create(filename: string): CorpusDB {
+    return new CorpusDB(filename);
   }
 
   getSentence(id, next) {
@@ -289,5 +292,3 @@ class CorpusDB {
     });*/
   }
 }
-
-module.exports = filename => new CorpusDB(filename);

@@ -54,8 +54,8 @@
   "scripts": {
     "build": "gulp",
     "build-watch": "gulp && gulp watch",
-    "server": "ts-node --project server/tsconfig.json server/app.js || ./scripts/fail-nicely.js",
-    "dev-server": "nodemon server/app.js --ignore corpora || ./scripts/fail-nicely.js"
+    "server": "ts-node --project server/tsconfig.json server/app.ts || ./scripts/fail-nicely.js",
+    "dev-server": "nodemon server/app.ts --ignore corpora || ./scripts/fail-nicely.js"
   },
   "repository": {
     "type": "git",

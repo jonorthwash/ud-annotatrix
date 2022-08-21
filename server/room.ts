@@ -1,8 +1,16 @@
-"use strict";
+import * as _ from "underscore";
 
-const _ = require("underscore");
+interface User {
+  id: string;
+  index: unknown|null;
+  mouse: unknown|null;
+  locked: unknown|null;
+  address: unknown;
+  username: unknown;
+}
 
-class Room {
+export class Room {
+  private users: {[id: string]: User};
   constructor() { this.users = {}; }
 
   serialize() {
@@ -42,5 +50,3 @@ class Room {
     return user;
   }
 }
-
-module.exports = Room;
