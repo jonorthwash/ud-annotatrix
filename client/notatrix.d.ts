@@ -159,6 +159,13 @@ declare module 'notatrix' {
     is_vertical: boolean;
   }
 
+  export interface CorpusSnapshot {
+    filename: string;
+    sentences: unknown[];
+    errors: unknown[];
+    labels: unknown[];
+  }
+
   export class Corpus {
     _labeler: Labeler;
     _meta: CorpusMeta;
@@ -166,6 +173,7 @@ declare module 'notatrix' {
     _sentences: Sentence[];
     options: Options;
     filename: string|null;
+    snapshot: CorpusSnapshot|null;
 
     serialize(): CorpusSerial;
     static deserialize(serial: CorpusSerial): Corpus;

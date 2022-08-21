@@ -1,13 +1,12 @@
-"use strict";
+import * as fs from "fs";
+import * as path from "path";
+import * as sqlite3 from "sqlite3";
 
-const cfg = require("../config");
-const init = require("./corpus-init");
-const sanitize = require("./sanitize");
-const parse = require("./parse");
-const sqlite3 = require("sqlite3");
-const path = require("path");
-const fs = require("fs");
-const DBError = require("../errors").DBError;
+import {cfg} from "../config";
+import {DBError} from "../errors";
+import {SQL} from "./corpus-init";
+import {parse} from "./parse";
+import {sanitizeMeta, sanitizeSentence} from "./sanitize";
 
 function open(filename, next) {
 
@@ -18,16 +17,22 @@ function open(filename, next) {
   } else {
 
     const db = new sqlite3.Database(filename);
-    db.exec(init, err => next(err, db));
+    db.exec(SQL, err => next(err, db));
   }
 }
 
-class CorpusDB {
+export class CorpusDB {
+  private path: string;
+
   constructor(filename) {
     if (!filename)
       throw new DBError("Missing required argument: filename");
 
     this.path = path.join(cfg.corpora_path, filename + ".db");
+  }
+
+  public create(filename: string): CorpusDB {
+    return new CorpusDB(filename);
   }
 
   getSentence(id, next) {
@@ -59,7 +64,7 @@ class CorpusDB {
 
       if (sentence) {
 
-        sentence = sanitize.sentence(sentence);
+        sentence = sanitizeSentence(sentence);
         this.getSentence(id, (err, data) => {
           if (err)
             return next(new DBError(err), null);
@@ -166,7 +171,7 @@ class CorpusDB {
 
         sentences.forEach(sentence => {
           // console.log('pre', sentence);
-          sentence = sanitize.sentence(sentence);
+          sentence = sanitizeSentence(sentence);
           // console.log('post', sentence);
           // console.log();
 
@@ -214,7 +219,7 @@ class CorpusDB {
       if (err)
         return next(new DBError(err), null);
 
-      params = sanitize.meta(params);
+      params = sanitizeMeta(params);
 
       db.run(`
         UPDATE meta
@@ -265,5 +270,3 @@ class CorpusDB {
     });
   }
 }
-
-module.exports = filename => new CorpusDB(filename);

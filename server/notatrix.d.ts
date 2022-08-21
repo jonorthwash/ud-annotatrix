@@ -1,0 +1,1 @@
+../client/notatrix.d.ts

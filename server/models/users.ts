@@ -1,8 +1,6 @@
-"use strict";
-
-const sqlite3 = require("sqlite3");
-const fs = require("fs");
-const DBError = require("../errors").DBError;
+import * as sqlite3 from "sqlite3";
+import * as fs from "fs";
+import {DBError} from "../errors";
 
 function open(filename, next) {
   if (fs.existsSync(filename)) {
@@ -22,8 +20,10 @@ function open(filename, next) {
   }
 }
 
-class UsersDB {
-  constructor(filename) {
+export class UsersDB {
+  private path: string;
+
+  private constructor(filename) {
     if (!filename)
       throw new DBError("Missing required argument: filename");
 
@@ -129,6 +129,8 @@ class UsersDB {
              });
     });
   }
-}
 
-module.exports = filename => new UsersDB(filename);
+  public static create(filename: string): UsersDB {
+    return new UsersDB(filename);
+  }
+}

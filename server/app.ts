@@ -1,18 +1,19 @@
-"use strict";
+import * as bodyParser from "body-parser";
+import * as cookieParser from "cookie-parser";
+import * as express from "express";
+import * as fileUpload from "express-fileupload";
+import * as http from "http";
+import * as morgan from "morgan";
+import * as nocache from "nocache";
+import * as session from "express-session";
+import * as socketIOCookieParser from "socket.io-cookie-parser";
+import * as socketIO from "socket.io";
 
-// basic stuff
-const cfg = require("./config");
-const express = require("express");
+import {cfg} from "./config";
+import {configureRoutes} from "./routes";
+import {configureSocketIO} from "./sockets";
+
 const app = express();
-const http = require("http");
-
-// express plugins
-const morgan = require("morgan");
-const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser");
-const fileUpload = require("express-fileupload");
-const nocache = require("nocache");
-const session = require("express-session");
 const MemoryStore = new session.MemoryStore();
 app.use(morgan(cfg.environment === "development" ? "dev" : "tiny"));
 app.use(bodyParser.json({limit: "500mb"}));
@@ -26,7 +27,7 @@ app.set("view engine", "ejs");
 app.set("views", "server/views");
 
 // routes
-require("./routes")(app);
+configureRoutes(app);
 app.use(express.static("server/public"));
 
 // run server
@@ -38,8 +39,6 @@ const server = http.createServer(app).listen(cfg.port, () => {
 });
 
 // set up sockets
-const socketIO = require("socket.io");
-const socketIOCookieParser = require("socket.io-cookie-parser");
 const sio = socketIO.listen(server);
 sio.use(socketIOCookieParser());
-require("./sockets")(sio, MemoryStore);
+configureSocketIO(sio, MemoryStore);

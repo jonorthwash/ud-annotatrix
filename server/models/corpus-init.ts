@@ -1,4 +1,4 @@
-module.exports = `
+export const SQL = `
 
 CREATE TABLE corpus (
   column_visibilities,

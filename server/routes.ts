@@ -1,15 +1,14 @@
-"use strict";
+import {v4 as uuidv4} from "uuid";
+import * as request from "request";
+import * as querystring from "querystring";
+import * as path from "path";
+import * as fs from "fs";
 
-const cfg = require("./config");
-const uuidv4 = require("uuid/v4");
-const CorpusDB = require("./models/corpus-json");
-const request = require("request");
-const querystring = require("querystring");
-const upload = require("./upload");
-const getTreebanksList = require("./list-treebanks");
-const ConfigError = require("./errors").ConfigError;
-const path = require("path");
-const fs = require("fs");
+import {cfg} from "./config"
+import {CorpusDB} from "./models/corpus-json";
+import {fromFile, fromGitHub} from "./upload";
+import {listTreebanks} from "./list-treebanks";
+import {ConfigError} from "./errors";
 
 // --------------------------------------------------------------------------
 // middleware
@@ -65,12 +64,12 @@ function github_post(req, path, payload, callback) {
 
 // --------------------------------------------------------------------------
 // urls
-module.exports = app => {
+export function configureRoutes(app) {
   // ---------------------------
   // core
   app.get("/index.html", (req, res) => { res.redirect("/"); });
   app.get("/", (req, res) => {
-    getTreebanksList((err, treebanks) => {
+    listTreebanks((err, treebanks) => {
       res.render("index.ejs", {
         // base: `${cfg.protocol}://${cfg.host}:${cfg.port}`,
         // leave relative path instead absolute one
@@ -105,7 +104,7 @@ module.exports = app => {
   app.get("/running", (req, res) => res.json({status: "running"}));
 
   app.post("/save", get_treebank, (req, res) => {
-    CorpusDB(req.treebank).save(null, req.body, err => {
+    CorpusDB.create(req.treebank).save(null, req.body, err => {
       if (err)
         res.json({error: err.message});
 
@@ -123,7 +122,7 @@ module.exports = app => {
   //
 
   app.get("/load", get_treebank, (req, res) => {
-    CorpusDB(req.treebank).load((err, data) => {
+    CorpusDB.create(req.treebank).load((err, data) => {
       if (err)
         res.json({error: err.message});
 
@@ -135,7 +134,7 @@ module.exports = app => {
     const treebank = uuidv4();
 
     if (req.files) {
-      upload.fromFile(treebank, req.files.file, err => {
+      fromFile(treebank, req.files.file, err => {
         if (err) {
           return res.json({error: err.message});
         }
@@ -150,7 +149,7 @@ module.exports = app => {
 
     } else if (req.body.url) {
 
-      upload.fromGitHub(treebank, req.body.url, err => {
+      fromGitHub(treebank, req.body.url, err => {
         if (err)
           return res.json({error: err.message});
 
@@ -208,7 +207,7 @@ module.exports = app => {
   app.get("/permissions", is_logged_in, (req, res) => { res.json({error: "Not implemented"}); });
 
   app.get("/settings", get_treebank, /*is_logged_in,*/ (req, res) => {
-    CorpusDB(req.treebank).load((err, data) => {
+    CorpusDB.create(req.treebank).load((err, data) => {
       if (err)
         throw err;
 
@@ -262,4 +261,4 @@ module.exports = app => {
       res.redirect("/login?" + querystring.stringify({token: token[1], treebank_id: req.session.treebank}));
     });
   });
-};
+}
