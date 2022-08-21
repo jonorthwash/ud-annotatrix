@@ -275,7 +275,7 @@ export class Graph {
 
         this.tokens[tokenNum] = token;
 
-        this.presentationId[id] = tokenNum;
+        (this.presentationId as any)[id] = tokenNum;
 
         eles.push(
           { // "form" node, including pos data
@@ -337,8 +337,8 @@ export class Graph {
               ? `⊲${deprel}`
               : `${deprel}⊳`;
 
-        const presentId = this.presentationId[id];
-        const presentHeadId = this.presentationId[headId];
+        const presentId = (this.presentationId as any)[id];
+        const presentHeadId = (this.presentationId as any)[headId];
         let depClasses = validate.depEdgeClasses(sent, token, head);
         if (!(presentHeadId in this.connections)) {
           this.connections[presentHeadId] = [];

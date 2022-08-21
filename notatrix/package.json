@@ -2,13 +2,11 @@
   "name": "notatrix",
   "version": "2.3.2",
   "description": "experimental notational system for ud-annotatrix, combines CoNLL-U and CG3",
-  "main": "build/js/src",
+  "main": "src/index.ts",
   "scripts": {
     "test": "mocha -r ts-node/register --max-old-space-size=8192 test/index.js",
     "coverage": "nyc mocha -r ts-node/register --max-old-space-size=8192 test/index.js",
-    "document": "jsdoc2md src/*.js > build/docs.md",
-    "build": "tsc",
-    "build-watch": "tsc --watch"
+    "document": "jsdoc2md src/*.js > build/docs.md"
   },
   "repository": {
     "type": "git",

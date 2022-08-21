@@ -25,6 +25,7 @@ export interface SentenceSerial {
 }
 
 interface SentenceMeta {
+  format?: string;
 }
 
 interface SuperToken {
@@ -51,7 +52,7 @@ export class Sentence extends NxBaseClass {
   _index: number|undefined;
   corpus: Corpus|undefined;
 
-  constructor(serial: SentenceSerial|string, options: Options) {
+  constructor(serial: SentenceSerial|string, options?: Options) {
     super("Sentence");
 
     this._meta = {};
@@ -122,11 +123,8 @@ export class Sentence extends NxBaseClass {
 
   /**
    * Output Sentence to a given format
-   *
-   * @param {String} format
-   * @param {Object} options
    */
-  to(format: string, options: Options): any {
+  to(format: string, options?: Options): any {
     return generate[format](this, options);
   }
 
@@ -508,7 +506,7 @@ export class Sentence extends NxBaseClass {
    *  delete the superToken.  Otherwise, split the token at the given
    *  index.
    */
-  split(src: BaseToken, splitAtIndexInput: string): Sentence {
+  split(src: BaseToken, splitAtIndexInput?: string|number): Sentence {
     if (!(src instanceof BaseToken))
       throw new NxError("unable to split: src must be a token");
 
@@ -554,7 +552,7 @@ export class Sentence extends NxBaseClass {
           this.tokens.slice(index));
 
     } else if (src.name === "SubToken") {
-      let splitAtIndex = parseInt(splitAtIndexInput);
+      let splitAtIndex = parseInt(splitAtIndexInput as string);
       if (isNaN(splitAtIndex))
         throw new NxError(
             `unable to split: cannot split at index ${splitAtIndex}`);
@@ -578,7 +576,7 @@ export class Sentence extends NxBaseClass {
               .concat(subTokens.slice(index + 1));
 
     } else {
-      let splitAtIndex = parseInt(splitAtIndexInput);
+      let splitAtIndex = parseInt(splitAtIndexInput as string);
       if (isNaN(splitAtIndex))
         throw new NxError(
             `unable to split: cannot split at index ${splitAtIndex}`);

@@ -41,10 +41,7 @@ export class Corpus {
   private app: App;
   public _corpus: nx.Corpus;
 
-  constructor(
-    app: App,
-    serial: nx.SentenceSerial|string = "",
-  ) {
+  constructor(app: App, serial?: nx.CorpusSerial) {
 
     // save a reference to the parent
     this.app = app;
@@ -360,7 +357,7 @@ export class Corpus {
   parse(text: string, main: boolean = true) {
 
     // split under the hood
-    const splitted = nx.split(text, this._corpus.options);
+    const splitted = nx.split(text, this._corpus.options) as string[];
 
     // get the index to start at
     const index = this.index || 0;

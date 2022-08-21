@@ -24,7 +24,7 @@ export const DETECT_BY_NAME: DetectByName = {
   sd: FORMAT_BY_NAME.sd.detect,
 };
 
-export function detect(input: Input, options: Options): DetectOutput|DetectOutput[] {
+export function detect(input: Input, options?: Options): DetectOutput|DetectOutput[] {
   options = {
     suppressDetectorErrors: true,
     returnAllMatches: true,
