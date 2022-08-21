@@ -3,11 +3,12 @@ import * as fs from "fs";
 import * as nx from "notatrix";
 import * as request from "request";
 import {v4 as uuidv4} from "uuid";
+import {UploadedFile} from "express-fileupload";
 
 import {UploadError} from "./errors";
 import {CorpusDB} from "./models/corpus-json";
 
-function upload(treebank, filename, contents, next) {
+function upload(treebank: string, filename: string, contents: string, next: (err: Error|null, data?: unknown) => void) {
 
   console.log("uploading");
   try {
@@ -23,7 +24,7 @@ function upload(treebank, filename, contents, next) {
   }
 }
 
-export function fromFile(treebank, file, next) {
+export function fromFile(treebank: string, file: UploadedFile, next: (err: Error|null, data?: unknown) => void) {
 
   if (!file)
     return next(new UploadError(`No file provided.`));
@@ -32,7 +33,7 @@ export function fromFile(treebank, file, next) {
   return upload(treebank, file.name, contents, next);
 }
 
-export function fromGitHub(treebank, url, next) {
+export function fromGitHub(treebank: string, url: string, next: (err: Error|null, data?: unknown) => void) {
 
   if (!url)
     return next(new UploadError(`No URL provided.`));

@@ -1,7 +1,11 @@
+import * as socketIO from "socket.io";
+import {Request} from "express";
+import {MemoryStore, SessionData} from "express-session";
+
 import {Room} from "./room";
 import {SocketError} from "./errors";
 
-function extractTreebank(url) {
+function extractTreebank(url: string) {
   const match = url.match(/treebank_id=([0-9a-f-]{36})(#|\/|$|&)/);
   if (!match)
     throw new SocketError(`Authorization Error: unable to find treebank_id in url "${url}"`);
@@ -10,15 +14,29 @@ function extractTreebank(url) {
 }
 
 // room metadata
-var rooms = {};
+var rooms: {[treebank: string]: Room} = {};
 
-export function configureSocketIO(sio, MemoryStore) {
-  sio.set("authorization", (request, next) => {
+interface SocketRequest extends Request {
+  sid: unknown;
+  token: unknown;
+  username: unknown;
+  treebank: string;
+  address: string;
+  id: string;
+}
+
+interface SocketSessionData extends SessionData {
+  token: unknown;
+  username: unknown;
+}
+
+export function configureSocketIO(sio: socketIO.Server, memoryStore: MemoryStore) {
+  (sio as any).set("authorization", (request: SocketRequest, next: (err: Error|null, success: boolean) => void) => {
     if (!request.headers.cookie || !request.cookies["express.sid"])
       next(new SocketError(`AuthorizationError: unable to find cookie`), false);
 
     const sid = (request.cookies["express.sid"] || "").substring(2, 34);
-    MemoryStore.get(sid, (err, session) => {
+    memoryStore.get(sid, (err, session: SocketSessionData) => {
       if (err)
         return next(new SocketError(`Authorization Error: ${err}`), false);
 
@@ -105,6 +123,7 @@ export function configureSocketIO(sio, MemoryStore) {
 
       const response = {
         id: user.id,
+        // @ts-ignore
         locked: null,
       };
 

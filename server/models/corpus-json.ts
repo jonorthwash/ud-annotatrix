@@ -8,7 +8,7 @@ import {DBError} from "../errors";
 export class CorpusDB {
   private path: string;
 
-  private constructor(filename) {
+  private constructor(filename: string) {
     if (!filename)
       throw new DBError("Missing required argument: filename");
 
@@ -19,7 +19,7 @@ export class CorpusDB {
     return new CorpusDB(filename);
   }
 
-  getSentence(id, next) {
+  getSentence(id: unknown, next: unknown) {
     /*open(this.path, (err, db) => {
       if (err)
         return next(new DBError(err), null);
@@ -41,7 +41,7 @@ export class CorpusDB {
     });*/
   }
 
-  setSentence(id, sentence, next) {
+  setSentence(id: unknown, sentence: unknown, next: unknown) {
     /*open(this.path, (err, db) => {
       if (err)
         return next(new DBError(err), null);
@@ -124,7 +124,7 @@ export class CorpusDB {
     });*/
   }
 
-  getSentences(next) {
+  getSentences(next: unknown) {
     /*open(this.path, (err, db) => {
       if (err)
         return next(new DBError(err), null);
@@ -145,7 +145,7 @@ export class CorpusDB {
     });*/
   }
 
-  setSentences(sentences, next) {
+  setSentences(sentences: unknown, next: unknown) {
     /*open(this.path, (err, db) => {
       if (err)
         return next(new DBError(err), null);
@@ -193,7 +193,7 @@ export class CorpusDB {
     });*/
   }
 
-  getMeta(next) {
+  getMeta(next: unknown) {
     /*open(this.path, (err, db) => {
       if (err)
         return next(new DBError(err), null);
@@ -217,7 +217,7 @@ export class CorpusDB {
     });*/
   }
 
-  setMeta(params, next) {
+  setMeta(params: unknown, next: unknown) {
     /*open(this.path, (err, db) => {
       if (err)
         return next(new DBError(err), null);
@@ -251,7 +251,7 @@ export class CorpusDB {
     });*/
   }
 
-  load(next) {
+  load(next: (err: Error, loaded?: string) => void) {
 
     fs.readFile(this.path, (err, data) => {
       if (err)
@@ -272,13 +272,13 @@ export class CorpusDB {
     });*/
   }
 
-  save(filename, state, next) {
+  save(filename: string, state: any, next: (_: null, contents: string, err: Error|null) => void) {
 
     state.meta = _.defaults(state.meta, {
       filename: filename,
     });
     state = JSON.stringify(state, null, 2);
-    fs.writeFile(this.path, state, next);
+    fs.writeFile(this.path, state, next as () => void);
     /*this.setMeta(state.meta, err => {
       if (err)
         return next(new DBError(err), null);
