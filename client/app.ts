@@ -112,7 +112,7 @@ export class App {
   /**
    * Load a corpus from a serial string.
    */
-  load(serial: string) {
+  load(serial: nx.CorpusSerial) {
     // this.gui.status.normal('loading...')
     this.corpus = new Corpus(this, serial);
     this.gui.refresh();

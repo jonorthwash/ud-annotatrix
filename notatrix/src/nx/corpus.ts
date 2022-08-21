@@ -12,7 +12,7 @@ import {Options} from "./options";
 import {Sentence, SentenceSerial} from "./sentence";
 import {split} from "../splitter";
 
-interface CorpusSerial {
+export interface CorpusSerial {
   filename: string|null;
   meta: CorpusMeta;
   options: Options;
@@ -22,6 +22,9 @@ interface CorpusSerial {
 }
 
 interface CorpusMeta {
+  filename?: string;
+  is_ltr?: boolean;
+  is_vertical?: boolean;
 }
 
 interface CorpusSnapshot {
@@ -46,7 +49,7 @@ export class Corpus extends NxBaseClass {
   _meta: CorpusMeta;
   _filterIndex: number;
 
-  constructor(options: Options) {
+  constructor(options?: Options) {
     super("Corpus");
     this.treebank_id = uuid();
 
@@ -303,7 +306,7 @@ export class Corpus extends NxBaseClass {
     return this;
   }
 
-  static fromString(s: string, options: Options): Corpus {
+  static fromString(s: string, options?: Options): Corpus {
     const corpus = new Corpus(options);
     corpus.parse(s);
     corpus.index = 0;

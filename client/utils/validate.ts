@@ -56,7 +56,7 @@ export function is_udeprel(s: string): boolean {
  *
  * See http://universaldependencies.org/u/dep/punct.html.
  */
-function is_leaf(s: nx.Token, t: nx.Token) {
+function is_leaf(s: nx.BaseToken, t: nx.BaseToken) {
 
   /**
    * Checks if a node is in the list of part-of-speech tags which
@@ -253,10 +253,10 @@ function is_relation_conflict(tree) {
 }
 */
 
-function is_cycle(sent: nx.Sentence, src: nx.Token, tar: nx.Token) {
+function is_cycle(sent: nx.Sentence, src: nx.BaseToken, tar: nx.BaseToken) {
 
   // recursive DFS
-  function is_cycle_util(sent: nx.Sentence, src: nx.Token, tar: nx.Token) {
+  function is_cycle_util(sent: nx.Sentence, src: nx.BaseToken, tar: nx.BaseToken) {
 
     // visit node
     seen.add(src);
@@ -280,7 +280,7 @@ function is_cycle(sent: nx.Sentence, src: nx.Token, tar: nx.Token) {
   return is_cycle_util(sent, src, tar);
 }
 
-export function depEdgeClasses(sent: nx.Sentence, token: nx.Token, head: nx.RelationItem) {
+export function depEdgeClasses(sent: nx.Sentence, token: nx.BaseToken, head: nx.RelationItem) {
 
   let classes = new Set(["dependency"]);
 

@@ -12,8 +12,8 @@ import type {Sentence} from "./sentence";
 import type {SubToken} from "./sub-token";
 
 // TODO: We need to clean these up...
-type ConlluIndex = unknown;
-type Cg3Index = unknown;
+export type ConlluIndex = string|number;
+export type Cg3Index = number|null;
 type CytoscapeIndex = number;
 type SerialIndex = unknown;
 
@@ -103,7 +103,7 @@ export class BaseToken extends NxBaseClass {
   /**
    * Add a head to a token with a dependency relation.
    */
-  addHead(head: BaseToken, deprel: string): boolean {
+  addHead(head: BaseToken, deprel?: string): boolean {
     if (!(head instanceof BaseToken))
       throw new NxError("cannot add head unless it is a token");
 

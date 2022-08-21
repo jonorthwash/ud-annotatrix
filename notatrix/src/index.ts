@@ -9,14 +9,14 @@ export {SplitterError} from "./utils/errors";
 export {ToolError} from "./utils/errors";
 
 export {Analysis} from "./nx/analysis";
-export {BaseToken} from "./nx/base-token";
+export {BaseToken, ConlluIndex, Cg3Index} from "./nx/base-token";
 export {Comment} from "./nx/comment";
-export {Corpus} from "./nx/corpus";
+export {Corpus, CorpusSerial} from "./nx/corpus";
 export {Labeler} from "./nx/labeler";
 export {NxBaseClass} from "./nx/base-class";
-export {RelationSet} from "./nx/relation-set";
+export {RelationItem, RelationSet} from "./nx/relation-set";
 export {RootToken} from "./nx/root-token";
-export {Sentence} from "./nx/sentence";
+export {Sentence, SentenceSerial} from "./nx/sentence";
 export {SubToken} from "./nx/sub-token";
 export {Token} from "./nx/token";
 

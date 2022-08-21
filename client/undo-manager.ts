@@ -1,3 +1,5 @@
+import * as nx from "notatrix";
+
 import {Corpus} from "./corpus";
 import {storage} from "./utils";
 import type {App} from "./app";
@@ -21,8 +23,8 @@ export class UndoManager {
   private app: App;
   public active: boolean;
   public current: any|null;
-  private undoStack: Stack<string>;
-  private redoStack: Stack<string>;
+  private undoStack: Stack<nx.CorpusSerial>;
+  private redoStack: Stack<nx.CorpusSerial>;
 
   constructor(app: App) {
     this.app = app;
