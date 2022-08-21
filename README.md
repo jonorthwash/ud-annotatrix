@@ -5,7 +5,7 @@ UD Annotatrix: a simple, sleek, fast editor for Universal Dependencies treebanks
 ![UD Annotatrix Screenshot](https://github.com/jonorthwash/ud-annotatrix/raw/master/screenshot.png)
 
 ## About
-UD Annotatrix is a client-side, browser-only, language-independent tool for editing dependency trees according to the guidelines established by the [Universal Dependencies](https://universaldependencies.org) project.  UD-Annotatrix supports uploading corpora to the browser to add, remove, and edit dependencies in a wide variety of formats (managed with the [notatrix](https://github.com/keggsmurph21/notatrix) tool), including:
+UD Annotatrix is a client-side, browser-only, language-independent tool for editing dependency trees according to the guidelines established by the [Universal Dependencies](https://universaldependencies.org) project.  UD-Annotatrix supports uploading corpora to the browser to add, remove, and edit dependencies in a wide variety of formats (managed with the [`notatrix`](notatrix/) tool), including:
  - [CoNLL-U](http://universaldependencies.org/format.html)
  - [VISL CG3](http://beta.visl.sdu.dk/cg3/single/#streamformats)
  - Brackets
@@ -157,12 +157,6 @@ Whenever you make changes, you will need to regenerate some of the source files.
 ```bash
 npm run build        # just build everything once
 npm run build-watch  # build now watch the source code for changes
-```
-
-If you make changes to any of the files in the [`notatrix/`](notatrix/) directory, you'll need to recompile the TypeScript files as well.  You can do that with
-```bash
-npm --prefix notatrix/ run build        # just build everything once
-npm --prefix notatrix/ run build-watch  # build now watch the source code for changes
 ```
 
 See also: the [API Documentation](documentation/README.md).

@@ -5,7 +5,6 @@ Experimental notational system for <a href="https://github.com/jonorthwash/ud-an
 
  - <a href="#Install">Installation</a>
  - <a href="#Usage">Basic usage</a>
- - <a href="build/docs.md">**API docs**<a>
  - <a href="#Contributing">Contributing</a>
  - <a href="#Related">Related projects</a>
  
@@ -26,7 +25,7 @@ Basic usage:
 
 ### Initializing
 
-The basic unit of `notatrix` is the [`notatrix.Sentence`](build/docs.md#Sentence).  Instances of this class hold format-agnostic information about sentences, and can be constructed from
+The basic unit of `notatrix` is the [`notatrix.Sentence`](src/nx/sentence.ts).  Instances of this class hold format-agnostic information about sentences, and can be constructed from
 - <a href="#from_brackets">Brackets</a>
 - <a href="#from_cg3">CG3</a>
 - <a href="#from_conllu">CoNLL-U</a>
@@ -96,7 +95,7 @@ mark(like, that)`;
 const sent = new nx.Sentence(sd);
 ```
 
-### <a id="inspecting" href="#inspecting">Inspecting properties of a [`notatrix.Sentence`](build/docs.md#Sentence)</a>
+### <a id="inspecting" href="#inspecting">Inspecting properties of a [`notatrix.Sentence`](src/nx/sentence.ts)</a>
 
 ```js
 const nx = require('notatrix');
@@ -119,7 +118,7 @@ console.log(sent.tokens.length);   // expected 8, only counts top-level tokens
 console.log(sent.size);            // expected 10, counts all tokens
 ```
 
-Some interesting properties here are `notatrix.Sentence.comments`, `notatrix.Sentence.tokens`, and `notatrix.Sentence.size`.  For more information about the syntax of working with `notatrix.Sentence` objects, check out the [API Documentation](build/docs.md).
+Some interesting properties here are `notatrix.Sentence.comments`, `notatrix.Sentence.tokens`, and `notatrix.Sentence.size`.
 
 ### <a id="converting" href="#Converting">Converting to other formats</a>
 
@@ -219,7 +218,7 @@ $ npm --prefix notatrix/ test
 
 #### Recompiling TypeScript
 ```bash
-$ npm --prefix notatrix/ run build
+$ npx --prefix notatrix/ tsc
 ```
 
 #### Running in the REPL
