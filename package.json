@@ -2,7 +2,6 @@
   "name": "ud-annotatrix",
   "version": "1.0.0",
   "description": "a client-side browser-only tool for editing dependency trees in CoNLL-U and VISL formats",
-  "main": "client/index.js",
   "dependencies": {
     "body-parser": "^1.19.0",
     "cookie-parser": "^1.4.4",
