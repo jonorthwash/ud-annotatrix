@@ -2,7 +2,7 @@
 
 UD Annotatrix: a simple, sleek, fast editor for Universal Dependencies treebanks.
 
-![UD Annotatrix Screenshot](https://github.com/jonorthwash/ud-annotatrix/raw/master/screenshot.png)
+![UD Annotatrix Screenshot](resources/screenshot.png)
 
 ## About
 UD Annotatrix is a client-side, browser-only, language-independent tool for editing dependency trees according to the guidelines established by the [Universal Dependencies](https://universaldependencies.org) project.  UD-Annotatrix supports uploading corpora to the browser to add, remove, and edit dependencies in a wide variety of formats (managed with the [`notatrix`](notatrix/) tool), including:
