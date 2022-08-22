@@ -111,7 +111,7 @@ git clone https://github.com/jonorthwash/ud-annotatrix
 cd ud-annotatrix/
 npm install
 ```
-You can configure the environment in several ways by setting `KEY=VALUE` pairs in the `.env` file (see [the server configuration file](server/config.js)).
+You can configure the environment in several ways by setting `KEY=VALUE` pairs in the `.env` file (see [the server configuration file](src/server/config.ts)).
 
 To run the server, run `npm run dev-server` in the project directory root, then navigate your browser to `localhost:5316`.  If you would like to deploy your own copy of UD Annotatrix, you could alternately run `npm run server`.
 

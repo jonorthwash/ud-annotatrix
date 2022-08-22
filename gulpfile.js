@@ -15,7 +15,7 @@ const gulp_mode = process.env.GULP_ENV || "development";
 console.log("Gulp runs in " + gulp_mode + " mode");
 
 gulp.task("js", function() {
-  let stream = browserify({entries: ["client/index.ts"], debug: true})
+  let stream = browserify({entries: ["src/client/index.ts"], debug: true})
                    .plugin(tsify)
                    .transform(babelify, {global: true})
                    .bundle()
@@ -27,7 +27,7 @@ gulp.task("js", function() {
   if (gulp_mode == "production") {
     stream = stream.pipe(terser({keep_fnames: true, mangle: false, compress: {drop_console: true}})).pipe(size())
   }
-  return stream.pipe(gulp.dest("server/public/js"));
+  return stream.pipe(gulp.dest("src/server/public/js"));
 });
 
 gulp.task("html", function(done) {
@@ -35,10 +35,10 @@ gulp.task("html", function(done) {
   done();
 });
 
-gulp.task("ico", function() { return gulp.src(["./client/favicon.png"]).pipe(gulp.dest("./server/public")); });
+gulp.task("ico", function() { return gulp.src(["./src/client/favicon.png"]).pipe(gulp.dest("./src/server/public")); });
 
 gulp.task("watch", () => {
-  gulp.watch(["client/**/*.js", "notatrix/**/*.js", "server/views/**/*.ejs"], gulp.parallel("js", "html"));
+  gulp.watch(["src/**/*.ts", "src/server/views/**/*.ejs"], gulp.parallel("js", "html"));
 });
 
 gulp.task("default", gulp.parallel("js", "html", "ico"));

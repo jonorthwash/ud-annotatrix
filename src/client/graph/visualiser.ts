@@ -1,7 +1,7 @@
 import * as $ from "jquery";
 import * as d3 from "d3";
-import * as nx from "notatrix";
 
+import * as nx from "../../notatrix";
 import type {MouseNode} from "../collaboration";
 import * as utils from "./utils";
 import type {DependencyNode, MultiwordNode, Graph} from ".";

@@ -1,6 +1,6 @@
 import * as $ from "jquery";
-import * as nx from "notatrix";
 
+import * as nx from "../../notatrix";
 import {forEachFormat} from "../utils/funcs";
 import {_gui as config} from "./config";
 import type {GUI} from ".";

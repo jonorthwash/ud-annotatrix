@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "noEmit": true,
         "noFallthroughCasesInSwitch": true,
         "noImplicitAny": true,
         "noImplicitReturns": true,
@@ -7,6 +8,9 @@
         "target": "es5"
     },
     "include": [
-        "./client/**/*"
+        "./src/"
+    ],
+    "exclude": [
+        "./src/server/public/"
     ]
 }

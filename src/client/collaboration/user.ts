@@ -1,5 +1,6 @@
 import * as $ from "jquery";
-import * as nx from "notatrix";
+
+import * as nx from "../../notatrix";
 
 export interface MousePosition {
   x: number;

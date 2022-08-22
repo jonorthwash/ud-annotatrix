@@ -1,10 +1,10 @@
 import * as _ from "underscore";
 import * as fs from "fs";
-import * as nx from "notatrix";
 import * as request from "request";
 import {v4 as uuidv4} from "uuid";
 import {UploadedFile} from "express-fileupload";
 
+import * as nx from "../notatrix";
 import {UploadError} from "./errors";
 import {CorpusDB} from "./models/corpus-json";
 

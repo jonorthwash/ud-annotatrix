@@ -47,6 +47,7 @@
     "babel-preset-env": "^1.7.0",
     "babelify": "^10.0.0",
     "browserify": "^16.2.3",
+    "chai": "^4.3.4",
     "gulp": "^4.0.2",
     "gulp-babel": "^8.0.0-beta.2",
     "gulp-concat": "^2.6.1",
@@ -54,7 +55,11 @@
     "gulp-size": "^3.0.0",
     "gulp-sourcemaps": "^2.6.5",
     "gulp-terser": "^1.2.0",
+    "istanbul": "^0.4.5",
+    "mocha": "^5.2.0",
     "nodemon": "^1.18.11",
+    "nyc": "^12.0.2",
+    "sinon": "^5.1.1",
     "socket.io-parser": "^4.2.1",
     "ts-node": "^10.8.2",
     "typescript": "^4.7.4",
@@ -64,8 +69,10 @@
   "scripts": {
     "build": "gulp",
     "build-watch": "gulp && gulp watch",
-    "server": "ts-node --files --project server/ server/app.ts || ./scripts/fail-nicely.js",
-    "dev-server": "nodemon --files server/app.ts --ignore corpora || ./scripts/fail-nicely.js"
+    "server": "ts-node src/server/app.ts || ./scripts/fail-nicely.js",
+    "dev-server": "nodemon src/server/app.ts --ignore corpora || ./scripts/fail-nicely.js",
+    "test": "mocha -r ts-node/register --max-old-space-size=8192 test/index.js",
+    "coverage": "nyc mocha -r ts-node/register --max-old-space-size=8192 test/index.js"
   },
   "repository": {
     "type": "git",

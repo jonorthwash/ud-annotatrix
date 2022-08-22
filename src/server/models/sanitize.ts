@@ -1,5 +1,6 @@
 import * as _ from "underscore";
-import * as nx from "notatrix";
+
+import * as nx from "../../notatrix";
 
 function sanitize(obj: any, keys: string[]): any {
   obj = _.pick(obj, keys);

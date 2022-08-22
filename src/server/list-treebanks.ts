@@ -1,8 +1,8 @@
 import * as fs from "fs";
 import * as moment from "moment";
-import * as nx from "notatrix";
 import * as path from "path";
 
+import * as nx from "../notatrix";
 import {cfg} from "./config";
 import {Treebank} from "./models/treebank";
 
