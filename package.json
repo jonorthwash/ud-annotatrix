@@ -69,8 +69,8 @@
   "scripts": {
     "build": "gulp",
     "build-watch": "gulp && gulp watch",
-    "server": "ts-node src/server/app.ts || ./scripts/fail-nicely.js",
-    "dev-server": "nodemon src/server/app.ts --ignore corpora || ./scripts/fail-nicely.js",
+    "server": "ts-node src/server/app.ts",
+    "dev-server": "nodemon src/server/app.ts --ignore corpora",
     "test": "mocha -r ts-node/register --max-old-space-size=8192 test/index.js",
     "coverage": "nyc mocha -r ts-node/register --max-old-space-size=8192 test/index.js"
   },
