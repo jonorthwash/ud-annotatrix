@@ -23,3 +23,6 @@ build
 
 # ubuntu process files
 .nfs*
+
+# OS files
+.DS_Store
