@@ -29,7 +29,3 @@ export {detect, DETECT_BY_NAME as detectAs} from "./detector";
 export {GENERATE_BY_NAME as generate} from "./generator";
 export {parse, PARSE_BY_NAME as parseAs} from "./parser";
 export {split} from "./splitter";
-
-// @ts-ignore: Don't store our data files in the bundle!
-import data = require("../data");
-export {data};

@@ -1,6 +1,9 @@
-const _ = require("underscore"), expect = require("chai").expect,
-      sinon = require("sinon"), utils = require("./utils"), nx = require(".."),
-      data = require("../data");
+const _ = require("underscore");
+const expect = require("chai").expect;
+const sinon = require("sinon");
+const utils = require("./utils");
+const nx = require("..");
+const data = require("./data");
 
 describe("setEmpty", () => {
   it("toggling isEmpty on trivial data", () => {

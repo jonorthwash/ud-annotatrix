@@ -3,7 +3,7 @@
 const _ = require("underscore");
 
 const srcUtils = require("../src/utils");
-const data = require("../data");
+const data = require("./data");
 
 function spacesToTabs(str) { return str.replace(/[ \t]+/g, "\t"); }
 
