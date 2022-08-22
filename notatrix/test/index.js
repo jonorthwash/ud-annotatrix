@@ -1,4 +1,3 @@
-
 // external format tools first
 require("./splitter");
 require("./detector");
@@ -10,14 +9,12 @@ require("./sentence");
 require("./merge");
 require("./combine");
 require("./split");
-// require('./corpus');
 
 // then externalizers
 require("./generator");
 require("./loss");
 
 // then editing stuff
-// require('./update');
 require("./enhance");
 require("./setEmpty");
 
