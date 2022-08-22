@@ -5,14 +5,14 @@ const _ = require("underscore"), expect = require("chai").expect,
 
 describe("integration tests", () => {
   it("from brackets", () => {
-    const nx = require("..");
+    const nx = require("../../src/notatrix");
     const brackets =
         "[root [nsubj I] have [obj [amod [advmod too] many] commitments] [advmod right now] [punct .]]";
     const sent = new nx.Sentence(brackets);
   });
 
   it("from CG3", () => {
-    const nx = require("..");
+    const nx = require("../../src/notatrix");
     const cg3 = `# sent_id = mst-0001
 # text = Peşreve başlamalı.
 "<Peşreve>"
@@ -25,7 +25,7 @@ describe("integration tests", () => {
   });
 
   it("from CoNLL-U", () => {
-    const nx = require("..");
+    const nx = require("../../src/notatrix");
     const conllu = `# sent_id = chapID01:paragID1:sentID1
 # text = Кечаень сыргозтизь налкставтыця карвот .
 # text[eng] = Kechai was awoken by annoying flies.
@@ -38,19 +38,19 @@ describe("integration tests", () => {
   });
 
   it("from params", () => {
-    const nx = require("..");
+    const nx = require("../../src/notatrix");
     const params = [{form: "hello"}, {form: "world"}];
     const sent = new nx.Sentence(params);
   });
 
   it("from plain text", () => {
-    const nx = require("..");
+    const nx = require("../../src/notatrix");
     const text = "this is my test string";
     const sent = new nx.Sentence(text);
   });
 
   it("from SD", () => {
-    const nx = require("..");
+    const nx = require("../../src/notatrix");
     const sd = `He says that you like to swim
 ccomp(says, like)
 mark(like, that)`;
@@ -58,7 +58,7 @@ mark(like, that)`;
   });
 
   it("inspecting", () => {
-    const nx = require("..");
+    const nx = require("../../src/notatrix");
     const conllu = `# text = He boued e tebr Mona er gegin.
 # text[eng] = Mona eats her food here in the kitchen.
 # labels = press_1986 ch_syntax p_197 to_check
@@ -80,7 +80,7 @@ mark(like, that)`;
   });
 
   it("converting", () => {
-    const nx = require("..");
+    const nx = require("../../src/notatrix");
     const conllu = `# this is my first comment
 # here is another comment
 1	hello	hello	_	_	_	0	root	_

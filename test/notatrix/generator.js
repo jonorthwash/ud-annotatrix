@@ -1,7 +1,7 @@
 "use strict";
 
 const _ = require("underscore"), expect = require("chai").expect,
-      sinon = require("sinon"), utils = require("./utils"), nx = require("..");
+      sinon = require("sinon"), utils = require("./utils"), nx = require("../../src/notatrix");
 
 describe("generator", () => {
   describe("generate output in input format from nx.Sentence instances", () => {

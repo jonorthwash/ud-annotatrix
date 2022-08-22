@@ -1,5 +1,5 @@
 const _ = require("underscore"), expect = require("chai").expect,
-      sinon = require("sinon"), utils = require("./utils"), nx = require("..");
+      sinon = require("sinon"), utils = require("./utils"), nx = require("../../src/notatrix");
 
 describe("enhance", () => {
   it(`should write the enhanced dependencies to the deps column`, () => {

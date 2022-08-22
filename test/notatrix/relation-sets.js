@@ -1,5 +1,5 @@
 const _ = require("underscore"), expect = require("chai").expect,
-      sinon = require("sinon"), utils = require("./utils"), nx = require("..");
+      sinon = require("sinon"), utils = require("./utils"), nx = require("../../src/notatrix");
 
 describe("relation sets", () => {
   it(`should initialize the heads and dependents fields on the tokens`, () => {
