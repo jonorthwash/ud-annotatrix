@@ -1,7 +1,11 @@
 "use strict";
 
-const _ = require("underscore"), expect = require("chai").expect,
-      sinon = require("sinon"), utils = require("./utils"), nx = require("..");
+const _ = require("underscore");
+const expect = require("chai").expect;
+const sinon = require("sinon");
+const utils = require("./utils");
+const nx = require("..");
+const data = require("./data");
 
 describe("combine", () => {
   it(`should throw errors if given bad input`, () => {
@@ -18,7 +22,7 @@ describe("combine", () => {
 
   it(`should throw errors if one the operands is a superToken or subTokens`,
      () => {
-       const sent = new nx.Sentence(nx.data.conllu.from_cg3_with_spans);
+       const sent = new nx.Sentence(data.conllu.from_cg3_with_spans);
        const tok4 = sent.tokens[4];
        const sup = sent.tokens[5];
        const sub = sup.subTokens[0];
@@ -40,7 +44,7 @@ describe("combine", () => {
      });
 
   it(`should throw errors if things aren't adjacent`, () => {
-    const sent = new nx.Sentence(nx.data.conllu.from_cg3_with_spans);
+    const sent = new nx.Sentence(data.conllu.from_cg3_with_spans);
     const tok0 = sent.tokens[0];
     const tok1 = sent.tokens[1];
     const tok2 = sent.tokens[2];
