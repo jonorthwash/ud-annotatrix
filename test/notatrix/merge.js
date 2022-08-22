@@ -4,7 +4,7 @@ const _ = require("underscore");
 const expect = require("chai").expect;
 const sinon = require("sinon");
 const utils = require("./utils");
-const nx = require("..");
+const nx = require("../../src/notatrix");
 const data = require("./data");
 
 describe("merge", () => {
