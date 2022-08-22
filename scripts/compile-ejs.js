@@ -15,11 +15,11 @@ const fs = require("fs");
 const path = require("path");
 
 const mkdirp = require("mkdirp");
-const html_base_path = path.join("server", "public", "html");
+const html_base_path = path.join("src", "server", "public", "html");
 
 function render(filename, args) {
-  const ejs_path = path.join("server", "views", `${filename}.ejs`);
-  const html_path = path.join("server", "public", "html", `${filename}.html`);
+  const ejs_path = path.join("src", "server", "views", `${filename}.ejs`);
+  const html_path = path.join("src", "server", "public", "html", `${filename}.html`);
 
   fs.readFile(ejs_path, (err, contents) => {
     if (err)
@@ -40,8 +40,8 @@ function render_all() {
   mkdirp(html_base_path);
 
   render("annotatrix", {
-    // `${__dirname}/../server/views/modals`
-    modalPath: path.join(__dirname, "../", "server", "views", "modals"),
+    // `src/server/views/modals`
+    modalPath: path.join(__dirname, "../", "src", "server", "views", "modals"),
     github_configured: false,
     username: null,
     path: path

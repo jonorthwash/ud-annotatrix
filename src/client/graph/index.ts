@@ -1,8 +1,8 @@
 import * as _ from "underscore";
 import * as $ from "jquery";
-import * as nx from "notatrix";
 import * as d3 from "d3";
 
+import * as nx from "../../notatrix";
 import * as storage from "../utils/local-storage";
 import * as validate from "../utils/validate";
 import type {App} from "../app";

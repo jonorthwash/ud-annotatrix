@@ -1,5 +1,6 @@
 import * as _ from "underscore";
-import * as nx from "notatrix";
+
+import * as nx from "../notatrix";
 
 import {check_if_browser} from "./utils/funcs";
 import type {App} from "./app";

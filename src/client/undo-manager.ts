@@ -1,5 +1,4 @@
-import * as nx from "notatrix";
-
+import * as nx from "../notatrix";
 import {Corpus} from "./corpus";
 import {storage} from "./utils";
 import type {App} from "./app";

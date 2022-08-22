@@ -17,7 +17,7 @@ if [ -z $1 ]; then
   usage
 fi
 
-OUTPUT=server/public/css/font-awesome-base64.min.css
+OUTPUT=src/server/public/css/font-awesome-base64.min.css
 FA_PATH=$1
 SOLID_CSS=`tail -n 1 $FA_PATH/css/solid.min.css`
 BRANDS_CSS=`tail -n 1 $FA_PATH/css/brands.min.css`

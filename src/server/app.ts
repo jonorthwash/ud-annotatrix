@@ -32,11 +32,11 @@ app.use(session({
 if (cfg.environment === "development")
   app.use(nocache());
 app.set("view engine", "ejs");
-app.set("views", "server/views");
+app.set("views", "src/server/views");
 
 // routes
 configureRoutes(app);
-app.use(express.static("server/public"));
+app.use(express.static("src/server/public"));
 
 // run server
 const server = http.createServer(app).listen(cfg.port, () => {
