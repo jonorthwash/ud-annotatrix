@@ -46,21 +46,26 @@ export function listTreebanks(next: (err: Error|null, treebanks: Treebank[]) => 
                                   return 0;
                                 })
                                 .map(info => {
-                                  const buffer = fs.readFileSync(info.path);
-                                  const serial = buffer.toString();
-                                  const parsed = JSON.parse(serial);
-                                  const snapshot = nx.Corpus.deserialize(parsed).snapshot;
+                                  try {
+                                    const buffer = fs.readFileSync(info.path);
+                                    const serial = buffer.toString();
+                                    const parsed = JSON.parse(serial);
+                                    const snapshot = nx.Corpus.deserialize(parsed).snapshot;
 
-                                  return {
-                                    id: path.basename(info.path).slice(0, -5),
-                                    modified: info.modified,
-                                    modified_ago: moment(info.modified).fromNow(),
-                                    filename: snapshot.filename,
-                                    sentences: snapshot.sentences,
-                                    errors: snapshot.errors,
-                                    labels: snapshot.labels.slice(0, 3),
-                                  };
-                                });
+                                    return {
+                                      id: path.basename(info.path).slice(0, -5),
+                                      modified: info.modified,
+                                      modified_ago: moment(info.modified).fromNow(),
+                                      filename: snapshot.filename,
+                                      sentences: snapshot.sentences,
+                                      errors: snapshot.errors,
+                                      labels: snapshot.labels.slice(0, 3),
+                                    };
+                                  } catch (e) {
+                                    console.warn(`Failed to parse '${info.path}': ${e}`);
+                                    return null;
+                                  }
+                                }).filter(corpus => !!corpus);
 
           next(null, treebanks);
         }
