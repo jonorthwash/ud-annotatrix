@@ -1,6 +1,6 @@
 # UD Annotatrix
 
-UD Annotatrix: a simple, sleek, fast editor for Universal Dependencies treebanks.
+UD Annotatrix: a simple, sleek, fast editor for Universal Dependencies Treebanks.
 
 ![UD Annotatrix Screenshot](resources/screenshot.png)
 
