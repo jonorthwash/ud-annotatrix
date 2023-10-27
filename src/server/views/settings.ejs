@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <title>UD Annotatrix: Settings</title>
+  <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css" />
+  <link rel="stylesheet" type="text/css" href="../css/font-awesome-base64.min.css" />
+  <link rel="stylesheet" type="text/css" href="../css/style.css" />
+  <link rel="stylesheet" type="text/css" href="../css/jquery.autocomplete.css" />
+</head>
+
+<body>
+
+  <a href="/annotatrix?treebank_id=<%= treebank %>">
+    <button type="button">
+      Back to Annotatrix
+    </button>
+  </a>
+
+  <form method="post" action="/settings?treebank_id=<%= treebank %>">
+    <div class="settings-container" id="treebank">
+      <h3 class="settings-banner">
+        Settings for treebank
+        <span class="settings-group-name">
+          <%= treebank %>
+        </span>
+      </h3>
+
+      <div class="settings-group" id="sharing">
+
+        <%
+          var claimed = meta && meta.hasOwnProperty("owner") && meta.owner && typeof meta.owner === 'string';
+          var is_owner = claimed && (meta.owner === username);
+          var allowed = meta && meta.permissions ? meta.permissions.allow : null;
+          var disallowed = meta && meta.permissions ? meta.permissions.disallow : [];
+        %>
+
+        <div class="settings-item" id="owner">
+          <div class="settings-item-title">
+            Owner
+          </div>
+          <div class="settings-item-content">
+            <% if (claimed) { %>
+            <strong class="strong">
+              <%= meta.owner %>
+            </strong>
+            <input type="checkbox" name="claim-owner" disabled />
+            <% } else { %>
+            <strong class="strong">
+              None
+            </strong>
+            <input type="checkbox" name="claim-owner" />
+            <span>Click to claim as treebank owner</span>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="settings-item" id="github_url">
+          <div class="settings-item-title">
+            GitHub url
+          </div>
+          <div class="settings-item-content">
+            <% if (!is_owner) { %>
+            <input type="text" name="set-github-url" value="" title="Only the owner can set this property" disabled />
+            <% } else if (meta.github_url && typeof meta.github_url === 'string') { %>
+            <input type="text" name="set-github-url" value="<%= meta.github_url %>" disabled />
+            <% } else { %>
+            <input type="text" name="set-github-url" value="" />
+            <% } %>
+          </div>
+        </div>
+
+        <div class="settings-item" id="permissions">
+          <div class="settings-item-title">
+            Collaboration
+          </div>
+          <!--
+          <div class="settings-item-content">
+            <div class="settings-sub-item" id="permissions-allow">
+              <table class="settings-table table table-striped table-sm">
+                <thead class="thead-light">
+                  <tr>
+                    <th class="username">
+                      Allowed GitHub users
+                    </th>
+                    <th class="toggle">
+                      Revoke privileges
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (allowed) { for (let i=0; i< allowed.length; i++) { %>
+                    <tr>
+                      <td class="username">
+                        <%= allowed[i] %>
+                      </td>
+                      <td class="toggle">
+                        <% if (allowed[i] === meta.owner) { %>
+                          <input type="checkbox" name="permissions-allow-revoke-<%= i %>" title="The owner must be allowed to edit" disabled />
+                        <% } else if (is_owner) { %>
+                          <input type="checkbox" name="permissions-allow-revoke-<%= i %>" />
+                        <% } else { %>
+                          <input type="checkbox" name="permissions-allow-revoke-<%= i %>" title="Only the owner can set this property" disabled />
+                        <% } %>
+                      </td>
+                    </tr>
+                  <% } } %>
+                </tbody>
+              </table>
+              <span>
+                <% if (is_owner) { %>
+                  <input type="text" name="permissions-allow-add" />
+                  <input type="submit" value="Add" />
+                <% } else { %>
+                  <input type="text" name="permissions-allow-add" title="Only the owner can set this property" disabled />
+                  <input type="submit" value="Add" title="Only the owner can set this property" disabled />
+                <% } %>
+              </span>
+            </div>
+            <div class="settings-sub-item" id="permissions-disallow">
+              <table class="settings-table table table-striped table-sm">
+                <thead class="thead-light">
+                  <tr>
+                    <th class="username">
+                      Blocked GitHub users
+                    </th>
+                    <th class="toggle">
+                      Unblock
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (disallowed) { for (let i=0; i< disallowed.length; i++) { %>
+                    <tr>
+                      <td class="username">
+                        <%= disallowed[i] %>
+                      </td>
+                      <td class="toggle">
+                        <% if (is_owner) { %>
+                          <input type="checkbox" name="permissions-disallow-revoke-<%= i %>" />
+                        <% } else { %>
+                          <input type="checkbox" name="permissions-disallow-revoke-<%= i %>" title="Only the owner can set this property" disabled />
+                        <% } %>
+                      </td>
+                    </tr>
+                  <% } } %>
+                </tbody>
+              </table>
+              <span>
+                <% if (is_owner) { %>
+                  <input type="text" name="permissions-disallow-add" />
+                  <input type="submit" value="Add" />
+                <% } else { %>
+                  <input type="text" name="permissions-disallow-add" title="Only the owner can set this property" disabled />
+                  <input type="submit" value="Add" title="Only the owner can set this property" disabled />
+                <% } %>
+              </span>
+            </div>
+  -->
+          <div class="settings-sub-item" id="permission-sharing">
+            <% if (!claimed) { %>
+            <input type="checkbox" name="permissions-sharing" title="Cannot set this property unless 'owner' is set" <%= meta && meta.permissions.sharing ? 'checked' : '' %> disabled />
+            <% } else { %>
+            <input type="checkbox" name="permissions-sharing" <%= meta && meta.permissions.sharing ? 'checked' : '' %> />
+            <% } %>
+            Enable collaborative editing
+          </div>
+          <div class="settings-sub-item" id="permissions-require-login">
+            <% if (!claimed) { %>
+            <input type="checkbox" name="permissions-require-login" title="Cannot set this property unless 'owner' is set" <%= meta && meta.permissions.require_login ? 'checked' : '' %> disabled />
+            <% } else { %>
+            <input type="checkbox" name="permissions-require-login" <%= meta && meta.permissions.require_login ? 'checked' : '' %> />
+            <% } %>
+            Require GitHub login to edit treebank
+          </div>
+          <!--
+            <div class="settings-sub-item" id="permissions-allow-all">
+              <% if (is_owner) { %>
+                <input type="checkbox" name="permissions-allow-all" <%= allowed === null ? 'checked' : '' %> />
+              <% } else { %>
+                <input type="checkbox" name="permissions-allow-all" title="Only the owner can set this property" <%= allowed === null ? 'checked' : '' %> disabled />
+              <% } %>
+              Allow everyone to edit
+            </div>
+            <div class="settings-sub-item" id="permissions-disallow-all">
+              <% if (is_owner) { %>
+                <input type="checkbox" name="permissions-disallow-all" <%= disallowed === null ? 'checked' : '' %> />
+              <% } else { %>
+                <input type="checkbox" name="permissions-disallow-all" title="Only the owner can set this property" <%= disallowed === null ? 'checked' : '' %> disabled />
+              <% } %>
+              Block everyone not explicitly allowed
+            </div>
+  -->
+        </div>
+      </div>
+
+      <div class="settings-item" id="editors">
+        <div class="settings-item-title">
+          Editors
+        </div>
+        <div class="settings-item-content">
+          <table class="settings-table table table-striped table-sm">
+            <thead class="thead-light">
+              <tr>
+                <th class="username">
+                  GitHub username
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (meta && meta.editors) { for (let i=0; i< meta.editors.length; i++) { %>
+              <tr>
+                <td class="username">
+                  <%= meta.editors[i] %>
+                </td>
+              </tr>
+              <% } } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+    </div>
+
+    <div class="settings-container" id="user">
+      <h3 class="settings-banner">
+        Settings for user
+        <span class="settings-group-name">
+          <%= username %>
+        </span>
+      </h3>
+    </div>
+
+    <button type="submit">Save</button>
+
+  </form>
+
+  <pre>
+    <%= JSON.stringify(meta, null, 2) %>
+  </pre>
+
+</body>
+
+</html>

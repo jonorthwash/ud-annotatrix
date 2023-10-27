@@ -1,1 +1,0 @@
-4	a	a	DET	DT	Definite=Ind|PronType=Art	4	det	_	_

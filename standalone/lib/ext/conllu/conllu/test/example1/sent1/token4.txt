@@ -1,1 +1,0 @@
-6	.	.	PUNCT	.	_	2	punct	_	_

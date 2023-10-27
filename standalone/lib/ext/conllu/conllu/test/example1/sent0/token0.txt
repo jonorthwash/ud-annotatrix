@@ -1,1 +1,0 @@
-1	They	they	PRON	PRP	Case=Nom|Number=Plur	2	nsubj	4:nsubj	_
