@@ -16,9 +16,11 @@
     "moment": "^2.24.0",
     "morgan": "^1.9.1",
     "nocache": "^2.0.0",
+    "notatrix": "file:notatrix",
     "request": "^2.88.0",
     "socket.io": "^2.2.0",
     "socket.io-cookie-parser": "^1.0.0",
+    "sqlite3": "^4.0.6",
     "tsify": "^5.0.4",
     "underscore": "^1.9.1",
     "uuid": "^3.3.2"
@@ -67,6 +69,8 @@
   "scripts": {
     "build": "gulp",
     "build-watch": "gulp && gulp watch",
+    "server": "ts-node src/server/app.ts",
+    "dev-server": "nodemon src/server/app.ts --ignore corpora",
     "test": "mocha -r ts-node/register --max-old-space-size=8192 test/notatrix/index.js",
     "coverage": "nyc mocha -r ts-node/register --max-old-space-size=8192 test/notatrix/index.js"
   },
