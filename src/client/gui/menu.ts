@@ -4,6 +4,7 @@ import {getTreebankId, link} from "../utils/funcs";
 import {latex as exportLatex, png as exportPNG, svg as exportSVG} from "../utils/export";
 import {uploadFile} from "./modals";
 import {uploadURL} from "./modals";
+import {helpInfo} from "./modals";
 import type {GUI} from ".";
 
 export class Menu {
@@ -121,10 +122,11 @@ export class Menu {
       self.gui.refresh();
     });
     $("[name=\"show-help\"]").click(e => {
-      if (!$(e.target).is(".pin")) {
-        // link('/help', '_self');
-        link(self.gui.root + "help.html", "_blank");
-      }
+	 	console.log("TESTING");
+      const target = $(e.target);
+      if (!target.is(".pin") && !target.closest("a").hasClass("disabled"))
+        helpInfo(self.gui).show();
+        //link(self.gui.root + "help.html", "_blank");
     });
     $("[name=\"go-home\"]").click(e => {
       if (!$(e.target).is(".pin")) {
