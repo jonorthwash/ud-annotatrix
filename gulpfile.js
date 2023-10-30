@@ -27,7 +27,7 @@ gulp.task("js", function() {
   if (gulp_mode == "production") {
     stream = stream.pipe(terser({keep_fnames: true, mangle: false, compress: {drop_console: true}})).pipe(size())
   }
-  return stream.pipe(gulp.dest("src/server/public/js"));
+  return stream.pipe(gulp.dest("src/client/public/js"));
 });
 
 gulp.task("html", function(done) {
@@ -35,10 +35,10 @@ gulp.task("html", function(done) {
   done();
 });
 
-gulp.task("ico", function() { return gulp.src(["./src/client/favicon.png"]).pipe(gulp.dest("./src/server/public")); });
+gulp.task("ico", function() { return gulp.src(["./src/client/favicon.png"]).pipe(gulp.dest("./src/client/public")); });
 
 gulp.task("watch", () => {
-  gulp.watch(["src/**/*.ts", "src/server/views/**/*.ejs"], gulp.parallel("js", "html"));
+  gulp.watch(["src/**/*.ts", "src/client/views/**/*.ejs"], gulp.parallel("js", "html"));
 });
 
 gulp.task("default", gulp.parallel("js", "html", "ico"));
