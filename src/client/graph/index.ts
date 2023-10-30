@@ -397,10 +397,6 @@ export class Graph {
     }
     
 
-    // add the mice and locks from `collab`
-//    this.drawMice();
-//    this.setLocks();
-
     // check if we had something locked already before we redrew the graph
     if (config.locked_index === this.app.corpus.index) {
 

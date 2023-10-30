@@ -2,7 +2,6 @@ import * as $ from "jquery";
 import * as d3 from "d3";
 
 import * as utils from "./utils";
-//import type {MouseNode} from "../collaboration";
 import type {Graph, DependencyNode} from ".";
 
 let _graph: Graph|null = null;

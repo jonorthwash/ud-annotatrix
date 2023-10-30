@@ -1,9 +1,7 @@
 import * as _ from "underscore";
 
-import type {MousePosition} from "../collaboration/user";
-
 export interface GraphConfig {
-  pan: MousePosition;
+  //pan: MousePosition;
   zoom: number;
   drawn_sentence: boolean;
 

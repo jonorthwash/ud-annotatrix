@@ -4,12 +4,11 @@ import * as nx from "../notatrix";
 import {storage} from "./utils";
 import {download} from "./utils/funcs";
 
-//import {CollaborationInterface} from "./collaboration";
 import {_config as config} from "./config";
 import {Corpus} from "./corpus";
 import {Graph} from "./graph";
 import {GUI} from "./gui";
-import {Server} from "./server";
+//import {Server} from "./server";
 import {Socket} from "./socket";
 import {UndoManager} from "./undo-manager";
 
@@ -28,7 +27,7 @@ export class App {
   public online: boolean;
   public initialized: boolean;
   public undoer: UndoManager;
-  public server: Server;
+  //public server: Server;
   public socket: Socket;
   public gui: GUI;
   //public collab: CollaborationInterface;
@@ -41,7 +40,7 @@ export class App {
     this.online = online;
     this.initialized = false;
     this.undoer = new UndoManager(this);
-    this.server = new Server(this);
+    //this.server = new Server(this);
     this.socket = new Socket(this);
     this.gui = new GUI(this);
     //this.collab = new CollaborationInterface(this);
@@ -56,16 +55,16 @@ export class App {
       const hash = window.location.hash.substring(1);
       this.corpus.index = parseInt(hash) - 1;
     }, 500);
-    if (this.online) {
-      this.server.connect();
-      this.socket.connect();
-    } else {
+//    if (this.online) {
+//      this.server.connect();
+//      this.socket.connect();
+//    } else {
       let backup = storage.restore();
       if (!$.isEmptyObject(backup)) {
         console.log("backup", backup);
         this.corpus = new Corpus(this, backup);
       }
-    }
+//    }
     this.gui.refresh();
   }
 
@@ -99,11 +98,11 @@ export class App {
     }
 
     // save it to server/local
-    if (this.server.is_running) {
-      this.server.save(serial);
-    } else {
+//    if (this.server.is_running) {
+//      this.server.save(serial);
+//    } else {
       storage.save(serial);
-    }
+//    }
 
     // refresh the gui stuff
     this.gui.refresh();
