@@ -530,26 +530,3 @@ function saveZoom() {
   svg.call(zoom.transform, d3.zoomIdentity.translate(transform.x, transform.y).scale(transform.k))
 }
 
-/**
- * Draw mouse on the svg.
- */
-
-/*
-export function drawMouse(mouse: MouseNode) {
-  const id = mouse.id.replace(/[#:]/g, "_");
-  if (!$(`#${id}.mouse`).length) {
-    _g.append("rect")
-      .attr("id", id)
-      .attr("class", "mouse")
-      .attr("width", 5)
-      .attr("height", 5);
-  }
-  if(mouse.position) {
-    d3.select(`#${id}.mouse`)
-      .attr("x", mouse.position.x)
-      .attr("y", mouse.position.y)
-      .style("fill", "#" + mouse.color);
-  }
-  
-}
-*/
