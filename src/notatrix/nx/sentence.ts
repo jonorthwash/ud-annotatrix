@@ -189,7 +189,7 @@ export class Sentence extends NxBaseClass {
     let empty = 0
 
     let conllu = 0
-    let cg3 = 0
+//    let cg3 = 0
     let cytoscape = -1;
 
     this.iterate((token, i, j, k) => {
@@ -198,8 +198,8 @@ export class Sentence extends NxBaseClass {
       token.indices.sub = k;
       token.indices.absolute = ++absolute;
 
-      if (!token._analyses || !token._analyses.length)
-        token.indices.cg3 = ++cg3;
+//      if (!token._analyses || !token._analyses.length)
+//        token.indices.cg3 = ++cg3;
 
       // @ts-ignore: `'Analysis' and 'number' have no overlap`
       if (!token.isSuperToken && superToken && superToken.analysis === j)

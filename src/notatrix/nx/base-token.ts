@@ -13,14 +13,14 @@ import type {SubToken} from "./sub-token";
 
 // TODO: We need to clean these up...
 export type ConlluIndex = string|number;
-export type Cg3Index = number|null;
+//export type Cg3Index = number|null;
 type CytoscapeIndex = number;
 type SerialIndex = unknown;
 
 interface Indices {
   absolute?: number;
   conllu: ConlluIndex;
-  cg3: Cg3Index;
+//  cg3: Cg3Index;
   cytoscape: CytoscapeIndex;
   serial?: SerialIndex;
   sup?: number;
@@ -94,7 +94,7 @@ export class BaseToken extends NxBaseClass {
 
     this.indices = {
       conllu: null,
-      cg3: null,
+      //cg3: null,
       cytoscape: null,
       serial: serial.index,
     };
@@ -181,8 +181,8 @@ export class BaseToken extends NxBaseClass {
     if (format === "CoNLL-U")
       return `${this.heads.first.token.indices.conllu}`;
 
-    if (format === "CG3")
-      return `${this.heads.first.token.indices.cg3}`;
+//    if (format === "CG3")
+//      return `${this.heads.first.token.indices.cg3}`;
 
     return `${this.heads.first.token.indices.absolute}`;
   }
@@ -194,12 +194,13 @@ export class BaseToken extends NxBaseClass {
     return this.heads.first.deprel;
   }
 
-  static getTokenIndex(token: BaseToken, format: string): ConlluIndex|Cg3Index|number|undefined {
+  //static getTokenIndex(token: BaseToken, format: string): ConlluIndex|Cg3Index|number|undefined {
+  static getTokenIndex(token: BaseToken, format: string): ConlluIndex|number|undefined {
     if (format === "CoNLL-U")
       return token.indices.conllu;
 
-    if (format === "CG3")
-      return token.indices.cg3;
+//    if (format === "CG3")
+//      return token.indices.cg3;
 
     return token.indices.absolute;
   }

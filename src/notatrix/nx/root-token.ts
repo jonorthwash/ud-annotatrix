@@ -11,7 +11,6 @@ export class RootToken extends BaseToken {
     this.indices = {
       absolute: 0,
       conllu: 0,
-      cg3: 0,
       cytoscape: 0,
     };
   }

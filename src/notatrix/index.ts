@@ -9,7 +9,8 @@ export {SplitterError} from "./utils/errors";
 export {ToolError} from "./utils/errors";
 
 export {Analysis} from "./nx/analysis";
-export {BaseToken, ConlluIndex, Cg3Index} from "./nx/base-token";
+//export {BaseToken, ConlluIndex, Cg3Index} from "./nx/base-token";
+export {BaseToken, ConlluIndex} from "./nx/base-token";
 export {Comment} from "./nx/comment";
 export {Corpus, CorpusSerial} from "./nx/corpus";
 export {Labeler} from "./nx/labeler";
