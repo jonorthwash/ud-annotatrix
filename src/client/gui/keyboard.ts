@@ -345,7 +345,7 @@ export function keyup(app: App, event: KeyboardEvent) {
 
         $(".merge-source").removeClass("merge-source").addClass("activated");
 
-        graph.lock($(".activated"));
+        //graph.lock($(".activated"));
 
       } else if ($(".activated").length) {
 
@@ -364,7 +364,7 @@ export function keyup(app: App, event: KeyboardEvent) {
         if (right.length && !right.hasClass("activated") && !right.hasClass("blocked") && right.attr("id").includes("form"))
           right.addClass("neighbor").addClass("merge-right");
 
-        graph.lock($(".activated"));
+        //graph.lock($(".activated"));
       }
       gui.status.refresh();
       break;
@@ -380,7 +380,7 @@ export function keyup(app: App, event: KeyboardEvent) {
 
         $(".combine-source").removeClass("combine-source").addClass("activated");
 
-        graph.lock($(".activated"));
+        //graph.lock($(".activated"));
 
       } else if ($(".activated").length) {
 
@@ -399,7 +399,7 @@ export function keyup(app: App, event: KeyboardEvent) {
         if (right.length && !right.hasClass("activated") && !right.hasClass("blocked") && right.attr("id").includes("form"))
           right.addClass("neighbor combine-right");
 
-        graph.lock($(".activated"));
+        //graph.lock($(".activated"));
       }
       gui.status.refresh();
       break;
@@ -480,139 +480,3 @@ export function keydown(app: App, event: KeyboardEvent) {
     event.preventDefault();
 }
 
-/*
-
-
-
-function onEnter(event) {
-  log.debug(`called onEnter()`);
-
-  let sentence = $('#text-data').val(),
-    cursor = $('#text-data').prop('selectionStart') - 1,
-    lines = sentence.split(/\n/),
-    lineId = null, before, during, after,
-    cursorLine = 0;
-
-  if (gui.is_table_view) {
-
-    const target = $(event.target);
-    cursor = parseInt(target.attr('row-id')) || parseInt(target.attr('col-id'));
-    cursorLine = target.attr('row-id');
-
-  } else {
-
-    if (manager.format === 'Unknown' || manager.format === 'plain text')
-      return;
-
-    // get current line number
-    let acc = 0;
-    $.each(lines, (i, line) => {
-      acc += line.length;
-      if (acc + i < cursor)
-        cursorLine = i + 1;
-    });
-    log.debug(`onEnter(): cursor on line[${cursorLine}]: "${lines[cursorLine]}"`);
-
-    // advance the cursor until we are at the end of a line that isn't followed by a comment
-    //   or at the very beginning of the textarea
-    if (cursor !== 0 || sentence.startsWith('#')) {
-      log.debug(`onEnter(): cursor[${cursor}]: "${sentence[cursor]}" (not at textarea start OR textarea has comments)`)
-      while (sentence[cursor + 1] === '#' || sentence[cursor] !== '\n') {
-        log.debug(`onEnter(): cursor[${cursor}]: "${sentence[cursor]}", line[${cursorLine}]: ${lines[cursorLine]}`);
-        if (cursor === sentence.length)
-          break;
-        if (sentence[cursor] === '\n')
-          cursorLine++;
-        cursor++;
-      }
-    } else {
-      log.debug(`onEnter(): cursor[${cursor}]: "${sentence[cursor]}" (at textarea start)`)
-      cursorLine = -1;
-    }
-  }
-
-  log.debug(`onEnter(): cursor[${cursor}]: "${sentence[cursor]}", line[${cursorLine}]: ${lines[cursorLine]}`);
-
-  if (event.preventDefault) // bc of testing, sometimes these are fake events
-    event.preventDefault();
-
-  switch (manager.format) {
-    case ('CoNLL-U'):
-
-      throw new Error('deprecated');
-      if (cursor) {
-        const tabs = lines[cursorLine].split('\t');
-        const token = manager.current.getById(tabs[0]).token;
-        manager.current.insertTokenAfter(token);
-
-      } else {
-        const token = manager.current[0].token;
-        manager.current.insertTokenBefore(token);
-      }
-
-      // parse but persist the table settings
-      const is_table_view = manager.current.is_table_view;
-      const column_visibilities = manager.current.column_visibilities;
-      manager.parse(manager.conllu);
-      manager.current.is_table_view = is_table_view;
-      manager.current.column_visibilities = column_visibilities;
-
-      break;
-
-    case ('CG3'):
-
-      throw new errors.NotImplementedError('can\'t onEnter with CG3 :/');*/
-/*
-// advance to the end of an analysis
-log.debug(`onEnter(): line[${cursorLine}]: "${lines[cursorLine]}", cursor[${cursor}]: "${sentence[cursor]}"`);
-while (cursorLine < lines.length - 1) {
-    if (lines[cursorLine + 1].startsWith('"<'))
-        break;
-    cursorLine++;
-    cursor += lines[cursorLine].length + 1;
-    log.debug(`onEnter(): incrementing line[${cursorLine}]: "${lines[cursorLine]}", cursor[${cursor}]:
-"${sentence[cursor]}"`);
-}
-
-lineId = lines.slice(0, cursorLine + 1).reduce((acc, line) => {
-    return acc + line.startsWith('"<');
-}, 0) + 1;
-log.debug(`onEnter(): inserting line with id: ${lineId}`);
-log.debug(`onEnter(): resetting all content lines: [${lines}]`);
-
-const incrementIndices = (lines, lineId) => {
-  return lines.map((line) => {
-    if (line.startsWith('#'))
-      return line;
-    (line.match(/[#>][0-9]+/g) || []).map((match) => {
-      let id = parseInt(match.slice(1));
-      id += (id >= lineId ? 1 : 0);
-      line = line.replace(match, `${match.slice(0,1)}${id}`)
-    });
-    return line;
-  });
-}
-before = incrementIndices(lines.slice(0, cursorLine + 1), lineId);
-during = [`"<_>"`, `\t${getCG3Analysis(lineId, {id:lineId})}`];
-after = incrementIndices(lines.slice(cursorLine + 1), lineId);
-
-log.debug(`onEnter(): preceding line(s) : [${before}]`);
-log.debug(`onEnter(): interceding lines : [${during}]`);
-log.debug(`onEnter(): proceeding line(s): [${after}]`);
-
-$('#text-data').val(before.concat(during, after).join('\n'))
-  .prop('selectionStart', cursor)
-  .prop('selectionEnd', cursor);*/
-
-/*
-
-break;
-
-default:
-insertSentence();
-}
-
-gui.refresh();
-}
-
-*/

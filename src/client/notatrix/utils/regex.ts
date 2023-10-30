@@ -10,8 +10,6 @@ export const conlluEmptyIndex = /^(\d+)(\.\d+)?/;
 export const whitespace = /(\s+)/;
 export const whitespaceLine = /^(\s*)$/;
 export const whiteline = /^(\s*)(\n|$)/;
-export const sdDependency = /^\s*([\w.]+)\(([\w.]+),\s*([\w.]+)\)\s*$/;
-export const sdDependencyNoWhitespace = /^([\w.]+)\(([\w.]+),\s*([\w.]+)\)$/;
 export const fallback = /^_$/;
 export const commentLabel = /(\s*)(labels?|tags?)\s*=\s*(\w.*)/;
 export const commentSentId = /(\s*)sent.?id\s*=\s*(\w*)/i;

@@ -69,10 +69,10 @@ export class UndoManager {
 
     let undo = this.undoStack.pop();
     this.app.corpus = new Corpus(this.app, undo);
-    this.app.socket.broadcast("modify corpus", {
-      type: "undo",
-      serial: undo,
-    });
+//    this.app.socket.broadcast("modify corpus", {
+//      type: "undo",
+//      serial: undo,
+//    });
     this.app.save();
     this.app.gui.refresh();
     this.active = false;
@@ -92,10 +92,10 @@ export class UndoManager {
 
     let redo = this.redoStack.pop();
     this.app.corpus = new Corpus(this.app, redo);
-    this.app.socket.broadcast("modify corpus", {
-      type: "redo",
-      serial: redo,
-    });
+//    this.app.socket.broadcast("modify corpus", {
+//      type: "redo",
+//      serial: redo,
+//    });
     this.app.save();
     this.app.gui.refresh();
     this.active = false;

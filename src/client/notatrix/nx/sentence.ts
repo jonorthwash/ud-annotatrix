@@ -80,8 +80,7 @@ export class Sentence extends NxBaseClass {
       let parsed: SentenceSerial;
       if (options.interpretAs) {
         // interpret as a particular format if passed option
-        console.log('options.interpretAs');
-        console.log(options.interpretAs);
+        console.log('options.interpretAs: ' + options.interpretAs);
         parsed = PARSE_BY_NAME[options.interpretAs](serial, options) as SentenceSerial;
       } else {
         // otherwise, get an array of possible interpretations

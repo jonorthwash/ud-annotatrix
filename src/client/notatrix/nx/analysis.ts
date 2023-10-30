@@ -18,9 +18,13 @@ export class Analysis extends NxBaseClass {
 
   constructor(sent: Sentence, serial: AnalysisSerial) {
     super("Analysis");
+    console.log('Analysis')
     this._subTokens =
         (serial.subTokens || []).map(sub => new SubToken(sent, sub));
   }
 
-  get subTokens(): SubToken[] { return this._subTokens; }
+  get subTokens(): SubToken[] { 
+    console.log('get subTokens()');   
+    return this._subTokens; 
+  }
 }
