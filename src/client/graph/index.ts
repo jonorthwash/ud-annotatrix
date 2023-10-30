@@ -41,7 +41,7 @@ export interface MultiwordNode {
   token: nx.BaseToken;
   conlluId: nx.ConlluIndex;
   absoluteId: number;
-  cg3Id: nx.Cg3Index;
+//  cg3Id: nx.Cg3Index;
   len: number;
   subId: number;
   classes: string;

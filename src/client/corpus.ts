@@ -23,8 +23,8 @@ function detectFormat(serial: nx.SentenceSerial|string): string|null {
     return null;
 
   // or found something lossless
-  if (formats.indexOf("notatrix serial") > -1)
-    return "notatrix serial";
+//  if (formats.indexOf("notatrix serial") > -1)
+//    return "notatrix serial";
 
   // or found just one thing
   if (formats.length === 1)
