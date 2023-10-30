@@ -1,7 +1,7 @@
 import * as $ from "jquery";
 import * as _ from "underscore";
 
-import * as nx from "../../notatrix";
+import * as nx from "../notatrix";
 import {storage} from "../utils";
 import {getRootPath} from "../utils/funcs";
 import type {App} from "../app";

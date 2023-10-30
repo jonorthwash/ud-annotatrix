@@ -1,6 +1,6 @@
 import * as $ from "jquery";
 
-import * as nx from "../notatrix";
+import * as nx from "./notatrix";
 import {storage} from "./utils";
 import {download} from "./utils/funcs";
 

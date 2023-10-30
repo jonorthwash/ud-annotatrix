@@ -1,7 +1,7 @@
 import * as _ from "underscore";
 import * as $ from "jquery";
 
-import * as nx from "../../notatrix";
+import * as nx from "../notatrix";
 
 export const U_DEPRELS = [
   "acl",      "advcl",     "advmod", "amod",       "appos", "aux",      "case",      "cc",         "ccomp", "clf",
