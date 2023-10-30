@@ -6,12 +6,12 @@ import type {Input, ParseByName, ParseOutput} from "./base";
 import type {Options} from "./nx/options";
 
 export const PARSE_BY_NAME: ParseByName = {
-  "apertium stream": FORMAT_BY_NAME.apertiumStream.parse,
-  apertiumStream: FORMAT_BY_NAME.apertiumStream.parse,
-  Brackets: FORMAT_BY_NAME.brackets.parse,
-  brackets: FORMAT_BY_NAME.brackets.parse,
-  CG3: FORMAT_BY_NAME.cg3.parse,
-  cg3: FORMAT_BY_NAME.cg3.parse,
+//  "apertium stream": FORMAT_BY_NAME.apertiumStream.parse,
+//  apertiumStream: FORMAT_BY_NAME.apertiumStream.parse,
+//  Brackets: FORMAT_BY_NAME.brackets.parse,
+//  brackets: FORMAT_BY_NAME.brackets.parse,
+//  CG3: FORMAT_BY_NAME.cg3.parse,
+//  cg3: FORMAT_BY_NAME.cg3.parse,
   "CoNLL-U": FORMAT_BY_NAME.conllu.parse,
   conllu: FORMAT_BY_NAME.conllu.parse,
   "notatrix serial": FORMAT_BY_NAME.notatrixSerial.parse,
@@ -20,8 +20,8 @@ export const PARSE_BY_NAME: ParseByName = {
   params: FORMAT_BY_NAME.params.parse,
   "plain text": FORMAT_BY_NAME.plainText.parse,
   plainText: FORMAT_BY_NAME.plainText.parse,
-  SD: FORMAT_BY_NAME.sd.parse,
-  sd: FORMAT_BY_NAME.sd.parse,
+//  SD: FORMAT_BY_NAME.sd.parse,
+//  sd: FORMAT_BY_NAME.sd.parse,
 };
 
 export function parse(input: Input, options: Options): ParseOutput|ParseOutput[] {

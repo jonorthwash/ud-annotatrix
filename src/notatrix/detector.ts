@@ -6,12 +6,12 @@ import type {DetectByName, DetectOutput, Input} from "./base";
 import type {Options} from "./nx/options";
 
 export const DETECT_BY_NAME: DetectByName = {
-  "apertium stream": FORMAT_BY_NAME.apertiumStream.detect,
-  apertiumStream: FORMAT_BY_NAME.apertiumStream.detect,
-  Brackets: FORMAT_BY_NAME.brackets.detect,
-  brackets: FORMAT_BY_NAME.brackets.detect,
-  CG3: FORMAT_BY_NAME.cg3.detect,
-  cg3: FORMAT_BY_NAME.cg3.detect,
+//  "apertium stream": FORMAT_BY_NAME.apertiumStream.detect,
+//  apertiumStream: FORMAT_BY_NAME.apertiumStream.detect,
+//  Brackets: FORMAT_BY_NAME.brackets.detect,
+//  brackets: FORMAT_BY_NAME.brackets.detect,
+//  CG3: FORMAT_BY_NAME.cg3.detect,
+//  cg3: FORMAT_BY_NAME.cg3.detect,
   "CoNLL-U": FORMAT_BY_NAME.conllu.detect,
   conllu: FORMAT_BY_NAME.conllu.detect,
   "notatrix serial": FORMAT_BY_NAME.notatrixSerial.detect,
@@ -20,8 +20,8 @@ export const DETECT_BY_NAME: DetectByName = {
   params: FORMAT_BY_NAME.params.detect,
   "plain text": FORMAT_BY_NAME.plainText.detect,
   plainText: FORMAT_BY_NAME.plainText.detect,
-  SD: FORMAT_BY_NAME.sd.detect,
-  sd: FORMAT_BY_NAME.sd.detect,
+//  SD: FORMAT_BY_NAME.sd.detect,
+//  sd: FORMAT_BY_NAME.sd.detect,
 };
 
 export function detect(input: Input, options?: Options): DetectOutput|DetectOutput[] {

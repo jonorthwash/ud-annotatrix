@@ -9,8 +9,9 @@ export const fields = [
 
 export const formats = [
   //'apertium stream',
-  "Brackets", "CG3", "CoNLL-U", "notatrix serial", "Params", "plain text",
-  "SD"
+//  "Brackets", "CG3", 
+//  "SD"
+  "CoNLL-U", "notatrix serial", "Params", "plain text",
 ];
 
 type _SentenceFields = {[k in keyof Partial<SentenceSerial>]: string};

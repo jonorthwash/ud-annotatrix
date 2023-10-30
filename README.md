@@ -7,9 +7,6 @@ UD Annotatrix: a simple, sleek, fast editor for Universal Dependencies treebanks
 ## About
 UD Annotatrix is a client-side, browser-only, language-independent tool for editing dependency trees according to the guidelines established by the [Universal Dependencies](https://universaldependencies.org) project.  UD-Annotatrix supports uploading corpora to the browser to add, remove, and edit dependencies in a wide variety of formats (managed with the [`notatrix`](notatrix/) tool), including:
  - [CoNLL-U](http://universaldependencies.org/format.html)
- - [VISL CG3](http://beta.visl.sdu.dk/cg3/single/#streamformats)
- - Brackets
- - SDParse
  - plain text
 
 Note: [brat](http://brat.nlplab.org) and [CoNLLUEditor](https://github.com/Orange-OpenSource/conllueditor) are similar corpus annotation tools, but UD Annotatrix aims to be a simple(r), clean(er), fast(er) interface optimized for Universal Dependencies with an optional server-side component.
