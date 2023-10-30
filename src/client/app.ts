@@ -44,7 +44,7 @@ export class App {
     this.server = new Server(this);
     this.socket = new Socket(this);
     this.gui = new GUI(this);
-    this.collab = new CollaborationInterface(this);
+    //this.collab = new CollaborationInterface(this);
     this.corpus = new Corpus(this);
     this.graph = new Graph(this);
     this.initialized = true;

@@ -107,6 +107,7 @@ export class Chat {
    */
   refresh() {
 
+/*
     $("#chat").css("display", this.is_visible ? "flex" : "none");
 
     $("#chat-expand").css("display", this.is_minimized ? "none" : "flex");
@@ -118,6 +119,7 @@ export class Chat {
     $("#chat-available").removeClass("red green").addClass(this.gui.app.socket.initialized ? "green" : "red");
 
     $("#currently-online-number").text(this.gui.app.collab.size);
+*/
   }
 
   /**

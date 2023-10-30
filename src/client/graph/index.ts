@@ -398,8 +398,8 @@ export class Graph {
     
 
     // add the mice and locks from `collab`
-    this.drawMice();
-    this.setLocks();
+//    this.drawMice();
+//    this.setLocks();
 
     // check if we had something locked already before we redrew the graph
     if (config.locked_index === this.app.corpus.index) {
@@ -1271,9 +1271,11 @@ export class Graph {
    * Add `mouse` nodes for each of the users on the current corpus index.
    */
   drawMice() {
+/*
     this.app.collab.getMouseNodes().forEach(mouse => {
       this.grapher.drawMouse(mouse);
     });
+*/
   }
 
   /**
@@ -1281,7 +1283,7 @@ export class Graph {
    *  on the current corpus index.
    */
   setLocks() {
-
+/*
     $(".locked")
       .removeClass("locked")
       .data("locked_by", null)
@@ -1295,6 +1297,7 @@ export class Graph {
         .css("background-color", "#" + lock.color)
         .css("line-color", "#" + lock.color);
     });
+*/
   }
 
   /**

@@ -36,13 +36,13 @@ export class Socket {
    *  we expect to receive.
    */
   connect() {
-
     // we shouldn't try to connect if we're just testing
     if (!check_if_browser() || !this.app.online)
       return;
-
+/*
     // cache this access
     const collab = this.app.collab, corpus = this.app.corpus, graph = this.app.graph, gui = this.app.gui;
+*/
 
     // request a server connection
     this._socket = new _Socket() as SocketIoClient;
@@ -54,7 +54,7 @@ export class Socket {
       this.isOpen = true;
 
       // make a note of our id, name, etc
-      collab.setSelf(data);
+//      collab.setSelf(data);
     });
 
     // another user connected to the document
@@ -64,11 +64,11 @@ export class Socket {
     this._socket.on("disconnection", d => collab.removeUser(d));
 
     // a user modified the corpus
-    this._socket.on("modify corpus", data => {
-      const user = collab.getUser(data.id);
+//    this._socket.on("modify corpus", data => {
+//      const user = collab.getUser(data.id);
 
       let index = corpus.index;
-
+/*
       // check whether we need to change our corpus index
       switch (data.type) {
       case ("insert"):
@@ -134,16 +134,17 @@ export class Socket {
 
     // a user moved their mouse in the graph area
     this._socket.on("move mouse", data => {
-      const user = collab.getUser(data.id);
+//      const user = collab.getUser(data.id);
       user.mouse = data.mouse;
-      graph.drawMice();
+//      graph.drawMice();
     });
 
     // a user sent a chat message
     this._socket.on("new message", data => {
-      const user = collab.getUser(data.id);
-      gui.chat.newMessage(user, data.message, false);
+//      const user = collab.getUser(data.id);
+//      gui.chat.newMessage(user, data.message, false);
     });
+*/
   }
 
   /**
