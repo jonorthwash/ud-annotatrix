@@ -2,7 +2,7 @@ import * as _ from "underscore";
 
 import {thin} from "../utils/funcs";
 import type {App} from "../app";
-import type {Chat} from "../gui/chat";
+//import type {Chat} from "../gui/chat";
 import {MousePosition, User, UserData} from "./user";
 
 export interface SetSelfData extends UserData {
@@ -25,7 +25,7 @@ export interface MouseNode {
 export class CollaborationInterface {
   private app: App;
   public self: User|null;
-  private chat: Chat;
+//  private chat: Chat;
   private _users: {[id: string]: User};
 
   constructor(app: App) {
@@ -36,7 +36,7 @@ export class CollaborationInterface {
     this.self = null;
 
     // cache a pointer to the chat (since we use it often)
-    this.chat = app.gui.chat;
+//    this.chat = app.gui.chat;
 
     // a list of users on this document
     this._users = {};
@@ -69,7 +69,7 @@ export class CollaborationInterface {
     this.self = self;
 
     // log it to the chat
-    this.chat.alert(`you are logged in as %u`, [self]);
+//    this.chat.alert(`you are logged in as %u`, [self]);
 
     // draw the mice and locks for everyone in the room
 //    this.app.graph.drawMice();
@@ -88,11 +88,12 @@ export class CollaborationInterface {
 
     const user = new User(data);
     this._users[data.id] = user;
-
+/*
     if (notifyChat)
       this.chat.alert(`%u connected from ${user.ip}`, [user]);
 
     this.chat.refresh();
+*/
   }
 
   /**
@@ -103,10 +104,12 @@ export class CollaborationInterface {
     const user = this.getUser(data.id);
     delete this._users[data.id];
 
+/*
     if (alert)
       this.chat.alert(`%u disconnected from ${user.ip}`, [user]);
 
     this.chat.refresh();
+*/
   }
 
   /**

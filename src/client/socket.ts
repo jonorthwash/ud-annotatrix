@@ -96,7 +96,7 @@ export class Socket {
       }
 
       // send a chat alert
-      gui.chat.alert(`%u: '${data.type}' index ${data.indices[0]}`, [user]);
+//      gui.chat.alert(`%u: '${data.type}' index ${data.indices[0]}`, [user]);
 
       // update the undo stack
       this.app.undoer.push(data.serial);
@@ -115,7 +115,7 @@ export class Socket {
     this._socket.on("modify index", data => {
       const user = collab.getUser(data.id);
       user.viewing = data.index;
-      gui.chat.updateUser(user);
+//      gui.chat.updateUser(user);
     });
 
     // a user clicked on a graph node
@@ -140,10 +140,10 @@ export class Socket {
     });
 
     // a user sent a chat message
-    this._socket.on("new message", data => {
+//    this._socket.on("new message", data => {
 //      const user = collab.getUser(data.id);
 //      gui.chat.newMessage(user, data.message, false);
-    });
+ //   });
 */
   }
 

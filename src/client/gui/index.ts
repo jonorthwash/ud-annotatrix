@@ -6,7 +6,6 @@ import {storage} from "../utils";
 import {getRootPath} from "../utils/funcs";
 import type {App} from "../app";
 
-import {Chat} from "./chat";
 import {_gui as config} from "./config";
 import {Corpus} from "../corpus";
 import {GraphMenu} from "./graph-menu";
@@ -28,7 +27,6 @@ interface Uploaded {
  */
 export class GUI {
   public app: App;
-  public chat: Chat;
   public config: typeof config;
   private graphMenu: GraphMenu;
   private labeler: Labeler;
@@ -45,7 +43,6 @@ export class GUI {
     this.app = app;
 
     // bind subelements
-    this.chat = new Chat(this);
     this.config = config;
     this.graphMenu = new GraphMenu(this);
     this.labeler = new Labeler(this);
@@ -98,7 +95,6 @@ export class GUI {
 
     // bind all subelements
     require("./selfcomplete");
-    this.chat.bind();
     this.graphMenu.bind();
     this.menu.bind();
     this.status.bind();
@@ -159,7 +155,6 @@ export class GUI {
       return;
 
     // refresh all subelements
-    this.chat.refresh();
     this.graphMenu.refresh();
     this.labeler.refresh();
     this.menu.refresh();

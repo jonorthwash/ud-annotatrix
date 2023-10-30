@@ -56,13 +56,6 @@ export class Menu {
       self.refresh();
     });
 
-    $("[name=\"chat\"]").click(e => {
-      const chat = self.gui.chat;
-      chat.is_visible = !chat.is_visible;
-
-      chat.refresh();
-    })
-
     $("[name=\"logout\"]").click(e => { link(`/logout?treebank_id=${getTreebankId()}`, "_self"); });
     $("[name=\"login\"]").click(e => { link(`/oauth/login?treebank_id=${getTreebankId()}`, "_self"); });
     $("[name=\"manage-repos\"]").click(e => { link("/repos"); });
@@ -241,8 +234,6 @@ export class Menu {
     // $('[name="upload-file"]')
     //   .toggleClass('disabled', !server_running)
     //   .prop('disabled', !server_running);
-
-    $("[name=\"chat\"]").toggleClass("disabled", !this.gui.app.online).prop("disabled", !this.gui.app.online);
 
     $(".export-button").toggleClass("disabled", !this.gui.app.graph.length);
     $("[name=\"show-table\"]").toggleClass("disabled", corpus.format !== "CoNLL-U");

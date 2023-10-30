@@ -271,14 +271,6 @@ export function keyup(app: App, event: KeyboardEvent) {
     return;
   }
 
-  if (focus.is("#chat-input")) {
-    if (event.which === KEYS.ENTER) {
-
-      gui.chat.sendMessage(collab);
-    }
-    return;
-  }
-
   if (event.which === KEYS.QUESTION_MARK) {
     console.log("help modal not implemented :(");
     return;
