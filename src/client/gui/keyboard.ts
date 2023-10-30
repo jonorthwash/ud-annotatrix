@@ -70,7 +70,8 @@ function name(which: number) {
 
 export function keyup(app: App, event: KeyboardEvent) {
 
-  const collab = app.collab, corpus = app.corpus, graph = app.graph, gui = app.gui;
+ // const collab = app.collab, 
+  const corpus = app.corpus, graph = app.graph, gui = app.gui;
 
   pressed.delete(event.which);
   console.log("keyup>", event.which, name(event.which) || event.key, pressed)

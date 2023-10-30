@@ -8,8 +8,6 @@ import {_config as config} from "./config";
 import {Corpus} from "./corpus";
 import {Graph} from "./graph";
 import {GUI} from "./gui";
-//import {Server} from "./server";
-import {Socket} from "./socket";
 import {UndoManager} from "./undo-manager";
 
 interface SaveMessage {
@@ -19,7 +17,7 @@ interface SaveMessage {
 
 /**
  * Wrapper class to hold references to all of our actual client objects (e.g.
- *  CollaborationInterface, Corpus, GUI, Graph, Server, Socket, UndoManager).
+ *  Corpus, GUI, Graph, UndoManager).
  *  This class should be instantiated at the beginning of a session.
  */
 export class App {
@@ -27,10 +25,7 @@ export class App {
   public online: boolean;
   public initialized: boolean;
   public undoer: UndoManager;
-  //public server: Server;
-  public socket: Socket;
   public gui: GUI;
-  //public collab: CollaborationInterface;
   public corpus: Corpus;
   public graph: Graph;
 
@@ -40,10 +35,7 @@ export class App {
     this.online = online;
     this.initialized = false;
     this.undoer = new UndoManager(this);
-    //this.server = new Server(this);
-    this.socket = new Socket(this);
     this.gui = new GUI(this);
-    //this.collab = new CollaborationInterface(this);
     this.corpus = new Corpus(this);
     this.graph = new Graph(this);
     this.initialized = true;
@@ -55,16 +47,11 @@ export class App {
       const hash = window.location.hash.substring(1);
       this.corpus.index = parseInt(hash) - 1;
     }, 500);
-//    if (this.online) {
-//      this.server.connect();
-//      this.socket.connect();
-//    } else {
-      let backup = storage.restore();
-      if (!$.isEmptyObject(backup)) {
-        console.log("backup", backup);
-        this.corpus = new Corpus(this, backup);
-      }
-//    }
+    let backup = storage.restore();
+    if (!$.isEmptyObject(backup)) {
+      console.log("backup", backup);
+      this.corpus = new Corpus(this, backup);
+    }
     this.gui.refresh();
   }
 
@@ -89,20 +76,7 @@ export class App {
     // add it to the undo/redo stack if it's an actual change
     this.undoer.push(serial)
 
-    if (message && this.online) {
-      this.socket.broadcast("modify corpus", {
-        type: message.type,
-        indices: message.indices,
-        serial: serial,
-      });
-    }
-
-    // save it to server/local
-//    if (this.server.is_running) {
-//      this.server.save(serial);
-//    } else {
-      storage.save(serial);
-//    }
+    storage.save(serial);
 
     // refresh the gui stuff
     this.gui.refresh();
