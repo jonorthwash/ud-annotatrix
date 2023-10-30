@@ -434,7 +434,7 @@ export class Graph {
       }
 
       // make sure we lock it in the same way as if we had just clicked it
-      this.lock(locked);
+      //this.lock(locked);
     }
     // set event handler callbacks
     return this.bind();
@@ -492,7 +492,7 @@ export class Graph {
         // right click the new edge and lock it
         newEdge.trigger('contextmenu');
         self.moving_dependency = true;
-        self.lock(newEdge);
+        //self.lock(newEdge);
 
       } else {
 
@@ -510,14 +510,14 @@ export class Graph {
           // perform merge
           let sourceNum = $('.merge-source').attr('subId') as unknown as number;
           self.merge(self.tokens[sourceNum], self.tokens[targetNum]);
-          self.unlock();
+          //self.unlock();
 
         } else if (target.hasClass('combine-right') || target.hasClass('combine-left')) {
 
           // perform combine
           let sourceNum = $('.combine-source').attr('subId') as unknown as number;
           self.combine(self.tokens[sourceNum], self.tokens[targetNum]);
-          self.unlock();
+          //self.unlock();
 
         } else if (target.hasClass('activated')) {
 
@@ -537,12 +537,12 @@ export class Graph {
             self.makeDependency(self.tokens[sourceNum], self.tokens[targetNum]);
             source.removeClass('activated');
             target.removeClass('activated');
-            self.unlock();
+            //self.unlock();
 
           } else {
 
             // activate it
-            self.lock(target);
+            //self.lock(target);
 
           }
         }
@@ -584,7 +584,7 @@ export class Graph {
       $(".selected").removeClass("selected");
 
       self.showEditLabelBox(target);
-      self.lock(target);
+      //self.lock(target);
     });
 
     // Handles click on multiword token
@@ -600,13 +600,13 @@ export class Graph {
       if (target.hasClass("multiword-active")) {
 
         target.removeClass("multiword-active");
-        self.unlock();
+        //self.unlock();
 
       } else {
 
         $(".multiword-active").removeClass("multiword-active");
         target.addClass("multiword-active");
-        self.lock(target);
+        //self.lock(target);
       }
     });
 
@@ -628,7 +628,7 @@ export class Graph {
       $(".selected").removeClass("selected");
 
       self.showEditLabelBox(target);
-      self.lock(target);
+      //self.lock(target);
 
     });
 
@@ -648,7 +648,7 @@ export class Graph {
         $('#form-' + arcSource).removeClass('arc-source');
         $('#form-' + arcTarget).removeClass('arc-target');
         target.removeClass('selected');
-        self.unlock();
+        //self.unlock();
 
       } else {
 
@@ -660,7 +660,7 @@ export class Graph {
 
         $(".selected").removeClass("selected");
         target.addClass("selected");
-        self.lock(target);
+        //self.lock(target);
       }
     });
 
@@ -683,7 +683,7 @@ export class Graph {
       $('.selected').removeClass('selected');
 
       self.showEditLabelBox(target);
-      self.lock(target);
+      //self.lock(target);
     });
 
     return this;
@@ -776,7 +776,7 @@ export class Graph {
     $("#edit").removeClass("activated");
 
     this.app.gui.status.refresh();
-    this.unlock();
+    //this.unlock();
   }
 
   // ---------------------------------------------------------------------------
@@ -789,7 +789,7 @@ export class Graph {
 
     try {
       tar.addHead(src);
-      this.unlock();
+      //this.unlock();
       this.app.save({
         type: "set",
         indices: [this.app.corpus.index],
@@ -846,7 +846,7 @@ export class Graph {
       let src = this.tokens[sourceNum];
       let tar = this.tokens[targetNum];
       tar.modifyHead(src, deprel);
-      this.unlock();
+      //this.unlock();
       this.app.save({
         type: "set",
         indices: [this.app.corpus.index],
@@ -877,7 +877,7 @@ export class Graph {
       let src = this.tokens[sourceNum];
       let tar = this.tokens[targetNum];
       tar.removeHead(src);
-      this.unlock();
+      //this.unlock();
       this.app.save({
         type: "set",
         indices: [this.app.corpus.index],
@@ -943,7 +943,7 @@ export class Graph {
 
     try {
       token.setEmpty(!token.isEmpty);
-      this.unlock();
+      //this.unlock();
       this.app.save({
         type: "set",
         indices: [this.app.corpus.index],
@@ -977,7 +977,7 @@ export class Graph {
         sent.root.dependents.clear();
 
       token.addHead(sent.root, "root");
-      this.unlock();
+      //this.unlock();
       this.app.save({
         type: "set",
         indices: [this.app.corpus.index],
@@ -1005,7 +1005,7 @@ export class Graph {
       let eleNum = ele.attr("subId") as unknown as number;
       const token = this.tokens[eleNum];
       this.app.corpus.current.split(token, index);
-      this.unlock();
+      //this.unlock();
       this.app.save({
         type: "set",
         indices: [this.app.corpus.index],
@@ -1033,7 +1033,7 @@ export class Graph {
     try {
       let eleNum = ele.attr("subId") as unknown as number;
       this.app.corpus.current.split(this.mwTokens[eleNum]);
-      this.unlock();
+      //this.unlock();
       this.app.save({
         type: "set",
         indices: [this.app.corpus.index],
@@ -1061,7 +1061,7 @@ export class Graph {
     try {
 
       this.app.corpus.current.combine(src, tar);
-      this.unlock();
+      //this.unlock();
       this.app.save({
         type: "set",
         indices: [this.app.corpus.index],
@@ -1089,7 +1089,7 @@ export class Graph {
     try {
 
       this.app.corpus.current.merge(src, tar);
-      this.unlock();
+      //this.unlock();
       this.app.save({
         type: "set",
         indices: [this.app.corpus.index],
@@ -1260,82 +1260,9 @@ export class Graph {
       $("#edit").select(); // highlight the current contents
     }
 
-    this.lock(target);
+    //this.lock(target);
     this.app.gui.status.refresh();
   }
 
-  // ---------------------------------------------------------------------------
-  // methods for collaboration
 
-  /**
-   * Add `mouse` nodes for each of the users on the current corpus index.
-   */
-  drawMice() {
-/*
-    this.app.collab.getMouseNodes().forEach(mouse => {
-      this.grapher.drawMouse(mouse);
-    });
-*/
-  }
-
-  /**
-   * Add the `locked` class to each of the elements being edited by other users
-   *  on the current corpus index.
-   */
-  setLocks() {
-/*
-    $(".locked")
-      .removeClass("locked")
-      .data("locked_by", null)
-      .css("background-color", "")
-      .css("line-color", "");
-
-    this.app.collab.getLocks().forEach(lock => {
-      $("#" + lock.locked)
-        .addClass("locked")
-        .data("locked_by", lock.id)
-        .css("background-color", "#" + lock.color)
-        .css("line-color", "#" + lock.color);
-    });
-*/
-  }
-
-  /**
-   * Add a lock to `ele`, save it to the config, and broadcast it to the other
-   *  users.
-   */
-  lock(ele: JQuery<HTMLElement>) {
-
-    if (!ele || !ele.length)
-      return this.unlock();
-
-    this.locked = ele;
-    config.locked_index = this.app.corpus.index;
-    config.locked_id = ele.attr('id');
-
-    let keys = ele.attr("class").split(/\s+/);
-    keys = _.intersection(keys, ["selected", "activated"
-      , "multiword-active", "merge-source", "combine-source"]);
-
-    config.locked_classes = keys.join(" ");
-    this.save();
-    if(this.app.online) {
-      this.app.socket.broadcast("lock graph", ele.attr("id"));
-    }
-  }
-
-  /**
-   * Remove the lock for the current user, save and broadcast.
-   */
-  unlock() {
-
-    this.locked = null;
-    config.locked_index = null;
-    config.locked_id = null;
-    config.locked_classes = null;
-    this.save();
-    if (this.app.online) {
-      this.app.socket.broadcast("unlock graph");
-    }
-  }
 }

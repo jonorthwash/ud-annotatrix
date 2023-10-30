@@ -2,7 +2,7 @@ import * as $ from "jquery";
 import * as d3 from "d3";
 
 import * as utils from "./utils";
-import type {MouseNode} from "../collaboration";
+//import type {MouseNode} from "../collaboration";
 import type {Graph, DependencyNode} from ".";
 
 let _graph: Graph|null = null;
@@ -241,6 +241,7 @@ function saveZoom() {
 /**
  * Draw mouse on the svg.
  */
+/*
 export function drawMouse(mouse: MouseNode) {
   const id = mouse.id.replace(/[#:]/g, "_");
   if (!$(`#${id}.mouse`).length) {
@@ -258,6 +259,7 @@ export function drawMouse(mouse: MouseNode) {
   }
   
 }
+*/
 
 export function displayError() {
   let t = d3.transition()

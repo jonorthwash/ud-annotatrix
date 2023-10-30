@@ -4,7 +4,7 @@ import * as nx from "../notatrix";
 import {storage} from "./utils";
 import {download} from "./utils/funcs";
 
-import {CollaborationInterface} from "./collaboration";
+//import {CollaborationInterface} from "./collaboration";
 import {_config as config} from "./config";
 import {Corpus} from "./corpus";
 import {Graph} from "./graph";
@@ -31,7 +31,7 @@ export class App {
   public server: Server;
   public socket: Socket;
   public gui: GUI;
-  public collab: CollaborationInterface;
+  //public collab: CollaborationInterface;
   public corpus: Corpus;
   public graph: Graph;
 

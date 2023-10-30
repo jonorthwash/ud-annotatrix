@@ -2,7 +2,7 @@ import * as $ from "jquery";
 import * as d3 from "d3";
 
 import * as nx from "../../notatrix";
-import type {MouseNode} from "../collaboration";
+//import type {MouseNode} from "../collaboration";
 import * as utils from "./utils";
 import type {DependencyNode, MultiwordNode, Graph} from ".";
 
@@ -534,6 +534,8 @@ function saveZoom() {
 /**
  * Draw mouse on the svg.
  */
+
+/*
 export function drawMouse(mouse: MouseNode) {
   const id = mouse.id.replace(/[#:]/g, "_");
   if (!$(`#${id}.mouse`).length) {
@@ -551,3 +553,4 @@ export function drawMouse(mouse: MouseNode) {
   }
   
 }
+*/
