@@ -8,8 +8,8 @@ import type {Options} from "./nx/options";
 export const PARSE_BY_NAME: ParseByName = {
   "CoNLL-U": FORMAT_BY_NAME.conllu.parse,
   conllu: FORMAT_BY_NAME.conllu.parse,
-  "notatrix serial": FORMAT_BY_NAME.notatrixSerial.parse,
-  notatrixSerial: FORMAT_BY_NAME.notatrixSerial.parse,
+//  "notatrix serial": FORMAT_BY_NAME.notatrixSerial.parse,
+//  notatrixSerial: FORMAT_BY_NAME.notatrixSerial.parse,
   "plain text": FORMAT_BY_NAME.plainText.parse,
   plainText: FORMAT_BY_NAME.plainText.parse,
 };

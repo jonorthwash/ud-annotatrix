@@ -68,6 +68,8 @@ export class Textarea {
         }
       } else {
 
+        console.log('[interpretAs: format]');
+	console.log(format)
         const s = new nx.Sentence(corpus.textdata, {interpretAs: format});
         if (s.Error)
           $(`.format-tab[name="${format}"]`)

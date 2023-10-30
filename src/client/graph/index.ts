@@ -550,9 +550,6 @@ export class Graph {
       let position = d3.mouse(this as d3.ContainerElement);
       position[0] = (position[0] - self.config.pan.x) / self.config.zoom;
       position[1] = (position[1] - self.config.pan.y) / self.config.zoom;
-      // send out a 'move mouse' event at most every `mouse_move_delay` msecs
-      if (self.app.initialized && !self.mouseBlocked && self.app.online)
-        self.app.socket.broadcast("move mouse", {"x": position[0], "y": position[1]});
 
       // enforce the delay
       self.mouseBlocked = true;

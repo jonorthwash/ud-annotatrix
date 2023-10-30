@@ -7,8 +7,8 @@ import type {Options} from "./nx/options";
 export const SPLIT_BY_NAME: SplitByName = {
   "CoNLL-U": FORMAT_BY_NAME.conllu.split,
   conllu: FORMAT_BY_NAME.conllu.split,
-  "notatrix serial": FORMAT_BY_NAME.notatrixSerial.split,
-  notatrixSerial: FORMAT_BY_NAME.notatrixSerial.split,
+//  "notatrix serial": FORMAT_BY_NAME.notatrixSerial.split,
+//  notatrixSerial: FORMAT_BY_NAME.notatrixSerial.split,
   "plain text": FORMAT_BY_NAME.plainText.split,
   plainText: FORMAT_BY_NAME.plainText.split,
 };

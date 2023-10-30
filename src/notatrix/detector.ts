@@ -8,8 +8,8 @@ import type {Options} from "./nx/options";
 export const DETECT_BY_NAME: DetectByName = {
   "CoNLL-U": FORMAT_BY_NAME.conllu.detect,
   conllu: FORMAT_BY_NAME.conllu.detect,
-  "notatrix serial": FORMAT_BY_NAME.notatrixSerial.detect,
-  notatrixSerial: FORMAT_BY_NAME.notatrixSerial.detect,
+//  "notatrix serial": FORMAT_BY_NAME.notatrixSerial.detect,
+//  notatrixSerial: FORMAT_BY_NAME.notatrixSerial.detect,
   "plain text": FORMAT_BY_NAME.plainText.detect,
   plainText: FORMAT_BY_NAME.plainText.detect,
 };

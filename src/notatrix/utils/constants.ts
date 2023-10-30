@@ -12,7 +12,8 @@ export const formats = [
 //  "Brackets", "CG3", 
 //  "SD"
 //"Params", 
-  "CoNLL-U", "notatrix serial", "plain text",
+//"notatrix serial", 
+"plain text", "CoNLL-U", 
 ];
 
 type _SentenceFields = {[k in keyof Partial<SentenceSerial>]: string};

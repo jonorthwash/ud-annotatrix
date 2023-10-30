@@ -47,5 +47,6 @@ export function thin<T>(arg: T): T|undefined {
 }
 
 export function forEachFormat(callback: (format: string) => void) {
-  ["Brackets", "CG3", "CoNLL-U", "plain text", "SD"].forEach(callback);
+  //["Brackets", "CG3", "CoNLL-U", "plain text", "SD"].forEach(callback);
+  ["CoNLL-U", "plain text"].forEach(callback);
 }
