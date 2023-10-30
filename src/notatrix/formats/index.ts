@@ -1,8 +1,8 @@
 import * as conllu from "./conllu";
 import * as notatrixSerial from "./notatrix-serial";
-import * as params from "./params";
 import * as plainText from "./plain-text";
 
+//import * as params from "./params";
 //import * as sd from "./sd";
 //import * as apertiumStream from "./apertium-stream";
 //import * as brackets from "./brackets";
@@ -21,8 +21,8 @@ export const FORMAT_BY_NAME: FormatByName = {
   conllu: conllu,
   "notatrix serial": notatrixSerial,
   notatrixSerial: notatrixSerial,
-  Params: params,
-  params: params,
+//  Params: params,
+//  params: params,
   "plain text": plainText,
   plainText: plainText,
 //  SD: sd,
