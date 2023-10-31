@@ -5,7 +5,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { v4 as uuid } from "uuid";
 
-import {Labeler, LabelerSerial, SortedLabel} from "./labeler";
+//import {Labeler, LabelerSerial, SortedLabel} from "./labeler";
 import {NxBaseClass} from "./base-class";
 import {NxError} from "../utils/errors";
 import {Options} from "./options";
@@ -16,7 +16,7 @@ export interface CorpusSerial {
   filename: string|null;
   meta: CorpusMeta;
   options: Options;
-  labeler: LabelerSerial;
+//  labeler: LabelerSerial;
   sentences: SentenceSerial[];
   index: number;
 }
@@ -31,7 +31,7 @@ interface CorpusSnapshot {
   filename: string|null;
   sentences: number;
   errors: number;
-  labels: SortedLabel[];
+//  labels: SortedLabel[];
 }
 
 /**
@@ -43,7 +43,7 @@ export class Corpus extends NxBaseClass {
   filename: string|null;
   options: Options;
   sources: string[];
-  _labeler: Labeler;
+//  _labeler: Labeler;
   _sentences: Sentence[];
   _index: number;
   _meta: CorpusMeta;
@@ -60,7 +60,7 @@ export class Corpus extends NxBaseClass {
     this.options = options;
     this.sources = [];
 
-    this._labeler = new Labeler(this);
+//    this._labeler = new Labeler(this);
     this._sentences = [];
     this._index = -1;
     this._meta = {};
@@ -72,7 +72,7 @@ export class Corpus extends NxBaseClass {
       filename: this.filename,
       sentences: this.length,
       errors: this.errors.length,
-      labels: this._labeler.sort(),
+//      labels: this._labeler.sort(),
     };
   }
 
@@ -87,7 +87,7 @@ export class Corpus extends NxBaseClass {
       filename: this.filename,
       meta: this._meta,
       options: this.options,
-      labeler: this._labeler.serialize(),
+//      labeler: this._labeler.serialize(),
       sentences: this._sentences.map(sent => sent.serialize(this.options)),
       index: this._index,
     };
@@ -97,15 +97,15 @@ export class Corpus extends NxBaseClass {
     const corpus = new Corpus(serial.options);
     corpus.filename = serial.filename || null;
     corpus._meta = serial.meta;
-    corpus._labeler = Labeler.deserialize(corpus, serial.labeler);
+//    corpus._labeler = Labeler.deserialize(corpus, serial.labeler);
     corpus._sentences = serial.sentences.map(s => {
       const sent = new Sentence(s, _.defaults(s.options, serial.options));
       sent._meta = s.meta;
 
-      _.each(corpus._labeler._labels, (label, name) => {
-        if (corpus._labeler.sentenceHasLabel(sent, name))
-          label._sents.add(sent);
-      });
+//      _.each(corpus._labeler._labels, (label, name) => {
+//        if (corpus._labeler.sentenceHasLabel(sent, name))
+//          label._sents.add(sent);
+//      });
 
       return sent;
     });
@@ -116,11 +116,17 @@ export class Corpus extends NxBaseClass {
 
   get sentence(): Sentence|null { return this.index < 0 ? null : this._sentences[this.index]; }
 
+  /**
+   * What does this do?
+   */ 
   get filtered(): Sentence[] {
+    return [];
+/*
     return this._labeler._filter.size
                ? this._sentences.filter(
                      sent => this._labeler.sentenceInFilter(sent))
                : [];
+*/
   }
 
   get index(): number { return this._index; }
@@ -219,12 +225,12 @@ export class Corpus extends NxBaseClass {
     if (isNaN(index) || this.getSentence(index) === null)
     throw new NxError(`cannot set sentence at index ${index}`);
 
-    this._labeler.onRemove(this.getSentence(index));
+//    this._labeler.onRemove(this.getSentence(index));
     const sent = new Sentence(text, this.options);
     sent.corpus = this;
 
     this._sentences[index] = sent;
-    this._labeler.onAdd(sent);
+//    this._labeler.onAdd(sent);
     this.reindex();
 
     return sent;
@@ -253,7 +259,7 @@ export class Corpus extends NxBaseClass {
 
     this._sentences = this._sentences.slice(0, index).concat(sent).concat(
         this._sentences.slice(index));
-    this._labeler.onAdd(sent);
+//    this._labeler.onAdd(sent);
 
     this.index = index;
     this.reindex();
@@ -279,7 +285,7 @@ export class Corpus extends NxBaseClass {
     if (!this.length)
       this.insertSentence();
 
-    this._labeler.onRemove(removed);
+//    this._labeler.onRemove(removed);
 
     if (index <= this.index)
       this.index--;

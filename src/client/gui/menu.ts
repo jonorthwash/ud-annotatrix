@@ -107,6 +107,7 @@ export class Menu {
     $("#btnUndo").click(e => self.gui.app.undoer.undo());
     $("#btnRedo").click(e => self.gui.app.undoer.redo());
 
+/*
     $("[name=\"show-labels\"]").click(e => {
       if ($(e.target).is(".pin"))
         return;
@@ -114,6 +115,7 @@ export class Menu {
       self.gui.config.is_label_bar_visible = !self.gui.config.is_label_bar_visible;
       self.gui.refresh();
     });
+*/
     $("[name=\"show-help\"]").click(e => {
 	 	console.log("TESTING");
       const target = $(e.target);

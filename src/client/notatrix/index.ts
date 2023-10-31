@@ -13,7 +13,7 @@ export {Analysis} from "./nx/analysis";
 export {BaseToken, ConlluIndex} from "./nx/base-token";
 export {Comment} from "./nx/comment";
 export {Corpus, CorpusSerial} from "./nx/corpus";
-export {Labeler} from "./nx/labeler";
+//export {Labeler} from "./nx/labeler";
 export {NxBaseClass} from "./nx/base-class";
 export {RelationItem, RelationSet} from "./nx/relation-set";
 export {RootToken} from "./nx/root-token";

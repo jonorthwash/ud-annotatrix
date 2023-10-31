@@ -1,7 +1,6 @@
 import * as $ from "jquery";
 import * as d3 from "d3";
 
-import * as nx from "../notatrix";
 import * as utils from "./utils";
 import type {DependencyNode, MultiwordNode, Graph} from ".";
 
@@ -416,9 +415,9 @@ function drawSuperTokens() {
       t1 = _graph.presentationId[index.conllu as number];
       
     }
-    else if (format == "CG3") {
-      t1 = _graph.presentationId[index.cg3 as number];
-    }
+    //else if (format == "CG3") {
+    //  t1 = _graph.presentationId[index.cg3 as number];
+    //}
     else {
       t1 = _graph.presentationId[index.absolute];
     }

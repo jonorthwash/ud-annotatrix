@@ -10,7 +10,7 @@ import {_gui as config} from "./config";
 import {Corpus} from "../corpus";
 import {GraphMenu} from "./graph-menu";
 import {KEYS, keyup, keydown} from "./keyboard";
-import {Labeler} from "./labeler";
+//import {Labeler} from "./labeler";
 import {Menu} from "./menu";
 import {Status} from "./status";
 import {Table} from "./table";
@@ -29,7 +29,7 @@ export class GUI {
   public app: App;
   public config: typeof config;
   private graphMenu: GraphMenu;
-  private labeler: Labeler;
+//  private labeler: Labeler;
   public menu: Menu
   public status: Status;
   public table: Table;
@@ -45,7 +45,7 @@ export class GUI {
     // bind subelements
     this.config = config;
     this.graphMenu = new GraphMenu(this);
-    this.labeler = new Labeler(this);
+    //this.labeler = new Labeler(this);
     this.menu = new Menu(this);
     this.status = new Status(this);
     this.table = new Table(this);
@@ -156,7 +156,7 @@ export class GUI {
 
     // refresh all subelements
     this.graphMenu.refresh();
-    this.labeler.refresh();
+    //this.labeler.refresh();
     this.menu.refresh();
     this.status.refresh();
     this.textarea.refresh();
