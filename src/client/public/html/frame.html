@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>UD Annotatrix</title>
+    <link rel="icon" href="../favicon.png" sizes="230x230" type="image/png">
+    <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../css/fontawesome.all.min.css" />
+    <link rel="stylesheet" type="text/css" href="../css/style.css" />
+    <link rel="stylesheet" type="text/css" href="../css/jquery.autocomplete.css" />
+      <script type="text/javascript" src="../js/jquery.js"></script>
+      <script type="text/javascript" src="../js/bundle.js"></script>
+  </head>
+    <script>
+function base64encode(str) {
+  let encode = encodeURIComponent(str).replace(/%([a-f0-9]{2})/gi, (m, $1) => String.fromCharCode(parseInt($1, 16)))
+  return btoa(encode)
+}
+function base64decode(str) {
+  let decode = atob(str).replace(/[\x80-\uffff]/g, (m) => `%${m.charCodeAt(0).toString(16).padStart(2, '0')}`)
+  return decodeURIComponent(decode)
+}
+       console.log('--frame-----');
+       const params = new Proxy(new URLSearchParams(window.location.search), {
+          get: (searchParams, prop) => searchParams.get(prop),
+        });
+       console.log('--frame-----');
+       console.log(params);
+       console.log('--frame-----');
+       var testb64 = params["c"];
+       console.log(testb64);
+       console.log('--frame-----');
+       newtest = base64decode(testb64);
+       console.log(newtest);
+       console.log('--frame-----');
+
+       let upcorpus = nx.Corpus.fromString(newtest);
+       upcorpus.filename = "noname";
+       console.log(upcorpus.serialize());
+       self.app.corpus = new Corpus(self.app, upcorpus.serialize());
+       $("#upload-file-modal").hide();
+       $("#upload-filename").val(null);
+   </script>
+  <body>
+        <div id="graph">
+
+          <div id="graph-buttons">
+
+            <div class="btn-group ml-sx-auto">
+              <button id="LTR" type="button" class="btn btn-outline-primary">
+                <i class="fa fa-align-right" title="Toggle right-to-left / left-to-right"></i>
+              </button>
+              <button id="vertical" type="button" class="btn btn-outline-primary">
+                <i class="fa fa-align-justify fa-rotate-90" title="Toggle vertical / horizontal display"></i>
+              </button>
+              <button id="enhanced" type="button" class="btn btn-outline-primary">
+                <i class="fa fa-tree" title="Toggle enhanced / basic dependencies"></i>
+              </button>
+            </div>
+
+          </div>
+
+          <div id="mute">
+            <input type="type" id="edit" class="hidden-input" tabindex="3" />
+          </div>
+
+          <div id="graph-container"></div>
+
+        </div>
+
+        <div id="progress-container">
+          <div id="progress-bar"></div>
+        </div>
+
+      </div>
+
+
+  </body>
+
+</html>
