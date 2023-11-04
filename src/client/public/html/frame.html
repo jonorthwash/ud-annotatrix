@@ -33,13 +33,7 @@ function base64decode(str) {
        newtest = base64decode(testb64);
        console.log(newtest);
        console.log('--frame-----');
-
-       let upcorpus = nx.Corpus.fromString(newtest);
-       upcorpus.filename = "noname";
-       console.log(upcorpus.serialize());
-       self.app.corpus = new Corpus(self.app, upcorpus.serialize());
-       $("#upload-file-modal").hide();
-       $("#upload-filename").val(null);
+window.app.corpus.insertSentence(0,newtest) 
    </script>
   <body>
         <div id="graph">
