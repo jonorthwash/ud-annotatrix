@@ -60,11 +60,13 @@ export class App {
    *  localStorage.
    */
   save(message?: SaveMessage) {
-
     if (!this.initialized || this.undoer.active)
       return;
 
     this.gui.status.normal("saving...");
+
+    // for embedded use, the origin is '*'
+    window.top.postMessage('saving...', '*');
 
     // save local preference stuff
     this.gui.save();

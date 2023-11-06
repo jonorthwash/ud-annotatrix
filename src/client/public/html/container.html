@@ -14,7 +14,18 @@
 
  <iframe src="frame.html" id="iframe-embed" width="80%" style="align:center"></iframe> 
 
+</body>
     <script>
+
+/*
+	container should be able to request conllu from iframe using postmessage	
+*/
+
+window.onmessage = function(event){
+    console.log('Reply received!');
+    console.log(event.data);
+};
+
 function base64encode(str) {
   let encode = encodeURIComponent(str).replace(/%([a-f0-9]{2})/gi, (m, $1) => String.fromCharCode(parseInt($1, 16)))
   return btoa(encode)
@@ -30,11 +41,11 @@ function base64decode(str) {
        console.log('--container-----');
 	console.log(testb64)
        console.log('--container-----');
+// 	window.open('frame.html?c=' + testb64, "iframe-embed");
 	var iframe1 = document.getElementById('iframe-embed')
 iframe1.src = 'frame.html?c=' + testb64;
        console.log(iframe1);
        console.log('--container-----');
     </script>
 
-</body>
 </html>
