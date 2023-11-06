@@ -82,7 +82,7 @@ export class App {
                            })
                            .join("\n\n");
 
-      window.top.postMessage(contents.trim() + '\n', '*');
+      window.top.postMessage({message: "changed", conllu: contents.trim() + '\n'});
     }
 
     // save local preference stuff

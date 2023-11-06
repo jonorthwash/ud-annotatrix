@@ -9,13 +9,16 @@ $(() => {
 
   (window as any).app = new App(location.protocol !== "file:");
 
-  window.onmessage = function(event){
-     if(event.data !== null) {
+  window.addEventListener("message", function (e) {
        if(window.top != window) {
-         console.log('window.onmessage');
-         app.corpus.insertSentence(0, event.data);
+         if(e.data.message == "load") {
+             console.log("loading:");
+             console.log(e.data.conllu);
+             app.corpus.insertSentence(0, e.data.conllu);
+  	}
        }
-     }
-  };
+    window.top.postMessage({message: "ready"});
+    console.log("sent ready");
+  });
 
 });
