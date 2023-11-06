@@ -35,7 +35,9 @@ window.onmessage = function(event){
 //        iframe1.contentWindow.postMessage(test, '*');
 iframe1.addEventListener("load", function() {
     console.log("Finished loading:");
-    iframe1.contentWindow.postMessage(test, '*');
+    //iframe1.contentWindow.postMessage(test, '*');
+    iframe1.contentWindow.postMessage({message: "load", conllu: test + '\n'}, '*');
+
 });
        console.log('--container-----');
     </script>

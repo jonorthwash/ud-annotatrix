@@ -100,7 +100,7 @@ export class GUI {
     this.status.bind();
     this.textarea.bind();
 
-    if (!this.app.online || !this.app.server.is_running) {
+    if (!this.app.online) {
       $("#upload-filename").on("change", function(e) {
         // console.log("changed", e.target.files);
         const target = e.target as HTMLInputElement;

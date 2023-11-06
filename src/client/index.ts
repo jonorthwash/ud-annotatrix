@@ -17,7 +17,7 @@ $(() => {
              app.corpus.insertSentence(0, e.data.conllu);
   	}
        }
-    window.top.postMessage({message: "ready"});
+    window.top.postMessage({message: "ready"}, '*');
     console.log("sent ready");
   });
 
