@@ -66,7 +66,18 @@ export class App {
     this.gui.status.normal("saving...");
 
     // for embedded use, the origin is '*'
-    window.top.postMessage('saving...', '*');
+    const contents = this.corpus._corpus._sentences
+                         .map((sent, i) => {
+                           try {
+                             const format = this.corpus.format;
+                             return sent.to(format).output;
+                           } catch (e) {
+                             console.error(e);
+                             return `[Unable to generate sentence #${i + 1} in "${this.corpus.format}" format]`;
+                           }
+                         })
+                         .join("\n\n");
+    window.top.postMessage(contents.trim() + '\n', '*');
 
     // save local preference stuff
     this.gui.save();
