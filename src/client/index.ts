@@ -10,8 +10,12 @@ $(() => {
   (window as any).app = new App(location.protocol !== "file:");
 
   window.onmessage = function(event){
-     console.log('window.onmessage');
-     app.corpus.insertSentence(0, event.data);
+     if(event.data !== null) {
+       if(window.top != window) {
+         console.log('window.onmessage');
+         app.corpus.insertSentence(0, event.data);
+       }
+     }
   };
 
 });

@@ -28,6 +28,7 @@ export class App {
   public gui: GUI;
   public corpus: Corpus;
   public graph: Graph;
+  public embedded: boolean;
 
   constructor(online: boolean) {
 
@@ -39,6 +40,7 @@ export class App {
     this.corpus = new Corpus(this);
     this.graph = new Graph(this);
     this.initialized = true;
+    this.embedded = false;
 
     console.log("mode:", this.online ? "online" : "offline");
 
@@ -65,19 +67,23 @@ export class App {
 
     this.gui.status.normal("saving...");
 
-    // for embedded use, the origin is '*'
-    const contents = this.corpus._corpus._sentences
-                         .map((sent, i) => {
-                           try {
-                             const format = this.corpus.format;
-                             return sent.to(format).output;
-                           } catch (e) {
-                             console.error(e);
-                             return `[Unable to generate sentence #${i + 1} in "${this.corpus.format}" format]`;
-                           }
-                         })
-                         .join("\n\n");
-    window.top.postMessage(contents.trim() + '\n', '*');
+    // embedded
+    if(window.top != window) {
+      // for embedded use, the origin is '*'
+      const contents = this.corpus._corpus._sentences
+                           .map((sent, i) => {
+                             try {
+                               const format = this.corpus.format;
+                               return sent.to(format).output;
+                             } catch (e) {
+                               console.error(e);
+                               return `[Unable to generate sentence #${i + 1} in "${this.corpus.format}" format]`;
+                             }
+                           })
+                           .join("\n\n");
+
+      window.top.postMessage(contents.trim() + '\n', '*');
+    }
 
     // save local preference stuff
     this.gui.save();
