@@ -10,15 +10,17 @@ $(() => {
   (window as any).app = new App(location.protocol !== "file:");
 
   window.addEventListener("message", function (e) {
-       if(window.top != window) {
+         if(e.source != window.top) {
+             return;
+         }
          if(e.data.message == "load") {
              console.log("loading:");
              console.log(e.data.conllu);
              app.corpus.insertSentence(0, e.data.conllu);
-  	}
-       }
-    window.top.postMessage({message: "ready"}, '*');
-    console.log("sent ready");
+             app.graph.grapher.resetZoom();
+  	 }
+         window.top.postMessage({message: "ready"}, '*');
+         console.log("sent ready");
   });
 
 });
