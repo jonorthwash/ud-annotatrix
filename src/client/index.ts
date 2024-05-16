@@ -14,6 +14,8 @@ $(() => {
              return;
          }
          if(e.data.message == "load") {
+             var conllu_text = e.data.conllu;
+             conllu_text = conllu_text.replace(/\t\t/g, "\t_\t");
              console.log("loading:");
              console.log(e.data.conllu);
              app.corpus.insertSentence(0, e.data.conllu);
