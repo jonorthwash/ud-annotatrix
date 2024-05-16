@@ -126,7 +126,16 @@ export class Sentence extends NxBaseClass {
    * Output Sentence to a given format
    */
   to(format: string, options?: Options): any {
-    return generate[format](this, options);
+    console.log('===');
+    console.log('sentence.to:');
+    console.log(format);
+    console.log(options);
+    console.log('---');
+    if(format in generate) {
+        return generate[format](this, options);
+    } else {
+        return generate["CoNLL-U"](this, options);
+    }
   }
 
   /**
