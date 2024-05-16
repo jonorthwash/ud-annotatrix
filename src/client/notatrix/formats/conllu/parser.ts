@@ -102,6 +102,7 @@ export function parse(text: string, options: Options): SentenceSerial {
     ...options,
   };
 
+
   function assertNext(supStr: string, subStr: string): void {
     function parseIndex(str: string): ParsedIndex|null {
       const match = (str || "").match(re.conlluEmptyIndex);
@@ -158,6 +159,9 @@ export function parse(text: string, options: Options): SentenceSerial {
   // "tokenize" into chunks
   let i = 0
   let chunks: Chunk[] = [];
+  // Because arborator allows sending conllu with \t\t
+  // FIXME: Do this nicer
+  text = text.replace(/\t\t/g,"\t_\t")
   const lines = text.split("\n");
   const tokenRegex = options.requireTenParams
                          ? re.conlluTokenLineTenParams
