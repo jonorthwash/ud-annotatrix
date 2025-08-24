@@ -1,0 +1,12 @@
+# vim: syntax=yaml
+Language: JavaScript
+BasedOnStyle: LLVM
+TabWidth: 2
+IndentWidth: 2
+UseTab: Never
+SpacesInContainerLiterals: false
+IndentCaseLabels: false
+JavaScriptQuotes: Double
+JavaScriptWrapImports: true
+AlignAfterOpenBracket: true
+ColumnLimit: 120
